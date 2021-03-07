@@ -396,6 +396,12 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
     boolean match = true;
 
+    if (match && isNotEmpty(scope.getTaskTypes())) {
+      match = scope.getTaskTypes().contains(taskGroup);
+    }
+    if (match && isTaskLinkedToAccountLevelEntityTask(appId, accountId)) {
+      return true;
+    }
     if (isNotEmpty(scope.getEnvironmentTypes())) {
       if (isNotBlank(appId) && isNotBlank(envId)) {
         Environment environment = environmentService.get(appId, envId, false);
@@ -407,15 +413,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         match = false;
       }
     }
-    if (match && isNotEmpty(scope.getTaskTypes())) {
-      match = scope.getTaskTypes().contains(taskGroup);
-    }
-    if (match && isNotEmpty(scope.getApplications()) && !isCloudProviderValidationTask(appId, accountId)) {
+
+    if (match && isNotEmpty(scope.getApplications())) {
       match = isNotBlank(appId) && scope.getApplications().contains(appId);
     }
     if (match && isNotEmpty(scope.getEnvironments())) {
       match = isNotBlank(envId) && scope.getEnvironments().contains(envId);
     }
+
+    // scope has -->
 
     if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
       InfrastructureMapping infrastructureMapping =
@@ -440,7 +446,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     return match;
   }
 
-  private boolean isCloudProviderValidationTask(String appId, String accountId) {
+  private boolean isTaskLinkedToAccountLevelEntityTask(String appId, String accountId) {
     if (isNotBlank(appId) && isNotBlank(accountId)) {
       return featureFlagService.isEnabled(
                  FeatureName.IGNORE_DELEGATE_APP_SCOPING_IN_VALIDATING_CLOUD_PROVIDER, accountId)
