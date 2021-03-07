@@ -19,6 +19,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.data.StepOutcomeRef;
@@ -38,8 +39,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-
-import software.wings.beans.LogHelper;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
@@ -239,11 +238,16 @@ public class StepUtils {
         .build();
   }
 
+  public static List<String> generateLogKeys(Ambiance ambiance, List<String> units) {
+    LinkedHashMap<String, String> logAbstractionMap = generateLogAbstractions(ambiance);
+    return generateLogKeys(logAbstractionMap, units);
+  }
+
   private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
     if (isEmpty(logAbstractionMap)) {
       return Collections.emptyList();
     }
-    String baseLogKey = LogHelper.generateLogBaseKey(logAbstractionMap);
+    String baseLogKey = LogStreamingHelper.generateLogBaseKey(logAbstractionMap);
     if (isEmpty(units)) {
       return Collections.singletonList(baseLogKey);
     }

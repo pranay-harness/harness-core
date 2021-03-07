@@ -17,6 +17,7 @@ import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.health.HealthService;
+import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.ng.core.CorrelationFilter;
@@ -132,13 +133,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.addBundle(new SwaggerBundle<NextGenConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(NextGenConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.setMetricRegistry(metricRegistry);
   }
 
@@ -163,6 +164,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     });
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
+    modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
+
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes

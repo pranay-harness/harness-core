@@ -31,8 +31,8 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Codecommit") CODECOMMIT("Codecommit"),
   @JsonProperty("CEAws") CE_AWS("CEAws"),
   @JsonProperty("CEAzure") CE_AZURE("CEAzure"),
-  @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster");
-
+  @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster"),
+  @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo");
   private final String displayName;
 
   @JsonCreator

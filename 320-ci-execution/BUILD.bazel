@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
@@ -14,6 +13,8 @@ shared_dependencies = [
     "//879-pms-sdk:module",
     "//890-sm-core:module",
     "//930-ng-core-clients:module",
+    "//950-log-client:module",
+    "//955-delegate-beans:module",
     "@jira_client//jar",
     "@maven//:aopalliance_aopalliance",
     "@maven//:cglib_cglib_nodep",

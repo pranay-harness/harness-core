@@ -316,7 +316,7 @@ public class WorkflowServiceHelper {
   public static final String CF_DELETE_STACK = "CloudFormation Delete Stack";
   public static final String TERRAFORM_APPLY = "Terraform Apply";
   public static final String TERRAFORM_PROVISION = "Terraform Provision";
-  public static final String ARM_CREATE_RESOURCE = "ARM Create Resource";
+  public static final String ARM_CREATE_RESOURCE = "ARM / Blueprint Create Resource";
   public static final String TERRAFORM_DESTROY = "Terraform Destroy";
   public static final String SERVICENOW = "ServiceNow";
   public static final String EMAIL = "Email";

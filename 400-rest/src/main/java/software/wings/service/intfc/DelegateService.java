@@ -61,6 +61,8 @@ public interface DelegateService extends OwnedByAccount {
 
   List<String> getAvailableVersions(String accountId);
 
+  Double getConnectedRatioWithPrimary(String targetVersion);
+
   DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails);
 
   File generateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,

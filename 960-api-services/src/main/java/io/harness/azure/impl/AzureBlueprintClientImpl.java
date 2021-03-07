@@ -9,8 +9,6 @@ import static io.harness.azure.model.AzureConstants.BLUEPRINT_NAME_BLANK_VALIDAT
 import static io.harness.azure.model.AzureConstants.NEXT_PAGE_LINK_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG;
-import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_MNG_GROUP_PATTERN;
-import static io.harness.azure.model.AzureConstants.RESOURCE_SCOPE_SUBSCRIPTION_PATTERN;
 import static io.harness.azure.model.AzureConstants.VERSION_ID_BLANK_VALIDATION_MSG;
 
 import static java.lang.String.format;
@@ -24,7 +22,9 @@ import io.harness.azure.model.blueprint.Blueprint;
 import io.harness.azure.model.blueprint.PublishedBlueprint;
 import io.harness.azure.model.blueprint.artifact.Artifact;
 import io.harness.azure.model.blueprint.assignment.Assignment;
+import io.harness.azure.model.blueprint.assignment.WhoIsBlueprintContract;
 import io.harness.azure.model.blueprint.assignment.operation.AssignmentOperation;
+import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -60,8 +60,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(blueprintJSON)) {
@@ -110,8 +109,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(blueprintName)) {
@@ -160,8 +158,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(blueprintName)) {
@@ -206,8 +203,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(blueprintName)) {
@@ -260,8 +256,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(blueprintName)) {
@@ -324,8 +319,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(assignmentName)) {
@@ -372,8 +366,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(assignmentName)) {
@@ -418,8 +411,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
 
@@ -482,8 +474,7 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
     if (isBlank(resourceScope)) {
       throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
     }
-    if (!resourceScope.contains(RESOURCE_SCOPE_MNG_GROUP_PATTERN)
-        && !resourceScope.contains(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
       throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
     }
     if (isBlank(assignmentName)) {
@@ -526,6 +517,48 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
       Response<ResponseBody> response) throws IOException {
     return serviceResponseFactory.<PageImpl<AssignmentOperation>, CloudException>newInstance(azureJacksonAdapter)
         .register(200, (new TypeToken<PageImpl<AssignmentOperation>>() {}).getType())
+        .registerError(CloudException.class)
+        .build(response);
+  }
+
+  @Override
+  public WhoIsBlueprintContract whoIsBlueprint(
+      final AzureConfig azureConfig, final String resourceScope, final String assignmentName) {
+    return whoIsBlueprintWithServiceResponseAsync(azureConfig, resourceScope, assignmentName)
+        .toBlocking()
+        .single()
+        .body();
+  }
+
+  private Observable<ServiceResponse<WhoIsBlueprintContract>> whoIsBlueprintWithServiceResponseAsync(
+      final AzureConfig azureConfig, final String resourceScope, final String assignmentName) {
+    if (isBlank(resourceScope)) {
+      throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
+    }
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
+      throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
+    }
+    if (isBlank(assignmentName)) {
+      throw new IllegalArgumentException(ASSIGNMENT_NAME_BLANK_VALIDATION_MSG);
+    }
+
+    return getAzureBlueprintRestClient(azureConfig.getAzureEnvironmentType())
+        .whoIsBlueprint(
+            getAzureBearerAuthToken(azureConfig), resourceScope, assignmentName, AzureBlueprintRestClient.APP_VERSION)
+        .flatMap((Func1<Response<ResponseBody>, Observable<ServiceResponse<WhoIsBlueprintContract>>>) response -> {
+          try {
+            ServiceResponse<WhoIsBlueprintContract> clientResponse = whoIsBlueprintDelegate(response);
+            return Observable.just(clientResponse);
+          } catch (Exception t) {
+            return Observable.error(t);
+          }
+        });
+  }
+
+  private ServiceResponse<WhoIsBlueprintContract> whoIsBlueprintDelegate(Response<ResponseBody> response)
+      throws IOException {
+    return serviceResponseFactory.<WhoIsBlueprintContract, CloudException>newInstance(azureJacksonAdapter)
+        .register(200, (new TypeToken<WhoIsBlueprintContract>() {}).getType())
         .registerError(CloudException.class)
         .build(response);
   }
