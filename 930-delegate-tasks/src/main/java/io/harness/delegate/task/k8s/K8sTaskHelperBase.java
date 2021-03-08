@@ -60,6 +60,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
@@ -1845,6 +1846,11 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+      case HELM_CHART:
+        HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            helmChartManifest.getHelmCommandFlag());
 
       default:
         throw new UnsupportedOperationException(
@@ -1864,6 +1870,12 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
+      case HELM_CHART:
+        HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, filesList,
+            valuesFiles, releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(),
+            timeoutInMillis, helmChartManifest.getHelmCommandFlag());
 
       default:
         throw new UnsupportedOperationException(
@@ -1889,27 +1901,25 @@ public class K8sTaskHelperBase {
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
       String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId) {
-    ManifestType manifestType = manifestDelegateConfig.getManifestType();
-    switch (manifestType) {
-      case K8S_MANIFEST:
+    StoreDelegateConfig storeDelegateConfig = manifestDelegateConfig.getStoreDelegateConfig();
+    switch (storeDelegateConfig.getType()) {
+      case GIT:
         return downloadManifestFilesFromGit(
-            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
+            storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
 
       default:
         throw new UnsupportedOperationException(
-            String.format("Manifest delegate config type: [%s]", manifestType.name()));
+            String.format("Manifest store config type: [%s]", storeDelegateConfig.getType().name()));
     }
   }
 
-  private boolean downloadManifestFilesFromGit(ManifestDelegateConfig manifestDelegateConfig,
-      String manifestFilesDirectory, LogCallback executionLogCallback, String accountId) {
-    if (!(manifestDelegateConfig instanceof K8sManifestDelegateConfig)) {
-      throw new InvalidArgumentsException(
-          Pair.of("manifestDelegateConfig", "Must be instance of K8sManifestDelegateConfig"));
+  private boolean downloadManifestFilesFromGit(StoreDelegateConfig storeDelegateConfig, String manifestFilesDirectory,
+      LogCallback executionLogCallback, String accountId) {
+    if (!(storeDelegateConfig instanceof GitStoreDelegateConfig)) {
+      throw new InvalidArgumentsException(Pair.of("storeDelegateConfig", "Must be instance of GitStoreDelegateConfig"));
     }
 
-    GitStoreDelegateConfig gitStoreDelegateConfig =
-        (GitStoreDelegateConfig) (((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig());
+    GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
 
     // ToDo What to set here now as we have a list now?
     //    if (isBlank(gitStoreDelegateConfig.getPaths().getFilePath())) {
