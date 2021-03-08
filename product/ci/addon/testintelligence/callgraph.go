@@ -174,3 +174,26 @@ func (cg *CGphDTO) ToStringMap(map[string]interface{}, error) {
 	}
 	return datum
 }
+
+//FromStringMap converts CallgraphDto to string for avro encoding
+func (cg *CGphDTO) FromStringMap(data map[string]interface{}) map[string]interface{} {
+	for k, v := range data {
+		switch k {
+		case "nodes":
+			if nodes, ok := v.([]interface{}); ok {
+				for _, node := range nodes {
+					fields := node.(map[string]interface{})
+					for f, v := range fields {
+						switch f {
+						case "method":
+							fmt.Println("method", v.(string))
+						case "package":
+							fmt.Println("package", v.(string))
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
