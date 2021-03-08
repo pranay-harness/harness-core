@@ -1,12 +1,11 @@
-package software.wings.search.framework.changestreams;
+package io.harness.mongo.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
-
-import software.wings.app.MainConfiguration;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
@@ -17,7 +16,6 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
-import com.mongodb.Tag;
 import com.mongodb.TagSet;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
@@ -25,6 +23,7 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -44,8 +43,9 @@ import org.mongodb.morphia.annotations.Entity;
 @OwnedBy(PL)
 @Slf4j
 public class ChangeTracker {
-  @Inject private MainConfiguration mainConfiguration;
-  @Inject private ChangeEventFactory changeEventFactory;
+  private MongoConfig mongoConfig;
+  private ChangeEventFactory changeEventFactory;
+  private TagSet mongoTagSet;
   private ExecutorService executorService;
   private Set<ChangeTrackingTask> changeTrackingTasks;
   private Set<Future<?>> changeTrackingTasksFuture;
@@ -54,18 +54,23 @@ public class ChangeTracker {
   private ReadPreference readPreference;
   private ClientSession clientSession;
 
+  @Inject
+  public ChangeTracker(MongoConfig mongoConfig, ChangeEventFactory changeEventFactory, TagSet mongoTagSet) {
+    this.mongoConfig = mongoConfig;
+    this.changeEventFactory = changeEventFactory;
+    this.mongoTagSet = mongoTagSet;
+  }
+
   private String getCollectionName(Class<? extends PersistentEntity> clazz) {
     return clazz.getAnnotation(Entity.class).value();
   }
 
   private MongoClientURI mongoClientUri() {
-    final String mongoClientUrl = mainConfiguration.getMongoConnectionFactory().getUri();
-    if (mainConfiguration.getElasticsearchConfig().getMongoTagKey().equals("none")) {
+    final String mongoClientUrl = mongoConfig.getUri();
+    if (Objects.isNull(mongoTagSet)) {
       readPreference = ReadPreference.secondaryPreferred();
     } else {
-      final TagSet tags = new TagSet(new Tag(mainConfiguration.getElasticsearchConfig().getMongoTagKey(),
-          mainConfiguration.getElasticsearchConfig().getMongoTagValue()));
-      readPreference = ReadPreference.secondary(tags);
+      readPreference = ReadPreference.secondary(mongoTagSet);
     }
     return new MongoClientURI(mongoClientUrl,
         MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
@@ -95,8 +100,8 @@ public class ChangeTracker {
       log.info("Connection details for mongo collection {}", collection.getReadPreference());
 
       ChangeStreamSubscriber changeStreamSubscriber = getChangeStreamSubscriber(changeTrackingInfo);
-      ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(
-          changeStreamSubscriber, collection, clientSession, latch, changeTrackingInfo.getResumeToken());
+      ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(changeStreamSubscriber, collection, clientSession,
+          latch, changeTrackingInfo.getResumeToken(), changeTrackingInfo.getPipeline());
       changeTrackingTasks.add(changeTrackingTask);
     }
   }
