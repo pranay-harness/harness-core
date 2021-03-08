@@ -23,6 +23,7 @@ import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.exception.WingsException;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.helpers.EncryptDecryptHelperImpl;
 import io.harness.kustomize.KustomizeClient;
 import io.harness.kustomize.KustomizeClientImpl;
 import io.harness.manage.ManagedExecutorService;
@@ -30,6 +31,7 @@ import io.harness.manifest.CustomManifestService;
 import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -241,6 +243,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AzureNetworkClient.class).to(AzureNetworkClientImpl.class);
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
     bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
+    bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))

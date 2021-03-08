@@ -1,4 +1,4 @@
-package software.wings.service.impl.security.kms;
+package io.harness.helpers;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
@@ -9,12 +9,12 @@ import static io.harness.security.SimpleEncryption.CHARSET;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 import static io.harness.security.encryption.SecretManagerType.VAULT;
 
-import io.harness.beans.SecretManagerConfig;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementDelegateException;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -26,11 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class TerraformPlanEncryptDecryptHelper {
+public class EncryptDecryptHelperImpl implements EncryptDecryptHelper {
   @Inject protected KmsEncryptorsRegistry kmsEncryptorsRegistry;
   @Inject protected VaultEncryptorsRegistry vaultEncryptorsRegistry;
 
-  public EncryptedRecord encryptTerraformPlan(byte[] content, String name, EncryptionConfig config) {
+  @Override
+  public EncryptedRecord encryptContent(byte[] content, String name, EncryptionConfig config) {
     String value = new String(CHARSET.decode(ByteBuffer.wrap(encodeBase64ToByteArray(content))).array());
     EncryptedRecordData record;
     if (KMS == config.getType()) {
@@ -46,45 +47,47 @@ public class TerraformPlanEncryptDecryptHelper {
     return record;
   }
 
-  public EncryptedRecord encryptKmsSecret(String value, EncryptionConfig encryptionConfig) {
+  private EncryptedRecord encryptKmsSecret(String value, EncryptionConfig encryptionConfig) {
     KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(encryptionConfig);
     return kmsEncryptor.encryptSecret(encryptionConfig.getAccountId(), value, encryptionConfig);
   }
 
-  public EncryptedRecord encryptVaultSecret(String name, String value, EncryptionConfig encryptionConfig) {
+  private EncryptedRecord encryptVaultSecret(String name, String value, EncryptionConfig encryptionConfig) {
     VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(encryptionConfig.getEncryptionType());
     return vaultEncryptor.createSecret(encryptionConfig.getAccountId(), name, value, encryptionConfig);
   }
 
-  public byte[] getDecryptedTerraformPlan(EncryptionConfig config, EncryptedRecord record) {
-    char[] decryptedTerraformPlan;
+  @Override
+  public byte[] getDecryptedContent(EncryptionConfig config, EncryptedRecord record) {
+    char[] decryptedContent;
     if (KMS == config.getType()) {
-      decryptedTerraformPlan = fetchKmsSecretValue(record, config);
+      decryptedContent = fetchKmsSecretValue(record, config);
     } else if (VAULT == config.getType()) {
-      decryptedTerraformPlan = fetchVaultSecretValue(record, config);
+      decryptedContent = fetchVaultSecretValue(record, config);
     } else {
       throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR,
           String.format("Encryptor for fetch secret task for encryption config %s not configured", config.getName()),
           USER);
     }
-    return decodeBase64(decryptedTerraformPlan);
+    return decodeBase64(decryptedContent);
   }
 
-  public char[] fetchKmsSecretValue(EncryptedRecord record, EncryptionConfig config) {
+  private char[] fetchKmsSecretValue(EncryptedRecord record, EncryptionConfig config) {
     KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(config);
     return kmsEncryptor.fetchSecretValue(config.getAccountId(), record, config);
   }
 
-  public char[] fetchVaultSecretValue(EncryptedRecord record, EncryptionConfig config) {
+  private char[] fetchVaultSecretValue(EncryptedRecord record, EncryptionConfig config) {
     VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(config.getEncryptionType());
     return vaultEncryptor.fetchSecretValue(config.getAccountId(), record, config);
   }
 
-  public boolean deleteTfPlanFromVault(SecretManagerConfig config, EncryptedRecord record) {
+  @Override
+  public boolean deleteEncryptedRecord(EncryptionConfig encryptionConfig, EncryptedRecord record) {
     // Only for Vault type Secret Manager, Plan is saved in Secret Manager
-    if (VAULT == config.getType()) {
-      VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(config.getEncryptionType());
-      return vaultEncryptor.deleteSecret(config.getAccountId(), record, config);
+    if (VAULT == encryptionConfig.getType()) {
+      VaultEncryptor vaultEncryptor = vaultEncryptorsRegistry.getVaultEncryptor(encryptionConfig.getEncryptionType());
+      return vaultEncryptor.deleteSecret(encryptionConfig.getAccountId(), record, encryptionConfig);
     }
     return false;
   }
