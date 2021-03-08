@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -23,6 +24,7 @@ import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
@@ -38,9 +40,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 
-public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
+public class EncryptDecryptHelperImplTest extends WingsBaseTest {
   @Mock private EncryptionConfig encryptionConfig;
   @Mock private EncryptedRecord encryptedRecord;
   @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
@@ -48,44 +49,19 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
   @Mock private VaultEncryptor vaultEncryptor;
 
-  @Inject @InjectMocks @Spy private TerraformPlanEncryptDecryptHelper terraformPlanEncryptDecryptHelper;
+  @Inject @InjectMocks private EncryptDecryptHelper encryptDecryptHelperImpl;
   private String accountId;
-  private String plaintext;
   private final byte[] fileContent = "TerraformPlan".getBytes();
   private final char[] terraformPlan = "TerraformPlan".toCharArray();
-  private String encodedTfPlan = encodeBase64(terraformPlan);
+  private final String encodedTfPlan = encodeBase64(terraformPlan);
 
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() {
     when(kmsEncryptorsRegistry.getKmsEncryptor(any())).thenReturn(kmsEncryptor);
     when(vaultEncryptorsRegistry.getVaultEncryptor(any())).thenReturn(vaultEncryptor);
     when(encryptionConfig.getAccountId()).thenReturn(accountId);
     accountId = UUIDGenerator.generateUuid();
-    plaintext = UUIDGenerator.generateUuid();
     when(encryptionConfig.getAccountId()).thenReturn(accountId);
-  }
-
-  @Test
-  @Owner(developers = TATHAGAT)
-  @Category(UnitTests.class)
-  public void testEncryptKmsSecret() {
-    when(kmsEncryptor.encryptSecret(accountId, plaintext, encryptionConfig)).thenReturn(encryptedRecord);
-    EncryptedRecord record = terraformPlanEncryptDecryptHelper.encryptKmsSecret(plaintext, encryptionConfig);
-    assertThat(record).isNotNull();
-    assertThat(record).isEqualTo(encryptedRecord);
-  }
-
-  @Test
-  @Owner(developers = TATHAGAT)
-  @Category(UnitTests.class)
-  public void testEncryptVaultSecret() {
-    when(vaultEncryptor.createSecret(accountId, "TerraformPlan", plaintext, encryptionConfig))
-        .thenReturn(encryptedRecord);
-    EncryptedRecord record =
-        terraformPlanEncryptDecryptHelper.encryptVaultSecret("TerraformPlan", plaintext, encryptionConfig);
-
-    assertThat(record).isNotNull();
-    assertThat(record).isEqualTo(encryptedRecord);
   }
 
   @Test
@@ -94,12 +70,9 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   public void testEncryptTerraformPlanForKms() {
     when(encryptionConfig.getType()).thenReturn(SecretManagerType.KMS);
     EncryptedRecordData data = EncryptedRecordData.builder().name("data").build();
-    doReturn(data).when(terraformPlanEncryptDecryptHelper).encryptKmsSecret(any(), any());
-    EncryptedRecord record =
-        terraformPlanEncryptDecryptHelper.encryptTerraformPlan(fileContent, "TerraformPlan", encryptionConfig);
+    when(kmsEncryptor.encryptSecret(eq(accountId), any(), eq(encryptionConfig))).thenReturn(data);
+    EncryptedRecord record = encryptDecryptHelperImpl.encryptContent(fileContent, "TerraformPlan", encryptionConfig);
 
-    verify(terraformPlanEncryptDecryptHelper, times(1)).encryptKmsSecret(any(), any());
-    assertThat(record).isNotNull();
     assertThat(record).isEqualTo(data);
   }
 
@@ -109,12 +82,9 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   public void testEncryptTerraformPlanForVault() {
     when(encryptionConfig.getType()).thenReturn(VAULT);
     EncryptedRecordData data = EncryptedRecordData.builder().name("data").build();
-    doReturn(data).when(terraformPlanEncryptDecryptHelper).encryptVaultSecret(any(), any(), any());
-    EncryptedRecord record =
-        terraformPlanEncryptDecryptHelper.encryptTerraformPlan(fileContent, "TerraformPlan", encryptionConfig);
+    when(vaultEncryptor.createSecret(eq(accountId), eq("TerraformPlan"), any(), eq(encryptionConfig))).thenReturn(data);
+    EncryptedRecord record = encryptDecryptHelperImpl.encryptContent(fileContent, "TerraformPlan", encryptionConfig);
 
-    verify(terraformPlanEncryptDecryptHelper, times(1)).encryptVaultSecret(any(), any(), any());
-    assertThat(record).isNotNull();
     assertThat(record).isEqualTo(data);
   }
 
@@ -123,8 +93,7 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testEncryptTerraformPlanUnsupportedSecretManager() {
     when(encryptionConfig.getType()).thenReturn(null);
-    assertThatThrownBy(
-        () -> terraformPlanEncryptDecryptHelper.encryptTerraformPlan(fileContent, "TerraformPlan", encryptionConfig))
+    assertThatThrownBy(() -> encryptDecryptHelperImpl.encryptContent(fileContent, "TerraformPlan", encryptionConfig))
         .isInstanceOf(SecretManagementDelegateException.class)
         .hasMessage("Encryptor for fetch secret task for encryption config null not configured");
   }
@@ -132,31 +101,12 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
-  public void testFetchKmsSecretValue() {
-    when(kmsEncryptor.fetchSecretValue(accountId, encryptedRecord, encryptionConfig)).thenReturn(terraformPlan);
-    char[] decryptedPlan = terraformPlanEncryptDecryptHelper.fetchKmsSecretValue(encryptedRecord, encryptionConfig);
-    assertThat(decryptedPlan).isNotNull();
-    assertThat(decryptedPlan).isEqualTo(terraformPlan);
-  }
-
-  @Test
-  @Owner(developers = TATHAGAT)
-  @Category(UnitTests.class)
-  public void testFetchVaultSecretValue() {
-    when(vaultEncryptor.fetchSecretValue(accountId, encryptedRecord, encryptionConfig)).thenReturn(terraformPlan);
-    char[] decryptedPlan = terraformPlanEncryptDecryptHelper.fetchVaultSecretValue(encryptedRecord, encryptionConfig);
-    assertThat(decryptedPlan).isNotNull();
-    assertThat(decryptedPlan).isEqualTo(terraformPlan);
-  }
-
-  @Test
-  @Owner(developers = TATHAGAT)
-  @Category(UnitTests.class)
   public void testGetDecryptedTerraformPlanFromKms() {
     when(encryptionConfig.getType()).thenReturn(SecretManagerType.KMS);
-    doReturn(encodedTfPlan.toCharArray()).when(terraformPlanEncryptDecryptHelper).fetchKmsSecretValue(any(), any());
-    byte[] result = terraformPlanEncryptDecryptHelper.getDecryptedTerraformPlan(encryptionConfig, encryptedRecord);
-    assertThat(result).isNotNull();
+    when(kmsEncryptor.fetchSecretValue(accountId, encryptedRecord, encryptionConfig))
+        .thenReturn(encodedTfPlan.toCharArray());
+    byte[] result = encryptDecryptHelperImpl.getDecryptedContent(encryptionConfig, encryptedRecord);
+
     assertThat(result).isEqualTo(fileContent);
   }
 
@@ -165,9 +115,11 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetDecryptedTerraformPlanFromVault() {
     when(encryptionConfig.getType()).thenReturn(VAULT);
-    doReturn(encodedTfPlan.toCharArray()).when(terraformPlanEncryptDecryptHelper).fetchVaultSecretValue(any(), any());
-    byte[] result = terraformPlanEncryptDecryptHelper.getDecryptedTerraformPlan(encryptionConfig, encryptedRecord);
-    assertThat(result).isNotNull();
+    when(vaultEncryptor.fetchSecretValue(accountId, encryptedRecord, encryptionConfig))
+        .thenReturn(encodedTfPlan.toCharArray());
+
+    byte[] result = encryptDecryptHelperImpl.getDecryptedContent(encryptionConfig, encryptedRecord);
+
     assertThat(result).isEqualTo(fileContent);
   }
 
@@ -176,8 +128,7 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetDecryptedTerraformPlanUnsupportedSecretManager() {
     when(encryptionConfig.getType()).thenReturn(null);
-    assertThatThrownBy(
-        () -> terraformPlanEncryptDecryptHelper.getDecryptedTerraformPlan(encryptionConfig, encryptedRecord))
+    assertThatThrownBy(() -> encryptDecryptHelperImpl.getDecryptedContent(encryptionConfig, encryptedRecord))
         .isInstanceOf(SecretManagementDelegateException.class)
         .hasMessage("Encryptor for fetch secret task for encryption config null not configured");
   }
@@ -188,7 +139,7 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   public void testdeleteTfPlanFromVaultWithAwsSecretManager() {
     doReturn(vaultEncryptor).when(vaultEncryptorsRegistry).getVaultEncryptor(any());
     doReturn(true).when(vaultEncryptor).deleteSecret(any(), any(), any());
-    boolean isPlanDeleted = terraformPlanEncryptDecryptHelper.deleteTfPlanFromVault(
+    boolean isPlanDeleted = encryptDecryptHelperImpl.deleteEncryptedRecord(
         AwsSecretsManagerConfig.builder().accountId(ACCOUNT_ID).build(), encryptedRecord);
     verify(vaultEncryptor, times(1)).deleteSecret(any(), any(), any());
     assertThat(isPlanDeleted).isTrue();
@@ -198,10 +149,10 @@ public class TerraformPlanEncryptDecryptHelperTest extends WingsBaseTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testdeleteTfPlanFromVaultWithKms() {
-    boolean isPlanDeleted = terraformPlanEncryptDecryptHelper.deleteTfPlanFromVault(
+    boolean isPlanDeleted = encryptDecryptHelperImpl.deleteEncryptedRecord(
         KmsConfig.builder().accountId(ACCOUNT_ID).build(), encryptedRecord);
+
     verify(vaultEncryptor, never()).deleteSecret(any(), any(), any());
-    verify(terraformPlanEncryptDecryptHelper, never()).fetchVaultSecretValue(any(), any());
     assertThat(isPlanDeleted).isFalse();
   }
 }
