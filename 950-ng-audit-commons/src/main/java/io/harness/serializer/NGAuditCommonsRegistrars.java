@@ -2,7 +2,6 @@ package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.NGAuditCommonsKryoRegistrar;
-import io.harness.serializer.morphia.NGAuditCommonsMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
@@ -21,6 +20,5 @@ public class NGAuditCommonsRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(CommonsRegistrars.morphiaRegistrars)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
-          .add(NGAuditCommonsMorphiaRegistrar.class)
           .build();
 }
