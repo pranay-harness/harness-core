@@ -63,6 +63,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("ResoureGroupConfig") private ResourceGroupConfig resoureGroupConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
+  @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

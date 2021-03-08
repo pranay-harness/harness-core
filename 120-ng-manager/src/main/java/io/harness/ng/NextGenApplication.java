@@ -16,6 +16,9 @@ import io.harness.cdng.executionplan.ExecutionPlanCreatorRegistrar;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
+import io.harness.gitsync.server.GitSyncGrpcModule;
+import io.harness.gitsync.server.GitSyncServiceConfiguration;
+import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
@@ -71,12 +74,15 @@ import software.wings.jersey.KryoFeature;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import io.dropwizard.Application;
@@ -162,10 +168,18 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         bind(MetricRegistry.class).toInstance(metricRegistry);
       }
     });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      public GitSyncServiceConfiguration gitSyncServiceConfiguration() {
+        return GitSyncServiceConfiguration.builder().grpcServerConfig(appConfig.getGitSyncGrpcServerConfig()).build();
+      }
+    });
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(PmsSdkModule.getInstance(getPmsSdkConfiguration(appConfig)));
     modules.add(new LogStreamingModule(appConfig.getLogStreamingServiceConfig().getBaseUrl()));
 
+    modules.add(GitSyncGrpcModule.getInstance());
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
@@ -187,7 +201,19 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
     registerIterators(injector);
+
+    intializeGitSync(injector, appConfig);
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
+    if (nextGenConfiguration.getShouldDeployWithGitSync()) {
+      log.info("Initializing gRPC servers...");
+      ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
+      serviceManager.awaitHealthy();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> serviceManager.stopAsync().awaitStopped()));
+    }
   }
 
   public void registerIterators(Injector injector) {
