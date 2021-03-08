@@ -39,7 +39,7 @@ public class TimeScaleDBChangeHandler implements ChangeHandler {
       default:
         log.info("Change Event Type not Handled: {}", changeEvent.getChangeType());
     }
-    return false;
+    return true;
   }
 
   public boolean dbOperation(String query) {
