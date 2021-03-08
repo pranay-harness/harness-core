@@ -1,4 +1,4 @@
-package io.harness.beans;
+package io.harness.delegate.beans;
 
 /**
  * The Enum ChecksumType.

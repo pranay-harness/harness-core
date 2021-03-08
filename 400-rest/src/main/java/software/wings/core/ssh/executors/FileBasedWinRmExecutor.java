@@ -24,7 +24,7 @@ import static java.lang.String.valueOf;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.data.encoding.EncodingUtils;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.DelegateAgentFileService;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
