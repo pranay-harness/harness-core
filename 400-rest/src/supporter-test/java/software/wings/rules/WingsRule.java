@@ -90,6 +90,7 @@ import software.wings.app.ManagerExecutorModule;
 import software.wings.app.ManagerQueueModule;
 import software.wings.app.ObserversHelper;
 import software.wings.app.SSOModule;
+import software.wings.app.SearchModule;
 import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
@@ -415,7 +416,7 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .target(((MainConfiguration) configuration).getGrpcClientConfig().getTarget())
             .authority(((MainConfiguration) configuration).getGrpcClientConfig().getAuthority())
             .build()));
-
+    modules.add(new SearchModule());
     return modules;
   }
 

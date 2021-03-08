@@ -22,6 +22,7 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
+  370-users-syncbridge
   380-cg-graphql
   390-db-migration
   400-rest

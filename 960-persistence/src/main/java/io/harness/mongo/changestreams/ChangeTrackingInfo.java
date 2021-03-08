@@ -1,12 +1,17 @@
-package software.wings.search.framework.changestreams;
+package io.harness.mongo.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import static lombok.AccessLevel.PRIVATE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Value;
+import lombok.experimental.FieldDefaults;
+import org.bson.conversions.Bson;
 
 /**
  * The change tracking info that has to
@@ -18,8 +23,10 @@ import lombok.Value;
 @OwnedBy(PL)
 @Value
 @AllArgsConstructor
+@FieldDefaults(level = PRIVATE)
 public class ChangeTrackingInfo<T extends PersistentEntity> {
-  private Class<T> morphiaClass;
-  private ChangeSubscriber<T> changeSubscriber;
-  private String resumeToken;
+  Class<T> morphiaClass;
+  ChangeSubscriber<T> changeSubscriber;
+  String resumeToken;
+  List<Bson> pipeline;
 }
