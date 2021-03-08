@@ -7,13 +7,13 @@ import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
 import io.harness.audit.beans.HttpRequestInfo;
 import io.harness.audit.beans.RequestMetadata;
-import io.harness.audit.beans.Resource;
-import io.harness.audit.beans.Resource.ResourceKeys;
 import io.harness.audit.beans.YamlDiff;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
+import io.harness.ng.core.Resource;
+import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.security.dto.Principal.PrincipalKeys;
 
 import com.google.common.collect.ImmutableList;

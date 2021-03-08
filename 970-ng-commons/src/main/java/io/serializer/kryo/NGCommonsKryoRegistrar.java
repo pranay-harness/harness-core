@@ -4,6 +4,7 @@ import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.Resource;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -25,5 +26,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ResponseDTO.class, 19459);
     kryo.register(Status.class, 19460);
     kryo.register(ErrorDTO.class, 19461);
+
+    kryo.register(Resource.class, 22009);
   }
 }

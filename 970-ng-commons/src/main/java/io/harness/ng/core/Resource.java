@@ -1,4 +1,4 @@
-package io.harness.audit.beans;
+package io.harness.ng.core;
 
 import java.util.Map;
 import lombok.Builder;

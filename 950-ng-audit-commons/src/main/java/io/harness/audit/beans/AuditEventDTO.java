@@ -2,6 +2,7 @@ package io.harness.audit.beans;
 
 import io.harness.ModuleType;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.ng.core.Resource;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
