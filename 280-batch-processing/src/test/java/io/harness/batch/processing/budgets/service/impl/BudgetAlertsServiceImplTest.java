@@ -1,5 +1,6 @@
 package io.harness.batch.processing.budgets.service.impl;
 
+import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
 import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
@@ -92,7 +93,7 @@ public class BudgetAlertsServiceImplTest extends CategoryTest {
     when(accountShardService.getCeEnabledAccounts())
         .thenReturn(Arrays.asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build()));
     alertThreshold = AlertThreshold.builder().percentage(0.5).basedOn(AlertThresholdBase.ACTUAL_COST).build();
-
+    AlertThreshold[] alertThresholds = new AlertThreshold[] {alertThreshold};
     budget = Budget.builder()
                  .uuid(BUDGET_ID)
                  .accountId(ACCOUNT_ID)
@@ -121,6 +122,7 @@ public class BudgetAlertsServiceImplTest extends CategoryTest {
     when(ceSlackWebhookService.getByAccountId(budget.getAccountId())).thenReturn(ceSlackWebhook);
     when(cloudBillingHelper.getCloudProviderTableName(anyString(), anyString(), anyString()))
         .thenReturn("cloudProviderTable");
+    when(budgetUtils.getSortedAlertThresholds(ACTUAL_COST, budget.getAlertThresholds())).thenReturn(alertThresholds);
   }
 
   @Test
