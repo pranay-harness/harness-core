@@ -12,7 +12,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -20,13 +19,13 @@ import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.ExceptionUtils;
@@ -215,7 +214,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -343,9 +341,7 @@ public class AwsHelperService {
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else if (awsConfig.isUseIRSA()) {
       WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
-      providerBuilder.roleSessionName(awsConfig.getAccountId()
-          + md5Hex(
-              awsConfig.getAccountId() + String.valueOf(ThreadLocalRandom.current().nextDouble()).getBytes(UTF_8)));
+      providerBuilder.roleSessionName(awsConfig.getAccountId() + UUIDGenerator.generateUuid());
 
       credentialsProvider = providerBuilder.build();
     } else {

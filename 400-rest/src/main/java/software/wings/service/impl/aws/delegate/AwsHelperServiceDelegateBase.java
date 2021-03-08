@@ -9,14 +9,13 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.AwsConfig;
@@ -51,7 +50,6 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -69,9 +67,8 @@ class AwsHelperServiceDelegateBase {
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
     } else if (awsConfig.isUseIRSA()) {
       WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
-      providerBuilder.roleSessionName(awsConfig.getAccountId()
-          + md5Hex(
-              awsConfig.getAccountId() + String.valueOf(ThreadLocalRandom.current().nextDouble()).getBytes(UTF_8)));
+
+      providerBuilder.roleSessionName(awsConfig.getAccountId() + UUIDGenerator.generateUuid());
 
       credentialsProvider = providerBuilder.build();
     } else {
