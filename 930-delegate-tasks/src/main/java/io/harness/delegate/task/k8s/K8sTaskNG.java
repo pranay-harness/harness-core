@@ -89,7 +89,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
         createDirectoryIfDoesNotExist(Paths.get(workingDirectory, MANIFEST_FILES_DIR).toString());
         HelmVersion helmVersion =
-            k8sDeployRequest.getManifestDelegateConfig().getManifestType() == ManifestType.HELM_CHART
+            (k8sDeployRequest.getManifestDelegateConfig() != null
+                && k8sDeployRequest.getManifestDelegateConfig().getManifestType() == ManifestType.HELM_CHART)
             ? ((HelmChartManifestDelegateConfig) k8sDeployRequest.getManifestDelegateConfig()).getHelmVersion()
             : null;
 
