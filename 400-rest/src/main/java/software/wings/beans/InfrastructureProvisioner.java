@@ -3,14 +3,12 @@ package software.wings.beans;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.InfrastructureProvisioner.InfrastructureProvisionerKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
@@ -20,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.Data;
@@ -40,17 +39,21 @@ import org.mongodb.morphia.annotations.Entity;
       @Type(value = CloudFormationInfrastructureProvisioner.class, name = "CLOUD_FORMATION"),
       @Type(value = ARMInfrastructureProvisioner.class, name = "ARM")
 })
-@CdIndex(name = "accountIdCreatedAtIdx",
-    fields =
-    {
-      @Field(InfrastructureProvisionerKeys.accountId)
-      , @Field(value = InfrastructureProvisionerKeys.createdAt, type = IndexType.DESC)
-    })
 @Entity(value = "infrastructureProvisioner")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "InfrastructureProvisionerKeys")
 public abstract class InfrastructureProvisioner
     extends Base implements NameAccess, TagAware, AccountAccess, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountIdCreatedAtIdx")
+                 .field(InfrastructureProvisionerKeys.accountId)
+                 .descSortField(InfrastructureProvisionerKeys.createdAt)
+                 .build())
+        .build();
+  }
+
   public static final String INFRASTRUCTURE_PROVISIONER_TYPE_KEY = "infrastructureProvisionerType";
   public static final String MAPPING_BLUEPRINTS_KEY = "mappingBlueprints";
   public static final String NAME_KEY = "name";
