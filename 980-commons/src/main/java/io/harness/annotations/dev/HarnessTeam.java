@@ -1,3 +1,3 @@
 package io.harness.annotations.dev;
 
-public enum HarnessTeam { CDC, CDP, CI, CE, CV, PL, DX, NG }
+public enum HarnessTeam { CDC, CDP, CI, CE, CV, PL, DEL, DX }
