@@ -1,6 +1,6 @@
 Portal Project Dev environment setup instructions
 ==================================================
-## On MacOS 
+## On MacOS  
 
 ### Prerequisities
 1. Install Homebrew:
@@ -29,7 +29,7 @@ brew install npm
 5. Set up JAVA_HOME: create or add this to your bash profile `~/.bashrc` or `~/.zshrc` file and add following line:
 ```
 ulimit -u 8192
-export JAVA_HOME=$(/usr/libexec/java_home -v1.8)
+export JAVA_HOME=$(/usr/libexec/java_home -v1.8) 
 ```
 
 Do not add the first line on MacOS Catalina
