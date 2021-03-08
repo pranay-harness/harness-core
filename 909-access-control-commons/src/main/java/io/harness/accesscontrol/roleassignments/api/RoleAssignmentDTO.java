@@ -4,16 +4,26 @@ import io.harness.accesscontrol.principals.PrincipalDTO;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.FieldDefaults;
 
-@Value
+@Getter
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@ToString
+@EqualsAndHashCode
 @ApiModel(value = "RoleAssignment")
 public class RoleAssignmentDTO {
-  @ApiModelProperty(required = true) String identifier;
-  @ApiModelProperty(required = true) String resourceGroupIdentifier;
-  @ApiModelProperty(required = true) String roleIdentifier;
-  @ApiModelProperty(required = true) PrincipalDTO principal;
-  boolean disabled;
+  @ApiModelProperty(required = true) final String identifier;
+  @ApiModelProperty(required = true) final String resourceGroupIdentifier;
+  @ApiModelProperty(required = true) final String roleIdentifier;
+  @ApiModelProperty(required = true) final PrincipalDTO principal;
+  @Setter boolean disabled;
 }

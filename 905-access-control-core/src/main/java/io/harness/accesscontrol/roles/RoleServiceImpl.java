@@ -71,6 +71,11 @@ public class RoleServiceImpl implements RoleService {
   }
 
   @Override
+  public List<Role> list(List<String> roleIdentifiers, String scopeIdentifier) {
+    return roleDao.list(roleIdentifiers, scopeIdentifier);
+  }
+
+  @Override
   public Optional<Role> get(String identifier, String scopeIdentifier, boolean isManaged) {
     return roleDao.get(identifier, scopeIdentifier, isManaged);
   }

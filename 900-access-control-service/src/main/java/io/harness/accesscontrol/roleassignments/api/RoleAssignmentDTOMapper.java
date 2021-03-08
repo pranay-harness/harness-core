@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RoleAssignmentDTOMapper {
-  public static RoleAssignmentResponseDTO toDTO(RoleAssignment object) {
+  public static RoleAssignmentResponseDTO toResponseDTO(RoleAssignment object) {
     return RoleAssignmentResponseDTO.builder()
         .roleAssignment(RoleAssignmentDTO.builder()
                             .identifier(object.getIdentifier())
@@ -27,6 +27,17 @@ public class RoleAssignmentDTOMapper {
         .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
+        .build();
+  }
+
+  public static RoleAssignmentDTO toDTO(RoleAssignment object) {
+    return RoleAssignmentDTO.builder()
+        .identifier(object.getIdentifier())
+        .principal(
+            PrincipalDTO.builder().identifier(object.getPrincipalIdentifier()).type(object.getPrincipalType()).build())
+        .resourceGroupIdentifier(object.getResourceGroupIdentifier())
+        .roleIdentifier(object.getRoleIdentifier())
+        .disabled(object.isDisabled())
         .build();
   }
 

@@ -9,8 +9,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 @HarnessRepo
-public interface ResourceGroupRepository extends PagingAndSortingRepository<ResourceGroupDBO, String> {
+public interface ResourceGroupRepository
+    extends PagingAndSortingRepository<ResourceGroupDBO, String>, ResourceGroupCustomRepository {
   Optional<ResourceGroupDBO> findByIdentifierAndScopeIdentifier(String identifier, String scopeIdentifier);
+
   Page<ResourceGroupDBO> findByScopeIdentifier(String scopeIdentifier, Pageable pageable);
+
   List<ResourceGroupDBO> deleteByIdentifierAndScopeIdentifier(String identifier, String scopeIdentifier);
 }
