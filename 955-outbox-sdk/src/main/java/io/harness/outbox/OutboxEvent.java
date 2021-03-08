@@ -5,7 +5,6 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.Valid;
@@ -16,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
@@ -23,6 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "OutboxEventKeys")
 @Entity(value = "outboxEvents", noClassnameStored = true)
 @Document("outboxEvents")
+@TypeAlias("outboxEvents")
 public class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 
@@ -30,17 +31,13 @@ public class OutboxEvent {
   @NotNull @Valid Resource resource;
 
   @NotNull String eventType;
-  @NotNull JsonNode eventData;
+  @NotNull String eventData;
 
   @CreatedDate Long createdAt;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
-                 .name("createdAt_entityType_Idx")
-                 .field(OutboxEventKeys.createdAt)
-                 .field(OutboxEventKeys.eventType)
-                 .build())
+        .add(CompoundMongoIndex.builder().name("createdAt_outbox_Idx").field(OutboxEventKeys.createdAt).build())
         .build();
   }
 }
