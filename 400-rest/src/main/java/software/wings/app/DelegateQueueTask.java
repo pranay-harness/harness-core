@@ -47,6 +47,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,7 +87,7 @@ public class DelegateQueueTask implements Runnable {
     try {
       if (configurationController.isPrimary()) {
         markTimedOutTasksAsFailed();
-        markTasksForForcedExecution();
+        //        markTasksForForcedExecution();
         markLongQueuedTasksAsFailed();
       }
       rebroadcastUnassignedTasks();
@@ -195,13 +196,25 @@ public class DelegateQueueTask implements Runnable {
   public void endTasks(List<String> taskIds) {
     Map<String, DelegateTask> delegateTasks = new HashMap<>();
     Map<String, String> taskWaitIds = new HashMap<>();
+    List<DelegateTask> tasksToExpire = new ArrayList<>();
     try {
       List<DelegateTask> tasks = persistence.createQuery(DelegateTask.class, excludeAuthority)
                                      .field(DelegateTaskKeys.uuid)
                                      .in(taskIds)
                                      .asList();
-      delegateTasks.putAll(tasks.stream().collect(toMap(DelegateTask::getUuid, identity())));
-      taskWaitIds.putAll(tasks.stream()
+
+      for (DelegateTask task : tasks) {
+        if (!task.isForceExecute() || !handleTaskWithForceExecution(task)) {
+          tasksToExpire.add(task);
+        }
+      }
+
+      // selection of delegate for all tasks with forceExecute, set delegate id as mustExecuteOnDelegateId()
+      // remove forceExecute field now
+      // extend expiry time of the task by some constant value
+
+      delegateTasks.putAll(tasksToExpire.stream().collect(toMap(DelegateTask::getUuid, identity())));
+      taskWaitIds.putAll(tasksToExpire.stream()
                              .filter(task -> isNotEmpty(task.getWaitId()))
                              .collect(toMap(DelegateTask::getUuid, DelegateTask::getWaitId)));
     } catch (Exception e1) {
@@ -235,7 +248,7 @@ public class DelegateQueueTask implements Runnable {
     }
 
     boolean deleted = persistence.deleteOnServer(
-        persistence.createQuery(DelegateTask.class, excludeAuthority).field(DelegateTaskKeys.uuid).in(taskIds));
+        persistence.createQuery(DelegateTask.class, excludeAuthority).field(DelegateTaskKeys.uuid).in(tasksToExpire));
 
     if (deleted) {
       taskIds.forEach(taskId -> {
@@ -324,5 +337,41 @@ public class DelegateQueueTask implements Runnable {
 
       log.info("{} tasks were rebroadcast", count);
     }
+  }
+
+  private boolean handleTaskWithForceExecution(DelegateTask task) {
+    BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
+    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
+
+    for (String delegatId : activeDelegates) {
+      boolean canAssign = assignDelegateService.canAssign(batch, delegatId, task);
+      if (canAssign) {
+        task.setPreAssignedDelegateId(delegatId);
+        break;
+      }
+    }
+
+    if (task.getPreAssignedDelegateId() == null) {
+      return false;
+    }
+
+    delegateSelectionLogsService.save(batch);
+
+    Query<DelegateTask> filterQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                          .filter(DelegateTaskKeys.accountId, task.getAccountId())
+                                          .filter(DelegateTaskKeys.uuid, task.getUuid())
+                                          .filter(DelegateTaskKeys.status, QUEUED);
+
+    UpdateOperations<DelegateTask> updateOperations =
+        persistence.createUpdateOperations(DelegateTask.class)
+            .set(DelegateTaskKeys.nextBroadcast, 0)
+            .set(DelegateTaskKeys.expiry, currentTimeMillis() + task.fetchExtraTimeoutForForceExecution())
+            .set(DelegateTaskKeys.preAssignedDelegateId, task.getPreAssignedDelegateId())
+            .set(DelegateTaskKeys.mustExecuteOnDelegateId, task.getPreAssignedDelegateId())
+            .set(DelegateTaskKeys.forceExecute, false);
+
+    persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
+
+    return true;
   }
 }

@@ -29,7 +29,8 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
             .accountId(accountIdentifier)
             .taskType(getTaskType())
             .taskParameters(getTaskParameters(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier))
-            .executionTimeout(Duration.ofMinutes(2))
+            .executionTimeout(Duration.ofSeconds(5))
+            .forceExecute(true)
             .build();
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);

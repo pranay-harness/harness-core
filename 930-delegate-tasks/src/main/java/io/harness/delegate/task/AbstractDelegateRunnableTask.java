@@ -124,9 +124,11 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
-      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-                                .errorMessage(ExceptionUtils.getMessage(exception))
-                                .build());
+      taskResponse.response(
+          errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
+              .errorMessage(ExceptionUtils.getMessage(exception))
+              .responseMessages(ExceptionLogger.getResponseMessageList(exception, WingsException.ReportTarget.REST_API))
+              .build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
       log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),

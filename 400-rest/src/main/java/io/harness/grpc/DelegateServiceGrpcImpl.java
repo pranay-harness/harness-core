@@ -120,6 +120,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
               .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
               .executionCapabilities(capabilities)
               .tags(taskSelectors)
+              .forceExecute(request.getForceExecute())
               .data(TaskData.builder()
                         .parked(taskDetails.getParked())
                         .async(taskDetails.getMode() == TaskMode.ASYNC)
@@ -146,9 +147,12 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
           delegateService.scheduleSyncTask(task);
         }
       }
+
+      // Add forceExecuteTimeout to total expiry (constant = 3 sec at max)
       responseObserver.onNext(SubmitTaskResponse.newBuilder()
                                   .setTaskId(TaskId.newBuilder().setId(taskId).build())
-                                  .setTotalExpiry(Timestamps.fromMillis(task.getExpiry() + task.getData().getTimeout()))
+                                  .setTotalExpiry(Timestamps.fromMillis(task.getExpiry() + task.getData().getTimeout()
+                                      + task.fetchExtraTimeoutForForceExecution()))
                                   .build());
       responseObserver.onCompleted();
 

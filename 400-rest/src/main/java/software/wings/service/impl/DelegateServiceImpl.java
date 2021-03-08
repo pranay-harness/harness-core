@@ -2383,14 +2383,8 @@ public class DelegateServiceImpl implements DelegateService {
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
-
-      // Hack for now
-      task.setPreAssignedDelegateId(eligibleDelegateIds.get(0));
-      task.setMustExecuteOnDelegateId(eligibleDelegateIds.get(0));
       saveDelegateTask(task, QUEUED);
-      // --------------
-
+      List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
       if (isEmpty(eligibleDelegateIds)) {
         log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
         if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
@@ -2399,6 +2393,16 @@ public class DelegateServiceImpl implements DelegateService {
           throw new NoAvailableDelegatesException();
         }
       }
+
+      // Hack for now
+      // Add any delegate selection logic if required
+      //      if (Boolean.TRUE.equals(task.getForceExecute())) {
+      //        task.setPreAssignedDelegateId(eligibleDelegateIds.get(0));
+      //        task.setMustExecuteOnDelegateId(eligibleDelegateIds.get(0));
+      //        saveDelegateTask(task, QUEUED);
+      //      }
+
+      // --------------
 
       log.info("Processing sync task {}", task.getUuid());
       broadcastHelper.rebroadcastDelegateTask(task);
@@ -2409,7 +2413,7 @@ public class DelegateServiceImpl implements DelegateService {
   public <T extends DelegateResponseData> T executeTask(DelegateTask task) {
     scheduleSyncTask(task);
     return delegateSyncService.waitForTask(
-        task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout()));
+        task.getUuid(), task.calcDescription(), Duration.ofMillis(task.getData().getTimeout() + 10000));
   }
 
   @VisibleForTesting
@@ -3288,8 +3292,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId) {
     DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
-    if (delegateTask == null) {
-      log.info("Task not found or was already assigned");
+    if (delegateTask == null || delegateTask.isForceExecute()) {
       return;
     }
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
