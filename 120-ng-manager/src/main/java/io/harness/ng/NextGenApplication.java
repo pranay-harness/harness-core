@@ -133,13 +133,13 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
+    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.addBundle(new SwaggerBundle<NextGenConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(NextGenConfiguration appConfig) {
         return appConfig.getSwaggerBundleConfiguration();
       }
     });
-    configureObjectMapper(bootstrap.getObjectMapper());
     bootstrap.setMetricRegistry(metricRegistry);
   }
 

@@ -8,10 +8,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
+
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -51,12 +52,9 @@ public class WorkloadCostServiceTest extends CategoryTest {
     when(statement.executeQuery()).thenReturn(resultSet);
     when(resultSet.next()).thenReturn(true);
     BigDecimal cpuCost = new BigDecimal("4.35");
-    when(resultSet.getBigDecimal("CPUBILLINGAMOUNT")).thenReturn(cpuCost);
+    when(resultSet.getBigDecimal(1)).thenReturn(cpuCost);
     BigDecimal memoryCost = new BigDecimal("3.12");
-    when(resultSet.getBigDecimal("MEMORYBILLINGAMOUNT")).thenReturn(memoryCost);
-    when(resultSet.getBigDecimal("CPUREQUEST")).thenReturn(new BigDecimal(1));
-    when(resultSet.getBigDecimal("MEMORYREQUEST")).thenReturn(new BigDecimal(1));
-    when(resultSet.getBigDecimal("USAGEDURATIONSECONDS")).thenReturn(new BigDecimal(1));
+    when(resultSet.getBigDecimal(2)).thenReturn(memoryCost);
     ResourceId workloadId = ResourceId.builder()
                                 .accountId("29b62881-fd2a-4265-a028-b1015a96b77b")
                                 .clusterId("8c8d8e25-e0ba-4727-914c-0d830944ee72")
@@ -66,9 +64,7 @@ public class WorkloadCostServiceTest extends CategoryTest {
                                 .build();
     Instant startInclusive = Instant.EPOCH.plus(Duration.ofDays(1));
     Cost actualCost = workloadCostService.getLastAvailableDayCost(workloadId, startInclusive);
-    assertThat(actualCost)
-        .isEqualTo(
-            Cost.builder().cpu(cpuCost).memory(memoryCost).cpuUnitCost(cpuCost).memoryUnitCost(memoryCost).build());
+    assertThat(actualCost).isEqualTo(Cost.builder().cpu(cpuCost).memory(memoryCost).build());
     verify(statement).setString(1, workloadId.getAccountId());
     verify(statement).setString(2, workloadId.getClusterId());
     verify(statement).setString(3, workloadId.getNamespace());

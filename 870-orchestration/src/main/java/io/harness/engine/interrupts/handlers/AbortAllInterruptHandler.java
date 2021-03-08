@@ -21,7 +21,9 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
+import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.waiter.WaitNotifyEngine;
@@ -95,6 +97,15 @@ public class AbortAllInterruptHandler implements InterruptHandler {
 
     List<NodeExecution> discontinuingNodeExecutions = nodeExecutionService.fetchNodeExecutionsByStatusAndIdIn(
         updatedInterrupt.getPlanExecutionId(), DISCONTINUING, targetIds);
+
+    nodeExecutionService.update(nodeExecutionId,
+        ops
+        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
+            InterruptEffect.builder()
+                .interruptType(interrupt.getType())
+                .tookEffectAt(System.currentTimeMillis())
+                .interruptId(interrupt.getUuid())
+                .build()));
 
     if (isEmpty(discontinuingNodeExecutions)) {
       log.warn(

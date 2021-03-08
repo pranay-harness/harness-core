@@ -11,6 +11,13 @@ public class BigQueryConstants {
       + "usagestartdate  >= '%s' AND usagestartdate < '%s' "
       + "GROUP BY  resourceid, servicecode, productfamily; ";
 
+  public static final String EKS_FARGATE_BILLING_QUERY = "SELECT SUM(blendedcost) as cost, resourceid, usagetype  "
+      + "FROM `%s` "
+      + "WHERE  "
+      + " (%s) AND "
+      + "usagestartdate  >= '%s' AND usagestartdate < '%s' "
+      + "GROUP BY  resourceid, usagetype; ";
+
   public static final String AWS_BILLING_DATA = "SELECT resourceid, productfamily  "
       + "FROM `%s` "
       + "WHERE productfamily = 'Compute Instance' AND "
@@ -24,7 +31,12 @@ public class BigQueryConstants {
   public static final String resourceId = "resourceid";
   public static final String serviceCode = "servicecode";
   public static final String productFamily = "productfamily";
+  public static final String usageType = "usagetype";
 
   public static final String networkProductFamily = "Data Transfer";
   public static final String computeProductFamily = "Compute Instance";
+
+  public static final String eksNetworkInstanceType = "DataTransfer";
+  public static final String eksCpuInstanceType = "vCPU-Hours";
+  public static final String eksMemoryInstanceType = "Fargate-GB-Hours";
 }

@@ -253,13 +253,15 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountForResource() {
+    PricingData pricingData = new PricingData(0, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
     InstanceData instanceData = getInstance(instanceResource, instanceResource, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP, InstanceType.ECS_TASK_EC2);
-    BillingAmountBreakup billingAmountForResource = billingCalculationService.getBillingAmountBreakupForResource(
-        instanceData, BigDecimal.valueOf(200), instanceResource.getCpuUnits(), instanceResource.getMemoryMb(), 0);
+    BillingAmountBreakup billingAmountForResource =
+        billingCalculationService.getBillingAmountBreakupForResource(instanceData, BigDecimal.valueOf(200),
+            instanceResource.getCpuUnits(), instanceResource.getMemoryMb(), 0, 0, pricingData);
     assertThat(billingAmountForResource.getBillingAmount()).isEqualTo(new BigDecimal("75.000"));
   }
 
@@ -290,7 +292,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmount() {
-    PricingData pricingData = new PricingData(0, 10, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
+    PricingData pricingData = new PricingData(0, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(256, 512);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
@@ -316,7 +318,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetBillingAmountWithZeroResourceInInstance() {
-    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
+    PricingData pricingData = new PricingData(10, 10, 0, 0, 256.0, 512.0, 0, PricingSource.PUBLIC_API);
     Resource instanceResource = getInstanceResource(0, 0);
     Map<String, String> metaData = new HashMap<>();
     addParentResource(metaData, 1024, 1024);
@@ -342,7 +344,7 @@ public class BillingCalculationServiceTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetBillingAmountWhereResourceIsNotPresent() {
-    PricingData pricingData = new PricingData(10, 10, 256.0, 512.0, 0, PricingSource.CUR_REPORT);
+    PricingData pricingData = new PricingData(10, 10, 0, 0, 256.0, 512.0, 0, PricingSource.CUR_REPORT);
     Map<String, String> metaData = new HashMap<>();
     InstanceData instanceData = getInstance(null, null, metaData, INSTANCE_START_TIMESTAMP,
         INSTANCE_STOP_TIMESTAMP.minus(12, ChronoUnit.HOURS), InstanceType.K8S_NODE);
@@ -469,7 +471,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
   public void testGetInstanceBillingAmountForFargate() throws IOException {
     when(vmPricingService.getFargatePricingInfo(REGION)).thenReturn(createEcsFargatePricingInfo());
     when(instancePricingStrategyRegistry.getInstancePricingStrategy(InstanceType.ECS_TASK_FARGATE))
-        .thenReturn(new EcsFargateInstancePricingStrategy(vmPricingService));
+        .thenReturn(new EcsFargateInstancePricingStrategy(
+            vmPricingService, customBillingMetaDataService, awsCustomBillingService));
     Resource instanceResource = getInstanceResource(320, 2048);
     Map<String, String> metaData = new HashMap<>();
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());

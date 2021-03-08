@@ -4,9 +4,13 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//920-delegate-agent-beans:module",
         "//930-delegate-tasks:module",
         "//940-secret-manager-client:module",
@@ -51,20 +55,13 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-    ],
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:commons_codec_commons_codec",
@@ -75,18 +72,6 @@ java_library(
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_api_mockito",
         "@maven//:org_powermock_powermock_module_junit4",
-    ],
-)
-
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
     ],
 )
 

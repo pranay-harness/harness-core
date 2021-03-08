@@ -10,6 +10,7 @@ java_library(
         "//902-aggregator-module:module",
         "//903-decision-module:module",
         "//905-access-control-core:module",
+        "//950-events-api:module",
         "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
         "@maven//:ru_vyarus_guice_validator",
     ],
@@ -48,6 +49,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [

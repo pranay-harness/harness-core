@@ -17,7 +17,7 @@ def run_tests(**kwargs):
                 "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
             ],
             test_class = test,
-            testonly = 1,
+            testonly = True,
             visibility = ["//visibility:private"],
             **kwargs
         )
@@ -33,6 +33,7 @@ def run_package_tests(deps = [], data = [], resources = []):
 
     native.java_library(
         name = "shared_package_tests",
+        testonly = True,
         srcs = native.glob(
             include = ["src/test/**/*.java"],
             exclude = ["src/test/**/*Test.java"],

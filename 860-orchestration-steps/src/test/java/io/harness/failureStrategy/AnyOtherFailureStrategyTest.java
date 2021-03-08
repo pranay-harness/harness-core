@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureType;
@@ -36,16 +37,16 @@ public class AnyOtherFailureStrategyTest extends CategoryTest {
     // Not containing error type as ANY_OTHER_ERRORS
     stageFailureStrategies1 = Collections.singletonList(
         FailureStrategyConfig.builder()
-            .onFailure(
-                OnFailureConfig.builder()
-                    .errors(Collections.singletonList(AUTHORIZATION_ERROR))
-                    .action(RetryFailureActionConfig.builder()
-                                .specConfig(RetryFailureSpecConfig.builder()
-                                                .retryCount(4)
-                                                .retryIntervals(Collections.singletonList(Timeout.fromString("2s")))
-                                                .build())
-                                .build())
-                    .build())
+            .onFailure(OnFailureConfig.builder()
+                           .errors(Collections.singletonList(AUTHORIZATION_ERROR))
+                           .action(RetryFailureActionConfig.builder()
+                                       .specConfig(RetryFailureSpecConfig.builder()
+                                                       .retryCount(ParameterField.createValueField(4))
+                                                       .retryIntervals(ParameterField.createValueField(
+                                                           Collections.singletonList(Timeout.fromString("2s"))))
+                                                       .build())
+                                       .build())
+                           .build())
             .build());
 
     boolean ans = new GenericStepPMSPlanCreator() {

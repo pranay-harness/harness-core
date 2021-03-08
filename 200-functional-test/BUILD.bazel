@@ -22,6 +22,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -66,6 +67,7 @@ run_tests()
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//200-functional-test/src/test/resources:resource",

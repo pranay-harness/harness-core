@@ -2,6 +2,7 @@ package io.harness.accesscontrol.scopes.core;
 
 import static io.harness.accesscontrol.scopes.core.Scope.PATH_DELIMITER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -51,7 +52,7 @@ public class ScopeServiceImpl implements ScopeService {
       ScopeLevel scopeLevel = scopeLevelsByRank.get(currentLevel);
       if (scopeLevel != null) {
         String instanceId = params.get(scopeLevel.getParamName());
-        if (instanceId != null) {
+        if (isNotEmpty(instanceId)) {
           scope = Scope.builder().level(scopeLevel).instanceId(instanceId).parentScope(scope).build();
         }
       }

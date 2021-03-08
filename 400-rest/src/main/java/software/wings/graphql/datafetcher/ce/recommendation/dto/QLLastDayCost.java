@@ -14,8 +14,9 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.K8S_RECOMMENDATION)
 @TargetModule(Module._380_CG_GRAPHQL)
-public class QLUnitPrice {
+public class QLLastDayCost {
   BigDecimal cpu;
   BigDecimal memory;
-  @Builder.Default String info = "cpu:'cost of 1 CPU/hr',  memory:'cost of 1GB Memory/hr'";
+  @Builder.Default
+  String info = "cpu:'Last day's total CPU Cost' and memory:'Last day's total Memory Cost' for this workload.";
 }
