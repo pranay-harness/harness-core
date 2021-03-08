@@ -4,6 +4,7 @@ import io.harness.accesscontrol.roles.Role;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
@@ -15,6 +16,8 @@ public interface RoleDao {
 
   PageResponse<Role> list(@NotNull PageRequest pageRequest, String scopeIdentifier, boolean includeManaged,
       @NotNull Set<String> allowedScopeLevels);
+
+  List<Role> list(List<String> roleIdentifiers, String scopeIdentifier);
 
   Optional<Role> get(@NotEmpty String identifier, String scopeIdentifier, boolean isManaged);
 

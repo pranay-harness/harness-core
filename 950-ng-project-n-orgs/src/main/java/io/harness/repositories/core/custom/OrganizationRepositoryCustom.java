@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 public interface OrganizationRepositoryCustom {
-  Page<Organization> findAll(Criteria criteria, Pageable pageable);
+  Page<Organization> findAll(Criteria criteria, Pageable pageable, boolean ignoreCase);
 
   Organization update(Query query, Update update);
 

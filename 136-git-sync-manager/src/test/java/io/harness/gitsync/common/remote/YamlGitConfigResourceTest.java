@@ -57,29 +57,6 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
     assertThat(ret).isEqualTo(gitSyncConfigDTO);
   }
 
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void testSaveWithDefaultOverride() {
-    GitSyncFolderConfigDTO rootFolder = GitSyncFolderConfigDTO.builder()
-                                            .isDefault(true)
-                                            .rootFolder(ROOT_FOLDER)
-                                            .identifier(ROOT_FOLDER_ID)
-                                            .enabled(true)
-                                            .build();
-    GitSyncFolderConfigDTO rootFolder_1 = GitSyncFolderConfigDTO.builder()
-                                              .isDefault(true)
-                                              .rootFolder(ROOT_FOLDER_1)
-                                              .identifier(ROOT_FOLDER_ID_1)
-                                              .enabled(true)
-                                              .build();
-    saveYamlGitConfig(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
-    saveYamlGitConfig(Collections.singletonList(rootFolder_1), CONNECTOR_ID_1, REPO, BRANCH, IDENTIFIER_1);
-
-    List<GitSyncConfigDTO> gitSyncConfigDTOS = yamlGitConfigResource.list(PROJECT_ID, ORG_ID, ACCOUNT_ID);
-    assertThat(getDefault(gitSyncConfigDTOS)).isEqualTo(rootFolder_1);
-  }
-
   private GitSyncConfigDTO buildGitSyncDTO(
       List<GitSyncFolderConfigDTO> rootFolder, String connectorId, String repo, String branch, String identifier) {
     return GitSyncConfigDTO.builder()
@@ -159,18 +136,16 @@ public class YamlGitConfigResourceTest extends GitSyncTestBase {
     saveYamlGitConfig(Arrays.asList(rootFolder, rootFolder_1), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
     GitSyncConfigDTO gitSyncConfigDTO =
         saveYamlGitConfig(Arrays.asList(rootFolder_2), CONNECTOR_ID_1, REPO, BRANCH, IDENTIFIER_1);
-    assertThat(getDefault(Collections.singletonList(gitSyncConfigDTO))).isEqualTo(rootFolder_2);
-    List<GitSyncConfigDTO> gitSyncConfigDTO_ret =
+    assertThat(getDefault(gitSyncConfigDTO)).isEqualTo(rootFolder_2);
+    GitSyncConfigDTO gitSyncConfigDTO_ret =
         yamlGitConfigResource.updateDefault(PROJECT_ID, ORG_ID, ACCOUNT_ID, IDENTIFIER, ROOT_FOLDER_ID);
     assertThat(getDefault(gitSyncConfigDTO_ret).getIdentifier()).isEqualTo(ROOT_FOLDER_ID);
   }
 
-  private GitSyncFolderConfigDTO getDefault(List<GitSyncConfigDTO> gitSyncConfigDTOS) {
+  private GitSyncFolderConfigDTO getDefault(GitSyncConfigDTO gitSyncConfigDTOS) {
+    List<GitSyncFolderConfigDTO> gitSyncFolderConfigDTOs = gitSyncConfigDTOS.getGitSyncFolderConfigDTOs();
     Optional<GitSyncFolderConfigDTO> defaultGitSync =
-        gitSyncConfigDTOS.stream()
-            .map(GitSyncConfigDTO::getGitSyncFolderConfigDTOs)
-            .flatMap(gitSyncFolderDTOS -> gitSyncFolderDTOS.stream().filter(GitSyncFolderConfigDTO::getIsDefault))
-            .findFirst();
+        gitSyncFolderConfigDTOs.stream().filter(GitSyncFolderConfigDTO::getIsDefault).findFirst();
     return defaultGitSync.orElse(null);
   }
 

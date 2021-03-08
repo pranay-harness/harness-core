@@ -130,6 +130,7 @@ import io.harness.gcp.client.GcpClient;
 import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.helpers.EncryptDecryptHelperImpl;
 import io.harness.http.HttpService;
 import io.harness.http.HttpServiceImpl;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -144,6 +145,7 @@ import io.harness.openshift.OpenShiftClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
 import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
@@ -1285,6 +1287,7 @@ public class DelegateModule extends AbstractModule {
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
+    bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
 
     binder()
         .bind(VaultEncryptor.class)

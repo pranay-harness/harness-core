@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package io.harness.gitsync;
+
+option java_multiple_files = true;
+
+service GitToHarnessService {
+  rpc syncRequestFromGit(Test) returns (Test);
+}
+
+message Test {
+  string abc = 1;
+}

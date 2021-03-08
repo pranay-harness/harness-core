@@ -22,6 +22,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -87,6 +88,11 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         writeUtf8StringToFile(Paths.get(workingDirectory, KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
 
         createDirectoryIfDoesNotExist(Paths.get(workingDirectory, MANIFEST_FILES_DIR).toString());
+        HelmVersion helmVersion =
+            (k8sDeployRequest.getManifestDelegateConfig() != null
+                && k8sDeployRequest.getManifestDelegateConfig().getManifestType() == ManifestType.HELM_CHART)
+            ? ((HelmChartManifestDelegateConfig) k8sDeployRequest.getManifestDelegateConfig()).getHelmVersion()
+            : null;
 
         K8sDelegateTaskParams k8SDelegateTaskParams =
             K8sDelegateTaskParams.builder()
@@ -94,8 +100,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                 .kubeconfigPath(KUBECONFIG_FILENAME)
                 .workingDirectory(workingDirectory)
                 .goTemplateClientPath(k8sGlobalConfigService.getGoTemplateClientPath())
-                // TODO: later add helm versions support also
-                .helmPath(k8sGlobalConfigService.getHelmPath(null))
+                .helmPath(k8sGlobalConfigService.getHelmPath(helmVersion))
                 .ocPath(k8sGlobalConfigService.getOcPath())
                 .kustomizeBinaryPath(k8sGlobalConfigService.getKustomizePath())
                 .build();
@@ -150,15 +155,12 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
       return;
     }
 
-    switch (manifestDelegateConfig.getManifestType()) {
-      case K8S_MANIFEST:
-        StoreDelegateConfig storeDelegateConfig =
-            ((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig();
-        if (storeDelegateConfig instanceof GitStoreDelegateConfig) {
-          GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
-          GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
-          gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
-        }
+    StoreDelegateConfig storeDelegateConfig = manifestDelegateConfig.getStoreDelegateConfig();
+    switch (storeDelegateConfig.getType()) {
+      case GIT:
+        GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
+        GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+        gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
         break;
 
       default:

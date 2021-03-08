@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -50,6 +51,11 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   @Override
   public PageResponse<ResourceGroup> list(PageRequest pageRequest, String scopeIdentifier) {
     return resourceGroupDao.list(pageRequest, scopeIdentifier);
+  }
+
+  @Override
+  public List<ResourceGroup> list(List<String> resourceGroupIdentifiers, String scopeIdentifier) {
+    return resourceGroupDao.list(resourceGroupIdentifiers, scopeIdentifier);
   }
 
   @Override

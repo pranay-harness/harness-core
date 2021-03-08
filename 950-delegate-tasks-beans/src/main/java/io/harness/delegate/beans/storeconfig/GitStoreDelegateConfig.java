@@ -21,4 +21,9 @@ public class GitStoreDelegateConfig implements StoreDelegateConfig {
   ScmConnector gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
   SSHKeySpecDTO sshKeySpecDTO;
+
+  @Override
+  public StoreDelegateConfigType getType() {
+    return StoreDelegateConfigType.GIT;
+  }
 }

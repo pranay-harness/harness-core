@@ -5,6 +5,7 @@ load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
+    "//370-users-syncbridge:module",
     "//400-rest:module",
     "//:lombok",
 ]

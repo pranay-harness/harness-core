@@ -272,6 +272,8 @@ events-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+userChangeStreamEnabled: false
+
 searchEnabled: false
 
 elasticsearch:
