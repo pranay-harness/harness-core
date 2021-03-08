@@ -95,6 +95,9 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     assertThat(request.getService2()).isEqualTo(stageService);
     assertThat(request.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
     assertThat(request.getCommandName()).isEqualTo(K8sBGSwapServicesStep.K8S_BG_SWAP_SERVICES_COMMAND_NAME);
+
+    // We need this null as K8sBGSwapServicesStep does not depend upon Manifests
+    assertThat(request.getManifestDelegateConfig()).isNull();
   }
 
   @Test
