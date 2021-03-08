@@ -6,7 +6,6 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.outbox.api.OutboxEventService;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +16,10 @@ public class OutboxEventPollJob implements Runnable {
   private final OutboxEventHandler outboxEventHandler;
   private final PersistentLocker persistentLocker;
   private static final String OUTBOX_POLL_JOB_LOCK = "OUTBOX_POLL_JOB_LOCK";
-  public static final String OUTBOX_PERSISTENCE_LOCKER = "OUTBOX_PERSISTENCE_LOCKER";
 
   @Inject
-  public OutboxEventPollJob(OutboxEventService outboxEventService, OutboxEventHandler outboxEventHandler,
-      @Named(OUTBOX_PERSISTENCE_LOCKER) PersistentLocker persistentLocker) {
+  public OutboxEventPollJob(
+      OutboxEventService outboxEventService, OutboxEventHandler outboxEventHandler, PersistentLocker persistentLocker) {
     this.outboxEventService = outboxEventService;
     this.outboxEventHandler = outboxEventHandler;
     this.persistentLocker = persistentLocker;
