@@ -13,6 +13,7 @@ public class NGAuditCoreRegistrars {
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(CommonsRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
+          .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .build();
 
@@ -20,6 +21,7 @@ public class NGAuditCoreRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(CommonsRegistrars.morphiaRegistrars)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
+          .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .add(NGAuditCoreMorphiaRegistrar.class)
           .build();
