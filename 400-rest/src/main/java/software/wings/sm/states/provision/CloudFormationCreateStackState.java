@@ -4,8 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static io.harness.exception.WingsException.USER;
-import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
@@ -311,8 +309,10 @@ public class CloudFormationCreateStackState extends CloudFormationState {
             .accountId(executionContext.getApp().getAccountId())
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, executionContext.getEnv().getUuid())
-            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, executionContext.getEnv().getEnvironmentType().name())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD,
+                executionContext.getEnv() != null ? executionContext.getEnv().getUuid() : null)
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD,
+                executionContext.getEnv() != null ? executionContext.getEnv().getEnvironmentType().name() : null)
             .uuid(generateUuid())
             .data(TaskData.builder()
                       .async(true)
@@ -388,7 +388,6 @@ public class CloudFormationCreateStackState extends CloudFormationState {
       ExecutionContext context, String activityId, GitConfig gitConfig, GitFileConfig gitFileConfig) {
     Application app = context.getApp();
     Environment env = ((ExecutionContextImpl) context).getEnv();
-    notNullCheck("Environment is null", env, USER);
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         createGitFetchFilesTaskParams(context, activityId, gitConfig, gitFileConfig, app);
@@ -396,8 +395,8 @@ public class CloudFormationCreateStackState extends CloudFormationState {
     return DelegateTask.builder()
         .accountId(app.getAccountId())
         .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getUuid())
-        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
-        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+        .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env != null ? env.getUuid() : null)
+        .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env != null ? env.getEnvironmentType().name() : null)
         .uuid(generateUuid())
         .data(TaskData.builder()
                   .async(true)

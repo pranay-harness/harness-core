@@ -3,10 +3,14 @@ package io.harness;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.mongo.MongoConfig;
-import io.harness.pms.triggers.scm.ScmConnectionConfig;
+import io.harness.notification.NotificationClientConfiguration;
+import io.harness.pms.triggers.webhook.scm.ScmConnectionConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -40,17 +44,28 @@ import org.reflections.Reflections;
 public class PipelineServiceConfiguration extends Configuration {
   public static final String RESOURCE_PACKAGE = "io.harness.pms";
   public static final String NG_TRIGGER_RESOURCE_PACKAGE = "io.harness.ngtriggers";
+  public static final String FILTER_PACKAGE = "io.harness.filter";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcClientConfigs") private Map<String, GrpcClientConfig> grpcClientConfigs;
+  @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
+  @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
+  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
+  @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
+  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
+  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
+  @JsonProperty("enableAuth") private boolean enableAuth;
+  @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
 
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
   private ScmConnectionConfig scmConnectionConfig;
+  private ServiceHttpClientConfig managerClientConfig;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
@@ -86,7 +101,7 @@ public class PipelineServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE);
+    Reflections reflections = new Reflections(RESOURCE_PACKAGE, NG_TRIGGER_RESOURCE_PACKAGE, FILTER_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

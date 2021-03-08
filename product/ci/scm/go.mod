@@ -6,7 +6,7 @@ replace github.com/wings-software/portal/commons/go/lib => ../../../commons/go/l
 
 require (
 	github.com/alexflint/go-arg v1.3.0
-	github.com/drone/go-scm v1.8.0
+	github.com/drone/go-scm v1.8.1-0.20210111143840-199eee180289
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.4.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1

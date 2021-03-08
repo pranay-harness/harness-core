@@ -9,7 +9,10 @@ import "product/ci/engine/proto/execution.proto";
 
 message ExecuteStepRequest {
   io.harness.product.ci.engine.proto.UnitStep step = 1;
-  string tmpFilePath = 2;  // Path to store temporary files
+  // Path to store temporary files
+  string tmpFilePath = 2;
+  // Output of all the previously executed steps of a stage
+  map<string, io.harness.product.ci.engine.proto.StepOutput> prev_step_outputs = 3;
 }
 
 message ExecuteStepResponse {

@@ -25,6 +25,11 @@ public class K8sConnectorHelper {
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
 
   public KubernetesClient createKubernetesClient(ConnectorDetails k8sConnectorDetails) {
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(k8sConnectorDetails);
+    return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
+  }
+
+  public KubernetesConfig getKubernetesConfig(ConnectorDetails k8sConnectorDetails) {
     KubernetesClusterConfigDTO clusterConfigDTO = (KubernetesClusterConfigDTO) k8sConnectorDetails.getConnectorConfig();
 
     KubernetesCredentialSpecDTO credentialSpecDTO = clusterConfigDTO.getCredential().getConfig();
@@ -34,10 +39,7 @@ public class K8sConnectorHelper {
           ((KubernetesClusterDetailsDTO) credentialSpecDTO).getAuth().getCredentials();
       secretDecryptionService.decrypt(kubernetesCredentialAuth, k8sConnectorDetails.getEncryptedDataDetails());
     }
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(clusterConfigDTO);
-
-    return kubernetesHelperService.getKubernetesClient(kubernetesConfig);
+    return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(clusterConfigDTO);
   }
 
   public DefaultKubernetesClient getDefaultKubernetesClient(ConnectorDetails k8sConnectorDetails) {

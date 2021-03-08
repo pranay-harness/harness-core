@@ -14,11 +14,14 @@ public class NGPipelineRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
+          .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(ProjectAndOrgRegistrars.kryoRegistrars)
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
           .addAll(OrchestrationVisualizationModuleRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
+          .addAll(CommonEntitiesRegistrars.kryoRegistrars)
+          .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .add(NGPipelineKryoRegistrar.class)
           .build();
 

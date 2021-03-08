@@ -182,7 +182,7 @@ public interface ServiceResourceService extends OwnedByApplication {
    * @param appId     the app id
    * @param serviceId the service id
    */
-  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId);
+  void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId, boolean syncFromGit);
 
   /**
    * Adds the command.

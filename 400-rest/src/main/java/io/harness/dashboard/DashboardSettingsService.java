@@ -12,6 +12,8 @@ public interface DashboardSettingsService {
 
   DashboardSettings get(@NotNull String accountId, @NotNull String id);
 
+  boolean doesPermissionsMatch(@NotNull DashboardSettings newDashboard, @NotNull DashboardSettings existingDashboard);
+
   boolean deleteDashboardSettings(@NotNull String accountId, @NotNull String id);
 
   PageResponse<DashboardSettings> getDashboardSettingSummary(

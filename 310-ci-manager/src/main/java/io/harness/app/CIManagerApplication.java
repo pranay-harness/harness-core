@@ -20,12 +20,14 @@ import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
+import io.harness.persistence.UserProvider;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -39,7 +41,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.ExecutionRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
-import io.harness.security.JWTAuthenticationFilter;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.CiExecutionRegistrars;
@@ -58,6 +60,12 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
+import io.harness.yaml.YamlSdkConfiguration;
+import io.harness.yaml.YamlSdkInitHelper;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+
+import software.wings.security.ThreadLocalUserProvider;
 
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -198,6 +206,11 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
             .addAll(OrchestrationRegistrars.springConverters)
             .build();
       }
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClasses() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
+      }
     });
 
     modules.add(new ProviderModule() {
@@ -208,11 +221,17 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
       }
     });
 
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new ThreadLocalUserProvider();
+      }
+    });
+
     modules.add(new CIPersistenceModule(configuration.getShouldConfigureWithPMS()));
     addGuiceValidationModule(modules);
     modules.add(new CIManagerServiceModule(configuration));
-
+    modules.add(YamlSdkModule.getInstance());
     modules.add(ExecutionPlanModule.getInstance());
 
     modules.add(new AbstractModule() {
@@ -243,7 +262,9 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     registerAuthFilters(configuration, environment);
     registerExecutionPlanCreators(injector);
     registerQueueListeners(injector, configuration);
+    registerCorrelationFilter(environment, injector);
     registerStores(configuration, injector);
+    registerYamlSdk(injector);
     scheduleJobs(injector);
     log.info("Starting app done");
     MaintenanceController.forceMaintenance(false);
@@ -305,7 +326,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
         .executionSummaryModuleInfoProviderClass(CIModuleInfoProvider.class)
         .engineAdvisers(OrchestrationAdviserRegistrar.getEngineAdvisers())
         .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(remote))
         .build();
   }
 
@@ -379,10 +400,25 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
           -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
           || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
       Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put("Bearer", configuration.getJwtAuthSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getJwtAuthSecret());
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), configuration.getJwtIdentityServiceSecret());
       serviceToSecretMapping.put(
           AuthorizationServiceHeader.DEFAULT.getServiceId(), configuration.getNgManagerServiceSecret());
-      environment.jersey().register(new JWTAuthenticationFilter(predicate, null, serviceToSecretMapping));
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
     }
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void registerYamlSdk(Injector injector) {
+    YamlSdkConfiguration yamlSdkConfiguration = YamlSdkConfiguration.builder()
+                                                    .requireSchemaInit(true)
+                                                    .requireSnippetInit(true)
+                                                    .requireValidatorInit(false)
+                                                    .build();
+    YamlSdkInitHelper.initialize(injector, yamlSdkConfiguration);
   }
 }

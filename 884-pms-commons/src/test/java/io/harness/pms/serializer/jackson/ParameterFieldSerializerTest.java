@@ -35,7 +35,7 @@ public class ParameterFieldSerializerTest extends CategoryTest implements Multil
   public void testParameterFieldSerialization() throws IOException {
     SampleParams params = SampleParams.builder().build();
     ParameterField<String> field = ParameterField.createExpressionField(
-        true, "${input}", new InputSetValidator(InputSetValidatorType.ALLOWED_VALUES, "a,b,c"), true);
+        true, "<+input>", new InputSetValidator(InputSetValidatorType.ALLOWED_VALUES, "a,b,c"), true);
     params.setInner(field);
     validateSerialization(params);
 

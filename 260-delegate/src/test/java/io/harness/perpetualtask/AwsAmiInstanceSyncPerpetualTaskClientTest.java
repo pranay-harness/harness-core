@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsAmiInstanceSyncPerpetualTaskParams;
@@ -78,23 +79,26 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   public void getValidationTask() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).tag("tag").build();
     prepareTaskData(awsConfig);
-    assertThat(client.getValidationTask(getClientContext(), ACCOUNT_ID))
-        .isEqualTo(DelegateTask.builder()
-                       .accountId(ACCOUNT_ID)
-                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                       .tags(singletonList("tag"))
-                       .data(TaskData.builder()
-                                 .async(false)
-                                 .taskType(TaskType.AWS_ASG_TASK.name())
-                                 .parameters(new Object[] {AwsAsgListInstancesRequest.builder()
-                                                               .awsConfig(awsConfig)
-                                                               .encryptionDetails(new ArrayList<>())
-                                                               .region("us-east-1")
-                                                               .autoScalingGroupName("asg")
-                                                               .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
-                                 .build())
-                       .build());
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(), ACCOUNT_ID);
+    assertThat(validationTask)
+        .isEqualToIgnoringGivenFields(
+            DelegateTask.builder()
+                .accountId(ACCOUNT_ID)
+                .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+                .tags(singletonList("tag"))
+                .data(TaskData.builder()
+                          .async(false)
+                          .taskType(TaskType.AWS_ASG_TASK.name())
+                          .parameters(new Object[] {AwsAsgListInstancesRequest.builder()
+                                                        .awsConfig(awsConfig)
+                                                        .encryptionDetails(new ArrayList<>())
+                                                        .region("us-east-1")
+                                                        .autoScalingGroupName("asg")
+                                                        .build()})
+                          .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                          .build())
+                .build(),
+            DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

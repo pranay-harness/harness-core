@@ -29,6 +29,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
+import io.harness.shell.AccessType;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
@@ -37,7 +38,6 @@ import software.wings.beans.Application;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionStrategy;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;

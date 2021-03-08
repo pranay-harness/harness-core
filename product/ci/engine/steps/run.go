@@ -42,6 +42,7 @@ type runStep struct {
 	containerPort uint32
 	stepContext   *pb.StepContext
 	reports       []*pb.Report
+	logKey        string
 	stageOutput   output.StageOutput
 	log           *zap.SugaredLogger
 }
@@ -61,6 +62,7 @@ func NewRunStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput,
 		tmpFilePath:   tmpFilePath,
 		stageOutput:   so,
 		log:           log,
+		logKey:        step.GetLogKey(),
 	}
 }
 
@@ -92,7 +94,7 @@ func (e *runStep) validate() error {
 func (e *runStep) resolveJEXL(ctx context.Context) error {
 	// JEXL expressions are only present in run step command
 	cmd := e.command
-	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{cmd}, e.stageOutput, e.log)
+	resolvedExprs, err := evaluateJEXL(ctx, e.id, []string{cmd}, e.stageOutput, false, e.log)
 	if err != nil {
 		return err
 	}
@@ -124,7 +126,9 @@ func (e *runStep) execute(ctx context.Context) (*output.StepOutput, int32, error
 		return nil, int32(1), err
 	}
 	e.log.Infow("Successfully executed step", "elapsed_time_ms", utils.TimeSince(st))
-	return &output.StepOutput{Output: ret.GetOutput()}, ret.GetNumRetries(), nil
+	stepOutput := &output.StepOutput{}
+	stepOutput.Output.Variables = ret.GetOutput()
+	return stepOutput, ret.GetNumRetries(), nil
 }
 
 func (e *runStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
@@ -140,6 +144,7 @@ func (e *runStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 					EnvVarOutputs: e.envVarOutputs,
 				},
 			},
+			LogKey: e.logKey,
 		},
 		TmpFilePath: e.tmpFilePath,
 	}

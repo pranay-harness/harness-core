@@ -14,6 +14,7 @@ import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.shell.AbstractScriptExecutor;
 
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;

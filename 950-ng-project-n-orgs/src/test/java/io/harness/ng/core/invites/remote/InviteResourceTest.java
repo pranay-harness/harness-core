@@ -1,26 +1,22 @@
 package io.harness.ng.core.invites.remote;
 
-import static io.harness.ng.core.invites.InviteOperationResponse.*;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
+import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITE_RESENT;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
 
-import static javax.ws.rs.core.Response.Status.*;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.beans.PageRequest;
-import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.api.InvitesService;
-import io.harness.ng.core.invites.api.impl.InvitesServiceImpl;
 import io.harness.ng.core.invites.dto.CreateInviteListDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.RoleDTO;
@@ -31,22 +27,16 @@ import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Range;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import javax.ws.rs.core.Response;
-import org.apache.http.protocol.HTTP;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 public class InviteResourceTest extends CategoryTest {
@@ -67,7 +57,8 @@ public class InviteResourceTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
-    inviteResource = new InviteResource(invitesService, ngUserService);
+    inviteResource =
+        new InviteResource(invitesService, ngUserService, "http://qa.harness.io/", "http://qa.harness.io/ng/#/");
     invite = Invite.builder()
                  .accountIdentifier(accountIdentifier)
                  .orgIdentifier(orgIdentifiier)
@@ -101,7 +92,7 @@ public class InviteResourceTest extends CategoryTest {
             .getContent();
 
     List<String> inviteIds = returnInvites.stream().map(InviteDTO::getId).collect(Collectors.toList());
-    assertEquals(inviteIds, actualInviteIds);
+    assertThat(inviteIds).isEqualTo(actualInviteIds);
   }
 
   @Test
@@ -140,7 +131,7 @@ public class InviteResourceTest extends CategoryTest {
     String jwtToken = randomAlphabetic(20);
     when(invitesService.verify(jwtToken)).thenReturn(Optional.empty());
     Response response = inviteResource.verify(jwtToken, accountIdentifier);
-    assertThat(response.getStatus()).isEqualTo(BAD_REQUEST.getStatusCode());
+    assertThat(response.getStatus()).isEqualTo(303);
   }
 
   @Test
@@ -151,9 +142,9 @@ public class InviteResourceTest extends CategoryTest {
     when(invitesService.updateInvite(any())).thenReturn(Optional.of(invite), Optional.empty());
 
     Optional<InviteDTO> inviteOptional = inviteResource.updateInvite(inviteId, inviteDTO, accountIdentifier).getData();
-    assertTrue(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isTrue();
 
     inviteOptional = inviteResource.updateInvite(inviteId, inviteDTO, accountIdentifier).getData();
-    assertFalse(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isFalse();
   }
 }

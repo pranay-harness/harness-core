@@ -2,14 +2,13 @@ package io.harness.delegate.task.executioncapability;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.SmbConnectionParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
-import io.harness.delegate.task.executioncapability.CapabilityCheck;
 
-import com.google.inject.Inject;
 import com.hierynomus.smbj.SMBClient;
 import com.hierynomus.smbj.SmbConfig;
 import com.hierynomus.smbj.connection.Connection;
@@ -18,7 +17,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SmbConnectionCapabilityCheck implements CapabilityCheck {
+public class SmbConnectionCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     SmbConnectionCapability capability = (SmbConnectionCapability) delegateCapability;
@@ -31,8 +30,9 @@ public class SmbConnectionCapabilityCheck implements CapabilityCheck {
     }
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.SMB_CONNECTION_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

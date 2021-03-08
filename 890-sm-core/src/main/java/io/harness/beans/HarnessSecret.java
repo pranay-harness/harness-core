@@ -1,5 +1,7 @@
 package io.harness.beans;
 
+import io.harness.security.encryption.AdditionalMetadata;
+
 import software.wings.security.ScopedEntity;
 import software.wings.security.UsageRestrictions;
 
@@ -23,5 +25,6 @@ public class HarnessSecret implements ScopedEntity {
   boolean scopedToAccount;
   boolean hideFromListing;
   boolean inheritScopesFromSM;
+  private AdditionalMetadata additionalMetadata;
   Map<String, String> runtimeParameters;
 }

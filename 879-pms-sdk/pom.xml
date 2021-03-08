@@ -45,7 +45,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>890-pms-contracts-proto</artifactId>
+            <artifactId>890-pms-contracts</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

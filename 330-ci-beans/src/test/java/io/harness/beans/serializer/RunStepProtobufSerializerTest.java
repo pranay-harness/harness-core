@@ -4,10 +4,7 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import io.harness.CiBeansTestBase;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.yaml.extended.reports.JunitTestReport;
-import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.category.element.UnitTests;
-import io.harness.product.ci.engine.proto.Report;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -33,9 +30,9 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
   @Category(UnitTests.class)
   public void shouldSerializeRunStep() throws InvalidProtocolBufferException {
     List<String> paths = Arrays.asList("path1", "path2");
-    JunitTestReport junitTestReport =
-        JunitTestReport.builder().spec(JunitTestReport.Spec.builder().paths(paths).build()).build();
-    List<UnitTestReport> unitTestReportList = Arrays.asList(junitTestReport);
+    //    JunitTestReport junitTestReport =
+    //        JunitTestReport.builder().spec(JunitTestReport.Spec.builder().paths(paths).build()).build();
+    //    List<UnitTestReport> unitTestReportList = Arrays.asList(junitTestReport);
     //    RunStepInfo runStepInfo = RunStepInfo.builder()
     //                                  .name(RUN_STEP)
     //                                  .identifier(RUN_STEP_ID)
@@ -51,7 +48,7 @@ public class RunStepProtobufSerializerTest extends CiBeansTestBase {
     //                                        .stepSpecType(runStepInfo)
     //                                        .build();
 
-    Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(paths).build();
+    // Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(paths).build();
 
     //    runStepInfo.setCallbackId(CALLBACK_ID);
     //    runStepInfo.setPort(PORT);

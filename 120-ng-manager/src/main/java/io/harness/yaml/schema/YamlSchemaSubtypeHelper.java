@@ -3,7 +3,7 @@ package io.harness.yaml.schema;
 import io.harness.ConnectorConstants;
 import io.harness.EntitySubtype;
 import io.harness.EntityType;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.schema.beans.SchemaConstants;

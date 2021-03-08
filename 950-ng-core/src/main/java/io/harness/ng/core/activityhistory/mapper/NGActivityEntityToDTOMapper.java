@@ -26,7 +26,6 @@ public class NGActivityEntityToDTOMapper {
         .description(activity.getDescription())
         .type(NGActivityType.valueOf(activity.getType()))
         .detail(activityDetail)
-        .errorMessage(activity.getErrorMessage())
         .build();
   }
 
@@ -40,6 +39,9 @@ public class NGActivityEntityToDTOMapper {
         return EntityUsageActivityDetailDTO.builder()
             .referredByEntity(referredByEntity)
             .activityStatusMessage(((EntityUsageActivityDetail) activity).getActivityStatusMessage())
+            .errors(entityUsageActivity.getErrors())
+            .errorSummary(entityUsageActivity.getErrorSummary())
+            .status(entityUsageActivity.getStatus())
             .build();
       case ENTITY_UPDATE:
       case ENTITY_CREATION:

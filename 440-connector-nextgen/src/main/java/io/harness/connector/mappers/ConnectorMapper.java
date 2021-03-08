@@ -2,9 +2,12 @@ package io.harness.connector.mappers;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.ConnectorActivityDetails;
+import io.harness.connector.ConnectorConnectivityDetails;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorRegistryFactory;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
@@ -15,8 +18,6 @@ import io.harness.connector.mappers.gitconnectormapper.GitEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
-import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -24,6 +25,7 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -57,7 +59,7 @@ public class ConnectorMapper {
     connector.setTags(TagMapper.convertToList(connectorInfo.getTags()));
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
-    connector.setCategories(connectorDTOToEntityMapper.getConnectorCategory());
+    connector.setCategories(Arrays.asList(ConnectorRegistryFactory.getConnectorCategory(connector.getType())));
     return connector;
   }
 
@@ -86,13 +88,43 @@ public class ConnectorMapper {
                                          .tags(TagMapper.convertToMap(connector.getTags()))
                                          .connectorType(connector.getType())
                                          .build();
+    Long timeWhenConnectorIsLastUpdated =
+        getTimeWhenTheConnectorWasUpdated(connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt());
     return ConnectorResponseDTO.builder()
         .connector(connectorInfo)
-        .status(connector.getConnectivityDetails())
+        .status(updateLastTestedAt(connector.getConnectivityDetails()))
         .createdAt(connector.getCreatedAt())
-        .lastModifiedAt(connector.getLastModifiedAt())
+        .lastModifiedAt(timeWhenConnectorIsLastUpdated)
         .harnessManaged(isHarnessManaged(connector))
+        .activityDetails(getConnectorActivity(connector.getActivityDetails(), timeWhenConnectorIsLastUpdated))
         .build();
+  }
+
+  private ConnectorActivityDetails getConnectorActivity(
+      ConnectorActivityDetails activityDetails, Long timeWhenConnectorIsLastUpdated) {
+    if (activityDetails == null) {
+      return ConnectorActivityDetails.builder().lastActivityTime(timeWhenConnectorIsLastUpdated).build();
+    }
+    return activityDetails;
+  }
+
+  private ConnectorConnectivityDetails updateLastTestedAt(ConnectorConnectivityDetails connectivityDetails) {
+    if (connectivityDetails == null) {
+      return null;
+    }
+    if (connectivityDetails.getTestedAt() == 0L) {
+      connectivityDetails.setTestedAt(connectivityDetails.getLastTestedAt());
+    }
+    return connectivityDetails;
+  }
+
+  private Long getTimeWhenTheConnectorWasUpdated(Long timeWhenConnectorIsLastUpdated, Long lastModifiedAt) {
+    // todo @deepak: Remove this logic later, currently it handles the old records too where the new field
+    // timeWhenConnectorIsLastUpdated is not present
+    if (timeWhenConnectorIsLastUpdated == null) {
+      return lastModifiedAt;
+    }
+    return timeWhenConnectorIsLastUpdated;
   }
 
   private boolean isHarnessManaged(Connector connector) {

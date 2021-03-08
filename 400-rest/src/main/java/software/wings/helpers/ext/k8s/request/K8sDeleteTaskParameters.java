@@ -2,6 +2,8 @@ package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.k8s.model.HelmVersion;
@@ -13,6 +15,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class K8sDeleteTaskParameters extends K8sTaskParameters {
   @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
@@ -24,10 +27,9 @@ public class K8sDeleteTaskParameters extends K8sTaskParameters {
   public K8sDeleteTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
-      String resources, boolean deleteNamespacesForRelease, HelmVersion helmVersion, String filePaths,
-      boolean deprecateFabric8Enabled) {
+      String resources, boolean deleteNamespacesForRelease, HelmVersion helmVersion, String filePaths) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, deprecateFabric8Enabled);
+        timeoutIntervalInMin, k8sTaskType, helmVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.resources = resources;

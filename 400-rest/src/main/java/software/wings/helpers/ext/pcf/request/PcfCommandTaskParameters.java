@@ -1,13 +1,16 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails;
+
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
+import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.delegatetasks.validation.capabilities.PcfAutoScalarCapability;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +20,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
   private PcfCommandRequest pcfCommandRequest;
   private List<EncryptedDataDetail> encryptedDataDetails;
@@ -24,12 +28,9 @@ public class PcfCommandTaskParameters implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities = new ArrayList<>();
-    capabilities.add(PcfConnectivityCapability.builder()
-                         .limitPcfThreads(pcfCommandRequest.isLimitPcfThreads())
-                         .ignorePcfConnectionContextCache(pcfCommandRequest.isIgnorePcfConnectionContextCache())
-                         .pcfConfig(pcfCommandRequest.getPcfConfig())
-                         .encryptionDetails(encryptedDataDetails)
-                         .build());
+    capabilities.add(
+        PcfConnectivityCapability.builder().endpointUrl(pcfCommandRequest.getPcfConfig().getEndpointUrl()).build());
+    capabilities.addAll(fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
     if (pcfCommandRequest.isUseCfCLI() || needToCheckAppAutoscalarPluginInstall()) {
       capabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
           "PCF", Arrays.asList("/bin/sh", "-c", "cf --version")));

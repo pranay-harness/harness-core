@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import software.wings.helpers.ext.terraform.TerraformConfigInspectClient;
+import software.wings.delegatetasks.terraform.TerraformConfigInspectClient;
 import software.wings.service.intfc.TerraformConfigInspectService;
 
 import com.google.inject.Inject;

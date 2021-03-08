@@ -35,7 +35,7 @@ import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-@Api("secrets")
+@Api(value = "secrets", hidden = true)
 @Path("/ng/secrets")
 @Produces("application/json")
 @Consumes("application/json")

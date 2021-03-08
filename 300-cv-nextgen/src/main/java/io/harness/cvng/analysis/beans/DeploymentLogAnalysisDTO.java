@@ -59,6 +59,9 @@ public class DeploymentLogAnalysisDTO {
     int label;
     ClusterType clusterType;
     int risk;
+    public Risk getRisk() {
+      return Risk.valueOf(risk);
+    }
     double score;
     int count;
     List<Double> testFrequencyData;
@@ -82,6 +85,9 @@ public class DeploymentLogAnalysisDTO {
   @Builder
   public static class ResultSummary {
     int risk;
+    public Risk getRisk() {
+      return Risk.valueOf(risk);
+    }
     double score;
     List<ControlClusterSummary> controlClusterSummaries;
     List<ClusterSummary> testClusterSummaries;

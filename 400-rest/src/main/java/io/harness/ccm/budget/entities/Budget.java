@@ -1,6 +1,8 @@
 package io.harness.ccm.budget.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.BudgetType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -33,6 +35,9 @@ public class Budget
   @NotBlank BudgetScope scope; // referred to as "Applies to" in the UI
   @NotBlank BudgetType type;
   @NotBlank Double budgetAmount;
+  Double actualCost;
+  Double forecastCost;
+  Double lastMonthCost;
   AlertThreshold[] alertThresholds;
   String[] emailAddresses;
   String[] userGroupIds; // reference

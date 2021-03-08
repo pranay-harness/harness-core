@@ -2,6 +2,8 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -17,8 +19,8 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.delegatetasks.terraform.TerraformConfigInspectClient.BLOCK_TYPE;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
-import software.wings.helpers.ext.terraform.TerraformConfigInspectClient.BLOCK_TYPE;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.TerraformConfigInspectService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -35,6 +37,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;

@@ -2,18 +2,42 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.ngtriggers.Constants.BITBUCKET_CLOUD_HEADER_KEY;
+import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.ngtriggers.Constants.X_BIT_BUCKET_EVENT;
+import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
+import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
 
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData;
+import io.harness.ngtriggers.beans.dto.WebhookEventHeaderData.WebhookEventHeaderDataBuilder;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.scm.*;
+import io.harness.ngtriggers.beans.scm.BranchWebhookEvent;
+import io.harness.ngtriggers.beans.scm.CommitDetails;
+import io.harness.ngtriggers.beans.scm.IssueCommentWebhookEvent;
+import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
 import io.harness.ngtriggers.beans.scm.Repository;
+import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
+import io.harness.ngtriggers.beans.scm.WebhookGitUser;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
-import io.harness.product.ci.scm.proto.*;
+import io.harness.product.ci.scm.proto.Commit;
+import io.harness.product.ci.scm.proto.GitProvider;
+import io.harness.product.ci.scm.proto.Header;
+import io.harness.product.ci.scm.proto.IssueCommentHook;
+import io.harness.product.ci.scm.proto.ParseWebhookRequest;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.product.ci.scm.proto.PullRequest;
+import io.harness.product.ci.scm.proto.PullRequestHook;
+import io.harness.product.ci.scm.proto.PushHook;
+import io.harness.product.ci.scm.proto.SCMGrpc;
+import io.harness.product.ci.scm.proto.Signature;
+import io.harness.product.ci.scm.proto.User;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -27,12 +51,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class WebhookEventPayloadParser {
-  private static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
-  private static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
-  private static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
-  public static final String BITBUCKET_SERVER_HEADER_KEY = "X-Request-Id";
-  public static final String BITBUCKET_CLOUD_HEADER_KEY = "X-Request-UUID";
-
   @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
 
   public WebhookPayloadData parseEvent(TriggerWebhookEvent triggerWebhookEvent) {
@@ -59,7 +77,7 @@ public class WebhookEventPayloadParser {
                                                               .build());
       log.info("Finished parsing webhook payload");
     } catch (StatusRuntimeException e) {
-      log.error("Failed to parse webhook payload {}", triggerWebhookEvent.getPayload());
+      log.error("Failed to parse webhook payload");
       throw e;
     }
     return parseWebhookResponse;
@@ -77,13 +95,18 @@ public class WebhookEventPayloadParser {
         throw new InvalidRequestException("Tag event not supported", USER);
       }
       webhookPayloadDataBuilder = convertPushHook(pushHook);
+    } else if (parseWebhookResponse.hasComment() && parseWebhookResponse.getComment().getIssue() != null
+        && parseWebhookResponse.getComment().getIssue().getPr() != null) {
+      IssueCommentHook commentHook = parseWebhookResponse.getComment();
+      webhookPayloadDataBuilder = convertComment(commentHook);
     } else {
-      log.error("Unknown webhook event");
-      throw new InvalidRequestException("Unknown webhook event", USER);
+      log.error("Unsupported webhook event");
+      throw new InvalidRequestException("Unsupported webhook event", USER);
     }
 
-    webhookPayloadDataBuilder.originalEvent(triggerWebhookEvent);
-    return webhookPayloadDataBuilder.build();
+    return webhookPayloadDataBuilder.originalEvent(triggerWebhookEvent)
+        .parseWebhookResponse(parseWebhookResponse)
+        .build();
   }
 
   private WebhookPayloadDataBuilder convertPullRequestHook(PullRequestHook prHook) {
@@ -103,6 +126,24 @@ public class WebhookEventPayloadParser {
     return WebhookPayloadData.builder()
         .webhookGitUser(webhookGitUser)
         .repository(webhookEvent.getRepository())
+        .webhookEvent(webhookEvent);
+  }
+
+  WebhookPayloadDataBuilder convertComment(IssueCommentHook commentHook) {
+    Repository repository = convertRepository(commentHook.getRepo());
+    WebhookGitUser webhookGitUser = convertUser(commentHook.getSender());
+
+    IssueCommentWebhookEvent webhookEvent =
+        IssueCommentWebhookEvent.builder()
+            .commentBody(commentHook.getComment().getBody())
+            .pullRequestNum(Integer.toString(commentHook.getIssue().getNumber()))
+            .repository(repository)
+            .baseAttributes(WebhookBaseAttributes.builder().action(commentHook.getAction().name()).build())
+            .build();
+
+    return WebhookPayloadData.builder()
+        .webhookGitUser(webhookGitUser)
+        .repository(repository)
         .webhookEvent(webhookEvent);
   }
 
@@ -154,7 +195,7 @@ public class WebhookEventPayloadParser {
         .build();
   }
 
-  private PRWebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
+  public PRWebhookEvent convertPRWebhookEvent(PullRequestHook prHook) {
     // TODO Add commit details
     PullRequest pr = prHook.getPr();
     return PRWebhookEvent.builder()
@@ -204,7 +245,7 @@ public class WebhookEventPayloadParser {
         .before(pushHook.getBefore())
         .after(pushHook.getAfter())
         .ref(pushHook.getRef())
-        .source(trimmedRef)
+        .source(EMPTY)
         .target(trimmedRef)
         .authorLogin(author.getLogin())
         .authorName(author.getName())
@@ -233,8 +274,9 @@ public class WebhookEventPayloadParser {
         USER);
   }
 
-  private GitProvider getBitbucketProvider(Set<String> headerKeys) {
-    if (containsHeaderKey(headerKeys, BITBUCKET_SERVER_HEADER_KEY)) {
+  @VisibleForTesting
+  GitProvider getBitbucketProvider(Set<String> headerKeys) {
+    if (isBitbucketServer(headerKeys)) {
       return GitProvider.STASH;
     } else if (containsHeaderKey(headerKeys, BITBUCKET_CLOUD_HEADER_KEY)) {
       return GitProvider.BITBUCKET;
@@ -247,7 +289,12 @@ public class WebhookEventPayloadParser {
     }
   }
 
-  private boolean containsHeaderKey(Set<String> headerKeys, String key) {
+  @VisibleForTesting
+  boolean isBitbucketServer(Set<String> headerKeys) {
+    return containsHeaderKey(headerKeys, BITBUCKET_SERVER_HEADER_KEY);
+  }
+
+  public boolean containsHeaderKey(Set<String> headerKeys, String key) {
     if (isEmpty(headerKeys) || isBlank(key)) {
       return false;
     }
@@ -265,7 +312,7 @@ public class WebhookEventPayloadParser {
                                     .findFirst()
                                     .orElse(null);
 
-    WebhookEventHeaderData.WebhookEventHeaderDataBuilder builder = WebhookEventHeaderData.builder().dataFound(false);
+    WebhookEventHeaderDataBuilder builder = WebhookEventHeaderData.builder().dataFound(false);
     if (headerConfig != null) {
       return WebhookEventHeaderData.builder()
           .sourceKey(headerConfig.getKey())

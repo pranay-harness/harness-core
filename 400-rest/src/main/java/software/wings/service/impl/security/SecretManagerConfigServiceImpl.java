@@ -35,7 +35,9 @@ import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AzureVaultConfig;
 import software.wings.beans.CyberArkConfig;
 import software.wings.beans.GcpKmsConfig;
+import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UsageRestrictions;
@@ -46,8 +48,10 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.VaultService;
 
 import com.google.inject.Inject;
@@ -77,6 +81,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private AccountService accountService;
   @Inject private KmsService kmsService;
   @Inject private GcpSecretsManagerService gcpSecretsManagerService;
+  @Inject private GcpSecretsManagerServiceV2 gcpSecretsManagerServiceV2;
   @Inject private VaultService vaultService;
   @Inject private AwsSecretsManagerService secretsManagerService;
   @Inject private LocalSecretManagerService localSecretManagerService;
@@ -87,6 +92,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Inject private SecretsDao secretsDao;
   @Inject private SecretService secretService;
   @Inject @Named("hashicorpvault") private RuntimeCredentialsInjector vaultRuntimeCredentialsInjector;
+  @Inject private SSHVaultService sshVaultService;
 
   @Override
   public String save(SecretManagerConfig secretManagerConfig) {
@@ -345,9 +351,16 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
         vaultService.decryptVaultConfigSecrets(accountId, (VaultConfig) secretManagerConfig, maskSecrets);
         ((VaultConfig) secretManagerConfig).setCertValidationRequired(isCertValidationRequired);
         break;
+      case VAULT_SSH:
+        sshVaultService.decryptVaultConfigSecrets(accountId, (SSHVaultConfig) secretManagerConfig, maskSecrets);
+        ((SSHVaultConfig) secretManagerConfig).setCertValidationRequired(isCertValidationRequired);
+        break;
       case AWS_SECRETS_MANAGER:
         secretsManagerService.decryptAsmConfigSecrets(
             accountId, (AwsSecretsManagerConfig) secretManagerConfig, maskSecrets);
+        break;
+      case GCP_SECRETS_MANAGER:
+        gcpSecretsManagerServiceV2.decryptGcpConfigSecrets((GcpSecretsManagerConfig) secretManagerConfig, maskSecrets);
         break;
       case AZURE_VAULT:
         azureSecretsManagerService.decryptAzureConfigSecrets((AzureVaultConfig) secretManagerConfig, maskSecrets);

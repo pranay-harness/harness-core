@@ -11,7 +11,7 @@ import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_TAIL_PATTERN
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.delegate.task.shell.ScriptType;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ExecCommandUnit;

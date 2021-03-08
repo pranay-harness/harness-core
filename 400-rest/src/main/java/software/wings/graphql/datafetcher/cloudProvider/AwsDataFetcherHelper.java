@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
 
@@ -23,6 +25,7 @@ import com.google.inject.Singleton;
 import org.apache.commons.lang3.ObjectUtils;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AwsDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 
@@ -88,6 +91,11 @@ public class AwsDataFetcherHelper {
         configBuilder.crossAccountAttributes(builder.build());
       });
     }
+
+    if (input.getDefaultRegion() != null && input.getDefaultRegion().isPresent()) {
+      input.getDefaultRegion().getValue().ifPresent(configBuilder::defaultRegion);
+    }
+
     settingAttributeBuilder.withValue(configBuilder.build());
 
     if (input.getName().isPresent() && input.getName().getValue().isPresent()) {
@@ -161,6 +169,10 @@ public class AwsDataFetcherHelper {
 
         config.setCrossAccountAttributes(awsCrossAccountAttributes);
       });
+    }
+
+    if (input.getDefaultRegion() != null && input.getDefaultRegion().isPresent()) {
+      input.getDefaultRegion().getValue().ifPresent(config::setDefaultRegion);
     }
 
     settingAttribute.setValue(config);

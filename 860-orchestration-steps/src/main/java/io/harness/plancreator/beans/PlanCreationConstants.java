@@ -8,4 +8,5 @@ public class PlanCreationConstants {
   public final String PIPELINE_NODE_IDENTIFIER = "pipeline";
   public final String EXECUTION_NODE_IDENTIFIER = "execution";
   public final String EXECUTION_NODE_NAME = "Execution";
+  public final String ROLLBACK_NODE_NAME = "Rollback";
 }

@@ -27,6 +27,7 @@ import io.harness.secrets.validation.SecretValidator;
 import io.harness.secrets.validation.SecretValidators;
 import io.harness.secrets.validation.validators.AwsSecretManagerValidator;
 import io.harness.secrets.validation.validators.AzureSecretManagerValidator;
+import io.harness.secrets.validation.validators.GcpSecretManagerValidator;
 import io.harness.secrets.validation.validators.VaultSecretManagerValidator;
 import io.harness.secrets.yamlhandlers.SecretYamlHandler;
 import io.harness.secrets.yamlhandlers.SecretYamlHandlerImpl;
@@ -77,6 +78,11 @@ public class SecretManagementCoreModule extends AbstractModule {
         .bind(SecretValidator.class)
         .annotatedWith(Names.named(SecretValidators.AZURE_SECRET_MANAGER_VALIDATOR.getName()))
         .to(AzureSecretManagerValidator.class);
+
+    binder()
+        .bind(SecretValidator.class)
+        .annotatedWith(Names.named(SecretValidators.GCP_SECRET_MANAGER_VALIDATOR.getName()))
+        .to(GcpSecretManagerValidator.class);
 
     binder()
         .bind(SecretValidator.class)

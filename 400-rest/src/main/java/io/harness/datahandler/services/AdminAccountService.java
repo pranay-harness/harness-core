@@ -47,4 +47,8 @@ public interface AdminAccountService {
   FeatureFlag updateFeatureFlagForAccount(String accountId, String featureName, boolean enabled);
 
   boolean updatePovFlag(String accountId, boolean isPov);
+
+  boolean updateAccountName(String accountId, String accountName);
+
+  boolean updateCompanyName(String accountId, String companyName);
 }

@@ -48,6 +48,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.testing.GrpcCleanupRule;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -76,19 +77,13 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
   private static final String SELECTOR = "selector";
 
   private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
-  private DelegateProfileServiceGrpcImpl delegateProfileServiceGrpcImpl;
 
   private DelegateProfileService delegateProfileService;
-  private UserService userService;
-
-  private Server server;
-  private Logger mockClientLogger;
-  private Logger mockServerLogger;
 
   @Before
   public void setUp() throws Exception {
-    mockClientLogger = mock(Logger.class);
-    mockServerLogger = mock(Logger.class);
+    Logger mockClientLogger = mock(Logger.class);
+    Logger mockServerLogger = mock(Logger.class);
     setStaticFieldValue(DelegateServiceGrpcClient.class, "log", mockClientLogger);
     setStaticFieldValue(DelegateServiceGrpcClient.class, "log", mockServerLogger);
 
@@ -100,15 +95,16 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     delegateProfileServiceGrpcClient = new DelegateProfileServiceGrpcClient(delegateProfileServiceBlockingStub);
 
     delegateProfileService = mock(DelegateProfileService.class);
-    userService = mock(UserService.class);
+    UserService userService = mock(UserService.class);
     when(userService.getUserFromCacheOrDB(anyString())).thenReturn(new User());
-    delegateProfileServiceGrpcImpl = new DelegateProfileServiceGrpcImpl(delegateProfileService, userService);
+    DelegateProfileServiceGrpcImpl delegateProfileServiceGrpcImpl =
+        new DelegateProfileServiceGrpcImpl(delegateProfileService, userService);
 
-    server = InProcessServerBuilder.forName(serverName)
-                 .directExecutor()
-                 .addService(delegateProfileServiceGrpcImpl)
-                 .build()
-                 .start();
+    Server server = InProcessServerBuilder.forName(serverName)
+                        .directExecutor()
+                        .addService(delegateProfileServiceGrpcImpl)
+                        .build()
+                        .start();
     grpcCleanup.register(server);
   }
 
@@ -150,7 +146,7 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
 
     Map<String, Set<String>> scopingEntities = new HashMap<>();
     scopingEntities.put(SCOPING_ENTITY_KEY_APP_ID, new HashSet<>(Arrays.asList("app_id1", "app_id2")));
-    scopingEntities.put(SCOPING_ENTITY_KEY_ENV_ID, new HashSet<>(Arrays.asList("env_id1")));
+    scopingEntities.put(SCOPING_ENTITY_KEY_ENV_ID, new HashSet<>(Collections.singletonList("env_id1")));
 
     DelegateProfileScopingRule scopingRule = DelegateProfileScopingRule.builder()
                                                  .description(SCOPING_RULE_DESCRIPTION)
@@ -165,8 +161,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
                                           .primary(true)
                                           .approvalRequired(true)
                                           .startupScript(STARTUP_SCRIPT)
-                                          .selectors(Arrays.asList(SELECTOR))
-                                          .scopingRules(Arrays.asList(scopingRule))
+                                          .selectors(Collections.singletonList(SELECTOR))
+                                          .scopingRules(Collections.singletonList(scopingRule))
                                           .build();
 
     when(delegateProfileService.get(accountId, profileId))
@@ -237,8 +233,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     Map<String, ScopingValues> grpcScopingEntities = new HashMap<>();
     grpcScopingEntities.put(
         SCOPING_ENTITY_KEY_APP_ID, ScopingValues.newBuilder().addAllValue(Arrays.asList("app_id1", "app_id2")).build());
-    grpcScopingEntities.put(
-        SCOPING_ENTITY_KEY_ENV_ID, ScopingValues.newBuilder().addAllValue(Arrays.asList("env_id1")).build());
+    grpcScopingEntities.put(SCOPING_ENTITY_KEY_ENV_ID,
+        ScopingValues.newBuilder().addAllValue(Collections.singletonList("env_id1")).build());
 
     DelegateProfileGrpc delegateProfileGrpc =
         DelegateProfileGrpc.newBuilder()
@@ -249,16 +245,16 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
             .setPrimary(true)
             .setApprovalRequired(true)
             .setStartupScript(STARTUP_SCRIPT)
-            .addAllSelectors(Arrays.asList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
-            .addAllScopingRules(Arrays.asList(ProfileScopingRule.newBuilder()
-                                                  .setDescription(SCOPING_RULE_DESCRIPTION)
-                                                  .putAllScopingEntities(grpcScopingEntities)
-                                                  .build()))
+            .addAllSelectors(Collections.singletonList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
+            .addAllScopingRules(Collections.singletonList(ProfileScopingRule.newBuilder()
+                                                              .setDescription(SCOPING_RULE_DESCRIPTION)
+                                                              .putAllScopingEntities(grpcScopingEntities)
+                                                              .build()))
             .build();
 
     Map<String, Set<String>> scopingEntities = new HashMap<>();
     scopingEntities.put(SCOPING_ENTITY_KEY_APP_ID, new HashSet<>(Arrays.asList("app_id1", "app_id2")));
-    scopingEntities.put(SCOPING_ENTITY_KEY_ENV_ID, new HashSet<>(Arrays.asList("env_id1")));
+    scopingEntities.put(SCOPING_ENTITY_KEY_ENV_ID, new HashSet<>(Collections.singletonList("env_id1")));
 
     DelegateProfileScopingRule scopingRule = DelegateProfileScopingRule.builder()
                                                  .description(SCOPING_RULE_DESCRIPTION)
@@ -273,8 +269,8 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
                                           .primary(true)
                                           .approvalRequired(true)
                                           .startupScript(STARTUP_SCRIPT)
-                                          .selectors(Arrays.asList(SELECTOR))
-                                          .scopingRules(Arrays.asList(scopingRule))
+                                          .selectors(Collections.singletonList(SELECTOR))
+                                          .scopingRules(Collections.singletonList(scopingRule))
                                           .build();
 
     when(delegateProfileService.add(any(DelegateProfile.class)))
@@ -345,11 +341,11 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
             .setPrimary(true)
             .setApprovalRequired(true)
             .setStartupScript(STARTUP_SCRIPT)
-            .addAllSelectors(Arrays.asList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
-            .addAllScopingRules(Arrays.asList(ProfileScopingRule.newBuilder()
-                                                  .setDescription(SCOPING_RULE_DESCRIPTION)
-                                                  .putAllScopingEntities(grpcScopingEntities)
-                                                  .build()))
+            .addAllSelectors(Collections.singletonList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
+            .addAllScopingRules(Collections.singletonList(ProfileScopingRule.newBuilder()
+                                                              .setDescription(SCOPING_RULE_DESCRIPTION)
+                                                              .putAllScopingEntities(grpcScopingEntities)
+                                                              .build()))
             .build();
 
     assertThatThrownBy(() -> delegateProfileServiceGrpcClient.addProfile(delegateProfileGrpc))
@@ -404,11 +400,11 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
             .setPrimary(true)
             .setApprovalRequired(true)
             .setStartupScript(STARTUP_SCRIPT)
-            .addAllSelectors(Arrays.asList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
-            .addAllScopingRules(Arrays.asList(ProfileScopingRule.newBuilder()
-                                                  .setDescription(SCOPING_RULE_DESCRIPTION)
-                                                  .putAllScopingEntities(grpcScopingEntities)
-                                                  .build()))
+            .addAllSelectors(Collections.singletonList(ProfileSelector.newBuilder().setSelector(SELECTOR).build()))
+            .addAllScopingRules(Collections.singletonList(ProfileScopingRule.newBuilder()
+                                                              .setDescription(SCOPING_RULE_DESCRIPTION)
+                                                              .putAllScopingEntities(grpcScopingEntities)
+                                                              .build()))
             .build();
 
     assertThatThrownBy(() -> delegateProfileServiceGrpcClient.updateProfile(delegateProfileGrpc))
@@ -466,7 +462,7 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     try {
       delegateProfileServiceGrpcClient.updateProfileSelectors(AccountId.newBuilder().setId(accountId).build(),
           ProfileId.newBuilder().setId(profileId).build(),
-          Arrays.asList(ProfileSelector.newBuilder().setSelector("test").build()));
+          Collections.singletonList(ProfileSelector.newBuilder().setSelector("test").build()));
 
       ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
       verify(delegateProfileService, times(2))
@@ -498,26 +494,25 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
         .hasMessage("Unexpected error occurred while updating profile scoping rules.");
 
     // Test update scoping rules
-    Map<String, ScopingValues> profileScopingRuleValues =
-        ImmutableMap.of("testKey", ScopingValues.newBuilder().addAllValue(Arrays.asList("scopingValues")).build());
+    Map<String, ScopingValues> profileScopingRuleValues = ImmutableMap.of(
+        "testKey", ScopingValues.newBuilder().addAllValue(Collections.singletonList("scopingValues")).build());
 
     when(delegateProfileService.updateScopingRules(eq(accountId), eq(profileId), any(List.class)))
         .thenReturn(DelegateProfile.builder().uuid(profileId).accountId(accountId).name(NAME).build());
 
     DelegateProfileGrpc delegateProfileGrpc = delegateProfileServiceGrpcClient.updateProfileScopingRules(
         AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(profileId).build(),
-        Arrays.asList(ProfileScopingRule.newBuilder()
-                          .setDescription("testDescription")
-                          .putAllScopingEntities(profileScopingRuleValues)
-                          .build()));
+        Collections.singletonList(ProfileScopingRule.newBuilder()
+                                      .setDescription("testDescription")
+                                      .putAllScopingEntities(profileScopingRuleValues)
+                                      .build()));
 
     assertThat(delegateProfileGrpc).isNotNull();
     ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
     verify(delegateProfileService, times(2)).updateScopingRules(eq(accountId), eq(profileId), argumentCaptor.capture());
 
     List<PermissionAttribute> scopingEntities = argumentCaptor.getValue();
-    assertThat(scopingEntities).isNotNull();
-    assertThat(scopingEntities).hasSize(1);
+    assertThat(scopingEntities).isNotNull().hasSize(1);
 
     // Test profile not found
     when(delegateProfileService.updateScopingRules(accountId, profileId, null)).thenReturn(null);
@@ -541,10 +536,10 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
         ()
             -> delegateProfileServiceGrpcClient.updateProfileScopingRules(
                 AccountId.newBuilder().setId(accountId).build(), ProfileId.newBuilder().setId(profileId).build(),
-                Arrays.asList(ProfileScopingRule.newBuilder()
-                                  .setDescription(SCOPING_RULE_DESCRIPTION)
-                                  .putAllScopingEntities(grpcScopingEntities)
-                                  .build())))
+                Collections.singletonList(ProfileScopingRule.newBuilder()
+                                              .setDescription(SCOPING_RULE_DESCRIPTION)
+                                              .putAllScopingEntities(grpcScopingEntities)
+                                              .build())))
         .isInstanceOf(DelegateServiceDriverException.class)
         .hasMessage("Scoping rule should have at least one scoping value set!");
   }

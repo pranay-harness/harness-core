@@ -3,12 +3,13 @@
 #
 # Build the ci-addon docker image using:
 # > bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //product/ci/addon/...
-# > docker build -t harness/ci-addon:<tag> -f product/ci/addon/Dockerfile bazel-bin/product/ci/addon/
+# > mvn clean install -pl 980-java-agent; cp ~/.m2/repository/software/wings/980-java-agent/0.0.1-SNAPSHOT/980-java-agent-0.0.1-SNAPSHOT.jar $(bazel info bazel-bin)/product/ci/addon/java-agent.jar
+# > docker build -t harness/ci-addon:<tag> -f product/ci/addon/Dockerfile $(bazel info bazel-bin)/product/ci/addon/
 
 
-# First stage
 FROM alpine:3.12
 # Copy ci-addon binary
 COPY linux_amd64_pure_stripped/ci-addon /usr/local/bin/ci-addon-linux-amd64
 RUN chmod +x /usr/local/bin/ci-addon-linux-amd64
+COPY java-agent.jar /usr/local/bin/
 CMD ["/usr/local/bin/ci-addon-linux-amd64"]

@@ -1,12 +1,13 @@
 package io.harness.cdng.creator.plan.stage;
 
-import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
+import io.harness.cdng.visitor.YamlTypes;
+import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -19,9 +20,9 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
 
@@ -46,31 +47,28 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
     Map<String, YamlField> dependenciesNodeMap = new HashMap<>();
 
     // Adding service child
-    YamlField serviceField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("service");
+    YamlField serviceField =
+        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.SERVICE_CONFIG);
 
     if (serviceField != null) {
       PlanNode servicePlanNode = ServicePMSPlanCreator.createPlanForServiceNode(
-          serviceField, ((DeploymentStageConfig) field.getStageType()).getService(), kryoSerializer);
+          serviceField, ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer);
       planCreationResponseMap.put(serviceField.getNode().getUuid(),
           PlanCreationResponse.builder().node(serviceField.getNode().getUuid(), servicePlanNode).build());
     }
+
     // Adding infrastructure node
-    String infraDefNodeUuid = ctx.getCurrentField()
-                                  .getNode()
-                                  .getField("spec")
-                                  .getNode()
-                                  .getField("infrastructure")
-                                  .getNode()
-                                  .getField("infrastructureDefinition")
-                                  .getNode()
-                                  .getUuid();
-    YamlField infraField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("infrastructure");
+    YamlField infraField =
+        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YamlTypes.PIPELINE_INFRASTRUCTURE);
+    if (infraField == null) {
+      throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
+    }
     YamlNode infraNode = infraField.getNode();
 
     PlanNode infraStepNode = InfrastructurePmsPlanCreator.getInfraStepPlanNode(
-        infraDefNodeUuid, ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
+        ((DeploymentStageConfig) field.getStageType()).getInfrastructure(), infraField);
     planCreationResponseMap.put(
-        infraDefNodeUuid, PlanCreationResponse.builder().node(infraDefNodeUuid, infraStepNode).build());
+        infraStepNode.getUuid(), PlanCreationResponse.builder().node(infraStepNode.getUuid(), infraStepNode).build());
 
     PlanNode infraSectionPlanNode =
         InfrastructurePmsPlanCreator.getInfraSectionPlanNode(infraNode, infraStepNode.getUuid(),
@@ -79,7 +77,11 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         infraNode.getUuid(), PlanCreationResponse.builder().node(infraNode.getUuid(), infraSectionPlanNode).build());
 
     // Add dependency for execution
-    YamlField executionField = ctx.getCurrentField().getNode().getField("spec").getNode().getField("execution");
+    YamlField executionField =
+        ctx.getCurrentField().getNode().getField(YamlTypes.SPEC).getNode().getField(YAMLFieldNameConstants.EXECUTION);
+    if (executionField == null) {
+      throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
+    }
     dependenciesNodeMap.put(executionField.getNode().getUuid(), executionField);
 
     planCreationResponseMap.put(
@@ -98,6 +100,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(stepParameters)
         .stepType(DeploymentStageStep.STEP_TYPE)
+        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
@@ -106,11 +109,11 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
-      YamlField siblingField =
-          currentField.getNode().nextSiblingFromParentArray(currentField.getName(), Arrays.asList("stage", "parallel"));
+      YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
+          currentField.getName(), Arrays.asList(YAMLFieldNameConstants.STAGE, YAMLFieldNameConstants.PARALLEL));
       if (siblingField != null && siblingField.getNode().getUuid() != null) {
         adviserObtainments.add(
             AdviserObtainment.newBuilder()
@@ -130,14 +133,6 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("stage", Collections.singleton("Deployment"));
-  }
-
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
-    }
-    return false;
+    return Collections.singletonMap(YAMLFieldNameConstants.STAGE, Collections.singleton("Deployment"));
   }
 }

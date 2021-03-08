@@ -1,14 +1,18 @@
 package io.harness.pms.merger.helpers;
 
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.PipelineYamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -18,8 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class MergeHelper {
   public String createTemplateFromPipeline(String pipelineYaml) throws IOException {
     return createTemplateFromPipeline(pipelineYaml, true);
@@ -36,7 +42,8 @@ public class MergeHelper {
     fullMap.keySet().forEach(key -> {
       String value = fullMap.get(key).toString().replace("\"", "");
       if ((keepInput && NGExpressionUtils.matchesInputSetPattern(value))
-          || (!keepInput && !NGExpressionUtils.matchesInputSetPattern(value) && !key.isIdentifierOrVariableName())) {
+          || (!keepInput && !NGExpressionUtils.matchesInputSetPattern(value) && !key.isIdentifierOrVariableName()
+              && !key.isType())) {
         templateMap.put(key, fullMap.get(key));
       }
     });
@@ -59,12 +66,13 @@ public class MergeHelper {
     return res;
   }
 
-  public String mergeInputSetIntoPipeline(String pipelineYaml, String inputSetPipelineCompYaml) throws IOException {
-    return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true);
+  public String mergeInputSetIntoPipeline(
+      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) throws IOException {
+    return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
   }
 
-  private String mergeInputSetIntoPipeline(
-      String pipelineYaml, String inputSetPipelineCompYaml, boolean convertToTemplate) throws IOException {
+  private String mergeInputSetIntoPipeline(String pipelineYaml, String inputSetPipelineCompYaml,
+      boolean convertToTemplate, boolean appendInputSetValidator) throws IOException {
     PipelineYamlConfig pipelineConfig = new PipelineYamlConfig(pipelineYaml);
     String templateYaml = createTemplateFromPipeline(pipelineYaml, true);
     if (!convertToTemplate) {
@@ -76,7 +84,11 @@ public class MergeHelper {
     Map<FQN, Object> res = new LinkedHashMap<>(pipelineConfig.getFqnToValueMap());
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetConfig.getFqnToValueMap().containsKey(key)) {
-        res.put(key, inputSetConfig.getFqnToValueMap().get(key));
+        Object value = inputSetConfig.getFqnToValueMap().get(key);
+        if (appendInputSetValidator) {
+          value = checkForRuntimeInputExpressions(value, templateConfig.getFqnToValueMap().get(key));
+        }
+        res.put(key, value);
       } else {
         Map<FQN, Object> subMap =
             io.harness.pms.merger.helpers.FQNUtils.getSubMap(inputSetConfig.getFqnToValueMap(), key);
@@ -88,7 +100,7 @@ public class MergeHelper {
     return (new PipelineYamlConfig(res, pipelineConfig.getYamlMap())).getYaml();
   }
 
-  public String getPipelineComp(String inputSetYaml) {
+  public String getPipelineComponent(String inputSetYaml) {
     try {
       JsonNode node = YamlUtils.readTree(inputSetYaml).getNode().getCurrJsonNode();
       ObjectNode innerMap = (ObjectNode) node.get("inputSet");
@@ -113,13 +125,20 @@ public class MergeHelper {
   private String sanitizeInputSet(String pipelineYaml, String runtimeInput, boolean isInputSet) throws IOException {
     String templateYaml = MergeHelper.createTemplateFromPipeline(pipelineYaml);
 
+    if (templateYaml == null) {
+      return EMPTY;
+    }
+
     // Strip off inputSet top key from yaml.
     // when its false, its runtimeInput (may be coming from trigger)
     if (isInputSet) {
-      runtimeInput = MergeHelper.getPipelineComp(runtimeInput);
+      runtimeInput = getPipelineComponent(runtimeInput);
     }
 
     String filteredInputSetYaml = MergeHelper.removeRuntimeInputFromYaml(runtimeInput);
+    if (EmptyPredicate.isEmpty(filteredInputSetYaml)) {
+      return "";
+    }
     PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(filteredInputSetYaml);
 
     Set<FQN> invalidFQNsInInputSet = getInvalidFQNsInInputSet(templateYaml, filteredInputSetYaml);
@@ -133,13 +152,32 @@ public class MergeHelper {
     return new PipelineYamlConfig(filtered, inputSetConfig.getYamlMap()).getYaml();
   }
 
-  public String mergeInputSets(String template, List<String> inputSetYamlList) throws IOException {
+  public String mergeInputSets(String template, List<String> inputSetYamlList, boolean appendInputSetValidator)
+      throws IOException {
     List<String> inputSetPipelineCompYamlList =
-        inputSetYamlList.stream().map(MergeHelper::getPipelineComp).collect(Collectors.toList());
+        inputSetYamlList.stream().map(MergeHelper::getPipelineComponent).collect(Collectors.toList());
     String res = template;
     for (String yaml : inputSetPipelineCompYamlList) {
-      res = mergeInputSetIntoPipeline(res, yaml, false);
+      res = mergeInputSetIntoPipeline(res, yaml, false, appendInputSetValidator);
     }
-    return createTemplateFromPipeline(res, false);
+    return res;
+  }
+
+  private Object checkForRuntimeInputExpressions(Object inputSetValue, Object pipelineValue) {
+    String pipelineValText = ((JsonNode) pipelineValue).asText();
+    if (!NGExpressionUtils.matchesInputSetPattern(pipelineValText)) {
+      return inputSetValue;
+    }
+    try {
+      ParameterField<?> parameterField = YamlUtils.read(pipelineValText, ParameterField.class);
+      if (parameterField.getInputSetValidator() == null) {
+        return inputSetValue;
+      }
+      return ParameterField.createExpressionField(true, ((JsonNode) inputSetValue).asText(),
+          parameterField.getInputSetValidator(), ((JsonNode) inputSetValue).getNodeType() != JsonNodeType.STRING);
+    } catch (IOException e) {
+      log.error("", e);
+      return inputSetValue;
+    }
   }
 }

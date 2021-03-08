@@ -73,7 +73,7 @@ func (s *saveCacheStep) resolveJEXL(ctx context.Context) error {
 		exprsToResolve = append(exprsToResolve, path)
 	}
 
-	resolvedExprs, err := evaluateJEXL(ctx, s.id, exprsToResolve, s.stageOutput, s.log)
+	resolvedExprs, err := evaluateJEXL(ctx, s.id, exprsToResolve, s.stageOutput, false, s.log)
 	if err != nil {
 		return err
 	}
@@ -157,9 +157,8 @@ func (s *saveCacheStep) Run(ctx context.Context) (*output.StepOutput, error) {
 		"key", s.key,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
-	o := &output.StepOutput{
-		Output: map[string]string{outputKey: s.key},
-	}
+	o := &output.StepOutput{}
+	o.Output.Variables = map[string]string{outputKey: s.key}
 	return o, nil
 }
 

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -19,7 +20,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
@@ -65,8 +65,8 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
-import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.ExecutionScope;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.NameValuePairKeys;
@@ -82,8 +82,6 @@ import software.wings.beans.approval.JiraApprovalParams;
 import software.wings.beans.approval.ServiceNowApprovalParams;
 import software.wings.beans.approval.ShellScriptApprovalParams;
 import software.wings.beans.approval.SlackApprovalParams;
-import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.security.UserGroup;
@@ -95,10 +93,12 @@ import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.impl.notifications.SlackApprovalMessageKeys;
+import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApprovalPolingService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
@@ -181,6 +181,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject private UserGroupService userGroupService;
   @Inject private ServiceResourceService serviceResourceService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Inject @Transient private TemplateExpressionProcessor templateExpressionProcessor;
   @Transient @Inject KryoSerializer kryoSerializer;
@@ -337,6 +338,10 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       if (jexlError.contains(":")) {
         jexlError = jexlError.split(":")[1];
       }
+      if (je instanceof JexlException.Variable
+          && ((JexlException.Variable) je).getVariable().equals("sweepingOutputSecrets")) {
+        jexlError = "Secret Variables defined in Script output of shell scripts cannot be used in assertions";
+      }
       return respondWithStatus(context, executionData, null,
           ExecutionResponse.builder()
               .executionStatus(FAILED)
@@ -355,6 +360,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
 
   private boolean isTrueExpression(
       String disableAssertion, ExecutionContext context, ApprovalStateExecutionData executionData) {
+    // rendering expression in order to have it tracked
+    context.renderExpression(disableAssertion);
     if ("true".equals(disableAssertion)) {
       return true;
     }
@@ -467,6 +474,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .activityId(activityId)
             .scriptString(parameters.getScriptString())
             .approvalType(approvalStateType)
+            .retryInterval(parameters.getRetryInterval())
             .build();
 
     try {
@@ -527,8 +535,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     executionData.setRejectionField(jiraApprovalParams.getRejectionField());
     executionData.setRejectionValue(jiraApprovalParams.getRejectionValue());
 
-    JiraExecutionData jiraExecutionData = jiraHelperService.fetchIssue(
-        jiraApprovalParams, app.getAccountId(), app.getAppId(), context.getWorkflowExecutionId(), approvalId);
+    JiraExecutionData jiraExecutionData =
+        jiraHelperService.fetchIssue(jiraApprovalParams, app.getAccountId(), app.getAppId(), approvalId);
 
     if (jiraExecutionData.getExecutionStatus() != null && FAILED == jiraExecutionData.getExecutionStatus()) {
       return respondWithStatus(context, executionData, null,
@@ -787,12 +795,21 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .stateExecutionData(executionData));
   }
 
-  private void updatePlaceholderValuesForSlackApproval(
+  @VisibleForTesting
+  void updatePlaceholderValuesForSlackApproval(
       String approvalId, String accountId, Map<String, String> placeHolderValues, ExecutionContext context) {
     String pausedStageName = null;
-    StringJoiner environments = new StringJoiner(", ");
-    StringJoiner services = new StringJoiner(", ");
-    StringJoiner artifacts = new StringJoiner(", ");
+    StringBuilder environments = new StringBuilder(128);
+    StringBuilder services = new StringBuilder(128);
+    WorkflowNotificationDetails serviceDetails = null;
+    StringBuilder artifacts = new StringBuilder(128);
+    StringBuilder infrastructureDefinitions = new StringBuilder(128);
+    WorkflowNotificationDetails infraDetails = null;
+
+    WorkflowNotificationDetails applicationDetails =
+        workflowNotificationHelper.calculateApplicationDetails(accountId, context.getAppId(), context.getApp());
+    String appDetails = applicationDetails.getMessage();
+    String appName = applicationDetails.getName();
 
     int tokenValidDuration = getTimeoutMillis();
 
@@ -803,27 +820,50 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       pausedStageName = context.getStateExecutionInstanceName();
     }
 
-    WorkflowExecution workflowExecution =
-        workflowExecutionService.fetchWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId(),
-            WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments, WorkflowExecutionKeys.serviceIds);
+    WorkflowExecution workflowExecution = workflowExecutionService.fetchWorkflowExecution(context.getAppId(),
+        context.getWorkflowExecutionId(), WorkflowExecutionKeys.artifacts, WorkflowExecutionKeys.environments,
+        WorkflowExecutionKeys.serviceIds, WorkflowExecutionKeys.infraDefinitionIds);
 
     if (isNotEmpty(workflowExecution.getArtifacts())) {
-      for (Artifact artifact : workflowExecution.getArtifacts()) {
-        artifacts.add(
-            artifact.getArtifactSourceName() + ": " + artifact.getMetadata().get(ArtifactMetadataKeys.buildNo));
-      }
+      artifacts.append(
+          workflowNotificationHelper.getArtifactsDetails(context, workflowExecution, ExecutionScope.WORKFLOW, null)
+              .getMessage());
+    } else {
+      artifacts.append("*Artifacts*: no artifacts");
     }
     if (isNotEmpty(workflowExecution.getEnvironments())) {
-      for (EnvSummary envSummary : workflowExecution.getEnvironments()) {
-        environments.add(envSummary.getName());
-      }
+      StringJoiner env = new StringJoiner(", ");
+      workflowExecution.getEnvironments().forEach(envSummary -> env.add(envSummary.getName()));
+      environments.append("*Environments*: ").append(env.toString());
+    } else {
+      environments.append("*Environments*: no environments");
     }
+    String envDetailsForEmail =
+        workflowNotificationHelper
+            .calculateEnvDetails(accountId, context.getAppId(), workflowExecution.getEnvironments())
+            .getMessage();
+    placeHolderValues.put("ENV", envDetailsForEmail.replace("*Environments:*", "<b>Environments:</b>"));
     if (isNotEmpty(workflowExecution.getServiceIds())) {
-      List<String> serviceNames =
-          serviceResourceService.fetchServiceNamesByUuids(context.getAppId(), workflowExecution.getServiceIds());
-      for (String serviceName : serviceNames) {
-        services.add(serviceName);
-      }
+      serviceDetails = workflowNotificationHelper.calculateServiceDetailsForAllServices(
+          accountId, context.getAppId(), context, workflowExecution, ExecutionScope.WORKFLOW, null);
+      services.append("*Services*: ").append(serviceDetails.getName());
+      placeHolderValues.put("SERVICE_NAMES", serviceDetails.getMessage().replace("*Services*", "<b>Services</b>"));
+    } else {
+      services.append("*Services*: no services");
+      placeHolderValues.put("SERVICE_NAMES", services.toString().replace("*Services*", "<b>Services</b>"));
+    }
+    List<String> infraDefinitionIds = workflowExecution.getInfraDefinitionIds();
+    if (isNotEmpty(infraDefinitionIds)) {
+      infraDetails = workflowNotificationHelper.calculateInfraDetails(accountId, context.getAppId(), workflowExecution);
+      infrastructureDefinitions.append("*Infrastructure Definitions*: ").append(infraDetails.getName());
+      placeHolderValues.put("INFRA_NAMES",
+          infraDetails.getMessage().replace("*Infrastructure Definitions*", "<b>Infrastructure Definitions</b>"));
+
+    } else {
+      infrastructureDefinitions.append("*Infrastructure Definitions*: no infrastructure definitions");
+      placeHolderValues.put("INFRA_NAMES",
+          infrastructureDefinitions.toString().replace(
+              "*Infrastructure Definitions*", "<b>Infrastructure Definitions</b>"));
     }
 
     Map<String, String> claims = new HashMap<>();
@@ -833,26 +873,41 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     String jwtToken = secretManager.generateJWTTokenWithCustomTimeOut(
         claims, secretManager.getJWTSecret(EXTERNAL_SERVICE_SECRET), tokenValidDuration);
 
-    SlackApprovalParams slackApprovalParams = SlackApprovalParams.builder()
-                                                  .appId(context.getAppId())
-                                                  .appName(context.getApp().getName())
-                                                  .routingId(accountId)
-                                                  .deploymentId(context.getWorkflowExecutionId())
-                                                  .workflowId(context.getWorkflowId())
-                                                  .workflowExecutionName(context.getWorkflowExecutionName())
-                                                  .stateExecutionId(context.getStateExecutionInstanceId())
-                                                  .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                                  .approvalId(approvalId)
-                                                  .pausedStageName(pausedStageName)
-                                                  .servicesInvolved(services.toString())
-                                                  .environmentsInvolved(environments.toString())
-                                                  .artifactsInvolved(artifacts.toString())
-                                                  .confirmation(false)
-                                                  .pipeline(isPipeline)
-                                                  .workflowUrl(workflowURL)
-                                                  .jwtToken(jwtToken)
-                                                  .build();
-    JSONObject customData = new JSONObject(slackApprovalParams);
+    placeHolderValues.put("APPROVAL_STEP", String.format("Approval Step: <<<%s|-|%s>>>", workflowURL, pausedStageName));
+    placeHolderValues.put("WORKFLOW", String.format("<<<%s|-|%s>>>", workflowURL, context.getWorkflowExecutionName()));
+    placeHolderValues.put("APP", appDetails);
+    placeHolderValues.put("ARTIFACTS", artifacts.toString().replace("*Artifacts*", "<b>Artifacts</b>"));
+
+    SlackApprovalParams slackApprovalParams =
+        SlackApprovalParams.builder()
+            .appId(context.getAppId())
+            .appName(appDetails)
+            .nonFormattedAppName(appName)
+            .routingId(accountId)
+            .deploymentId(context.getWorkflowExecutionId())
+            .workflowId(context.getWorkflowId())
+            .workflowExecutionName(context.getWorkflowExecutionName())
+            .stateExecutionId(context.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+            .approvalId(approvalId)
+            .pausedStageName(pausedStageName)
+            .servicesInvolved(services.toString())
+            .environmentsInvolved(environments.toString())
+            .artifactsInvolved(artifacts.toString())
+            .infraDefinitionsInvolved(infrastructureDefinitions.toString())
+            .confirmation(false)
+            .pipeline(isPipeline)
+            .workflowUrl(workflowURL)
+            .jwtToken(jwtToken)
+            .startTsSecs(placeHolderValues.get(SlackApprovalMessageKeys.START_TS_SECS))
+            .endTsSecs(placeHolderValues.get(SlackApprovalMessageKeys.END_TS_SECS))
+            .startDate(placeHolderValues.get(SlackApprovalMessageKeys.START_DATE))
+            .expiryTsSecs(placeHolderValues.get(SlackApprovalMessageKeys.EXPIRES_TS_SECS))
+            .endDate(placeHolderValues.get(SlackApprovalMessageKeys.END_DATE))
+            .expiryDate(placeHolderValues.get(SlackApprovalMessageKeys.EXPIRES_DATE))
+            .verb(placeHolderValues.get(SlackApprovalMessageKeys.VERB))
+            .build();
+    JSONObject customData = createCustomData(slackApprovalParams);
 
     URL notificationTemplateUrl;
     if (slackApprovalParams.isPipeline()) {
@@ -864,11 +919,73 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
     }
 
     String displayText = createSlackApprovalMessage(slackApprovalParams, notificationTemplateUrl);
+    String validatedMessage = validateMessageLength(
+        displayText, slackApprovalParams, notificationTemplateUrl, serviceDetails, artifacts, infraDetails);
     String buttonValue = customData.toString();
     buttonValue = StringEscapeUtils.escapeJson(buttonValue);
     placeHolderValues.put(SlackApprovalMessageKeys.SLACK_APPROVAL_PARAMS, buttonValue);
-    placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, displayText);
+    placeHolderValues.put(SlackApprovalMessageKeys.APPROVAL_MESSAGE, validatedMessage);
     placeHolderValues.put(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER, "suppressTraditionalNotificationOnSlack");
+  }
+
+  @VisibleForTesting
+  String validateMessageLength(String displayText, SlackApprovalParams slackApprovalParams, URL notificationTemplateUrl,
+      WorkflowNotificationDetails serviceDetails, StringBuilder artifacts, WorkflowNotificationDetails infraDetails) {
+    if (displayText.length() < 1900) {
+      return displayText;
+    } else {
+      int serviceCount = serviceDetails.getName().split(",").length;
+      boolean areServicesTrimmed = trimNotificationDetails(serviceDetails, serviceCount);
+      int artifactsCount = artifacts.toString().replace("*Artifacts:* ", "").split(", ").length;
+      boolean areArtifactsTrimmed = trimArtifacts(artifacts, artifactsCount);
+      int infraCount = infraDetails.getName().split(",").length;
+      boolean areInfrasTrimmed = trimNotificationDetails(infraDetails, infraCount);
+      SlackApprovalParams params =
+          slackApprovalParams.toBuilder()
+              .servicesInvolved(areServicesTrimmed
+                      ? String.format("*Services*: %s... %s more", serviceDetails.getName(), serviceCount - 3)
+                      : slackApprovalParams.getServicesInvolved())
+              .artifactsInvolved(areArtifactsTrimmed
+                      ? String.format("*Artifacts:* %s... %s more", artifacts.toString(), artifactsCount - 3)
+                      : slackApprovalParams.getArtifactsInvolved())
+              .infraDefinitionsInvolved(areInfrasTrimmed ? String.format("*Infrastructure Definitions*: %s... %s more",
+                                            infraDetails.getName(), infraCount - 3)
+                                                         : slackApprovalParams.getInfraDefinitionsInvolved())
+              .build();
+      return createSlackApprovalMessage(params, notificationTemplateUrl);
+    }
+  }
+
+  private boolean trimArtifacts(StringBuilder artifactsDetails, int artifactsCount) {
+    if (artifactsCount > 3) {
+      String[] trimmedArtifacts =
+          Arrays.copyOfRange(artifactsDetails.toString().replace("*Artifacts:* ", "").split(", "), 0, 3);
+      StringJoiner artifacts = new StringJoiner(", ");
+      for (String artifact : trimmedArtifacts) {
+        artifacts.add(artifact);
+      }
+      artifactsDetails.setLength(0);
+      artifactsDetails.append(artifacts);
+      return true;
+    }
+    return false;
+  }
+
+  private boolean trimNotificationDetails(WorkflowNotificationDetails notificationDetails, int detailCount) {
+    if (detailCount > 3) {
+      String[] trimmedDetails = Arrays.copyOfRange(notificationDetails.getName().split(","), 0, 3);
+      StringJoiner details = new StringJoiner(", ");
+      for (String detail : trimmedDetails) {
+        details.add(detail);
+      }
+      notificationDetails.setName(details.toString());
+      return true;
+    }
+    return false;
+  }
+
+  private JSONObject createCustomData(SlackApprovalParams slackApprovalParams) {
+    return new JSONObject(SlackApprovalParams.getExternalParams(slackApprovalParams));
   }
 
   @Override
@@ -1213,8 +1330,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       userName = workflowExecution.getTriggeredBy().getName();
     }
 
-    return notificationMessageResolver.getPlaceholderValues(
-        context, userName, startTs, System.currentTimeMillis(), "", statusMsg, "", status, ApprovalNeeded);
+    return notificationMessageResolver.getPlaceholderValues(context, userName, startTs, System.currentTimeMillis(),
+        getTimeoutMillis().toString(), statusMsg, "", status, ApprovalNeeded);
   }
 
   private Map<String, String> getPlaceholderValues(ExecutionContext context, String timeout) {

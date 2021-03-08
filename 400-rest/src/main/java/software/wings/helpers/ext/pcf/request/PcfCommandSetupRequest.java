@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 
 import software.wings.beans.PcfConfig;
@@ -17,6 +19,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfCommandSetupRequest extends PcfCommandRequest {
   /**
    * releasePrefixName is (appId_serviceId_envId), while creating new version of app,
@@ -37,6 +40,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
   private boolean blueGreen;
   private Integer olderActiveVersionCountToKeep;
   private PcfManifestsPackage pcfManifestsPackage;
+  private String artifactProcessingScript;
 
   @Builder
   public PcfCommandSetupRequest(String accountId, String appId, String commandName, String activityId,
@@ -47,7 +51,7 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
       Integer timeoutIntervalInMin, Integer maxCount, Integer currentRunningCount, boolean useCurrentCount,
       boolean blueGreen, Integer olderActiveVersionCountToKeep, boolean useCLIForPcfAppCreation,
       PcfManifestsPackage pcfManifestsPackage, boolean useAppAutoscalar, boolean enforceSslValidation,
-      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache) {
+      boolean limitPcfThreads, boolean ignorePcfConnectionContextCache, String artifactProcessingScript) {
     super(accountId, appId, commandName, activityId, pcfCommandType, organization, space, pcfConfig,
         workflowExecutionId, timeoutIntervalInMin, useCLIForPcfAppCreation, enforceSslValidation, useAppAutoscalar,
         limitPcfThreads, ignorePcfConnectionContextCache);
@@ -65,5 +69,6 @@ public class PcfCommandSetupRequest extends PcfCommandRequest {
     this.currentRunningCount = currentRunningCount;
     this.useCurrentCount = useCurrentCount;
     this.pcfManifestsPackage = pcfManifestsPackage;
+    this.artifactProcessingScript = artifactProcessingScript;
   }
 }

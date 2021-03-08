@@ -56,13 +56,16 @@ import software.wings.yaml.workflow.StepYaml;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import lombok.var;
 import org.apache.commons.lang3.StringUtils;
@@ -102,13 +105,18 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
+    String type = stepYaml.getType();
+
+    if (isEmpty(type)) {
+      throw new InvalidRequestException("Step type could not be empty");
+    }
 
     if (isEmpty(stepYaml.getName())) {
-      throw new InvalidRequestException("Step name is empty for " + stepYaml.getType() + " step");
+      throw new InvalidRequestException("Step name is empty for " + type + " step");
     }
 
     StepCompletionYamlValidator stepCompletionYamlValidator =
-        stepCompletionYamlValidatorFactory.getValidatorForStepType(StepType.valueOf(stepYaml.getType()));
+        stepCompletionYamlValidatorFactory.getValidatorForStepType(StepType.valueOf(type));
     if (stepCompletionYamlValidator != null) {
       stepCompletionYamlValidator.validate(changeContext);
     }
@@ -145,6 +153,8 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     validateArtifactCollectionStep(stepYaml, outputProperties);
 
+    validateOutputEnvironmentVariables(stepYaml, outputProperties);
+
     Boolean isRollback = false;
     if (changeContext.getProperties().get(YamlConstants.IS_ROLLBACK) != null) {
       isRollback = (Boolean) changeContext.getProperties().get(YamlConstants.IS_ROLLBACK);
@@ -177,7 +187,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
 
     return GraphNode.builder()
         .name(stepYaml.getName())
-        .type(stepYaml.getType())
+        .type(type)
         .templateExpressions(templateExpressions)
         .rollback(isRollback)
         .properties(outputProperties.isEmpty() ? null : outputProperties)
@@ -187,6 +197,42 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         .importedTemplateDetails(importedTemplateDetail)
         .templateVariables(convertToEntityVariables(stepYaml.getTemplateVariables()))
         .build();
+  }
+
+  private void validateOutputEnvironmentVariables(StepYaml stepYaml, Map<String, Object> outputProperties) {
+    if (StateType.SHELL_SCRIPT.name().equals(stepYaml.getType()) && isNotEmpty(outputProperties)) {
+      String outputVars = (String) outputProperties.get("outputVars");
+      String secretOutputVars = (String) outputProperties.get("secretOutputVars");
+
+      List<String> outputVarsList = new ArrayList<>();
+      List<String> secretOutputVarsList = new ArrayList<>();
+
+      if (isNotEmpty(outputVars)) {
+        outputVarsList = Arrays.asList(outputVars.trim().split("\\s*,\\s*"));
+        outputVarsList.replaceAll(String::trim);
+      }
+
+      if (isNotEmpty(secretOutputVars)) {
+        secretOutputVarsList = Arrays.asList(secretOutputVars.split("\\s*,\\s*"));
+        secretOutputVarsList.replaceAll(String::trim);
+      }
+      Set<String> uniqueOutputVarsList = new HashSet<>(outputVarsList);
+      Set<String> uniqueSecretOutputVarsList = new HashSet<>(secretOutputVarsList);
+
+      if (uniqueOutputVarsList.size() < outputVarsList.size()) {
+        throw new InvalidRequestException("Duplicate output variables in Shell Script");
+      }
+      if (uniqueSecretOutputVarsList.size() < secretOutputVarsList.size()) {
+        throw new InvalidRequestException("Duplicate Secret output variables in Shell Script");
+      }
+
+      Set<String> commonVars =
+          outputVarsList.stream().distinct().filter(secretOutputVarsList::contains).collect(Collectors.toSet());
+
+      if (isNotEmpty(commonVars)) {
+        throw new InvalidRequestException("Variables cannot be both Secret and String");
+      }
+    }
   }
 
   private void validateArtifactCollectionStep(StepYaml stepYaml, Map<String, Object> outputProperties) {
@@ -296,6 +342,10 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
           outputProperties.put("commandType", CommandType.OTHER.name());
         }
       }
+    }
+
+    if (StateType.HTTP.name().equals(step.getType()) && isNotEmpty(outputProperties)) {
+      outputProperties.remove("header");
     }
 
     if (StateType.APPROVAL.name().equals(step.getType()) && isNotEmpty(outputProperties)) {

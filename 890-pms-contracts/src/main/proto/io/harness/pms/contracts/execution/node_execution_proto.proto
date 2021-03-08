@@ -7,11 +7,13 @@ option java_multiple_files = true;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 
+import "io/harness/pms/contracts/advisers/advise.proto";
 import "io/harness/pms/contracts/ambiance/ambiance.proto";
 import "io/harness/pms/contracts/plan/plan_node_proto.proto";
 import "io/harness/pms/contracts/execution/execution_mode.proto";
 import "io/harness/pms/contracts/execution/executable_response.proto";
 import "io/harness/pms/contracts/execution/failure/failure_info.proto";
+import "io/harness/pms/contracts/execution/skip/skip_info.proto";
 import "io/harness/pms/contracts/execution/status.proto";
 import "io/harness/pms/contracts/data/step_outcome_ref.proto";
 
@@ -26,6 +28,7 @@ message NodeExecutionProto {
   google.protobuf.Duration initialWaitDuration = 7;
 
   string resolvedStepParameters = 8;
+  string resolvedStepInputs = 21;
 
   string notifyId = 9;
 
@@ -39,10 +42,12 @@ message NodeExecutionProto {
   repeated io.harness.pms.contracts.data.StepOutcomeRef outcomeRefs = 15;
 
   io.harness.pms.contracts.execution.failure.FailureInfo failureInfo = 16;
+  io.harness.pms.contracts.execution.skip.SkipInfo skipInfo = 17;
 
-  repeated string retryIds = 17;
+  repeated string retryIds = 18;
+  bool oldRetry = 19;
 
-  bool oldRetry = 18;
+  io.harness.pms.contracts.advisers.AdviserResponse adviserResponse = 20;
 
   // Missing Fields which needs to be added
   // Interrupt Effect

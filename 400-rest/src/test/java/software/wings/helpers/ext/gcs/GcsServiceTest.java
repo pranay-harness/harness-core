@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.rule.Owner;
 
@@ -16,7 +17,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.service.impl.GcpHelperService;
 
 import com.google.api.client.util.DateTime;
 import com.google.api.services.storage.Storage;
@@ -63,7 +63,9 @@ public class GcsServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws IllegalAccessException, IOException {
     FieldUtils.writeField(gcsService, "gcpHelperService", gcpHelperService, true);
-    when(gcpHelperService.getGcsStorageService(gcpConfig, null)).thenReturn(storage).thenReturn(storage);
+    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate()))
+        .thenReturn(storage)
+        .thenReturn(storage);
     when(storage.objects()).thenReturn(objects);
     when(objects.list(anyString())).thenReturn(lists);
     when(storage.buckets()).thenReturn(bucketsObj);
@@ -89,7 +91,8 @@ public class GcsServiceTest extends WingsBaseTest {
     bucket.setName("bucket");
     bucket.setId("bucketId");
     buckets.setItems(Arrays.asList(bucket));
-    when(gcpHelperService.getGcsStorageService(gcpConfig, null)).thenReturn(gcsStorageService);
+    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate()))
+        .thenReturn(gcsStorageService);
     when(gcsStorageService.buckets()).thenReturn(bucketsObj);
     when(bucketsObj.list(TEST_PROJECT_ID)).thenReturn(listRequest);
     when(listRequest.execute()).thenReturn(buckets);
@@ -193,7 +196,8 @@ public class GcsServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldHandleThrownExceptionListBuckets() throws IOException {
-    when(gcpHelperService.getGcsStorageService(gcpConfig, null)).thenReturn(gcsStorageService);
+    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate()))
+        .thenReturn(gcsStorageService);
     when(gcsStorageService.buckets()).thenReturn(bucketsObj);
     when(bucketsObj.list(TEST_PROJECT_ID)).thenReturn(listRequest);
     when(listRequest.execute()).thenThrow(new RuntimeException("some error"));
@@ -205,7 +209,8 @@ public class GcsServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldThrowHandleExceptionWhenGetArtifactBuildDetails() {
-    when(gcpHelperService.getGcsStorageService(gcpConfig, null)).thenThrow(new RuntimeException("some error"));
+    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate()))
+        .thenThrow(new RuntimeException("some error"));
     assertThatThrownBy(() -> gcsService.getArtifactBuildDetails(gcpConfig, null, "somebucket", "someObj", true))
         .isInstanceOf(InvalidArtifactServerException.class);
   }

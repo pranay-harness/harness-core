@@ -1,12 +1,16 @@
 package software.wings.beans;
 
+import static io.harness.shell.AuthenticationScheme.SSH_KEY;
+
 import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.shell.AccessType;
+import io.harness.shell.AuthenticationScheme;
+import io.harness.shell.KerberosConfig;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -58,6 +62,13 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
   @Attributes(title = "Auth Scheme") private AuthenticationScheme authenticationScheme = SSH_KEY;
 
+  private boolean isVaultSSH;
+  private String role;
+  private String publicKey;
+  private String signedPublicKey;
+  private String sshVaultConfigId;
+  private SSHVaultConfig sshVaultConfig;
+
   @Override
   public String fetchResourceCategory() {
     return CONNECTION_ATTRIBUTES.name();
@@ -71,7 +82,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     return new ArrayList<>();
   }
 
-  public enum AuthenticationScheme { SSH_KEY, KERBEROS, HTTP_PASSWORD }
   @Attributes private KerberosConfig kerberosConfig;
   @Attributes(title = "Kerberos Password") @Encrypted(fieldName = "kerberos_password") private char[] kerberosPassword;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKerberosPassword;
@@ -90,40 +100,6 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
    */
   public HostConnectionAttributes(SettingVariableTypes type) {
     super(type.name());
-  }
-
-  /**
-   * The Enum AccessType.
-   */
-  public enum AccessType {
-    /**
-     * User password access type.
-     */
-    USER_PASSWORD,
-    /**
-     * User password su app user access type.
-     */
-    USER_PASSWORD_SU_APP_USER,
-    /**
-     * User password sudo app user access type.
-     */
-    USER_PASSWORD_SUDO_APP_USER,
-    /**
-     * Key access type.
-     */
-    KEY,
-    /**
-     * Key su app user access type.
-     */
-    KEY_SU_APP_USER,
-    /**
-     * Key sudo app user access type.
-     */
-    KEY_SUDO_APP_USER,
-    /**
-     * Kerberos Access Type.
-     */
-    KERBEROS
   }
 
   /**
@@ -153,6 +129,12 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private char[] sshPassword;
     private char[] kerberosPassword;
     private String encryptedSshPassword;
+    private boolean isVaultSSH;
+    private String role;
+    private String publicKey;
+    private String signedPublicKey;
+    private String sshVaultConfigId;
+    private SSHVaultConfig sshVaultConfig;
 
     private Builder() {}
 
@@ -162,6 +144,11 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
     public Builder withConnectionType(ConnectionType connectionType) {
       this.connectionType = connectionType;
+      return this;
+    }
+
+    public Builder withVaultSSH(boolean isVaultSSH) {
+      this.isVaultSSH = isVaultSSH;
       return this;
     }
 
@@ -257,7 +244,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
           .withEncryptedPassphrase(encryptedPassphrase)
           .withSshPassword(sshPassword)
           .withKerberosPassword(kerberosPassword)
-          .withEncryptedSshPassword(encryptedSshPassword);
+          .withEncryptedSshPassword(encryptedSshPassword)
+          .withVaultSSH(isVaultSSH);
     }
 
     public HostConnectionAttributes build() {
@@ -278,6 +266,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setSshPassword(sshPassword);
       hostConnectionAttributes.setEncryptedSshPassword(encryptedSshPassword);
       hostConnectionAttributes.setKerberosPassword(kerberosPassword);
+      hostConnectionAttributes.setVaultSSH(isVaultSSH);
       return hostConnectionAttributes;
     }
   }

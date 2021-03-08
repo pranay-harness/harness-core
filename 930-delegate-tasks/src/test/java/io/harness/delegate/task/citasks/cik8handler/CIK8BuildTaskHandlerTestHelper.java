@@ -30,6 +30,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -63,10 +64,12 @@ public class CIK8BuildTaskHandlerTestHelper {
   private static String volume1 = "volume1";
 
   public static CIK8BuildTaskParams buildGitSecretErrorTaskParams() {
+    List<CIK8ContainerParams> containerParamsList = new ArrayList<>();
     CIK8PodParams<CIK8ContainerParams> cik8PodParams = CIK8PodParams.<CIK8ContainerParams>builder()
                                                            .name(podName)
                                                            .namespace(namespace)
                                                            .gitConnector(ConnectorDetails.builder().build())
+                                                           .containerParamsList(containerParamsList)
                                                            .build();
     return CIK8BuildTaskParams.builder().cik8PodParams(cik8PodParams).build();
   }
@@ -164,7 +167,9 @@ public class CIK8BuildTaskHandlerTestHelper {
         .connectorType(ConnectorType.GIT)
         .connectorConfig(GitConfigDTO.builder()
                              .gitAuthType(GitAuthType.SSH)
-                             .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                             .gitAuth(GitSSHAuthenticationDTO.builder()
+                                          .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
+                                          .build())
                              .url(gitSshRepoUrl)
                              .build())
         .build();

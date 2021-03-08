@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.query;
 
-import software.wings.beans.Environment.EnvironmentType;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EnvironmentType;
 
 import graphql.schema.DataFetchingFieldSelectionSet;
 import lombok.AccessLevel;
@@ -9,6 +11,7 @@ import lombok.experimental.FieldDefaults;
 
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLInstancesByEnvTypeQueryParameters implements QLPageQueryParameters {
   int limit;
   int offset;

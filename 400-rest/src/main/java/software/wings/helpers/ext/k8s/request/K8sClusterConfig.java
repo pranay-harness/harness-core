@@ -2,6 +2,7 @@ package software.wings.helpers.ext.k8s.request;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -38,7 +39,7 @@ public class K8sClusterConfig implements ExecutionCapabilityDemander {
     List<ExecutionCapability> capabilities = new ArrayList<>();
     capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         getMasterUrl(), maskingEvaluator));
-    capabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+    capabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
         getCloudProviderEncryptionDetails(), maskingEvaluator));
     return capabilities;
   }

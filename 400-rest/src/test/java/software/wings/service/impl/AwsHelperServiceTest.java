@@ -25,7 +25,9 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -63,9 +65,14 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksResult;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
+import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.DescribeRegionsResult;
+import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.model.BatchGetImageRequest;
 import com.amazonaws.services.ecr.model.BatchGetImageResult;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.Image;
 import com.amazonaws.services.ecr.model.ImageIdentifier;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -79,6 +86,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -91,6 +99,8 @@ import org.mockito.stubbing.Answer;
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
   @Mock AwsConfig awsConfig;
+  @Mock private AwsCallTracker tracker;
+  @Mock private EncryptionService encryptionService;
 
   @Before
   public void setup() {
@@ -507,5 +517,56 @@ public class AwsHelperServiceTest extends WingsBaseTest {
             ArtifactStreamAttributes.builder().region(Regions.US_EAST_1.getName()).imageName("imageName").build(),
             Lists.newArrayList("latest")))
         .isEqualTo(ImmutableMap.<String, String>builder().put("key1", "val1").build());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testValidateAwsAccountCredentialFailsInvalidCredentials() {
+    AwsHelperService service = spy(new AwsHelperService());
+    Reflect.on(service).set("tracker", tracker);
+    assertThatThrownBy(() -> service.validateAwsAccountCredential(ACCESS_KEY, SECRET_KEY))
+        .isInstanceOf(InvalidRequestException.class);
+    verify(tracker, never()).trackEC2Call("Describe Regions");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testListRepositories() {
+    String region = "us-west-1";
+    DescribeRepositoriesRequest request = new DescribeRepositoriesRequest();
+    AmazonECRClient ecrClient = mock(AmazonECRClient.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    Reflect.on(service).set("encryptionService", encryptionService);
+    doReturn(ecrClient).when(service).getAmazonEcrClient(any(), any(String.class));
+    when(service.getAmazonEcrClient(awsConfig, region)).thenReturn(ecrClient);
+    Reflect.on(service).set("tracker", tracker);
+
+    DescribeRepositoriesResult result = new DescribeRepositoriesResult();
+    when(ecrClient.describeRepositories(request)).thenReturn(result);
+    DescribeRepositoriesResult actual = service.listRepositories(awsConfig, null, request, region);
+    verify(tracker, times(1)).trackECRCall("List Repositories");
+    assertThat(actual).isEqualTo(result);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testListRegions() {
+    AmazonEC2Client ec2Client = mock(AmazonEC2Client.class);
+    AwsHelperService service = spy(new AwsHelperService());
+    Reflect.on(service).set("encryptionService", encryptionService);
+    doReturn(ec2Client).when(service).getAmazonEc2Client(any());
+    when(service.getAmazonEc2Client(awsConfig)).thenReturn(ec2Client);
+    Reflect.on(service).set("tracker", tracker);
+
+    DescribeRegionsResult result = new DescribeRegionsResult().withRegions(
+        new Region().withRegionName("us-east-1"), new Region().withRegionName("us-east-2"));
+    when(ec2Client.describeRegions()).thenReturn(result);
+    List<String> actual = service.listRegions(awsConfig, null);
+    verify(tracker, times(1)).trackEC2Call("List Regions");
+    assertThat(actual).hasSize(2);
+    assertThat(actual).containsExactly("us-east-1", "us-east-2");
   }
 }

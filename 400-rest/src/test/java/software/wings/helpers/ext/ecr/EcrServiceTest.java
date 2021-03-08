@@ -100,6 +100,26 @@ public class EcrServiceTest extends WingsBaseTest {
         .containsExactly("repo1", "repo2");
   }
 
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testVerifyRepository() {
+    DescribeRepositoriesResult describeRepositoriesResult = new DescribeRepositoriesResult();
+    describeRepositoriesResult.setRepositories(Lists.newArrayList("repo1", "repo2")
+                                                   .stream()
+                                                   .map(repoName -> {
+                                                     Repository repo = new Repository();
+                                                     repo.setRepositoryName(repoName);
+                                                     return repo;
+                                                   })
+                                                   .collect(Collectors.toList()));
+    describeRepositoriesResult.setNextToken(null);
+    when(awsHelperService.listRepositories(
+             awsConfig, null, new DescribeRepositoriesRequest(), Regions.US_EAST_1.getName()))
+        .thenReturn(describeRepositoriesResult);
+    assertThat(ecrService.verifyRepository(awsConfig, null, Regions.US_EAST_1.getName(), "repo1")).isTrue();
+  }
+
   private ImageIdentifier buildImageIdentifier(String tag) {
     ImageIdentifier imageIdentifier = new ImageIdentifier();
     imageIdentifier.setImageTag(tag);

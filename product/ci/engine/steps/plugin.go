@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -25,11 +26,14 @@ type pluginStep struct {
 	image         string
 	containerPort uint32
 	stepContext   *pb.StepContext
+	stageOutput   output.StageOutput
+	logKey        string
 	log           *zap.SugaredLogger
 }
 
 // NewPluginStep creates a plugin step executor
-func NewPluginStep(step *pb.UnitStep, log *zap.SugaredLogger) PluginStep {
+func NewPluginStep(step *pb.UnitStep, stageOutput output.StageOutput,
+	log *zap.SugaredLogger) PluginStep {
 	r := step.GetPlugin()
 	return &pluginStep{
 		id:            step.GetId(),
@@ -37,7 +41,9 @@ func NewPluginStep(step *pb.UnitStep, log *zap.SugaredLogger) PluginStep {
 		image:         r.GetImage(),
 		containerPort: r.GetContainerPort(),
 		stepContext:   r.GetContext(),
+		stageOutput:   stageOutput,
 		log:           log,
+		logKey:        step.GetLogKey(),
 	}
 }
 
@@ -84,6 +90,13 @@ func (e *pluginStep) execute(ctx context.Context) (int32, error) {
 }
 
 func (e *pluginStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
+	prevStepOutputs := make(map[string]*pb.StepOutput)
+	for stepID, stepOutput := range e.stageOutput {
+		if stepOutput != nil {
+			prevStepOutputs[stepID] = &pb.StepOutput{Output: stepOutput.Output.Variables}
+		}
+	}
+
 	return &addonpb.ExecuteStepRequest{
 		Step: &pb.UnitStep{
 			Id:          e.id,
@@ -94,6 +107,8 @@ func (e *pluginStep) getExecuteStepArg() *addonpb.ExecuteStepRequest {
 					Context: e.stepContext,
 				},
 			},
+			LogKey: e.logKey,
 		},
+		PrevStepOutputs: prevStepOutputs,
 	}
 }

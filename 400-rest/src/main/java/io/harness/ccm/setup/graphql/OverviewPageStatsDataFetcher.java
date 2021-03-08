@@ -8,6 +8,7 @@ import io.harness.beans.FeatureName;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.setup.graphql.QLCEOverviewStatsData.QLCEOverviewStatsDataBuilder;
+import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
@@ -26,6 +27,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.FieldValueList;
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.Table;
@@ -51,6 +53,7 @@ public class OverviewPageStatsDataFetcher
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject protected DataFetcherUtils utils;
   @Inject protected FeatureFlagService featureFlagService;
+  @Inject private CEViewService ceViewService;
 
   private static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
   private static final String PRE_AGG_TABLE_NAME_VALUE = "preAggregated";
@@ -69,6 +72,7 @@ public class OverviewPageStatsDataFetcher
   protected QLCEOverviewStatsData fetch(QLNoOpQueryParameters parameters, String accountId) {
     boolean isAWSConnectorPresent = false;
     boolean isGCPConnectorPresent = false;
+    boolean isAzureConnectorPresent = false;
     boolean isApplicationDataPresent = false;
     boolean isClusterDataPresent = false;
     List<SettingAttribute> ceConnectorsList = getCEConnectors(accountId);
@@ -82,8 +86,12 @@ public class OverviewPageStatsDataFetcher
       if (settingAttribute.getValue().getType().equals(SettingVariableTypes.CE_GCP.toString())) {
         isGCPConnectorPresent = true;
       }
+      if (settingAttribute.getValue().getType().equals(SettingVariableTypes.CE_AZURE.toString())) {
+        isAzureConnectorPresent = true;
+      }
     }
-    overviewStatsDataBuilder.cloudConnectorsPresent(isAWSConnectorPresent || isGCPConnectorPresent);
+    overviewStatsDataBuilder.cloudConnectorsPresent(
+        isAWSConnectorPresent || isGCPConnectorPresent || isAzureConnectorPresent);
 
     // Cluster, Application Data Present
     Instant sevenDaysPriorInstant =
@@ -112,7 +120,7 @@ public class OverviewPageStatsDataFetcher
         .applicationDataPresent(isApplicationDataPresent)
         .ceEnabledClusterPresent(isCeEnabledCloudProviderPresent);
 
-    // AWS, GCP Data Present
+    // AWS, GCP, AZURE Data Present
     String dataSetId = String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
     TableId tableId = TableId.of(dataSetId, PRE_AGG_TABLE_NAME_VALUE);
     CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
@@ -131,13 +139,20 @@ public class OverviewPageStatsDataFetcher
           modifyOverviewStatsBuilder(row, overviewStatsDataBuilder);
         }
       } else {
-        overviewStatsDataBuilder.awsConnectorsPresent(Boolean.FALSE).gcpConnectorsPresent(Boolean.FALSE);
+        overviewStatsDataBuilder.awsConnectorsPresent(Boolean.FALSE)
+            .gcpConnectorsPresent(Boolean.FALSE)
+            .azureConnectorsPresent(Boolean.FALSE);
       }
-    } catch (InterruptedException e) {
+    } catch (BigQueryException | InterruptedException e) {
       log.error("Failed to get OverviewPageStatsDataFetcher {}", e);
       Thread.currentThread().interrupt();
     }
 
+    if (overviewStatsDataBuilder.build().getAzureConnectorsPresent() != null
+        && overviewStatsDataBuilder.build().getAzureConnectorsPresent()) {
+      overviewStatsDataBuilder.defaultAzurePerspectiveId(ceViewService.getDefaultAzureViewId(accountId));
+    }
+    log.info("Returning /overviewPageStats ");
     return overviewStatsDataBuilder.build();
   }
 
@@ -149,6 +164,9 @@ public class OverviewPageStatsDataFetcher
         break;
       case "GCP":
         overviewStatsDataBuilder.gcpConnectorsPresent(row.get(countStringValueConstant).getDoubleValue() > 0);
+        break;
+      case "AZURE":
+        overviewStatsDataBuilder.azureConnectorsPresent(row.get(countStringValueConstant).getDoubleValue() > 0);
         break;
       default:
         break;

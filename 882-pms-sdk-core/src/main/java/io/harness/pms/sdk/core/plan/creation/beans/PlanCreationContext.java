@@ -7,12 +7,13 @@ import io.harness.pms.yaml.YamlField;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Singular;
 
-@Getter
-@Setter
-@Builder
 @Data
+@Builder
 @EqualsAndHashCode
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PlanCreationContext {

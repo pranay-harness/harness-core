@@ -31,9 +31,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -59,13 +57,6 @@ public class WaitNotifyEngine {
     if (log.isDebugEnabled()) {
       log.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
     }
-
-    final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
-                                                        .uuid(generateUuid())
-                                                        .callback(callback)
-                                                        .progressCallback(progressCallback)
-                                                        .publisher(publisherName);
-
     final List<String> list;
     if (correlationIds.length == 1) {
       list = singletonList(correlationIds[0]);
@@ -75,6 +66,22 @@ public class WaitNotifyEngine {
       Collections.addAll(set, correlationIds);
       list = new ArrayList<>(set);
     }
+
+    return waitForAllOn(publisherName, callback, progressCallback, list);
+  }
+
+  public String waitForAllOnInList(String publisherName, NotifyCallback callback, List<String> list) {
+    return waitForAllOn(publisherName, callback, null, list);
+  }
+
+  public String waitForAllOn(
+      String publisherName, NotifyCallback callback, ProgressCallback progressCallback, List<String> list) {
+    final WaitInstanceBuilder waitInstanceBuilder = WaitInstance.builder()
+                                                        .uuid(generateUuid())
+                                                        .callback(callback)
+                                                        .progressCallback(progressCallback)
+                                                        .publisher(publisherName);
+
     waitInstanceBuilder.correlationIds(list).waitingOnCorrelationIds(list);
 
     final String waitInstanceId = persistence.save(waitInstanceBuilder.build());

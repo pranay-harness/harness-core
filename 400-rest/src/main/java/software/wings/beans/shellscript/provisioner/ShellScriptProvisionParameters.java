@@ -3,15 +3,16 @@ package software.wings.beans.shellscript.provisioner;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class ShellScriptProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   @Expression(ALLOW_SECRETS) private String scriptBody;
   private long timeoutInMillis;
@@ -46,8 +48,9 @@ public class ShellScriptProvisionParameters implements TaskParameters, ActivityA
 
     if (isNotEmpty(encryptedVariables)) {
       for (EncryptedDataDetail encryptedDataDetail : encryptedVariables.values()) {
-        executionCapabilities.addAll(CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
-            Arrays.asList(encryptedDataDetail), maskingEvaluator));
+        executionCapabilities.addAll(
+            EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+                Arrays.asList(encryptedDataDetail), maskingEvaluator));
       }
     }
 

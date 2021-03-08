@@ -11,10 +11,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
+import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
@@ -28,16 +31,16 @@ import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState
 import io.harness.cvng.statemachine.entities.TimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
-import io.harness.cvng.verificationjob.beans.CanaryVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +54,7 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
-public class StateMachineServiceTest extends CvNextGenTest {
+public class StateMachineServiceTest extends CvNextGenTestBase {
   private String cvConfigId;
   private String verificationTaskId;
   private CVConfig cvConfig;
@@ -69,7 +72,7 @@ public class StateMachineServiceTest extends CvNextGenTest {
   @Mock private VerificationTaskService verificationTaskService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @InjectMocks AnalysisStateMachineService stateMachineService = new AnalysisStateMachineServiceImpl();
-
+  @Inject private VerificationJobService verificationJobService;
   @Before
   public void setup() {
     cvConfigId = generateUuid();
@@ -120,8 +123,11 @@ public class StateMachineServiceTest extends CvNextGenTest {
                         .cvConfigId(cvConfigId)
                         .build());
     when(verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId))
-        .thenReturn(
-            VerificationJobInstance.builder().resolvedJob(newCanaryVerificationJobDTO().getVerificationJob()).build());
+        .thenReturn(VerificationJobInstance.builder()
+                        .deploymentStartTime(Instant.now())
+                        .startTime(Instant.now().plus(Duration.ofMinutes(2)))
+                        .resolvedJob(verificationJobService.fromDto(newCanaryVerificationJobDTO()))
+                        .build());
 
     AnalysisInput inputs = AnalysisInput.builder()
                                .verificationTaskId(verificationTaskId)

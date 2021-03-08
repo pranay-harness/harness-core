@@ -18,8 +18,9 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.shell.AccessType;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
@@ -89,7 +90,7 @@ class CustomSecretsManagerUtils {
         .withName("hostConnectionAttrs")
         .withAccountId(GLOBAL_ACCOUNT_ID)
         .withValue(aHostConnectionAttributes()
-                       .withAccessType(HostConnectionAttributes.AccessType.USER_PASSWORD)
+                       .withAccessType(AccessType.USER_PASSWORD)
                        .withAccountId(GLOBAL_ACCOUNT_ID)
                        .build())
         .build();

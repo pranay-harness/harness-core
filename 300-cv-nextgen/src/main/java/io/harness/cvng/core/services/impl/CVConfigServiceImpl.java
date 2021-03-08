@@ -11,14 +11,18 @@ import static java.util.stream.Collectors.toList;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
+import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.beans.EnvToServicesDTO;
-import io.harness.cvng.dashboard.services.api.AnomalyService;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
@@ -28,7 +32,6 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,15 +42,19 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@Slf4j
 public class CVConfigServiceImpl implements CVConfigService {
   @Inject private HPersistence hPersistence;
-  @Inject private AnomalyService anomalyService;
   @Inject private DeletedCVConfigService deletedCVConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private NextGenService nextGenService;
+  @Inject private VerificationManagerService verificationManagerService;
+  @Inject private CVEventService eventService;
+  @Inject private Map<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder;
 
   @Override
   public CVConfig save(CVConfig cvConfig) {
@@ -55,7 +62,14 @@ public class CVConfigServiceImpl implements CVConfigService {
     cvConfig.validate();
     hPersistence.save(cvConfig);
     verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid());
+    sendScopedCreateEvent(cvConfig);
     return cvConfig;
+  }
+
+  private void sendScopedCreateEvent(CVConfig cvConfig) {
+    eventService.sendConnectorCreateEvent(cvConfig);
+    eventService.sendServiceCreateEvent(cvConfig);
+    eventService.sendEnvironmentCreateEvent(cvConfig);
   }
 
   @Override
@@ -88,8 +102,12 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public void update(CVConfig cvConfig) {
     checkNotNull(cvConfig.getUuid(), "Trying to update a CVConfig with empty UUID.");
+    Preconditions.checkNotNull(dataSourceTypeCVConfigMapBinder.containsKey(cvConfig.getType()));
     cvConfig.validate();
-    hPersistence.save(cvConfig);
+    UpdateOperations<CVConfig> updateOperations = hPersistence.createUpdateOperations(CVConfig.class);
+    UpdatableEntity<CVConfig, CVConfig> updatableEntity = dataSourceTypeCVConfigMapBinder.get(cvConfig.getType());
+    updatableEntity.setUpdateOperations(updateOperations, cvConfig);
+    hPersistence.update(get(cvConfig.getUuid()), updateOperations);
   }
 
   @Override
@@ -109,7 +127,6 @@ public class CVConfigServiceImpl implements CVConfigService {
                                     .accountId(cvConfig.getAccountId())
                                     .perpetualTaskId(cvConfig.getPerpetualTaskId())
                                     .build());
-    anomalyService.closeAnomaly(cvConfig.getAccountId(), cvConfigId, Instant.now());
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
 
@@ -174,16 +191,33 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Override
   public List<EnvToServicesDTO> getEnvToServicesList(String accountId, String orgIdentifier, String projectIdentifier) {
     Map<String, Set<String>> envToServicesMap = getEnvToServicesMap(accountId, orgIdentifier, projectIdentifier);
+    if (isEmpty(envToServicesMap)) {
+      return Collections.emptyList();
+    }
+    Set<String> envIdentifiers = new HashSet<>();
+    Set<String> serIdentifiers = new HashSet<>();
+    envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
+      envIdentifiers.add(envIdentifier);
+      serIdentifiers.addAll(serviceIdentifiers);
+    });
 
     List<EnvToServicesDTO> envToServicesDTOS = new ArrayList<>();
     envToServicesMap.forEach((envIdentifier, serviceIdentifiers) -> {
       EnvironmentResponseDTO environment =
-          nextGenService.getEnvironment(envIdentifier, accountId, orgIdentifier, projectIdentifier);
-      Set<ServiceResponseDTO> services = new HashSet<>();
-      serviceIdentifiers.forEach(serviceIdentifier
-          -> services.add(nextGenService.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier)));
+          nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, envIdentifier);
+      Preconditions.checkNotNull(environment, "no env with identifier %s found for account %s org %s project %s",
+          envIdentifier, accountId, orgIdentifier, projectIdentifier);
+      Set<ServiceResponseDTO> serviceDTOS = new HashSet<>();
+      serviceIdentifiers.forEach(serviceIdentifier -> {
+        ServiceResponseDTO serviceResponseDTO =
+            nextGenService.getService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier);
+        Preconditions.checkNotNull(serviceResponseDTO,
+            "no service with identifier %s found for account %s org %s project %s", serviceIdentifier, accountId,
+            orgIdentifier, projectIdentifier);
+        serviceDTOS.add(serviceResponseDTO);
+      });
 
-      envToServicesDTOS.add(EnvToServicesDTO.builder().environment(environment).services(services).build());
+      envToServicesDTOS.add(EnvToServicesDTO.builder().environment(environment).services(serviceDTOS).build());
     });
     return envToServicesDTOS;
   }
@@ -227,11 +261,11 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public void setCollectionTaskId(String cvConfigId, String perpetualTaskId) {
+  public void markFirstTaskCollected(CVConfig cvConfig) {
     UpdateOperations<CVConfig> updateOperations =
-        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.perpetualTaskId, perpetualTaskId);
+        hPersistence.createUpdateOperations(CVConfig.class).set(CVConfigKeys.firstTaskQueued, true);
     Query<CVConfig> query =
-        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfigId);
+        hPersistence.createQuery(CVConfig.class, excludeAuthority).filter(CVConfigKeys.uuid, cvConfig.getUuid());
     hPersistence.update(query, updateOperations);
   }
 
@@ -290,10 +324,15 @@ public class CVConfigServiceImpl implements CVConfigService {
       CVMonitoringCategory monitoringCategory) {
     List<CVConfig> configsForFilter =
         list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+    if (isEmpty(configsForFilter)) {
+      return Collections.emptyList();
+    }
     List<CVConfig> configsToReturn = new ArrayList<>();
     configsForFilter.forEach(config -> {
-      EnvironmentResponseDTO environment = nextGenService.getEnvironment(
-          config.getEnvIdentifier(), config.getAccountId(), config.getOrgIdentifier(), config.getProjectIdentifier());
+      EnvironmentResponseDTO environment =
+          nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, config.getEnvIdentifier());
+      Preconditions.checkNotNull(environment, "no env with identifier %s found for account %s org %s project %s",
+          config.getEnvIdentifier(), accountId, orgIdentifier, projectIdentifier);
       if (environment.getType().equals(EnvironmentType.Production)) {
         configsToReturn.add(config);
       }
@@ -303,8 +342,8 @@ public class CVConfigServiceImpl implements CVConfigService {
 
   @Override
   public boolean isProductionConfig(CVConfig cvConfig) {
-    EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getEnvIdentifier(),
-        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
+    EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getAccountId(),
+        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier());
     return EnvironmentType.Production.equals(environment.getType());
   }
 
@@ -371,13 +410,20 @@ public class CVConfigServiceImpl implements CVConfigService {
     return serviceIdentifiers.size();
   }
 
-  @Override
-  public void deleteConfigsForProject(String accountId, String orgIdentifier, String projectIdentifier) {
-    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
-                                   .filter(CVConfigKeys.accountId, accountId)
-                                   .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
-                                   .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
-                                   .asList();
+  private void deleteConfigsForEntity(
+      String accountId, @Nullable String orgIdentifier, @Nullable String projectIdentifier) {
+    Query<CVConfig> query = hPersistence.createQuery(CVConfig.class);
+    query = query.filter(CVConfigKeys.accountId, accountId);
+
+    if (orgIdentifier != null) {
+      query = query.filter(CVConfigKeys.orgIdentifier, orgIdentifier);
+    }
+
+    if (projectIdentifier != null) {
+      query = query.filter(CVConfigKeys.projectIdentifier, projectIdentifier);
+    }
+
+    List<CVConfig> cvConfigs = query.asList();
     cvConfigs.forEach(cvConfig -> delete(cvConfig.getUuid()));
   }
 
@@ -385,8 +431,21 @@ public class CVConfigServiceImpl implements CVConfigService {
   public void deleteByProjectIdentifier(
       Class<CVConfig> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
     Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
-    this.deleteConfigsForProject(accountId, orgIdentifier, projectIdentifier);
+    this.deleteConfigsForEntity(accountId, orgIdentifier, projectIdentifier);
   }
+
+  @Override
+  public void deleteByOrgIdentifier(Class<CVConfig> clazz, String accountId, String orgIdentifier) {
+    Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
+    this.deleteConfigsForEntity(accountId, orgIdentifier, null);
+  }
+
+  @Override
+  public void deleteByAccountIdentifier(Class<CVConfig> clazz, String accountId) {
+    Preconditions.checkState(clazz.equals(CVConfig.class), "Class should be of type CVConfig");
+    this.deleteConfigsForEntity(accountId, null, null);
+  }
+
   @Override
   public List<CVConfig> getExistingMappedConfigs(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String identifier) {
@@ -398,5 +457,74 @@ public class CVConfigServiceImpl implements CVConfigService {
         .field(CVConfigKeys.identifier)
         .notEqual(identifier)
         .asList();
+  }
+
+  @Override
+  public List<CVConfig> getExistingMappedConfigs(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, accountId)
+        .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+        .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+        .field(CVConfigKeys.identifier)
+        .notEqual(identifier)
+        .asList();
+  }
+
+  @Override
+  public Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String projectIdentifier, String orgIdentifier,
+      String environmentIdentifier, String serviceIdentifier, CVMonitoringCategory monitoringCategory) {
+    List<CVConfig> cvConfigs = getConfigsOfProductionEnvironments(
+        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory);
+
+    if (isEmpty(cvConfigs)) {
+      return Collections.emptySet();
+    }
+
+    return cvConfigs.stream()
+        .map(config
+            -> DatasourceTypeDTO.builder()
+                   .dataSourceType(config.getType())
+                   .verificationType(config.getVerificationType())
+                   .build())
+        .collect(Collectors.toSet());
+  }
+
+  @Override
+  public List<String> cleanupPerpetualTasks(String accountId, List<String> cvConfigIds) {
+    if (isNotEmpty(cvConfigIds)) {
+      List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class)
+                                     .filter(CVConfigKeys.accountId, accountId)
+                                     .field(CVConfigKeys.uuid)
+                                     .in(cvConfigIds)
+                                     .asList();
+      List<String> perpetualTaskIds = cvConfigs.stream().map(CVConfig::getPerpetualTaskId).collect(toList());
+      verificationManagerService.deletePerpetualTasks(accountId, perpetualTaskIds);
+      Query<CVConfig> cvConfigQuery = hPersistence.createQuery(CVConfig.class).field(CVConfigKeys.uuid).in(cvConfigIds);
+      UpdateOperations<CVConfig> cvConfigUpdateOperations =
+          hPersistence.createUpdateOperations(CVConfig.class).unset(CVConfigKeys.perpetualTaskId);
+      hPersistence.update(cvConfigQuery, cvConfigUpdateOperations);
+      log.info("Cleaned up perpetual tasks for the following cvConfigs : " + cvConfigIds);
+    }
+    return cvConfigIds;
+  }
+
+  @Override
+  public List<CVConfig> listByMonitoringSources(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, String envIdentifier, List<String> monitoringSources) {
+    Preconditions.checkNotNull(accountId);
+    List<CVConfig> cvConfigs = hPersistence.createQuery(CVConfig.class, excludeAuthority)
+                                   .filter(CVConfigKeys.accountId, accountId)
+                                   .filter(CVConfigKeys.projectIdentifier, projectIdentifier)
+                                   .filter(CVConfigKeys.orgIdentifier, orgIdentifier)
+                                   .filter(CVConfigKeys.serviceIdentifier, serviceIdentifier)
+                                   .filter(CVConfigKeys.envIdentifier, envIdentifier)
+                                   .asList();
+    if (monitoringSources == null) {
+      return cvConfigs;
+    }
+    return cvConfigs.stream()
+        .filter(cvConfig -> monitoringSources.contains(cvConfig.getIdentifier()))
+        .collect(Collectors.toList());
   }
 }

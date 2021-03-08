@@ -1,13 +1,14 @@
 package io.harness.connector.services;
 
-import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
-import io.harness.delegate.beans.connector.ConnectorCategory;
+import io.harness.connector.ConnectorCatalogueResponseDTO;
+import io.harness.connector.ConnectorCategory;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorFilterPropertiesDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorType;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 
@@ -30,5 +31,11 @@ public interface ConnectorCrudService {
 
   ConnectorCatalogueResponseDTO getConnectorCatalogue();
 
-  void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, ConnectorInfoDTO connector, String id);
+  void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId);
+
+  void updateActivityDetailsInTheConnector(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String identifier, ConnectorValidationResult connectorValidationResult, Long activityTime);
+
+  List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorsFQN);
 }

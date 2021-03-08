@@ -1,6 +1,6 @@
 package io.harness.cvng.dashboard.beans;
 
-import java.util.Set;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -10,13 +10,15 @@ import lombok.Singular;
 public class EnvServiceRiskDTO {
   String orgIdentifier;
   String projectIdentifier;
+  String envName;
   String envIdentifier;
   Integer risk;
-  @Singular("addServiceRisk") Set<ServiceRisk> serviceRisks;
+  @Singular("addServiceRisk") List<ServiceRisk> serviceRisks;
 
   @Data
   @Builder
   public static class ServiceRisk implements Comparable<ServiceRisk> {
+    String serviceName;
     String serviceIdentifier;
     Integer risk;
 

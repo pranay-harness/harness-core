@@ -8,8 +8,6 @@ import io.harness.perpetualtask.PerpetualTaskState;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.scheduler.PersistentScheduler;
 
-import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
 import software.wings.service.intfc.AccountService;
 
 import com.google.inject.Inject;
@@ -27,20 +25,9 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
 
   @Override
   public void manageBackgroundJobsForAccount(String accountId) {
-    String accountStatus = accountService.getAccountStatus(accountId);
-    if (AccountStatus.DELETED.equals(accountStatus)) {
-      return;
-    }
-
-    boolean isBackgroundJobsDisabled = isBackgroundJobsDisabledForAccount(accountId);
-
-    if (AccountStatus.ACTIVE.equals(accountStatus)) {
-      if (isBackgroundJobsDisabled) {
-        resumeAllPerpetualTasksForAccount(accountId);
-        resumeAllQuartzJobsForAccount(accountId);
-        accountService.updateBackgroundJobsDisabled(accountId, false);
-      }
-    }
+    resumeAllPerpetualTasksForAccount(accountId);
+    resumeAllQuartzJobsForAccount(accountId);
+    accountService.updateBackgroundJobsDisabled(accountId, false);
   }
 
   private void resumeAllQuartzJobsForAccount(String accountId) {
@@ -64,10 +51,5 @@ public class AccountBackgroundJobServiceImpl implements AccountBackgroundJobServ
         perpetualTaskService.resumeTask(accountId, perpetualTask.getUuid());
       }
     }
-  }
-
-  private boolean isBackgroundJobsDisabledForAccount(String accountId) {
-    Account account = accountService.get(accountId);
-    return account.isBackgroundJobsDisabled();
   }
 }

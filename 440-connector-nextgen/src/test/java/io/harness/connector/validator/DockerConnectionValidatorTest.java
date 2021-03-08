@@ -1,5 +1,6 @@
 package io.harness.connector.validator;
 
+import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.USER_PASSWORD;
 
 import static org.mockito.Matchers.any;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskResponse;
@@ -32,6 +35,7 @@ import org.mockito.MockitoAnnotations;
 public class DockerConnectionValidatorTest extends CategoryTest {
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private SecretManagerClientService ngSecretService;
+  @Mock private EncryptionHelper encryptionHelper;
   @InjectMocks private DockerConnectionValidator dockerConnectionValidator;
 
   @Before
@@ -56,10 +60,14 @@ public class DockerConnectionValidatorTest extends CategoryTest {
         DockerAuthenticationDTO.builder().authType(USER_PASSWORD).credentials(dockerUserNamePasswordDTO).build();
     DockerConnectorDTO dockerConnectorDTO =
         DockerConnectorDTO.builder().dockerRegistryUrl(dockerRegistryUrl).auth(dockerAuthenticationDTO).build();
+    when(encryptionHelper.getEncryptionDetail(any(), any(), any(), any())).thenReturn(null);
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
-        .thenReturn(DockerTestConnectionTaskResponse.builder().connectionSuccessFul(true).build());
-    dockerConnectionValidator.validate(dockerConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier");
+        .thenReturn(DockerTestConnectionTaskResponse.builder()
+                        .connectorValidationResult(ConnectorValidationResult.builder().status(SUCCESS).build())
+                        .build());
+    dockerConnectionValidator.validate(
+        dockerConnectorDTO, "accountIdentifier", "orgIdentifier", "projectIdentifier", "identifier");
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(any());
   }
 }

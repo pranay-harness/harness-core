@@ -154,7 +154,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     FieldUtils.writeField(appDynamicsState, "cvActivityLogService", cvActivityLogService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
 
-    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
+    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTestBase.PHASE_PARAM))
         .thenReturn(phaseElement);
     when(executionContext.fetchInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);

@@ -27,7 +27,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.PublicApi;
+import io.harness.security.annotations.PublicApiWithWhitelist;
 import io.harness.stream.BoundedInputStream;
 import io.harness.yaml.BaseYaml;
 
@@ -49,6 +49,7 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.Template;
 import software.wings.exception.YamlProcessingException;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
@@ -996,7 +997,7 @@ public class YamlResource {
   @Consumes(APPLICATION_JSON)
   @Timed
   @ExceptionMetered
-  @PublicApi
+  @PublicApiWithWhitelist
   public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
       @PathParam("entityToken") String entityToken, String yamlWebHookPayload, @Context HttpHeaders httpHeaders) {
     notNullCheck("webhook token", entityToken);
@@ -1250,5 +1251,37 @@ public class YamlResource {
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
     return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
+  }
+
+  /**
+   * Gets the yaml version of a Governance Config by accountId
+   *
+   * @param accountId  the accountId
+   * @return the rest response
+   */
+  @GET
+  @Path("/compliance-config/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getGovernanceConfig(@QueryParam("accountId") String accountId) {
+    return yamlResourceService.getGovernanceConfig(accountId);
+  }
+
+  /**
+   * Update the Governance Config that is sent as Yaml (in a JSON "wrapper")
+   *
+   * @param accountId   the account id
+   * @param yamlPayload the yaml version of the Freeze Config
+   * @param governanceConfigId governanceConfigId
+   * @return the rest response
+   */
+  @PUT
+  @Path("/compliance-config/{governanceConfigId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES)
+  public RestResponse<YamlPayload> updateGovernanceConfig(@QueryParam("accountId") String accountId,
+      YamlPayload yamlPayload, @PathParam("governanceConfigId") String governanceConfigId) {
+    return yamlService.update(yamlPayload, accountId, governanceConfigId);
   }
 }

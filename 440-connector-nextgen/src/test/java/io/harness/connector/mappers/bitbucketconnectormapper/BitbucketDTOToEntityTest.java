@@ -3,7 +3,7 @@ package io.harness.connector.mappers.bitbucketconnectormapper;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -11,7 +11,6 @@ import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnec
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketSshAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
@@ -19,8 +18,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
 import org.junit.Before;
@@ -125,11 +124,8 @@ public class BitbucketDTOToEntityTest extends CategoryTest {
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
             .authType(GitAuthType.SSH)
-            .credentials(BitbucketSshCredentialsDTO.builder()
-                             .spec(BitbucketSshCredentialsSpecDTO.builder()
-                                       .sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef))
-                                       .build())
-                             .build())
+            .credentials(
+                BitbucketSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
 
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()

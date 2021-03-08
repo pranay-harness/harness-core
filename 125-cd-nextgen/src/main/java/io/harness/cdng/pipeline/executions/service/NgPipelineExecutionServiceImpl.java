@@ -230,8 +230,8 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
     ServiceExecutionSummary serviceExecutionSummary =
         ServiceExecutionSummary.builder()
             .identifier(serviceOutcome.getIdentifier())
-            .displayName(serviceOutcome.getDisplayName())
-            .deploymentType(serviceOutcome.getDeploymentType())
+            .displayName(serviceOutcome.getName())
+            .deploymentType(serviceOutcome.getType())
             .artifacts(pipelineExecutionHelper.mapArtifactsOutcomeToSummary(serviceOutcome))
             .build();
     pipelineExecutionRepository.findAndUpdate(planExecutionId,

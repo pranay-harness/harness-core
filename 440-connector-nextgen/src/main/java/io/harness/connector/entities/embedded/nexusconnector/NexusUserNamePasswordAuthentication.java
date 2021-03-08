@@ -14,5 +14,6 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication")
 public class NexusUserNamePasswordAuthentication implements NexusAuthentication {
   String username;
+  String usernameRef;
   String passwordRef;
 }

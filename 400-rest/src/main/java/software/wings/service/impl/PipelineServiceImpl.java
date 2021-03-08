@@ -271,6 +271,15 @@ public class PipelineServiceImpl implements PipelineService {
     return updatedPipeline;
   }
 
+  @Override
+  public void savePipelines(List<Pipeline> pipelines, boolean skipValidations) {
+    if (skipValidations) {
+      wingsPersistence.save(pipelines);
+    } else {
+      pipelines.forEach(this::save);
+    }
+  }
+
   @VisibleForTesting
   void handlePipelineStageDeletion(Pipeline pipeline, Pipeline savedPipeline, boolean fromYaml) {
     List<PipelineStage> newPipelineStages = pipeline.getPipelineStages();

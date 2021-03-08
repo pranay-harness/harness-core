@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static software.wings.settings.SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES;
 
+import io.harness.shell.AccessType;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -33,6 +33,7 @@ public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
+          .addAll(ConnectorBeansRegistrars.kryoRegistrars)
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
@@ -43,7 +44,7 @@ public class ManagerRegistrars {
           .addAll(NGCoreRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
-          .addAll(NotificationRegistrars.kryoRegistrars)
+          .addAll(NotificationSenderRegistrars.kryoRegistrars)
           .add(CvNextGenCommonsBeansKryoRegistrar.class)
           // temporary:
           .add(DelegateAgentKryoRegister.class)
@@ -72,14 +73,15 @@ public class ManagerRegistrars {
           .add(OrchestrationStepsMorphiaRegistrar.class)
           .add(ProjectAndOrgMorphiaRegistrar.class)
           .add(ViewsMorphiaRegistrar.class)
-          .addAll(CapabilityRegistrars.morphiaRegistrars)
-          .addAll(NotificationRegistrars.morphiaRegistrars)
+          .addAll(NotificationSenderRegistrars.morphiaRegistrars)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(PersistenceRegistrars.morphiaConverters)
           .addAll(OrchestrationRegistrars.morphiaConverters)
+          .addAll(DelegateTasksBeansRegistrars.morphiaConverters)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -34,6 +33,7 @@ import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.paging.PageRequestGrpc;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.tasks.Cd1SetupFields;
@@ -48,6 +48,7 @@ import software.wings.service.intfc.AppService;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -61,12 +62,15 @@ import org.mockito.Mock;
 
 public class DelegateProfileManagerServiceTest extends WingsBaseTest {
   private static final String ACCOUNT_ID = generateUuid();
-  private static String DELEGATE_PROFILE_ID = generateUuid();
-  private Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
+  private static final String DELEGATE_PROFILE_ID = generateUuid();
+  private static final String TEST_DELEGATE_PROFILE_IDENTIFIER = generateUuid();
+
+  private final Application app = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
 
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
   @Mock private AppService appService;
   @InjectMocks @Inject private DelegateProfileManagerServiceImpl delegateProfileManagerService;
+  @Inject private HPersistence persistence;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -135,7 +139,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
                                                .environmentIds(new HashSet(Arrays.asList("env1", "env2")))
                                                .applicationId("appId")
                                                .build();
-    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    profileDetail.setScopingRules(Collections.singletonList(scopingRuleDetail));
 
     DelegateProfileGrpc delegateProfileGrpc =
         DelegateProfileGrpc.newBuilder()
@@ -176,7 +180,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
                                                .startupScript("startupScript")
                                                .build();
     ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder().description("test").build();
-    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    profileDetail.setScopingRules(Collections.singletonList(scopingRuleDetail));
     assertThatThrownBy(() -> delegateProfileManagerService.update(profileDetail))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("The Scoping rule requires application!");
@@ -211,13 +215,14 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
                                                .name("test")
                                                .description("description")
                                                .startupScript("startupScript")
+                                               .identifier(TEST_DELEGATE_PROFILE_IDENTIFIER)
                                                .build();
     ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder()
                                                .description("test")
                                                .environmentIds(new HashSet(Arrays.asList("env1", "env2")))
                                                .applicationId("appId")
                                                .build();
-    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    profileDetail.setScopingRules(Collections.singletonList(scopingRuleDetail));
 
     DelegateProfileGrpc delegateProfileGrpc =
         DelegateProfileGrpc.newBuilder()
@@ -228,13 +233,13 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
             .addScopingRules(
                 ProfileScopingRule.newBuilder().setDescription("test").putAllScopingEntities(scopingEntities).build())
             .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
+            .setIdentifier(TEST_DELEGATE_PROFILE_IDENTIFIER)
             .build();
 
     when(delegateProfileServiceGrpcClient.addProfile(any(DelegateProfileGrpc.class))).thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetails result = delegateProfileManagerService.add(profileDetail);
-    assertThat(result).isNotNull();
-    assertThat(result).isEqualToIgnoringGivenFields(profileDetail, "uuid");
+    assertThat(result).isNotNull().isEqualToIgnoringGivenFields(profileDetail, "uuid");
   }
 
   @Test
@@ -248,7 +253,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
                                                .startupScript("startupScript")
                                                .build();
     ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder().description("test").build();
-    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
+    profileDetail.setScopingRules(Collections.singletonList(scopingRuleDetail));
     assertThatThrownBy(() -> delegateProfileManagerService.add(profileDetail))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("The Scoping rule requires application!");
@@ -266,7 +271,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder()
                                                .description("test")
                                                .applicationId("appId")
-                                               .environmentIds(new HashSet<>(asList("PROD")))
+                                               .environmentIds(new HashSet<>(Collections.singletonList("PROD")))
                                                .build();
 
     when(delegateProfileServiceGrpcClient.updateProfileScopingRules(
@@ -275,11 +280,11 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
         .thenReturn(delegateProfileGrpc);
 
     DelegateProfileDetails updatedDelegateProfileDetails = delegateProfileManagerService.updateScopingRules(
-        ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), asList(scopingRuleDetail));
+        ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), Collections.singletonList(scopingRuleDetail));
     assertThat(updatedDelegateProfileDetails).isNull();
 
     updatedDelegateProfileDetails = delegateProfileManagerService.updateScopingRules(
-        ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), asList(scopingRuleDetail));
+        ACCOUNT_ID, delegateProfileGrpc.getProfileId().getId(), Collections.singletonList(scopingRuleDetail));
     assertThat(updatedDelegateProfileDetails).isNotNull();
     assertThat(updatedDelegateProfileDetails.getUuid()).isEqualTo(delegateProfileGrpc.getProfileId().getId());
     assertThat(updatedDelegateProfileDetails.getAccountId()).isEqualTo(delegateProfileGrpc.getAccountId().getId());
@@ -296,9 +301,10 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
                                                .startupScript("startupScript")
                                                .build();
     ScopingRuleDetails scopingRuleDetail = ScopingRuleDetails.builder().description("test").build();
-    profileDetail.setScopingRules(Arrays.asList(scopingRuleDetail));
-    assertThatThrownBy(
-        () -> delegateProfileManagerService.updateScopingRules(ACCOUNT_ID, generateUuid(), asList(scopingRuleDetail)))
+    profileDetail.setScopingRules(Collections.singletonList(scopingRuleDetail));
+    assertThatThrownBy(()
+                           -> delegateProfileManagerService.updateScopingRules(
+                               ACCOUNT_ID, generateUuid(), Collections.singletonList(scopingRuleDetail)))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("The Scoping rule requires application!");
   }
@@ -323,7 +329,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
                                                   .setProfileId(ProfileId.newBuilder().setId(generateUuid()).build())
                                                   .build();
 
-    List<String> selectors = Arrays.asList("selectors");
+    List<String> selectors = Collections.singletonList("selectors");
 
     when(delegateProfileServiceGrpcClient.updateProfileSelectors(any(AccountId.class), any(ProfileId.class), anyList()))
         .thenReturn(null)
@@ -352,7 +358,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     ScopingValues scopingValuesAppId = ScopingValues.newBuilder().addValue("Harness App").build();
 
     Application application = Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).build();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
     Map<String, ScopingValues> scopingEntities = new HashMap<>();
     scopingEntities.put(APP_ID_FIELD, scopingValuesAppId);
@@ -360,8 +366,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
 
     String description = delegateProfileManagerService.generateScopingRuleDescription(scopingEntities);
 
-    assertThat(description).isNotNull();
-    assertThat(description).isEqualTo("Application: Harness App; Service: service1, service2; ");
+    assertThat(description).isNotNull().isEqualTo("Application: Harness App; Service: service1, service2; ");
   }
 
   @Test
@@ -371,17 +376,16 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> scopingEntitiesIds = new ArrayList<>();
 
     Application application = Application.Builder.anApplication().name(APP_NAME).uuid(APP_ID).build();
-    wingsPersistence.save(application);
+    persistence.save(application);
 
-    Application retrievedApplication = wingsPersistence.get(Application.class, application.getUuid());
+    Application retrievedApplication = persistence.get(Application.class, application.getUuid());
 
     scopingEntitiesIds.add(retrievedApplication.getName());
 
     List<String> retrieveScopingRuleEntitiesNames =
         delegateProfileManagerService.retrieveScopingRuleEntitiesNames(APP_ID_FIELD, scopingEntitiesIds);
 
-    assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
-    assertThat(retrieveScopingRuleEntitiesNames).containsExactly(APP_NAME);
+    assertThat(retrieveScopingRuleEntitiesNames).isNotNull().containsExactly(APP_NAME);
   }
 
   @Test
@@ -391,13 +395,13 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> scopingEntitiesIds = new ArrayList<>();
 
     Service service1 = Service.builder().uuid("SERVICE_ID1").name("To-Do List K8s").build();
-    wingsPersistence.save(service1);
+    persistence.save(service1);
 
     Service service2 = Service.builder().uuid("SERVICE_ID2").name("To-Do List Docker").build();
-    wingsPersistence.save(service2);
+    persistence.save(service2);
 
-    Service retrievedService1 = wingsPersistence.get(Service.class, service1.getUuid());
-    Service retrievedService2 = wingsPersistence.get(Service.class, service2.getUuid());
+    Service retrievedService1 = persistence.get(Service.class, service1.getUuid());
+    Service retrievedService2 = persistence.get(Service.class, service2.getUuid());
 
     scopingEntitiesIds.add(retrievedService1.getName());
     scopingEntitiesIds.add(retrievedService2.getName());
@@ -405,8 +409,7 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> retrieveScopingRuleEntitiesNames =
         delegateProfileManagerService.retrieveScopingRuleEntitiesNames(SERVICE_ID_FIELD, scopingEntitiesIds);
 
-    assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
-    assertThat(retrieveScopingRuleEntitiesNames).containsExactly("To-Do List K8s", "To-Do List Docker");
+    assertThat(retrieveScopingRuleEntitiesNames).isNotNull().containsExactly("To-Do List K8s", "To-Do List Docker");
   }
 
   @Test
@@ -416,16 +419,15 @@ public class DelegateProfileManagerServiceTest extends WingsBaseTest {
     List<String> scopingEntitiesIds = new ArrayList<>();
 
     Environment environment = Environment.Builder.anEnvironment().uuid(ENV_ID).name("qa").build();
-    wingsPersistence.save(environment);
+    persistence.save(environment);
 
-    Environment retrievedEnvironment = wingsPersistence.get(Environment.class, environment.getUuid());
+    Environment retrievedEnvironment = persistence.get(Environment.class, environment.getUuid());
 
     scopingEntitiesIds.add(retrievedEnvironment.getName());
 
     List<String> retrieveScopingRuleEntitiesNames =
         delegateProfileManagerService.retrieveScopingRuleEntitiesNames(ENV_ID_FIELD, scopingEntitiesIds);
 
-    assertThat(retrieveScopingRuleEntitiesNames).isNotNull();
-    assertThat(retrieveScopingRuleEntitiesNames).containsExactly("qa");
+    assertThat(retrieveScopingRuleEntitiesNames).isNotNull().containsExactly("qa");
   }
 }

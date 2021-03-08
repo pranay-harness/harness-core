@@ -8,7 +8,7 @@ inputSet:
           identifier: prod
           type: Deployment
           spec:
-            service:
+            serviceConfig:
               useFromStage:
                 stage: new-qa
               stageOverrides:
@@ -20,5 +20,5 @@ inputSet:
                         store:
                           type: Git
                           spec:
-                            connectorRef: ${input}
+                            connectorRef: <+input>
                             gitFetchType: Commit

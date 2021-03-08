@@ -1,5 +1,7 @@
 package io.harness.batch.processing.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
@@ -19,6 +21,7 @@ import software.wings.dl.WingsPersistence;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.mongodb.BasicDBObject;
@@ -89,6 +92,7 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
             InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
         updateOperations.append(InstanceDataKeys.ttl, new Date(instanceTime.plus(180, ChronoUnit.DAYS).toEpochMilli()));
 
+        updateOperations.append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
         bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
       } catch (Exception ex) {
         log.error("Error updating syncEvent {}", lifecycle.toString(), ex);
@@ -105,6 +109,7 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
 
     for (InstanceInfo instanceInfo : instanceInfos) {
       try {
+        long createdAt = Instant.now().toEpochMilli();
         BasicDBObject instanceInfoDocument =
             new BasicDBObject()
                 .append(InstanceDataKeys.accountId, instanceInfo.getAccountId())
@@ -115,7 +120,9 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
                 .append(InstanceDataKeys.clusterId, instanceInfo.getClusterId())
                 .append(InstanceDataKeys.clusterName, instanceInfo.getClusterName())
                 .append(InstanceDataKeys.instanceState, instanceInfo.getInstanceState().name())
-                .append(InstanceDataKeys.usageStartTime, instanceInfo.getUsageStartTime());
+                .append(InstanceDataKeys.usageStartTime, instanceInfo.getUsageStartTime())
+                .append(InstanceDataKeys.createdAt, createdAt)
+                .append(InstanceDataKeys.lastUpdatedAt, createdAt);
 
         if (!isNull(instanceInfo.getResource())) {
           instanceInfoDocument.append(InstanceDataKeys.totalResource, objectToDocument(instanceInfo.getResource()));
@@ -134,6 +141,11 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
         if (!isNull(instanceInfo.getAllocatableResource())) {
           instanceInfoDocument.append(
               InstanceDataKeys.allocatableResource, objectToDocument(instanceInfo.getAllocatableResource()));
+        }
+
+        if (!isNull(instanceInfo.getPricingResource())) {
+          instanceInfoDocument.append(
+              InstanceDataKeys.pricingResource, objectToDocument(instanceInfo.getPricingResource()));
         }
 
         if (!isNull(instanceInfo.getStorageResource())) {
@@ -156,6 +168,10 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
         if (!isNull(instanceInfo.getHarnessServiceInfo())) {
           instanceInfoDocument.append(
               InstanceDataKeys.harnessServiceInfo, objectToDocument(instanceInfo.getHarnessServiceInfo()));
+        }
+
+        if (!isEmpty(instanceInfo.getPvcClaimNames())) {
+          instanceInfoDocument.append(InstanceDataKeys.pvcClaimNames, instanceInfo.getPvcClaimNames());
         }
 
         final BasicDBObject filter = new BasicDBObject(
@@ -196,13 +212,16 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
             updateOperations = new BasicDBObject(ImmutableMap.of(
                 InstanceDataKeys.usageStopTime, instant, InstanceDataKeys.instanceState, InstanceState.STOPPED.name()));
 
-            if (instanceEvent.getInstanceType() == InstanceType.K8S_POD) {
+            if (ImmutableSet.of(InstanceType.K8S_POD, InstanceType.K8S_POD_FARGATE)
+                    .contains(instanceEvent.getInstanceType())) {
               updateOperations.append(InstanceDataKeys.ttl, new Date(instant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
-            } else if (instanceEvent.getInstanceType() == InstanceType.K8S_NODE) {
+            } else if (ImmutableList.of(InstanceType.K8S_NODE, InstanceType.K8S_PV)
+                           .contains(instanceEvent.getInstanceType())) {
               updateOperations.append(
                   InstanceDataKeys.ttl, new Date(instant.plus(180, ChronoUnit.DAYS).toEpochMilli()));
             }
 
+            updateOperations.append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
             bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
             break;
 
@@ -213,6 +232,7 @@ public class InstanceDataBulkWriteServiceImpl implements InstanceDataBulkWriteSe
             updateOperations = new BasicDBObject(ImmutableMap.of(InstanceDataKeys.usageStartTime, instant,
                 InstanceDataKeys.instanceState, InstanceState.RUNNING.name()));
 
+            updateOperations.append(InstanceDataKeys.lastUpdatedAt, Instant.now().toEpochMilli());
             bulkWriteOperation.find(filter).update(new BasicDBObject("$set", updateOperations));
             break;
           default:

@@ -6,6 +6,8 @@ import static io.harness.network.SafeHttpCall.execute;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -17,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateStackdriverLogAppender extends RemoteStackdriverLogAppender {
   private static final String APP_NAME = "delegate";
 

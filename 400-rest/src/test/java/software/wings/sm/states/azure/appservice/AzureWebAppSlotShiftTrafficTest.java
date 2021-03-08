@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyListOf;
@@ -17,6 +18,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -24,6 +26,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotShiftTrafficResponse;
+import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -37,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContextImpl;
@@ -65,10 +69,12 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected ActivityService activityService;
   @Mock AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotShiftTraffic state = new AzureWebAppSlotShiftTraffic("Slot Traffic shift state");
 
   private final String ACTIVITY_ID = "activityId";
   private final String trafficWeight = "10";
+
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
@@ -82,10 +88,27 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANIL)
   @Category(UnitTests.class)
+  public void testSlotTrafficShiftExecuteSkip() {
+    ExecutionContextImpl mockContext = initializeMockSetup(true, true);
+    state.setTrafficWeightExpr("junk");
+    doReturn(AzureConstants.INVALID_TRAFFIC)
+        .when(azureVMSSStateHelper)
+        .renderDoubleExpression(eq("junk"), eq(mockContext), eq(AzureConstants.INVALID_TRAFFIC));
+
+    ExecutionResponse result = state.execute(mockContext);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(result.getErrorMessage())
+        .contains("Invalid traffic percent - [junk] specified. Skipping traffic shift step");
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
   public void testSlotTrafficShiftExecuteFailure() {
     ExecutionContextImpl mockContext = initializeMockSetup(false, true);
-    ExecutionResponse response = state.execute(mockContext);
-    assertThat(response.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(mockContext)).isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -93,8 +116,9 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSlotTrafficShiftAbsenceOfContextElement() {
     ExecutionContextImpl mockContext = initializeMockSetup(true, false);
-    ExecutionResponse failedResponse = state.execute(mockContext);
-    assertThat(failedResponse.getExecutionStatus()).isEqualTo(FAILED);
+    assertThatThrownBy(() -> state.execute(mockContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Did not find Setup element of class AzureAppServiceSlotSetupContextElement");
   }
 
   @Test
@@ -171,7 +195,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
+          .getInfoFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
 
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));
@@ -179,9 +203,13 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     doReturn(Integer.valueOf(trafficWeight))
         .when(azureVMSSStateHelper)
         .renderExpressionOrGetDefault(anyString(), eq(mockContext), anyInt());
+    doReturn(Double.valueOf(trafficWeight))
+        .when(azureVMSSStateHelper)
+        .renderDoubleExpression(anyString(), eq(mockContext), anyInt());
     doReturn(20)
         .when(azureVMSSStateHelper)
         .getStateTimeOutFromContext(eq(mockContext), eq(ContextElementType.AZURE_WEBAPP_SETUP));
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();
@@ -227,7 +255,7 @@ public class AzureWebAppSlotShiftTrafficTest extends WingsBaseTest {
     assertThat(stateExecutionData.getAppServiceSlotSetupTimeOut()).isNotNull();
     assertThat(stateExecutionData.getAppServiceName()).isEqualTo("app-service");
     assertThat(stateExecutionData.getDeploySlotName()).isEqualTo("stage");
-    assertThat(stateExecutionData.getTrafficWeight()).isEqualTo(trafficWeight);
+    assertThat(Float.parseFloat(stateExecutionData.getTrafficWeight())).isEqualTo(Float.parseFloat(trafficWeight));
     assertThat(stateExecutionData.getInfrastructureMappingId()).isEqualTo("infraMappingId");
 
     AzureAppServiceSlotShiftTrafficExecutionSummary stepExecutionSummary = stateExecutionData.getStepExecutionSummary();

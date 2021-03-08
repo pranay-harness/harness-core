@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.function.Function.identity;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 
 import software.wings.beans.EntityType;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G, S, E, TA extends TagAggregation, LA
                                                                              extends LabelAggregation, EA>
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, G, S> {
@@ -52,9 +55,13 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
   @Inject protected BillingDataHelper billingDataHelper;
   private static final String TYPE_LABEL = "K8sLabel";
   private static final String TYPE_UTILIZATION = "Utilization";
+
   protected abstract TA getTagAggregation(G groupBy);
+
   protected abstract LA getLabelAggregation(G groupBy);
+
   protected abstract EA getEntityAggregation(G groupBy);
+
   protected abstract EntityType getEntityType(E entityType);
 
   @Override
@@ -109,8 +116,10 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndTags<A, F, G
     } else if (qlData instanceof QLEntityTableListData) {
       QLEntityTableListData entityTableListData = (QLEntityTableListData) qlData;
       List<QLEntityTableData> entityTableDataPoints = entityTableListData.getData();
-      getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1, includeOthers);
-      sortEntityTableData(entityTableDataPoints, (List<QLBillingSortCriteria>) sortCriteria);
+      if (entityTableDataPoints != null) {
+        getLabelEntityTableDataPoints(accountId, entityTableDataPoints, groupByLabelLevel1, includeOthers);
+        sortEntityTableData(entityTableDataPoints, (List<QLBillingSortCriteria>) sortCriteria);
+      }
     } else if (qlData instanceof QLCEData) {
       QLCEData data = (QLCEData) qlData;
       List<QLCEDataEntry> dataPoints = data.getData();

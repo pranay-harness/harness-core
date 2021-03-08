@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -31,7 +32,6 @@ import static io.harness.provision.TerraformConstants.WORKSPACE_KEY;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEOUT_IN_MINUTES;
@@ -73,6 +73,7 @@ import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.TerraformPlanParam;
+import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
 import software.wings.app.MainConfiguration;
@@ -351,7 +352,11 @@ public abstract class TerraformProvisionState extends State {
     }
     if (terraformExecutionData.getOutputs() != null) {
       Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
-      outputInfoElement.addOutPuts(outputs);
+      if (featureFlagService.isEnabled(FeatureName.SAVE_TERRAFORM_OUTPUTS_TO_SWEEPING_OUTPUT, context.getAccountId())) {
+        saveOutputs(context, outputs);
+      } else {
+        outputInfoElement.addOutPuts(outputs);
+      }
       ManagerExecutionLogCallback executionLogCallback = infrastructureProvisionerService.getManagerExecutionCallback(
           terraformProvisioner.getAppId(), terraformExecutionData.getActivityId(), commandUnit().name());
       infrastructureProvisionerService.regenerateInfrastructureMappings(
@@ -368,6 +373,30 @@ public abstract class TerraformProvisionState extends State {
         .executionStatus(terraformExecutionData.getExecutionStatus())
         .errorMessage(terraformExecutionData.getErrorMessage())
         .build();
+  }
+
+  private void saveOutputs(ExecutionContext context, Map<String, Object> outputs) {
+    TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
+    SweepingOutputInstance instance = sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(TerraformOutputVariables.SWEEPING_OUTPUT_NAME).build());
+    TerraformOutputVariables terraformOutputVariables =
+        instance != null ? (TerraformOutputVariables) instance.getValue() : new TerraformOutputVariables();
+
+    terraformOutputVariables.putAll(outputs);
+    if (outputInfoElement != null && outputInfoElement.getOutputVariables() != null) {
+      // Ensure that we're not missing any variables during migration from context element to sweeping output
+      // can be removed with the next releases
+      terraformOutputVariables.putAll(outputInfoElement.getOutputVariables());
+    }
+
+    if (instance != null) {
+      sweepingOutputService.deleteById(context.getAppId(), instance.getUuid());
+    }
+
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(TerraformOutputVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(terraformOutputVariables)
+                                   .build());
   }
 
   private void saveUserInputs(ExecutionContext context, TerraformExecutionData terraformExecutionData,
@@ -557,9 +586,9 @@ public abstract class TerraformProvisionState extends State {
     gitConfigHelperService.convertToRepoGitConfig(
         gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
 
-    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
-        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
-        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+    SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
+        ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
+        : null;
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
@@ -649,9 +678,9 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
 
-    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
-        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
-        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+    SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
+        ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
+        : null;
 
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {
@@ -1017,5 +1046,26 @@ public abstract class TerraformProvisionState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity).getUuid();
+  }
+
+  private boolean isRunAndExportEncryptedPlan() {
+    return runPlanOnly && exportPlanToApplyStep;
+  }
+
+  private boolean isInheritingEncryptedPlan() {
+    return !runPlanOnly && inheritApprovedPlan;
+  }
+
+  boolean isExportingDestroyPlan() {
+    return runPlanOnly && TerraformCommand.DESTROY == command();
+  }
+
+  boolean isSecretManagerRequired() {
+    return isRunAndExportEncryptedPlan() || isInheritingEncryptedPlan() || isExportingDestroyPlan();
+  }
+
+  SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
+    return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
+                                    : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
   }
 }

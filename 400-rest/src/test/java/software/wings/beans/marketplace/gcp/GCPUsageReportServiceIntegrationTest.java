@@ -5,12 +5,12 @@ import static io.harness.rule.OwnerRule.HITESH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.marketplace.gcp.GCPUsageReport.GCPUsageReportKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
-import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceIntegrationTest;
+import software.wings.service.impl.marketplace.gcp.GCPMarketPlaceServiceImpl;
 import software.wings.service.impl.marketplace.gcp.GCPUsageReportServiceImpl;
 
 import com.google.inject.Inject;
@@ -24,7 +24,7 @@ import org.junit.experimental.categories.Category;
 
 public class GCPUsageReportServiceIntegrationTest extends IntegrationTestBase {
   @Inject private GCPUsageReportServiceImpl gcpUsageReportService;
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   private boolean indexesEnsured;
 
   // namespacing accountId so that other tests are not impacted by this
@@ -38,7 +38,7 @@ public class GCPUsageReportServiceIntegrationTest extends IntegrationTestBase {
       "gcp-operation-id-" + GCPUsageReportServiceIntegrationTest.class.getSimpleName();
 
   private static final String SOME_ENTITLEMENT_NAME =
-      "gcp-entitlement-" + GCPMarketPlaceServiceIntegrationTest.class.getSimpleName();
+      "gcp-entitlement-" + GCPMarketPlaceServiceImpl.class.getSimpleName();
 
   @Before
   public void ensureIndices() {

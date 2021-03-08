@@ -1,6 +1,7 @@
 package io.harness.redesign.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -225,11 +226,19 @@ public class CustomExecutionServiceImpl implements CustomExecutionService {
   }
 
   private ExecutionMetadata getMetadata() {
-    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo()).build();
+    return ExecutionMetadata.newBuilder()
+        .setExecutionUuid(generateUuid())
+        .setRunSequence(0)
+        .setTriggerInfo(getTriggerInfo())
+        .build();
   }
 
   private ExecutionMetadata getMetadata(EmbeddedUser embeddedUser) {
-    return ExecutionMetadata.newBuilder().setRunSequence(0).setTriggerInfo(getTriggerInfo(embeddedUser)).build();
+    return ExecutionMetadata.newBuilder()
+        .setExecutionUuid(generateUuid())
+        .setRunSequence(0)
+        .setTriggerInfo(getTriggerInfo(embeddedUser))
+        .build();
   }
 
   private ExecutionTriggerInfo getTriggerInfo(EmbeddedUser embeddedUser) {

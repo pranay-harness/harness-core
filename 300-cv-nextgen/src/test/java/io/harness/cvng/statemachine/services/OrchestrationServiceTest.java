@@ -1,5 +1,6 @@
 package io.harness.cvng.statemachine.services;
 
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
@@ -9,7 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
@@ -22,12 +23,18 @@ import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.persistence.HPersistence;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.rule.Owner;
 
+import com.google.api.client.util.Sets;
 import com.google.inject.Inject;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +42,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class OrchestrationServiceTest extends CvNextGenTest {
+public class OrchestrationServiceTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
 
   @Mock AnalysisStateMachineService mockStateMachineService;
@@ -68,6 +75,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
 
     assertThat(orchestrator).isNull();
 
+    when(mockStateMachineService.ignoreOldStatemachine(any())).thenReturn(Optional.empty());
     orchestrationService.queueAnalysis(cvConfigId, Instant.now(), Instant.now().minus(5, ChronoUnit.MINUTES));
 
     orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
@@ -75,7 +83,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
                        .get();
 
     assertThat(orchestrator).isNotNull();
-    assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.RUNNING.name());
+    assertThat(orchestrator.getStatus().name()).isEqualTo(AnalysisStatus.CREATED.name());
   }
 
   @Test(expected = NullPointerException.class)
@@ -141,6 +149,7 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     hPersistence.save(orchestrator);
 
     when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);
+    when(mockStateMachineService.ignoreOldStatemachine(any())).thenReturn(Optional.empty());
 
     orchestrationService.orchestrate(cvConfigId);
 
@@ -225,5 +234,126 @@ public class OrchestrationServiceTest extends CvNextGenTest {
     // verify
     verify(mockStateMachineService).getExecutingStateMachine(cvConfigId);
     verify(mockStateMachineService).retryStateMachineAfterFailure(stateMachine);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testOrchestrate_ignoreStateMachine() {
+    AnalysisOrchestrator orchestrator = AnalysisOrchestrator.builder()
+                                            .verificationTaskId(cvConfigId)
+                                            .status(AnalysisStatus.RUNNING)
+                                            .analysisStateMachineQueue(new ArrayList<>())
+                                            .build();
+
+    AnalysisStateMachine stateMachine =
+        AnalysisStateMachine.builder().status(AnalysisStatus.SUCCESS).verificationTaskId(verificationTaskId).build();
+
+    AnalysisStateMachine firstSM = AnalysisStateMachine.builder()
+                                       .status(AnalysisStatus.CREATED)
+                                       .verificationTaskId(verificationTaskId)
+                                       .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+                                       .analysisEndTime(Instant.now())
+                                       .build();
+    orchestrator.getAnalysisStateMachineQueue().add(firstSM);
+    when(mockStateMachineService.ignoreOldStatemachine(firstSM)).thenReturn(Optional.of(firstSM));
+
+    AnalysisStateMachine nextSM = AnalysisStateMachine.builder()
+                                      .status(AnalysisStatus.CREATED)
+                                      .verificationTaskId(verificationTaskId)
+                                      .analysisStartTime(Instant.now())
+                                      .analysisEndTime(Instant.now().plus(5, ChronoUnit.MINUTES))
+                                      .build();
+    orchestrator.getAnalysisStateMachineQueue().add(nextSM);
+    when(mockStateMachineService.ignoreOldStatemachine(nextSM)).thenReturn(Optional.empty());
+
+    hPersistence.save(orchestrator);
+
+    when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);
+
+    orchestrationService.orchestrate(cvConfigId);
+
+    // verify
+    verify(mockStateMachineService).getExecutingStateMachine(cvConfigId);
+    verify(mockStateMachineService).ignoreOldStatemachine(firstSM);
+    verify(mockStateMachineService).ignoreOldStatemachine(nextSM);
+    verify(mockStateMachineService, times(1)).initiateStateMachine(cvConfigId, nextSM);
+
+    AnalysisOrchestrator orchestratorFromDB = hPersistence.createQuery(AnalysisOrchestrator.class).get();
+    assertThat(orchestratorFromDB.getAnalysisStateMachineQueue()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testOrchestrate_ignoreStateMachine100OldOnes() {
+    AnalysisOrchestrator orchestrator = AnalysisOrchestrator.builder()
+                                            .verificationTaskId(cvConfigId)
+                                            .status(AnalysisStatus.RUNNING)
+                                            .analysisStateMachineQueue(new ArrayList<>())
+                                            .build();
+
+    AnalysisStateMachine stateMachine =
+        AnalysisStateMachine.builder().status(AnalysisStatus.SUCCESS).verificationTaskId(verificationTaskId).build();
+
+    List<AnalysisStateMachine> ignoreList = new ArrayList<>();
+
+    for (int i = 0; i < 110; i++) {
+      AnalysisStateMachine firstSM = AnalysisStateMachine.builder()
+                                         .status(AnalysisStatus.CREATED)
+                                         .verificationTaskId(verificationTaskId)
+                                         .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+                                         .analysisEndTime(Instant.now())
+                                         .build();
+      orchestrator.getAnalysisStateMachineQueue().add(firstSM);
+      when(mockStateMachineService.ignoreOldStatemachine(firstSM)).thenReturn(Optional.of(firstSM));
+
+      if (i < STATE_MACHINE_IGNORE_LIMIT) {
+        ignoreList.add(firstSM);
+      }
+    }
+
+    hPersistence.save(orchestrator);
+
+    when(mockStateMachineService.getExecutingStateMachine(cvConfigId)).thenReturn(stateMachine);
+
+    orchestrationService.orchestrate(cvConfigId);
+
+    // verify
+    verify(mockStateMachineService).getExecutingStateMachine(cvConfigId);
+    verify(mockStateMachineService).save(ignoreList);
+
+    AnalysisOrchestrator orchestratorFromDB = hPersistence.createQuery(AnalysisOrchestrator.class).get();
+    assertThat(orchestratorFromDB.getAnalysisStateMachineQueue().size()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testValidateAllFieldsOnUpsert() {
+    AnalysisOrchestrator orchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
+                                            .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)
+                                            .get();
+
+    assertThat(orchestrator).isNull();
+
+    when(mockStateMachineService.ignoreOldStatemachine(any())).thenReturn(Optional.empty());
+    orchestrationService.queueAnalysis(cvConfigId, Instant.now(), Instant.now().minus(5, ChronoUnit.MINUTES));
+    AnalysisOrchestrator dbOrchestrator = hPersistence.createQuery(AnalysisOrchestrator.class)
+                                              .filter(AnalysisOrchestratorKeys.verificationTaskId, cvConfigId)
+                                              .get();
+
+    Set<String> nullableFields = Sets.newHashSet();
+    nullableFields.add(AnalysisOrchestratorKeys.analysisOrchestrationIteration);
+
+    List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(AnalysisOrchestrator.class);
+    fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
+      try {
+        field.setAccessible(true);
+        assertThat(field.get(dbOrchestrator)).withFailMessage("field %s is null", field.getName()).isNotNull();
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    });
   }
 }

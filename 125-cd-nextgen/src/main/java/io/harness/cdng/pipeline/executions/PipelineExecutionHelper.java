@@ -2,12 +2,12 @@ package io.harness.cdng.pipeline.executions;
 
 import static io.harness.pms.execution.ExecutionStatus.getExecutionStatus;
 
-import io.harness.cdng.artifact.bean.ArtifactOutcome;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;
 import io.harness.execution.NodeExecution;
+import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.pipeline.StageTypeToStageExecutionSummaryMapper;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.ngpipeline.pipeline.executions.beans.CDStageExecutionSummary;
@@ -141,12 +141,12 @@ public class PipelineExecutionHelper {
     ServiceExecutionSummary.ArtifactsSummary.ArtifactsSummaryBuilder artifactsSummaryBuilder =
         ServiceExecutionSummary.ArtifactsSummary.builder();
 
-    if (serviceOutcome.getArtifacts().getPrimary() != null) {
-      artifactsSummaryBuilder.primary(serviceOutcome.getArtifacts().getPrimary().getArtifactSummary());
+    if (serviceOutcome.getArtifactsResult().getPrimary() != null) {
+      artifactsSummaryBuilder.primary(serviceOutcome.getArtifactsResult().getPrimary().getArtifactSummary());
     }
 
-    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifacts().getSidecars())) {
-      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifacts()
+    if (EmptyPredicate.isNotEmpty(serviceOutcome.getArtifactsResult().getSidecars())) {
+      artifactsSummaryBuilder.sidecars(serviceOutcome.getArtifactsResult()
                                            .getSidecars()
                                            .values()
                                            .stream()

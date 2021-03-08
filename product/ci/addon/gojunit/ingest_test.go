@@ -7,7 +7,6 @@ package junit
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -114,9 +113,9 @@ func TestExamplesInTheWild(t *testing.T) {
 				assert.Equal(t, "I'm an error!\n", suites[0].Tests[0].SystemErr)
 
 				var testcase = Test{
-					Name:      "testStdoutStderr",
-					Classname: "com.example.FooTest",
-					Duration:  1234560 * time.Millisecond,
+					Name:       "testStdoutStderr",
+					Classname:  "com.example.FooTest",
+					DurationMs: 1234560,
 					Result: types.Result{
 						Status: types.StatusFailed,
 						Type:   "java.lang.AssertionError",
@@ -142,9 +141,9 @@ func TestExamplesInTheWild(t *testing.T) {
 				assert.Len(t, suites[0].Tests, 4)
 
 				var testcase = Test{
-					Name:      "testSomething()",
-					Classname: "TestClassSample",
-					Duration:  342 * time.Millisecond,
+					Name:       "testSomething()",
+					Classname:  "TestClassSample",
+					DurationMs: 342,
 					Result: types.Result{
 						Status:  types.StatusFailed,
 						Message: "XCTAssertTrue failed",
@@ -178,9 +177,9 @@ func TestExamplesInTheWild(t *testing.T) {
 				assert.Equal(t, "/untitled/tests/SampleTest.php", suite.Properties["file"])
 
 				var testcase = Test{
-					Name:      "testA",
-					Classname: "SampleTest",
-					Duration:  5917 * time.Microsecond,
+					Name:       "testA",
+					Classname:  "SampleTest",
+					DurationMs: 5,
 					Result: types.Result{
 						Status: types.StatusPassed,
 					},
@@ -205,12 +204,12 @@ func TestExamplesInTheWild(t *testing.T) {
 				suites[0].Aggregate()
 				actualTotals := suites[0].Totals
 				expectedTotals := Totals{
-					Tests:    7,
-					Passed:   4,
-					Skipped:  0,
-					Failed:   3,
-					Error:    0,
-					Duration: 8489 * time.Microsecond,
+					Tests:      7,
+					Passed:     4,
+					Skipped:    0,
+					Failed:     3,
+					Error:      0,
+					DurationMs: 7,
 				}
 				assert.Equal(t, expectedTotals, actualTotals)
 			},

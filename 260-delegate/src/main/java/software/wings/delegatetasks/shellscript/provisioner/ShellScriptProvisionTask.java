@@ -6,26 +6,28 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService logService;
   @Inject private ShellExecutorFactory shellExecutorFactory;
@@ -86,16 +89,13 @@ public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
                                                     .scriptType(ScriptType.BASH)
                                                     .build();
       ScriptProcessExecutor executor = shellExecutorFactory.getExecutor(shellExecutorConfig);
-      CommandExecutionResult commandExecutionResult =
-          executor.executeCommandString(parameters.getScriptBody(), emptyList());
+      ExecuteCommandResponse executeCommandResponse =
+          executor.executeCommandString(parameters.getScriptBody(), emptyList(), emptyList());
 
-      saveExecutionLog(parameters, "Execution finished with status: " + commandExecutionResult.getStatus(),
-          commandExecutionResult.getStatus());
-      if (commandExecutionResult.getStatus() == CommandExecutionStatus.FAILURE) {
-        return ShellScriptProvisionExecutionData.builder()
-            .executionStatus(ExecutionStatus.FAILED)
-            .errorMsg(commandExecutionResult.getErrorMessage())
-            .build();
+      saveExecutionLog(parameters, "Execution finished with status: " + executeCommandResponse.getStatus(),
+          executeCommandResponse.getStatus());
+      if (executeCommandResponse.getStatus() == CommandExecutionStatus.FAILURE) {
+        return ShellScriptProvisionExecutionData.builder().executionStatus(ExecutionStatus.FAILED).build();
       }
 
       try {

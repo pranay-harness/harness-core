@@ -18,6 +18,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLContainerRecom
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRecommendationConnection;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendationPreset;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -109,6 +110,14 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                        .namespace("default")
                        .workloadType("Deployment")
                        .workloadName("my-nginx")
+                       .preset(QLK8sWorkloadRecommendationPreset.builder()
+                                   .cpuRequest(0.8)
+                                   .memoryRequest(0.8)
+                                   .memoryLimit(0.95)
+                                   .safetyMargin(0.15)
+                                   .minCpuMilliCores(25L)
+                                   .minMemoryBytes(250_000_000L)
+                                   .build())
                        .containerRecommendation(QLContainerRecommendation.builder()
                                                     .containerName("nginx")
                                                     .current(QLResourceRequirement.builder()

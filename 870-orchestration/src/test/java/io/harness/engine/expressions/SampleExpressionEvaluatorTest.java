@@ -28,17 +28,18 @@ public class SampleExpressionEvaluatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testWithSupportStringUtils() {
     ExpressionEvaluatorProvider expressionEvaluatorProvider = new SampleExpressionEvaluatorProvider(true);
+    EngineExpressionEvaluator expressionEvaluatorT = expressionEvaluatorProvider.get(null, ambiance, null, false);
     EngineExpressionEvaluator expressionEvaluator = expressionEvaluatorProvider.get(null, ambiance, null, false);
 
-    validateEvaluateExpression(expressionEvaluator, "${stringUtils.toUpper(\"Abc\")}", "ABC");
-    validateEvaluateExpression(expressionEvaluator, "${stringUtils.toLower(\"Abc\")}", "abc");
-    validateEvaluateExpression(expressionEvaluator, "${string.toUpper(\"Abc\")}", "ABC");
-    validateEvaluateExpression(expressionEvaluator, "${string.toLower(\"Abc\")}", "abc");
-    validateEvaluateExpression(expressionEvaluator, "${toUpper(\"Abc\")}", "ABC");
-    validateEvaluateExpression(expressionEvaluator, "${toLower(\"Abc\")}", "abc");
+    validateEvaluateExpression(expressionEvaluator, "<+stringUtils.toUpper(\"Abc\")>", "ABC");
+    validateEvaluateExpression(expressionEvaluator, "<+stringUtils.toLower(\"Abc\")>", "abc");
+    validateEvaluateExpression(expressionEvaluator, "<+string.toUpper(\"Abc\")>", "ABC");
+    validateEvaluateExpression(expressionEvaluator, "<+string.toLower(\"Abc\")>", "abc");
+    validateEvaluateExpression(expressionEvaluator, "<+toUpper(\"Abc\")>", "ABC");
+    validateEvaluateExpression(expressionEvaluator, "<+toLower(\"Abc\")>", "abc");
 
-    validateEvaluateExpression(expressionEvaluator, "${random.generateRandom()}", null);
-    validateEvaluateExpression(expressionEvaluator, "${generateRandom()}", null);
+    validateEvaluateExpression(expressionEvaluator, "<+random.generateRandom()>", null);
+    validateEvaluateExpression(expressionEvaluator, "<+generateRandom()>", null);
   }
 
   @Test
@@ -48,11 +49,11 @@ public class SampleExpressionEvaluatorTest extends CategoryTest {
     ExpressionEvaluatorProvider expressionEvaluatorProvider = new SampleExpressionEvaluatorProvider(false);
     EngineExpressionEvaluator expressionEvaluator = expressionEvaluatorProvider.get(null, ambiance, null, false);
 
-    validateEvaluateExpression(expressionEvaluator, "${random.generateRandom()}", null);
-    validateEvaluateExpression(expressionEvaluator, "${generateRandom()}", null);
+    validateEvaluateExpression(expressionEvaluator, "<+random.generateRandom()>", null);
+    validateEvaluateExpression(expressionEvaluator, "<+generateRandom()>", null);
 
     validateEvaluateExpression(
-        expressionEvaluator, "${stringUtils.toUpper(\"Abc\")}", "${stringUtils.toUpper(\"Abc\")}");
+        expressionEvaluator, "<+stringUtils.toUpper(\"Abc\")>", "<+stringUtils.toUpper(\"Abc\")>");
   }
 
   private void validateEvaluateExpression(

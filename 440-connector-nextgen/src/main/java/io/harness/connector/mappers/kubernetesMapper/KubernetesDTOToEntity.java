@@ -18,8 +18,6 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCredential;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
@@ -31,15 +29,15 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;
-import java.util.Collections;
-import java.util.List;
 
 @Singleton
-public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO> {
+public class KubernetesDTOToEntity
+    implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
   @Override
   public KubernetesClusterConfig toConnectorEntity(KubernetesClusterConfigDTO k8ClusterDTO) {
     KubernetesCredentialType credentialType = getKubernetesCredentialType(k8ClusterDTO);
@@ -48,11 +46,6 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
         KubernetesClusterConfig.builder().credentialType(credentialType).credential(kubernetesCredential).build();
     kubernetesClusterConfig.setType(KUBERNETES_CLUSTER);
     return kubernetesClusterConfig;
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CLOUD_PROVIDER);
   }
 
   private KubernetesCredentialType getKubernetesCredentialType(KubernetesClusterConfigDTO k8ClusterDTO) {
@@ -64,7 +57,9 @@ public class KubernetesDTOToEntity implements ConnectorDTOToEntityMapper<Kuberne
     if (k8CredentialType == INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetailsDTO kubernetesDelegateDetails =
           castToKubernetesDelegateDetails(k8ClusterDTO.getCredential().getConfig());
-      return KubernetesDelegateDetails.builder().delegateName(kubernetesDelegateDetails.getDelegateName()).build();
+      return KubernetesDelegateDetails.builder()
+          .delegateSelectors(kubernetesDelegateDetails.getDelegateSelectors())
+          .build();
     } else if (k8CredentialType == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO kubernetesClusterDetails =
           castToKubernetesClusterDetails(k8ClusterDTO.getCredential().getConfig());

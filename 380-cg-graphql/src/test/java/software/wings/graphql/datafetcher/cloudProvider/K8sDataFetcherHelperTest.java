@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.IGOR;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
@@ -29,6 +30,8 @@ import software.wings.graphql.schema.type.cloudProvider.k8s.QLClusterDetailsType
 import software.wings.graphql.schema.type.cloudProvider.k8s.QLManualClusterDetailsAuthenticationType;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -62,7 +65,10 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
             .skipValidation(RequestField.ofNullable(Boolean.TRUE))
             .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
             .inheritClusterDetails(RequestField.ofNullable(
-                QLInheritClusterDetails.builder().delegateName(RequestField.ofNullable(DELEGATE)).build()))
+                QLInheritClusterDetails.builder()
+                    .delegateSelectors(RequestField.ofNullable(new HashSet<>(Collections.singletonList(DELEGATE))))
+                    .delegateName(RequestField.ofNull())
+                    .build()))
             .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -73,6 +79,28 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
     KubernetesClusterConfig config = (KubernetesClusterConfig) setting.getValue();
     assertThat(config.isSkipValidation()).isEqualTo(Boolean.TRUE);
     assertThat(config.isUseKubernetesDelegate()).isTrue();
+    assertThat(config.getDelegateSelectors().iterator().next()).isEqualTo(DELEGATE);
+  }
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void toSettingAttributeDelegateNamePresentSelectorsNull() {
+    final QLK8sCloudProviderInput input =
+        QLK8sCloudProviderInput.builder()
+            .name(RequestField.ofNullable(NAME))
+            .skipValidation(RequestField.ofNullable(Boolean.TRUE))
+            .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
+            .inheritClusterDetails(RequestField.ofNullable(QLInheritClusterDetails.builder()
+                                                               .delegateSelectors(RequestField.ofNull())
+                                                               .delegateName(RequestField.ofNullable(DELEGATE))
+                                                               .build()))
+            .build();
+
+    SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
+
+    assertThat(setting).isNotNull();
+    KubernetesClusterConfig config = (KubernetesClusterConfig) setting.getValue();
+    assertThat(config.getDelegateSelectors().iterator().next()).isEqualTo(DELEGATE);
     assertThat(config.getDelegateName()).isEqualTo(DELEGATE);
   }
 
@@ -120,7 +148,10 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
             .skipValidation(RequestField.ofNullable(Boolean.TRUE))
             .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
             .inheritClusterDetails(RequestField.ofNullable(
-                QLUpdateInheritClusterDetails.builder().delegateName(RequestField.ofNullable(DELEGATE)).build()))
+                QLUpdateInheritClusterDetails.builder()
+                    .delegateSelectors(RequestField.ofNullable(new HashSet<>(Collections.singletonList(DELEGATE))))
+                    .delegateName(RequestField.ofNull())
+                    .build()))
             .build();
 
     SettingAttribute setting =
@@ -133,6 +164,31 @@ public class K8sDataFetcherHelperTest extends WingsBaseTest {
     KubernetesClusterConfig config = (KubernetesClusterConfig) setting.getValue();
     assertThat(config.isSkipValidation()).isTrue();
     assertThat(config.isUseKubernetesDelegate()).isTrue();
+    assertThat(config.getDelegateSelectors().iterator().next()).isEqualTo(DELEGATE);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void updateSettingAttributeDelegateNamePresentSelectorsNull() {
+    final QLUpdateK8sCloudProviderInput input =
+        QLUpdateK8sCloudProviderInput.builder()
+            .name(RequestField.ofNullable(NAME))
+            .skipValidation(RequestField.ofNullable(Boolean.TRUE))
+            .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
+            .inheritClusterDetails(RequestField.ofNullable(QLUpdateInheritClusterDetails.builder()
+                                                               .delegateSelectors(RequestField.ofNull())
+                                                               .delegateName(RequestField.ofNullable(DELEGATE))
+                                                               .build()))
+            .build();
+
+    SettingAttribute setting =
+        SettingAttribute.Builder.aSettingAttribute().withValue(KubernetesClusterConfig.builder().build()).build();
+    helper.updateSettingAttribute(setting, input, ACCOUNT_ID);
+
+    assertThat(setting).isNotNull();
+    KubernetesClusterConfig config = (KubernetesClusterConfig) setting.getValue();
+    assertThat(config.getDelegateSelectors().iterator().next()).isEqualTo(DELEGATE);
     assertThat(config.getDelegateName()).isEqualTo(DELEGATE);
   }
 

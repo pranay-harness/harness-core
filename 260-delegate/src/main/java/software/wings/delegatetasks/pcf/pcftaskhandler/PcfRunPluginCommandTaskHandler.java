@@ -9,6 +9,8 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -19,13 +21,13 @@ import io.harness.exception.UnexpectedException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
-import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRunPluginScriptRequestData;
@@ -50,6 +52,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @NoArgsConstructor
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
   @Inject PcfClient pcfClient;
 

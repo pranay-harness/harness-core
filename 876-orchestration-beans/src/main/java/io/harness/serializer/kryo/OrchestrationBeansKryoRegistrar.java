@@ -9,6 +9,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.timeout.trackers.active.ActiveTimeoutParameters;
 
 import com.esotericsoftware.kryo.Kryo;
 import java.time.Duration;
@@ -30,6 +31,8 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(RepairActionCode.class, 2528);
 
     kryo.register(InterruptEffect.class, 2534);
+
+    kryo.register(ActiveTimeoutParameters.class, 2537);
 
     // Add moved/old classes here
     // Keeping the same id for moved classes

@@ -11,10 +11,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.expression.EngineJexlContext;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.registries.OrchestrationFieldRegistry;
 import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.ParameterFieldProcessor;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,7 +39,8 @@ import org.mockito.Mock;
 
 public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
   @Mock private PlanExecutionService planExecutionService;
-  @Inject OrchestrationFieldRegistry orchestrationFieldRegistry;
+  @Inject private ParameterFieldProcessor parameterFieldProcessor;
+
   private ObjectMapper objectMapper;
 
   @Before
@@ -58,18 +60,17 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
 
     // Kind of applying input sets on given pipeline
     Infrastructure infrastructure = pipeline.getInfrastructure();
-    infrastructure.getInner1().updateWithValue("${inner02}");
+    infrastructure.getInner1().updateWithValue("<+inner02>");
     infrastructure.getInner2().updateWithValue(Arrays.asList("value1", "value2"));
-    infrastructure.getInner3().updateWithExpression("${inner03}");
+    infrastructure.getInner3().updateWithExpression("<+inner03>");
     infrastructure.getInner4().updateWithValue(Collections.singleton(2));
     Definition definition = infrastructure.getDefinition();
     definition.getInner5().updateWithValue("string1");
-    definition.getInner6().updateWithExpression("${infrastructure.inner3}");
+    definition.getInner6().updateWithExpression("<+infrastructure.inner3>");
     definition.getInner8().updateWithValue("dev_a");
 
     EngineExpressionEvaluator evaluator =
         prepareEngineExpressionEvaluator(new ImmutableMap.Builder<String, Object>().put("obj", pipeline).build());
-    // evaluator.resolve(pipeline);
 
     validateExpression(evaluator, "inner02", "stringval", false);
     validateExpression(evaluator, "infrastructure.inner3", 4.2, true);
@@ -79,7 +80,7 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
 
   private void validateExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    expression = "${" + expression + "}";
+    expression = "<+" + expression + ">";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
     if (!skipEvaluate) {
       assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
@@ -119,7 +120,7 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
   private EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(contextMap);
     on(evaluator).set("planExecutionService", planExecutionService);
-    on(evaluator).set("orchestrationFieldRegistry", orchestrationFieldRegistry);
+    on(evaluator).set("parameterFieldProcessor", parameterFieldProcessor);
     return evaluator;
   }
 
@@ -142,6 +143,15 @@ public class ParameterFieldExpressionEvaluatorTest extends NGPipelineTestBase {
     @NotNull
     protected List<String> fetchPrefixes() {
       return ImmutableList.of("obj", "");
+    }
+
+    @Override
+    protected Object evaluateInternal(String expression, EngineJexlContext ctx) {
+      Object value = super.evaluateInternal(expression, ctx);
+      if (value instanceof ParameterField) {
+        return ((ParameterField) value).fetchFinalValue();
+      }
+      return value;
     }
   }
 }

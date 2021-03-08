@@ -1,7 +1,9 @@
 package io.harness.serializer.kryo;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.encryption.Scope;
 import io.harness.exception.ArtifactServerException;
+import io.harness.exception.ArtifactoryServerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.ServiceNowException;
@@ -23,8 +25,10 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(GeneralException.class, 3005);
     kryo.register(BinaryResponseData.class, 3006);
     kryo.register(FailureResponseData.class, 3007);
+    kryo.register(KeyValuePair.class, 3008);
 
     // Promoted Classes
+    kryo.register(ArtifactoryServerException.class, 7214);
     kryo.register(ArtifactServerException.class, 7244);
     kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(ShellExecutionException.class, 7473);

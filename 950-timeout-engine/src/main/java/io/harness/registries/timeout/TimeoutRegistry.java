@@ -6,8 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.Registry;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
-import io.harness.timeout.Dimension;
 import io.harness.timeout.TimeoutTrackerFactory;
+import io.harness.timeout.contracts.Dimension;
 
 import com.google.inject.Singleton;
 import java.util.Map;

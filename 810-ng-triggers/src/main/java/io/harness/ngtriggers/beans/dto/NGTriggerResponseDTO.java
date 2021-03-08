@@ -28,4 +28,5 @@ public class NGTriggerResponseDTO {
   String targetIdentifier;
   String yaml;
   @JsonIgnore Long version;
+  boolean enabled;
 }

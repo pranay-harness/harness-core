@@ -11,13 +11,13 @@ mkdir -p dist/manager ;
 
 cd dist/manager
 
-cp ${HOME}/.bazel-dirs/bin/400-rest/module_deploy.jar rest-capsule.jar
+cp ${HOME}/.bazel-dirs/bin/360-cg-manager/module_deploy.jar rest-capsule.jar
 cp ../../400-rest/src/main/resources/hazelcast.xml .
 cp ../../keystore.jks .
-cp ../../400-rest/key.pem .
-cp ../../400-rest/cert.pem .
-cp ../../400-rest/newrelic.yml .
-cp ../../400-rest/config.yml .
+cp ../../360-cg-manager/key.pem .
+cp ../../360-cg-manager/cert.pem .
+cp ../../360-cg-manager/newrelic.yml .
+cp ../../360-cg-manager/config.yml .
 cp ../../400-rest/src/main/resources/redisson-jcache.yaml .
 
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
@@ -38,7 +38,7 @@ mkdir -p dist/cv-nextgen ;
 
 cd dist/cv-nextgen
 
-cp ../../300-cv-nextgen/target/cv-nextgen-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/300-cv-nextgen/module_deploy.jar cv-nextgen-capsule.jar
 cp ../../300-cv-nextgen/keystore.jks .
 cp ../../300-cv-nextgen/cv-nextgen-config.yml .
 
@@ -58,7 +58,7 @@ mkdir -p dist/verification-service ;
 
 cd dist/verification-service
 
-cp ../../270-verification/target/verification-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/270-verification/module_deploy.jar verification-capsule.jar
 cp ../../270-verification/keystore.jks .
 cp ../../270-verification/verification-config.yml .
 
@@ -78,7 +78,7 @@ mkdir -p dist/command-library-server ;
 
 cd dist/command-library-server
 
-cp ../../210-command-library-server/target/command-library-app-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/210-command-library-server/module_deploy.jar command-library-app-capsule.jar
 cp ../../210-command-library-server/keystore.jks .
 cp ../../210-command-library-server/command-library-server-config.yml .
 
@@ -96,7 +96,7 @@ cd ../..
 
 mkdir -p dist/event-server ;
 cd dist/event-server
-cp ../../350-event-server/target/event-server-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/350-event-server/module_deploy.jar event-server-capsule.jar
 cp ../../350-event-server/key.pem .
 cp ../../350-event-server/cert.pem .
 cp ../../350-event-server/event-service-config.yml .
@@ -113,7 +113,7 @@ cd ../..
 
 mkdir -p dist/batch-processing ;
 cd dist/batch-processing
-cp ../../280-batch-processing/target/batch-processing-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/280-batch-processing/module_deploy.jar batch-processing-capsule.jar
 cp ../../280-batch-processing/batch-processing-config.yml .
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
 cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
@@ -126,14 +126,33 @@ then
 fi
 cd ../..
 
+MODULE_NAME="340-ce-nextgen";
+FOLDER_NAME="ce-nextgen";
+mkdir -p dist/${FOLDER_NAME} ;
+cd dist/${FOLDER_NAME}
+cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
+cp ../../${MODULE_NAME}/keystore.jks .
+cp ../../${MODULE_NAME}/config.yml .
+cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-gcr-openjdk Dockerfile-gcr
+cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-openjdk Dockerfile
+cp -r ../../dockerization/${FOLDER_NAME}/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
 mkdir -p dist/delegate
 cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+#cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/delegate/delegate-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/delegate/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
-cp 250-watcher/target/watcher-capsule.jar dist/watcher/watcher-capsule.jar
+cp ${HOME}/.bazel-dirs/bin/250-watcher/module_deploy.jar dist/watcher/watcher-capsule.jar
 jarsigner -storetype pkcs12 -keystore ${KEY_STORE} -storepass ${KEY_STORE_PASSWORD} dist/watcher/watcher-capsule.jar ${KEY_STORE_ALIAS}
 cp dist/watcher/watcher-capsule.jar watcher-${VERSION}.jar
 
@@ -154,7 +173,7 @@ cp dist/disconnected_on_prem_k8s/disconnected_on_prem_k8s_installer_builder.tar.
 
 mkdir -p dist/test
 cd dist/test
-cp ../../160-model-gen-tool/target/model-gen-tool-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar model-gen-tool-capsule.jar
 cp ../../160-model-gen-tool/config-datagen.yml .
 cd ../..
 
@@ -174,7 +193,8 @@ cd ../..
 
 mkdir -p dist/ng-manager
 cd dist/ng-manager
-cp ../../120-ng-manager/target/ng-manager-capsule.jar .
+
+cp ${HOME}/.bazel-dirs/bin/120-ng-manager/module_deploy.jar ng-manager-capsule.jar
 cp ../../120-ng-manager/config.yml .
 cp ../../keystore.jks .
 cp ../../120-ng-manager/key.pem .
@@ -195,7 +215,7 @@ cd ../..
 
 mkdir -p dist/ci-manager
 cd dist/ci-manager
-cp ../../310-ci-manager/target/ci-manager-capsule.jar .
+cp ${HOME}/.bazel-dirs/bin/310-ci-manager/module_deploy.jar ci-manager-capsule.jar
 cp ../../310-ci-manager/ci-manager-config.yml .
 cp ../../keystore.jks .
 cp ../../310-ci-manager/key.pem .
@@ -204,6 +224,81 @@ cp ../../310-ci-manager/cert.pem .
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/ci-manager/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
+
+mkdir -p dist/notification-service
+cd dist/notification-service
+
+cp ${HOME}/.bazel-dirs/bin/830-notification-service/module_deploy.jar notification-service-capsule.jar
+cp ../../830-notification-service/config.yml .
+cp ../../830-notification-service/keystore.jks .
+cp ../../830-notification-service/key.pem .
+cp ../../830-notification-service/cert.pem .
+cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/notification-service/scripts/ .
+
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
+
+mkdir -p dist/pipeline-service
+cd dist/pipeline-service
+
+cp ${HOME}/.bazel-dirs/bin/800-pipeline-service/module_deploy.jar pipeline-service-capsule.jar
+cp ../../800-pipeline-service/config.yml .
+cp ../../800-pipeline-service/keystore.jks .
+cp ../../800-pipeline-service/key.pem .
+cp ../../800-pipeline-service/cert.pem .
+cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/pipeline-service/scripts/ .
+
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
+
+mkdir -p dist/eventsapi-monitor
+cd dist/eventsapi-monitor
+
+cp -r ../../950-events-api/src/monitoring/* .
+
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
+
+mkdir -p dist/accesscontrol-service
+cd dist/accesscontrol-service
+
+cp ${HOME}/.bazel-dirs/bin/900-access-control-service/module_deploy.jar accesscontrol-service-capsule.jar
+cp ../../900-access-control-service/config.yml .
+cp ../../900-access-control-service/keystore.jks .
+cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/accesscontrol-service/Dockerfile-accesscontrol-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/accesscontrol-service/scripts/ .
+
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]

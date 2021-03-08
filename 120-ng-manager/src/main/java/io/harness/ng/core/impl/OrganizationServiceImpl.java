@@ -10,7 +10,8 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -36,6 +37,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -48,13 +50,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 public class OrganizationServiceImpl implements OrganizationService {
   private final OrganizationRepository organizationRepository;
-  private final AbstractProducer eventProducer;
+  private final Producer eventProducer;
   private final NgUserService ngUserService;
   private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService) {
     this.organizationRepository = organizationRepository;
     this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
@@ -72,13 +74,14 @@ public class OrganizationServiceImpl implements OrganizationService {
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
-          String.format("Try using different org identifier, [%s] cannot be used", organization.getIdentifier()),
+          String.format(
+              "An organization with identifier %s is already present or was deleted", organization.getIdentifier()),
           USER_SRE, ex);
     }
   }
 
   private void performActionsPostOrganizationCreation(Organization organization) {
-    publishEvent(organization, EventsFrameworkConstants.CREATE_ACTION);
+    publishEvent(organization, EventsFrameworkMetadataConstants.CREATE_ACTION);
     createUserProjectMap(organization);
   }
 
@@ -87,8 +90,8 @@ public class OrganizationServiceImpl implements OrganizationService {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", organization.getAccountIdentifier(),
-                  EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.ORGANIZATION_ENTITY,
-                  EventsFrameworkConstants.ACTION_METADATA, action))
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, action))
               .setData(getOrganizationPayload(organization))
               .build());
     } catch (ProducerShutdownException e) {
@@ -150,7 +153,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
       validate(organization);
       Organization updatedOrganization = organizationRepository.save(organization);
-      publishEvent(existingOrganization, EventsFrameworkConstants.UPDATE_ACTION);
+      publishEvent(existingOrganization, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return updatedOrganization;
     }
     throw new InvalidRequestException(String.format("Organisation with identifier [%s] not found", identifier), USER);
@@ -164,12 +167,12 @@ public class OrganizationServiceImpl implements OrganizationService {
                                                              .and(OrganizationKeys.deleted)
                                                              .ne(Boolean.TRUE),
         organizationFilterDTO);
-    return organizationRepository.findAll(criteria, pageable);
+    return organizationRepository.findAll(criteria, pageable, organizationFilterDTO.isIgnoreCase());
   }
 
   @Override
   public Page<Organization> list(Criteria criteria, Pageable pageable) {
-    return organizationRepository.findAll(criteria, pageable);
+    return organizationRepository.findAll(criteria, pageable, false);
   }
 
   @Override
@@ -188,6 +191,9 @@ public class OrganizationServiceImpl implements OrganizationService {
           Criteria.where(OrganizationKeys.tags + "." + NGTagKeys.value)
               .regex(organizationFilterDTO.getSearchTerm(), "i"));
     }
+    if (Objects.nonNull(organizationFilterDTO.getIdentifiers()) && !organizationFilterDTO.getIdentifiers().isEmpty()) {
+      Criteria.where(OrganizationKeys.identifier).in(organizationFilterDTO.getIdentifiers());
+    }
     return criteria;
   }
 
@@ -197,9 +203,19 @@ public class OrganizationServiceImpl implements OrganizationService {
     if (delete) {
       publishEvent(
           Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
-          EventsFrameworkConstants.DELETE_ACTION);
+          EventsFrameworkMetadataConstants.DELETE_ACTION);
     }
     return delete;
+  }
+
+  @Override
+  public boolean restore(String accountIdentifier, String identifier) {
+    boolean success = organizationRepository.restore(accountIdentifier, identifier);
+    if (success) {
+      publishEvent(Organization.builder().accountIdentifier(accountIdentifier).identifier(identifier).build(),
+          EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    }
+    return success;
   }
 
   private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {

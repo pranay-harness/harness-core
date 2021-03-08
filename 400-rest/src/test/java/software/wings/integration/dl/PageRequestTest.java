@@ -18,10 +18,10 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -29,7 +29,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class PageRequestTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = GEORGE)
@@ -38,20 +38,20 @@ public class PageRequestTest extends WingsBaseTest {
     {
       final Dummy dummy = new Dummy();
       dummy.setDummies(asList(DummyItem.builder().i(1).s("foo").build(), DummyItem.builder().i(2).s("foo").build()));
-      wingsPersistence.save(dummy);
+      persistence.save(dummy);
     }
 
     {
       final Dummy dummy = new Dummy();
       dummy.setDummies(asList(DummyItem.builder().i(2).s("foo").build(), DummyItem.builder().i(1).s("bar").build()));
-      wingsPersistence.save(dummy);
+      persistence.save(dummy);
     }
 
     {
       final PageRequest<Dummy> itemPageRequest = aPageRequest().addFilter("i", EQ, 1).addFilter("s", EQ, "foo").build();
       final PageRequest<Dummy> pageRequest =
           aPageRequest().addFilter("dummies", ELEMENT_MATCH, itemPageRequest).build();
-      PageResponse<Dummy> response = wingsPersistence.query(Dummy.class, pageRequest, excludeAuthority);
+      PageResponse<Dummy> response = persistence.query(Dummy.class, pageRequest, excludeAuthority);
       assertThat(response.size()).isEqualTo(1);
     }
 
@@ -59,7 +59,7 @@ public class PageRequestTest extends WingsBaseTest {
       final PageRequest<Dummy> itemPageRequest = aPageRequest().addFilter("i", GE, 1).addFilter("s", EQ, "foo").build();
       final PageRequest<Dummy> pageRequest =
           aPageRequest().addFilter("dummies", ELEMENT_MATCH, itemPageRequest).build();
-      PageResponse<Dummy> response = wingsPersistence.query(Dummy.class, pageRequest, excludeAuthority);
+      PageResponse<Dummy> response = persistence.query(Dummy.class, pageRequest, excludeAuthority);
       assertThat(response.size()).isEqualTo(2);
     }
   }
@@ -83,7 +83,7 @@ public class PageRequestTest extends WingsBaseTest {
             .dummies(asList(DummyItem.builder().i(1).s("i31").build(), DummyItem.builder().i(2).s("i32").build()))
             .name("dummy3")
             .build();
-    List<String> strings = wingsPersistence.save(asList(dummy1, dummy2, dummy3));
+    List<String> strings = persistence.save(asList(dummy1, dummy2, dummy3));
 
     SearchFilter searchFilterForDummy1 =
         SearchFilter.builder()
@@ -107,7 +107,7 @@ public class PageRequestTest extends WingsBaseTest {
                            .build())
             .build();
 
-    PageResponse<Dummy> pageResponse = wingsPersistence.query(Dummy.class, pageRequestForDummy1And3, excludeAuthority);
+    PageResponse<Dummy> pageResponse = persistence.query(Dummy.class, pageRequestForDummy1And3, excludeAuthority);
     assertThat(pageResponse.getResponse()).containsExactlyInAnyOrder(dummy1, dummy3);
   }
 }

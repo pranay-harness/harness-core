@@ -72,16 +72,22 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateParams.DelegateParamsBuilder;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -94,7 +100,6 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
@@ -114,7 +119,9 @@ import io.harness.filesystem.FileIo;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
-import io.harness.logstreaming.DelegateAgentLogStreamingClient;
+import io.harness.logstreaming.LogStreamingClient;
+import io.harness.logstreaming.LogStreamingHelper;
+import io.harness.logstreaming.LogStreamingSanitizer;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -135,15 +142,11 @@ import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateTaskFactory;
-import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.delegation.ShellScriptParameters;
-import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.delegatetasks.ActivityBasedLogSanitizer;
 import software.wings.delegatetasks.DelegateLogService;
@@ -243,6 +246,9 @@ import retrofit2.Response;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
+@BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
+@BreakDependencyOn("io.harness.delegate.beans.Delegate")
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
@@ -260,9 +266,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+  private final String delegateGroupId = System.getenv().get("DELEGATE_GROUP_ID");
+
   private static final String START_SH = "start.sh";
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
+
+  private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
+  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
+  private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
+  private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
+      ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
+      : 0;
 
   public static final String JAVA_VERSION = "java.version";
 
@@ -300,7 +315,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
-  @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
+  @Inject(optional = true) @Nullable private LogStreamingClient logStreamingClient;
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
@@ -353,10 +368,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private final boolean multiVersion = DeployMode.KUBERNETES.name().equals(System.getenv().get(DeployMode.DEPLOY_MODE))
       || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
-
-  public static String getHostName() {
-    return HOST_NAME;
-  }
 
   public static Optional<String> getDelegateId() {
     return Optional.ofNullable(delegateId);
@@ -412,8 +423,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
 
       long start = clock.millis();
+      String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
       String description = "description here".equals(delegateConfiguration.getDescription())
-          ? ""
+          ? descriptionFromConfigFile
           : delegateConfiguration.getDescription();
 
       String delegateName = System.getenv().get("DELEGATE_NAME");
@@ -438,12 +450,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
       }
 
+      log.info("Delegate Group Id: {}", delegateGroupId);
+
       DelegateParamsBuilder builder = DelegateParams.builder()
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
+                                          .sessionIdentifier(delegateSessionIdentifier)
+                                          .delegateSize(delegateSize)
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
+                                          .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
                                           .version(getVersion())
@@ -692,13 +709,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     log.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(true);
-    if (!closingSocket.get()) {
-      if (reconnectingSocket.compareAndSet(false, true)) {
-        try {
-          trySocketReconnect();
-        } finally {
-          reconnectingSocket.set(false);
-        }
+    if (!closingSocket.get() && reconnectingSocket.compareAndSet(false, true)) {
+      try {
+        trySocketReconnect();
+      } finally {
+        reconnectingSocket.set(false);
       }
     }
   }
@@ -824,7 +839,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void stopGrpcService() {
     if (delegateConfiguration.isGrpcServiceEnabled() && restartableServiceManager.isRunning()) {
-      grpcServiceExecutor.submit(() -> { restartableServiceManager.stop(); });
+      grpcServiceExecutor.submit(() -> restartableServiceManager.stop());
     }
   }
 
@@ -1545,7 +1560,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateHeartbeatResponse receivedDelegateResponse = delegateParamsResponse.getResource();
 
       if (delegateId.equals(receivedDelegateResponse.getDelegateId())) {
-        if (Status.DELETED == Status.valueOf(receivedDelegateResponse.getStatus())) {
+        if (DelegateInstanceStatus.DELETED == DelegateInstanceStatus.valueOf(receivedDelegateResponse.getStatus())) {
           initiateSelfDestruct();
         } else {
           builder.delegateId(receivedDelegateResponse.getDelegateId());
@@ -1715,6 +1730,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     try {
+      int perpetualTaskCount = 0;
+      if (perpetualTaskWorker != null) {
+        perpetualTaskCount = perpetualTaskWorker.getCurrentlyExecutingPerpetualTasksCount().intValue();
+      }
+
+      if (delegateTaskLimit > 0
+          && (currentlyExecutingTasks.size() + currentlyValidatingTasks.size() + perpetualTaskCount)
+              >= delegateTaskLimit) {
+        log.info("Delegate reached Delegate Size Task Limit of {}. It will not acquire this time.", delegateTaskLimit);
+        return;
+      }
+
       currentlyAcquiringTasks.add(delegateTaskId);
 
       // Delay response if already working on many tasks
@@ -1741,8 +1768,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         updateCounterIfLessThanCurrent(maxValidatingTasksCount, currentlyValidatingTasks.size());
         ExecutorService executorService = selectExecutorService(taskData);
 
-        Future<List<DelegateConnectionResult>> future =
-            executorService.submit(() -> delegateValidateTask.validationResults());
+        Future<List<DelegateConnectionResult>> future = executorService.submit(delegateValidateTask::validationResults);
         currentlyValidatingFutures.put(delegateTaskPackage.getDelegateTaskId(), future);
 
         updateCounterIfLessThanCurrent(maxValidatingFuturesCount, currentlyValidatingFutures.size());
@@ -1902,7 +1928,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String appId = null;
     String activityId = null;
 
-    if (delegateAgentLogStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
+    if (logStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
         && !isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
       logStreamingConfigPresent = true;
     }
@@ -1910,7 +1936,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     // Extract appId and activityId from task params, in case LogCallback logging has to be used for backward
     // compatibility reasons
     Object[] taskParameters = delegateTaskPackage.getData().getParameters();
-    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof ApplicationAccess
+    if (taskParameters != null && taskParameters.length == 1 && taskParameters[0] instanceof Cd1ApplicationAccess
         && taskParameters[0] instanceof ActivityAccess) {
       Cd1ApplicationAccess applicationAccess = (Cd1ApplicationAccess) taskParameters[0];
       appId = applicationAccess.getAppId();
@@ -1926,11 +1952,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (!logStreamingConfigPresent && !logCallbackConfigPresent) {
       return null;
     }
-    String logBaseKey = LogHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions());
+    String logBaseKey = delegateTaskPackage.getLogStreamingAbstractions() != null
+        ? LogStreamingHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions())
+        : EMPTY;
 
     LogStreamingTaskClientBuilder taskClientBuilder =
         LogStreamingTaskClient.builder()
-            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+            .logStreamingClient(logStreamingClient)
             .accountId(delegateTaskPackage.getAccountId())
             .token(delegateTaskPackage.getLogStreamingToken())
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
@@ -1967,6 +1995,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String activityId = null;
     Set<String> secrets = new HashSet<>(delegateTaskPackage.getSecrets());
 
+    // Add other system secrets
+    addSystemSecrets(secrets);
+
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
     Object[] parameters = taskData.getParameters();
@@ -2002,6 +2033,32 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     return Pair.of(activityId, secrets);
+  }
+
+  private void addSystemSecrets(Set<String> secrets) {
+    // Add config file secrets
+    secrets.add(delegateConfiguration.getAccountSecret());
+    secrets.add(delegateConfiguration.getManagerServiceSecret());
+
+    // Add environment variable secrets
+    String delegateProfileId = System.getenv().get("DELEGATE_PROFILE");
+    if (isNotBlank(delegateProfileId)) {
+      secrets.add(delegateProfileId);
+    }
+
+    if (isNotBlank(delegateSessionIdentifier)) {
+      secrets.add(delegateSessionIdentifier);
+    }
+
+    String proxyUser = System.getenv().get("PROXY_USER");
+    if (isNotBlank(proxyUser)) {
+      secrets.add(proxyUser);
+    }
+
+    String proxyPassword = System.getenv().get("PROXY_PASSWORD");
+    if (isNotBlank(proxyPassword)) {
+      secrets.add(proxyPassword);
+    }
   }
 
   /**
@@ -2053,7 +2110,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void updateCounterIfLessThanCurrent(AtomicInteger counter, int current) {
-    counter.updateAndGet(value -> value < current ? current : value);
+    counter.updateAndGet(value -> Math.max(value, current));
   }
 
   private Consumer<DelegateTaskResponse> getPostExecutionFunction(
@@ -2350,6 +2407,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
+  private void addToEncryptedConfigListMap(Map<EncryptionConfig, List<EncryptedRecord>> encryptionConfigListMap,
+      EncryptionConfig encryptionConfig, EncryptedRecord encryptedRecord) {
+    if (encryptionConfigListMap.containsKey(encryptionConfig)) {
+      encryptionConfigListMap.get(encryptionConfig).add(encryptedRecord);
+    } else {
+      List<EncryptedRecord> encryptedRecordList = new ArrayList<>();
+      encryptedRecordList.add(encryptedRecord);
+      encryptionConfigListMap.put(encryptionConfig, encryptedRecordList);
+    }
+  }
+
   @VisibleForTesting
   void applyDelegateSecretFunctor(DelegateTaskPackage delegateTaskPackage) {
     Map<String, EncryptionConfig> encryptionConfigs = delegateTaskPackage.getEncryptionConfigs();
@@ -2361,7 +2429,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Map<EncryptionConfig, List<EncryptedRecord>> encryptionConfigListMap = new HashMap<>();
     secretDetails.forEach((key, secretDetail) -> {
       encryptedRecordList.add(secretDetail.getEncryptedRecord());
-      encryptionConfigListMap.put(encryptionConfigs.get(secretDetail.getConfigUuid()), encryptedRecordList);
+      // encryptionConfigListMap.put(encryptionConfigs.get(secretDetail.getConfigUuid()), encryptedRecordList);
+      addToEncryptedConfigListMap(encryptionConfigListMap, encryptionConfigs.get(secretDetail.getConfigUuid()),
+          secretDetail.getEncryptedRecord());
     });
 
     Map<String, char[]> decryptedRecords = delegateDecryptionService.decrypt(encryptionConfigListMap);

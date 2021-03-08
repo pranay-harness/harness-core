@@ -175,7 +175,7 @@ func TestRunExecuteSuccess(t *testing.T) {
 	executor := NewRunStep(step, tmpPath, nil, log.Sugar())
 	o, n, err := executor.Run(ctx)
 	assert.Nil(t, err)
-	assert.Equal(t, o.Output[outputKey], outputVal)
+	assert.Equal(t, o.Output.Variables[outputKey], outputVal)
 	assert.Equal(t, n, numRetries)
 }
 
@@ -220,7 +220,7 @@ func TestRunStepResolveJEXL(t *testing.T) {
 		}
 		// Initialize a mock CI addon
 		evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-			log *zap.SugaredLogger) (map[string]string, error) {
+			force bool, log *zap.SugaredLogger) (map[string]string, error) {
 			return tc.jexlEvalRet, tc.jexlEvalErr
 		}
 		got := s.resolveJEXL(ctx)

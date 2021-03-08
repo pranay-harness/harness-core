@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.USE_CREDENTIALS_AUTH_NEXUS_2;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -58,6 +59,7 @@ import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.ccm.setup.service.support.intfc.AzureCEConfigValidationService;
 import io.harness.data.parser.CsvParser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -81,9 +83,11 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsS3BucketDetails;
 import software.wings.beans.Base;
 import software.wings.beans.CustomArtifactServerConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
@@ -108,6 +112,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.config.NexusConfig;
@@ -227,6 +232,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private ApmVerificationService apmVerificationService;
   @Inject private AWSCEConfigValidationService awsCeConfigService;
+  @Inject private AzureCEConfigValidationService azureCEConfigValidationService;
   @Inject @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
   @Inject @Getter private Subject<SettingAttributeObserver> subject = new Subject<>();
@@ -244,11 +250,14 @@ public class SettingsServiceImpl implements SettingsService {
   public PageResponse<SettingAttribute> list(
       PageRequest<SettingAttribute> req, String appIdFromRequest, String envIdFromRequest) {
     try {
+      long timestamp = System.currentTimeMillis();
       PageResponse<SettingAttribute> pageResponse = wingsPersistence.query(SettingAttribute.class, req);
+      log.info("Time taken in DB Query for while fetching settings:  {}", System.currentTimeMillis() - timestamp);
 
+      timestamp = System.currentTimeMillis();
       List<SettingAttribute> filteredSettingAttributes =
           getFilteredSettingAttributes(pageResponse.getResponse(), appIdFromRequest, envIdFromRequest);
-
+      log.info("Total time taken in filtering setting records:  {}.", System.currentTimeMillis() - timestamp);
       return aPageResponse()
           .withResponse(filteredSettingAttributes)
           .withTotal(filteredSettingAttributes.size())
@@ -379,7 +388,6 @@ public class SettingsServiceImpl implements SettingsService {
     if (inputSettingAttributes == null) {
       return Collections.emptyList();
     }
-
     if (isEmpty(inputSettingAttributes)) {
       return inputSettingAttributes;
     }
@@ -401,7 +409,8 @@ public class SettingsServiceImpl implements SettingsService {
     for (SettingAttribute settingAttribute : inputSettingAttributes) {
       PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
       isAccountAdmin = userService.hasPermission(accountId, permissionType);
-      if (isSettingAttributeReferencingCloudProvider(settingAttribute)) {
+      boolean isRefereincing = isSettingAttributeReferencingCloudProvider(settingAttribute);
+      if (isRefereincing) {
         helmRepoSettingAttributes.add(settingAttribute);
       } else {
         if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
@@ -410,7 +419,6 @@ public class SettingsServiceImpl implements SettingsService {
         }
       }
     }
-
     getFilteredHelmRepoSettingAttributes(appIdFromRequest, envIdFromRequest, accountId, filteredSettingAttributes,
         appEnvMapFromUserPermissions, restrictionsFromUserPermissions, appIdEnvMap, helmRepoSettingAttributes);
 
@@ -499,7 +507,6 @@ public class SettingsServiceImpl implements SettingsService {
       }
       return true;
     }
-
     return false;
   }
 
@@ -617,7 +624,7 @@ public class SettingsServiceImpl implements SettingsService {
         settingAttributeList.stream()
             .filter(sa
                 -> sa.getValue() instanceof KubernetesClusterConfig
-                    && delegateName.equals(((KubernetesClusterConfig) sa.getValue()).getDelegateName()))
+                    && (((KubernetesClusterConfig) sa.getValue()).getDelegateSelectors()).contains(delegateName))
             .findFirst()
             .orElse(null);
 
@@ -631,6 +638,31 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public boolean isSettingValueGcp(SettingAttribute settingAttribute) {
     return settingAttribute.getValue() instanceof GcpConfig;
+  }
+
+  @Override
+  public boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute) {
+    return settingAttribute.getValue() instanceof GcpConfig || settingAttribute.getValue() instanceof DockerConfig
+        || settingAttribute.getValue() instanceof AwsConfig;
+  }
+
+  @Override
+  public List<String> getDelegateSelectors(SettingAttribute settingAttribute) {
+    List<String> selectors = new ArrayList<>();
+    if (!hasDelegateSelectorProperty(settingAttribute)) {
+      return selectors;
+    }
+    if (settingAttribute.getValue() instanceof GcpConfig && ((GcpConfig) settingAttribute.getValue()).isUseDelegate()) {
+      selectors = Collections.singletonList(((GcpConfig) settingAttribute.getValue()).getDelegateSelector());
+    }
+    if (settingAttribute.getValue() instanceof DockerConfig) {
+      selectors = ((DockerConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof AwsConfig) {
+      selectors = Collections.singletonList(((AwsConfig) settingAttribute.getValue()).getTag());
+    }
+    return isEmpty(selectors) ? new ArrayList<>()
+                              : selectors.stream().filter(StringUtils::isNotBlank).distinct().collect(toList());
   }
 
   @Override
@@ -785,6 +817,7 @@ public class SettingsServiceImpl implements SettingsService {
           ccmSettingService.listCeCloudAccounts(settingAttribute.getAccountId());
       boolean isAwsConnectorPresent = false;
       boolean isGCPConnectorPresent = false;
+      boolean isAzureConnectorPresent = false;
 
       for (SettingAttribute attribute : settingAttributesList) {
         if (attribute.getValue() instanceof CEAwsConfig) {
@@ -793,6 +826,9 @@ public class SettingsServiceImpl implements SettingsService {
         if (attribute.getValue() instanceof CEGcpConfig) {
           isGCPConnectorPresent = true;
         }
+        if (attribute.getValue() instanceof CEAzureConfig) {
+          isAzureConnectorPresent = true;
+        }
       }
 
       ceMetadataRecordDao.upsert(
@@ -800,6 +836,8 @@ public class SettingsServiceImpl implements SettingsService {
               .accountId(settingAttribute.getAccountId())
               .awsConnectorConfigured(isAwsConnectorPresent || (settingAttribute.getValue() instanceof CEAwsConfig))
               .gcpConnectorConfigured(isGCPConnectorPresent || (settingAttribute.getValue() instanceof CEGcpConfig))
+              .azureConnectorConfigured(
+                  isAzureConnectorPresent || (settingAttribute.getValue() instanceof CEAzureConfig))
               .build());
 
       int maxCloudAccountsAllowed = ceCloudAccountFeature.getMaxUsageAllowedForAccount(settingAttribute.getAccountId());
@@ -846,6 +884,18 @@ public class SettingsServiceImpl implements SettingsService {
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
           throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
         }
+      }
+
+      // Azure
+      if (settingAttribute.getValue() instanceof CEAzureConfig) {
+        // Throw Exception if Azure connector Exists already
+        if (isAzureConnectorPresent && isSave) {
+          log.info("Did not save Setting Attribute of type {} for account ID {} because Azure connector exists already",
+              settingAttribute.getValue().getType(), settingAttribute.getAccountId());
+          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 Azure cloud account");
+        }
+        CEAzureConfig azureConfig = (CEAzureConfig) settingAttribute.getValue();
+        azureCEConfigValidationService.verifyCrossAccountAttributes(azureConfig);
       }
     }
   }
@@ -946,6 +996,11 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
       gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    }
+    if (settingAttribute != null && settingAttribute.getValue() instanceof NexusConfig) {
+      NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
+      nexusConfig.setUseCredentialsWithAuth(
+          featureFlagService.isEnabled(USE_CREDENTIALS_AUTH_NEXUS_2, nexusConfig.getAccountId()));
     }
   }
 
@@ -1624,6 +1679,12 @@ public class SettingsServiceImpl implements SettingsService {
                                 .filter("appId", appId)
                                 .filter(SettingAttributeKeys.envId, envId)
                                 .filter("value.type", type));
+  }
+
+  @Override
+  public void pruneByApplication(String appId) {
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(SettingAttribute.class).filter(SettingAttributeKeys.appId, appId));
   }
 
   @Override

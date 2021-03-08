@@ -49,12 +49,7 @@ public class IntegrationStageStep implements ChildExecutable<IntegrationStageSte
       String stageID = integrationStageStepParameters.getIntegrationStageIdentifier();
       int buildNumber = ambiance.getMetadata().getRunSequence();
 
-      K8PodDetails k8PodDetails = K8PodDetails.builder()
-                                      .clusterName(k8sDirectInfraYaml.getSpec().getConnectorRef())
-                                      .stageID(stageID)
-                                      .accountId(buildNumberDetails.getAccountIdentifier())
-                                      .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
-                                      .build();
+      K8PodDetails k8PodDetails = null;
 
       executionSweepingOutputResolver.consume(ambiance, ContextElement.podDetails, k8PodDetails, null);
     }

@@ -15,9 +15,16 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
-import io.harness.pms.ngpipeline.inputset.beans.resource.*;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateResponseDTOPMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
+import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetElementMapper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetFilterHelper;
@@ -26,14 +33,28 @@ import io.harness.pms.ngpipeline.overlayinputset.beans.resource.OverlayInputSetR
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
-import io.swagger.annotations.*;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -52,6 +73,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@PipelineServiceAuth
 public class InputSetResourcePMS {
   private final PMSInputSetService pmsInputSetService;
   private final ValidateAndMergeHelper validateAndMergeHelper;
@@ -107,7 +129,7 @@ public class InputSetResourcePMS {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
     } catch (IOException e) {
-      throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
+      throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
     InputSetErrorWrapperDTOPMS errorWrapperDTO =
@@ -161,7 +183,7 @@ public class InputSetResourcePMS {
     try {
       yaml = removeRuntimeInputFromYaml(yaml);
     } catch (IOException e) {
-      throw new InvalidRequestException("Could not clear ${input} fields from yaml : " + e.getMessage());
+      throw new InvalidRequestException("Could not clear <+input> fields from yaml : " + e.getMessage());
     }
 
     InputSetErrorWrapperDTOPMS errorWrapperDTO =

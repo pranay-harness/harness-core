@@ -64,8 +64,10 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
+import io.harness.delegate.beans.azure.ManagementGroupData;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.delegate.task.spotinst.response.SpotinstElastigroupRunningCountData;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
@@ -133,6 +135,7 @@ import software.wings.infra.AwsLambdaInfrastructure.AwsLambdaInfrastructureKeys;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureVMSSInfra;
 import software.wings.infra.AzureWebAppInfra;
+import software.wings.infra.AzureWebAppInfra.AzureWebAppInfraKeys;
 import software.wings.infra.CloudProviderInfrastructure;
 import software.wings.infra.CustomInfrastructure;
 import software.wings.infra.DirectKubernetesInfrastructure;
@@ -150,10 +153,12 @@ import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.infra.ProvisionerAware;
 import software.wings.infra.SshBasedInfrastructure;
 import software.wings.infra.WinRmBasedInfrastructure;
+import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
+import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
@@ -176,9 +181,11 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureDefinition;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
@@ -264,6 +271,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
+  @Inject private AzureARMManager azureARMManager;
   @Inject private AzureAppServiceManager azureAppServiceManager;
 
   @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
@@ -615,6 +623,19 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       validatePhysicalInfraWithProvisioner((PhysicalInfra) infra);
     } else if (infra instanceof AwsEcsInfrastructure) {
       validateAwsEcsInfraWithProvisioner((AwsEcsInfrastructure) infra);
+    } else if (infra instanceof AzureWebAppInfra) {
+      validateAzureWebAppInfraWithProvisioner((AzureWebAppInfra) infra);
+    }
+  }
+
+  @VisibleForTesting
+  public void validateAzureWebAppInfraWithProvisioner(AzureWebAppInfra infra) {
+    Map<String, String> expressions = infra.getExpressions();
+    if (isEmpty(expressions.get(AzureWebAppInfraKeys.subscriptionId))) {
+      throw new InvalidRequestException("Subscription Id is required");
+    }
+    if (isEmpty(expressions.get(AzureWebAppInfraKeys.resourceGroup))) {
+      throw new InvalidRequestException("Resource Group is required");
     }
   }
 
@@ -780,7 +801,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     ensureSafeToDelete(appId, infrastructureDefinition);
 
-    wingsPersistence.delete(InfrastructureDefinition.class, appId, infraDefinitionId);
+    prune(appId, infraDefinitionId);
     yamlPushService.pushYamlChangeSet(accountId, infrastructureDefinition, null, Type.DELETE, false, false);
   }
 
@@ -1502,7 +1523,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {
-    // no descending entity for infra definition
+    List<OwnedByInfrastructureDefinition> services = ServiceClassLocator.descendingServices(
+        this, InfrastructureDefinitionServiceImpl.class, OwnedByInfrastructureDefinition.class);
+    PruneEntityListener.pruneDescendingEntities(
+        services, descending -> descending.pruneByInfrastructureDefinition(appId, infraDefinitionId));
   }
 
   @Override
@@ -1955,6 +1979,45 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
+  public List<String> listSubscriptionLocations(String appId, String computeProviderId, String subscriptionId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listSubscriptionLocations(azureConfig, encryptionDetails, appId, subscriptionId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public List<String> listAzureCloudProviderLocations(String appId, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      return azureARMManager.listAzureCloudProviderLocations(azureConfig, encryptionDetails, appId);
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
+  public Map<String, String> listManagementGroups(String appId, String computeProviderId) {
+    AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
+    try {
+      List<ManagementGroupData> managementGroups =
+          azureARMManager.listManagementGroups(azureConfig, encryptionDetails, appId);
+      return managementGroups.stream().collect(
+          Collectors.toMap(ManagementGroupData::getId, ManagementGroupData::getDisplayName));
+    } catch (Exception e) {
+      log.warn(ExceptionUtils.getMessage(e), e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
+    }
+  }
+
+  @Override
   public Map<String, String> listVirtualMachineScaleSets(
       String appId, String deploymentType, String computeProviderId, String subscriptionId, String resourceGroupName) {
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
@@ -2023,12 +2086,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public List<String> getAppServiceDeploymentSlotNames(String appId, String computeProviderId, String subscriptionId,
-      String resourceGroupName, String appType, String appName) {
+  public List<DeploymentSlotData> getAppServiceDeploymentSlots(String appId, String computeProviderId,
+      String subscriptionId, String resourceGroupName, String appType, String appName) {
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderId);
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
     try {
-      return azureAppServiceManager.getAppServiceDeploymentSlotNames(
+      return azureAppServiceManager.getAppServiceDeploymentSlots(
           azureConfig, encryptionDetails, appId, subscriptionId, resourceGroupName, appType, appName);
     } catch (Exception exception) {
       log.warn(ExceptionUtils.getMessage(exception), exception);
@@ -2037,7 +2100,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Override
-  public List<String> getDeploymentSlotNames(String appId, String infraDefinitionId, String appType, String appName) {
+  public List<DeploymentSlotData> getAppServiceDeploymentSlots(
+      String appId, String infraDefinitionId, String appType, String appName) {
     InfrastructureDefinition infrastructureDefinition = get(appId, infraDefinitionId);
     notNullCheck("Infrastructure Definition", infrastructureDefinition);
     if (!(infrastructureDefinition.getInfrastructure() instanceof AzureWebAppInfra)) {
@@ -2050,7 +2114,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       AzureWebAppInfra infrastructure = (AzureWebAppInfra) infrastructureDefinition.getInfrastructure();
       AzureConfig azureConfig = validateAndGetAzureConfig(infrastructure.getCloudProviderId());
       List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, appId, null);
-      return azureAppServiceManager.getAppServiceDeploymentSlotNames(azureConfig, encryptionDetails, appId,
+      return azureAppServiceManager.getAppServiceDeploymentSlots(azureConfig, encryptionDetails, appId,
           infrastructure.getSubscriptionId(), infrastructure.getResourceGroup(), appType, appName);
     } catch (Exception exception) {
       log.warn(ExceptionUtils.getMessage(exception), exception);

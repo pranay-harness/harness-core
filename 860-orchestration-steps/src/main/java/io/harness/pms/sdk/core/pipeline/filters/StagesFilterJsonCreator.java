@@ -1,12 +1,17 @@
 package io.harness.pms.sdk.core.pipeline.filters;
 
-import io.harness.pms.contracts.plan.EdgeLayoutList;
-import io.harness.pms.contracts.plan.GraphLayoutNode;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -27,27 +32,8 @@ public class StagesFilterJsonCreator {
     return getStageYamlFields(stagesYamlField).get(0).getNode().getUuid();
   }
 
-  public Map<String, GraphLayoutNode> getStagesGraphLayoutNode(YamlField stagesYamlNode) {
-    Map<String, GraphLayoutNode> stageYamlFieldMap = new HashMap<>();
-    List<YamlField> stagesYamlField = getStageYamlFields(stagesYamlNode);
-    List<EdgeLayoutList> edgeLayoutLists = new ArrayList<>();
-    for (YamlField stageYamlField : stagesYamlField) {
-      EdgeLayoutList.Builder stageEdgesBuilder = EdgeLayoutList.newBuilder();
-      stageEdgesBuilder.addNextIds(stageYamlField.getNode().getUuid());
-      edgeLayoutLists.add(stageEdgesBuilder.build());
-    }
-    for (int i = 0; i < edgeLayoutLists.size(); i++) {
-      YamlField stageYamlField = stagesYamlField.get(i);
-      stageYamlFieldMap.put(stageYamlField.getNode().getUuid(),
-          GraphLayoutNode.newBuilder()
-              .setNodeUUID(stageYamlField.getNode().getUuid())
-              .setNodeType("stage")
-              .setNodeIdentifier(stageYamlField.getNode().getIdentifier())
-              .setEdgeLayoutList(
-                  i + 1 < edgeLayoutLists.size() ? edgeLayoutLists.get(i + 1) : EdgeLayoutList.newBuilder().build())
-              .build());
-    }
-    return stageYamlFieldMap;
+  public int getStagesCount(Collection<YamlField> stagesYamlField) {
+    return (int) stagesYamlField.stream().filter(yamlField -> !yamlField.getName().equals(PARALLEL)).count();
   }
 
   private List<YamlField> getStageYamlFields(YamlField stagesYamlField) {

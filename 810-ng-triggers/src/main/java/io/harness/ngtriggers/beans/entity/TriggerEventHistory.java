@@ -36,6 +36,11 @@ public class TriggerEventHistory implements PersistentEntity {
                  .field(TriggerEventHistoryKeys.targetIdentifier)
                  .descSortField(TriggerEventHistoryKeys.createdAt)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_createdAt_desc")
+                 .field(TriggerEventHistoryKeys.accountId)
+                 .descSortField(TriggerEventHistoryKeys.createdAt)
+                 .build())
         .build();
   }
 

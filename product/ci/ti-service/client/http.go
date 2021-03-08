@@ -21,7 +21,8 @@ import (
 var _ Client = (*HTTPClient)(nil)
 
 const (
-	dbEndpoint = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
+	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
+	testEndpoint = "tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -32,10 +33,11 @@ var defaultClient = &http.Client{
 }
 
 // NewHTTPClient returns a new HTTPClient.
-func NewHTTPClient(endpoint, accountID string, skipverify bool) *HTTPClient {
+func NewHTTPClient(endpoint, accountID, token string, skipverify bool) *HTTPClient {
 	client := &HTTPClient{
 		Endpoint:   endpoint,
 		AccountID:  accountID,
+		Token:      token,
 		SkipVerify: skipverify,
 	}
 	if skipverify {
@@ -58,6 +60,7 @@ func NewHTTPClient(endpoint, accountID string, skipverify bool) *HTTPClient {
 type HTTPClient struct {
 	Client     *http.Client
 	Endpoint   string // Example: http://localhost:port
+	Token      string
 	AccountID  string
 	SkipVerify bool
 }
@@ -67,6 +70,14 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report)
 	_, err := c.do(ctx, c.Endpoint+path, "POST", &tests, nil)
 	return err
+}
+
+// GetTests returns list of tests which should be run intelligently
+func (c *HTTPClient) GetTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.Test, error) {
+	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
+	var tests []types.Test
+	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
+	return tests, err
 }
 
 func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool, b backoff.BackOff) (*http.Response, error) {
@@ -92,7 +103,6 @@ func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out int
 			// responses to allow the server time to recover, as
 			// 5xx's are typically not permanent errors and may
 			// relate to outages on the server side.
-
 			if res.StatusCode >= 500 {
 				logger.FromContext(ctx).WithError(err).WithField("path", path).Warnln("http: server error: reconnect and retry")
 				if duration == backoff.Stop {
@@ -131,6 +141,7 @@ func (c *HTTPClient) do(ctx context.Context, path, method string, in, out interf
 
 	// the request should include the secret shared between
 	// the agent and server for authorization.
+	req.Header.Add("X-Harness-Token", c.Token)
 	res, err := c.client().Do(req)
 	if res != nil {
 		defer func() {
@@ -187,6 +198,7 @@ func (c *HTTPClient) open(ctx context.Context, path, method string, body io.Read
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("X-Harness-Token", c.Token)
 	return c.client().Do(req)
 }
 

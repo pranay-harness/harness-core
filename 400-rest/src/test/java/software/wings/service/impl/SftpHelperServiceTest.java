@@ -4,7 +4,6 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
-import static software.wings.service.impl.instance.InstanceHelperTest.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.PARENT;
 import static software.wings.utils.WingsTestConstants.PATH;
 
@@ -36,6 +35,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 public class SftpHelperServiceTest extends WingsBaseTest {
+  public static final String ACCOUNT_ID = "ACCOUNT_ID";
+
   @Inject SftpHelperService sftpHelperService;
   @Mock SSHClient sshClient;
   @Mock SFTPClient sftpClient;

@@ -21,6 +21,7 @@ public interface YamlConstants {
   String APPLICATIONS_FOLDER = "Applications";
   String SERVICES_FOLDER = "Services";
   String MANIFEST_FOLDER = "Manifests";
+  String MANIFEST_FOLDER_APP_SERVICE = "App Service Settings";
   String MANIFEST_FILE_FOLDER = "Files";
   String MANIFEST_FILE = "MANIFEST_FILE";
   String APPLICATIONS_MANIFEST = "ApplicationManifest";
@@ -119,6 +120,21 @@ public interface YamlConstants {
   String OC_PARAMS_FOLDER = "OC Params";
   String OC_PARAMS_FILE = "params";
 
+  // AZURE APP SERVICES
+  String APP_SETTINGS_ENTITY = "APP_SETTINGS";
+  String AZURE_APP_SETTINGS_OVERRIDES_FOLDER = "App Settings Overrides";
+  String APP_SETTINGS_FILE = "appsettings";
+
+  String CONN_STRINGS_ENTITY = "CONN_STRINGS";
+  String AZURE_CONN_STRINGS_OVERRIDES_FOLDER = "Conn Strings Overrides";
+  String CONN_STRINGS_FILE = "connstrings";
+
+  String APP_SERVICE_MANIFEST_FILE_NAME = "appsettings";
+
   // ECS PARAMS
   String ECS_NOT_USED = "ECS_NOT_USED";
+
+  // Governance Folder
+  String GOVERNANCE_FOLDER = "Governance";
+  String DEPLOYMENT_GOVERNANCE_FOLDER = "Deployment Governance";
 }

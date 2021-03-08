@@ -32,25 +32,26 @@ import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GRO
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
 import software.wings.beans.AccountType;
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.TechStack;
 import software.wings.beans.User;
@@ -111,6 +112,7 @@ public class EventPublishHelper {
   @Inject private AccountService accountService;
   @Inject private UserService userService;
   @Inject private SSOSettingService ssoSettingService;
+  @Inject private DelegateCache delegateCache;
   @Inject private DelegateService delegateService;
   @Inject private WhitelistService whitelistService;
   @Inject private UserGroupService userGroupService;
@@ -459,7 +461,7 @@ public class EventPublishHelper {
   }
 
   private boolean isFirstDelegateInAccount(String delegateId, String accountId) {
-    Delegate delegate = delegateService.get(accountId, delegateId, false);
+    Delegate delegate = delegateCache.get(accountId, delegateId, false);
     if (delegate != null && delegate.isSampleDelegate()) {
       return false;
     }

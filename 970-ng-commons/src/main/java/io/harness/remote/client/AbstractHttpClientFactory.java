@@ -7,7 +7,9 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
+import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
@@ -37,6 +39,7 @@ public abstract class AbstractHttpClientFactory {
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
   private String clientId = "NextGenManager";
+  private final ObjectMapper objectMapper;
 
   public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
@@ -45,6 +48,7 @@ public abstract class AbstractHttpClientFactory {
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
     this.clientId = clientId;
+    objectMapper = getObjectMapper();
   }
 
   public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
@@ -53,11 +57,11 @@ public abstract class AbstractHttpClientFactory {
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
+    objectMapper = getObjectMapper();
   }
 
   protected Retrofit getRetrofit() {
     String baseUrl = serviceHttpClientConfig.getBaseUrl();
-    ObjectMapper objectMapper = getObjectMapper();
     return new Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(kryoConverterFactory)
@@ -111,7 +115,14 @@ public abstract class AbstractHttpClientFactory {
   protected Interceptor getAuthorizationInterceptor() {
     final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
+      boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
+      if (!isPrincipalInContext) {
+        SecurityContextBuilder.setContext(new ServicePrincipal(clientId));
+      }
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
+      if (!isPrincipalInContext) {
+        SecurityContextBuilder.unsetContext();
+      }
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };

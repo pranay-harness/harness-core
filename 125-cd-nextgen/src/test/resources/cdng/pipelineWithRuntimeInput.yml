@@ -36,7 +36,7 @@ pipeline:
                 type: Retry
                 spec:
                   retryCount: 3
-                  retryInterval:
+                  retryIntervals:
                     - 1s
                     - 5s
                   onRetryFailure:
@@ -51,9 +51,10 @@ pipeline:
             - name: stageN2
               type: Number
               value: 12
-          service:
-            name: service1
-            identifier: ${input}
+          serviceConfig:
+            service:
+              name: service1
+              identifier: service1
             tags:
               k1: v1
               k2: v2
@@ -72,7 +73,7 @@ pipeline:
                     type: Dockerhub
                     spec:
                       connectorRef: npQuotecenter
-                      imagePath: ${input}
+                      imagePath: <+input>
                       tag: "latest"
                   sidecars:
                     - sidecar:
@@ -81,7 +82,7 @@ pipeline:
                         spec:
                           connectorRef: myDocker2
                           imagePath: "library/redis"
-                          tag: ${input}
+                          tag: <+input>
                 manifests:
                   - manifest:
                       identifier: specFiles
@@ -93,7 +94,7 @@ pipeline:
                             connectorRef: myGitConnector
                             gitFetchType: Branch
                             branch: master
-                            paths: ${input}.allowedValues(['paths1', 'master/paths2', 'paths3'])
+                            paths: <+input>.allowedValues(['paths1', 'master/paths2', 'paths3'])
                 manifestOverrideSets:
                   - overrideSet:
                       identifier: overrideSet1
@@ -106,7 +107,7 @@ pipeline:
                                 type: Git
                                 # Git|Local
                                 spec:
-                                  connectorRef: ${input}
+                                  connectorRef: <+input>
                                   gitFetchType: Branch
                                   branch: master
                                   paths:
@@ -120,8 +121,8 @@ pipeline:
                           value: 14
           infrastructure:
             environment:
-              name: ${input}
-              identifier: ${input}
+              name: env1
+              identifier: env1
               type: PreProduction
               tags:
                 envType: prod
@@ -130,7 +131,7 @@ pipeline:
               type: KubernetesDirect
               spec:
                 connectorRef: np-quotecenter_quotecenter-yin
-                namespace: ${input}.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
+                namespace: <+input>.allowedValues(jexl(${stage.name} == 'qa' ? 'dev1, qa1':'prod1, stage1'))
           execution:
             steps:
               - parallel:
@@ -139,8 +140,8 @@ pipeline:
                       identifier: rolloutDeployment
                       type: K8sRollingDeploy
                       spec:
-                        timeout: ${input}.allowedValues(100, 1000, 100)
-                        skipDryRun: ${input}.allowedValues(true, false)
+                        timeout: <+input>.allowedValues(100, 1000, 100)
+                        skipDryRun: <+input>.allowedValues(true, false)
               - stepGroup:
                   identifier: HttpValidationSteps
                   failureStrategies:
@@ -157,7 +158,7 @@ pipeline:
                         identifier: HttpValidation
                         type: Http
                         spec:
-                          socketTimeoutMillis: 30000
+                          timeout: 30s
                           url: http://httpstat.us/500
               - step:
                   name: http step 1
@@ -180,7 +181,7 @@ pipeline:
                           type: MarkAsSuccess
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 10m
                     method: GET
                     url: http://httpstat.us/500
             rollbackSteps:
@@ -189,13 +190,13 @@ pipeline:
                   identifier: rollbackRolloutDeployment1
                   type: K8sRollingRollback
                   spec:
-                    timeout: ${input}.allowedValues(100, 1000, 100)
+                    timeout: <+input>.allowedValues(100, 1000, 100)
               - step:
                   name: http rollback step 2
                   identifier: httpStep4
                   type: Http
                   spec:
-                    socketTimeoutMillis: 1000
+                    timeout: 10s
                     method: GET
                     url: http://httpstat.us/200
     - stage:
@@ -203,9 +204,9 @@ pipeline:
         name: Prod stage
         type: Deployment
         spec:
-          service:
+          serviceConfig:
             useFromStage:
-              stage: ${input}.regex(^prod*)
+              stage: <+input>.regex(^prod*)
             stageOverrides:
               manifests:
                 - manifest:
@@ -215,7 +216,7 @@ pipeline:
                       store:
                         type: Git
                         spec:
-                          connectorRef: ${input}
+                          connectorRef: <+input>
                           gitFetchType: Branch
                           branch: master
                           paths:
@@ -235,7 +236,8 @@ pipeline:
               stage: qaStage
               overrides:
                 environment:
-                  identifier: ${input}
+                  name: envSomeNumber
+                  identifier: envSomeNumber
                 infrastructureDefinition:
                   type: KubernetesDirect
                   spec:

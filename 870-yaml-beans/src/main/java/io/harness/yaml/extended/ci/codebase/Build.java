@@ -1,4 +1,5 @@
 package io.harness.yaml.extended.ci.codebase;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import javax.validation.constraints.NotNull;
@@ -14,6 +15,7 @@ public class Build {
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @NotNull
   private BuildSpec spec;
+
   @Builder
   public Build(BuildType type, BuildSpec spec) {
     this.type = type;

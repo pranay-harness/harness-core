@@ -65,12 +65,14 @@ logServiceConfig:
 
 tiServiceConfig:
   baseUrl: http://localhost:8078
+  globalToken: "78d16b66-4b4c-11eb-8377-acde48001122"
 
 managerTarget: localhost:9880
 managerAuthority: localhost
 managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
 jwtAuthSecret: "dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq"
 ngManagerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+jwtIdentityServiceSecret: "HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU="
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
@@ -82,10 +84,10 @@ managerClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 ciExecutionServiceConfig:
-  addonImageTag: valpha-1.21.2
-  liteEngineImageTag: valpha-1.21.2
-  defaultMemoryLimit: 200
-  defaultCPULimit: 200
+  addonImageTag: v1.90-alpha
+  liteEngineImageTag: v1.90-alpha
+  defaultMemoryLimit: 500
+  defaultCPULimit: 400
   defaultInternalImageConnector: account.harnessimage
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
@@ -93,9 +95,15 @@ ciExecutionServiceConfig:
 pmsSdkGrpcServerConfig:
   connectors:
     - port: 12301
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 12302
 
 pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
+
+apiUrl: https://localhost:8181/#/
 
 shouldConfigureWithPMS: false

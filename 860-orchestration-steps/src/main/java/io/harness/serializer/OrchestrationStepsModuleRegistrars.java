@@ -1,10 +1,16 @@
 package io.harness.serializer;
 
+import io.harness.EntityType;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.steps.internal.PMSStepInfo;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
+import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.YamlKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -20,6 +26,8 @@ public class OrchestrationStepsModuleRegistrars {
           .add(OrchestrationStepsKryoRegistrar.class)
           .add(YamlKryoRegistrar.class)
           .add(NGCoreBeansKryoRegistrar.class)
+          .add(DelegateServiceBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .build();
 
@@ -37,5 +45,23 @@ public class OrchestrationStepsModuleRegistrars {
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()
           .addAll(OrchestrationRegistrars.springConverters)
+          .build();
+
+  public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
+      ImmutableList.<YamlSchemaRootClass>builder()
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.PIPELINES)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(PipelineConfig.class)
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.PIPELINE_STEPS)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(PMSStepInfo.class)
+                   .build())
           .build();
 }

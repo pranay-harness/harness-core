@@ -15,6 +15,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -108,6 +110,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmDeployServiceImpl implements HelmDeployService {
   public static final String MANIFEST_FILE_NAME = "manifest.yaml";
   @Inject private transient K8sTaskHelper k8sTaskHelper;
@@ -165,9 +168,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       commandResponse.setHelmChartInfo(helmChartInfo);
 
-      boolean useK8sSteadyStateCheck = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-          commandRequest.isK8SteadyStateCheckEnabled(), commandRequest.isDeprecateFabric8Enabled(),
-          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
+      boolean useK8sSteadyStateCheck =
+          containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
+              commandRequest.getContainerServiceParams(), commandRequest.getExecutionLogCallback());
       List<KubernetesResourceId> k8sWorkloads = Collections.emptyList();
       if (useK8sSteadyStateCheck) {
         k8sWorkloads = readKubernetesResourcesIds(commandRequest, commandRequest.getVariableOverridesYamlFiles(),
@@ -264,9 +267,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         KubernetesConfig kubernetesConfig =
             containerDeploymentDelegateHelper.getKubernetesConfig(commandRequest.getContainerServiceParams());
         String releaseName = commandRequest.getReleaseName();
-        List<ContainerInfo> containerInfos = commandRequest.isDeprecateFabric8Enabled()
-            ? k8sTaskHelperBase.getContainerInfos(kubernetesConfig, releaseName, namespace, timeoutInMillis)
-            : k8sTaskHelperBase.getContainerInfosFabric8(kubernetesConfig, releaseName, namespace, timeoutInMillis);
+        List<ContainerInfo> containerInfos =
+            k8sTaskHelperBase.getContainerInfos(kubernetesConfig, releaseName, namespace, timeoutInMillis);
         containerInfoList.addAll(containerInfos);
       }
     }
@@ -284,7 +286,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       throws Exception {
     String workingDirPath = Paths.get(commandRequest.getWorkingDir()).normalize().toAbsolutePath().toString();
 
-    List<FileData> manifestFiles = k8sTaskHelper.renderTemplateForHelm(
+    List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplateForHelm(
         helmClient.getHelmPath(commandRequest.getHelmVersion()), workingDirPath, variableOverridesYamlFiles,
         commandRequest.getReleaseName(), commandRequest.getContainerServiceParams().getNamespace(),
         executionLogCallback, commandRequest.getHelmVersion(), timeoutInMillis, commandRequest.getHelmCommandFlag());
@@ -310,9 +312,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         commandRequest.getExecutionLogCallback().saveExecutionLog(msg);
         throw new InvalidRequestException(msg, USER);
       }
-      boolean useK8sSteadyStateCheck = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-          commandRequest.isK8SteadyStateCheckEnabled(), commandRequest.isDeprecateFabric8Enabled(),
-          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) commandRequest.getExecutionLogCallback());
+      boolean useK8sSteadyStateCheck =
+          containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
+              commandRequest.getContainerServiceParams(), commandRequest.getExecutionLogCallback());
       if (useK8sSteadyStateCheck) {
         fetchInlineChartUrl(commandRequest, timeoutInMillis);
       }
@@ -471,8 +473,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   private ReleaseHistory fetchK8sReleaseHistory(HelmCommandRequest request, KubernetesConfig kubernetesConfig)
       throws IOException {
-    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryFromSecret(
-        kubernetesConfig, request.getReleaseName(), request.isDeprecateFabric8Enabled());
+    String releaseHistoryData =
+        k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, request.getReleaseName());
 
     return (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                      : ReleaseHistory.createFromData(releaseHistoryData);
@@ -499,8 +501,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
     releaseHistory.setReleaseStatus(
         CommandExecutionStatus.SUCCESS == response.getCommandExecutionStatus() ? Status.Succeeded : Status.Failed);
-    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml(), true,
-        request.isDeprecateFabric8Enabled());
+    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, request.getReleaseName(), releaseHistory.getAsYaml(), true);
   }
 
   @Override
@@ -516,9 +517,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       }
 
       List<KubernetesResourceId> k8sRollbackWorkloads = Collections.emptyList();
-      boolean useK8sSteadyStateCheck = containerDeploymentDelegateHelper.useK8sSteadyStateCheck(
-          commandRequest.isK8SteadyStateCheckEnabled(), commandRequest.isDeprecateFabric8Enabled(),
-          commandRequest.getContainerServiceParams(), (ExecutionLogCallback) executionLogCallback);
+      boolean useK8sSteadyStateCheck =
+          containerDeploymentDelegateHelper.useK8sSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(),
+              commandRequest.getContainerServiceParams(), executionLogCallback);
 
       if (useK8sSteadyStateCheck) {
         prepareWorkingDirectoryForK8sRollout(commandRequest);

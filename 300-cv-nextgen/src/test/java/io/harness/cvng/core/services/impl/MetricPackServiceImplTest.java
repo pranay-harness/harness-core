@@ -4,11 +4,12 @@ import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENT
 import static io.harness.cvng.core.services.CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
@@ -28,7 +29,6 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.File;
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class MetricPackServiceImplTest extends CvNextGenTest {
+public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Inject private MetricPackService metricPackService;
   @Inject private HPersistence hPersistence;
   private String accountId;
@@ -50,15 +50,15 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMetricPackFilesAdded() {
-    final URL metricPackUrl = MetricPackService.class.getResource("/appdynamics/metric-packs");
-    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
+    final String metricPackUrl = getSourceResourceFile(MetricPackService.class, "/appdynamics/metric-packs");
+    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl), null, false);
     assertThat(metricPackYamls.size()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_METRICPACK_FILES.size() + 1);
   }
 
@@ -247,5 +247,26 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     assertThat(timeSeriesThreshold.getCriteria().getAction()).isNull();
     assertThat(timeSeriesThreshold.getCriteria().getOccurrenceCount()).isNull();
     assertThat(timeSeriesThreshold.getCriteria().getThresholdType()).isEqualTo(TimeSeriesThresholdType.ACT_WHEN_LOWER);
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testCreateDefaultMetricPackAndThresholds() {
+    List<MetricPack> metricPacks =
+        metricPackService.getMetricPacks(accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS);
+    assertThat(metricPacks).isNotEmpty();
+
+    List<MetricPack> performancePacks =
+        metricPacks.stream()
+            .filter(metricPack -> metricPack.getIdentifier().equals(PERFORMANCE_PACK_IDENTIFIER))
+            .collect(Collectors.toList());
+    assertThat(performancePacks.size()).isEqualTo(1);
+
+    List<TimeSeriesThreshold> metricPackThresholds = metricPackService.getMetricPackThresholds(
+        accountId, orgIdentifier, projectIdentifier, metricPacks.get(0).getIdentifier(), DataSourceType.APP_DYNAMICS);
+
+    assertThat(metricPackThresholds).isNotEmpty();
+    assertThat(metricPackThresholds).size().isEqualTo(2);
   }
 }

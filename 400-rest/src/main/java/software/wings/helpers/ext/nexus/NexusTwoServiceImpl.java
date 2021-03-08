@@ -3,6 +3,7 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -27,6 +28,10 @@ import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.nexus.NexusRestClient;
+import io.harness.nexus.model.IndexBrowserTreeNode;
+import io.harness.nexus.model.IndexBrowserTreeViewResponse;
+import io.harness.nexus.model.Project;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.stream.StreamUtils;
 
@@ -37,9 +42,6 @@ import software.wings.common.AlphanumComparator;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
-import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;
-import software.wings.helpers.ext.nexus.model.IndexBrowserTreeViewResponse;
-import software.wings.helpers.ext.nexus.model.Project;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.RepositoryFormat;
 
@@ -105,6 +107,9 @@ public class NexusTwoServiceImpl {
     }
 
     final Response<RepositoryListResourceResponse> response = request.execute();
+    if (response.code() == 404) {
+      throw new InvalidArtifactServerException("Invalid Artifact server", USER);
+    }
     if (isSuccessful(response)) {
       log.info("Retrieving repositories success");
       if (RepositoryFormat.maven.name().equals(repositoryFormat)) {
@@ -333,8 +338,7 @@ public class NexusTwoServiceImpl {
                 }
               }
             }
-            throw new ArtifactServerException(
-                "No versions found with specified extension/ classifier", null, WingsException.USER);
+            throw new ArtifactServerException("No versions found with specified extension/ classifier", null, USER);
           }
         }
       }
@@ -387,7 +391,7 @@ public class NexusTwoServiceImpl {
       case "npm":
         return getVersionsForNPM(nexusConfig, encryptionDetails, repositoryId, packageName);
       default:
-        throw new WingsException("Unsupported format for Nexus 3.x", WingsException.USER);
+        throw new WingsException("Unsupported format for Nexus 3.x", USER);
     }
   }
 
@@ -926,16 +930,27 @@ public class NexusTwoServiceImpl {
   @SuppressWarnings({"squid:S3510"})
   public Pair<String, InputStream> downloadArtifactByUrl(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl) {
+    String credentials = null;
     try {
       if (nexusConfig.hasCredentials()) {
         encryptionService.decrypt(nexusConfig, encryptionDetails, false);
-        Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
-            nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+        log.info("Artifact: {}, ArtifactUrl: {}, Username: {}", artifactName, artifactUrl, nexusConfig.getUsername());
+        if (nexusConfig.isUseCredentialsWithAuth()) {
+          log.info("Using Nexus auth with credentials instead of authenticator");
+          credentials = Credentials.basic(nexusConfig.getUsername(), new String(nexusConfig.getPassword()));
+        } else {
+          Authenticator.setDefault(new NexusThreeServiceImpl.MyAuthenticator(
+              nexusConfig.getUsername(), new String(nexusConfig.getPassword())));
+        }
       }
+
       URL url = new URL(artifactUrl);
       URLConnection conn = url.openConnection();
+      if (credentials != null) {
+        conn.setRequestProperty("Authorization", credentials);
+      }
       if (conn instanceof HttpsURLConnection) {
-        HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
+        HttpsURLConnection conn1 = (HttpsURLConnection) conn;
         conn1.setHostnameVerifier((hostname, session) -> true);
         conn1.setSSLSocketFactory(Http.getSslContext().getSocketFactory());
         return ImmutablePair.of(artifactName, conn1.getInputStream());

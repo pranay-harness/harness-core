@@ -11,6 +11,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.beans.template.Template.FOLDER_ID_KEY;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.NAME_KEY;
 import static software.wings.beans.template.Template.REFERENCED_TEMPLATE_ID_KEY;
@@ -106,6 +107,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -232,6 +234,7 @@ public class TemplateServiceImpl implements TemplateService {
       throw new InvalidRequestException("Name of imported template cannot be changed.", USER);
     }
     validateScope(template, oldTemplate);
+    validateOutputEnvironmentVariables(template);
     Set<String> existingKeywords = oldTemplate.getKeywords();
     Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
     if (isNotEmpty(existingKeywords)) {
@@ -358,6 +361,7 @@ public class TemplateServiceImpl implements TemplateService {
     }
     notNullCheck("Template " + template.getName() + " does not exist", oldTemplate);
     validateScope(template, oldTemplate);
+    validateOutputEnvironmentVariables(template);
     Set<String> existingKeywords = oldTemplate.getKeywords();
     Set<String> generatedKeywords = trimmedLowercaseSet(template.generateKeywords());
     if (isNotEmpty(existingKeywords)) {
@@ -552,6 +556,42 @@ public class TemplateServiceImpl implements TemplateService {
       String toScope = fromScope.equals(APPLICATION) ? ACCOUNT : APPLICATION;
       throw new InvalidRequestException(
           format("Template %s cannot be moved from %s to %s", oldTemplate.getName(), fromScope, toScope));
+    }
+  }
+
+  private void validateOutputEnvironmentVariables(Template template) {
+    if (template.getTemplateObject() instanceof ShellScriptTemplate) {
+      String outputVars = ((ShellScriptTemplate) template.getTemplateObject()).getOutputVars();
+      String secretOutputVars = ((ShellScriptTemplate) template.getTemplateObject()).getSecretOutputVars();
+
+      List<String> outputVarsList = new ArrayList<>();
+      List<String> secretOutputVarsList = new ArrayList<>();
+
+      if (isNotEmpty(outputVars)) {
+        outputVarsList = Arrays.asList(outputVars.trim().split("\\s*,\\s*"));
+        outputVarsList.replaceAll(String::trim);
+      }
+
+      if (isNotEmpty(secretOutputVars)) {
+        secretOutputVarsList = Arrays.asList(secretOutputVars.split("\\s*,\\s*"));
+        secretOutputVarsList.replaceAll(String::trim);
+      }
+      Set<String> uniqueOutputVarsList = new HashSet<>(outputVarsList);
+      Set<String> uniqueSecretOutputVarsList = new HashSet<>(secretOutputVarsList);
+
+      if (uniqueOutputVarsList.size() < outputVarsList.size()) {
+        throw new InvalidRequestException("Duplicate output variables in Shell Script Template");
+      }
+      if (uniqueSecretOutputVarsList.size() < secretOutputVarsList.size()) {
+        throw new InvalidRequestException("Duplicate Secret output variables in Shell Script Template");
+      }
+
+      Set<String> commonVars =
+          outputVarsList.stream().distinct().filter(secretOutputVarsList::contains).collect(Collectors.toSet());
+
+      if (isNotEmpty(commonVars)) {
+        throw new InvalidRequestException("Output Variables cannot be Secret and String both");
+      }
     }
   }
 
@@ -895,19 +935,13 @@ public class TemplateServiceImpl implements TemplateService {
 
   @Override
   public Template findByFolder(TemplateFolder templateFolder, String templateName, String appId) {
-    List<Template> templates = wingsPersistence.createQuery(Template.class)
-                                   .filter(Template.ACCOUNT_ID_KEY2, templateFolder.getAccountId())
-                                   .filter(Template.APP_ID_KEY, appId)
-                                   .field(FOLDER_PATH_ID_KEY)
-                                   .contains(templateFolder.getUuid())
-                                   .field(NAME_KEY)
-                                   .equal(templateName)
-                                   .filter(Template.GALLERY_ID_KEY, templateFolder.getGalleryId())
-                                   .asList();
-    if (templates.size() == 1) {
-      return templates.get(0);
-    }
-    return null;
+    final Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                              .filter(TemplateKeys.accountId, templateFolder.getAccountId())
+                                              .filter(Template.APP_ID_KEY, appId)
+                                              .filter(FOLDER_ID_KEY, templateFolder.getUuid())
+                                              .filter(NAME_KEY, templateName)
+                                              .filter(Template.GALLERY_ID_KEY, templateFolder.getGalleryId());
+    return templateQuery.get();
   }
 
   @Override
@@ -1005,7 +1039,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .project(Template.ACCOUNT_ID_KEY2, true)
                             .filter(Template.ACCOUNT_ID_KEY2, accountId)
                             .filter(NAME_KEY, templateName)
-                            .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
+                            .filter(FOLDER_ID_KEY, templateFolder.getUuid())
                             .filter(TemplateKeys.appId, templateAppId)
                             .filter(TemplateKeys.galleryId, galleryId)
                             .get();
@@ -1044,7 +1078,7 @@ public class TemplateServiceImpl implements TemplateService {
     Template template = wingsPersistence.createQuery(Template.class)
                             .filter(Template.ACCOUNT_ID_KEY2, accountId)
                             .filter(NAME_KEY, templateName)
-                            .filter(Template.FOLDER_ID_KEY, templateFolder.getUuid())
+                            .filter(FOLDER_ID_KEY, templateFolder.getUuid())
                             .filter(TemplateKeys.appId, templateAppId)
                             .filter(TemplateKeys.galleryId, galleryId)
                             .get();
@@ -1126,7 +1160,7 @@ public class TemplateServiceImpl implements TemplateService {
                             .project(Template.ACCOUNT_ID_KEY2, true)
                             .filter(Template.ACCOUNT_ID_KEY2, accountId)
                             .filter(NAME_KEY, name)
-                            .filter(Template.FOLDER_ID_KEY, folderId)
+                            .filter(FOLDER_ID_KEY, folderId)
                             .filter(Template.GALLERY_ID_KEY, galleryId)
                             .get();
     if (template == null) {

@@ -2,10 +2,10 @@ package software.wings.service.impl.template;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.delegate.task.shell.ScriptType.POWERSHELL;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.shell.ScriptType.POWERSHELL;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -37,6 +37,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -68,6 +69,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Inject @InjectMocks protected TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
   @Inject private TemplateFolderService templateFolderService;
+  @Inject private HPersistence persistence;
 
   @Mock private AccountService accountService;
 
@@ -298,7 +300,7 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
                           .withUuid(ACCOUNT_ID)
                           .withAppId(GLOBAL_APP_ID)
                           .build();
-    wingsPersistence.save(account);
+    persistence.save(account);
     templateGalleryService.saveHarnessCommandLibraryGalleryToAccount(ACCOUNT_ID, ACCOUNT_NAME);
     assertThat(templateGalleryService.getByAccount(ACCOUNT_ID, GalleryKey.HARNESS_COMMAND_LIBRARY_GALLERY)).isNotNull();
   }

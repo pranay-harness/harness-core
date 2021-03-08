@@ -19,5 +19,8 @@ public class TimeSeriesTestDataDTO {
     private long timestamp;
     private double value;
     private int risk;
+    public Risk getRisk() {
+      return Risk.valueOf(risk);
+    }
   }
 }

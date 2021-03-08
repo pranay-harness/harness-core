@@ -44,9 +44,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pcf.PcfAppNotFoundException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -55,7 +57,6 @@ import software.wings.api.PcfDeploymentInfo;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PcfConfig;
@@ -66,7 +67,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
-import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfInstanceSyncResponse;
 import software.wings.service.impl.PcfHelperService;

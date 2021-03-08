@@ -47,16 +47,27 @@ input K8sLabelInput {
 input ceAggregation {
   function: ceAggregationFunction
   cost: ceCost
+  utilization: ceUtilization
 }
 
 enum ceAggregationFunction {
   SUM
+  AVG
 }
 
 enum ceCost {
   TOTALCOST
   IDLECOST
   UNALLOCATEDCOST
+}
+
+enum ceUtilization {
+  CPU_REQUEST
+  CPU_LIMIT
+  CPU_UTILIZATION_VALUE
+  MEMORY_REQUEST
+  MEMORY_LIMIT
+  MEMORY_UTILIZATION_VALUE
 }
 
 input ceGroupBy {
@@ -76,6 +87,7 @@ enum ceEntityGroupBy {
   Task
   LaunchType
   Workload
+  WorkloadType
   Namespace
   Node
   Pod
@@ -128,8 +140,6 @@ type BillingDataEntry {
   idleCost: Number
   unallocatedCost: Number
   systemCost: Number
-  maxCpuUtilization: Number
-  maxMemoryUtilization: Number
   avgCpuUtilization: Number
   avgMemoryUtilization: Number
   cpuRequest: Number
@@ -153,6 +163,7 @@ type BillingDataEntry {
 
 type ceK8sEntity {
   workload: String
+  workloadType: String
   namespace: String
   node: String
   pod: String

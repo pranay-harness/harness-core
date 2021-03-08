@@ -17,13 +17,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.rule.Owner;
 import io.harness.time.Timestamp;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.stackdriver.StackDriverLogDataCollectionInfo;

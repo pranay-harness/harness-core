@@ -8,7 +8,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.StepTransput;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -47,11 +47,11 @@ public interface Resolver<T extends StepTransput> {
   }
 
   default Document convertToDocument(T value) {
-    return DocumentOrchestrationUtils.convertToDocument(value);
+    return RecastOrchestrationUtils.toDocument(value);
   }
 
   @SneakyThrows
-  default T convertToObject(Document value) {
-    return DocumentOrchestrationUtils.convertFromDocument(value);
+  default T convertToObject(Document value, Class<T> clazz) {
+    return RecastOrchestrationUtils.fromDocument(value, clazz);
   }
 }

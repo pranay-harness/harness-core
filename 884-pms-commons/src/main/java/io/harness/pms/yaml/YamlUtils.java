@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -80,8 +79,83 @@ public class YamlUtils {
         getPipelineField(rootYamlNode), "Invalid pipeline YAML: root of the yaml needs to be an object");
   }
 
-  private YamlField getPipelineField(YamlNode rootYamlNode) {
+  public YamlField getPipelineField(YamlNode rootYamlNode) {
     return (rootYamlNode == null || !rootYamlNode.isObject()) ? null : rootYamlNode.getField("pipeline");
+  }
+
+  public YamlField injectUuidWithLeafUuid(String content) throws IOException {
+    JsonNode rootJsonNode = mapper.readTree(content);
+    if (rootJsonNode == null) {
+      return null;
+    }
+    injectUuidWithLeafUuid(rootJsonNode);
+    YamlNode rootYamlNode = new YamlNode(rootJsonNode, null);
+    return new YamlField(rootYamlNode);
+  }
+
+  private void injectUuidWithLeafUuid(JsonNode node) {
+    if (node.isObject()) {
+      injectUuidInObjectWithLeafValues(node);
+    } else if (node.isArray()) {
+      injectUuidInArrayWithLeafUuid(node);
+    }
+  }
+
+  private void injectUuidInArrayWithLeafUuid(JsonNode node) {
+    ArrayNode arrayNode = (ArrayNode) node;
+    for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+      injectUuidWithLeafUuid(it.next());
+    }
+  }
+
+  private void injectUuidInObjectWithLeafValues(JsonNode node) {
+    ObjectNode objectNode = (ObjectNode) node;
+    objectNode.put(YamlNode.UUID_FIELD_NAME, generateUuid());
+    boolean isIdentifierPresent = false;
+    Entry<String, JsonNode> nameField = null;
+    for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
+      Entry<String, JsonNode> field = it.next();
+      if (field.getValue().isValueNode()) {
+        switch (field.getKey()) {
+          case YamlNode.IDENTIFIER_FIELD_NAME:
+            isIdentifierPresent = true;
+            break;
+          case YamlNode.NAME_FIELD_NAME:
+            nameField = field;
+            break;
+          case YamlNode.UUID_FIELD_NAME:
+          case YamlNode.TYPE_FIELD_NAME:
+            break;
+          default:
+            objectNode.put(field.getKey(), generateUuid());
+            break;
+        }
+      } else if (checkIfNodeIsArrayWithPrimitiveTypes(field.getValue())) {
+        objectNode.put(field.getKey(), generateUuid());
+      } else {
+        injectUuidWithLeafUuid(field.getValue());
+      }
+    }
+    if (isIdentifierPresent && nameField != null) {
+      objectNode.put(nameField.getKey(), generateUuid());
+    }
+  }
+
+  private boolean checkIfNodeIsArrayWithPrimitiveTypes(JsonNode jsonNode) {
+    if (jsonNode.isArray()) {
+      ArrayNode arrayNode = (ArrayNode) jsonNode;
+      // Empty array is not primitive array
+      if (arrayNode.size() == 0) {
+        return false;
+      }
+      for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+        if (!it.next().isValueNode()) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
   }
 
   public String injectUuid(String content) throws IOException {
@@ -135,7 +209,7 @@ public class YamlUtils {
     StringBuilder response = new StringBuilder();
     for (String qualifiedName : qualifiedNames) {
       if (qualifiedName.equals(from)) {
-        response.append(qualifiedName).append(".");
+        response.append(qualifiedName).append('.');
       }
       if (qualifiedName.equals(to)) {
         response.append(qualifiedName);
@@ -147,7 +221,9 @@ public class YamlUtils {
 
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
     if (yamlNode.getParentNode() == null) {
-      return Collections.singletonList(getQNForNode(yamlNode, null));
+      List<String> qualifiedNameList = new ArrayList<>();
+      qualifiedNameList.add(getQNForNode(yamlNode, null));
+      return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());
     if (isEmpty(qualifiedName)) {
@@ -177,6 +253,8 @@ public class YamlUtils {
     if (parentNode.getParentNode() != null && parentNode.getParentNode().isArray()) {
       if (yamlNode.getIdentifier() != null) {
         return yamlNode.getIdentifier();
+      } else if (parentNode.getName() != null) {
+        return parentNode.getName();
       } else {
         return "";
       }
@@ -196,7 +274,7 @@ public class YamlUtils {
     return field.getName();
   }
 
-  private boolean shouldNotIncludeInQualifiedName(String fieldName) {
+  public boolean shouldNotIncludeInQualifiedName(String fieldName) {
     if (ignorableStringForQualifiedName.contains(fieldName)) {
       return true;
     }
@@ -239,9 +317,16 @@ public class YamlUtils {
     if (parentNode == null) {
       return null;
     }
-    if (!parentNode.toString().contains(currentNode.getUuid())) {
-      return null;
+    if (currentNode.getCurrJsonNode().isArray()) {
+      if (!parentNode.toString().contains(currentNode.toString())) {
+        return null;
+      }
+    } else {
+      if (!parentNode.toString().contains(currentNode.getUuid())) {
+        return null;
+      }
     }
+
     return parentNode;
   }
 
@@ -291,5 +376,11 @@ public class YamlUtils {
       }
     }
     return null;
+  }
+
+  public String writeYamlString(YamlField yamlField) throws IOException {
+    String json = yamlField.getNode().toString();
+    JsonNode jsonNode = mapper.readTree(json);
+    return mapper.writeValueAsString(jsonNode);
   }
 }

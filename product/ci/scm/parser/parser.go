@@ -67,6 +67,17 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 				Push: push,
 			},
 		}, nil
+	case *scm.IssueCommentHook:
+		comment, err := converter.ConvertIssueCommentHook(event)
+		if err != nil {
+			return nil, err
+		}
+		log.Infow("Successfully parsed issue comment", "elapsed_time_ms", utils.TimeSince(start))
+		return &pb.ParseWebhookResponse{
+			Hook: &pb.ParseWebhookResponse_Comment{
+				Comment: comment,
+			},
+		}, nil
 	default:
 		log.Errorw(
 			"Unsupported webhook event",

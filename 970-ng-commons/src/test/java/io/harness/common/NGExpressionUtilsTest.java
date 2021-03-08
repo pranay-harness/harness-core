@@ -19,9 +19,9 @@ public class NGExpressionUtilsTest extends CategoryTest {
   public void testMatchesInputSetPattern() {
     String notInputSet = "${inpu}.t.abc";
     String notInputSet1 = "${input.test}";
-    String inputSet = "${input}";
-    String inputSet1 = "${input}.allowedValues(dev, ${env}, ${env2}, stage)";
-    String inputSet2 = "${input}  ";
+    String inputSet = "<+input>";
+    String inputSet1 = "<+input>.allowedValues(dev, ${env}, ${env2}, stage)";
+    String inputSet2 = "<+input>  ";
 
     assertThat(NGExpressionUtils.matchesInputSetPattern(notInputSet)).isFalse();
     assertThat(NGExpressionUtils.matchesInputSetPattern(notInputSet1)).isFalse();
@@ -34,8 +34,8 @@ public class NGExpressionUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testContainsPattern() {
-    String expression1 = "${input}.allowedValues(dev, ${env}, ${env2}, stage)";
-    String expression2 = "${input}.allowedValues123(dev, ${env}, ${env2}, stage)";
+    String expression1 = "<+input>.allowedValues(dev, ${env}, ${env2}, stage)";
+    String expression2 = "<+input>.allowedValues123(dev, ${env}, ${env2}, stage)";
 
     String pattern = NGExpressionUtils.getInputSetValidatorPattern("allowedValues");
 
@@ -49,9 +49,9 @@ public class NGExpressionUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testMatchesPattern() {
-    String expression = "${input}.allowedValues(abc)";
-    String pattern1 = "\\$\\{input}.*";
-    String pattern2 = "\\$\\{input}";
+    String expression = "<+input>.allowedValues(abc)";
+    String pattern1 = "<\\+input>.*";
+    String pattern2 = "<\\+input>";
 
     boolean matchesPattern = NGExpressionUtils.matchesPattern(Pattern.compile(pattern1), expression);
     assertThat(matchesPattern).isTrue();

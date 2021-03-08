@@ -77,7 +77,7 @@ public class ChildStrategy implements ExecuteStrategy {
                                                 .setParentId(nodeExecution.getUuid())
                                                 .build();
     pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
+    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
         ExecutableResponse.newBuilder().setChild(response).build(), Collections.singletonList(childInstanceId));
   }
 }

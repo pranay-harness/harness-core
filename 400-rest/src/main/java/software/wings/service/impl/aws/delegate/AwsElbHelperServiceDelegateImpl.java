@@ -23,6 +23,8 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListener.AwsElbListenerBuilder;
@@ -93,6 +95,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsElbHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsElbHelperServiceDelegate {
   public static final String ALB = "application";
@@ -106,7 +109,7 @@ public class AwsElbHelperServiceDelegateImpl
       Regions region, AwsConfig awsConfig) {
     AmazonElasticLoadBalancingClientBuilder builder =
         AmazonElasticLoadBalancingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) builder.build();
   }
 
@@ -115,7 +118,7 @@ public class AwsElbHelperServiceDelegateImpl
     com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder builder =
         com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder.standard().withRegion(
             region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonElasticLoadBalancingClient) builder.build();
   }
 

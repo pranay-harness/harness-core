@@ -6,12 +6,14 @@ import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.WeeklyFreezeConfig;
 import io.harness.rule.Owner;
 
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.governance.GovernanceConfig;
 
 import java.util.Calendar;
@@ -22,6 +24,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._980_COMMONS)
 public class WeeklyRangeTest extends CategoryTest {
   private String accountId = "some-account-uuid-" + RandomStringUtils.randomAlphanumeric(5);
 
@@ -54,10 +57,11 @@ public class WeeklyRangeTest extends CategoryTest {
     try {
       TimeRange range = new TimeRange(100L, 200L, "Asia/Kolkata");
       WeeklyRange weeklyRange = new WeeklyRange(null, "Monday", "7:00 PM", "Tuesday", "5:00 AM", "Asia/Kolkata");
-      TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig = new TimeRangeBasedFreezeConfig(
-          true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), range);
-      WeeklyFreezeConfig weeklyFreezeConfig = new WeeklyFreezeConfig(
-          true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD), weeklyRange);
+      TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
+          new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
+              range, null, null, false, null, null, "uuid");
+      WeeklyFreezeConfig weeklyFreezeConfig = new WeeklyFreezeConfig(true, Collections.emptyList(),
+          Collections.singletonList(EnvironmentType.PROD), weeklyRange, null, null, false, null, null, "uuid");
 
       GovernanceConfig.builder()
           .accountId(accountId)

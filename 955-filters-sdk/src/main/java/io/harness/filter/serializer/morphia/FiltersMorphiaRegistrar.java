@@ -1,7 +1,6 @@
 package io.harness.filter.serializer.morphia;
 
 import io.harness.filter.entity.Filter;
-import io.harness.filter.entity.FilterProperties;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 

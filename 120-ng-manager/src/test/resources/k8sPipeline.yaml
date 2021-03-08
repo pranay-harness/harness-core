@@ -7,9 +7,10 @@ pipeline:
         name: "qa stage"
         type: Deployment
         spec:
-          service:
-            identifier: manager
-            name: manager
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
             serviceDefinition:
               type: Kubernetes
               spec:

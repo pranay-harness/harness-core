@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.sm.StateType.HTTP;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -16,6 +17,7 @@ import software.wings.sm.states.HttpState;
 import software.wings.sm.states.HttpState.HttpStateKeys;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -69,8 +71,10 @@ public class WorkflowUtils {
             ImmutableMap.<String, Object>builder()
                 .put(HttpStateKeys.url, "https://postman-echo.com/post")
                 .put(HttpStateKeys.method, "POST")
-                .put(HttpStateKeys.header,
-                    "${serviceVariable.normalText}:" + values[0] + ", ${serviceVariable.overridableText}:" + values[0])
+                .put(HttpStateKeys.headers,
+                    Lists.newArrayList(
+                        KeyValuePair.builder().key("${serviceVariable.normalText}").value(values[0]).build(),
+                        KeyValuePair.builder().key("${serviceVariable.overridableText}").value(values[0]).build()))
                 .build())
         .build();
   }

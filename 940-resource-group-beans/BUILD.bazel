@@ -1,0 +1,27 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+java_library(
+    name = "maven_deps",
+    visibility = ["//visibility:public"],
+    exports = [
+        "//960-persistence:module",
+        "//970-ng-commons:module",
+    ],
+)
+
+java_library(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        "maven_deps",
+        "//:lombok",
+    ],
+)
+
+checkstyle()
+
+pmd()

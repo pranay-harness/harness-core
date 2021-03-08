@@ -2,8 +2,17 @@ package software.wings.sm;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.interrupts.ExecutionInterruptType.ABORT;
+import static io.harness.interrupts.ExecutionInterruptType.END_EXECUTION;
+import static io.harness.interrupts.ExecutionInterruptType.MARK_FAILED;
+import static io.harness.interrupts.ExecutionInterruptType.MARK_SUCCESS;
+import static io.harness.interrupts.ExecutionInterruptType.WAITING_FOR_MANUAL_INTERVENTION;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -27,21 +36,25 @@ import static software.wings.utils.WingsTestConstants.NOTIFICATION_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.FailureType;
 import io.harness.ff.FeatureFlagService;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.waiter.OrchestrationNotifyEventListener;
@@ -60,18 +73,23 @@ import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
-import software.wings.sm.StateMachineTest.StateAsync;
-import software.wings.sm.StateMachineTest.StateSync;
+import software.wings.sm.StateMachineTestBase.StateAsync;
+import software.wings.sm.StateMachineTestBase.StateSync;
 import software.wings.sm.states.ForkState;
 
 import com.google.inject.Inject;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +108,8 @@ import org.mockito.Mock;
 @Slf4j
 public class StateMachineExecutorTest extends WingsBaseTest {
   private final String APP_ID = generateUuid();
+  private final DateFormat dateFormat = new SimpleDateFormat("MMM d");
+  private final DateFormat timeFormat = new SimpleDateFormat("HH:mm z");
   @Inject WingsPersistence wingsPersistence;
   @InjectMocks @Inject StateMachineExecutor stateMachineExecutor;
 
@@ -108,7 +128,9 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ExecutionEventAdvice executionEventAdvice;
   @Mock private StateExecutionInstance stateExecutionInstance;
+  @Mock private AlertService alertService;
   @InjectMocks private StateMachineExecutor injectStateMachineExecutor;
+  @InjectMocks private StateMachineExecutor spyExecutor = spy(new StateMachineExecutor());
 
   @Captor private ArgumentCaptor<List<NotificationRule>> notificationRuleArgumentCaptor;
 
@@ -243,13 +265,13 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique(), true);
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique(), true);
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
-    StateMachineTest.StateSync stateD = new StateMachineTest.StateSync("stateD" + StaticMap.getUnique());
+    StateSync stateD = new StateSync("stateD" + StaticMap.getUnique());
     sm.addState(stateD);
     sm.setInitialStateName(stateA.getName());
 
@@ -485,7 +507,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_SUCCESS);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(MARK_SUCCESS);
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -549,7 +571,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.MARK_FAILED);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(MARK_FAILED);
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -613,7 +635,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String executionUuid = createWorkflowExecution(sm);
 
     StateMachineExecutionCallbackMock callback = new StateMachineExecutionCallbackMock();
-    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ExecutionInterruptType.ABORT);
+    CustomExecutionEventAdvisor advisor = new CustomExecutionEventAdvisor(ABORT);
     stateMachineExecutor.execute(sm, executionUuid, executionUuid, null, callback, advisor);
     callback.await();
 
@@ -639,14 +661,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 500, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -699,14 +721,14 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     String appId = generateUuid();
     StateMachine sm = new StateMachine();
     sm.setAppId(appId);
-    State stateA = new StateMachineTest.StateSync("stateA" + StaticMap.getUnique());
+    State stateA = new StateSync("stateA" + StaticMap.getUnique());
     sm.addState(stateA);
-    StateMachineTest.StateSync stateB = new StateMachineTest.StateSync("stateB" + StaticMap.getUnique());
+    StateSync stateB = new StateSync("stateB" + StaticMap.getUnique());
     sm.addState(stateB);
-    StateMachineTest.StateSync stateC = new StateMachineTest.StateSync("stateC" + StaticMap.getUnique());
+    StateSync stateC = new StateSync("stateC" + StaticMap.getUnique());
     sm.addState(stateC);
 
-    State stateAB = new StateMachineTest.StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
+    State stateAB = new StateAsync("StateAB" + StaticMap.getUnique(), 500, false, true);
     sm.addState(stateAB);
 
     sm.setInitialStateName(stateA.getName());
@@ -895,6 +917,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testSendManualInterventionNeededNotification() {
+    long expiryTs = 1610998940219L;
     NotificationRule notificationRule = aNotificationRule()
                                             .withNotificationGroups(Arrays.asList(aNotificationGroup()
                                                                                       .withName(USER_NAME)
@@ -920,10 +943,12 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     when(notificationMessageResolver.getPlaceholderValues(
              any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
         .thenReturn(placeholders);
+    when(notificationMessageResolver.getFormattedExpiresTime(expiryTs))
+        .thenReturn(format("%s at %s", dateFormat.format(new Date(expiryTs)), timeFormat.format(new Date(expiryTs))));
     when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().build());
 
-    injectStateMachineExecutor.sendManualInterventionNeededNotification(context);
+    injectStateMachineExecutor.sendManualInterventionNeededNotification(context, expiryTs);
     verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
 
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -932,6 +957,10 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     Notification notification = notificationArgumentCaptor.getAllValues().get(0);
     assertThat(notification.getNotificationTemplateId()).isEqualTo(MANUAL_INTERVENTION_NEEDED_NOTIFICATION.name());
     assertThat(notification.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(notification.getNotificationTemplateVariables().get("EXPIRES_TS_SECS"))
+        .isEqualTo(String.valueOf(expiryTs / 1000));
+    assertThat(notification.getNotificationTemplateVariables().get("EXPIRES_DATE"))
+        .isEqualTo(format("%s at %s", dateFormat.format(new Date(expiryTs)), timeFormat.format(new Date(expiryTs))));
 
     notificationRule = notificationRuleArgumentCaptor.getValue().get(0);
     assertThat(notificationRule.getNotificationGroups().get(0).getName()).isEqualTo(USER_NAME);
@@ -1072,7 +1101,7 @@ public class StateMachineExecutorTest extends WingsBaseTest {
         .thenReturn(WorkflowNotificationDetails.builder().build());
 
     injectStateMachineExecutor.sendPipelineNotification(
-        context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance, ExecutionStatus.SUCCESS);
+        context, executionEventAdvice.getUserGroupIdsToNotify(), stateExecutionInstance, SUCCESS);
     verify(notificationService).sendNotificationAsync(any(Notification.class), singletonList(any()));
 
     ArgumentCaptor<Notification> notificationArgumentCaptor = ArgumentCaptor.forClass(Notification.class);
@@ -1146,5 +1175,86 @@ public class StateMachineExecutorTest extends WingsBaseTest {
     StateExecutionInstance updatedStateExecutionInstance =
         wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
     assertThat(updatedStateExecutionInstance.getStateTimeout()).isEqualTo(10);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void testUpdateExecutionInstanceWhenWaitingForIntervention() {
+    when(context.getApp()).thenReturn(anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).build());
+    when(alertService.openAlert(any(), any(), any(), any())).thenReturn(null);
+    when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(pipelineService.readPipeline(any(), any(), anyBoolean())).thenReturn(pipeline);
+    when(workflow.getOrchestrationWorkflow()).thenReturn(new CanaryOrchestrationWorkflow());
+    when(workflowExecutionService.getExecutionDetails(eq(APP_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), anyBoolean()))
+        .thenReturn(WorkflowExecution.builder()
+                        .triggeredBy(EmbeddedUser.builder().name(USER_NAME).uuid(USER_NAME).build())
+                        .startTs(70L)
+                        .build());
+    when(mockWorkflowService.readWorkflow(any(), any())).thenReturn(workflow);
+    when(notificationMessageResolver.getPlaceholderValues(
+             any(), any(), any(Long.class), any(Long.class), any(), any(), any(), any(), any()))
+        .thenReturn(emptyMap());
+    when(workflowNotificationHelper.getArtifactsDetails(any(), any(), any(), any()))
+        .thenReturn(WorkflowNotificationDetails.builder().build());
+
+    String uuid = generateUuid();
+    ExecutionEventAdvice executionEventAdvice = anExecutionEventAdvice()
+                                                    .withTimeout(60000L)
+                                                    .withActionAfterManualInterventionTimeout(END_EXECUTION)
+                                                    .withExecutionInterruptType(WAITING_FOR_MANUAL_INTERVENTION)
+                                                    .build();
+
+    StateExecutionInstance initialStateExecutionInstance =
+        aStateExecutionInstance().uuid(uuid).appId("appId").displayName("state1").stateName("stateA").build();
+    wingsPersistence.save(initialStateExecutionInstance);
+    StateExecutionInstance updatedStateExecutionInstance = stateMachineExecutor.handleExecutionEventAdvice(
+        context, initialStateExecutionInstance, RUNNING, executionEventAdvice);
+    StateExecutionInstance persistedStateExecutionInstance =
+        wingsPersistence.get(StateExecutionInstance.class, initialStateExecutionInstance.getUuid());
+    assertThat(persistedStateExecutionInstance)
+        .isEqualToIgnoringGivenFields(updatedStateExecutionInstance, "lastUpdatedAt");
+    assertThat(persistedStateExecutionInstance.getStatus()).isEqualTo(WAITING);
+    assertThat(persistedStateExecutionInstance.getExpiryTs()).isEqualTo(updatedStateExecutionInstance.getExpiryTs());
+    assertThat(persistedStateExecutionInstance.getActionAfterManualInterventionTimeout()).isEqualTo(END_EXECUTION);
+    wingsPersistence.delete(updatedStateExecutionInstance);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSkipDelayedStepIfRequired() {
+    StateMachineExecutor executor = mock(StateMachineExecutor.class);
+    State state = mock(State.class);
+    when(executor.skipDelayedStepIfRequired(context, state)).thenCallRealMethod();
+    ExecutionEvent executionEvent =
+        ExecutionEvent.builder().failureTypes(EnumSet.noneOf(FailureType.class)).context(context).state(state).build();
+    ExecutionEventAdvisor executionEventAdvisor = mock(ExecutionEventAdvisor.class);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionEventAdvisors(singletonList(executionEventAdvisor)).build());
+    when(executionEventAdvisor.onExecutionEvent(executionEvent))
+        .thenReturn(anExecutionEventAdvice().withSkipState(true).build());
+    executor.skipDelayedStepIfRequired(context, state);
+
+    verify(executor).handleResponse(any(), any());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotSkipDelayedStep() {
+    StateMachineExecutor executor = mock(StateMachineExecutor.class);
+    State state = mock(State.class);
+    when(executor.skipDelayedStepIfRequired(context, state)).thenCallRealMethod();
+    ExecutionEvent executionEvent =
+        ExecutionEvent.builder().failureTypes(EnumSet.noneOf(FailureType.class)).context(context).state(state).build();
+    ExecutionEventAdvisor executionEventAdvisor = mock(ExecutionEventAdvisor.class);
+    when(context.getStateExecutionInstance())
+        .thenReturn(aStateExecutionInstance().executionEventAdvisors(singletonList(executionEventAdvisor)).build());
+    when(executionEventAdvisor.onExecutionEvent(executionEvent))
+        .thenReturn(anExecutionEventAdvice().withSkipState(false).build());
+    executor.skipDelayedStepIfRequired(context, state);
+
+    verify(executor, never()).handleResponse(any(), any());
   }
 }

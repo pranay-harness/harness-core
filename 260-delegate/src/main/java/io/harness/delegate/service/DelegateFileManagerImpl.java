@@ -6,6 +6,8 @@ import static io.harness.network.SafeHttpCall.execute;
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
@@ -48,12 +50,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import retrofit2.Response;
 
-/**
- * Created by rishi on 12/19/16.
- */
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final int DEFAULT_MAX_CACHED_ARTIFACT = 2;
   private static final long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB

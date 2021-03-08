@@ -1,5 +1,7 @@
 package io.harness.ng.core.service.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static software.wings.beans.Service.ServiceKeys;
@@ -8,7 +10,7 @@ import static java.lang.Long.parseLong;
 import static javax.ws.rs.core.HttpHeaders.IF_MATCH;
 import static org.apache.commons.lang3.StringUtils.isNumeric;
 
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.NGCommonEntityConstants;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -16,6 +18,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
+import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
@@ -68,8 +71,8 @@ public class ServiceResource {
   @ApiOperation(value = "Gets a Service by identifier", nickname = "getService")
   public ResponseDTO<ServiceResponseDTO> get(@PathParam("serviceIdentifier") String serviceIdentifier,
       @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier,
-      @QueryParam("deleted") @DefaultValue("false") boolean deleted) {
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     Optional<ServiceEntity> serviceEntity =
         serviceEntityService.get(accountId, orgIdentifier, projectIdentifier, serviceIdentifier, deleted);
     return ResponseDTO.newResponse(
@@ -96,8 +99,7 @@ public class ServiceResource {
             .map(serviceRequestDTO -> ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO))
             .collect(Collectors.toList());
     Page<ServiceEntity> createdServices = serviceEntityService.bulkCreate(accountId, serviceEntities);
-    return ResponseDTO.newResponse(
-        getNGPageResponse(createdServices.map(serviceEntity -> ServiceElementMapper.writeDTO(serviceEntity))));
+    return ResponseDTO.newResponse(getNGPageResponse(createdServices.map(ServiceElementMapper::writeDTO)));
   }
 
   @DELETE
@@ -105,7 +107,8 @@ public class ServiceResource {
   @ApiOperation(value = "Delete a service by identifier", nickname = "deleteService")
   public ResponseDTO<Boolean> delete(@HeaderParam(IF_MATCH) String ifMatch,
       @PathParam("serviceIdentifier") String serviceIdentifier, @QueryParam("accountId") String accountId,
-      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier) {
+      @QueryParam("orgIdentifier") String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     return ResponseDTO.newResponse(serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier,
         serviceIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
   }
@@ -137,12 +140,16 @@ public class ServiceResource {
   @ApiOperation(value = "Gets Service list for a project", nickname = "getServiceListForProject")
   public ResponseDTO<PageResponse<ServiceResponseDTO>> listServicesForProject(
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("100") int size,
-      @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier, @QueryParam("sort") List<String> sort) {
+      @QueryParam("accountId") String accountId, @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
     Criteria criteria =
         ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false);
     Pageable pageRequest;
-    if (EmptyPredicate.isEmpty(sort)) {
+    if (isNotEmpty(serviceIdentifiers)) {
+      criteria.and(ServiceEntityKeys.identifier).in(serviceIdentifiers);
+    }
+    if (isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, ServiceKeys.createdAt));
     } else {
       pageRequest = PageUtils.getPageRequest(page, size, sort);

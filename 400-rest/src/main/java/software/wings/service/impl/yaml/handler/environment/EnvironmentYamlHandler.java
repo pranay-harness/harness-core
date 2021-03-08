@@ -15,6 +15,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -29,7 +30,6 @@ import software.wings.beans.Base.BaseKeys;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Environment.VariableOverrideYaml;
 import software.wings.beans.Environment.Yaml;
 import software.wings.beans.Service;

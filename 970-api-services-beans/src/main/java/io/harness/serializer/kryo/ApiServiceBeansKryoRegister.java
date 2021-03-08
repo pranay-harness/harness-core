@@ -1,12 +1,20 @@
 package io.harness.serializer.kryo;
 
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
 import io.harness.azure.AzureEnvironmentType;
+import io.harness.azure.model.ARMScopeType;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConfiguration;
+import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceConnectionStringType;
+import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.azure.model.AzureVMData;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
+import io.harness.beans.NGInstanceUnitType;
 import io.harness.container.ContainerInfo;
 import io.harness.deployment.InstanceDetails;
 import io.harness.ecs.EcsContainerDetails;
@@ -23,6 +31,7 @@ import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
@@ -40,10 +49,14 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceFile;
+import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptableSettingWithEncryptionDetails;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedDataParams;
@@ -51,10 +64,18 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.shell.AccessType;
+import io.harness.shell.AuthenticationScheme;
+import io.harness.shell.CommandExecutionData;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.KerberosConfig;
+import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
 import software.wings.settings.SettingVariableTypes;
+import software.wings.utils.RepositoryFormat;
 
 import com.amazonaws.SdkClientException;
 import com.amazonaws.internal.SdkInternalList;
@@ -150,9 +171,12 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(EncryptionType.class, 5123);
     kryo.register(EncryptedDataDetail.class, 5125);
     kryo.register(ImageDetails.class, 5151);
+    kryo.register(AccessType.class, 5072);
     kryo.register(ContainerInfo.Status.class, 5076);
     kryo.register(ContainerInfo.class, 5075);
-
+    kryo.register(ShellExecutionData.class, 5528);
+    kryo.register(KerberosConfig.class, 5549);
+    kryo.register(AuthenticationScheme.class, 5550);
     kryo.register(K8sPod.class, 7145);
     kryo.register(K8sContainer.class, 7146);
     kryo.register(AuditGlobalContextData.class, 7172);
@@ -184,6 +208,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureVMData.class, 1417);
 
     kryo.register(SettingVariableTypes.class, 5131);
+    kryo.register(ScriptType.class, 5253);
 
     kryo.register(GitFile.class, 5574);
     kryo.register(EncryptableSettingWithEncryptionDetails.class, 7258);
@@ -202,8 +227,8 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(PushResultGit.class, 1425);
     kryo.register(PushResultGit.RefUpdate.class, 1426);
     kryo.register(FetchFilesResult.class, 1427);
+    kryo.register(CommandExecutionData.class, 5035);
     kryo.register(GitRepositoryType.class, 5270);
-
     kryo.register(JiraAction.class, 5580);
     kryo.register(JiraCustomFieldValue.class, 7177);
     kryo.register(JiraProjectData.class, 7198);
@@ -223,5 +248,23 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(TfVarSource.class, 1434);
     kryo.register(TfVarSourceType.class, 1435);
     kryo.register(InstanceDetails.AZURE_WEBAPP.class, 1437);
+    kryo.register(ExecuteCommandResponse.class, 1438);
+    kryo.register(AzureAppServiceConnectionStringType.class, 1439);
+    kryo.register(AzureAppServiceConfiguration.class, 1440);
+
+    kryo.register(NexusRequest.class, 1441);
+    kryo.register(RepositoryFormat.class, 7204);
+
+    kryo.register(AzureAppServiceApplicationSetting.class, 1442);
+    kryo.register(AzureAppServiceConnectionString.class, 1443);
+    kryo.register(ArtifactoryConfigRequest.class, 1444);
+    kryo.register(NGInstanceUnitType.class, 1445);
+    kryo.register(AzureDeploymentMode.class, 1446);
+    kryo.register(ARMScopeType.class, 1447);
+    kryo.register(HelmSubCommandType.class, 1448);
+    kryo.register(CustomManifestSource.class, 1449);
+    kryo.register(CustomSourceFile.class, 1450);
+
+    kryo.register(AdditionalMetadata.class, 72101);
   }
 }

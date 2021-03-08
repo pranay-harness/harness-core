@@ -17,7 +17,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseIntegrationTest;
+import io.harness.VerificationIntegrationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
@@ -118,9 +118,10 @@ import org.quartz.Scheduler;
 /**
  * Created by rsingh on 8/17/17.
  */
+@Ignore
 @SuppressWarnings("ALL")
 @Slf4j
-public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
+public class LogMLIntegrationTest extends VerificationIntegrationBase {
   private static final SecureRandom random = new SecureRandom();
 
   private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};

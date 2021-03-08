@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.beans.scm;
 
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import lombok.Builder;
 import lombok.Value;
@@ -12,4 +13,5 @@ public class WebhookPayloadData {
   private Repository repository;
   private WebhookEvent webhookEvent;
   private TriggerWebhookEvent originalEvent;
+  private ParseWebhookResponse parseWebhookResponse;
 }

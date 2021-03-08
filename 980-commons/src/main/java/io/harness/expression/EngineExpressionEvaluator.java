@@ -35,8 +35,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(CDC)
 @Slf4j
 public class EngineExpressionEvaluator {
-  private static final Pattern variablePattern = Pattern.compile("\\$\\{[^{}]*}");
-  private static final Pattern secretVariablePattern = Pattern.compile("\\$\\{secret(Manager|Delegate)\\.[^{}]*}");
+  public static final String EXPR_START = "<+";
+  public static final String EXPR_END = ">";
+  public static final String EXPR_START_ESC = "<\\+";
+  public static final String EXPR_END_ESC = ">";
+
+  private static final Pattern variablePattern = Pattern.compile(EXPR_START_ESC + "[^{}<>]*" + EXPR_END_ESC);
+  private static final Pattern secretVariablePattern =
+      Pattern.compile(EXPR_START_ESC + "secret(Manager|Delegate)\\.[^{}<>]*" + EXPR_END_ESC);
   private static final Pattern validVariableFieldNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
   private static final Pattern aliasNamePattern = Pattern.compile("^[a-zA-Z_][a-zA-Z_0-9]*$");
 
@@ -58,7 +64,9 @@ public class EngineExpressionEvaluator {
    * Add objects/functors to context map and aliases. Context map and aliases can only be updated in this method.
    */
   protected void initialize() {
-    // This method will be overridden by sub-classes.
+    addToContext("regex", new RegexFunctor());
+    addToContext("json", new JsonFunctor());
+    addToContext("xml", new XmlFunctor());
   }
 
   protected final boolean isInitialized() {
@@ -139,14 +147,22 @@ public class EngineExpressionEvaluator {
   }
 
   public String renderExpression(String expression) {
+    return renderExpression(expression, null);
+  }
+
+  public String renderExpression(String expression, Map<String, Object> ctx) {
     if (!hasVariables(expression)) {
       return expression;
     }
 
-    return ExpressionEvaluatorUtils.substitute(this, expression, prepareContext());
+    return ExpressionEvaluatorUtils.substitute(this, expression, prepareContext(ctx));
   }
 
   public Object evaluateExpression(String expression) {
+    return evaluateExpression(expression, null);
+  }
+
+  public Object evaluateExpression(String expression, Map<String, Object> ctx) {
     // TODO(gpahal): Look at adding support for recursion and nested expressions in this method.
 
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
@@ -154,14 +170,15 @@ public class EngineExpressionEvaluator {
       return null;
     }
 
-    EngineJexlContext ctx = prepareContext();
+    EngineJexlContext finalCtx = prepareContext(ctx);
     StrSubstitutor strSubstitutor = new StrSubstitutor(EngineVariableResolver.builder()
                                                            .expressionEvaluator(this)
-                                                           .ctx(ctx)
+                                                           .ctx(finalCtx)
                                                            .prefix(IdentifierName.random())
                                                            .suffix(IdentifierName.random())
-                                                           .build());
-    return evaluateInternal(strSubstitutor.replace(expression), ctx);
+                                                           .build(),
+        EXPR_START, EXPR_END, StrSubstitutor.DEFAULT_ESCAPE);
+    return evaluateInternal(strSubstitutor.replace(expression), finalCtx);
   }
 
   /**
@@ -256,7 +273,7 @@ public class EngineExpressionEvaluator {
     return jexlExpression.evaluate(ctx);
   }
 
-  private EngineJexlContext prepareContext() {
+  private EngineJexlContext prepareContext(Map<String, Object> ctx) {
     synchronized (this) {
       if (!initialized) {
         initialize();
@@ -266,7 +283,18 @@ public class EngineExpressionEvaluator {
 
     Map<String, Object> clonedContext = new LateBindingMap();
     clonedContext.putAll(contextMap);
+    if (EmptyPredicate.isNotEmpty(ctx)) {
+      clonedContext.putAll(ctx);
+    }
     return new EngineJexlContext(this, clonedContext);
+  }
+
+  public static boolean matchesVariablePattern(String str) {
+    if (EmptyPredicate.isEmpty(str)) {
+      return false;
+    }
+
+    return variablePattern.matcher(str).matches();
   }
 
   public static boolean hasVariables(String str) {
@@ -328,7 +356,7 @@ public class EngineExpressionEvaluator {
   }
 
   public static String createExpression(String expr) {
-    return expr == null ? null : "${" + expr + "}";
+    return expr == null ? null : EXPR_START + expr + EXPR_END;
   }
 
   public static class ResolveFunctorImpl implements ExpressionResolveFunctor {
@@ -339,18 +367,8 @@ public class EngineExpressionEvaluator {
     }
 
     @Override
-    public String renderExpression(String expression) {
+    public String processString(String expression) {
       return expressionEvaluator.renderExpression(expression);
-    }
-
-    @Override
-    public Object evaluateExpression(String expression) {
-      return expressionEvaluator.renderExpression(expression);
-    }
-
-    @Override
-    public boolean hasVariables(String expression) {
-      return EngineExpressionEvaluator.hasVariables(expression);
     }
   }
 }

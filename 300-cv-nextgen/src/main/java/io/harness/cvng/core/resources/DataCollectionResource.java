@@ -3,7 +3,7 @@ package io.harness.cvng.core.resources;
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION;
 
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
-import io.harness.cvng.core.services.api.TimeSeriesService;
+import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 
@@ -25,7 +25,7 @@ import retrofit2.http.Body;
 @Path(DELEGATE_DATA_COLLECTION)
 @Produces("application/json")
 public class DataCollectionResource {
-  @Inject private TimeSeriesService timeSeriesService;
+  @Inject private TimeSeriesRecordService timeSeriesRecordService;
 
   @POST
   @Timed
@@ -34,6 +34,6 @@ public class DataCollectionResource {
   @ApiOperation(value = "save time series records", nickname = "saveTimeSeriesData")
   public RestResponse<Boolean> saveTimeSeriesData(@QueryParam("accountId") @NotNull String accountId,
       @NotNull @Valid @Body List<TimeSeriesDataCollectionRecord> dataCollectionRecords) {
-    return new RestResponse<>(timeSeriesService.save(dataCollectionRecords));
+    return new RestResponse<>(timeSeriesRecordService.save(dataCollectionRecords));
   }
 }

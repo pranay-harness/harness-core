@@ -29,6 +29,10 @@
             <artifactId>aws-java-sdk-ecs</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.cloudfoundry</groupId>
+            <artifactId>cloudfoundry-client-reactor</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>460-capability</artifactId>
             <version>${project.parent.version}</version>

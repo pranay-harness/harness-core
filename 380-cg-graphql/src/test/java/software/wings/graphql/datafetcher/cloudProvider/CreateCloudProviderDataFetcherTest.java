@@ -57,6 +57,8 @@ import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.collect.Sets;
 import java.sql.SQLException;
+import java.util.Arrays;
+import java.util.HashSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -243,7 +245,9 @@ public class CreateCloudProviderDataFetcherTest extends AbstractDataFetcherTestB
                     .skipValidation(RequestField.ofNullable(Boolean.TRUE))
                     .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
                     .inheritClusterDetails(RequestField.ofNullable(
-                        QLInheritClusterDetails.builder().delegateName(RequestField.ofNullable("DELEGATE")).build()))
+                        QLInheritClusterDetails.builder()
+                            .delegateSelectors(RequestField.ofNullable(new HashSet<>(Arrays.asList("DELEGATE"))))
+                            .build()))
                     .build())
             .build(),
         MutationContext.builder().accountId(ACCOUNT_ID).build());

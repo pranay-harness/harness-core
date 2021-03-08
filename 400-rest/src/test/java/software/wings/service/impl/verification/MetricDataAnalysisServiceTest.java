@@ -10,10 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.VerificationOperationException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.Threshold;
 import software.wings.metrics.ThresholdComparisonType;
@@ -50,7 +50,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   private String delegateTaskId;
   private Integer analysisMinute;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   @Before
@@ -92,7 +92,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     }
 
     List<TimeSeriesMLTransactionThresholds> thresholds =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter("appId", this.appId)
             .order(TimeSeriesMLTransactionThresholds.CREATED_AT_KEY)
             .asList();
@@ -146,7 +146,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
           null);
     }
 
-    thresholds = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+    thresholds = persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                      .filter("appId", this.appId)
                      .order(TimeSeriesMLTransactionThresholds.CREATED_AT_KEY)
                      .asList();
@@ -201,16 +201,16 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
                             .build())
             .build();
     timeSeriesMLTransactionThresholds.setAppId(appId);
-    wingsPersistence.save(timeSeriesMLTransactionThresholds);
+    persistence.save(timeSeriesMLTransactionThresholds);
     List<TimeSeriesMLTransactionThresholds> thresholds =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
             .asList();
 
     assertThat(thresholds.size()).isEqualTo(1);
     metricDataAnalysisService.deleteCustomThreshold(
         appId, StateType.NEW_RELIC, serviceId, cvConfigId, null, "transaction-name", "metric-name", null, null);
-    thresholds = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+    thresholds = persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                      .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
                      .asList();
     assertThat(thresholds).isEmpty();
@@ -222,7 +222,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
   public void testDeleteCustomThresholds_deleteSpecificTxnmetric() throws Exception {
     metricDataAnalysisService.saveCustomThreshold(serviceId, cvConfigId, createThresholds());
     List<TimeSeriesMLTransactionThresholds> thresholds =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
             .asList();
 
@@ -240,7 +240,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     metricDataAnalysisService.deleteCustomThreshold(appId, StateType.NEW_RELIC, serviceId, cvConfigId, null,
         "transaction-name", "metric-name", ThresholdComparisonType.RATIO, null);
 
-    thresholds = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+    thresholds = persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                      .filter(TimeSeriesMLTransactionThresholdKeys.cvConfigId, cvConfigId)
                      .asList();
 
@@ -410,7 +410,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     metricDataAnalysisService.saveCustomThreshold(null, cvConfigId, timeSeriesMLTransactionThresholds);
 
     List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId,
                 timeSeriesMLTransactionThresholds.get(0).getCustomThresholdRefId())
             .asList();
@@ -424,7 +424,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     List<TimeSeriesMLTransactionThresholds> thresholds = createThresholds();
     metricDataAnalysisService.saveCustomThreshold(null, cvConfigId, thresholds);
     List<TimeSeriesMLTransactionThresholds> thresholdsInDB =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+        persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
             .filter(
                 TimeSeriesMLTransactionThresholdKeys.customThresholdRefId, thresholds.get(0).getCustomThresholdRefId())
             .asList();
@@ -432,7 +432,7 @@ public class MetricDataAnalysisServiceTest extends WingsBaseTest {
     assertThat(thresholdsInDB.size()).isEqualTo(2);
 
     metricDataAnalysisService.bulkDeleteCustomThreshold(thresholds.get(0).getCustomThresholdRefId());
-    thresholdsInDB = wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+    thresholdsInDB = persistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                          .filter(TimeSeriesMLTransactionThresholdKeys.customThresholdRefId,
                              thresholds.get(0).getCustomThresholdRefId())
                          .asList();

@@ -1,6 +1,6 @@
 package io.harness.functional.nas;
 
-import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
@@ -28,6 +28,7 @@ import io.harness.rule.Owner;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
+import software.wings.api.ExecutionDataValue;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.GraphNode;
@@ -51,12 +52,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@Slf4j
 public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
   private static final String WRAP_UP_CONSTANT = "Wrap Up";
   @Inject private OwnerManager ownerManager;
@@ -135,11 +138,12 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = AADITI)
+  @Owner(developers = PRABU)
   @Category({FunctionalTests.class})
   public void executeBuildWorkflowWithParameterizedArtifactStream() {
     final String appId = service.getAppId();
     final String accountId = service.getAccountId();
+
     resetCache(accountId);
     // create parameterized nexus maven artifact stream
     artifactStream = artifactStreamManager.ensurePredefined(seed, owners,
@@ -159,14 +163,39 @@ public class NASBuildWorkflowExecutionTest extends AbstractFunctionalTest {
             .build());
     assertThat(artifactStream).isNotNull();
     service.setArtifactStreamIds(new ArrayList<>(Arrays.asList(artifactStream.getUuid())));
+    log.info("Artifact stream " + artifactStream.getName()
+        + " created successfully in service with name : " + service.getName());
     resetCache(accountId);
-    workflow = workflowGenerator.ensureWorkflow(seed, owners,
+    //    workflow = workflowGenerator.ensureWorkflow(seed, owners,
+    //        createBuildWorkflow("build-workflow-" + System.currentTimeMillis(), appId, artifactStream.getUuid()));
+    //    resetCache(accountId);
+    workflow = WorkflowRestUtils.createWorkflow(bearerToken, accountId, appId,
         createBuildWorkflow("build-workflow-" + System.currentTimeMillis(), appId, artifactStream.getUuid()));
-    resetCache(accountId);
+    log.info("Workflow created successfully with name : " + workflow.getName());
     // Test running the workflow
     WorkflowExecution workflowExecution =
         runWorkflow(bearerToken, appId, null, workflow.getUuid(), Collections.emptyList());
+    if (workflowExecution.getStatus() == ExecutionStatus.FAILED) {
+      printErrorMessageFromNode(appId, workflowExecution);
+    }
+    log.info("Workflow execution status : " + workflowExecution.getStatus());
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  private void printErrorMessageFromNode(String appId, WorkflowExecution workflowExecution) {
+    WorkflowExecution workflowExecutionWithDetails =
+        workflowExecutionService.getExecutionDetails(appId, workflowExecution.getUuid(), true);
+    GraphNode phase1 = workflowExecutionWithDetails.getExecutionNode().getNext();
+    if (phase1 != null && phase1.getGroup() != null) {
+      GraphNode prepareSteps = phase1.getGroup().getElements().get(0);
+      GraphNode collectArtifact = prepareSteps.getNext();
+      if (collectArtifact != null && collectArtifact.getGroup() != null) {
+        GraphNode collectArtifactStep = collectArtifact.getGroup().getElements().get(0);
+        Map<String, ExecutionDataValue> properties =
+            (Map<String, ExecutionDataValue>) collectArtifactStep.getExecutionDetails();
+        log.info("Workflow execution failed due to: " + properties.get("errorMsg").getValue());
+      }
+    }
   }
 
   @After

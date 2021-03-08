@@ -47,6 +47,12 @@ public interface ProjectManagerClient {
       @Query(value = NGResourceFilterConstants.SIZE_KEY) int size,
       @Query(value = NGResourceFilterConstants.SORT_KEY) List<String> sort);
 
+  @GET(PROJECTS_API)
+  Call<ResponseDTO<PageResponse<ProjectResponse>>> listProjects(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers);
+
   @PUT(PROJECTS_API + "/{identifier}")
   Call<ResponseDTO<Optional<ProjectResponse>>> updateProject(
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,

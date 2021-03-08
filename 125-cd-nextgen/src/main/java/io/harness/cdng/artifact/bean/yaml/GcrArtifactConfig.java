@@ -48,6 +48,15 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
    */
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> imagePath;
   /**
+   * Tag refers to exact tag number.
+   */
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> tag;
+  /**
+   * Tag regex is used to get latest build from builds matching regex.
+   */
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> tagRegex;
+
+  /**
    * Identifier for artifact.
    */
   @EntityIdentifier String identifier;
@@ -74,14 +83,20 @@ public class GcrArtifactConfig implements ArtifactConfig, Visitable {
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
     GcrArtifactConfig gcrArtifactSpecConfig = (GcrArtifactConfig) overrideConfig;
     GcrArtifactConfig resultantConfig = this;
-    if (gcrArtifactSpecConfig.getConnectorRef() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getConnectorRef())) {
       resultantConfig = resultantConfig.withConnectorRef(gcrArtifactSpecConfig.getConnectorRef());
     }
-    if (gcrArtifactSpecConfig.getImagePath() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getImagePath())) {
       resultantConfig = resultantConfig.withImagePath(gcrArtifactSpecConfig.getImagePath());
     }
-    if (gcrArtifactSpecConfig.getRegistryHostname() != null) {
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getRegistryHostname())) {
       resultantConfig = resultantConfig.withRegistryHostname(gcrArtifactSpecConfig.getRegistryHostname());
+    }
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getTag())) {
+      resultantConfig = resultantConfig.withTag(gcrArtifactSpecConfig.getTag());
+    }
+    if (!ParameterField.isNull(gcrArtifactSpecConfig.getTagRegex())) {
+      resultantConfig = resultantConfig.withTagRegex(gcrArtifactSpecConfig.getTagRegex());
     }
     return resultantConfig;
   }

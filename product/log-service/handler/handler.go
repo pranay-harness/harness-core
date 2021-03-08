@@ -24,8 +24,10 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 	r.Mount("/token", func() http.Handler {
 		sr := chi.NewRouter()
 		// Validate the incoming request with a global secret and return back a token
-		// for the given account ID if the match is successful.
-		sr.Use(TokenGenerationMiddleware(config, true))
+		// for the given account ID if the match is successful (if auth is enabled).
+		if !config.Secrets.DisableAuth {
+			sr.Use(TokenGenerationMiddleware(config, true))
+		}
 
 		sr.Get("/", HandleToken(config))
 		return sr
@@ -38,7 +40,9 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 		sr := chi.NewRouter()
 		// Validate the incoming request with a global secret and return info only if the
 		// match is successful. This endpoint should be only accessible from the Harness side.
-		sr.Use(TokenGenerationMiddleware(config, false))
+		if !config.Secrets.DisableAuth {
+			sr.Use(TokenGenerationMiddleware(config, false))
+		}
 
 		sr.Get("/stream", HandleInfo(stream))
 
@@ -61,7 +65,9 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 	r.Mount("/stream", func() http.Handler {
 		sr := chi.NewRouter()
 		// Validate the accountID in URL with the token generated above and authorize the request
-		sr.Use(AuthMiddleware(config))
+		if !config.Secrets.DisableAuth {
+			sr.Use(AuthMiddleware(config))
+		}
 
 		sr.Post("/", HandleOpen(stream))
 		sr.Delete("/", HandleClose(stream, store))
@@ -76,7 +82,9 @@ func Handler(stream stream.Stream, store store.Store, config config.Config) http
 	// Format: /blob?accountID=&key=
 	r.Mount("/blob", func() http.Handler {
 		sr := chi.NewRouter()
-		sr.Use(AuthMiddleware(config))
+		if !config.Secrets.DisableAuth {
+			sr.Use(AuthMiddleware(config))
+		}
 
 		sr.Post("/", HandleUpload(store))
 		sr.Delete("/", HandleDelete(store))

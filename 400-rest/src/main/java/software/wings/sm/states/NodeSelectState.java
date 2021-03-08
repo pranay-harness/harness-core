@@ -219,12 +219,13 @@ public abstract class NodeSelectState extends State {
             .value(serviceIdParamElement)
             .build());
 
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
 

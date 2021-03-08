@@ -6,6 +6,7 @@ import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
+import static io.harness.pms.contracts.execution.Status.IGNORE_FAILED;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
 import static io.harness.pms.contracts.execution.Status.PAUSING;
@@ -28,7 +29,7 @@ public class StatusUtils {
   private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
       INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
-  private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED);
+  private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
 
   private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
 
@@ -81,14 +82,13 @@ public class StatusUtils {
       case ASYNC_WAITING:
       case TASK_WAITING:
       case PAUSING:
+      case SKIPPED:
         return EnumSet.of(QUEUED, RUNNING);
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING, PAUSING);
       case DISCONTINUING:
         return EnumSet.of(
             QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
-      case SKIPPED:
-        return EnumSet.of(QUEUED);
       case QUEUED:
         return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:
@@ -99,6 +99,8 @@ public class StatusUtils {
         return FINALIZABLE_STATUSES;
       case SUCCEEDED:
         return EnumSet.allOf(Status.class);
+      case IGNORE_FAILED:
+        return EnumSet.of(FAILED, INTERVENTION_WAITING);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }

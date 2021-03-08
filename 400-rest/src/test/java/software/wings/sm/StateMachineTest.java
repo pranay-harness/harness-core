@@ -1,41 +1,41 @@
 package software.wings.sm;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 
+import static software.wings.sm.StateMachine.MAPPING_ERROR_MESSAGE_PREFIX;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
-import io.harness.threading.ThreadPool;
-import io.harness.waiter.StringNotifyResponseData;
-import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.GeneralNotifyEventListener;
+import software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.Graph;
+import software.wings.beans.GraphNode;
+import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.PhaseStep.PhaseStepBuilder;
+import software.wings.beans.PhaseStepType;
+import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.rules.Listeners;
-import software.wings.service.StaticMap;
-import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
+import software.wings.sm.StateMachineTestBase.StateSync;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -110,6 +110,46 @@ public class StateMachineTest extends WingsBaseTest {
     } catch (WingsException exception) {
       assertThat(exception).hasMessage(ErrorCode.TRANSITION_TYPE_NULL.name());
     }
+  }
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void stateMachineShouldBeMarkedInvalidIfGivenPropertiesAreInvalid() {
+    /**
+     * This test Checks if properties for a given state are invalid, StateMachine should be marked invalid,
+     * The orchestrationWorkflow for Generated StateMachine should also marked invalid with appropriate
+     * validationMessage.
+     *
+     * This test specifically checks for APPROVAL state. In approval state timeoutMillis field is defined as
+     * Integer. If provided properties contains a bigger number (i.e. Long). Corresponding mapping would fail
+     * and generated StateMachine should contain an invalid orchestrationWorkflow.
+     */
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("userGroups", Collections.singletonList("qM90ydbbTfiAt-QF4ohD8Q"));
+    properties.put("timeoutMillis", 7776000000L); // This is a long, Where as timeoutMillis field in ApprovalState is
+                                                  // Integer.
+    properties.put("approvalStateType", "USER_GROUP");
+    properties.put("parentId", "mXgEfqzMQAGFptFi0-GM5A");
+
+    GraphNode node = GraphNode.builder().name("Approval").type("APPROVAL").origin(true).properties(properties).build();
+
+    Graph graph = Graph.Builder.aGraph().addNodes(node).build();
+
+    OrchestrationWorkflow orchestrationWorkflow =
+        CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow()
+            .withPreDeploymentSteps(
+                PhaseStepBuilder.aPhaseStep(PhaseStepType.PRE_DEPLOYMENT, "pre-deploy").addStep(node).build())
+            .build();
+
+    Workflow workflow = WorkflowBuilder.aWorkflow().envId("env").orchestrationWorkflow(orchestrationWorkflow).build();
+
+    Map<String, StateTypeDescriptor> stencilMap = new HashMap<>();
+    stencilMap.put("APPROVAL", StateType.APPROVAL);
+
+    StateMachine sm = new StateMachine(workflow, 1, graph, stencilMap, false);
+    assertThat(sm.getOrchestrationWorkflow().isValid()).isFalse();
+    assertThat(sm.getOrchestrationWorkflow().getValidationMessage()).contains(MAPPING_ERROR_MESSAGE_PREFIX);
+    assertThat(sm.isValid()).isFalse();
   }
 
   /**
@@ -632,251 +672,5 @@ public class StateMachineTest extends WingsBaseTest {
     assertThat(sm.getNextStates("command2", TransitionType.SUCCESS)).hasSize(1).containsOnly(expectedNewState2);
 
     assertThat(sm.getNextStates("command3", TransitionType.SUCCESS)).isNull();
-  }
-
-  /**
-   * The Class Notifier.
-   */
-  static class Notifier implements Runnable {
-    @Inject private WaitNotifyEngine waitNotifyEngine;
-    private boolean shouldFail;
-    private String name;
-    private int duration;
-    private String uuid;
-
-    /**
-     * Creates a new Notifier object.
-     *
-     * @param name     name of notifier.
-     * @param uuid     the uuid
-     * @param duration duration to sleep for.
-     */
-    Notifier(String name, String uuid, int duration) {
-      this(name, uuid, duration, false);
-    }
-
-    /**
-     * Instantiates a new notifier.
-     *
-     * @param name       the name
-     * @param uuid       the uuid
-     * @param duration   the duration
-     * @param shouldFail the should fail
-     */
-    Notifier(String name, String uuid, int duration, boolean shouldFail) {
-      this.name = name;
-      this.uuid = uuid;
-      this.duration = duration;
-      this.shouldFail = shouldFail;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see java.lang.Runnable#run()
-     */
-    @Override
-    public void run() {
-      log.info("duration = " + duration);
-      try {
-        Thread.sleep(duration);
-      } catch (InterruptedException e) {
-        // TODO Auto-generated catch block
-        log.error("", e);
-      }
-      StaticMap.putValue(name, System.currentTimeMillis());
-      if (shouldFail) {
-        waitNotifyEngine.doneWith(uuid, StringNotifyResponseData.builder().data("FAILURE").build());
-      } else {
-        waitNotifyEngine.doneWith(uuid, StringNotifyResponseData.builder().data("SUCCESS").build());
-      }
-    }
-  }
-
-  /**
-   * The Class StateSync.
-   *
-   * @author Rishi
-   */
-  public static class StateSync extends State {
-    private boolean shouldFail;
-
-    /**
-     * Instantiates a new state synch.
-     *
-     * @param name the name
-     */
-    public StateSync(String name) {
-      this(name, false);
-    }
-
-    /**
-     * Instantiates a new state synch.
-     *
-     * @param name       the name
-     * @param shouldFail the should fail
-     */
-    public StateSync(String name, boolean shouldFail) {
-      super(name, StateType.HTTP.name());
-      this.shouldFail = shouldFail;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-     */
-    @Override
-    public ExecutionResponse execute(ExecutionContext context) {
-      log.info("Executing ..." + getClass());
-      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
-      StateExecutionData stateExecutionData = new TestStateExecutionData(getName(), System.currentTimeMillis() + "");
-      executionResponseBuilder.stateExecutionData(stateExecutionData);
-      StaticMap.putValue(getName(), System.currentTimeMillis());
-      log.info("stateExecutionData:" + stateExecutionData);
-      if (shouldFail) {
-        executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
-      }
-      return executionResponseBuilder.build();
-    }
-
-    /**
-     * Handle abort event.
-     *
-     * @param context the context
-     */
-    @Override
-    public void handleAbortEvent(ExecutionContext context) {}
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(shouldFail);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      final StateSync other = (StateSync) obj;
-      return Objects.equals(this.shouldFail, other.shouldFail);
-    }
-  }
-
-  /**
-   * The Class StateAsync.
-   *
-   * @author Rishi
-   */
-  public static class StateAsync extends State {
-    private boolean shouldFail;
-    private boolean shouldThrowException;
-    private int duration;
-
-    @Inject private Injector injector;
-
-    /**
-     * Instantiates a new state asynch.
-     *
-     * @param name     the name
-     * @param duration the duration
-     */
-    public StateAsync(String name, int duration) {
-      this(name, duration, false);
-    }
-
-    /**
-     * Instantiates a new state asynch.
-     *
-     * @param name       the name
-     * @param duration   the duration
-     * @param shouldFail the should fail
-     */
-    public StateAsync(String name, int duration, boolean shouldFail) {
-      this(name, duration, shouldFail, false);
-    }
-
-    /**
-     * Instantiates a new State async.
-     *
-     * @param name                 the name
-     * @param duration             the duration
-     * @param shouldFail           the should fail
-     * @param shouldThrowException the should throw exception
-     */
-    public StateAsync(String name, int duration, boolean shouldFail, boolean shouldThrowException) {
-      super(name, StateType.HTTP.name());
-      this.duration = duration;
-      this.shouldFail = shouldFail;
-      this.shouldThrowException = shouldThrowException;
-    }
-
-    /*
-     * (non-Javadoc)
-     *
-     * @see software.wings.sm.State#execute(software.wings.sm.ExecutionContext)
-     */
-    @Override
-    public ExecutionResponse execute(ExecutionContext context) {
-      String uuid = generateUuid();
-
-      log.info("Executing ..." + StateAsync.class.getName() + "..duration=" + duration + ", uuid=" + uuid);
-      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
-      executionResponseBuilder.async(true);
-      List<String> correlationIds = new ArrayList<>();
-      correlationIds.add(uuid);
-      executionResponseBuilder.correlationIds(correlationIds);
-      if (shouldThrowException) {
-        throw new RuntimeException("Exception for test");
-      }
-      Notifier notifier = new Notifier(getName(), uuid, duration, shouldFail);
-      injector.injectMembers(notifier);
-      ThreadPool.execute(notifier);
-      return executionResponseBuilder.build();
-    }
-
-    /**
-     * Handle abort event.
-     *
-     * @param context the context
-     */
-    @Override
-    public void handleAbortEvent(ExecutionContext context) {}
-
-    /* (non-Javadoc)
-     * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
-     */
-    @Override
-    public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> responseMap) {
-      ExecutionResponseBuilder executionResponseBuilder = ExecutionResponse.builder();
-      for (Object response : responseMap.values()) {
-        if (!"SUCCESS".equals(((StringNotifyResponseData) response).getData())) {
-          executionResponseBuilder.executionStatus(ExecutionStatus.FAILED);
-        }
-      }
-      return executionResponseBuilder.build();
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(shouldFail, shouldThrowException, duration, injector);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      final StateAsync other = (StateAsync) obj;
-      return Objects.equals(this.shouldFail, other.shouldFail)
-          && Objects.equals(this.shouldThrowException, other.shouldThrowException)
-          && Objects.equals(this.duration, other.duration) && Objects.equals(this.injector, other.injector);
-    }
   }
 }

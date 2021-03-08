@@ -6,9 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.utils.DateTimeUtils;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -55,27 +55,29 @@ public class DeploymentActivity extends Activity {
     setDeploymentTag(deploymentActivityDTO.getDeploymentTag());
     setVerificationStartTime(deploymentActivityDTO.getVerificationStartTime());
     setType(ActivityType.DEPLOYMENT);
-    addCommonFileds(activityDTO);
+    addCommonFields(activityDTO);
   }
 
   @Override
-  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {
-    verificationJobInstance.setOldVersionHosts(this.getOldVersionHosts());
-    verificationJobInstance.setNewVersionHosts(this.getNewVersionHosts());
-    verificationJobInstance.setNewHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
-    verificationJobInstance.setDataCollectionDelay(this.getDataCollectionDelay());
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstanceBuilder verificationJobInstanceBuilder) {
+    verificationJobInstanceBuilder.oldVersionHosts(this.getOldVersionHosts());
+    verificationJobInstanceBuilder.newVersionHosts(this.getNewVersionHosts());
+    verificationJobInstanceBuilder.newHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
+    verificationJobInstanceBuilder.dataCollectionDelay(this.getDataCollectionDelay());
 
     // Set the properties needed for a health verification instance
-    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
-    Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
-
-    if (!VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-      verificationJobInstance.setStartTime(preactivityStart);
+    Instant postActivityStart = DateTimeUtils.roundDownTo5MinBoundary(getVerificationStartTime());
+    Instant preActivityStart = postActivityStart.minus(verificationJobInstanceBuilder.getResolvedJob().getDuration());
+    // TODO: we can probably get rid of this logic by moving postActivityStart, preActivityStart inside the job
+    if (!VerificationJobType.getDeploymentJobTypes().contains(
+            verificationJobInstanceBuilder.getResolvedJob().getType())) {
+      verificationJobInstanceBuilder.startTime(preActivityStart);
     } else {
-      verificationJobInstance.setStartTime(this.getVerificationStartTime());
+      verificationJobInstanceBuilder.startTime(this.getVerificationStartTime());
     }
-    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
-    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
+    // TODO: These should be inferred from startTime and probably should be part of HealthVerification as methods
+    verificationJobInstanceBuilder.preActivityVerificationStartTime(preActivityStart);
+    verificationJobInstanceBuilder.postActivityVerificationStartTime(postActivityStart);
   }
 
   @Override
@@ -87,6 +89,11 @@ public class DeploymentActivity extends Activity {
       Preconditions.checkNotNull(isEmpty(verificationJob.getVerificationJobIdentifier()),
           "The verification job identifier is a required parameter for deployment activities");
     });
+  }
+
+  @Override
+  public boolean deduplicateEvents() {
+    return false;
   }
 
   @JsonIgnore

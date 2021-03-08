@@ -2,9 +2,12 @@ package software.wings.beans.delegation;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
@@ -26,6 +29,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class TerraformProvisionParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final long TIMEOUT_IN_MINUTES = 100;
   public static final String TERRAFORM = "terraform";
@@ -96,7 +100,8 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
                            .build());
     }
     if (secretManagerConfig != null) {
-      capabilities.addAll(CapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
+      capabilities.addAll(
+          EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
     }
     return capabilities;
   }

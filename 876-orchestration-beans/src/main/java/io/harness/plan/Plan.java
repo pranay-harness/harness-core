@@ -98,22 +98,25 @@ public final class Plan implements PersistentEntity {
     }
 
     public PlanBuilder node(PlanNode node) {
-      if (this.nodes == null)
+      if (this.nodes == null) {
         this.nodes = new ArrayList<>();
+      }
       this.nodes.add(PlanNodeProtoMapper.toPlanNodeProto(node));
       return this;
     }
 
     public PlanBuilder node(PlanNodeProto node) {
-      if (this.nodes == null)
+      if (this.nodes == null) {
         this.nodes = new ArrayList<>();
+      }
       this.nodes.add(node);
       return this;
     }
 
     public PlanBuilder nodes(Collection<PlanNode> nodes) {
-      if (this.nodes == null)
+      if (this.nodes == null) {
         this.nodes = new ArrayList<>();
+      }
       this.nodes.addAll(nodes.stream().map(PlanNodeProtoMapper::toPlanNodeProto).collect(Collectors.toList()));
       return this;
     }

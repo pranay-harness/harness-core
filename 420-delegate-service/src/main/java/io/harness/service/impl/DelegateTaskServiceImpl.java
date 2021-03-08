@@ -13,11 +13,14 @@ import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
+import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
+import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
 import io.harness.waiter.WaitNotifyEngine;
@@ -29,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -43,6 +47,8 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateCallbackRegistry delegateCallbackRegistry;
   @Inject private KryoSerializer kryoSerializer;
+
+  @Getter private Subject<DelegateTaskRetryObserver> retryObserverSubject = new Subject<>();
 
   @Override
   public void touchExecutingTasks(String accountId, String delegateId, List<String> delegateTaskIds) {
@@ -96,7 +102,19 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
               delegateTask.getVersion());
         }
 
-        // TODO: Add here the Observer pattern implementation for assignDelegateService
+        if (response.getResponseCode() == DelegateTaskResponse.ResponseCode.RETRY_ON_OTHER_DELEGATE) {
+          RetryDelegate retryDelegate =
+              RetryDelegate.builder().delegateId(delegateId).delegateTask(delegateTask).taskQuery(taskQuery).build();
+
+          RetryDelegate delegateTaskRetry =
+              retryObserverSubject.fireProcess(DelegateTaskRetryObxxxxxxxx:onPossibleRetry, retryDelegate);
+
+          if (delegateTaskRetry.isRetryPossible()) {
+            return;
+          }
+        }
+        handleResponse(delegateTask, taskQuery, response);
+        retryObserverSubject.fireInform(DelegateTaskRetryObxxxxxxxx:onTaskResponseProcessed, delegateTask, delegateId);
       }
     } else {
       log.warn("No delegate task found");

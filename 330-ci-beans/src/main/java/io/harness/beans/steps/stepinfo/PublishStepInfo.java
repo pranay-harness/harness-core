@@ -10,7 +10,6 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.beans.ConstructorProperties;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +21,6 @@ import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@JsonTypeName("PublishArtifacts")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("publishStepInfo")
 public class PublishStepInfo implements CIStepInfo {
@@ -30,7 +28,8 @@ public class PublishStepInfo implements CIStepInfo {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PUBLISH).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.PUBLISH.name()).build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.PUBLISH.getDisplayName()).build();
 
   @NotNull @EntityIdentifier private String identifier;
   private String name;

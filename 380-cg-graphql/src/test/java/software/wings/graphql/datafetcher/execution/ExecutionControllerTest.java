@@ -1,6 +1,7 @@
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.POOJA;
 
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
@@ -28,6 +29,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.EntityType;
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
@@ -38,11 +40,15 @@ import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInp
 import software.wings.graphql.schema.mutation.execution.input.QLParameterValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLParameterizedArtifactSourceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
+import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
+import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
+import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.RepositoryFormat;
@@ -62,6 +68,7 @@ public class ExecutionControllerTest extends AbstractDataFetcherTestBase {
   @Mock ArtifactStreamHelper artifactStreamHelper;
   @Mock ArtifactService artifactService;
   @Mock ArtifactCollectionServiceAsyncImpl artifactCollectionServiceAsync;
+  @Mock EnvironmentService environmentService;
   @Inject @InjectMocks private ExecutionController executionController;
 
   @Test
@@ -119,6 +126,61 @@ public class ExecutionControllerTest extends AbstractDataFetcherTestBase {
   public void validateEnvVariableTest() {
     Variable variable = aVariable().name("Env").entityType(EntityType.ENVIRONMENT).build();
     assertThat(executionController.validateVariableValue("appId", "env_value", variable, "env_value")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void validateInfraVariableWithIdTypeTest() {
+    Environment environment = new Environment();
+    when(environmentService.get(any(), any())).thenReturn(environment);
+
+    List<QLVariableInput> variableInputs =
+        asList(QLVariableInput.builder()
+                   .name("infra")
+                   .variableValue(QLVariableValue.builder().value("env_id").type(QLVariableValueType.ID).build())
+                   .build());
+    assertThat(executionController.getEnvId("infra", "appId", variableInputs)).isEqualTo("env_id");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void validateInfraVariableWithNameTypeTest() {
+    Environment environment = new Environment();
+    environment.setUuid("env_id");
+    when(environmentService.getEnvironmentByName(any(), any())).thenReturn(environment);
+
+    List<QLVariableInput> variableInputs =
+        asList(QLVariableInput.builder()
+                   .name("infra")
+                   .variableValue(QLVariableValue.builder().value("env_name").type(QLVariableValueType.NAME).build())
+                   .build());
+    assertThat(executionController.getEnvId("infra", "appId", variableInputs)).isEqualTo("env_id");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void validateInfraVariableWithWrongTypeTest() {
+    List<QLVariableInput> variableInputs = asList(
+        QLVariableInput.builder()
+            .name("infra")
+            .variableValue(QLVariableValue.builder().value("env_name").type(QLVariableValueType.EXPRESSION).build())
+            .build());
+    assertThatThrownBy(() -> executionController.getEnvId("infra", "appId", variableInputs))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Value Type EXPRESSION Not supported");
+  }
+
+  @Test
+  @Owner(developers = POOJA)
+  @Category(UnitTests.class)
+  public void validateEmptyValueThrowsExcpetion() {
+    Variable variable = aVariable().name("Env").entityType(EntityType.ENVIRONMENT).build();
+    assertThatThrownBy(() -> executionController.validateVariableValue("appId", "", variable, "env_value"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Please provide a non empty value for Env");
   }
 
   @Test

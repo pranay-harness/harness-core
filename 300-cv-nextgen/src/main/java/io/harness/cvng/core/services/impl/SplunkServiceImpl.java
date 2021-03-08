@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.impl;
 
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.client.NextGenService;
@@ -56,5 +56,11 @@ public class SplunkServiceImpl implements SplunkService {
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     throw new UnsupportedOperationException("Not Implemented yet");
+  }
+
+  @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    getSavedSearches(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, tracingId);
   }
 }

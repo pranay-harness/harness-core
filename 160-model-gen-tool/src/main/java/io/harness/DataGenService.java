@@ -9,13 +9,13 @@ import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PL
 import static io.harness.generator.AccountGenerator.Accounts;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static io.harness.shell.AccessType.KEY;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;

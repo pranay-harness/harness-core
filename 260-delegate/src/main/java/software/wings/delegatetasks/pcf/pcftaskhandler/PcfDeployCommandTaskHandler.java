@@ -17,11 +17,14 @@ import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
+import io.harness.pcf.PivotalClientApiException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.PcfInstanceElement;
@@ -29,7 +32,6 @@ import software.wings.api.pcf.PcfServiceData;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
-import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfAppAutoscalarRequestData;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
@@ -52,6 +54,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 @NoArgsConstructor
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * This method is responsible for upsizing new application instances and downsizing previous application instances.

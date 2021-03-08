@@ -3,6 +3,7 @@ package io.harness.secretmanagerclient;
 import io.harness.ng.core.common.beans.NGTag;
 
 import java.util.List;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,4 +24,13 @@ public class NGSecretManagerMetadata extends NGMetadata {
   private List<NGTag> tags;
   private String description;
   private Boolean harnessManaged;
+  @Builder.Default private Boolean deleted = Boolean.FALSE;
+
+  public boolean getHarnessManaged() {
+    return Boolean.TRUE.equals(harnessManaged);
+  }
+
+  public boolean getDeleted() {
+    return Boolean.TRUE.equals(deleted);
+  }
 }

@@ -86,5 +86,5 @@ CREATE TABLE tests(
   stdout TEXT,
   stderr TEXT
 );
-SELECT create_hypertable('tests', 'time');
+SELECT create_distributed_hypertable('tests', 'time');
 ```

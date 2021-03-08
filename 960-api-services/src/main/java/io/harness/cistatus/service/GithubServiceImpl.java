@@ -11,6 +11,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -39,9 +40,18 @@ public class GithubServiceImpl implements GithubService {
     log.info("Retrieving github installation token for installation id {}", githubAppConfig.getInstallationId());
     try {
       String jwtToken = generateTokenFromPrivateKey(githubAppConfig);
-      GithubAppTokenCreationResponse response =
-          executeRestCall(getGithubClient(githubAppConfig, encryptionDetails)
-                              .createAccessToken(getAuthToken(jwtToken), githubAppConfig.getInstallationId()));
+      String authToken = getAuthToken(jwtToken);
+      Call<GithubAppTokenCreationResponse> responseCall;
+
+      if (githubAppConfig.getGithubUrl().contains("github.com")) {
+        responseCall = getGithubClient(githubAppConfig, encryptionDetails)
+                           .createAccessToken(authToken, githubAppConfig.getInstallationId());
+      } else {
+        responseCall = getGithubClient(githubAppConfig, encryptionDetails)
+                           .createAccessTokenForGithubEnterprise(authToken, githubAppConfig.getInstallationId());
+      }
+
+      GithubAppTokenCreationResponse response = executeRestCall(responseCall);
       return response.getToken();
     } catch (Exception ex) {
       throw new InvalidRequestException(format("Failed to generate token for url %s, installation id %s",
@@ -70,6 +80,26 @@ public class GithubServiceImpl implements GithubService {
     } catch (Exception e) {
       log.error("Failed to send status for github url {} and sha {} ", githubAppConfig.getGithubUrl(), sha, e);
       return false;
+    }
+  }
+
+  @Override
+  public String findPR(String apiUrl, String token, List<EncryptedDataDetail> encryptionDetails, String owner,
+      String repo, String prNumber) {
+    try {
+      Response<Object> response =
+          getGithubClient(GithubAppConfig.builder().githubUrl(apiUrl).build(), encryptionDetails)
+              .findPR(getAuthToken(token), owner, repo, prNumber)
+              .execute();
+      if (response.isSuccessful()) {
+        return new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(response.body());
+      } else {
+        return null;
+      }
+
+    } catch (Exception e) {
+      log.error("Failed to fetch PR details for github url {} and prNum {} ", apiUrl, prNumber, e);
+      return "";
     }
   }
 
@@ -113,8 +143,7 @@ public class GithubServiceImpl implements GithubService {
     byte[] encoded = Base64.decodeBase64(privateKeyPEM);
     KeyFactory kf = KeyFactory.getInstance("RSA");
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-    RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpec);
-    return privKey;
+    return (RSAPrivateKey) kf.generatePrivate(keySpec);
   }
 
   private String generateTokenFromPrivateKey(GithubAppConfig githubAppConfig) throws Exception {

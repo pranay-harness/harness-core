@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.storeconfig;
 
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
@@ -17,6 +18,12 @@ public class GitStoreDelegateConfig implements StoreDelegateConfig {
   @Singular List<String> paths;
   FetchType fetchType;
 
-  GitConfigDTO gitConfigDTO;
+  ScmConnector gitConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
+  SSHKeySpecDTO sshKeySpecDTO;
+
+  @Override
+  public StoreDelegateConfigType getType() {
+    return StoreDelegateConfigType.GIT;
+  }
 }

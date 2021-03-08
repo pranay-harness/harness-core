@@ -38,11 +38,6 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>960-expression-service-proto</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-testing</artifactId>
             <scope>test</scope>

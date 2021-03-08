@@ -1,10 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
 import static java.util.Collections.singletonList;
@@ -141,7 +141,9 @@ public class KubernetesSteadyStateCheck extends State {
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, containerInfraMapping.getUuid())
+              .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, containerInfraMapping.getServiceId())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.builder()

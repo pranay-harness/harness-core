@@ -14,6 +14,7 @@ import io.harness.serializer.KryoSerializer;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Registration;
+import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.kryo.util.IntMap;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -23,14 +24,27 @@ import org.reflections.Reflections;
 
 @OwnedBy(PL)
 public class RedissonKryoCodec extends KryoCodec {
-  @Override
-  protected Kryo createInstance(List<Class<?>> classes, ClassLoader classLoader) {
-    return kryo();
+  private boolean useFieldSerializer;
+
+  public RedissonKryoCodec() {
+    this.useFieldSerializer = true;
   }
 
-  public static synchronized Kryo kryo() {
+  public RedissonKryoCodec(boolean useFieldSerializer) {
+    this.useFieldSerializer = useFieldSerializer;
+  }
+
+  @Override
+  protected Kryo createInstance(List<Class<?>> classes, ClassLoader classLoader) {
+    return kryo(useFieldSerializer);
+  }
+
+  public static synchronized Kryo kryo(boolean useFieldSerializer) {
     final ClassResolver classResolver = new ClassResolver();
     HKryo kryo = new HKryo(classResolver);
+    if (useFieldSerializer) {
+      kryo.setDefaultSerializer(FieldSerializer.class);
+    }
 
     try {
       Reflections reflections = new Reflections("io.harness.serializer.kryo");

@@ -1,17 +1,18 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//920-delegate-service-beans:module",
         "//950-wait-engine:module",
+        "//955-delegate-beans:module",
         "//970-grpc:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_inject_guice",
@@ -25,27 +26,6 @@ java_library(
     ],
 )
 
-java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

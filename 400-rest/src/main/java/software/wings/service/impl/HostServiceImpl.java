@@ -109,7 +109,16 @@ public class HostServiceImpl implements HostService {
                                .filter(HostKeys.infraMappingId, appHost.getInfraMappingId())
                                .filter(HostKeys.properties, appHost.getProperties())
                                .get();
-    return applicationHost != null ? applicationHost : wingsPersistence.saveAndGet(Host.class, appHost);
+    if (applicationHost != null) {
+      if (applicationHost.getEc2Instance() != null && appHost.getEc2Instance() != null) {
+        applicationHost.setEc2Instance(appHost.getEc2Instance());
+        wingsPersistence.updateField(
+            Host.class, applicationHost.getUuid(), HostKeys.ec2Instance, appHost.getEc2Instance());
+      }
+      return applicationHost;
+    } else {
+      return wingsPersistence.saveAndGet(Host.class, appHost);
+    }
   }
 
   @Override

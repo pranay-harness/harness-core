@@ -37,7 +37,6 @@ import software.wings.api.ContainerServiceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ecs.EcsBGRoute53SetupStateExecutionData;
-import software.wings.api.ecs.EcsSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
@@ -154,7 +153,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
       EcsSetUpDataBag ecsSetUpDataBag) {
     Application app = appService.get(context.getAppId());
 
-    ecsStateHelper.setUpRemoteContainerTaskAndServiceSpecIfRequired(context, ecsSetUpDataBag, log);
+    ecsStateHelper.setUpRemoteContainerTaskAndServiceSpecForEcsRoute53IfRequired(context, ecsSetUpDataBag, log);
 
     EcsSetupParams ecsSetupParams = (EcsSetupParams) ecsStateHelper.buildContainerSetupParams(context,
         EcsSetupStateConfig.builder()
@@ -332,7 +331,7 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
   private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     StateExecutionData stateExecutionData = context.getStateExecutionData();
 
-    if (stateExecutionData instanceof EcsSetupStateExecutionData) {
+    if (stateExecutionData instanceof EcsBGRoute53SetupStateExecutionData) {
       return handleAsyncInternalGitTask(context, response);
     } else if (stateExecutionData instanceof CommandStateExecutionData) {
       return handleAsyncInternalECSBGRoute53Task(context, response);

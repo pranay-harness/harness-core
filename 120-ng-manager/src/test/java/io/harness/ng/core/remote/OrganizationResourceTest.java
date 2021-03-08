@@ -30,6 +30,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.rule.Owner;
 
+import java.util.Collections;
 import java.util.Optional;
 import javax.ws.rs.NotFoundException;
 import org.junit.Before;
@@ -120,7 +121,7 @@ public class OrganizationResourceTest extends CategoryTest {
         .thenReturn(getPage(singletonList(organization), 1));
 
     ResponseDTO<PageResponse<OrganizationResponse>> response =
-        organizationResource.list(accountIdentifier, searchTerm, pageRequest);
+        organizationResource.list(accountIdentifier, Collections.EMPTY_LIST, searchTerm, pageRequest);
 
     verify(organizationService, times(1)).list(eq(accountIdentifier), any(), argumentCaptor.capture());
     OrganizationFilterDTO organizationFilterDTO = argumentCaptor.getValue();

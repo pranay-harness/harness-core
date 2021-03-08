@@ -15,6 +15,7 @@ import io.swagger.annotations.Api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -26,7 +27,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Api("/ng/users")
+@Api(value = "/ng/users", hidden = true)
 @Path("/ng/users")
 @Produces("application/json")
 @Consumes("application/json")
@@ -81,5 +82,28 @@ public class UserResourceNG {
   public RestResponse<Optional<User>> getUserFromEmail(
       @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
     return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
+  }
+
+  @GET
+  @Path("/user-account")
+  public RestResponse<Boolean> isUserInAccount(
+      @NotNull @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+    try {
+      User user = userService.getUserFromCacheOrDB(userId);
+      boolean isUserInAccount = false;
+      if (user != null && user.getAccounts() != null) {
+        isUserInAccount = user.getAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+      }
+      if (!isUserInAccount && user != null && user.getSupportAccounts() != null) {
+        isUserInAccount = user.getSupportAccounts().stream().anyMatch(account -> account.getUuid().equals(accountId));
+      }
+      if (!isUserInAccount) {
+        log.error(String.format("User %s does not belong to account %s", userId, accountId));
+      }
+      return new RestResponse<>(isUserInAccount);
+    } catch (Exception ex) {
+      log.error(String.format("User %s does not belong to account %s", userId, accountId), ex);
+      return new RestResponse<>(false);
+    }
   }
 }

@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.MILOS;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -21,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@TargetModule(Module._870_YAML_BEANS)
 public class EmailStepYamlValidatorTest extends WingsBaseTest {
   private static final String TO_ADDRESS = "toAddress";
   private static final String CC_ADDRESS = "ccAddress";
@@ -84,6 +87,30 @@ public class EmailStepYamlValidatorTest extends WingsBaseTest {
     assertThatThrownBy(() -> validator.validate(changeContext)).isInstanceOf(IncompleteStateException.class);
     assertThatThrownBy(() -> validator.validate(changeContext))
         .hasMessage("\"subject\" could not be empty or null, please provide a value.");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testValidateEmailStepYamlWithoutBody() {
+    Map<String, Object> properties = getProperties(TO_ADDRESS, CC_ADDRESS, SUBJECT, null, false);
+    ChangeContext changeContext = buildChangeContext(properties);
+
+    assertThatThrownBy(() -> validator.validate(changeContext)).isInstanceOf(IncompleteStateException.class);
+    assertThatThrownBy(() -> validator.validate(changeContext))
+        .hasMessage("\"body\" could not be empty or null, please provide a value.");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testValidateEmailStepYamlWithEmptyBody() {
+    Map<String, Object> properties = getProperties(TO_ADDRESS, CC_ADDRESS, SUBJECT, " ", false);
+    ChangeContext changeContext = buildChangeContext(properties);
+
+    assertThatThrownBy(() -> validator.validate(changeContext)).isInstanceOf(IncompleteStateException.class);
+    assertThatThrownBy(() -> validator.validate(changeContext))
+        .hasMessage("\"body\" could not be empty or null, please provide a value.");
   }
 
   private ChangeContext buildChangeContext(Map<String, Object> parameters) {

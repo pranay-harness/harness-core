@@ -22,7 +22,7 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
   @Builder(builderMethodName = "newBuilder")
   public InfraSectionStepParameters(InfrastructureDef infrastructureDefinition, InfraUseFromStage useFromStage,
       EnvironmentYaml environment, String metadata, String childNodeID) {
-    super(infrastructureDefinition, useFromStage, environment, metadata);
+    super(infrastructureDefinition, useFromStage, environment, null, metadata);
     this.childNodeID = childNodeID;
   }
 

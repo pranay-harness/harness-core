@@ -19,9 +19,11 @@ import io.harness.ccm.commons.beans.InstanceType;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -105,7 +107,9 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   private void refreshLabelCache(String accountId, List<InstanceBillingData> instanceBillingDataList) {
     Map<String, Set<String>> clusterWorkload =
         instanceBillingDataList.stream()
-            .filter(instanceBillingData -> instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name()))
+            .filter(instanceBillingData
+                -> ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
+                       .contains(instanceBillingData.getInstanceType()))
             .filter(instanceBillingData
                 -> null
                     == k8SWorkloadService.getK8sWorkloadLabel(
@@ -195,6 +199,13 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     clusterBillingData.setUsagedurationseconds(instanceBillingData.getUsageDurationSeconds());
     clusterBillingData.setEndtime(instanceBillingData.getEndTimestamp());
     clusterBillingData.setStarttime(instanceBillingData.getStartTimestamp());
+    clusterBillingData.setStoragecost(getDoubleValueFromBigDecimal(instanceBillingData.getStorageBillingAmount()));
+    clusterBillingData.setStorageactualidlecost(
+        getDoubleValueFromBigDecimal(instanceBillingData.getStorageActualIdleCost()));
+    clusterBillingData.setStorageunallocatedcost(
+        getDoubleValueFromBigDecimal(instanceBillingData.getStorageUnallocatedCost()));
+    clusterBillingData.setStorageutilizationvalue(instanceBillingData.getStorageUtilizationValue());
+    clusterBillingData.setStoragerequest(instanceBillingData.getStorageRequest());
 
     if (instanceBillingData.getAppId() != null) {
       clusterBillingData.setAppname(entityIdToNameCache.get(
@@ -218,7 +229,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     }
 
     List<Label> labels = new ArrayList<>();
-    if (instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name())) {
+    if (ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
+            .contains(instanceBillingData.getInstanceType())) {
       Map<String, String> k8sWorkloadLabel = k8SWorkloadService.getK8sWorkloadLabel(
           accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName());
 
@@ -252,5 +264,12 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   private static DataFileWriter<ClusterBillingData> getInstanceBillingDataDataFileWriter() {
     DatumWriter<ClusterBillingData> userDatumWriter = new SpecificDatumWriter<>(ClusterBillingData.class);
     return new DataFileWriter<>(userDatumWriter);
+  }
+
+  private static double getDoubleValueFromBigDecimal(BigDecimal value) {
+    if (value != null) {
+      return value.doubleValue();
+    }
+    return 0D;
   }
 }

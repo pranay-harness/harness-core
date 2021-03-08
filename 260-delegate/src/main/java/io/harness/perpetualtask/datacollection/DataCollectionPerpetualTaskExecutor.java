@@ -2,13 +2,19 @@ package io.harness.perpetualtask.datacollection;
 
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.FAILED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.beans.LogDataCollectionInfo;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.datacollection.entity.LogDataRecord;
 import io.harness.datacollection.entity.RuntimeParameters;
@@ -30,17 +36,19 @@ import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -52,7 +60,9 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
   @Inject private KryoSerializer kryoSerializer;
 
   @Inject private DataCollectionDSLService dataCollectionDSLService;
+  @Inject private CVNGRequestExecutor cvngRequestExecutor;
   @Inject @Named("verificationDataCollectorExecutor") protected ExecutorService dataCollectionService;
+  @Inject private CVNGParallelExecutor cvngParallelExecutor;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -65,46 +75,45 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     log.info("DataCollectionInfo {} ", dataCollectionInfo);
     try (DataCollectionLogContext ignored = new DataCollectionLogContext(
              taskParams.getDataCollectionWorkerId(), dataCollectionInfo.getDataCollectionType(), OVERRIDE_ERROR)) {
-      DataCollectionTaskDTO dataCollectionTask;
-      secretDecryptionService.decrypt(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntity() != null
-              ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntity()
+      secretDecryptionService.decrypt(isNotEmpty(dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities())
+              ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities().get(0)
               : null,
           dataCollectionInfo.getEncryptedDataDetails());
       dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
-      try {
-        // TODO: What happens if this task takes more time then the schedule?
-        while (true) {
-          dataCollectionTask = getNextDataCollectionTask(taskParams);
-          if (dataCollectionTask == null) {
-            log.info("Nothing to process.");
-            break;
-          } else {
-            log.info("Next task to process: ", dataCollectionTask);
-            run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTask);
-          }
+      List<DataCollectionTaskDTO> dataCollectionTasks;
+      // TODO: What happens if this task takes more time then the schedule?
+      while (true) {
+        dataCollectionTasks = getNextDataCollectionTasks(taskParams);
+        if (isEmpty(dataCollectionTasks)) {
+          log.info("Nothing to process.");
+          break;
+        } else {
+          log.info("Next tasks to process: {}", dataCollectionTasks);
+          List<Callable<Void>> callables = new ArrayList<>();
+          dataCollectionTasks.forEach(dataCollectionTaskDTO -> callables.add(() -> {
+            run(taskParams, dataCollectionInfo.getConnectorConfigDTO(), dataCollectionTaskDTO);
+            return null;
+          }));
+          cvngParallelExecutor.executeParallel(callables);
         }
-      } catch (IOException e) {
-        log.error("Perpetual task failed with exception", e);
-        throw new IllegalStateException(e);
       }
     }
 
     return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
   }
 
-  private DataCollectionTaskDTO getNextDataCollectionTask(DataCollectionPerpetualTaskParams taskParams)
-      throws IOException {
-    return cvNextGenServiceClient
-        .getNextDataCollectionTask(taskParams.getAccountId(), taskParams.getDataCollectionWorkerId())
-        .execute()
-        .body()
+  private List<DataCollectionTaskDTO> getNextDataCollectionTasks(DataCollectionPerpetualTaskParams taskParams) {
+    return cvngRequestExecutor
+        .executeWithRetry(cvNextGenServiceClient.getNextDataCollectionTasks(
+            taskParams.getAccountId(), taskParams.getDataCollectionWorkerId()))
         .getResource();
   }
 
   private void run(DataCollectionPerpetualTaskParams taskParams, ConnectorConfigDTO connectorConfigDTO,
-      DataCollectionTaskDTO dataCollectionTask) throws IOException {
+      DataCollectionTaskDTO dataCollectionTask) {
     try {
       DataCollectionInfo dataCollectionInfo = dataCollectionTask.getDataCollectionInfo();
+      log.info("collecting data for {}", dataCollectionTask.getVerificationTaskId());
       final RuntimeParameters runtimeParameters =
           RuntimeParameters.builder()
               .baseUrl(dataCollectionTask.getDataCollectionInfo().getBaseUrl(connectorConfigDTO))
@@ -118,8 +127,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         case TIME_SERIES:
           List<TimeSeriesRecord> timeSeriesRecords = (List<TimeSeriesRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
-              new ThirdPartyCallHandler(
-                  dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
+              new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
+                  delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime()));
           timeSeriesDataStoreService.saveTimeSeriesDataRecords(
               dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), timeSeriesRecords);
 
@@ -127,8 +136,8 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         case LOG:
           List<LogDataRecord> logDataRecords = (List<LogDataRecord>) dataCollectionDSLService.execute(
               dataCollectionInfo.getDataCollectionDsl(), runtimeParameters,
-              new ThirdPartyCallHandler(
-                  dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), delegateLogService));
+              new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
+                  delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime()));
           logRecordDataStoreService.save(
               dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(), logDataRecords);
           if (dataCollectionInfo.isCollectHostData()) {
@@ -136,7 +145,7 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
             Set<String> hosts = new HashSet<>((Collection<String>) dataCollectionDSLService.execute(
                 logDataCollectionInfo.getHostCollectionDSL(), runtimeParameters,
                 new ThirdPartyCallHandler(dataCollectionTask.getAccountId(), dataCollectionTask.getVerificationTaskId(),
-                    delegateLogService)));
+                    delegateLogService, dataCollectionTask.getStartTime(), dataCollectionTask.getEndTime())));
             hostRecordDataStoreService.save(dataCollectionTask.getAccountId(),
                 dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime(),
                 dataCollectionTask.getEndTime(), hosts);
@@ -145,20 +154,32 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
         default:
           throw new IllegalArgumentException("Invalid type " + dataCollectionInfo.getVerificationType());
       }
+      log.info("data collection success for {}.", dataCollectionTask.getVerificationTaskId());
       DataCollectionTaskResult result =
           DataCollectionTaskResult.builder().dataCollectionTaskId(dataCollectionTask.getUuid()).status(SUCCESS).build();
-      cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
-      log.info("Updated task status to success.");
+      cvngRequestExecutor.execute(cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result));
+      log.info("Updated task status to success for {}.", dataCollectionTask.getVerificationTaskId());
 
-    } catch (Exception e) {
-      log.error("Perpetual task failed with exception", e);
-      DataCollectionTaskResult result = DataCollectionTaskResult.builder()
-                                            .dataCollectionTaskId(dataCollectionTask.getUuid())
-                                            .status(FAILED)
-                                            .exception(ExceptionUtils.getMessage(e))
-                                            .stacktrace(ExceptionUtils.getStackTrace(e))
-                                            .build();
-      cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result).execute();
+    } catch (Throwable e) {
+      updateStatusWithException(taskParams, dataCollectionTask, e);
+    }
+  }
+
+  private void updateStatusWithException(
+      DataCollectionPerpetualTaskParams taskParams, DataCollectionTaskDTO dataCollectionTask, Throwable e) {
+    DataCollectionTaskResult result = DataCollectionTaskResult.builder()
+                                          .dataCollectionTaskId(dataCollectionTask.getUuid())
+                                          .status(FAILED)
+                                          .exception(ExceptionUtils.getMessage(e))
+                                          .stacktrace(ExceptionUtils.getStackTrace(e))
+                                          .build();
+    log.error("Data collection task failed for {} with exception Result: {} exception: {}",
+        dataCollectionTask.getVerificationTaskId(), result, e);
+    try {
+      cvngRequestExecutor.execute(cvNextGenServiceClient.updateTaskStatus(taskParams.getAccountId(), result));
+    } catch (Exception exceptionOnExecute) {
+      // ignore
+      log.error("status Update call failed with {}", exceptionOnExecute);
     }
   }
 

@@ -49,8 +49,8 @@ if [[ "" != "$MANAGER_JWT_AUTH_SECRET" ]]; then
   yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtAuthSecret "$MANAGER_JWT_AUTH_SECRET"
 fi
 
-if [[ "" != "$MANAGER_JWT_IDENTITY_SERVICE_SECRET" ]]; then
-  yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtIdentityServiceSecret "$MANAGER_JWT_IDENTITY_SERVICE_SECRET"
+if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i /opt/harness/cv-nextgen-config.yml managerAuthConfig.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
 
 if [[ "" != "$NG_MANAGER_URL" ]]; then
@@ -62,9 +62,39 @@ if [[ "" != "$NOTIFICATION_BASE_URL" ]]; then
 fi
 
 if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
+  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 fi
 
 if [[ "" != "$PORTAL_URL" ]]; then
   yq write -i $CONFIG_FILE portalUrl "$PORTAL_URL"
+fi
+
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.sentinel "$EVENTS_FRAMEWORK_USE_SENTINEL"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE eventsFramework.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
 fi

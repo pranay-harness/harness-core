@@ -38,18 +38,20 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.service.intfc.MicrosoftTeamsNotificationService;
 
-import com.google.api.client.util.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -170,11 +172,9 @@ public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
   public void testGetTemplateWithError() throws IOException {
-    final String expectedFileAbsolutePath = getClass().getResource(TEMPLATE_FILE_NAME_WITH_ERROR).getPath();
-    final File expectedFile = new File(expectedFileAbsolutePath);
+    String expectedTemplate = getFileContentsAsString(TEMPLATE_FILE_NAME_WITH_ERROR);
     notificationWithError.getNotificationTemplateVariables().put(ERRORS, ERRORS);
-    assertEquals(FileUtils.readFileToString(expectedFile, Charsets.UTF_8),
-        microsoftTeamsMessageDispatcher.getTemplate(notificationWithError));
+    assertEquals(expectedTemplate, microsoftTeamsMessageDispatcher.getTemplate(notificationWithError));
   }
 
   @Test
@@ -284,9 +284,11 @@ public class MicrosoftTeamsMessageDispatcherTest extends WingsBaseTest {
   }
 
   private String getFileContentsAsString(String fileName) throws IOException {
-    final String fileAbsolutePath = getClass().getResource(fileName).getPath();
-    final File expectedFile = new File(fileAbsolutePath);
-    return FileUtils.readFileToString(expectedFile, Charsets.UTF_8);
+    InputStream in = getClass().getResourceAsStream(fileName);
+
+    String fileContentasString =
+        new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines().collect(Collectors.joining("\n"));
+    return fileContentasString;
   }
 
   @Test

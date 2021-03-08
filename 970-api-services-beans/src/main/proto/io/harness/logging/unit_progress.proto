@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package io.harness.logging;
+
+option java_multiple_files = true;
+
+message UnitProgress {
+  string unitName = 1;
+  UnitStatus status = 2;
+  int64 startTime = 3;
+  int64 endTime = 4;
+}
+
+enum UnitStatus {
+  UNKNOWN = 0;
+  SUCCESS = 1;
+  FAILURE = 2;
+  RUNNING = 3;
+  QUEUED = 4;
+  SKIPPED = 5;
+}

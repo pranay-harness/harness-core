@@ -19,8 +19,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.APMVerificationState.Method;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.HashMap;
@@ -78,8 +76,8 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     return input;
   }
 
-  private BiMap<String, Object> resolveDollarReferences(Map<String, String> input) {
-    BiMap<String, Object> output = HashBiMap.create();
+  private Map<String, Object> resolveDollarReferences(Map<String, String> input) {
+    Map<String, Object> output = new HashMap<>();
     if (input == null) {
       return output;
     }

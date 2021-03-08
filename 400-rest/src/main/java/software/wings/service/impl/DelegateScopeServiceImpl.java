@@ -9,19 +9,21 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 
-import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.DelegateKeys;
-import software.wings.beans.DelegateScope;
-import software.wings.beans.DelegateScope.DelegateScopeKeys;
 import software.wings.beans.Event;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
@@ -38,19 +40,20 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateScopeServiceImpl implements DelegateScopeService {
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private DelegateService delegateService;
   @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public PageResponse<DelegateScope> list(PageRequest<DelegateScope> pageRequest) {
-    return wingsPersistence.query(DelegateScope.class, pageRequest);
+    return persistence.query(DelegateScope.class, pageRequest);
   }
 
   @Override
   public DelegateScope get(String accountId, String delegateScopeId) {
-    return wingsPersistence.createQuery(DelegateScope.class)
+    return persistence.createQuery(DelegateScope.class)
         .filter(DelegateScopeKeys.uuid, delegateScopeId)
         .filter(DelegateScopeKeys.accountId, accountId)
         .get();
@@ -61,7 +64,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     if (!delegateScope.isValid()) {
       throw new InvalidArgumentsException("Delegate scope cannot be empty.", USER);
     }
-    UpdateOperations<DelegateScope> updateOperations = wingsPersistence.createUpdateOperations(DelegateScope.class);
+    UpdateOperations<DelegateScope> updateOperations = persistence.createUpdateOperations(DelegateScope.class);
     setUnset(updateOperations, DelegateScopeKeys.name, delegateScope.getName());
     setUnset(updateOperations, DelegateScopeKeys.taskTypes, delegateScope.getTaskTypes());
     setUnset(updateOperations, DelegateScopeKeys.environmentTypes, delegateScope.getEnvironmentTypes());
@@ -72,10 +75,10 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
         updateOperations, DelegateScopeKeys.infrastructureDefinitions, delegateScope.getInfrastructureDefinitions());
     setUnset(updateOperations, DelegateScopeKeys.services, delegateScope.getServices());
 
-    Query<DelegateScope> query = wingsPersistence.createQuery(DelegateScope.class)
+    Query<DelegateScope> query = persistence.createQuery(DelegateScope.class)
                                      .filter(DelegateScopeKeys.accountId, delegateScope.getAccountId())
                                      .filter(ID_KEY, delegateScope.getUuid());
-    wingsPersistence.update(query, updateOperations);
+    persistence.update(query, updateOperations);
     DelegateScope updatedDelegateScope = get(delegateScope.getAccountId(), delegateScope.getUuid());
     log.info("Updated delegate scope: {}", updatedDelegateScope.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
@@ -83,7 +86,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     log.info(
         "Auditing updating of DelegateScope={} for account={}", delegateScope.getUuid(), delegateScope.getAccountId());
 
-    List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class)
+    List<Delegate> delegates = persistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, updatedDelegateScope.getAccountId())
                                    .asList();
     for (Delegate delegate : delegates) {
@@ -125,7 +128,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
     }
 
     try {
-      wingsPersistence.save(delegateScope);
+      persistence.save(delegateScope);
     } catch (DuplicateKeyException e) {
       ignoredOnPurpose(e);
       throw new InvalidRequestException("Scope with given name already exists for this account");
@@ -139,14 +142,14 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
 
   @Override
   public void delete(String accountId, String delegateScopeId) {
-    DelegateScope delegateScope = wingsPersistence.createQuery(DelegateScope.class)
+    DelegateScope delegateScope = persistence.createQuery(DelegateScope.class)
                                       .filter(DelegateScopeKeys.accountId, accountId)
                                       .filter(ID_KEY, delegateScopeId)
                                       .get();
     if (delegateScope != null) {
       ensureScopeSafeToDelete(accountId, delegateScope);
       log.info("Deleting delegate scope: {}", delegateScopeId);
-      wingsPersistence.delete(delegateScope);
+      persistence.delete(delegateScope);
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(accountId, delegateScope);
       log.info("Auditing deletion of DelegateScope for accountId={}", accountId);
     }
@@ -155,7 +158,7 @@ public class DelegateScopeServiceImpl implements DelegateScopeService {
   private void ensureScopeSafeToDelete(String accountId, DelegateScope delegateScope) {
     String delegateScopeId = delegateScope.getUuid();
     List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate
                                          -> (isNotEmpty(delegate.getIncludeScopes())

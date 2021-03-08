@@ -28,12 +28,12 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
-import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,14 +58,14 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
   public void testCreateK8ClusterConfigDTOForDelegateCredentials() {
     String delegateName = "testDeleagete";
     KubernetesDelegateDetails delegateCredential =
-        KubernetesDelegateDetails.builder().delegateName(delegateName).build();
+        KubernetesDelegateDetails.builder().delegateSelectors(Collections.singleton(delegateName)).build();
     Connector connector =
         KubernetesClusterConfig.builder().credentialType(INHERIT_FROM_DELEGATE).credential(delegateCredential).build();
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(((KubernetesDelegateDetailsDTO) connectorDTO.getCredential().getConfig()).getDelegateName())
-        .isEqualTo(delegateName);
+    assertThat(((KubernetesDelegateDetailsDTO) connectorDTO.getCredential().getConfig()).getDelegateSelectors())
+        .isEqualTo(Collections.singleton(delegateName));
     assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
   }
 
@@ -75,7 +75,7 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
   public void testCreateK8ClusterConfigDTOForDelegateCredentialsWithWrongType() {
     String delegateName = "testDeleagete";
     KubernetesDelegateDetails delegateCredential =
-        KubernetesDelegateDetails.builder().delegateName(delegateName).build();
+        KubernetesDelegateDetails.builder().delegateSelectors(Collections.singleton(delegateName)).build();
     Connector connector =
         KubernetesClusterConfig.builder().credentialType(MANUAL_CREDENTIALS).credential(delegateCredential).build();
     KubernetesClusterConfigDTO connectorDTO =

@@ -8,8 +8,7 @@ inputSet:
           identifier: qa
           type: Deployment
           spec:
-            service:
-              identifier: service2 #adding comments to check
+            serviceConfig:
               serviceDefinition:
                 type: Kubernetes # Can it be type to make it consistent with other types
                 spec:
@@ -49,8 +48,6 @@ inputSet:
                                   spec:
                                     branch: masterOverride2
             infrastructure:
-              environment:
-                identifier: env2
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:

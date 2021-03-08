@@ -18,12 +18,18 @@ import lombok.Value;
 
 @Value
 @Builder
-public class HttpTaskParametersNg implements TaskParameters {
+public class HttpTaskParametersNg implements TaskParameters, ExecutionCapabilityDemander {
   String method;
-  String url;
-  Map<String, String> requestHeader;
-  String body;
+  @Expression(ALLOW_SECRETS) String url;
+  @Expression(ALLOW_SECRETS) Map<String, String> requestHeader;
+  @Expression(ALLOW_SECRETS) String body;
   int socketTimeoutMillis;
   boolean useProxy;
   boolean isCertValidationRequired;
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+        url, QUERY, maskingEvaluator));
+  }
 }

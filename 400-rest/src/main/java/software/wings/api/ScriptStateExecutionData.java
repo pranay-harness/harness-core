@@ -10,6 +10,7 @@ import io.harness.pms.sdk.core.data.Outcome;
 import software.wings.sm.StateExecutionData;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class ScriptStateExecutionData extends StateExecutionData implements Dele
   private String name;
   private String activityId;
   private Map<String, String> sweepingOutputEnvVariables;
+  private List<String> secretOutputVars;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -55,7 +57,7 @@ public class ScriptStateExecutionData extends StateExecutionData implements Dele
       putNotNull(executionDetails, "sweepingOutputEnvVariables",
           ExecutionDataValue.builder()
               .displayName("Script Output")
-              .value(removeNullValues(sweepingOutputEnvVariables))
+              .value(removeNullValuesAndMaskSecrets(sweepingOutputEnvVariables, secretOutputVars))
               .build());
     }
   }

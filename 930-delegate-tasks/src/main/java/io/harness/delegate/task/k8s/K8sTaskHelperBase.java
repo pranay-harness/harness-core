@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
+import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.k8s.K8sConstants.KUBERNETES_CHANGE_CAUSE_ANNOTATION;
 import static io.harness.k8s.K8sConstants.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
@@ -30,13 +31,13 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.beans.LogWeight.Normal;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -44,26 +45,39 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FileData;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GitOperationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.helm.HelmCliCommandType;
+import io.harness.helm.HelmCommandFlagsUtils;
+import io.harness.helm.HelmCommandTemplateFactory;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -82,6 +96,7 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -93,12 +108,15 @@ import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -108,16 +126,13 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
-import io.fabric8.kubernetes.api.model.LoadBalancerIngress;
-import io.fabric8.kubernetes.api.model.LoadBalancerStatus;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import java.io.File;
@@ -156,6 +171,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -175,6 +191,8 @@ public class K8sTaskHelperBase {
   @Inject private NGGitService ngGitService;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private NGErrorHelper ngErrorHelper;
+  @Inject private GitDecryptionHelper gitDecryptionHelper;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -258,35 +276,6 @@ public class K8sTaskHelperBase {
         && !StringUtils.equals(filename, values_filename);
   }
 
-  public List<K8sPod> getPodDetailsWithLabelsFabric8(KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, Map<String, String> labels, long timeoutInMillis) throws Exception {
-    return timeLimiter.callWithTimeout(
-        ()
-            -> kubernetesContainerService.getRunningPodsWithLabelsFabric8(kubernetesConfig, namespace, labels)
-                   .stream()
-                   .map(pod
-                       -> K8sPod.builder()
-                              .uid(pod.getMetadata().getUid())
-                              .name(pod.getMetadata().getName())
-                              .namespace(pod.getMetadata().getNamespace())
-                              .releaseName(releaseName)
-                              .podIP(pod.getStatus().getPodIP())
-                              .containerList(pod.getStatus()
-                                                 .getContainerStatuses()
-                                                 .stream()
-                                                 .map(container
-                                                     -> K8sContainer.builder()
-                                                            .containerId(container.getContainerID())
-                                                            .name(container.getName())
-                                                            .image(container.getImage())
-                                                            .build())
-                                                 .collect(toList()))
-                              .labels(pod.getMetadata().getLabels())
-                              .build())
-                   .collect(toList()),
-        timeoutInMillis, TimeUnit.MILLISECONDS, true);
-  }
-
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
     return timeLimiter.callWithTimeout(
@@ -322,42 +311,16 @@ public class K8sTaskHelperBase {
         timeoutinMillis, TimeUnit.MILLISECONDS, true);
   }
 
-  public List<K8sPod> getPodDetailsWithTrackFabric8(KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, String track, long timeoutInMillis) throws Exception {
-    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
-    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
   public List<K8sPod> getPodDetailsWithTrack(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       String track, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.track, track);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
-  public List<K8sPod> getPodDetailsWithColorFabric8(KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, String color, long timeoutInMillis) throws Exception {
-    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
-    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
   public List<K8sPod> getPodDetailsWithColor(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       String color, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName, HarnessLabels.color, color);
     return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
-  private Service waitForLoadBalancerServiceFabric8(
-      KubernetesConfig kubernetesConfig, String serviceName, String namespace, int timeoutInSeconds) {
-    return waitForLoadBalancerService(serviceName, () -> {
-      Service service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName, namespace);
-
-      LoadBalancerStatus loadBalancerStatus = service.getStatus().getLoadBalancer();
-      if (!loadBalancerStatus.getIngress().isEmpty()) {
-        return service;
-      }
-
-      return null;
-    }, timeoutInSeconds);
   }
 
   private V1Service waitForLoadBalancerService(
@@ -457,29 +420,6 @@ public class K8sTaskHelperBase {
         loadBalancerHost, service.getSpec().getPorts().stream().map(V1ServicePort::getPort).iterator());
   }
 
-  public String getLoadBalancerEndpointFabric8(KubernetesConfig kubernetesConfig, List<KubernetesResource> resources) {
-    KubernetesResource loadBalancerResource = getFirstLoadBalancerService(resources);
-    if (loadBalancerResource == null) {
-      return null;
-    }
-
-    // NOTE(hindwani): We are not using timeOutInMillis for waiting because of the bug: CDP-13872
-    Service service = waitForLoadBalancerServiceFabric8(kubernetesConfig,
-        loadBalancerResource.getResourceId().getName(), loadBalancerResource.getResourceId().getNamespace(), 60);
-
-    if (service == null) {
-      log.warn("Could not get the Service Status {} from cluster.", loadBalancerResource.getResourceId().getName());
-      return null;
-    }
-
-    LoadBalancerIngress loadBalancerIngress = service.getStatus().getLoadBalancer().getIngress().get(0);
-    String loadBalancerHost =
-        isNotBlank(loadBalancerIngress.getHostname()) ? loadBalancerIngress.getHostname() : loadBalancerIngress.getIp();
-
-    return getLoadBalancerEndpoint(
-        loadBalancerHost, service.getSpec().getPorts().stream().map(ServicePort::getPort).iterator());
-  }
-
   public void setNamespaceToKubernetesResourcesIfRequired(
       List<KubernetesResource> kubernetesResources, String namespace) {
     if (isEmpty(kubernetesResources)) {
@@ -491,12 +431,6 @@ public class K8sTaskHelperBase {
         kubernetesResource.getResourceId().setNamespace(namespace);
       }
     }
-  }
-
-  public List<K8sPod> getPodDetailsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
-    Map<String, String> labels = ImmutableMap.of(HarnessLabels.releaseName, releaseName);
-    return getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<K8sPod> getPodDetails(
@@ -740,35 +674,15 @@ public class K8sTaskHelperBase {
     return isEmpty(pod.getContainerList()) ? EMPTY : pod.getContainerList().get(0).getContainerId();
   }
 
-  private List<K8sPod> getHelmPodDetails(boolean useFabric8, KubernetesConfig kubernetesConfig, String namespace,
-      String releaseName, long timeoutInMillis) throws Exception {
+  private List<K8sPod> getHelmPodDetails(
+      KubernetesConfig kubernetesConfig, String namespace, String releaseName, long timeoutInMillis) throws Exception {
     Map<String, String> labels = ImmutableMap.of(HELM_RELEASE_LABEL, releaseName);
-    return useFabric8
-        ? getPodDetailsWithLabelsFabric8(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis)
-        : getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
-  }
-
-  public List<ContainerInfo> getContainerInfosFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
-    List<K8sPod> helmPods = getHelmPodDetails(true, kubernetesConfig, namespace, releaseName, timeoutInMillis);
-
-    return helmPods.stream()
-        .map(pod
-            -> ContainerInfo.builder()
-                   .hostName(pod.getName())
-                   .ip(pod.getPodIP())
-                   .containerId(getPodContainerId(pod))
-                   .podName(pod.getName())
-                   .newContainer(true)
-                   .status(ContainerInfo.Status.SUCCESS)
-                   .releaseName(releaseName)
-                   .build())
-        .collect(Collectors.toList());
+    return getPodDetailsWithLabels(kubernetesConfig, namespace, releaseName, labels, timeoutInMillis);
   }
 
   public List<ContainerInfo> getContainerInfos(
       KubernetesConfig kubernetesConfig, String releaseName, String namespace, long timeoutInMillis) throws Exception {
-    List<K8sPod> helmPods = getHelmPodDetails(false, kubernetesConfig, namespace, releaseName, timeoutInMillis);
+    List<K8sPod> helmPods = getHelmPodDetails(kubernetesConfig, namespace, releaseName, timeoutInMillis);
 
     return helmPods.stream()
         .map(pod
@@ -1628,14 +1542,17 @@ public class K8sTaskHelperBase {
       String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    ConfigMap configMap = kubernetesContainerService.getConfigMapFabric8(kubernetesConfig, releaseName);
+    final V1ConfigMap releaseConfigMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1Secret releaseSecret = kubernetesContainerService.getSecret(kubernetesConfig, releaseName);
 
-    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+    if (!(releaseHistoryPresent(releaseConfigMap) || releaseHistoryPresent(releaseSecret))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
       return emptyList();
     }
 
-    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
+    String releaseHistoryDataString = releaseHistoryPresent(releaseSecret)
+        ? new String(releaseSecret.getData().get(ReleaseHistoryKeyName), UTF_8)
+        : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
     if (isEmpty(releaseHistory.getReleases())) {
@@ -1650,13 +1567,34 @@ public class K8sTaskHelperBase {
       }
     }
 
-    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
-                                                          .kind(configMap.getKind())
-                                                          .name(releaseName)
-                                                          .namespace(kubernetesConfig.getNamespace())
-                                                          .build();
-    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    if (releaseConfigMap != null) {
+      KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
+                                                            .kind(releaseConfigMap.getKind())
+                                                            .name(releaseName)
+                                                            .namespace(kubernetesConfig.getNamespace())
+                                                            .build();
+      kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    }
+    if (releaseSecret != null) {
+      KubernetesResourceId harnessGeneratedSecretResource = KubernetesResourceId.builder()
+                                                                .kind(releaseSecret.getKind())
+                                                                .name(releaseName)
+                                                                .namespace(kubernetesConfig.getNamespace())
+                                                                .build();
+      kubernetesResourceIdMap.put(
+          generateResourceIdentifier(harnessGeneratedSecretResource), harnessGeneratedSecretResource);
+    }
     return new ArrayList<>(kubernetesResourceIdMap.values());
+  }
+
+  private boolean releaseHistoryPresent(V1ConfigMap configMap) {
+    return configMap != null && isNotEmpty(configMap.getData())
+        && isNotBlank(configMap.getData().get(ReleaseHistoryKeyName));
+  }
+
+  private boolean releaseHistoryPresent(V1Secret secret) {
+    return secret != null && isNotEmpty(secret.getData())
+        && ArrayUtils.isNotEmpty(secret.getData().get(ReleaseHistoryKeyName));
   }
 
   public List<FileData> readFilesFromDirectory(
@@ -1859,22 +1797,8 @@ public class K8sTaskHelperBase {
     };
   }
 
-  public String getReleaseHistoryData(
-      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
-    return isDeprecateFabric8Enabled ? getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName)
-                                     : getReleaseHistoryDataFabric8(kubernetesConfig, releaseName);
-  }
-
-  private String getReleaseHistoryDataFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
-    String releaseHistoryData =
-        kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
-
-    if (isEmpty(releaseHistoryData)) {
-      releaseHistoryData =
-          kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(kubernetesConfig, releaseName);
-    }
-
-    return releaseHistoryData;
+  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) {
+    return getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName);
   }
 
   private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
@@ -1888,45 +1812,27 @@ public class K8sTaskHelperBase {
     return releaseHistoryData;
   }
 
-  public String getReleaseHistoryDataFromConfigMap(
-      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
-    }
-
-    return kubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(kubernetesConfig, releaseName);
+  public String getReleaseHistoryDataFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
+    return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
   }
 
-  public void saveReleaseHistoryInConfigMap(KubernetesConfig kubernetesConfig, String releaseName,
-      String releaseHistoryAsYaml, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
-    } else {
-      kubernetesContainerService.saveReleaseHistoryInConfigMapFabric8(
-          kubernetesConfig, releaseName, releaseHistoryAsYaml);
-    }
+  public void saveReleaseHistoryInConfigMap(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistoryAsYaml) {
+    kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
   }
 
-  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
-      boolean storeInSecrets, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
-    } else {
-      kubernetesContainerService.saveReleaseHistoryFabric8(
-          kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
-    }
+  public void saveReleaseHistory(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
   }
 
-  public String getReleaseHistoryFromSecret(
-      KubernetesConfig kubernetesConfig, String releaseName, boolean isDeprecateFabric8Enabled) {
-    if (isDeprecateFabric8Enabled) {
-      return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
-    }
-    return kubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(kubernetesConfig, releaseName);
+  public String getReleaseHistoryFromSecret(KubernetesConfig kubernetesConfig, String releaseName) {
+    return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
-  public LogCallback getExecutionLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName) {
-    return new NGLogCallback(logStreamingTaskClient, commandUnitName);
+  public LogCallback getLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName,
+      boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
+    return new NGLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream, commandUnitsProgress);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -1940,6 +1846,11 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+      case HELM_CHART:
+        HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            helmChartManifest.getHelmCommandFlag());
 
       default:
         throw new UnsupportedOperationException(
@@ -1959,6 +1870,12 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
+      case HELM_CHART:
+        HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, filesList,
+            valuesFiles, releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(),
+            timeoutInMillis, helmChartManifest.getHelmCommandFlag());
 
       default:
         throw new UnsupportedOperationException(
@@ -1984,27 +1901,25 @@ public class K8sTaskHelperBase {
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
       String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId) {
-    ManifestType manifestType = manifestDelegateConfig.getManifestType();
-    switch (manifestType) {
-      case K8S_MANIFEST:
+    StoreDelegateConfig storeDelegateConfig = manifestDelegateConfig.getStoreDelegateConfig();
+    switch (storeDelegateConfig.getType()) {
+      case GIT:
         return downloadManifestFilesFromGit(
-            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
+            storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
 
       default:
         throw new UnsupportedOperationException(
-            String.format("Manifest delegate config type: [%s]", manifestType.name()));
+            String.format("Manifest store config type: [%s]", storeDelegateConfig.getType().name()));
     }
   }
 
-  private boolean downloadManifestFilesFromGit(ManifestDelegateConfig manifestDelegateConfig,
-      String manifestFilesDirectory, LogCallback executionLogCallback, String accountId) {
-    if (!(manifestDelegateConfig instanceof K8sManifestDelegateConfig)) {
-      throw new InvalidArgumentsException(
-          Pair.of("manifestDelegateConfig", "Must be instance of K8sManifestDelegateConfig"));
+  private boolean downloadManifestFilesFromGit(StoreDelegateConfig storeDelegateConfig, String manifestFilesDirectory,
+      LogCallback executionLogCallback, String accountId) {
+    if (!(storeDelegateConfig instanceof GitStoreDelegateConfig)) {
+      throw new InvalidArgumentsException(Pair.of("storeDelegateConfig", "Must be instance of GitStoreDelegateConfig"));
     }
 
-    GitStoreDelegateConfig gitStoreDelegateConfig =
-        (GitStoreDelegateConfig) (((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig());
+    GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
 
     // ToDo What to set here now as we have a list now?
     //    if (isBlank(gitStoreDelegateConfig.getPaths().getFilePath())) {
@@ -2013,7 +1928,14 @@ public class K8sTaskHelperBase {
 
     try {
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, executionLogCallback);
-      ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, accountId);
+
+      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+
+      ngGitService.downloadFiles(
+          gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfigDTO);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));
@@ -2021,18 +1943,18 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (Exception e) {
-      log.error("Failure in fetching files from git", e);
+      String errorMsg = "Failed to download manifest files from git. ";
       executionLogCallback.saveExecutionLog(
-          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
-          CommandExecutionStatus.FAILURE);
-      return false;
+          errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new GitOperationException(errorMsg, e);
     }
   }
 
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());
@@ -2046,6 +1968,20 @@ public class K8sTaskHelperBase {
 
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
+    try {
+      kubernetesContainerService.validate(kubernetesConfig);
+      connectivityStatus = ConnectivityStatus.SUCCESS;
+    } catch (Exception ex) {
+      log.info("Exception while validating kubernetes credentials", ex);
+      return createConnectivityFailureValidationResult(ex);
+    }
+    return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  private KubernetesConfig getKubernetesConfig(
+      ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connector;
     if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
         == KubernetesCredentialType.MANUAL_CREDENTIALS) {
@@ -2053,25 +1989,189 @@ public class K8sTaskHelperBase {
           (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
       secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptionDetailList);
     }
-    Exception exceptionInProcessing = null;
-    boolean isCredentialsValid = false;
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+    return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+  }
+
+  public ConnectorValidationResult validateCEKubernetesCluster(
+      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.SUCCESS;
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
+    List<ErrorDetail> errorDetails = new ArrayList<>();
+    String errorSummary = "";
     try {
-      kubernetesContainerService.validate(kubernetesConfig);
-      isCredentialsValid = true;
+      CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+          kubernetesContainerService.validateMetricsServer(kubernetesConfig);
+      List<CEK8sDelegatePrerequisite.Rule> ruleList =
+          kubernetesContainerService.validateCEResourcePermissions(kubernetesConfig);
+
+      if (!metricsServerCheck.getIsInstalled()) {
+        errorDetails.add(ErrorDetail.builder()
+                             .message("Please install metrics server on your cluster")
+                             .reason("couldn't access metrics server")
+                             .build());
+        errorSummary += metricsServerCheck.getMessage();
+      }
+      if (!ruleList.isEmpty()) {
+        errorDetails.addAll(ruleList.stream()
+                                .map(e
+                                    -> ErrorDetail.builder()
+                                           .reason(String.format("'%s' not granted on '%s' in apiGroup:'%s'",
+                                               e.getVerbs(), e.getResources(), e.getApiGroups()))
+                                           .message(e.getMessage())
+                                           .code(0)
+                                           .build())
+                                .collect(toList()));
+        errorSummary += "; few permissions are missing.";
+      }
+
+      if (!errorDetails.isEmpty()) {
+        return ConnectorValidationResult.builder()
+            .errorSummary(errorSummary)
+            .errors(errorDetails)
+            .status(ConnectivityStatus.FAILURE)
+            .build();
+      }
     } catch (Exception ex) {
       log.info("Exception while validating kubernetes credentials", ex);
-      exceptionInProcessing = ex;
+      return createConnectivityFailureValidationResult(ex);
     }
+    return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {
+    String errorMessage = ex.getMessage();
+    ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(errorMessage);
+    String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
     return ConnectorValidationResult.builder()
-        .errorMessage(isNull(exceptionInProcessing) ? null : exceptionInProcessing.getMessage())
-        .valid(isCredentialsValid)
+        .status(ConnectivityStatus.FAILURE)
+        .errors(Collections.singletonList(errorDetail))
+        .errorSummary(errorSummary)
         .build();
   }
 
   private KubernetesAuthCredentialDTO getKubernetesCredentialsAuth(
       KubernetesClusterDetailsDTO kubernetesClusterConfigDTO) {
     return kubernetesClusterConfigDTO.getAuth().getCredentials();
+  }
+
+  @VisibleForTesting
+  public List<K8sPod> tagNewPods(List<K8sPod> newPods, List<K8sPod> existingPods) {
+    Set<String> existingPodNames = existingPods.stream().map(K8sPod::getName).collect(Collectors.toSet());
+    List<K8sPod> allPods = new ArrayList<>(newPods);
+    allPods.forEach(pod -> {
+      if (!existingPodNames.contains(pod.getName())) {
+        pod.setNewPod(true);
+      }
+    });
+    return allPods;
+  }
+
+  public List<FileData> renderTemplateForHelm(String helmPath, String manifestFilesDirectory, List<String> valuesFiles,
+      String releaseName, String namespace, LogCallback executionLogCallback, HelmVersion helmVersion,
+      long timeoutInMillis, HelmCommandFlag helmCommandFlag) throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    log.info("Values file options: " + valuesFileOptions);
+
+    printHelmPath(executionLogCallback, helmPath);
+
+    List<FileData> result = new ArrayList<>();
+    try (LogOutputStream logErrorStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+      String helmTemplateCommand = getHelmCommandForRender(
+          helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion, helmCommandFlag);
+      printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
+      ProcessResult processResult =
+          executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
+      if (processResult.getExitValue() != 0) {
+        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+      }
+
+      result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
+    }
+
+    return result;
+  }
+
+  public List<FileData> renderTemplateForHelmChartFiles(String helmPath, String manifestFilesDirectory,
+      List<String> chartFiles, List<String> valuesFiles, String releaseName, String namespace,
+      LogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis, HelmCommandFlag helmCommandFlag)
+      throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    log.info("Values file options: " + valuesFileOptions);
+
+    printHelmPath(executionLogCallback, helmPath);
+
+    List<FileData> result = new ArrayList<>();
+
+    for (String chartFile : chartFiles) {
+      if (K8sTaskHelperBase.isValidManifestFile(chartFile)) {
+        try (LogOutputStream logErrorStream =
+                 K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+          String helmTemplateCommand = getHelmCommandForRender(helmPath, manifestFilesDirectory, releaseName, namespace,
+              valuesFileOptions, chartFile, helmVersion, helmCommandFlag);
+          printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
+          ProcessResult processResult =
+              executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
+          if (processResult.getExitValue() != 0) {
+            throw new WingsException(format("Failed to render chart file [%s]", chartFile));
+          }
+
+          result.add(FileData.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
+        }
+      } else {
+        executionLogCallback.saveExecutionLog(
+            color(format("Ignoring file [%s] with unsupported extension", chartFile), Yellow, Bold));
+      }
+    }
+
+    return result;
+  }
+
+  private void printHelmPath(LogCallback executionLogCallback, final String helmPath) {
+    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
+    executionLogCallback.saveExecutionLog(color(format("Using helm binary %s", helmPath), White, Normal));
+  }
+
+  private void printHelmTemplateCommand(LogCallback executionLogCallback, final String helmTemplateCommand) {
+    executionLogCallback.saveExecutionLog(color("Running Helm command", White, Bold));
+    executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
+  }
+
+  @VisibleForTesting
+  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
+      String valuesFileOptions, String chartFile, HelmVersion helmVersion, HelmCommandFlag helmCommandFlag) {
+    HelmCliCommandType commandType = HelmCliCommandType.RENDER_SPECIFIC_CHART_FILE;
+    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
+    String command = replacePlaceHoldersInHelmTemplateCommand(
+        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, chartFile, valuesFileOptions);
+    Map<HelmSubCommandType, String> commandFlagValueMap =
+        helmCommandFlag != null ? helmCommandFlag.getValueMap() : null;
+    command =
+        HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), commandFlagValueMap, helmVersion);
+    return command;
+  }
+
+  @VisibleForTesting
+  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
+      String valuesFileOptions, HelmVersion helmVersion, HelmCommandFlag commandFlag) {
+    HelmCliCommandType commandType = HelmCliCommandType.RENDER_CHART;
+    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
+    String command = replacePlaceHoldersInHelmTemplateCommand(
+        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, EMPTY, valuesFileOptions);
+    Map<HelmSubCommandType, String> commandFlagValueMap = commandFlag != null ? commandFlag.getValueMap() : null;
+    command =
+        HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), commandFlagValueMap, helmVersion);
+    return command;
+  }
+
+  private String replacePlaceHoldersInHelmTemplateCommand(String unrenderedCommand, String helmPath,
+      String chartLocation, String releaseName, String namespace, String chartFile, String valueOverrides) {
+    return unrenderedCommand.replace(HELM_PATH_PLACEHOLDER, helmPath)
+        .replace("${CHART_LOCATION}", chartLocation)
+        .replace("${CHART_FILE}", chartFile)
+        .replace("${RELEASE_NAME}", releaseName)
+        .replace("${NAMESPACE}", namespace)
+        .replace("${OVERRIDE_VALUES}", valueOverrides);
   }
 }

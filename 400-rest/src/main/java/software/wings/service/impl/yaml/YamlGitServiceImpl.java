@@ -386,7 +386,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, NOTIFICATION_GROUPS_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, GLOBAL_TEMPLATE_LIBRARY_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, SOURCE_REPO_PROVIDERS_FOLDER));
-
+    gitFileChanges.add(generateGitFileChangeForDelete(accountId, YamlConstants.GOVERNANCE_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, DEFAULTS_YAML));
 
     return gitFileChanges;
@@ -698,6 +698,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // only check for file and not directories
 
     if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_APP_SERVICE.getPathExpression()).matcher(filePath).matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_VALUES_ENV_OVERRIDE.getPathExpression()).matcher(filePath).matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE.getPathExpression())
                .matcher(filePath)
@@ -706,6 +707,18 @@ public class YamlGitServiceImpl implements YamlGitService {
                .matcher(filePath)
                .matches()
         || Pattern.compile(YamlType.MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_CONN_STRINGS_ENV_OVERRIDE.getPathExpression())
+               .matcher(filePath)
+               .matches()
+        || Pattern.compile(YamlType.MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE.getPathExpression())
                .matcher(filePath)
                .matches()) {
       return;

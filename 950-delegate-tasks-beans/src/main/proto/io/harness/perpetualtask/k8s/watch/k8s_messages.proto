@@ -58,6 +58,7 @@ message PodInfo {
   string qos_class = 16;
   repeated Volume volume = 17;
   map<string, string> namespace_labels = 18;
+  map<string, string> metadata_annotations = 19;
 }
 
 message PodEvent {
@@ -81,6 +82,7 @@ message PVInfo {
     PV_TYPE_GCE_PERSISTENT_DISK = 1;
     PV_TYPE_AWS_EBS = 2;
     PV_TYPE_AZURE_DISK = 3;
+    PV_TYPE_NFS = 4;
   }
   PVType pv_type = 2;
 

@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.helm.HelmSubCommandType.TEMPLATE;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -11,7 +12,6 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
-import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 import static software.wings.helpers.ext.helm.HelmDeployServiceImpl.WORKING_DIR;
 import static software.wings.utils.WingsTestConstants.BRANCH_NAME;
 import static software.wings.utils.WingsTestConstants.COMMIT_REFERENCE;
@@ -49,6 +49,7 @@ import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.GeneralException;
@@ -71,7 +72,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
@@ -222,8 +222,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
-        .thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
@@ -272,8 +271,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
-        .thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), anyList(), anyString(), anyString(),
@@ -457,7 +455,6 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             .chartSpecification(HelmChartSpecification.builder().chartName(HelmTestConstants.CHART_NAME_KEY).build())
             .containerServiceParams(ContainerServiceParams.builder().namespace("default").build())
             .executionLogCallback(logCallback)
-            .deprecateFabric8Enabled(true)
             .sourceRepoConfig(K8sDelegateManifestConfig.builder()
                                   .manifestStoreTypes(StoreType.HelmSourceRepo)
                                   .gitConfig(GitConfig.builder().build())
@@ -478,7 +475,6 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                                 .chartUrl("http://127.0.0.1")
                                 .build())
         .executionLogCallback(logCallback)
-        .deprecateFabric8Enabled(true)
         .build();
   }
 
@@ -938,8 +934,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         KubernetesResourceId.builder().namespace("default-2").name("resource-2").kind(Kind.Deployment.name()).build();
     KubernetesResourceId resource3 =
         KubernetesResourceId.builder().namespace("default-3").name("resource-3").kind(Kind.Deployment.name()).build();
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
-        .thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
 
     HelmInstallCommandResponse result = null;
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -993,8 +988,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void validateCreateNewRelease(int releaseNumber) throws Exception {
     ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
     verify(k8sTaskHelperBase, atLeastOnce())
-        .saveReleaseHistory(
-            any(KubernetesConfig.class), eq("release"), releaseHistoryCaptor.capture(), eq(true), eq(true));
+        .saveReleaseHistory(any(KubernetesConfig.class), eq("release"), releaseHistoryCaptor.capture(), eq(true));
     ReleaseHistory storedHistory = ReleaseHistory.createFromData(releaseHistoryCaptor.getValue());
     assertThat(storedHistory.getRelease(releaseNumber)).isNotNull();
   }
@@ -1009,7 +1003,6 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                                                                      .chartName(HelmTestConstants.CHART_NAME_KEY)
                                                                      .chartUrl("http://127.0.0.1")
                                                                      .build())
-                                             .deprecateFabric8Enabled(true)
                                              .timeoutInMillis(LONG_TIMEOUT_INTERVAL)
                                              .build();
     List<ContainerInfo> containerInfosDefault1 =
@@ -1024,7 +1017,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
                         .output("Rollback was a success.")
                         .commandExecutionStatus(SUCCESS)
                         .build());
-    when(k8sTaskHelperBase.getReleaseHistoryFromSecret(any(KubernetesConfig.class), eq("release"), anyBoolean()))
+    when(k8sTaskHelperBase.getReleaseHistoryFromSecret(any(KubernetesConfig.class), eq("release")))
         .thenReturn(releaseHistory.getAsYaml());
     when(k8sTaskHelperBase.getContainerInfos(any(), eq("release"), eq("default-1"), eq(LONG_TIMEOUT_INTERVAL)))
         .thenReturn(containerInfosDefault1);
@@ -1246,8 +1239,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     List<KubernetesResourceId> resourceIds =
         resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
 
-    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), anyBoolean(), any(), any()))
-        .thenReturn(true);
+    when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelper.doStatusCheckAllResourcesForHelm(any(Kubectl.class), eq(resourceIds), anyString(), anyString(),
              anyString(), anyString(), any(ExecutionLogCallback.class)))
         .thenReturn(false);

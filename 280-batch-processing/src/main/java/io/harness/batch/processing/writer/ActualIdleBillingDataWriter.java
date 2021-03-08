@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepExecution;
@@ -26,6 +27,13 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
   @Autowired private BillingDataServiceImpl billingDataService;
 
   private JobParameters parameters;
+
+  @Value
+  private static class CostDistribution {
+    Double total;
+    Double cpu;
+    Double memory;
+  }
 
   @BeforeStep
   public void beforeStep(final StepExecution stepExecution) {
@@ -49,63 +57,59 @@ public class ActualIdleBillingDataWriter extends EventWriter implements ItemWrit
             parentInstanceId = parentInstanceData.getInstanceName();
           }
         }
-        BigDecimal unallocatedCostForNode = BigDecimal.valueOf(nodeData.getCost() - nodeData.getSystemCost());
-        BigDecimal cpuUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getCpuCost() - nodeData.getCpuSystemCost());
-        BigDecimal memoryUnallocatedCostForNode =
-            BigDecimal.valueOf(nodeData.getMemoryCost() - nodeData.getMemorySystemCost());
+
+        CostDistribution unallocatedCostForNode = new CostDistribution(nodeData.getCost() - nodeData.getSystemCost(),
+            nodeData.getCpuCost() - nodeData.getCpuSystemCost(),
+            nodeData.getMemoryCost() - nodeData.getMemorySystemCost());
 
         if (parentInstanceIdToPodData.containsKey(parentInstanceId)) {
-          unallocatedCostForNode = BigDecimal.valueOf(nodeData.getCost()
-              - parentInstanceIdToPodData.get(parentInstanceId).getCost() - nodeData.getSystemCost());
-          cpuUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getCpuCost()
-              - parentInstanceIdToPodData.get(parentInstanceId).getCpuCost() - nodeData.getCpuSystemCost());
-          memoryUnallocatedCostForNode = BigDecimal.valueOf(nodeData.getMemoryCost()
-              - parentInstanceIdToPodData.get(parentInstanceId).getMemoryCost() - nodeData.getMemorySystemCost());
-          if (unallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
-              || cpuUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1
-              || memoryUnallocatedCostForNode.compareTo(BigDecimal.ZERO) == -1) {
-            log.debug(
-                "Unallocated billing amount -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
+          ActualIdleCostData podData = parentInstanceIdToPodData.get(parentInstanceId);
+
+          unallocatedCostForNode = new CostDistribution(
+              nodeData.getCost() - podData.getMemoryCost() - podData.getCpuCost() - nodeData.getSystemCost(),
+              nodeData.getCpuCost() - podData.getCpuCost() - nodeData.getCpuSystemCost(),
+              nodeData.getMemoryCost() - podData.getMemoryCost() - nodeData.getMemorySystemCost());
+
+          if (isNegative(unallocatedCostForNode)) {
+            log.debug("Unallocated billing amount -ve for node account {} cluster {} instance {} startdate {}: {}",
                 nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
-                unallocatedCostForNode, cpuUnallocatedCostForNode, memoryUnallocatedCostForNode);
-            unallocatedCostForNode = BigDecimal.ZERO;
-            cpuUnallocatedCostForNode = BigDecimal.ZERO;
-            memoryUnallocatedCostForNode = BigDecimal.ZERO;
+                unallocatedCostForNode);
+            unallocatedCostForNode = new CostDistribution(0D, 0D, 0D);
           }
         }
 
-        BigDecimal actualIdleCost = BigDecimal.valueOf(nodeData.getIdleCost() - unallocatedCostForNode.doubleValue());
-        BigDecimal cpuActualIdleCost =
-            BigDecimal.valueOf(nodeData.getCpuIdleCost() - cpuUnallocatedCostForNode.doubleValue());
-        BigDecimal memoryActualIdleCost =
-            BigDecimal.valueOf(nodeData.getMemoryIdleCost() - memoryUnallocatedCostForNode.doubleValue());
+        CostDistribution actualIdleCostForNode =
+            new CostDistribution(nodeData.getIdleCost() - unallocatedCostForNode.getTotal(),
+                nodeData.getCpuIdleCost() - unallocatedCostForNode.getCpu(),
+                nodeData.getMemoryIdleCost() - unallocatedCostForNode.getMemory());
 
-        if (actualIdleCost.compareTo(BigDecimal.ZERO) == -1 || cpuActualIdleCost.compareTo(BigDecimal.ZERO) == -1
-            || memoryActualIdleCost.compareTo(BigDecimal.ZERO) == -1) {
-          log.debug(
-              "Unallocated idle cost -ve for node account {} cluster {} instance {} startdate {} total {} cpu {} memory {}",
+        if (isNegative(actualIdleCostForNode)) {
+          log.debug("Unallocated idle cost -ve for node account {} cluster {} instance {} startdate {}: {}",
               nodeData.getAccountId(), nodeData.getClusterId(), nodeData.getInstanceId(), nodeData.getStartTime(),
-              actualIdleCost, cpuActualIdleCost, memoryActualIdleCost);
-          actualIdleCost = BigDecimal.ZERO;
-          cpuActualIdleCost = BigDecimal.ZERO;
-          memoryActualIdleCost = BigDecimal.ZERO;
+              actualIdleCostForNode);
+          actualIdleCostForNode = new CostDistribution(0D, 0D, 0D);
         }
+
         billingDataService.update(ActualIdleCostWriterData.builder()
                                       .accountId(nodeData.getAccountId())
                                       .instanceId(nodeData.getInstanceId())
                                       .parentInstanceId(nodeData.getParentInstanceId())
-                                      .unallocatedCost(unallocatedCostForNode)
-                                      .cpuUnallocatedCost(cpuUnallocatedCostForNode)
-                                      .memoryUnallocatedCost(memoryUnallocatedCostForNode)
-                                      .actualIdleCost(actualIdleCost)
-                                      .cpuActualIdleCost(cpuActualIdleCost)
-                                      .memoryActualIdleCost(memoryActualIdleCost)
+                                      .unallocatedCost(BigDecimal.valueOf(unallocatedCostForNode.getTotal()))
+                                      .cpuUnallocatedCost(BigDecimal.valueOf(unallocatedCostForNode.getCpu()))
+                                      .memoryUnallocatedCost(BigDecimal.valueOf(unallocatedCostForNode.getMemory()))
+                                      .actualIdleCost(BigDecimal.valueOf(actualIdleCostForNode.getTotal()))
+                                      .cpuActualIdleCost(BigDecimal.valueOf(actualIdleCostForNode.getCpu()))
+                                      .memoryActualIdleCost(BigDecimal.valueOf(actualIdleCostForNode.getMemory()))
                                       .startTime(nodeData.getStartTime())
                                       .clusterId(nodeData.getClusterId())
                                       .build(),
             batchJobType);
       });
     });
+  }
+
+  private static boolean isNegative(final CostDistribution costDistribution) {
+    return costDistribution.getTotal() < 0D || costDistribution.getMemory() < 0D || costDistribution.getCpu() < 0D;
   }
 
   private Map<String, ActualIdleCostData> getParentInstanceIdToDataMap(List<ActualIdleCostData> podsData) {

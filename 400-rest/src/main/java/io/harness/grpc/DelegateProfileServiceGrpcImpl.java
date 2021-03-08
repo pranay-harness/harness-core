@@ -6,6 +6,8 @@ import static io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -57,6 +59,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBase {
   private DelegateProfileService delegateProfileService;
   private UserService userService;
@@ -269,6 +272,17 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
               .collect(Collectors.toList()));
     }
 
+    if (isNotBlank(delegateProfile.getIdentifier())) {
+      delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
+    }
+
+    List<String> delegatesForProfile =
+        delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
+
+    if (isNotEmpty(delegatesForProfile)) {
+      delegateProfileGrpcBuilder.setNumberOfDelegates(delegatesForProfile.size());
+    }
+
     return delegateProfileGrpcBuilder.build();
   }
 
@@ -281,7 +295,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                                         .approvalRequired(delegateProfileGrpc.getApprovalRequired())
                                                         .startupScript(delegateProfileGrpc.getStartupScript());
 
-    if (delegateProfileGrpc.hasCreatedBy()) {
+    if (delegateProfileGrpc.hasCreatedBy() && isNotEmpty(delegateProfileGrpc.getCreatedBy().getUuid())) {
       delegateProfileBuilder.createdBy(EmbeddedUser.builder()
                                            .uuid(delegateProfileGrpc.getCreatedBy().getUuid())
                                            .name(delegateProfileGrpc.getCreatedBy().getName())
@@ -289,7 +303,7 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                                            .build());
     }
 
-    if (delegateProfileGrpc.hasLastUpdatedBy()) {
+    if (delegateProfileGrpc.hasLastUpdatedBy() && isNotEmpty(delegateProfileGrpc.getLastUpdatedBy().getUuid())) {
       User user = userService.getUserFromCacheOrDB(delegateProfileGrpc.getLastUpdatedBy().getUuid());
       UserThreadLocal.set(user);
     }
@@ -315,6 +329,10 @@ public class DelegateProfileServiceGrpcImpl extends DelegateProfileServiceImplBa
                          .scopingEntities(convertGrpcScopes(grpcScopingRule.getScopingEntitiesMap()))
                          .build())
               .collect(Collectors.toList()));
+    }
+
+    if (isNotEmpty(delegateProfileGrpc.getIdentifier())) {
+      delegateProfileBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
 
     return delegateProfileBuilder.build();

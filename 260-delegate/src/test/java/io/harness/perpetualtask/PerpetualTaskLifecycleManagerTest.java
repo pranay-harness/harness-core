@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +20,7 @@ import com.google.protobuf.Any;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -26,12 +28,14 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(PerpetualTaskLifecycleManager.class)
 public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   private PerpetualTaskLifecycleManager perpetualTaskLifecycleManager;
-  private Map<String, PerpetualTaskExecutor> factoryMap = new HashMap<>();
+  private final Map<String, PerpetualTaskExecutor> factoryMap = new HashMap<>();
   @Mock private TimeLimiter timeLimiter;
   @Mock private PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
 
@@ -41,16 +45,18 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   @Captor private ArgumentCaptor<Instant> instantArgumentCaptor;
   @Captor private ArgumentCaptor<PerpetualTaskResponse> perpetualTaskResponseArgumentCaptor;
 
-  private final String REGION = "us-east-1";
-  private final String CLUSTER_ID = "clusterId";
-  private final String SETTING_ID = "settingId";
-  private final String CLUSTER_NAME = "ecs-ccm-cluster";
   private final String PERPETUAL_TASK_ID = "perpetualTaskId";
+
+  @Mock private AtomicInteger currentlyExecutingPerpetualTasksCount;
 
   @Before
   public void setUp() throws Exception {
     factoryMap.put("EcsPerpetualTaskParams", perpetualTaskExecutor);
 
+    String REGION = "us-east-1";
+    String CLUSTER_ID = "clusterId";
+    String SETTING_ID = "settingId";
+    String CLUSTER_NAME = "ecs-ccm-cluster";
     EcsPerpetualTaskParams ecsPerpetualTaskParams = EcsPerpetualTaskParams.newBuilder()
                                                         .setClusterId(CLUSTER_ID)
                                                         .setRegion(REGION)
@@ -63,8 +69,8 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
     PerpetualTaskId perpetualTaskId = PerpetualTaskId.newBuilder().setId(PERPETUAL_TASK_ID).build();
     PerpetualTaskExecutionContext taskContext =
         PerpetualTaskExecutionContext.newBuilder().setTaskParams(params).build();
-    perpetualTaskLifecycleManager = new PerpetualTaskLifecycleManager(
-        perpetualTaskId, taskContext, factoryMap, perpetualTaskServiceGrpcClient, timeLimiter);
+    perpetualTaskLifecycleManager = new PerpetualTaskLifecycleManager(perpetualTaskId, taskContext, factoryMap,
+        perpetualTaskServiceGrpcClient, timeLimiter, currentlyExecutingPerpetualTasksCount);
   }
 
   @Test
@@ -73,12 +79,16 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   public void testRunOnceWhenResponseIsSuccess() {
     PerpetualTaskResponse perpetualTaskResponse = PerpetualTaskResponse.builder().responseCode(200).build();
     when(perpetualTaskExecutor.runOnce(any(), any(), any())).thenReturn(perpetualTaskResponse);
+    when(currentlyExecutingPerpetualTasksCount.get()).thenReturn(1);
     perpetualTaskLifecycleManager.call();
     verify(perpetualTaskServiceGrpcClient)
         .heartbeat(perpetualTaskIdArgumentCaptor.capture(), instantArgumentCaptor.capture(),
             perpetualTaskResponseArgumentCaptor.capture());
     assertThat(perpetualTaskIdArgumentCaptor.getValue().getId()).isEqualTo(PERPETUAL_TASK_ID);
     assertThat(perpetualTaskResponseArgumentCaptor.getValue()).isEqualTo(perpetualTaskResponse);
+
+    verify(currentlyExecutingPerpetualTasksCount, times(1)).getAndIncrement();
+    verify(currentlyExecutingPerpetualTasksCount, times(1)).getAndDecrement();
   }
 
   @Test
@@ -88,12 +98,16 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
     PerpetualTaskResponse perpetualTaskResponse =
         PerpetualTaskResponse.builder().responseCode(408).responseMessage("failed").build();
     when(perpetualTaskExecutor.runOnce(any(), any(), any())).thenThrow(UncheckedTimeoutException.class);
+    when(currentlyExecutingPerpetualTasksCount.get()).thenReturn(1);
     perpetualTaskLifecycleManager.call();
     verify(perpetualTaskServiceGrpcClient)
         .heartbeat(perpetualTaskIdArgumentCaptor.capture(), instantArgumentCaptor.capture(),
             perpetualTaskResponseArgumentCaptor.capture());
     assertThat(perpetualTaskIdArgumentCaptor.getValue().getId()).isEqualTo(PERPETUAL_TASK_ID);
     assertThat(perpetualTaskResponseArgumentCaptor.getValue()).isEqualTo(perpetualTaskResponse);
+
+    verify(currentlyExecutingPerpetualTasksCount, times(1)).getAndIncrement();
+    verify(currentlyExecutingPerpetualTasksCount, times(1)).getAndDecrement();
   }
 
   @Test
@@ -103,11 +117,15 @@ public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
     PerpetualTaskResponse perpetualTaskResponse =
         PerpetualTaskResponse.builder().responseCode(500).responseMessage("failed").build();
     when(perpetualTaskExecutor.runOnce(any(), any(), any())).thenThrow(Exception.class);
+    when(currentlyExecutingPerpetualTasksCount.get()).thenReturn(1);
     perpetualTaskLifecycleManager.call();
     verify(perpetualTaskServiceGrpcClient)
         .heartbeat(perpetualTaskIdArgumentCaptor.capture(), instantArgumentCaptor.capture(),
             perpetualTaskResponseArgumentCaptor.capture());
     assertThat(perpetualTaskIdArgumentCaptor.getValue().getId()).isEqualTo(PERPETUAL_TASK_ID);
     assertThat(perpetualTaskResponseArgumentCaptor.getValue()).isEqualTo(perpetualTaskResponse);
+
+    verify(currentlyExecutingPerpetualTasksCount, times(1)).getAndIncrement();
+    verify(currentlyExecutingPerpetualTasksCount, times(1)).getAndDecrement();
   }
 }

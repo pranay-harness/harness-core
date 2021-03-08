@@ -2,6 +2,8 @@ package io.harness.perpetualtask;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppInstanceSyncDelegateExecutor implements PerpetualTaskExecutor {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;

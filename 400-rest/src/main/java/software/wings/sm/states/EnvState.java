@@ -2,19 +2,25 @@ package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.REJECTED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.alert.AlertType.DEPLOYMENT_FREEZE_EVENT;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -22,6 +28,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -37,6 +44,7 @@ import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
 import software.wings.api.artifact.ServiceArtifactVariableElement;
 import software.wings.api.artifact.ServiceArtifactVariableElements;
+import software.wings.beans.Application;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
@@ -45,11 +53,13 @@ import software.wings.beans.ManifestVariable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.service.impl.EnvironmentServiceImpl;
+import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -64,7 +74,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -76,6 +85,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -94,21 +104,18 @@ import org.mongodb.morphia.annotations.Transient;
 @Attributes(title = "Env")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvStateKeys")
+@TargetModule(Module._860_ORCHESTRATION_STEPS)
 public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
   // NOTE: This field should no longer be used. It contains incorrect/stale values.
   @Deprecated
   @Expand(dataProvider = EnvironmentServiceImpl.class)
-  @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   @Setter
   private String envId;
 
-  @EnumData(enumDataProvider = WorkflowServiceImpl.class)
-  @Attributes(required = true, title = "Workflow")
-  @Setter
-  private String workflowId;
+  @Attributes(required = true, title = "Workflow") @Setter private String workflowId;
 
   @Setter @SchemaIgnore private String pipelineId;
   @Setter @SchemaIgnore private String pipelineStageElementId;
@@ -128,6 +135,8 @@ public class EnvState extends State implements WorkflowState {
   @Transient @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Transient @Inject private SweepingOutputService sweepingOutputService;
   @Transient @Inject private FeatureFlagService featureFlagService;
+  @Transient @Inject private NotificationMessageResolver notificationMessageResolver;
+  @Transient @Inject private DeploymentFreezeUtils deploymentFreezeUtils;
 
   @Getter @Setter @JsonIgnore private boolean disable;
 
@@ -201,6 +210,19 @@ public class EnvState extends State implements WorkflowState {
           .correlationIds(asList(execution.getUuid()))
           .stateExecutionData(envStateExecutionData)
           .build();
+    } catch (DeploymentFreezeException dfe) {
+      log.warn(dfe.getMessage());
+      // TODO: Notification Handling for rejected pipelines
+      if (!dfe.isMasterFreeze()) {
+        Map<String, String> placeholderValues = getPlaceHolderValues(context);
+        deploymentFreezeUtils.sendPipelineRejectionNotification(
+            accountId, appId, dfe.getDeploymentFreezeIds(), placeholderValues);
+      }
+      return ExecutionResponse.builder()
+          .executionStatus(REJECTED)
+          .errorMessage(dfe.getMessage())
+          .stateExecutionData(envStateExecutionData)
+          .build();
     } catch (Exception e) {
       String message = ExceptionUtils.getMessage(e);
       return ExecutionResponse.builder()
@@ -209,6 +231,21 @@ public class EnvState extends State implements WorkflowState {
           .stateExecutionData(envStateExecutionData)
           .build();
     }
+  }
+
+  private Map<String, String> getPlaceHolderValues(ExecutionContext context) {
+    Application app = Objects.requireNonNull(context.getApp());
+    WorkflowExecution workflowExecution =
+        executionService.fetchWorkflowExecution(app.getUuid(), context.getWorkflowExecutionId(),
+            WorkflowExecutionKeys.createdAt, WorkflowExecutionKeys.triggeredBy, WorkflowExecutionKeys.status);
+
+    notNullCheck("Pipeline execution in context " + context.getWorkflowExecutionId()
+            + " doesn't exist in the specified application " + app.getUuid(),
+        workflowExecution, USER);
+    String userName = workflowExecution.getTriggeredBy() != null ? workflowExecution.getTriggeredBy().getName() : "";
+
+    return notificationMessageResolver.getPlaceholderValues(context, userName, workflowExecution.getCreatedAt(),
+        System.currentTimeMillis(), "", "rejected", "", REJECTED, DEPLOYMENT_FREEZE_EVENT);
   }
 
   private List<ManifestVariable> getManifestVariables(WorkflowStandardParams workflowStandardParams) {

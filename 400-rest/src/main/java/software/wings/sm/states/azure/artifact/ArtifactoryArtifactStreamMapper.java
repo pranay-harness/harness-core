@@ -10,19 +10,19 @@ import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsern
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 
-import software.wings.beans.artifact.ArtifactStream;
+import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 
 import java.util.Optional;
 
 public class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
-  protected ArtifactoryArtifactStreamMapper(ArtifactStream artifactStream) {
-    super(artifactStream);
+  protected ArtifactoryArtifactStreamMapper(Artifact artifact, ArtifactStreamAttributes artifactStreamAttributes) {
+    super(artifact, artifactStreamAttributes);
   }
 
   public ConnectorConfigDTO getConnectorDTO() {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue();
     String username = artifactoryConfig.getUsername();
     String registryUrl = artifactoryConfig.fetchRegistryUrl();
@@ -49,5 +49,10 @@ public class ArtifactoryArtifactStreamMapper extends ArtifactStreamMapper {
   public Optional<DecryptableEntity> getConnectorDTOAuthCredentials(ConnectorConfigDTO connectorConfigDTO) {
     ArtifactoryConnectorDTO artifactoryConnectorDTO = (ArtifactoryConnectorDTO) connectorConfigDTO;
     return Optional.ofNullable(artifactoryConnectorDTO.getAuth().getCredentials());
+  }
+
+  @Override
+  public Optional<EncryptableSetting> getEncryptableSetting() {
+    return Optional.ofNullable((ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue());
   }
 }

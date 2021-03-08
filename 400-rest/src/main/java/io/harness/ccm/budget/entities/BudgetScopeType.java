@@ -6,4 +6,5 @@ import lombok.experimental.UtilityClass;
 public class BudgetScopeType {
   public static final String APPLICATION = "APPLICATION";
   public static final String CLUSTER = "CLUSTER";
+  public static final String PERSPECTIVE = "PERSPECTIVE";
 }

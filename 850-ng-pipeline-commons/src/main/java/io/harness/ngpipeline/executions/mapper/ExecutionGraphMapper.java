@@ -39,12 +39,13 @@ public class ExecutionGraphMapper {
     return ExecutionNode.builder()
         .endTs(graphVertex.getEndTs())
         .failureInfo(graphVertex.getFailureInfo())
+        .skipInfo(graphVertex.getSkipInfo())
         .name(graphVertex.getName())
         .startTs(graphVertex.getStartTs())
         .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
         .stepType(graphVertex.getStepType())
         .uuid(graphVertex.getUuid())
-        .executableResponsesMetadata(graphVertex.getExecutableResponsesMetadata())
+        .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
         .build();
   }

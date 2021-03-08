@@ -4,6 +4,8 @@ import io.harness.batch.processing.metrics.CeCloudMetricsService;
 import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
+import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
+import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
@@ -50,6 +52,7 @@ public class BatchProcessingModule extends AbstractModule {
     bind(ViewsBillingService.class).to(ViewsBillingServiceImpl.class);
     bind(ViewCustomFieldService.class).to(ViewCustomFieldServiceImpl.class);
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
+    bind(AnomalyService.class).to(AnomalyServiceImpl.class);
   }
 
   @Provides

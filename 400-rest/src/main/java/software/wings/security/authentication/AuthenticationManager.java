@@ -14,7 +14,6 @@ import static io.harness.eraro.ErrorCode.PASSWORD_EXPIRED;
 import static io.harness.eraro.ErrorCode.USER_DISABLED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_LOCKED;
-import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 
@@ -387,7 +386,7 @@ public class AuthenticationManager {
     String accountId = authenticationUtils.getDefaultAccount(user).getUuid();
 
     if (!userService.isUserAccountAdmin(authService.getUserPermissionInfo(accountId, user, false), accountId)) {
-      throw new WingsException(USER_NOT_AUTHORIZED, USER);
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
     return user;
   }

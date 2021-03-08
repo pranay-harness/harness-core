@@ -8,6 +8,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
@@ -21,6 +22,8 @@ import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
@@ -49,6 +52,7 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -56,6 +60,9 @@ import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.retry.PredefinedBackoffStrategies;
+import com.amazonaws.retry.PredefinedRetryPolicies;
+import com.amazonaws.retry.RetryPolicy;
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScaling;
 import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScalingClientBuilder;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
@@ -217,9 +224,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class AwsHelperService {
-  private static final String AWS_AVAILABILITY_ZONE_CHECK =
-      "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
@@ -255,13 +261,13 @@ public class AwsHelperService {
 
   public AmazonCloudWatchClient getAwsCloudWatchClient(String region, AwsConfig awsConfig) {
     AmazonCloudWatchClientBuilder builder = AmazonCloudWatchClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCloudWatchClient) builder.build();
   }
 
   private AmazonECSClient getAmazonEcsClient(String region, AwsConfig awsConfig) {
     AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECSClient) builder.build();
   }
 
@@ -275,7 +281,7 @@ public class AwsHelperService {
 
   public AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
     AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECRClient) builder.build();
   }
 
@@ -315,18 +321,18 @@ public class AwsHelperService {
   private AmazonS3Client getAmazonS3Client(String region, AwsConfig awsConfig) {
     AmazonS3ClientBuilder builder =
         AmazonS3ClientBuilder.standard().withRegion(region).withForceGlobalBucketAccessEnabled(true);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonS3Client) builder.build();
   }
 
   private AmazonS3Client getAmazonS3Client(AwsConfig awsConfig) {
     AmazonS3ClientBuilder builder =
         AmazonS3ClientBuilder.standard().withRegion(getRegion(awsConfig)).withForceGlobalBucketAccessEnabled(true);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonS3Client) builder.build();
   }
 
-  public void attachCredentials(AwsClientBuilder builder, AwsConfig awsConfig) {
+  public void attachCredentialsAndBackoffPolicy(AwsClientBuilder builder, AwsConfig awsConfig) {
     AWSCredentialsProvider credentialsProvider;
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
@@ -351,37 +357,42 @@ public class AwsHelperService {
     }
 
     builder.withCredentials(credentialsProvider);
+    ClientConfiguration clientConfiguration = new ClientConfiguration();
+    RetryPolicy retryPolicy = new RetryPolicy(new PredefinedRetryPolicies.SDKDefaultRetryCondition(),
+        new PredefinedBackoffStrategies.SDKDefaultBackoffStrategy(), DEFAULT_BACKOFF_MAX_ERROR_RETRIES, false);
+    clientConfiguration.setRetryPolicy(retryPolicy);
+    builder.withClientConfiguration(clientConfiguration);
   }
 
   private AmazonEC2Client getAmazonEc2Client(String region, AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
   }
 
-  private AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
+  public AmazonEC2Client getAmazonEc2Client(AwsConfig awsConfig) {
     AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(getRegion(awsConfig));
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonEC2Client) builder.build();
   }
 
   private AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, AwsConfig awsConfig) {
     AmazonCodeDeployClientBuilder builder = AmazonCodeDeployClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCodeDeployClient) builder.build();
   }
 
   @VisibleForTesting
   AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, AwsConfig awsConfig) {
     AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonCloudFormationClient) builder.build();
   }
 
   @VisibleForTesting
   AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
     AmazonAutoScalingClientBuilder builder = AmazonAutoScalingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonAutoScalingClient) builder.build();
   }
 
@@ -389,7 +400,7 @@ public class AwsHelperService {
     com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder builder =
         com.amazonaws.services.elasticloadbalancingv2.AmazonElasticLoadBalancingClientBuilder.standard().withRegion(
             region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonElasticLoadBalancingClient) builder.build();
   }
 
@@ -397,7 +408,7 @@ public class AwsHelperService {
       Regions region, AwsConfig awsConfig) {
     AmazonElasticLoadBalancingClientBuilder builder =
         AmazonElasticLoadBalancingClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient) builder.build();
   }
 

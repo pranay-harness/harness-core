@@ -1,6 +1,7 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
+import static io.harness.helm.HelmSubCommandType.TEMPLATE;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.Deployment;
 import static io.harness.k8s.model.Kind.Namespace;
@@ -12,36 +13,48 @@ import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.exception.GitOperationException;
 import io.harness.k8s.KubernetesContainerService;
-import io.harness.k8s.kubectl.AbstractExecutable;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
@@ -51,7 +64,10 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -76,7 +92,9 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
 import io.kubernetes.client.util.Yaml;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -92,6 +110,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.zeroturnaround.exec.ProcessOutput;
@@ -106,8 +125,14 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private KubernetesContainerService mockKubernetesContainerService;
   @Mock private TimeLimiter mockTimeLimiter;
   @Mock private LogCallback executionLogCallback;
+  @Mock private NGGitService ngGitService;
+  @Mock private GitDecryptionHelper gitDecryptionHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
+
+  private final String flagValue = "--flag-test-1";
+  private final HelmCommandFlag commandFlag =
+      HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, flagValue)).build();
 
   long LONG_TIMEOUT_INTERVAL = 60 * 1000L;
 
@@ -116,31 +141,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
         .when(mockTimeLimiter)
         .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
-  }
-
-  @Test
-  @Owner(developers = ABOSII)
-  @Category(UnitTests.class)
-  public void testGetPodDetailsWithLabelsFabric8() throws Exception {
-    KubernetesConfig config = KubernetesConfig.builder().build();
-    Map<String, String> labelsQuery = ImmutableMap.of("release-name", "releaseName");
-    List<Pod> existingPods =
-        asList(k8sApiMockPodWith("uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container")),
-            k8sApiMockPodWith("uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList()),
-            k8sApiMockPodWith("uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3")));
-
-    doReturn(existingPods)
-        .when(mockKubernetesContainerService)
-        .getRunningPodsWithLabelsFabric8(config, "default", labelsQuery);
-    List<K8sPod> pods = k8sTaskHelperBase.getPodDetailsWithLabelsFabric8(
-        config, "default", "releaseName", labelsQuery, LONG_TIMEOUT_INTERVAL);
-
-    assertThat(pods).isNotEmpty();
-    assertThat(pods).hasSize(3);
-    assertThat(pods.get(0).getUid()).isEqualTo("uid-1");
-    assertThatK8sPodHas(pods.get(0), "uid-1", ImmutableMap.of("marker", "marker-value"), singletonList("container"));
-    assertThatK8sPodHas(pods.get(1), "uid-2", ImmutableMap.of("release", "releaseName", "color", "green"), emptyList());
-    assertThatK8sPodHas(pods.get(2), "uid-3", ImmutableMap.of(), asList("container-1", "container-2", "container-3"));
   }
 
   @Test
@@ -562,49 +562,15 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldGetReleaseHistoryFromConfigMapUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMapFabric8(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, "release", false);
-    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .fetchReleaseHistoryFromConfigMapFabric8(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromConfigMap(any(), any());
-
-    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistory).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
   public void testShouldGetReleaseHistoryFromConfigMapUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     when(mockKubernetesContainerService.fetchReleaseHistoryFromConfigMap(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, "release", true);
+    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig, "release");
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService).fetchReleaseHistoryFromConfigMap(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromConfigMapFabric8(any(), any());
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryInConfigMapUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    doNothing().when(mockKubernetesContainerService).saveReleaseHistoryInConfigMapFabric8(any(), any(), anyString());
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, "release", "secret", false);
-    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .saveReleaseHistoryInConfigMapFabric8(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistoryInConfigMap(any(), any(), anyString());
-
-    assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
   }
 
   @Test
@@ -613,29 +579,11 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testShouldSaveReleaseHistoryInConfigMapUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     when(mockKubernetesContainerService.saveReleaseHistoryInConfigMap(any(), any(), anyString())).thenReturn(null);
-    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, "release", "secret", true);
+    k8sTaskHelperBase.saveReleaseHistoryInConfigMap(kubernetesConfig, "release", "secret");
     ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService)
         .saveReleaseHistoryInConfigMap(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistoryInConfigMapFabric8(any(), any(), anyString());
-
-    assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void testShouldSaveReleaseHistoryUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    doNothing().when(mockKubernetesContainerService).saveReleaseHistoryFabric8(any(), any(), anyString(), anyBoolean());
-    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, "release", "secret", true, false);
-    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .saveReleaseHistoryFabric8(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture(), anyBoolean());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistory(any(), any(), anyString(), anyBoolean());
 
     assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
@@ -647,12 +595,11 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testShouldSaveReleaseHistoryUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     doNothing().when(mockKubernetesContainerService).saveReleaseHistory(any(), any(), anyString(), anyBoolean());
-    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, "release", "secret", true, true);
+    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, "release", "secret", true);
     ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> releaseHistoryCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService)
         .saveReleaseHistory(any(), releaseNameCaptor.capture(), releaseHistoryCaptor.capture(), anyBoolean());
-    verify(mockKubernetesContainerService, times(0)).saveReleaseHistoryFabric8(any(), any(), anyString(), anyBoolean());
 
     assertThat(releaseNameCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistoryCaptor.getValue()).isEqualTo("secret");
@@ -661,29 +608,12 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldGetReleaseHistoryFromSecretUsingFabric8() {
-    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
-    when(mockKubernetesContainerService.fetchReleaseHistoryFromSecretsFabric8(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, "release", false);
-    ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
-    verify(mockKubernetesContainerService)
-        .fetchReleaseHistoryFromSecretsFabric8(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromSecrets(any(), any());
-
-    assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
-    assertThat(releaseHistory).isEqualTo("secret");
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
   public void testShouldGetReleaseHistoryFromSecretUsingK8sClient() {
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
     when(mockKubernetesContainerService.fetchReleaseHistoryFromSecrets(any(), any())).thenReturn("secret");
-    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, "release", true);
+    String releaseHistory = k8sTaskHelperBase.getReleaseHistoryFromSecret(kubernetesConfig, "release");
     ArgumentCaptor<String> releaseArgumentCaptor = ArgumentCaptor.forClass(String.class);
     verify(mockKubernetesContainerService).fetchReleaseHistoryFromSecrets(any(), releaseArgumentCaptor.capture());
-    verify(mockKubernetesContainerService, times(0)).fetchReleaseHistoryFromSecretsFabric8(any(), any());
 
     assertThat(releaseArgumentCaptor.getValue()).isEqualTo("release");
     assertThat(releaseHistory).isEqualTo("secret");
@@ -731,5 +661,266 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     }
 
     assertThat(captor.getValue().command()).isEqualTo(expectedExecutedCommand);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testTagNewPods() {
+    assertThat(k8sTaskHelperBase.tagNewPods(emptyList(), emptyList())).isEmpty();
+
+    List<K8sPod> pods = k8sTaskHelperBase.tagNewPods(
+        asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("old-pod-1"), podWithName("old-pod-2")));
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+
+    pods =
+        k8sTaskHelperBase.tagNewPods(asList(podWithName("pod-1"), podWithName("pod-2")), asList(podWithName("pod-1")));
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(1);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+
+    pods = k8sTaskHelperBase.tagNewPods(asList(podWithName("pod-1"), podWithName("pod-2")), emptyList());
+    assertThat(pods).hasSize(2);
+    assertThat(pods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
+    assertThat(pods.stream().map(K8sPod::getName).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder("pod-1", "pod-2");
+  }
+
+  private K8sPod podWithName(String name) {
+    return K8sPod.builder().name(name).build();
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRender() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2, null);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRenderWithCommand() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V2, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRenderOneChartFile() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2, null);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV2CommandForRenderOneChartFileWithCommandFlags() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V2, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRender() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3, null);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRenderWithCommand() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender(
+        "helm", "chart_location", "test-release", "default", " -f values-0.yaml", HelmVersion.V3, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRenderOneChartFile() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3, null);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetHelmV3CommandForRenderOneChartFileWithCommandFlag() {
+    String command = k8sTaskHelperBase.getHelmCommandForRender("helm", "chart_location", "test-release", "default",
+        " -f values-0.yaml", "template/service.yaml", HelmVersion.V3, commandFlag);
+    assertThat(command).doesNotContain("$").doesNotContain("{").doesNotContain("}");
+    assertThat(command).contains(flagValue);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateForHelmChartFiles() throws Exception {
+    K8sTaskHelperBase spyHelperBase = Mockito.spy(k8sTaskHelperBase);
+    List<String> chartFiles = Arrays.asList("file.yaml");
+
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
+    doReturn(processResult).when(spyHelperBase).executeShellCommand(any(), any(), any(), anyLong());
+
+    final List<FileData> manifestFiles = spyHelperBase.renderTemplateForHelmChartFiles("helm", "manifest", chartFiles,
+        new ArrayList<>(), "release", "namespace", executionLogCallback, HelmVersion.V3, 9000, commandFlag);
+
+    assertThat(manifestFiles.size()).isEqualTo(1);
+    verify(spyHelperBase, times(1))
+        .getHelmCommandForRender(
+            "helm", "manifest", "release", "namespace", "", "file.yaml", HelmVersion.V3, commandFlag);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testRenderTemplateHelmChartRepo() throws Exception {
+    K8sTaskHelperBase spyHelperBase = Mockito.spy(k8sTaskHelperBase);
+
+    ProcessResult processResult = new ProcessResult(0, new ProcessOutput("".getBytes()));
+    doReturn(processResult).when(spyHelperBase).executeShellCommand(any(), any(), any(), anyLong());
+    doReturn("").when(spyHelperBase).writeValuesToFile(any(), any());
+
+    final List<FileData> manifestFiles = spyHelperBase.renderTemplateForHelm("helm", "./chart", new ArrayList<>(),
+        "release", "namespace", executionLogCallback, HelmVersion.V3, 9000, commandFlag);
+
+    verify(spyHelperBase, times(1)).executeShellCommand(eq("./chart"), anyString(), any(), anyLong());
+    assertThat(manifestFiles.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectory() throws IOException {
+    K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
+    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
+    SshSessionConfig sshSessionConfig = mock(SshSessionConfig.class);
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitStoreDelegateConfig storeDelegateConfig = GitStoreDelegateConfig.builder()
+                                                     .branch("master")
+                                                     .fetchType(FetchType.BRANCH)
+                                                     .connectorName("conenctor")
+                                                     .gitConfigDTO(gitConfigDTO)
+                                                     .path("manifest")
+                                                     .encryptedDataDetails(encryptionDataDetails)
+                                                     .sshKeySpecDTO(sshKeySpecDTO)
+                                                     .build();
+
+    K8sManifestDelegateConfig manifestDelegateConfig =
+        K8sManifestDelegateConfig.builder().storeDelegateConfig(storeDelegateConfig).build();
+
+    doReturn(sshSessionConfig).when(gitDecryptionHelper).getSSHSessionConfig(sshKeySpecDTO, encryptionDataDetails);
+    doReturn("files").when(spyHelperBase).getManifestFileNamesInLogFormat("manifest");
+
+    boolean result = spyHelperBase.fetchManifestFilesAndWriteToDirectory(
+        manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId");
+    assertThat(result).isTrue();
+
+    verify(gitDecryptionHelper, times(1)).decryptGitConfig(gitConfigDTO, encryptionDataDetails);
+    verify(ngGitService, times(1))
+        .downloadFiles(storeDelegateConfig, "manifest", "accountId", sshSessionConfig, gitConfigDTO);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectoryFailed() {
+    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
+    GitStoreDelegateConfig storeDelegateConfig =
+        GitStoreDelegateConfig.builder().gitConfigDTO(gitConfigDTO).encryptedDataDetails(encryptionDataDetails).build();
+
+    K8sManifestDelegateConfig manifestDelegateConfig =
+        K8sManifestDelegateConfig.builder().storeDelegateConfig(storeDelegateConfig).build();
+
+    doThrow(new RuntimeException("unable to decrypt"))
+        .when(gitDecryptionHelper)
+        .decryptGitConfig(gitConfigDTO, encryptionDataDetails);
+
+    assertThatThrownBy(()
+                           -> k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
+                               manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId"))
+        .isInstanceOf(GitOperationException.class);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateHelmChart() throws Exception {
+    K8sTaskHelperBase spyHelper = spy(k8sTaskHelperBase);
+    String helmPath = "/usr/bin/helm";
+    List<String> valuesList = new ArrayList<>();
+    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
+    ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
+                                                        .skipResourceVersioning(true)
+                                                        .helmVersion(HelmVersion.V3)
+                                                        .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
+                                                        .helmCommandFlag(helmCommandFlag)
+                                                        .build();
+    List<FileData> renderedFiles = new ArrayList<>();
+
+    doReturn(renderedFiles)
+        .when(spyHelper)
+        .renderTemplateForHelm(helmPath, "manifest", valuesList, "release", "namespace", executionLogCallback,
+            HelmVersion.V3, 600000, helmCommandFlag);
+
+    List<FileData> result = spyHelper.renderTemplate(K8sDelegateTaskParams.builder().helmPath(helmPath).build(),
+        manifestDelegateConfig, "manifest", valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(spyHelper, times(1))
+        .renderTemplateForHelm(helmPath, "manifest", valuesList, "release", "namespace", executionLogCallback,
+            HelmVersion.V3, 600000, helmCommandFlag);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateForGivenFiles() throws Exception {
+    K8sTaskHelperBase spyHelper = spy(k8sTaskHelperBase);
+    String helmPath = "/usr/bin/helm";
+    List<String> valuesList = new ArrayList<>();
+    List<String> filesToRender = Arrays.asList("file1", "file2");
+    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
+    ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
+                                                        .skipResourceVersioning(true)
+                                                        .helmVersion(HelmVersion.V3)
+                                                        .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
+                                                        .helmCommandFlag(helmCommandFlag)
+                                                        .build();
+    List<FileData> renderedFiles = new ArrayList<>();
+
+    doReturn(renderedFiles)
+        .when(spyHelper)
+        .renderTemplateForHelmChartFiles(helmPath, "manifest", filesToRender, valuesList, "release", "namespace",
+            executionLogCallback, HelmVersion.V3, 600000, helmCommandFlag);
+
+    List<FileData> result = spyHelper.renderTemplateForGivenFiles(
+        K8sDelegateTaskParams.builder().helmPath(helmPath).build(), manifestDelegateConfig, "manifest", filesToRender,
+        valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(spyHelper, times(1))
+        .renderTemplateForHelmChartFiles(helmPath, "manifest", filesToRender, valuesList, "release", "namespace",
+            executionLogCallback, HelmVersion.V3, 600000, helmCommandFlag);
   }
 }

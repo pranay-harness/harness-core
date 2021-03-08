@@ -14,15 +14,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
+import io.harness.shell.AbstractScriptExecutor;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.delegatetasks.DelegateFileManager;
 
 import com.google.common.io.CharStreams;
@@ -31,6 +33,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
@@ -67,20 +70,19 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .workingDirectory("/tmp")
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     fileBasedProcessScriptExecutor =
         new FileBasedProcessScriptExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
-    CommandExecutionResult commandExecutionResult =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"));
-    assertThat(commandExecutionResult).isNotNull();
-    assertThat(commandExecutionResult.getStatus()).isEqualTo(SUCCESS);
-    assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
-    ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
+    ExecuteCommandResponse executeCommandResponse =
+        scriptProcessExecutor.executeCommandString(command, asList("A", "B", "${C}", "${A}"), Collections.emptyList());
+    assertThat(executeCommandResponse).isNotNull();
+    assertThat(executeCommandResponse.getStatus()).isEqualTo(SUCCESS);
+    assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();
+    ShellExecutionData shellExecutionData = (ShellExecutionData) executeCommandResponse.getCommandExecutionData();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isNotEmpty();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("A", "aaa");
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).containsEntry("B", "bbb");
@@ -102,17 +104,16 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .scriptType(ScriptType.BASH)
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "exit 1";
-    CommandExecutionResult commandExecutionResult =
-        scriptProcessExecutor.executeCommandString(command, asList("A", "B"));
-    assertThat(commandExecutionResult).isNotNull();
-    assertThat(commandExecutionResult.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(commandExecutionResult.getCommandExecutionData()).isNotNull();
-    ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
+    ExecuteCommandResponse executeCommandResponse =
+        scriptProcessExecutor.executeCommandString(command, asList("A", "B"), Collections.emptyList());
+    assertThat(executeCommandResponse).isNotNull();
+    assertThat(executeCommandResponse.getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(executeCommandResponse.getCommandExecutionData()).isNotNull();
+    ShellExecutionData shellExecutionData = (ShellExecutionData) executeCommandResponse.getCommandExecutionData();
     assertThat(shellExecutionData.getSweepingOutputEnvVariables()).isEmpty();
   }
 
@@ -131,9 +132,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .workingDirectory("/tmp")
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
@@ -155,9 +155,8 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
                               .scriptType(ScriptType.BASH)
                               .environment(env)
                               .build();
-    scriptProcessExecutor = new ScriptProcessExecutor(delegateFileManager, logCallback, true, shellExecutorConfig);
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, shellExecutorConfig);
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     String command = "export A=\"aaa\"\n"
         + "export B=\"bbb\"";
@@ -169,12 +168,10 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testScpOneFileSuccess() throws IOException {
-    scriptProcessExecutor =
-        new ScriptProcessExecutor(delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, ShellExecutorConfig.builder().build());
     fileBasedProcessScriptExecutor = new FileBasedProcessScriptExecutor(
         delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     File file = testFolder.newFile();
     CharStreams.asWriter(new FileWriter(file)).append("ANY_TEXT").close();
@@ -207,12 +204,10 @@ public class ScriptProcessExecutorTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testScpOneFileFails() {
-    scriptProcessExecutor =
-        new ScriptProcessExecutor(delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
+    scriptProcessExecutor = new ScriptProcessExecutor(logCallback, true, ShellExecutorConfig.builder().build());
     fileBasedProcessScriptExecutor = new FileBasedProcessScriptExecutor(
         delegateFileManager, logCallback, true, ShellExecutorConfig.builder().build());
     on(scriptProcessExecutor).set("logCallback", logCallback);
-    on(scriptProcessExecutor).set("delegateFileManager", delegateFileManager);
 
     AbstractScriptExecutor.FileProvider fileProvider = new AbstractScriptExecutor.FileProvider() {
       @Override

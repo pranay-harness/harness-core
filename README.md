@@ -1,6 +1,6 @@
 Portal Project Dev environment setup instructions
 ==================================================
-## On MacOS
+## On MacOS 
 
 ### Prerequisities
 1. Install Homebrew:
@@ -57,12 +57,10 @@ buf check lint
 Create a file `.bazelrc` in your portal repo root with the following content
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=<Java home path>
 ```
 Here is a sample `.bazelrc`
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 ```
 
 If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
@@ -123,7 +121,7 @@ NOTE: the data from it is used for every git operation github does on you behave
    to setup your SSH keys. You can then use SSH to interact with git
 
 2. Update your maven settings file
-    a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/cv/datacollection-artifactory
+    a. Download the credentials for the Datacollection artifact from here : https://vault-internal.harness.io:8200/ui/vault/secrets/secret/show/credentials/artifactory-internal-read
     b. Copy the settings.xml file present under tools/build/custom-settings.xml and paste this file into ~/.m2/settings.xml (Remember to rename the file to settings.xml)
     c. Edit the file and replace the text "${REPLACE_USERNAME_HERE}" with the username from vault secret
     d. Replace "${REPLACE_PASSWORD_HERE}" with the encrypted password that was present in the vault secret
@@ -132,6 +130,7 @@ NOTE: the data from it is used for every git operation github does on you behave
 3. Go to `portal` directory and run
 
     `mvn clean install -DskipTests`
+
     `bazel build :all`
 
 4. If Global Search is not required:
@@ -151,7 +150,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
 
-    In portal/400-rest/config.yml set `searchEnabled` to `true`.
+    In portal/360-cg-manager/config.yml set `searchEnabled` to `true`.
 
     Run mongo in replica set:
 
@@ -192,18 +191,20 @@ NOTE: the data from it is used for every git operation github does on you behave
     timescaledbUsername: admin
     timescaledbPassword: password
   ```
+7. Install Redis - Follow the instructions from [here](https://gist.github.com/tomysmile/1b8a321e7c58499ef9f9441b2faa0aa8)
+
 
 ### Run Harness without IDE (especially for the UI development)
 cd to `portal` directory
 1. Start server by running following commands :
 
-   * `mvn clean install -DskipTests`
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar server 400-rest/config.yml > portal.log &`
+   * `bazel build //360-cg-manager:module_deploy.jar`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar .bazel-dirs/bin/360-cg-manager/module_deploy.jar server 360-cg-manager/config.yml > portal.log &`
 
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
 
-   * `java -Xmx1024m -jar 160-model-gen-tool/target/model-gen-tool-capsule.jar 160-model-gen-tool/config-datagen.yml`
+   * `java -Xmx1024m -jar ~/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar server  160-model-gen-tool/config-datagen.yml`
 
 3. Start Delegate
 
@@ -342,9 +343,9 @@ https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-proce
 ```lang=bash
 portal/tools/go/go_setup.sh
 ```
-### Install Bazel (3.5.0+)
-4. On mac: `brew install bazel`
-   * Other platforms: Install bazel locally by following user guide [here](https://docs.bazel.build/versions/master/install.html). Note that bazel version is automatically managed since then and is guaranteed to be same across all machines for each specific revision.
+### Install Bazelisk
+4. On mac: `brew install bazelisk`
+   * Other platforms: Follow the instrictions [here](https://github.com/bazelbuild/bazelisk)
 
 
 ### IDE
@@ -530,3 +531,11 @@ gazelle  # generates, updates BUILD.bazel
 ```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
 ```
+# How to enable aws sdk logging in Manager/Delegate app locally
+NOTE: Below changes are only recommended in local environment and changes shall not be pushed.
+
+AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple facade or abstraction for various logging frameworks (e.g. java.util.logging, logback, log4j)
+
+We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
+* Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
+* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager.

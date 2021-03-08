@@ -1,5 +1,7 @@
 package io.harness.managerclient;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
 
@@ -18,6 +20,7 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class VerificationServiceClientFactory implements Provider<VerificationServiceClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
       ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());

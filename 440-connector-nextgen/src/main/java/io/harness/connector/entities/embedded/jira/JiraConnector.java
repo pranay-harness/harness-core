@@ -15,10 +15,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "JiraConnectorKeys")
+@EqualsAndHashCode(callSuper = true)
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.embedded.jira.JiraConnector")
 public class JiraConnector extends Connector {
   String jiraUrl;

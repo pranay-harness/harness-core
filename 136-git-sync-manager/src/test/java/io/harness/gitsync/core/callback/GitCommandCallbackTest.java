@@ -2,8 +2,6 @@ package io.harness.gitsync.core.callback;
 
 import static io.harness.rule.OwnerRule.ABHINAV;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -25,10 +23,10 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.CommitAndPushRequest;
-import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.CommitResult;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.GitFileChange;
+import io.harness.gitsync.common.TestConstants;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.GitCommit;
 import io.harness.gitsync.core.beans.GitWebhookRequestAttributes;
@@ -36,7 +34,6 @@ import io.harness.gitsync.core.impl.GitChangeSetProcessor;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.core.service.YamlGitService;
-import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
@@ -72,13 +69,13 @@ public class GitCommandCallbackTest extends CategoryTest {
   @Mock private GitSyncErrorService gitSyncErrorService;
 
   @InjectMocks
-  private GitCommandCallback commandCallback = new GitCommandCallback(ACCOUNT_ID, CHANGESET_ID,
+  private GitCommandCallback commandCallback = new GitCommandCallback(TestConstants.ACCOUNT_ID, CHANGESET_ID,
       GitCommandType.COMMIT_AND_PUSH, gitConnectorId, repositoryName, branchName, yamlGitConfig);
 
   @InjectMocks
   @Spy
-  private GitCommandCallback commandCallbackDiff = new GitCommandCallback(
-      ACCOUNT_ID, CHANGESET_ID, GitCommandType.DIFF, gitConnectorId, repositoryName, branchName, yamlGitConfig);
+  private GitCommandCallback commandCallbackDiff = new GitCommandCallback(TestConstants.ACCOUNT_ID, CHANGESET_ID,
+      GitCommandType.DIFF, gitConnectorId, repositoryName, branchName, yamlGitConfig);
 
   @Before
   public void setup() {
@@ -101,7 +98,8 @@ public class GitCommandCallbackTest extends CategoryTest {
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
-    verify(yamlChangeSetService, times(1)).updateStatus(ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
+    verify(yamlChangeSetService, times(1))
+        .updateStatus(TestConstants.ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
   }
 
   @Test
@@ -139,7 +137,8 @@ public class GitCommandCallbackTest extends CategoryTest {
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
-    verify(yamlChangeSetService, times(1)).updateStatus(ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
+    verify(yamlChangeSetService, times(1))
+        .updateStatus(TestConstants.ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
   }
 
   @Test
@@ -158,7 +157,8 @@ public class GitCommandCallbackTest extends CategoryTest {
     on(commandCallback).set("gitCommandType", GitCommandType.CHECKOUT);
     commandCallback.notify(map);
 
-    verify(yamlChangeSetService, times(1)).updateStatus(ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
+    verify(yamlChangeSetService, times(1))
+        .updateStatus(TestConstants.ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
   }
 
   @Test
@@ -175,52 +175,6 @@ public class GitCommandCallbackTest extends CategoryTest {
     List<GitFileChange> allFilesProcessed =
         commandCallback.getAllFilesSuccessFullyProccessed(fileChangesPartOfYamlChangeSet, filesCommited);
     assertThat(allFilesProcessed.size()).isEqualTo(3);
-  }
-
-  @Test
-  @Owner(developers = ABHINAV)
-  @Category(UnitTests.class)
-  public void testNotifyForGitCommitAndPush() {
-    io.harness.git.model.GitFileChange gitFileChange = GitFileChange.builder().changeType(ChangeType.ADD).build();
-    String commitId = "commitId";
-    CommitResult gitCommitResult = CommitResult.builder().commitId(commitId).build();
-    String yamlChangeSetId = "yamlChangeSetId";
-    CommitAndPushResult gitCommitAndPushResult = CommitAndPushResult.builder()
-                                                     .filesCommittedToGit(Arrays.asList(gitFileChange))
-                                                     .gitCommitResult(gitCommitResult)
-                                                     .build();
-    DelegateResponseData notifyResponseData =
-        GitCommandExecutionResponse.builder()
-            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
-            .gitCommandResult(gitCommitAndPushResult)
-            .gitCommandRequest(CommitAndPushRequest.builder().build())
-
-            .build();
-
-    Map<String, ResponseData> map = new HashMap<>();
-    map.put("key", notifyResponseData);
-
-    doReturn(Optional.of(YamlChangeSet.builder().gitFileChanges(Collections.singletonList(gitFileChange)).build()))
-        .when(yamlChangeSetService)
-        .get(any(), any());
-    GitCommit gitCommit = GitCommit.builder()
-                              .accountId(ACCOUNT_ID)
-                              .commitId(commitId)
-                              .status(GitCommit.Status.COMPLETED)
-                              .yamlChangeSetId(yamlChangeSetId)
-                              .build();
-    doReturn(gitCommit).when(gitCommitService).save(any());
-    on(commandCallback).set("gitCommandType", GitCommandType.COMMIT_AND_PUSH);
-    commandCallback.notify(map);
-
-    verify(yamlGitService, times(1))
-        .removeGitSyncErrors(ACCOUNT_ID, null, null, Collections.singletonList(gitFileChange), false);
-
-    verify(gitSyncService, times(1))
-        .logActivityForGitOperation(Collections.singletonList(gitFileChange), GitFileActivity.Status.SUCCESS, false,
-            false, "", commitId, null, yamlGitConfig);
-    verify(gitSyncService, times(1))
-        .createGitFileActivitySummaryForCommit(commitId, ACCOUNT_ID, false, GitCommit.Status.COMPLETED, yamlGitConfig);
   }
 
   @Test
@@ -251,10 +205,15 @@ public class GitCommandCallbackTest extends CategoryTest {
                              .build()))
         .when(yamlChangeSetService)
         .get(any(), any());
-    GitCommit gitCommit =
-        GitCommit.builder().accountId(ACCOUNT_ID).commitId(commitId).status(GitCommit.Status.COMPLETED).build();
+    GitCommit gitCommit = GitCommit.builder()
+                              .accountId(TestConstants.ACCOUNT_ID)
+                              .commitId(commitId)
+                              .status(GitCommit.Status.COMPLETED)
+                              .build();
     doReturn(gitCommit).when(gitCommitService).save(any());
-    doReturn(true).when(yamlChangeSetService).updateStatus(ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
+    doReturn(true)
+        .when(yamlChangeSetService)
+        .updateStatus(TestConstants.ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
     doNothing()
         .when(gitChangeSetProcessor)
         .processGitChangeSet(anyString(), any(), anyString(), anyString(), anyString());
@@ -264,7 +223,8 @@ public class GitCommandCallbackTest extends CategoryTest {
     commandCallbackDiff.notify(map);
 
     verify(gitCommitService, times(1)).save(any());
-    verify(yamlChangeSetService, times(1)).updateStatus(ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
+    verify(yamlChangeSetService, times(1))
+        .updateStatus(TestConstants.ACCOUNT_ID, CHANGESET_ID, YamlChangeSet.Status.FAILED);
   }
 
   @Test

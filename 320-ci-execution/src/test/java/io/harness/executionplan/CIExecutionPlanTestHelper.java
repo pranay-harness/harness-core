@@ -2,9 +2,7 @@ package io.harness.executionplan;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
-import static io.harness.common.CIExecutionConstants.ARGS_PREFIX;
 import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
-import static io.harness.common.CIExecutionConstants.ENTRYPOINT_PREFIX;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
@@ -64,14 +62,13 @@ import io.harness.beans.yaml.extended.CustomVariable;
 import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.container.Container;
 import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
-import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.common.CIExecutionConstants;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams.CIK8ContainerParamsBuilder;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -96,8 +93,20 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetails
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
@@ -115,6 +124,7 @@ import io.harness.yaml.core.StepElement;
 import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
 import io.harness.yaml.core.intfc.Connector;
+import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Singleton;
@@ -427,18 +437,19 @@ public class CIExecutionPlanTestHelper {
   private DependencyElement getServiceDependencyElement() {
     return DependencyElement.builder()
         .identifier(SERVICE_ID)
-        .dependencySpecType(CIServiceInfo.builder()
-                                .identifier(SERVICE_ID)
-                                .args(Collections.singletonList(SERVICE_ARGS))
-                                .entrypoint(Collections.singletonList(SERVICE_ENTRYPOINT))
-                                .image(SERVICE_IMAGE)
-                                .resources(ContainerResource.builder()
-                                               .limits(ContainerResource.Limits.builder()
-                                                           .cpu(CpuQuantity.fromString(SERVICE_LIMIT_CPU_STRING))
-                                                           .memory(MemoryQuantity.fromString(SERVICE_LIMIT_MEM_STRING))
-                                                           .build())
-                                               .build())
-                                .build())
+        .dependencySpecType(
+            CIServiceInfo.builder()
+                .identifier(SERVICE_ID)
+                .args(ParameterField.createValueField(Collections.singletonList(SERVICE_ARGS)))
+                .entrypoint(ParameterField.createValueField(Collections.singletonList(SERVICE_ENTRYPOINT)))
+                .image(ParameterField.createValueField(SERVICE_IMAGE))
+                .resources(ContainerResource.builder()
+                               .limits(ContainerResource.Limits.builder()
+                                           .cpu(ParameterField.createValueField(SERVICE_LIMIT_CPU_STRING))
+                                           .memory(ParameterField.createValueField(SERVICE_LIMIT_MEM_STRING))
+                                           .build())
+                               .build())
+                .build())
         .build();
   }
 
@@ -452,7 +463,7 @@ public class CIExecutionPlanTestHelper {
                           .name(RUN_STEP_NAME)
                           .command(ParameterField.createValueField("./test-script1.sh"))
                           .image(ParameterField.createValueField(RUN_STEP_IMAGE))
-                          .connector(ParameterField.createValueField(RUN_STEP_CONNECTOR))
+                          .connectorRef(ParameterField.createValueField(RUN_STEP_CONNECTOR))
                           .build())
         .build();
   }
@@ -462,8 +473,8 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
 
-    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
-        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+    List<String> args = Arrays.asList(
+        SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE, PORT_PREFIX, port.toString());
 
     return ContainerDefinitionInfo.builder()
         .containerImageDetails(ContainerImageDetails.builder()
@@ -489,8 +500,8 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
 
-    List<String> args = Arrays.asList(SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE,
-        ENTRYPOINT_PREFIX, SERVICE_ENTRYPOINT, ARGS_PREFIX, SERVICE_ARGS, PORT_PREFIX, port.toString());
+    List<String> args = Arrays.asList(
+        SERVICE_ARG_COMMAND, ID_PREFIX, SERVICE_ID, IMAGE_PREFIX, SERVICE_IMAGE, PORT_PREFIX, port.toString());
 
     return CIK8ContainerParams.builder()
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -565,18 +576,19 @@ public class CIExecutionPlanTestHelper {
         .identifier(PLUGIN_STEP_ID)
         .type("plugin")
         .name(PLUGIN_STEP_NAME)
-        .stepSpecType(PluginStepInfo.builder()
-                          .identifier(PLUGIN_STEP_ID)
-                          .name(PLUGIN_STEP_NAME)
-                          .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
-                          .resources(ContainerResource.builder()
-                                         .limits(ContainerResource.Limits.builder()
-                                                     .cpu(CpuQuantity.fromString(PLUGIN_STEP_LIMIT_CPU_STRING))
-                                                     .memory(MemoryQuantity.fromString(PLUGIN_STEP_LIMIT_MEM_STRING))
-                                                     .build())
-                                         .build())
-                          .settings(ParameterField.createValueField(settings))
-                          .build())
+        .stepSpecType(
+            PluginStepInfo.builder()
+                .identifier(PLUGIN_STEP_ID)
+                .name(PLUGIN_STEP_NAME)
+                .image(ParameterField.createValueField(PLUGIN_STEP_IMAGE))
+                .resources(ContainerResource.builder()
+                               .limits(ContainerResource.Limits.builder()
+                                           .cpu(ParameterField.createValueField(PLUGIN_STEP_LIMIT_CPU_STRING))
+                                           .memory(ParameterField.createValueField(PLUGIN_STEP_LIMIT_MEM_STRING))
+                                           .build())
+                               .build())
+                .settings(ParameterField.createValueField(settings))
+                .build())
         .build();
   }
 
@@ -880,8 +892,7 @@ public class CIExecutionPlanTestHelper {
   public Infrastructure getInfrastructure() {
     return K8sDirectInfraYaml.builder()
         .type(Infrastructure.Type.KUBERNETES_DIRECT)
-        .spec(
-            K8sDirectInfraYaml.Spec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
+        .spec(K8sDirectInfraYamlSpec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
         .build();
   }
   public StageElement getIntegrationStageElement() {
@@ -925,15 +936,17 @@ public class CIExecutionPlanTestHelper {
     return envVars;
   }
 
-  public List<CustomSecretVariable> getCustomSecretVariable() {
-    List<CustomSecretVariable> secretVariables = new ArrayList<>();
-    secretVariables.add(CustomSecretVariable.builder()
+  public List<SecretNGVariable> getCustomSecretVariable() {
+    List<SecretNGVariable> secretVariables = new ArrayList<>();
+    secretVariables.add(SecretNGVariable.builder()
                             .name("VAR1")
-                            .value(SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build())
+                            .value(ParameterField.createValueField(
+                                SecretRefData.builder().identifier("VAR1_secret").scope(Scope.ACCOUNT).build()))
                             .build());
-    secretVariables.add(CustomSecretVariable.builder()
+    secretVariables.add(SecretNGVariable.builder()
                             .name("VAR2")
-                            .value(SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build())
+                            .value(ParameterField.createValueField(
+                                SecretRefData.builder().identifier("VAR2_secret").scope(Scope.ACCOUNT).build()))
                             .build());
     return secretVariables;
   }
@@ -1005,7 +1018,9 @@ public class CIExecutionPlanTestHelper {
                     KubernetesClusterConfigDTO.builder()
                         .credential(KubernetesCredentialDTO.builder()
                                         .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                        .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegate").build())
+                                        .config(KubernetesDelegateDetailsDTO.builder()
+                                                    .delegateSelectors(Collections.singleton("delegate"))
+                                                    .build())
                                         .build())
                         .build())
                 .build())
@@ -1102,6 +1117,72 @@ public class CIExecutionPlanTestHelper {
                                                              .build())
                                                 .build())
                            .build())
+        .build();
+  }
+
+  public ConnectorDTO getGitHubConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("gitHubConnector")
+                .identifier("gitHubConnector")
+                .connectorType(ConnectorType.GITHUB)
+                .connectorConfig(
+                    GithubConnectorDTO.builder()
+                        .url("https://github.com/wings-software/portal.git")
+                        .connectionType(GitConnectionType.REPO)
+                        .authentication(
+                            GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(
+                                                     GithubUsernamePasswordDTO.builder()
+                                                         .username("username")
+                                                         .passwordRef(SecretRefData.builder()
+                                                                          .identifier("gitPassword")
+                                                                          .scope(Scope.ACCOUNT)
+                                                                          .decryptedValue("password".toCharArray())
+                                                                          .build())
+                                                         .build())
+                                                 .build())
+                                .build())
+
+                        .build())
+                .build())
+        .build();
+  }
+  public ConnectorDTO getAwsCodeCommitConnectorDTO() {
+    return ConnectorDTO.builder()
+        .connectorInfo(
+            ConnectorInfoDTO.builder()
+                .name("awsCodeCommitConnector")
+                .identifier("awsCodeCommitConnector")
+                .connectorType(ConnectorType.CODECOMMIT)
+                .connectorConfig(
+                    AwsCodeCommitConnectorDTO.builder()
+                        .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
+                        .urlType(AwsCodeCommitUrlType.REPO)
+                        .authentication(
+                            AwsCodeCommitAuthenticationDTO.builder()
+                                .authType(AwsCodeCommitAuthType.HTTPS)
+                                .credentials(
+                                    AwsCodeCommitHttpsCredentialsDTO.builder()
+                                        .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                                        .httpCredentialsSpec(
+                                            AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+                                                .accessKey("AKIAIOSFODNN7EXAMPLE")
+                                                .secretKeyRef(SecretRefData.builder()
+                                                                  .identifier("secretKeyRefIdentifier")
+                                                                  .scope(Scope.ACCOUNT)
+                                                                  .decryptedValue("S3CR3TKEYEXAMPLE".toCharArray())
+                                                                  .build())
+                                                .build())
+                                        .build())
+
+                                .build())
+                        .build())
+                .build())
         .build();
   }
 

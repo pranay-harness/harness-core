@@ -12,12 +12,12 @@ import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.IntegrationTestBase;
 import software.wings.integration.IntegrationTestUtils;
 import software.wings.utils.WingsIntegrationTestConstants;
@@ -36,7 +36,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response.Status;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
-import migrations.InitializeAppCounters;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -48,14 +47,12 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 public class AppResourceIntegrationTest extends IntegrationTestBase {
   @Inject private LimitConfigurationService limitConfigurationService;
-  @Inject private WingsPersistence persistence;
-  @Inject private InitializeAppCounters initializeAppCounters;
+  @Inject private HPersistence persistence;
 
   private final ExecutorService executors = Executors.newFixedThreadPool(5);
 
   @Before
   public void init() throws Exception {
-    initializeAppCounters.migrate();
     super.setUp();
     loginAdminUser();
   }
@@ -65,7 +62,6 @@ public class AppResourceIntegrationTest extends IntegrationTestBase {
     final Query<Application> query = fetchAppsQuery();
     val ds = persistence.getDatastore(query.getEntityClass());
     ds.delete(query);
-    initializeAppCounters.migrate();
   }
 
   @Test

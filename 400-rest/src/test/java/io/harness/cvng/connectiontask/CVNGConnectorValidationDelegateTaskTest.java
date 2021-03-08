@@ -80,6 +80,6 @@ public class CVNGConnectorValidationDelegateTaskTest extends WingsBaseTest {
                                                               .encryptionDetails(Collections.emptyList())
                                                               .build());
     CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
-    assertThat(cvConnectorTaskResponse).isEqualTo(CVConnectorTaskResponse.builder().valid(true).build());
+    assertThat(cvConnectorTaskResponse.isValid()).isEqualTo(true);
   }
 }

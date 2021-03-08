@@ -128,7 +128,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     expectedMetrics = Arrays.asList(requestsPerMinuteMetric, averageResponseTimeMetric, errorMetric, apdexScoreMetric);
     infraMappingId = generateUuid();
     when(executionContext.getAccountId()).thenReturn(accountId);
-    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTest.PHASE_PARAM))
+    when(executionContext.getContextElement(ContextElementType.PARAM, AbstractAnalysisStateTestBase.PHASE_PARAM))
         .thenReturn(phaseElement);
     when(executionContext.fetchInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);

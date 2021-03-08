@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.beans.FeatureName.HARNESS_TAGS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
@@ -22,6 +23,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.validation.PersistenceValidator.duplicateCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.api.DeploymentType.AZURE_WEBAPP;
 import static software.wings.api.DeploymentType.CUSTOM;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.HELM;
@@ -36,6 +38,8 @@ import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.beans.yaml.YamlConstants.APP_SETTINGS_FILE;
+import static software.wings.beans.yaml.YamlConstants.CONN_STRINGS_FILE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
@@ -48,6 +52,7 @@ import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -138,6 +143,7 @@ import software.wings.beans.command.ServiceCommand.ServiceCommandKeys;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTask.ContainerTaskKeys;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.EcsServiceSpecification.EcsServiceSpecificationKeys;
 import software.wings.beans.container.HelmChartSpecification;
@@ -232,6 +238,7 @@ import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.CriteriaContainerImpl;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -504,6 +511,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       serviceTemplateService.createDefaultTemplatesByService(savedService);
       createDefaultK8sManifests(savedService, service.isSyncFromGit());
       createDefaultPCFManifestsIfApplicable(savedService, service.isSyncFromGit());
+      createDefaultAzureAppServiceManifests(savedService, service.isSyncFromGit());
 
       if (featureFlagService.isEnabled(HARNESS_TAGS, accountId)) {
         setDeploymentTypeTag(savedService);
@@ -628,7 +636,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       List<ServiceTemplate> serviceTemplates =
           serviceTemplateService
               .list(aPageRequest()
-                        .addFilter(ServiceTemplate.APP_ID_KEY2, EQ, originalService.getAppId())
+                        .addFilter(ServiceTemplate.APP_ID, EQ, originalService.getAppId())
                         .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
                         .build(),
                   false, OBTAIN_VALUE)
@@ -762,21 +770,34 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       version = commandNameVersionMap.get(commandName);
     }
 
-    Command command = getCommandByNameAndVersion(appId, serviceId, commandName, version).getCommand();
-
-    return command.getCommandUnits()
+    return getCommandByNameAndVersion(appId, serviceId, commandName, version)
+        .getCommand()
+        .getCommandUnits()
         .stream()
-        .flatMap(commandUnit -> {
-          if (COMMAND == commandUnit.getCommandUnitType()) {
-            String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
-                ? ((Command) commandUnit).getReferenceId()
-                : commandUnit.getName();
-            return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
-          } else {
-            return Stream.of(commandUnit);
-          }
-        })
+        .flatMap(commandUnit -> processCommandUnit(appId, serviceId, commandNameVersionMap, commandUnit))
         .collect(toList());
+  }
+
+  @Nullable
+  private Stream<? extends CommandUnit> processCommandUnit(
+      String appId, String serviceId, Map<String, Integer> commandNameVersionMap, CommandUnit commandUnit) {
+    if (COMMAND == commandUnit.getCommandUnitType()) {
+      Command internalCommand = (Command) commandUnit;
+      if (internalCommand.getTemplateReference() != null) {
+        Template template = templateService.get(internalCommand.getTemplateReference().getTemplateUuid(),
+            internalCommand.getTemplateReference().getTemplateVersion().toString());
+        SshCommandTemplate baseTemplate = (SshCommandTemplate) template.getTemplateObject();
+        return baseTemplate.getCommandUnits().stream().flatMap(
+            cm -> processCommandUnit(appId, null, new HashMap<>(), cm));
+      } else {
+        String commandUnitName = isNotBlank(((Command) commandUnit).getReferenceId())
+            ? ((Command) commandUnit).getReferenceId()
+            : commandUnit.getName();
+        return getFlattenCommandUnitList(appId, serviceId, commandUnitName, commandNameVersionMap).stream();
+      }
+    } else {
+      return Stream.of(commandUnit);
+    }
   }
 
   @Override
@@ -1189,7 +1210,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
+  public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId, boolean syncFromGit) {
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
     PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
@@ -1390,7 +1411,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
           .forEach(serviceCommand -> deleteServiceCommand(service, serviceCommand, false));
 
       pruneDeploymentSpecifications(service);
-      pruneDescendingEntities(appId, serviceUuid);
+      pruneDescendingEntities(appId, serviceUuid, false);
       harnessTagService.pruneTagLinks(service.getAccountId(), serviceUuid);
     }
 
@@ -1432,6 +1453,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     ContainerTask persistedContainerTask = wingsPersistence.saveAndGet(ContainerTask.class, containerTask);
 
     if (advanced) {
+      if (persistedContainerTask instanceof EcsContainerTask) {
+        return ((EcsContainerTask) persistedContainerTask)
+            .convertToAdvanced(featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, accountId));
+      }
       return persistedContainerTask.convertToAdvanced();
     }
 
@@ -2747,6 +2772,39 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
+  private void createDefaultAzureAppServiceManifests(Service service, boolean createdFromGit) {
+    if (AZURE_WEBAPP != service.getDeploymentType() || createdFromGit) {
+      return;
+    }
+
+    if (applicationManifestService.getByServiceId(
+            service.getAppId(), service.getUuid(), AppManifestKind.AZURE_APP_SERVICE_MANIFEST)
+        != null) {
+      return;
+    }
+
+    createLocalApplicationManifest(service, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+
+    createManifestFile(service, APP_SETTINGS_FILE, EMPTY, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+    createManifestFile(service, CONN_STRINGS_FILE, EMPTY, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+  }
+
+  private void createLocalApplicationManifest(Service service, AppManifestKind kind) {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().serviceId(service.getUuid()).storeType(StoreType.Local).kind(kind).build();
+    applicationManifest.setAppId(service.getAppId());
+
+    applicationManifestService.create(applicationManifest);
+  }
+
+  private void createManifestFile(
+      Service service, final String fileName, final String fileContent, AppManifestKind kind) {
+    ManifestFile defaultManifestSpec = ManifestFile.builder().fileName(fileName).fileContent(fileContent).build();
+    defaultManifestSpec.setAppId(service.getAppId());
+
+    applicationManifestService.createManifestFileByServiceId(defaultManifestSpec, service.getUuid(), kind);
+  }
+
   @Override
   public HelmVersion getHelmVersionWithDefault(String appId, String serviceId) {
     Service service = get(appId, serviceId);
@@ -2763,7 +2821,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   HelmVersion getDefaultHelmVersion(DeploymentType deploymentType) {
     if (deploymentType == null) {
-      return null;
+      return V2;
     }
     switch (deploymentType) {
       case HELM:
@@ -2984,9 +3042,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     UpdateOperations<Service> updateOperations =
         wingsPersistence.createUpdateOperations(Service.class).unset("helmValueYaml");
 
-    Query<Service> query = wingsPersistence.createQuery(Service.class)
-                               .filter(Service.APP_ID_KEY2, appId)
-                               .filter(Service.ID_KEY2, serviceId);
+    Query<Service> query =
+        wingsPersistence.createQuery(Service.class).filter(Service.APP_ID, appId).filter(Service.ID, serviceId);
 
     wingsPersistence.update(query, updateOperations);
   }

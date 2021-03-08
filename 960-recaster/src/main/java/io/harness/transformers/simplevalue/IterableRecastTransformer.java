@@ -11,12 +11,12 @@ import io.harness.utils.RecastReflectionUtils;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import org.bson.Document;
 
 public class IterableRecastTransformer extends RecastTransformer implements SimpleValueTransformer {
   @Override
-  @SuppressWarnings("unchecked")
   public Object decode(final Class<?> targetClass, final Object fromDBObject, final CastedField castedField) {
     return decodeInternal(targetClass, fromDBObject, castedField);
   }
@@ -40,12 +40,13 @@ public class IterableRecastTransformer extends RecastTransformer implements Simp
     } else if (fromDBObject instanceof Iterable) {
       for (final Object o : (Iterable<Object>) fromDBObject) {
         if (o instanceof Document) {
+          // if document does not have __recast then use HashMap.class to create instance
           values.add(getRecaster().fromDocument(
-              (Document) o, (Object) getRecaster().getObjectFactory().createInstance(null, (Document) o)));
+              (Document) o, (Object) getRecaster().getObjectFactory().createInstance(HashMap.class, (Document) o)));
         } else if (o instanceof Iterable) {
           values.add(decodeInternal(o.getClass(), o, castedField));
         } else {
-          values.add(transformer.decode(o.getClass(), o, castedField));
+          values.add(transformer.decode(getRealTypeFromCastedField(castedField), o, castedField));
         }
       }
     } else {
@@ -62,6 +63,19 @@ public class IterableRecastTransformer extends RecastTransformer implements Simp
     } else {
       return values;
     }
+  }
+
+  private Class<?> getRealTypeFromCastedField(CastedField castedField) {
+    CastedField currentCastedField = castedField;
+    while (!currentCastedField.getTypeParameters().isEmpty()) {
+      if (currentCastedField.isMap()) {
+        currentCastedField = currentCastedField.getTypeParameters().get(1);
+      } else {
+        currentCastedField = currentCastedField.getTypeParameters().get(0);
+      }
+    }
+
+    return currentCastedField.getRealType();
   }
 
   @Override

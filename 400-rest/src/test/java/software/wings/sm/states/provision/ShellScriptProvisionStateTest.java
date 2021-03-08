@@ -1,10 +1,10 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
@@ -43,7 +44,6 @@ import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionDat
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
@@ -213,12 +213,16 @@ public class ShellScriptProvisionStateTest extends WingsBaseTest {
     doAnswer(invocation -> invocation.getArgumentAt(0, Activity.class)).when(activityService).save(any(Activity.class));
     doReturn(provisioner).when(infrastructureProvisionerService).getShellScriptProvisioner(APP_ID, PROVISIONER_ID);
     ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
 
     // When OrchestrationWorkflowType is BUILD
     doReturn(OrchestrationWorkflowType.BUILD).when(executionContext).getOrchestrationWorkflowType();
     state.execute(executionContext);
     verify(activityService, times(1)).save(activityCaptor.capture());
     assertCreatedActivity(activityCaptor.getValue(), GLOBAL_ENV_ID, GLOBAL_ENV_ID, ALL);
+
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue().getData().getExpressionFunctorToken()).isNotNull();
 
     // When OrchestrationWorkflowType is other than BUILD
     doReturn(OrchestrationWorkflowType.BASIC).when(executionContext).getOrchestrationWorkflowType();

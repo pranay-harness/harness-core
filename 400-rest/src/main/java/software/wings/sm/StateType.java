@@ -9,6 +9,7 @@ import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_RO
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
+import static software.wings.beans.PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
 import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
@@ -88,6 +89,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
+import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsConstants;
@@ -205,6 +207,8 @@ import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
+import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
@@ -370,8 +374,8 @@ public enum StateType implements StateTypeDescriptor {
   /**
    * Generic APM verification state type.
    */
-  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 16, "APM Verification", asList(K8S_PHASE_STEP),
-      ORCHESTRATION_STENCILS),
+  APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 16, "APM Verification",
+      asList(K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   /**
 
@@ -725,6 +729,16 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS),
 
   TERRAFORM_APPLY(ApplyTerraformState.class, OTHERS, 5, "Terraform Apply", asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  ARM_CREATE_RESOURCE(ARMProvisionState.class, PROVISIONERS, 0, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
+      asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,
+          InfrastructureMappingType.AZURE_WEBAPP),
+      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), ORCHESTRATION_STENCILS),
+
+  ARM_ROLLBACK(ARMRollbackState.class, PROVISIONERS, ProvisionerConstants.ARM_ROLLBACK,
+      asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,
+          InfrastructureMappingType.AZURE_WEBAPP),
+      singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISIONERS, 2, PROVISION_SHELL_SCRIPT,
       asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),

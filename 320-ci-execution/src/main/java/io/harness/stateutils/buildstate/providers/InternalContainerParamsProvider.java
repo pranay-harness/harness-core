@@ -1,17 +1,14 @@
 package io.harness.stateutils.buildstate.providers;
 
 import static io.harness.common.CIExecutionConstants.ADDON_IMAGE_NAME;
-import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.BUCKET_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_ID_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.DELEGATE_SERVICE_TOKEN_VARIABLE;
-import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE;
-import static io.harness.common.CIExecutionConstants.ENDPOINT_MINIO_VARIABLE_VALUE;
 import static io.harness.common.CIExecutionConstants.GRPC_SERVICE_PORT_PREFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
+import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_ORG_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PIPELINE_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_PROJECT_ID_VARIABLE;
@@ -90,7 +87,7 @@ public class InternalContainerParamsProvider {
       Map<String, ConnectorDetails> publishArtifactConnectors, K8PodDetails k8PodDetails,
       String serializedLiteEngineTaskStepInfo, String serviceToken, Integer stageCpuRequest, Integer stageMemoryRequest,
       List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars, Map<String, String> tiEnvVars,
-      Map<String, String> volumeToMountPath, String workDirPath, Ambiance ambiance) {
+      Map<String, String> volumeToMountPath, String workDirPath, String logPrefix, Ambiance ambiance) {
     Map<String, String> map = new HashMap<>();
     map.putAll(volumeToMountPath);
     map.put(LITE_ENGINE_VOLUME, LITE_ENGINE_PATH);
@@ -105,7 +102,8 @@ public class InternalContainerParamsProvider {
     return CIK8ContainerParams.builder()
         .name(LITE_ENGINE_CONTAINER_NAME)
         .containerResourceParams(getLiteEngineResourceParams(stageCpuRequest, stageMemoryRequest))
-        .envVars(getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath, ambiance))
+        .envVars(
+            getLiteEngineEnvVars(k8PodDetails, serviceToken, logEnvVars, tiEnvVars, workDirPath, logPrefix, ambiance))
         .containerType(CIContainerType.LITE_ENGINE)
         .containerSecrets(ContainerSecrets.builder().connectorDetailsMap(publishArtifactConnectors).build())
         .imageDetailsWithConnector(ImageDetailsWithConnector.builder()
@@ -123,7 +121,8 @@ public class InternalContainerParamsProvider {
   }
 
   private Map<String, String> getLiteEngineEnvVars(K8PodDetails k8PodDetails, String serviceToken,
-      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath, Ambiance ambiance) {
+      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, String workDirPath, String logPrefix,
+      Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = AmbianceHelper.getAccountId(ambiance);
     final String orgID = AmbianceHelper.getOrgIdentifier(ambiance);
@@ -140,8 +139,6 @@ public class InternalContainerParamsProvider {
 
     // Add environment variables that need to be used inside the lite engine container
     envVars.put(HARNESS_WORKSPACE, workDirPath);
-    envVars.put(ENDPOINT_MINIO_VARIABLE, ENDPOINT_MINIO_VARIABLE_VALUE);
-    envVars.put(BUCKET_MINIO_VARIABLE, BUCKET_MINIO_VARIABLE_VALUE);
     envVars.put(DELEGATE_SERVICE_TOKEN_VARIABLE, serviceToken);
     envVars.put(DELEGATE_SERVICE_ENDPOINT_VARIABLE, ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue());
     envVars.put(DELEGATE_SERVICE_ID_VARIABLE, DELEGATE_SERVICE_ID_VARIABLE_VALUE);
@@ -152,6 +149,7 @@ public class InternalContainerParamsProvider {
     envVars.put(HARNESS_PIPELINE_ID_VARIABLE, pipelineID);
     envVars.put(HARNESS_BUILD_ID_VARIABLE, String.valueOf(buildNumber));
     envVars.put(HARNESS_STAGE_ID_VARIABLE, stageID);
+    envVars.put(HARNESS_LOG_PREFIX_VARIABLE, logPrefix);
     return envVars;
   }
 

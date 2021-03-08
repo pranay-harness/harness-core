@@ -5,12 +5,12 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.sm.StateType;
 import software.wings.utils.Utils;
@@ -46,14 +46,15 @@ public class APMDataCollectionInfo implements TaskParameters, ExecutionCapabilit
   private int dataCollectionTotalTime;
   private String cvConfigId;
   private int initialDelaySeconds;
+  private boolean validateCert;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         Utils.appendPathToBaseUrl(baseUrl, validationUrl), QUERY, maskingEvaluator));
-    executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
+    executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 

@@ -24,6 +24,7 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
+import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
@@ -79,6 +80,13 @@ import org.mongodb.morphia.annotations.Transient;
     })
 @CdIndex(name = "acctKmsIdx", fields = { @Field("accountId")
                                          , @Field("kmsId") })
+@CdIndex(name = "ngSecretManagerIdx",
+    fields =
+    {
+      @Field("ngMetadata.accountIdentifier")
+      , @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier"),
+          @Field("ngMetadata.secretManagerIdentifier")
+    })
 @FieldNameConstants(innerTypeName = "EncryptedDataKeys")
 public class EncryptedData
     implements EncryptedRecord, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
@@ -113,6 +121,8 @@ public class EncryptedData
 
   @NotEmpty private String kmsId;
 
+  @Default private AdditionalMetadata additionalMetadata = AdditionalMetadata.builder().build();
+
   @NotNull private EncryptionType encryptionType;
 
   private long fileSize;
@@ -145,6 +155,8 @@ public class EncryptedData
 
   @FdIndex private Long nextAwsToGcpKmsMigrationIteration;
 
+  @FdIndex private Long nextLocalToGcpKmsMigrationIteration;
+
   @SchemaIgnore private boolean base64Encoded;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
@@ -159,7 +171,7 @@ public class EncryptedData
 
   @JsonIgnore private NGEncryptedDataMetadata ngMetadata;
 
-  @Default private boolean hideFromListing = false;
+  private boolean hideFromListing;
 
   public String getKmsId() {
     if (encryptionType == LOCAL) {
@@ -189,6 +201,9 @@ public class EncryptedData
     } else if (EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration.equals(fieldName)) {
       this.nextAwsToGcpKmsMigrationIteration = nextIteration;
       return;
+    } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
+      this.nextLocalToGcpKmsMigrationIteration = nextIteration;
+      return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -199,6 +214,8 @@ public class EncryptedData
       return nextMigrationIteration;
     } else if (EncryptedDataKeys.nextAwsToGcpKmsMigrationIteration.equals(fieldName)) {
       return nextAwsToGcpKmsMigrationIteration;
+    } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
+      return nextLocalToGcpKmsMigrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -346,6 +363,11 @@ public class EncryptedData
   @JsonIgnore
   public String getProjectIdentifier() {
     return Optional.ofNullable(ngMetadata).map(NGEncryptedDataMetadata::getProjectIdentifier).orElse(null);
+  }
+
+  @Override
+  public AdditionalMetadata getAdditionalMetadata() {
+    return additionalMetadata;
   }
 
   @UtilityClass

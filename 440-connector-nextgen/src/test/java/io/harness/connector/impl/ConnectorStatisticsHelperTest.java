@@ -3,13 +3,13 @@ package io.harness.connector.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorsTestBase;
-import io.harness.connector.apis.dto.stats.ConnectorStatistics;
-import io.harness.connector.apis.dto.stats.ConnectorStatusStats;
-import io.harness.connector.apis.dto.stats.ConnectorTypeStats;
-import io.harness.connector.entities.ConnectivityStatus;
 import io.harness.connector.entities.Connector;
-import io.harness.connector.entities.ConnectorConnectivityDetails;
+import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.connector.stats.ConnectorStatusStats;
+import io.harness.connector.stats.ConnectorTypeStats;
 import io.harness.connector.utils.AWSConnectorTestHelper;
 import io.harness.connector.utils.DockerConnectorTestHelper;
 import io.harness.connector.utils.KubernetesConnectorTestHelper;
@@ -40,34 +40,34 @@ public class ConnectorStatisticsHelperTest extends ConnectorsTestBase {
   public void getStats() {
     for (int i = 0; i < 5; i++) {
       Connector connector = KubernetesConnectorTestHelper.createK8sConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.SUCCESS);
       connectorRepository.save(connector);
     }
 
     for (int i = 0; i < 3; i++) {
       Connector connector = AWSConnectorTestHelper.createAWSConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.FAILURE);
       connectorRepository.save(connector);
     }
 
     for (int i = 0; i < 4; i++) {
       Connector connector = DockerConnectorTestHelper.createDockerConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.FAILURE);
       connectorRepository.save(connector);
     }
 
     for (int i = 0; i < 6; i++) {
       Connector connector = DockerConnectorTestHelper.createDockerConnector(
-          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.ACCOUNT);
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier, Scope.PROJECT);
       setStatus(connector, ConnectivityStatus.SUCCESS);
       connectorRepository.save(connector);
     }
 
     ConnectorStatistics connectorStatistics =
-        connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier, Scope.ACCOUNT);
+        connectorStatisticsHelper.getStats(accountIdentifier, orgIdentifier, projectIdentifier);
     assertThat(connectorStatistics).isNotNull();
     List<ConnectorTypeStats> connectorTypeStatsList = connectorStatistics.getTypeStats();
     assertThat(connectorTypeStatsList.size()).isEqualTo(3);

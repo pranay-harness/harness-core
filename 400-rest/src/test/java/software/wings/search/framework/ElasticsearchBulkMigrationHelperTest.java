@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -39,6 +40,7 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Mock private ElasticsearchClient elasticsearchClient;
   @Inject @InjectMocks private ApplicationSearchEntity aSearchEntity;
   @Inject @InjectMocks private ElasticsearchBulkMigrationHelper elasticsearchBulkMigrationHelper;
+  @Inject private HPersistence persistence;
 
   @Test
   @Owner(developers = UTKARSH)
@@ -46,14 +48,14 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
   @Ignore("Investigate to make sure Search Unit Tests are not creating system resources such as Threads")
   public void testSearchEntityBulkMigration() throws IOException {
     Account account = new Account();
-    String accountId = wingsPersistence.save(account);
+    String accountId = persistence.save(account);
     account.setUuid(accountId);
 
     Application application = new Application();
     application.setName("first application");
     application.setDescription("Application to test bulk sync");
     application.setAccountId(accountId);
-    String applicationUuid = wingsPersistence.save(application);
+    String applicationUuid = persistence.save(application);
     application.setUuid(applicationUuid);
 
     Set<SearchEntity<?>> searchEntities = new HashSet<>();
@@ -73,7 +75,7 @@ public class ElasticsearchBulkMigrationHelperTest extends WingsBaseTest {
             .toVersion(newVersion)
             .build();
 
-    wingsPersistence.save(elasticsearchBulkMigrationJob);
+    persistence.save(elasticsearchBulkMigrationJob);
 
     IndexResponse indexResponse = mock(IndexResponse.class);
     when(indexResponse.status()).thenReturn(RestStatus.OK);

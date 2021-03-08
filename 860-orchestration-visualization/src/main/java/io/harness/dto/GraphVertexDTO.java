@@ -1,11 +1,14 @@
 package io.harness.dto;
 
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
+import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
-import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.execution.beans.RepresentationStrategy;
 import io.harness.tasks.ProgressData;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -34,16 +37,22 @@ public class GraphVertexDTO {
   String stepType;
   Status status;
   FailureInfo failureInfo;
-  Map<String, Object> stepParameters;
+  SkipInfo skipInfo;
+  Document stepParameters;
   ExecutionMode mode;
 
-  List<Map<String, Object>> executableResponsesMetadata;
+  List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
   List<Document> outcomes;
   List<String> retryIds;
 
   Map<String, List<ProgressData>> progressDataMap;
 
+  List<UnitProgress> unitProgresses;
+
   // skip
   SkipType skipType;
+
+  // UI
+  RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
 }

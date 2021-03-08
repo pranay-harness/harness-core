@@ -7,6 +7,8 @@ import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_ST
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Optional.ofNullable;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
   private final String clusterId;
   private final boolean isClusterSeen;
@@ -201,6 +204,8 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
       return PVInfo.PVType.PV_TYPE_AWS_EBS;
     } else if (spec.getAzureDisk() != null) {
       return PVInfo.PVType.PV_TYPE_AZURE_DISK;
+    } else if (spec.getNfs() != null) {
+      return PVInfo.PVType.PV_TYPE_NFS;
     }
     return PVInfo.PVType.PV_TYPE_UNSPECIFIED;
   }

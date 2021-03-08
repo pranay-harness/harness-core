@@ -1,10 +1,14 @@
 package io.harness.beans.yaml.extended.container;
 
-import io.harness.beans.yaml.extended.container.quantity.CpuQuantity;
-import io.harness.beans.yaml.extended.container.quantity.MemoryQuantity;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.number;
+
+import io.harness.common.SwaggerConstants;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.Optional;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -26,12 +30,16 @@ public class ContainerResource {
   @Data
   @TypeAlias("resource_limits")
   public static class Limits {
-    @Min(0) private MemoryQuantity memory;
-    @Min(0) private CpuQuantity cpu;
+    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Min(0) private ParameterField<String> memory;
+    @YamlSchemaTypes(value = {number})
+    @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+    @Min(0)
+    private ParameterField<String> cpu;
 
     @Builder
     @JsonCreator
-    public Limits(@JsonProperty("memory") MemoryQuantity memory, @JsonProperty("cpu") CpuQuantity cpu) {
+    public Limits(
+        @JsonProperty("memory") ParameterField<String> memory, @JsonProperty("cpu") ParameterField<String> cpu) {
       this.memory = memory;
       this.cpu = cpu;
     }

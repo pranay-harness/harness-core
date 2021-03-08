@@ -3,7 +3,7 @@ package software.wings.sm;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.delegate.task.shell.ScriptType;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.artifact.Artifact;
 

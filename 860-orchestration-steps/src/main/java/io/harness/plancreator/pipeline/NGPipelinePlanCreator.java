@@ -1,6 +1,5 @@
 package io.harness.plancreator.pipeline;
 
-import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -9,6 +8,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.steps.StepOutcomeGroup;
@@ -51,11 +51,12 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
     String name = config.getName() != null ? config.getName() : config.getIdentifier();
     YamlNode stagesYamlNode = Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField("stages")).getNode();
 
-    StepParameters stepParameters = PipelineSetupStepParameters.getStepParameters(config, stagesYamlNode.getUuid());
+    StepParameters stepParameters =
+        PipelineSetupStepParameters.getStepParameters(ctx, config, stagesYamlNode.getUuid());
 
     return PlanNode.builder()
         .uuid(config.getUuid())
-        .identifier(PlanCreationConstants.PIPELINE_NODE_IDENTIFIER)
+        .identifier(YAMLFieldNameConstants.PIPELINE)
         .stepType(PipelineSetupStep.STEP_TYPE)
         .group(StepOutcomeGroup.PIPELINE.name())
         .name(name)
@@ -72,6 +73,6 @@ public class NGPipelinePlanCreator extends ChildrenPlanCreator<PipelineInfoConfi
 
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
-    return Collections.singletonMap("pipeline", Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+    return Collections.singletonMap(YAMLFieldNameConstants.PIPELINE, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 }

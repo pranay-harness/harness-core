@@ -82,11 +82,9 @@ import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskResponse;
 
 import com.google.common.collect.ImmutableMap;
-import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.ServiceBuilder;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
+import io.kubernetes.client.openapi.models.V1ServiceSpec;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -180,8 +178,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     K8sTaskExecutionResponse response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     verify(k8sTaskHelperBase, times(2))
-        .saveReleaseHistoryInConfigMap(
-            any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString(), eq(false));
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString());
 
     deployTaskParams.setReleaseName("releaseName-apply");
     doReturn(false)
@@ -191,7 +188,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     verify(k8sTaskHelperBase)
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(false));
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString());
   }
 
   @Test
@@ -206,7 +203,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), eq(false)))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any())).thenReturn(null);
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
@@ -217,7 +214,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean());
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
   }
 
@@ -233,7 +230,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), eq(false)))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any())).thenReturn(null);
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
@@ -244,7 +241,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     verify(k8sTaskHelper, times(1)).renderTemplate(any(), any(), any(), any(), any(), any(), any(), any());
     verify(k8sTaskHelperBase, times(1)).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     verify(k8sTaskHelperBase, times(1)).deleteSkippedManifestFiles(any(), any());
-    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean());
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any());
     verify(containerDeploymentDelegateHelper, times(1)).getKubernetesConfig(any(K8sClusterConfig.class), eq(false));
   }
 
@@ -275,8 +272,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(kubernetesContainerService.getService(null, "stage-service")).thenReturn(stageService);
 
     k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
-        K8sBlueGreenDeployTaskParameters.builder().deprecateFabric8Enabled(true).build(), delegateTaskParams,
-        executionLogCallback);
+        K8sBlueGreenDeployTaskParameters.builder().build(), delegateTaskParams, executionLogCallback);
 
     String foundPrimaryColor = on(k8sBlueGreenDeployTaskHandler).get("primaryColor");
     assertThat(foundPrimaryColor).isEqualTo(HarnessLabelValues.colorGreen);
@@ -315,55 +311,10 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(kubernetesContainerService.getService(null, "servicename")).thenReturn(service);
 
     boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
-        K8sBlueGreenDeployTaskParameters.builder().deprecateFabric8Enabled(true).build(), delegateTaskParams,
-        executionLogCallback);
-    assertThat(result).isFalse();
-
-    verify(kubernetesContainerService, times(2)).getService(any(), any());
-    verify(releaseHistory, times(0)).createNewRelease(any());
-    verify(executionLogCallback, times(1))
-        .saveExecutionLog(
-            "Found conflicting service [servicename] in the cluster. For blue/green deployment, the label [harness.io/color] is required in service selector. Delete this existing service to proceed",
-            ERROR, FAILURE);
-  }
-
-  @Test
-  @Owner(developers = ANSHUL)
-  @Category(UnitTests.class)
-  public void testMissingLabelInServiceUsingFabric8() {
-    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-
-    List<KubernetesResource> kubernetesResources = new ArrayList<>();
-    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
-    kubernetesResources.addAll(ManifestHelper.processYaml(SERVICE_YAML));
-
-    Service service = new ServiceBuilder()
-                          .withApiVersion("v1")
-                          .withNewMetadata()
-                          .withName("servicename")
-                          .endMetadata()
-                          .withNewSpec()
-                          .withType("LoadBalancer")
-                          .addNewPort()
-                          .withPort(80)
-                          .endPort()
-                          .withClusterIP("1.2.3.4")
-                          .endSpec()
-                          .withNewStatus()
-                          .endStatus()
-                          .build();
-
-    on(k8sBlueGreenDeployTaskHandler).set("resources", kubernetesResources);
-    on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", releaseHistory);
-    on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
-
-    when(kubernetesContainerService.getServiceFabric8(null, "servicename")).thenReturn(service);
-
-    boolean result = k8sBlueGreenDeployTaskHandler.prepareForBlueGreen(
         K8sBlueGreenDeployTaskParameters.builder().build(), delegateTaskParams, executionLogCallback);
     assertThat(result).isFalse();
 
-    verify(kubernetesContainerService, times(2)).getServiceFabric8(any(), any());
+    verify(kubernetesContainerService, times(2)).getService(any(), any());
     verify(releaseHistory, times(0)).createNewRelease(any());
     verify(executionLogCallback, times(1))
         .saveExecutionLog(
@@ -496,13 +447,13 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void prepareIfPrimaryServiceExistsInCluster() throws IOException {
-    Service clusterPrimary = new Service();
-    ServiceSpec spec = new ServiceSpec();
+    V1Service clusterPrimary = new V1Service();
+    V1ServiceSpec spec = new V1ServiceSpec();
     spec.setSelector(ImmutableMap.of(HarnessLabels.color, "blue"));
     clusterPrimary.setSpec(spec);
     doReturn(clusterPrimary)
         .when(kubernetesContainerService)
-        .getServiceFabric8(any(KubernetesConfig.class), eq(primaryService().getResourceId().getName()));
+        .getService(any(KubernetesConfig.class), eq(primaryService().getResourceId().getName()));
     on(k8sBlueGreenDeployTaskHandler)
         .set("resources", new ArrayList<>(asList(primaryService(), stageService(), deployment())));
     on(k8sBlueGreenDeployTaskHandler).set("releaseHistory", ReleaseHistory.createNew());
@@ -610,7 +561,6 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     on(k8sBlueGreenDeployTaskHandler).set("releaseName", "releaseName");
     on(k8sBlueGreenDeployTaskHandler).set("stageColor", "stageColor");
     on(k8sBlueGreenDeployTaskHandler).set("primaryColor", "primaryColor");
-    on(k8sBlueGreenDeployTaskHandler).set("isDeprecateFabric8Enabled", true);
     on(k8sBlueGreenDeployTaskHandler).set("k8sBGBaseHandler", k8sBGBaseHandler);
 
     testGetAllPodsWithStageAndPrimary();
@@ -627,7 +577,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     final List<K8sPod> allPods = k8sBGBaseHandler.getAllPods(LONG_TIMEOUT_INTERVAL, KubernetesConfig.builder().build(),
         KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(), "primaryColor",
-        "stageColor", "releaseName", true);
+        "stageColor", "releaseName");
 
     assertThat(allPods).hasSize(2);
     assertThat(allPods.stream().filter(K8sPod::isNewPod).count()).isEqualTo(2);
@@ -643,7 +593,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     final List<K8sPod> allPods = k8sBGBaseHandler.getAllPods(LONG_TIMEOUT_INTERVAL, KubernetesConfig.builder().build(),
         KubernetesResource.builder().resourceId(KubernetesResourceId.builder().build()).build(), "primaryColor",
-        "stageColor", "releaseName", true);
+        "stageColor", "releaseName");
 
     assertThat(allPods).hasSize(4);
     assertThat(allPods.stream().filter(K8sPod::isNewPod).map(K8sPod::getName).collect(Collectors.toList()))
@@ -771,7 +721,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void shouldFetchReleaseDataUsingFabric8() throws Exception {
+  public void shouldFetchReleaseDataUsingK8sClient() throws Exception {
     K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
         K8sBlueGreenDeployTaskParameters.builder().skipDryRun(true).build();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
@@ -780,36 +730,13 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
         .thenReturn(KubernetesConfig.builder().build());
     doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
+    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any())).thenReturn(null);
     when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
     doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
 
     k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
-    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(false));
-    verify(k8sTaskHelperBase, times(0)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(true));
-  }
-
-  @Test
-  @Owner(developers = ACASIAN)
-  @Category(UnitTests.class)
-  public void shouldFetchReleaseDataUsingK8sClient() throws Exception {
-    K8sBlueGreenDeployTaskParameters blueGreenDeployTaskParams =
-        K8sBlueGreenDeployTaskParameters.builder().deprecateFabric8Enabled(true).skipDryRun(true).build();
-    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-    ExecutionLogCallback executionLogCallback = new ExecutionLogCallback();
-
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
-        .thenReturn(KubernetesConfig.builder().build());
-    doNothing().when(k8sTaskHelperBase).deleteSkippedManifestFiles(any(), any());
-    when(k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(any(), any(), anyBoolean())).thenReturn(null);
-    when(k8sTaskHelper.renderTemplate(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(emptyList());
-    doNothing().when(k8sTaskHelperBase).setNamespaceToKubernetesResourcesIfRequired(any(), any());
-    when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(emptyList());
-
-    k8sBlueGreenDeployTaskHandler.init(blueGreenDeployTaskParams, delegateTaskParams, executionLogCallback);
-    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(true));
-    verify(k8sTaskHelperBase, times(0)).getReleaseHistoryDataFromConfigMap(any(), any(), eq(false));
+    verify(k8sTaskHelperBase, times(1)).getReleaseHistoryDataFromConfigMap(any(), any());
   }
 
   @Test
@@ -852,7 +779,6 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     spyHandler.executeTaskInternal(K8sBlueGreenDeployTaskParameters.builder()
                                        .releaseName("release-success")
-                                       .deprecateFabric8Enabled(true)
                                        .k8sTaskType(K8sTaskType.BLUE_GREEN_DEPLOY)
                                        .build(),
         K8sDelegateTaskParams.builder()
@@ -863,14 +789,10 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
 
     verify(k8sTaskHelper, times(1)).getK8sTaskExecutionResponse(any(K8sBlueGreenDeployResponse.class), eq(SUCCESS));
     verify(k8sTaskHelperBase, times(2))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("release-success"), anyString(), eq(true));
-    verify(k8sTaskHelperBase, times(0))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("release-success"), anyString(), eq(false));
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("release-success"), anyString());
 
-    K8sBlueGreenDeployTaskParameters deployTaskParams = K8sBlueGreenDeployTaskParameters.builder()
-                                                            .deprecateFabric8Enabled(true)
-                                                            .releaseName("releaseName-statusCheck")
-                                                            .build();
+    K8sBlueGreenDeployTaskParameters deployTaskParams =
+        K8sBlueGreenDeployTaskParameters.builder().releaseName("releaseName-statusCheck").build();
     K8sDelegateTaskParams taskParams = K8sDelegateTaskParams.builder().build();
 
     doReturn(false)
@@ -880,11 +802,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     K8sTaskExecutionResponse response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     verify(k8sTaskHelperBase, times(2))
-        .saveReleaseHistoryInConfigMap(
-            any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString(), eq(true));
-    verify(k8sTaskHelperBase, times(0))
-        .saveReleaseHistoryInConfigMap(
-            any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString(), eq(false));
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-statusCheck"), anyString());
 
     deployTaskParams.setReleaseName("releaseName-apply");
     doReturn(false)
@@ -894,9 +812,7 @@ public class K8sBlueGreenDeployTaskHandlerTest extends WingsBaseTest {
     response = spyHandler.executeTaskInternal(deployTaskParams, taskParams);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     verify(k8sTaskHelperBase)
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(true));
-    verify(k8sTaskHelperBase, times(0))
-        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString(), eq(false));
+        .saveReleaseHistoryInConfigMap(any(KubernetesConfig.class), eq("releaseName-apply"), anyString());
   }
 
   @Data

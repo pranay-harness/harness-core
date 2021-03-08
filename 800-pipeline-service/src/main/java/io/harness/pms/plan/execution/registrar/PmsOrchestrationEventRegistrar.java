@@ -6,11 +6,14 @@ import static io.harness.pms.contracts.execution.events.OrchestrationEventType.P
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.notification.orchestration.NotificationOrchestrationRegistrar;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
+import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.registrars.OrchestrationModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationModuleRegistrarHelper;
+import io.harness.registrars.OrchestrationStepsModuleEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationVisualizationModuleEventHandlerRegistrar;
 
 import com.google.common.collect.Sets;
@@ -26,9 +29,14 @@ public class PmsOrchestrationEventRegistrar {
     Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap =
         new HashMap<>();
     engineEventHandlersMap.put(ORCHESTRATION_START, Sets.newHashSet(ExecutionSummaryCreateEventHandler.class));
-    engineEventHandlersMap.put(PLAN_EXECUTION_STATUS_UPDATE, Sets.newHashSet(ExecutionInfoUpdateEventHandler.class));
+    engineEventHandlersMap.put(PLAN_EXECUTION_STATUS_UPDATE,
+        Sets.newHashSet(ExecutionInfoUpdateEventHandler.class, PlanStatusEventEmitterHandler.class));
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, NotificationOrchestrationRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationVisualizationModuleEventHandlerRegistrar.getEngineEventHandlers());
+    OrchestrationModuleRegistrarHelper.mergeEventHandlers(
+        engineEventHandlersMap, OrchestrationStepsModuleEventHandlerRegistrar.getEngineEventHandlers());
     OrchestrationModuleRegistrarHelper.mergeEventHandlers(
         engineEventHandlersMap, OrchestrationModuleEventHandlerRegistrar.getEngineEventHandlers());
     return engineEventHandlersMap;

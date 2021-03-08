@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.ownership.OwnedByAccount;
+import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedBySettingAttribute;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
@@ -27,7 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @OwnedBy(CDC)
-public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute {
+public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute, OwnedByApplication {
   /**
    * List.
    *
@@ -162,4 +163,8 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   CEK8sDelegatePrerequisite validateCEDelegateSetting(String accountId, String delegateName);
 
   boolean isSettingValueGcp(SettingAttribute settingAttribute);
+
+  boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute);
+
+  List<String> getDelegateSelectors(SettingAttribute settingAttribute);
 }

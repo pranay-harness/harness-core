@@ -8,9 +8,10 @@ pipeline:
         name: qa stage
         type: Deployment
         spec:
-          service:
-            identifier: manager
-            name: manager
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
             serviceDefinition:
               type: Kubernetes
               spec:
@@ -78,9 +79,10 @@ pipeline:
             name: qa stage2
             type: Deployment
             spec:
-              service:
-                identifier: manager
-                name: manager
+              serviceConfig:
+                service:
+                  identifier: manager
+                  name: manager
                 serviceDefinition:
                   type: Kubernetes
                   spec:
@@ -147,9 +149,10 @@ pipeline:
             name: qa stage3
             type: Deployment
             spec:
-              service:
-                identifier: manager
-                name: manager
+              serviceConfig:
+                service:
+                  identifier: manager
+                  name: manager
                 serviceDefinition:
                   type: Kubernetes
                   spec:
@@ -216,9 +219,10 @@ pipeline:
         name: qa stage4
         type: Deployment
         spec:
-          service:
-            identifier: manager
-            name: manager
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
             serviceDefinition:
               type: Kubernetes
               spec:

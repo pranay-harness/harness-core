@@ -1,8 +1,8 @@
 package io.harness.beans.environment.pod.container;
 
-import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
+import io.harness.yaml.core.variables.SecretNGVariable;
 
 import java.util.List;
 import java.util.Map;
@@ -28,5 +28,5 @@ public class ContainerDefinitionInfo {
   private List<String> args;
   private List<Integer> ports;
   Map<String, String> envVars;
-  List<CustomSecretVariable> secretVariables;
+  List<SecretNGVariable> secretVariables;
 }

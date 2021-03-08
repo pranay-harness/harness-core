@@ -9,7 +9,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
@@ -17,17 +16,19 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretDTOV2;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.yaml.core.variables.SecretNGVariable;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -39,10 +40,10 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class SecretVariableUtilsTest extends CIExecutionTest {
+public class SecretVariableUtilsTest extends CIExecutionTestBase {
   @Mock private SecretNGManagerClient secretNGManagerClient;
   @Mock private SecretManagerClientService secretManagerClientService;
-  @InjectMocks SecretVariableUtils secretVariableUtils;
+  @InjectMocks SecretUtils secretUtils;
 
   private NGAccess ngAccess;
   private static final String PROJ_ID = "projectId";
@@ -54,20 +55,22 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
   private static final String TEXT_SECRET = "textSecretName";
   private static final String FILE_SECRET = "fileSecretName";
 
-  private CustomSecretVariable secretVariableText;
-  private CustomSecretVariable secretVariableFile;
+  private SecretNGVariable secretVariableText;
+  private SecretNGVariable secretVariableFile;
 
   @Before
   public void setUp() {
     ngAccess =
         BaseNGAccess.builder().projectIdentifier(PROJ_ID).orgIdentifier(ORG_ID).accountIdentifier(ACCOUNT_ID).build();
-    secretVariableText = CustomSecretVariable.builder()
+    secretVariableText = SecretNGVariable.builder()
                              .name(TEXT_SECRET)
-                             .value(SecretRefData.builder().identifier(TEXT_SECRET_ID).scope(Scope.ACCOUNT).build())
+                             .value(ParameterField.createValueField(
+                                 SecretRefData.builder().identifier(TEXT_SECRET_ID).scope(Scope.ACCOUNT).build()))
                              .build();
-    secretVariableFile = CustomSecretVariable.builder()
+    secretVariableFile = SecretNGVariable.builder()
                              .name(FILE_SECRET)
-                             .value(SecretRefData.builder().identifier(FILE_SECRET_ID).scope(Scope.ORG).build())
+                             .value(ParameterField.createValueField(
+                                 SecretRefData.builder().identifier(FILE_SECRET_ID).scope(Scope.ORG).build()))
                              .build();
   }
 
@@ -85,8 +88,7 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
-    SecretVariableDetails secretVariableDetails =
-        secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableText);
+    SecretVariableDetails secretVariableDetails = secretUtils.getSecretVariableDetails(ngAccess, secretVariableText);
     assertThat(secretVariableDetails)
         .isEqualTo(SecretVariableDetails.builder()
                        .secretVariableDTO(
@@ -112,8 +114,7 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
-    SecretVariableDetails secretVariableDetails =
-        secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableFile);
+    SecretVariableDetails secretVariableDetails = secretUtils.getSecretVariableDetails(ngAccess, secretVariableFile);
 
     assertThat(secretVariableDetails)
         .isEqualTo(SecretVariableDetails.builder()
@@ -141,9 +142,9 @@ public class SecretVariableUtilsTest extends CIExecutionTest {
     when(secretManagerClientService.getEncryptionDetails(any(), any()))
         .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
 
-    assertThatThrownBy(() -> secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
+    assertThatThrownBy(() -> secretUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
         .isInstanceOf(CIStageExecutionUserException.class);
-    assertThatThrownBy(() -> secretVariableUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
+    assertThatThrownBy(() -> secretUtils.getSecretVariableDetails(ngAccess, secretVariableFile))
         .isInstanceOf(CIStageExecutionException.class);
   }
 }

@@ -39,6 +39,7 @@ public class AmbianceTestUtils {
         .setPlanExecutionId(EXECUTION_INSTANCE_ID)
         .putAllSetupAbstractions(ImmutableMap.of("accountId", ACCOUNT_ID, "appId", APP_ID))
         .addAllLevels(levels)
+        .setExpressionFunctorToken(1234)
         .build();
   }
 }

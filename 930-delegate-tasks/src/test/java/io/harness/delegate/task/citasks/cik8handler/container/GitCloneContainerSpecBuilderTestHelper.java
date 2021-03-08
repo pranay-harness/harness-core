@@ -23,6 +23,7 @@ import io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams;
 import io.harness.delegate.task.citasks.cik8handler.params.GitCloneContainerParams.GitCloneContainerParamsBuilder;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -120,7 +121,9 @@ public class GitCloneContainerSpecBuilderTestHelper {
                 .connectorType(ConnectorType.GIT)
                 .connectorConfig(GitConfigDTO.builder()
                                      .gitAuthType(GitAuthType.SSH)
-                                     .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                                     .gitAuth(GitSSHAuthenticationDTO.builder()
+                                                  .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
+                                                  .build())
                                      .url(gitSshRepoUrl)
                                      .build())
                 .build())
@@ -172,7 +175,9 @@ public class GitCloneContainerSpecBuilderTestHelper {
                 .connectorType(ConnectorType.GIT)
                 .connectorConfig(GitConfigDTO.builder()
                                      .gitAuthType(GitAuthType.SSH)
-                                     .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                                     .gitAuth(GitSSHAuthenticationDTO.builder()
+                                                  .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
+                                                  .build())
                                      .branchName(gitBranch)
                                      .url(gitSshRepoUrl)
                                      .build())
@@ -188,7 +193,9 @@ public class GitCloneContainerSpecBuilderTestHelper {
                 .connectorType(ConnectorType.GIT)
                 .connectorConfig(GitConfigDTO.builder()
                                      .gitAuthType(GitAuthType.SSH)
-                                     .gitAuth(GitSSHAuthenticationDTO.builder().encryptedSshKey(gitSshKey).build())
+                                     .gitAuth(GitSSHAuthenticationDTO.builder()
+                                                  .encryptedSshKey(SecretRefHelper.createSecretRef(gitSshKey))
+                                                  .build())
                                      .branchName(gitBranch)
                                      .url(gitSshRepoUrl)
                                      .build())

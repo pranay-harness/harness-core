@@ -20,6 +20,7 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.steps.TestStepParameters;
@@ -184,13 +185,14 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
 
   private PlanNodeProto preparePlanNode(
       boolean skipExpressionChain, String identifier, String paramValue, String groupName) {
-    PlanNodeProto.Builder builder = PlanNodeProto.newBuilder()
-                                        .setUuid(generateUuid())
-                                        .setName(identifier + "n")
-                                        .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                                        .setIdentifier(identifier)
-                                        .setSkipExpressionChain(skipExpressionChain)
-                                        .setStepParameters(prepareStepParameters(paramValue).toJson());
+    PlanNodeProto.Builder builder =
+        PlanNodeProto.newBuilder()
+            .setUuid(generateUuid())
+            .setName(identifier + "n")
+            .setStepType(StepType.newBuilder().setType("DUMMY").build())
+            .setIdentifier(identifier)
+            .setSkipExpressionChain(skipExpressionChain)
+            .setStepParameters(RecastOrchestrationUtils.toDocumentJson(prepareStepParameters(paramValue)));
 
     if (!isEmpty(groupName)) {
       builder.setGroup(groupName);

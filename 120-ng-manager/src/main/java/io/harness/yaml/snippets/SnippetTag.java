@@ -1,5 +1,7 @@
 package io.harness.yaml.snippets;
 
+import io.harness.yaml.snippets.bean.YamlSnippetTags;
+
 public enum SnippetTag implements YamlSnippetTags {
   k8s,
   git,
@@ -9,5 +11,28 @@ public enum SnippetTag implements YamlSnippetTags {
   secret,
   secretText,
   secretFile,
-  sshKey
+  sshKey,
+  service,
+  infra,
+  steps,
+  pipeline,
+  http,
+  splunk,
+  appdynamics,
+  vault,
+  local,
+  gcpkms,
+  gcp,
+  aws,
+  artifactory,
+  jira,
+  nexus,
+  github,
+  gitlab,
+  bitbucket,
+  ceaws,
+  ceazure,
+  cek8s,
+  codecommit,
+  httphelmrepo
 }

@@ -17,4 +17,12 @@ public enum CloudProvider {
   public String getCloudProviderName() {
     return cloudProviderName;
   }
+
+  public static CloudProvider fromCloudProviderName(String cloudProviderName) {
+    try {
+      return CloudProvider.valueOf(cloudProviderName);
+    } catch (IllegalArgumentException e) {
+      return CloudProvider.UNKNOWN;
+    }
+  }
 }

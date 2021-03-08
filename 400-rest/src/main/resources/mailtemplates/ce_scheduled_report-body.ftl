@@ -75,7 +75,7 @@
                     <tr>
                         <td align="left" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; line-height: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border-spacing: 0; margin: 0; padding: 0; padding-left: 7%; padding-right: 6.25%; width: 87.5%; padding-top: 0px; height: 110px; border-collapse: collapse;" height="70" class="button" width="87.5%">
                             <a href="${url!}" target="_blank" style="-webkit-font-smoothing: antialiased; text-size-adjust: 100%; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; padding: 8px 24px; text-decoration: none; background-color: #0face4; color: #FFFFFF; font-family: 'Source Sans Pro', Tahoma, Verdana, Segoe, sans-serif; font-size: 14px; line-height: 120%; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px;">
-                                Go to this view
+                                Go to this perspective
                             </a>
                         </td>
                     </tr>

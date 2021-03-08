@@ -16,8 +16,8 @@ import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
-import static io.harness.beans.FeatureName.ADDRESS_INEFFICIENT_QUERIES;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
+import static io.harness.beans.FeatureName.NEW_DEPLOYMENT_FREEZE;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -62,6 +62,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static software.wings.sm.StateType.ENV_LOOP_RESUME_STATE;
 import static software.wings.sm.StateType.ENV_LOOP_STATE;
@@ -86,10 +87,13 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -123,6 +127,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
+import io.harness.state.inspection.StateInspectionService;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -169,7 +174,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EnvSummary;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphNode;
@@ -226,6 +230,7 @@ import software.wings.service.impl.WorkflowTree.WorkflowTreeBuilder;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.impl.deployment.checks.DeploymentCtx;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeChecker;
+import software.wings.service.impl.pipeline.PipelineServiceHelper;
 import software.wings.service.impl.pipeline.resume.PipelineResumeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.security.auth.DeploymentAuthHandler;
@@ -288,10 +293,12 @@ import software.wings.sm.StepExecutionSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.rollback.RollbackStateMachineGenerator;
 import software.wings.sm.states.ElementStateExecutionData;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.ForkState.ForkStateExecutionData;
 import software.wings.sm.states.HoldingScope;
 import software.wings.sm.states.RepeatState.RepeatStateExecutionData;
 import software.wings.sm.states.azure.AzureVMSSDeployStateExecutionData;
+import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecutionData;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.status.StateStatusUpdateInfo;
 import software.wings.sm.status.WorkflowStatusPropagator;
@@ -350,6 +357,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BarrierService barrierService;
@@ -400,6 +408,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private AuthService authService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HelmChartService helmChartService;
+  @Inject private StateInspectionService stateInspectionService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
@@ -710,6 +719,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                     .endTs(stateExecutionInstance.getEndTs())
                     .build();
 
+            appendSkipCondition(pipelineStageElement, stageExecution, stateExecutionInstance.getUuid());
+
             StateExecutionData stateExecutionData = stateExecutionInstance.fetchStateExecutionData();
 
             if (stateExecutionData instanceof SkipStateExecutionData) {
@@ -761,7 +772,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               }
               if (stateExecutionData instanceof ForkStateExecutionData) {
                 handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
-                    stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement);
+                    stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement,
+                    stateExecutionInstance.getUuid());
               } else if (stateExecutionData instanceof EnvStateExecutionData) {
                 EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
                 stageExecution.setMessage(envStateExecutionData.getErrorMsg());
@@ -805,6 +817,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
+  @VisibleForTesting
+  void appendSkipCondition(PipelineStageElement pipelineStageElement, PipelineStageExecution stageExecution,
+      String stateExecutionInstanceId) {
+    if (isNotEmpty(pipelineStageElement.getDisableAssertion())) {
+      stageExecution.setDisableAssertionInspection(stateInspectionService.get(stateExecutionInstanceId));
+      stageExecution.setSkipCondition(pipelineStageElement.getDisableAssertion());
+    }
+  }
+
   private void setWaitingForInputFlag(
       StateExecutionInstance stateExecutionInstance, PipelineStageExecution stageExecution) {
     stageExecution.setWaitingForInputs(stateExecutionInstance.isWaitingForInputs());
@@ -816,7 +837,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
       List<PipelineStageExecution> stageExecutionDataList, ForkStateExecutionData envStateExecutionData,
-      PipelineStageElement pipelineStageElement) {
+      PipelineStageElement pipelineStageElement, String stateExecutionInstanceId) {
     if (isNotEmpty(envStateExecutionData.getForkStateNames())) {
       for (String element : envStateExecutionData.getForkStateNames()) {
         StateExecutionInstance executionInstanceLooped = stateExecutionInstanceMap.get(element);
@@ -849,6 +870,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           }
           stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
         }
+        appendSkipCondition(pipelineStageElement, stageExecution, stateExecutionInstanceId);
         stageExecutionDataList.add(stageExecution);
       }
     }
@@ -1167,8 +1189,12 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     checkPreDeploymentConditions(accountId, appId);
 
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, pipeline.getEnvIds()), environmentService);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId,
+            featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
+                ? PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1)
+                : pipeline.getEnvIds()),
+        environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
     if (isEmpty(pipeline.getPipelineStages())) {
@@ -1257,6 +1283,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setInfraMappingIds(pipeline.getInfraMappingIds());
     workflowExecution.setCloudProviderIds(
         infrastructureMappingService.fetchCloudProviderIds(appId, workflowExecution.getInfraMappingIds()));
+    workflowExecution.setInfraDefinitionIds(pipeline.getInfraDefinitionIds());
 
     return triggerExecution(
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
@@ -1309,8 +1336,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     // Doing this check here so that workflow is already fetched from databae.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId, isNotEmpty(envId) ? Collections.singletonList(envId) : Collections.emptyList()),
+        environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
     checkPreDeploymentConditions(accountId, appId);
 
@@ -1409,6 +1437,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     Application app = appService.get(workflowExecution.getAppId());
 
     populateArtifactsAndServices(workflowExecution, stdParams, keywords, executionArgs, app.getAccountId());
+    List<String> infraMappingList =
+        workflowExecutionServiceHelper.getInfraMappings(workflow, executionArgs.getWorkflowVariables());
+    populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
 
     populatePipelineSummary(workflowExecution, keywords, executionArgs);
 
@@ -1994,6 +2025,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setServices(services);
   }
 
+  public void populateRollbackArtifacts(
+      WorkflowExecution workflowExecution, List<String> infraMappingList, WorkflowStandardParams stdParams) {
+    if (EmptyPredicate.isNotEmpty(infraMappingList)) {
+      List<Artifact> rollbackArtifacts = obtainLastGoodDeployedArtifacts(workflowExecution, infraMappingList);
+      stdParams.setRollbackArtifactIds(rollbackArtifacts.stream().map(Artifact::getUuid).collect(toList()));
+      workflowExecution.setRollbackArtifacts(rollbackArtifacts);
+    }
+  }
+
   private void populateHelmChartsInWorkflowExecution(
       WorkflowExecution workflowExecution, Set<String> keywords, ExecutionArgs executionArgs, String accountId) {
     if (isEmpty(executionArgs.getHelmCharts())) {
@@ -2279,15 +2319,45 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
          AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
           getStateExecutionInstanceMap(prevWorkflowExecution);
-      Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
-          appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
-      WorkflowExecution currWorkflowExecution =
-          triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
-              prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
-                                                                  : prevWorkflowExecution.getUuid());
-      pipelineResumeUtils.updatePipelineExecutionsAfterResume(currWorkflowExecution, prevWorkflowExecution);
-      return currWorkflowExecution;
+
+      return triggerPipelineResumeExecution(
+          appId, parallelIndexToResume, prevWorkflowExecution, accountId, stateExecutionInstanceMap);
     }
+  }
+  @Override
+  public WorkflowExecution triggerPipelineResumeExecution(
+      String appId, String stageName, WorkflowExecution prevWorkflowExecution) {
+    String accountId = prevWorkflowExecution.getAccountId();
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new AppLogContext(appId, OVERRIDE_ERROR)) {
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap =
+          getStateExecutionInstanceMap(prevWorkflowExecution);
+      Pipeline pipeline = pipelineResumeUtils.getPipelineFromWorkflowExecution(prevWorkflowExecution, appId);
+      int parallelIndexToResume = pipelineResumeUtils.getParallelIndexFromPipelineStageName(stageName, pipeline);
+      return triggerPipelineResumeExecution(
+          appId, parallelIndexToResume, prevWorkflowExecution, accountId, stateExecutionInstanceMap);
+    }
+  }
+
+  private WorkflowExecution triggerPipelineResumeExecution(String appId, int parallelIndexToResume,
+      WorkflowExecution prevWorkflowExecution, String accountId,
+      ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap) {
+    Pipeline pipeline = pipelineResumeUtils.getPipelineForResume(
+        appId, parallelIndexToResume, prevWorkflowExecution, stateExecutionInstanceMap);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId,
+            featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, accountId)
+                ? software.wings.service.impl.pipeline.PipelineServiceHelper.getEnvironmentIdsForParallelIndex(
+                    pipeline, parallelIndexToResume)
+                : pipeline.getEnvIds()),
+        environmentService, featureFlagService);
+    deploymentFreezeChecker.check(accountId);
+    WorkflowExecution currWorkflowExecution =
+        triggerPipelineExecution(appId, pipeline, prevWorkflowExecution.getExecutionArgs(), null, null,
+            prevWorkflowExecution.getPipelineResumeId() != null ? prevWorkflowExecution.getPipelineResumeId()
+                                                                : prevWorkflowExecution.getUuid());
+    pipelineResumeUtils.updatePipelineExecutionsAfterResume(currWorkflowExecution, prevWorkflowExecution);
+    return currWorkflowExecution;
   }
 
   @Override
@@ -2321,7 +2391,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
-      if (isEmpty(previousArtifacts)) {
+      if (isNotEmpty(workflowExecution.getArtifacts()) && isEmpty(previousArtifacts)) {
         throw new InvalidRequestException("No previous artifact found to rollback to");
       }
 
@@ -2377,7 +2447,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
 
       List<Artifact> previousArtifacts = validateAndGetPreviousArtifacts(workflowExecution);
-      if (isEmpty(previousArtifacts)) {
+      if (isNotEmpty(workflowExecution.getArtifacts()) && isEmpty(previousArtifacts)) {
         throw new InvalidRequestException("No artifact found in previous execution");
       }
 
@@ -2569,8 +2639,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // Doing this check here so that workflow is already fetched from database.
     preDeploymentChecks.checkIfWorkflowUsingRestrictedFeatures(workflow);
 
-    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(
-        governanceConfigService, new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService);
+    PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+        new DeploymentCtx(appId, Collections.singletonList(envId)), environmentService, featureFlagService);
     deploymentFreezeChecker.check(accountId);
 
     // Not including instance limit and deployment limit check as it is a emergency rollback
@@ -3101,11 +3171,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     String workflowId = null;
     RuntimeInputsConfig runtimeInputsConfig = null;
+    String envIdInStage = null;
     for (PipelineStage pipelineStage : pipelineStages) {
       PipelineStageElement pipelineStageElement = pipelineStage.getPipelineStageElements().get(0);
       if (pipelineStageElement.getUuid().equals(pipelineStageElementId)
-          && pipelineStageElement.getProperties().get("workflowId") != null) {
-        workflowId = (String) pipelineStageElement.getProperties().get("workflowId");
+          && pipelineStageElement.getProperties().get(EnvStateKeys.workflowId) != null) {
+        if (pipelineStageElement.getProperties().containsKey(EnvStateKeys.envId)) {
+          envIdInStage = (String) pipelineStageElement.getProperties().get(EnvStateKeys.envId);
+        }
+        workflowId = (String) pipelineStageElement.getProperties().get(EnvStateKeys.workflowId);
         runtimeInputsConfig = pipelineStageElement.getRuntimeInputsConfig();
         break;
       }
@@ -3136,6 +3210,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (envVarInStage != null && runtimeVarsInStage.contains(envVarInStage.getName())) {
       String envValueInStage = wfVariables.get(envVarInStage.getName());
       authService.checkIfUserAllowedToDeployPipelineToEnv(appId, envValueInStage);
+    }
+
+    if (featureFlagService.isEnabled(NEW_DEPLOYMENT_FREEZE, pipelineExecution.getAccountId())) {
+      if (ExpressionEvaluator.matchesVariablePattern(envIdInStage) && envVarInStage != null) {
+        envIdInStage = wfVariables.get(envVarInStage.getName());
+      }
+      PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
+          new DeploymentCtx(
+              appId, envIdInStage != null ? Collections.singletonList(envIdInStage) : Collections.emptyList()),
+          environmentService, featureFlagService);
+      deploymentFreezeChecker.check(pipelineExecution.getAccountId());
     }
     List<String> extraVars = new ArrayList<>();
     List<String> runtimeKeys =
@@ -3991,6 +4076,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               instanceStatusSummaries.addAll(instanceFetchStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
+        } else if (nextStateType == AZURE_WEBAPP_SLOT_SETUP
+            && next.fetchStateExecutionData() instanceof AzureAppServiceSlotSetupExecutionData) {
+          AzureAppServiceSlotSetupExecutionData appServiceSetupStateExecutionData =
+              (AzureAppServiceSlotSetupExecutionData) next.fetchStateExecutionData();
+          if (isNotEmpty(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(appServiceSetupStateExecutionData.getNewInstanceStatusSummaries());
+          }
         }
         last = next;
       }
@@ -4426,6 +4518,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public List<Artifact> obtainLastGoodDeployedArtifacts(
+      WorkflowExecution workflowExecution, List<String> infraMappingList) {
+    WorkflowExecution lastGoodWorkflowExecution = fetchLastSuccessDeployment(workflowExecution, infraMappingList);
+    if (lastGoodWorkflowExecution != null && lastGoodWorkflowExecution.getArtifacts() != null) {
+      return lastGoodWorkflowExecution.getArtifacts();
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
   public List<ArtifactVariable> obtainLastGoodDeployedArtifactsVariables(String appId, String workflowId) {
     WorkflowExecution workflowExecution = fetchLastSuccessDeployment(appId, workflowId);
     // Todo call fetchLastSuccessDeployment (fetch infra mapping)
@@ -4449,34 +4551,72 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private WorkflowExecution fetchLastSuccessDeployment(WorkflowExecution workflowExecution) {
     FindOptions findOptions = new FindOptions();
-    Query<WorkflowExecution> workflowExecutionQuery =
-        wingsPersistence.createQuery(WorkflowExecution.class)
-            .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
-            .filter(WorkflowExecutionKeys.workflowId, workflowExecution.getWorkflowId())
-            .filter(WorkflowExecutionKeys.status, SUCCESS);
-    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
-      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
-    }
+    Query<WorkflowExecution> workflowExecutionQuery = getWorkflowExecutionQuery(workflowExecution, SUCCESS);
+
     if (workflowExecution.isOnDemandRollback()) {
       findOptions = findOptions.skip(1);
     }
+
+    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, workflowExecution.getInfraMappingIds());
+    }
+
+    addressInefficientQueries(workflowExecutionQuery);
+
+    if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
+      findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+    } else {
+      findOptions.modifier("$hint", "appid_workflowid_status_createdat");
+    }
+    return workflowExecutionQuery.order("-createdAt").get(findOptions);
+  }
+
+  private WorkflowExecution fetchLastSuccessDeployment(
+      WorkflowExecution workflowExecution, List<String> infraMappingList) {
+    FindOptions findOptions = new FindOptions();
+    Query<WorkflowExecution> workflowExecutionQuery = getWorkflowExecutionQuery(workflowExecution, SUCCESS);
+
+    if (workflowExecution.isOnDemandRollback()) {
+      findOptions = findOptions.skip(1);
+    }
+
+    if (isNotEmpty(infraMappingList)) {
+      workflowExecutionQuery.filter(WorkflowExecutionKeys.infraMappingIds, infraMappingList);
+    }
+
+    addressInefficientQueries(workflowExecutionQuery);
+
+    if (isNotEmpty(infraMappingList)) {
+      findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+    } else {
+      findOptions.modifier("$hint", "appid_workflowid_status_createdat");
+    }
+    return workflowExecutionQuery.order("-createdAt").get(findOptions);
+  }
+
+  private Query<WorkflowExecution> getWorkflowExecutionQuery(
+      WorkflowExecution workflowExecution, ExecutionStatus status) {
+    return wingsPersistence.createQuery(WorkflowExecution.class)
+        .filter(WorkflowExecutionKeys.appId, workflowExecution.getAppId())
+        .filter(WorkflowExecutionKeys.workflowId, workflowExecution.getWorkflowId())
+        .filter(WorkflowExecutionKeys.status, status);
+  }
+
+  private String getAccountId(WorkflowExecution workflowExecution) {
     String accountId = workflowExecution.getAccountId();
     if (accountId == null) {
       accountId = appService.getAccountIdByAppId(workflowExecution.getAppId());
     }
-    if (featureFlagService.isEnabled(ADDRESS_INEFFICIENT_QUERIES, accountId)) {
-      workflowExecutionQuery.project(WorkflowExecutionKeys.uuid, true)
-          .project(WorkflowExecutionKeys.releaseNo, true)
-          .project(WorkflowExecutionKeys.name, true)
-          .project(WorkflowExecutionKeys.createdAt, true);
+    return accountId;
+  }
 
-      if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
-        findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
-      } else {
-        findOptions.modifier("$hint", "appid_workflowid_status_createdat");
-      }
-    }
-    return workflowExecutionQuery.order("-createdAt").get(findOptions);
+  private void addressInefficientQueries(Query<WorkflowExecution> workflowExecutionQuery) {
+    workflowExecutionQuery.project(WorkflowExecutionKeys.uuid, true)
+        .project(WorkflowExecutionKeys.releaseNo, true)
+        .project(WorkflowExecutionKeys.name, true)
+        .project(WorkflowExecutionKeys.createdAt, true)
+        .project(WorkflowExecutionKeys.artifacts, true)
+        .project(WorkflowExecutionKeys.executionArgs, true);
   }
 
   @Override

@@ -45,7 +45,7 @@ public interface DelegateAgentManagerClient {
 
   @Headers({"Content-Type: application/x-kryo"})
   @KryoRequest
-  @POST("agent/delegates/{delegateId}/tasks/{taskId}")
+  @POST("agent/tasks/{taskId}/delegates/{delegateId}")
   Call<ResponseBody> sendTaskStatus(@Path("delegateId") String delegateId, @Path("taskId") String taskId,
       @Query("accountId") String accountId, @Body DelegateTaskResponse delegateTaskResponse);
 
@@ -103,7 +103,8 @@ public interface DelegateAgentManagerClient {
   // Query for a specific set of delegate properties for a given account.
   // Request: GetDelegatePropertiesRequest
   // Response: GetDelegatePropertiesResponse
-  @GET("agent/delegates/properties") Call<RestResponse<String>> getDelegateProperties(@Query("request") String request);
+  @POST("agent/delegates/properties")
+  Call<RestResponse<String>> getDelegateProperties(@Query("accountId") String accountId, @Body RequestBody request);
 
   @POST("logs/activity/{activityId}/unit/{unitName}/batched")
   Call<RestResponse> saveCommandUnitLogs(@Path("activityId") String activityId, @Path("unitName") String unitName,

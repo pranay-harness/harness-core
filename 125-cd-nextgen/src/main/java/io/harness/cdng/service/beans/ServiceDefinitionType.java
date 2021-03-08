@@ -13,7 +13,8 @@ public enum ServiceDefinitionType {
   @JsonProperty(ServiceSpecType.SSH) SSH("Ssh", Lists.newArrayList(ExecutionStrategyType.BASIC), ServiceSpecType.SSH),
   @JsonProperty(ServiceSpecType.KUBERNETES)
   KUBERNETES("Kubernetes",
-      Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY),
+      Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN, ExecutionStrategyType.CANARY,
+          ExecutionStrategyType.DEFAULT),
       ServiceSpecType.KUBERNETES),
   @JsonProperty(ServiceSpecType.ECS)
   ECS("Ecs",

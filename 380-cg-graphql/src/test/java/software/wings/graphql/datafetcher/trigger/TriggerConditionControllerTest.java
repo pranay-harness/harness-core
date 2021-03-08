@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.trigger;
 
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.MILAN;
+import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
@@ -31,6 +32,7 @@ import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.graphql.schema.type.trigger.QLArtifactConditionInput;
 import software.wings.graphql.schema.type.trigger.QLBitbucketEvent;
 import software.wings.graphql.schema.type.trigger.QLConditionType;
@@ -65,6 +67,7 @@ import org.mockito.MockitoAnnotations;
 
 public class TriggerConditionControllerTest extends CategoryTest {
   public static final String APP_ID = "appId";
+  private static final String BRANCH_REGEX = "regex";
   @Mock MainConfiguration mainConfiguration;
   @Mock SettingsService settingsService;
   @Mock ArtifactStreamService artifactStreamService;
@@ -523,7 +526,7 @@ public class TriggerConditionControllerTest extends CategoryTest {
         WebHookTriggerCondition.builder()
             .webHookToken(webHookToken)
             .webhookSource(WebhookSource.BITBUCKET)
-            .bitBucketEvents(Arrays.asList(WebhookSource.BitBucketEventType.PULL_REQUEST_CREATED))
+            .bitBucketEvents(Arrays.asList(BitBucketEventType.PULL_REQUEST_CREATED))
             .branchName("branchName")
             .gitConnectorId("gitConnectorId")
             .filePaths(Arrays.asList("filePath1", "filePath2"))
@@ -579,16 +582,15 @@ public class TriggerConditionControllerTest extends CategoryTest {
         .append("?accountId=")
         .append(accountId);
 
-    WebHookTriggerCondition webhookTriggerCondition =
-        WebHookTriggerCondition.builder()
-            .webHookToken(webHookToken)
-            .webhookSource(WebhookSource.BITBUCKET)
-            .bitBucketEvents(Arrays.asList(WebhookSource.BitBucketEventType.ALL))
-            .branchName("branchName")
-            .gitConnectorId("gitConnectorId")
-            .filePaths(Arrays.asList("filePath1", "filePath2"))
-            .checkFileContentChanged(true)
-            .build();
+    WebHookTriggerCondition webhookTriggerCondition = WebHookTriggerCondition.builder()
+                                                          .webHookToken(webHookToken)
+                                                          .webhookSource(WebhookSource.BITBUCKET)
+                                                          .bitBucketEvents(Arrays.asList(BitBucketEventType.ALL))
+                                                          .branchName("branchName")
+                                                          .gitConnectorId("gitConnectorId")
+                                                          .filePaths(Arrays.asList("filePath1", "filePath2"))
+                                                          .checkFileContentChanged(true)
+                                                          .build();
     Trigger trigger = Trigger.builder().condition(webhookTriggerCondition).build();
 
     SettingAttribute gitConfig = new SettingAttribute();
@@ -1373,5 +1375,172 @@ public class TriggerConditionControllerTest extends CategoryTest {
     assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateTriggerInput3))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Unsupported GitHub Package Action");
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketRefsChangedTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(
+            getQLCreateOrUpdateTriggerInput(QLBitbucketEvent.REFS_CHANGED, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.REFS_CHANGED.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.REFS_CHANGED.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name())
+        .isEqualTo(BitBucketEventType.REFS_CHANGED.name());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketUpdatedTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(
+            getQLCreateOrUpdateTriggerInput(QLBitbucketEvent.UPDATED, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.UPDATED.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.UPDATED.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name()).isEqualTo(BitBucketEventType.UPDATED.name());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketPushTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(
+            getQLCreateOrUpdateTriggerInput(QLBitbucketEvent.PUSH, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.PUSH.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.PUSH.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name()).isEqualTo(BitBucketEventType.PUSH.name());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketForkTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(
+            getQLCreateOrUpdateTriggerInput(QLBitbucketEvent.FORK, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.FORK.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.FORK.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name()).isEqualTo(BitBucketEventType.FORK.name());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketCommitCommentCreatedTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(getQLCreateOrUpdateTriggerInput(
+            QLBitbucketEvent.COMMIT_COMMENT_CREATED, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.COMMIT_COMMENT_CREATED.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.COMMIT_COMMENT_CREATED.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name())
+        .isEqualTo(BitBucketEventType.COMMIT_COMMENT_CREATED.name());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketBuildStatusCreatedTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(getQLCreateOrUpdateTriggerInput(
+            QLBitbucketEvent.BUILD_STATUS_CREATED, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.BUILD_STATUS_CREATED.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.BUILD_STATUS_CREATED.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name())
+        .isEqualTo(BitBucketEventType.BUILD_STATUS_CREATED.name());
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void resolveBitBucketBuildStatusUpdatedTriggerConditionTest() {
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) triggerConditionController.resolveTriggerCondition(getQLCreateOrUpdateTriggerInput(
+            QLBitbucketEvent.BUILD_STATUS_UPDATED, QLWebhookSource.BITBUCKET, BRANCH_REGEX));
+
+    assertThat(webHookTriggerCondition.getWebhookSource().name()).isEqualTo(QLWebhookSource.BITBUCKET.name());
+    assertThat(webHookTriggerCondition.getBranchRegex()).isEqualTo(BRANCH_REGEX);
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).name()).isEqualTo(WebhookEventType.REPO.name());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getValue()).isEqualTo(WebhookEventType.REPO.getValue());
+    assertThat(webHookTriggerCondition.getEventTypes().get(0).getDisplayName())
+        .isEqualTo(WebhookEventType.REPO.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getDisplayName())
+        .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.getDisplayName());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).getValue())
+        .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.getValue());
+    assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name())
+        .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.name());
+  }
+
+  private QLCreateOrUpdateTriggerInput getQLCreateOrUpdateTriggerInput(
+      QLBitbucketEvent qlBitbucketEvent, QLWebhookSource qlWebhookSource, String branchRegex) {
+    QLWebhookConditionInput webhookConditionInput = QLWebhookConditionInput.builder()
+                                                        .webhookSourceType(qlWebhookSource)
+                                                        .bitbucketEvent(qlBitbucketEvent)
+                                                        .branchRegex(branchRegex)
+                                                        .build();
+
+    QLTriggerConditionInput qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                                          .conditionType(QLConditionType.ON_WEBHOOK)
+                                                          .webhookConditionInput(webhookConditionInput)
+                                                          .build();
+
+    return QLCreateOrUpdateTriggerInput.builder().condition(qlTriggerConditionInput).build();
   }
 }

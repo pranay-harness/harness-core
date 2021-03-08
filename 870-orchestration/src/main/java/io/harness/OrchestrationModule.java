@@ -14,9 +14,14 @@ import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
+import io.harness.engine.interrupts.PMSInterruptServiceImpl;
 import io.harness.engine.outcomes.OutcomeServiceImpl;
 import io.harness.engine.outputs.ExecutionSweepingOutputServiceImpl;
-import io.harness.engine.pms.data.*;
+import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.govern.ServersModule;
@@ -25,10 +30,11 @@ import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
+import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
+import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
-import io.harness.pms.sdk.registries.registrar.ResolverRegistrar;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationResolverRegistrar;
 import io.harness.state.inspection.StateInspectionService;
@@ -98,6 +104,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
       bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingOutputServiceImpl.class).in(Singleton.class);
       bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
       bind(OutcomeService.class).to(OutcomeServiceImpl.class).in(Singleton.class);
+      bind(PMSInterruptService.class).to(PMSInterruptServiceImpl.class).in(Singleton.class);
     }
   }
 

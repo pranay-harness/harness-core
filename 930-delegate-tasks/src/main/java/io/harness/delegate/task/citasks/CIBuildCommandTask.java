@@ -36,6 +36,6 @@ public class CIBuildCommandTask extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     CIBuildSetupTaskParams ciBuildSetupTaskParams = (CIBuildSetupTaskParams) parameters;
-    return ciBuildTaskHandler.executeTaskInternal(ciBuildSetupTaskParams);
+    return ciBuildTaskHandler.executeTaskInternal(ciBuildSetupTaskParams, getLogStreamingTaskClient());
   }
 }

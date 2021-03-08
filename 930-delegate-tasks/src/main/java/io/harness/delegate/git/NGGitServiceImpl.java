@@ -1,12 +1,15 @@
 package io.harness.delegate.git;
 
 import static io.harness.git.model.GitRepositoryType.YAML;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
+import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.task.shell.SshSessionConfigMapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
 import io.harness.git.UsernamePasswordAuthRequest;
@@ -18,53 +21,76 @@ import io.harness.git.model.FetchFilesByPathRequest;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitBaseRequest;
 import io.harness.git.model.GitRepositoryType;
+import io.harness.git.model.JgitSshAuthRequest;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
+import org.eclipse.jgit.transport.JschConfigSessionFactory;
+import org.eclipse.jgit.transport.OpenSshConfig;
+import org.eclipse.jgit.transport.SshSessionFactory;
+import org.eclipse.jgit.util.FS;
 
 @Singleton
 @ValidateOnExecution
 @Slf4j
 public class NGGitServiceImpl implements NGGitService {
   @Inject private GitClientV2 gitClientV2;
+  @Inject private SshSessionConfigMapper sshSessionConfigMapper;
 
   @Override
-  public String validate(GitConfigDTO gitConfig, String accountId) {
+  public String validate(GitConfigDTO gitConfig, String accountId, SshSessionConfig sshSessionConfig) {
     final GitBaseRequest gitBaseRequest = GitBaseRequest.builder().build();
-    setGitBaseRequest(gitConfig, accountId, gitBaseRequest, YAML);
+    setGitBaseRequest(gitConfig, accountId, gitBaseRequest, YAML, sshSessionConfig);
     return gitClientV2.validate(gitBaseRequest);
   }
 
   @VisibleForTesting
-  void setGitBaseRequest(
-      GitConfigDTO gitConfig, String accountId, GitBaseRequest gitBaseRequest, GitRepositoryType repositoryType) {
-    gitBaseRequest.setAuthRequest(getAuthRequest(gitConfig));
+  void setGitBaseRequest(GitConfigDTO gitConfig, String accountId, GitBaseRequest gitBaseRequest,
+      GitRepositoryType repositoryType, SshSessionConfig sshSessionConfig) {
+    gitBaseRequest.setAuthRequest(getAuthRequest(gitConfig, sshSessionConfig));
     gitBaseRequest.setBranch(gitConfig.getBranchName());
     gitBaseRequest.setRepoType(repositoryType);
     gitBaseRequest.setRepoUrl(gitConfig.getUrl());
     gitBaseRequest.setAccountId(accountId);
   }
 
-  private AuthRequest getAuthRequest(GitConfigDTO gitConfig) {
+  private AuthRequest getAuthRequest(GitConfigDTO gitConfig, SshSessionConfig sshSessionConfig) {
     switch (gitConfig.getGitAuthType()) {
       case SSH:
-        // todo @deepak @vaibhav: handle ssh auth when added for ng.
-        throw new NotImplementedException("Ssh not yet implemented");
+        return JgitSshAuthRequest.builder().factory(getSshSessionFactory(sshSessionConfig)).build();
       case HTTP:
-        // todo @deepak @vaibhav: handle kerboros when added.
         GitHTTPAuthenticationDTO httpAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfig.getGitAuth();
+        String userName = getSecretAsStringFromPlainTextOrSecretRef(
+            httpAuthenticationDTO.getUsername(), httpAuthenticationDTO.getUsernameRef());
         return UsernamePasswordAuthRequest.builder()
-            .username(httpAuthenticationDTO.getUsername())
+            .username(userName)
             .password(httpAuthenticationDTO.getPasswordRef().getDecryptedValue())
             .build();
       default:
         throw new InvalidRequestException("Unknown auth type.");
     }
+  }
+
+  private SshSessionFactory getSshSessionFactory(SshSessionConfig sshSessionConfig) {
+    return new JschConfigSessionFactory() {
+      @Override
+      protected Session createSession(OpenSshConfig.Host hc, String user, String host, int port, FS fs)
+          throws JSchException {
+        sshSessionConfig.setPort(port); // use port from repo URL
+        sshSessionConfig.setHost(host);
+        return getSSHSession(sshSessionConfig);
+      }
+
+      @Override
+      protected void configure(OpenSshConfig.Host hc, Session session) {}
+    };
   }
 
   private void setAuthorInfo(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest) {
@@ -84,18 +110,18 @@ public class NGGitServiceImpl implements NGGitService {
   }
 
   @Override
-  public CommitAndPushResult commitAndPush(
-      GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest, String accountId) {
-    setGitBaseRequest(gitConfig, accountId, commitAndPushRequest, YAML);
+  public CommitAndPushResult commitAndPush(GitConfigDTO gitConfig, CommitAndPushRequest commitAndPushRequest,
+      String accountId, SshSessionConfig sshSessionConfig) {
+    setGitBaseRequest(gitConfig, accountId, commitAndPushRequest, YAML, sshSessionConfig);
     setAuthorInfo(gitConfig, commitAndPushRequest);
     return gitClientV2.commitAndPush(commitAndPushRequest);
   }
 
   @Override
-  public FetchFilesResult fetchFilesByPath(GitStoreDelegateConfig gitStoreDelegateConfig, String accountId) {
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
+  public FetchFilesResult fetchFilesByPath(GitStoreDelegateConfig gitStoreDelegateConfig, String accountId,
+      SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
     FetchFilesByPathRequest fetchFilesByPathRequest = FetchFilesByPathRequest.builder()
-                                                          .authRequest(getAuthRequest(gitConfigDTO))
+                                                          .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                           .filePaths(gitStoreDelegateConfig.getPaths())
                                                           .recursive(true)
                                                           .accountId(accountId)
@@ -109,11 +135,10 @@ public class NGGitServiceImpl implements NGGitService {
   }
 
   @Override
-  public void downloadFiles(
-      GitStoreDelegateConfig gitStoreDelegateConfig, String destinationDirectory, String accountId) {
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
+  public void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String destinationDirectory,
+      String accountId, SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
     DownloadFilesRequest downloadFilesRequest = DownloadFilesRequest.builder()
-                                                    .authRequest(getAuthRequest(gitConfigDTO))
+                                                    .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                     .filePaths(gitStoreDelegateConfig.getPaths())
                                                     .recursive(true)
                                                     .accountId(accountId)

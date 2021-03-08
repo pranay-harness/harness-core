@@ -1,5 +1,8 @@
 package io.harness.delegate.service;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.delegatetasks.DelegateCVActivityLogService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.verification.CVActivityLog;
@@ -12,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateCVActivityLogServiceImpl implements DelegateCVActivityLogService {
   @Inject private DelegateLogService delegateLogService;
   @Override

@@ -9,24 +9,16 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.serializer.KryoSerializer;
-import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyResponse.NotifyResponseKeys;
-import io.harness.waiter.WaitInstance.WaitInstanceKeys;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.mongodb.WriteConcern;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class NotifyEventListener extends QueueListener<NotifyEvent> {

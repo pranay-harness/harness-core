@@ -2,6 +2,7 @@ package io.harness.batch.processing.tasklet;
 
 import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
 import static io.harness.rule.OwnerRule.HITESH;
+import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -47,6 +48,7 @@ import com.google.protobuf.Timestamp;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -99,7 +101,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
   private static final String WORKLOAD_ID = "workload_id";
   private static final String MAP_KEY_WITH_DOT = "harness.io/created.by";
   private static final String MAP_VALUE = "harness.io/created.by";
-  Map<String, String> NAMESPACE_LABELS = ImmutableMap.of(MAP_KEY_WITH_DOT, MAP_VALUE);
+  Map<String, String> SAMPLE_MAP = ImmutableMap.of(MAP_KEY_WITH_DOT, MAP_VALUE);
 
   private final Instant NOW = Instant.now();
   private final Timestamp START_TIMESTAMP = HTimestamps.fromInstant(NOW.minus(1, ChronoUnit.DAYS));
@@ -112,6 +114,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(50).build());
     when(clusterDataGenerationValidator.shouldGenerateClusterData(any(), any())).thenReturn(true);
     when(instanceDataBulkWriteService.updateList(any())).thenReturn(true);
+    when(harnessServiceInfoFetcher.fetchHarnessServiceInfo(any(), any(), any(), any(), any()))
+        .thenReturn(Optional.empty());
   }
 
   @Test
@@ -149,13 +153,31 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
-            NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+            NAMESPACE, label, SAMPLE_MAP, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
 
     when(publishedMessageDao.fetchPublishedMessage(any(), any(), any(), any(), anyInt()))
         .thenReturn(Arrays.asList(k8sPodInfoMessage));
 
     RepeatStatus repeatStatus = k8sPodInfoTasklet.execute(null, chunkContext);
     assertThat(repeatStatus).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testPodMetadataAnnotation() {
+    PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessageWithAnnotations(SAMPLE_MAP);
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
+    assertThat(instanceInfo.getMetadataAnnotations()).isEqualTo(SAMPLE_MAP);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testPodMetadataAnnotationNotNull() {
+    PublishedMessage k8sPodInfoMessage = getK8sPodInfoMessageWithAnnotations(Collections.emptyMap());
+    InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
+    assertThat(instanceInfo.getMetadataAnnotations()).isEqualTo(Collections.emptyMap());
   }
 
   @Test
@@ -235,7 +257,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).putAllLimits(limitQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID, CLUSTER_NAME,
-            NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
+            NAMESPACE, label, SAMPLE_MAP, resource, START_TIMESTAMP, WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID);
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.ccm.commons.beans.Resource infoResource = instanceInfo.getResource();
     io.harness.ccm.commons.beans.Resource limitResource = instanceInfo.getResourceLimit();
@@ -257,8 +279,8 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     assertThat(metaData.get(InstanceMetaDataConstants.PARENT_RESOURCE_CPU))
         .isEqualTo(String.valueOf((double) CPU_AMOUNT));
     assertThat(metaData.get(InstanceMetaDataConstants.NODE_POOL_NAME)).isEqualTo(NODE_POOL_NAME);
-    assertThat(instanceInfo.getNamespaceLabels()).isEqualTo(encodeDotsInKey(NAMESPACE_LABELS));
-    assertThat(instanceInfo.getNamespaceLabels()).isNotEqualTo(NAMESPACE_LABELS);
+    assertThat(instanceInfo.getNamespaceLabels()).isEqualTo(encodeDotsInKey(SAMPLE_MAP));
+    assertThat(instanceInfo.getNamespaceLabels()).isNotEqualTo(SAMPLE_MAP);
     verify(workloadRepository).savePodWorkload(ACCOUNT_ID, (PodInfo) k8sPodInfoMessage.getMessage());
   }
 
@@ -281,7 +303,7 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
     Resource resource = Resource.newBuilder().putAllRequests(requestQuantity).build();
     PublishedMessage k8sPodInfoMessage =
         getK8sPodInfoMessage(POD_UID, KUBE_PROXY_POD_NAME, NODE_NAME, CLOUD_PROVIDER_ID, ACCOUNT_ID, CLUSTER_ID,
-            CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, NAMESPACE_LABELS, resource, START_TIMESTAMP, "", "", "");
+            CLUSTER_NAME, KUBE_SYSTEM_NAMESPACE, label, SAMPLE_MAP, resource, START_TIMESTAMP, "", "", "");
     InstanceInfo instanceInfo = k8sPodInfoTasklet.process(k8sPodInfoMessage);
     io.harness.ccm.commons.beans.Resource infoResource = instanceInfo.getResource();
     io.harness.ccm.commons.beans.Resource limitResource = instanceInfo.getResourceLimit();
@@ -345,6 +367,29 @@ public class K8sPodInfoEventTaskletTest extends CategoryTest {
                            .setTopLevelOwner(getOwner(workloadName, workloadType, workloadId))
                            .build();
     return getPublishedMessage(accountId, nodeInfo, HTimestamps.toMillis(timestamp));
+  }
+
+  private PublishedMessage getK8sPodInfoMessageWithAnnotations(Map<String, String> metadataAnnotations) {
+    Map<String, Quantity> requestQuantity = new HashMap<>();
+    requestQuantity.put("cpu", getQuantity(CPU_AMOUNT, "M"));
+    requestQuantity.put("memory", getQuantity(MEMORY_AMOUNT, "M"));
+
+    PodInfo nodeInfo = PodInfo.newBuilder()
+                           .setPodUid(POD_UID)
+                           .setPodName(POD_NAME)
+                           .setNodeName(NODE_NAME)
+                           .setCloudProviderId(CLOUD_PROVIDER_ID)
+                           .setClusterId(CLUSTER_ID)
+                           .setClusterName(CLUSTER_NAME)
+                           .setNamespace(NAMESPACE)
+                           .putAllLabels(SAMPLE_MAP)
+                           .putAllNamespaceLabels(SAMPLE_MAP)
+                           .setTotalResource(Resource.newBuilder().putAllRequests(requestQuantity).build())
+                           .setCreationTimestamp(START_TIMESTAMP)
+                           .putAllMetadataAnnotations(metadataAnnotations)
+                           .setTopLevelOwner(getOwner(WORKLOAD_NAME, WORKLOAD_TYPE, WORKLOAD_ID))
+                           .build();
+    return getPublishedMessage(ACCOUNT_ID, nodeInfo, HTimestamps.toMillis(START_TIMESTAMP));
   }
 
   private io.harness.perpetualtask.k8s.watch.Owner getOwner(

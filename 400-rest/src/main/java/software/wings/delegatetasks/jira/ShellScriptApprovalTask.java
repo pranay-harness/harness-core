@@ -16,23 +16,24 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ShellExecutionData;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.api.ShellScriptApprovalExecutionData;
 import software.wings.beans.ApprovalDetails.Action;
-import software.wings.beans.command.ShellExecutionData;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateLogService;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,15 +85,16 @@ public class ShellScriptApprovalTask extends AbstractDelegateRunnableTask {
     }
 
     saveExecutionLog(parameters, "Starting Script Execution ...", RUNNING);
-    CommandExecutionResult commandExecutionResult = executor.executeCommandString(parameters.getScript(), items);
+    ExecuteCommandResponse executeCommandResponse =
+        executor.executeCommandString(parameters.getScript(), items, Collections.emptyList());
     saveExecutionLog(parameters, "End of Script Execution ...", RUNNING);
     saveExecutionLog(parameters, "\n---------------------------------------------------\n", RUNNING);
 
     Action action = null;
     ExecutionStatus executionStatus = ExecutionStatus.RUNNING;
-    if (SUCCESS == commandExecutionResult.getStatus()) {
+    if (SUCCESS == executeCommandResponse.getStatus()) {
       Map<String, String> sweepingOutputEnvVariables =
-          ((ShellExecutionData) commandExecutionResult.getCommandExecutionData()).getSweepingOutputEnvVariables();
+          ((ShellExecutionData) executeCommandResponse.getCommandExecutionData()).getSweepingOutputEnvVariables();
 
       if (MapUtils.isNotEmpty(sweepingOutputEnvVariables)
           && EmptyPredicate.isNotEmpty(sweepingOutputEnvVariables.get(SCRIPT_APPROVAL_ENV_VARIABLE))) {

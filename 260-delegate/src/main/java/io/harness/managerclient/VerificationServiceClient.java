@@ -2,6 +2,8 @@ package io.harness.managerclient;
 
 import static software.wings.common.VerificationConstants.DELEGATE_DATA_COLLECTION;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.rest.RestResponse;
 
 import software.wings.common.VerificationConstants;
@@ -19,9 +21,7 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-/**
- * Created by raghu on 09/17/18.
- */
+@TargetModule(Module._420_DELEGATE_AGENT)
 public interface VerificationServiceClient {
   @POST(DELEGATE_DATA_COLLECTION + "/save-metrics")
   Call<RestResponse<Boolean>> saveTimeSeriesMetrics(@Query("accountId") String accountId,

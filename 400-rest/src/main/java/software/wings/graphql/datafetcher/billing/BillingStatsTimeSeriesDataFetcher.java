@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.billing;
 
 import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -51,6 +53,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BillingStatsTimeSeriesDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCCMAggregationFunction, QLBillingDataFilter,
         QLCCMGroupBy, QLBillingSortCriteria, QLBillingDataTagType, QLBillingDataTagAggregation,
@@ -124,7 +127,6 @@ public class BillingStatsTimeSeriesDataFetcher
     queryData = billingDataQueryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, !isGroupByNodeOrPodPresent(groupByEntityList));
     log.info("BillingStatsTimeSeriesDataFetcher query: {}", queryData.getQuery());
-    log.info(queryData.getQuery());
 
     while (!successful && retryCount < MAX_RETRY) {
       try (Connection connection = timeScaleDBService.getDBConnection();
@@ -166,14 +168,17 @@ public class BillingStatsTimeSeriesDataFetcher
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuLimitPointMap = new LinkedHashMap<>();
     Map<Long, List<QLBillingTimeDataPoint>> qlTimeCpuRequestPointMap = new LinkedHashMap<>();
 
-    boolean dataPresent =
-        checkAndAddPrecedingZeroValuedData(queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap);
     // Checking if namespace should be appended to entity Id in order to distinguish between same workloadNames across
     // Distinct namespaces
-    boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
+    boolean addNamespaceToEntityId = groupByEntityList.contains(QLCCMEntityGroupBy.WorkloadName);
     boolean addClusterIdToEntityId = billingDataQueryBuilder.isClusterDrilldown(groupByEntityList)
         || groupByEntityList.contains(QLCCMEntityGroupBy.Node);
     boolean addAppIdToEntityId = billingDataQueryBuilder.isApplicationDrillDown(groupByEntityList);
+    boolean isKeyTypeInstanceId =
+        groupByEntityList.contains(QLCCMEntityGroupBy.Node) || groupByEntityList.contains(QLCCMEntityGroupBy.PV);
+
+    boolean dataPresent = checkAndAddPrecedingZeroValuedData(
+        queryData, resultSet, startTimeFromFilters, qlTimeDataPointMap, addClusterIdToEntityId);
 
     if (dataPresent) {
       do {
@@ -197,6 +202,9 @@ public class BillingStatsTimeSeriesDataFetcher
         QLBillingTimeDataPointBuilder cpuAvgLimitPointBuilder = QLBillingTimeDataPoint.builder();
         QLBillingTimeDataPointBuilder cpuMaxUtilValuePointBuilder = QLBillingTimeDataPoint.builder();
 
+        String clusterId = "";
+        String instanceId = "";
+        String instanceName = "";
         for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
           switch (field.getDataType()) {
             case DOUBLE:
@@ -272,6 +280,13 @@ public class BillingStatsTimeSeriesDataFetcher
               }
               break;
             case STRING:
+              if (field == BillingDataMetaDataFields.CLUSTERID) {
+                clusterId = resultSet.getString(field.getFieldName());
+              } else if (field == BillingDataMetaDataFields.INSTANCEID) {
+                instanceId = resultSet.getString(field.getFieldName());
+              } else if (field == BillingDataMetaDataFields.INSTANCENAME) {
+                instanceName = resultSet.getString(field.getFieldName());
+              }
               // Group by has been re-arranged such that additional info gets populated first
               if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
                   || (addClusterIdToEntityId && field == BillingDataMetaDataFields.CLUSTERID)
@@ -327,6 +342,14 @@ public class BillingStatsTimeSeriesDataFetcher
             default:
               throw new InvalidRequestException("UnsupportedType " + field.getDataType());
           }
+        }
+
+        if (isKeyTypeInstanceId) {
+          dataPointBuilder.key(QLReference.builder()
+                                   .name(instanceName)
+                                   .id(clusterId + BillingStatsDefaultKeys.TOKEN + instanceId)
+                                   .type(BillingDataMetaDataFields.INSTANCEID.name())
+                                   .build());
         }
 
         checkDataPointIsValidAndInsert(dataPointBuilder.build(), qlTimeDataPointMap);
@@ -415,23 +438,29 @@ public class BillingStatsTimeSeriesDataFetcher
 
   // returns true if data is present
   private boolean checkAndAddPrecedingZeroValuedData(BillingDataQueryMetadata queryData, ResultSet resultSet,
-      long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap) throws SQLException {
+      long startTimeFromFilters, Map<Long, List<QLBillingTimeDataPoint>> qlTimeDataPointMap, boolean isClusterDrilldown)
+      throws SQLException {
     if (resultSet != null && resultSet.next()) {
       String entityId = "";
       String idWithInfo = "";
-      String additionalInfo = "";
+      String additionalInfo = EMPTY;
       String timeFieldName = BillingDataMetaDataFields.STARTTIME.getFieldName();
       boolean addNamespaceToEntityId = queryData.groupByFields.contains(BillingDataMetaDataFields.WORKLOADNAME);
       for (BillingDataMetaDataFields field : queryData.getFieldNames()) {
         switch (field.getDataType()) {
           case STRING:
             if ((addNamespaceToEntityId && field == BillingDataMetaDataFields.NAMESPACE)
+                || (isClusterDrilldown && field == BillingDataMetaDataFields.CLUSTERID)
                 || field == BillingDataMetaDataFields.INSTANCENAME) {
-              additionalInfo = resultSet.getString(field.getFieldName());
+              additionalInfo = additionalInfo.equals(EMPTY)
+                  ? resultSet.getString(field.getFieldName())
+                  : additionalInfo + BillingStatsDefaultKeys.TOKEN + resultSet.getString(field.getFieldName());
               break;
             }
             entityId = resultSet.getString(field.getFieldName());
-            idWithInfo = addNamespaceToEntityId ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId : entityId;
+            idWithInfo = (addNamespaceToEntityId || isClusterDrilldown) && !additionalInfo.equals(EMPTY)
+                ? additionalInfo + BillingStatsDefaultKeys.TOKEN + entityId
+                : entityId;
             break;
           case TIMESTAMP:
             timeFieldName = field.getFieldName();

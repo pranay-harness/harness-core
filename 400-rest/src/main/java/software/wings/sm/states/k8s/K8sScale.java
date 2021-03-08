@@ -19,6 +19,7 @@ import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -37,7 +38,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
@@ -52,7 +52,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sScale extends State {
+public class K8sScale extends AbstractK8sState {
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
@@ -62,7 +62,6 @@ public class K8sScale extends State {
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
-  @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
@@ -86,10 +85,10 @@ public class K8sScale extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
 
       Integer maxInstances = null;
-      K8sElement k8sElement = k8sStateHelper.getK8sElement(context);
+      K8sElement k8sElement = k8sStateHelper.fetchK8sElement(context);
       if (k8sElement != null) {
         maxInstances = k8sElement.getTargetInstances();
       }
@@ -98,7 +97,7 @@ public class K8sScale extends State {
 
       K8sTaskParameters k8sTaskParameters = K8sScaleTaskParameters.builder()
                                                 .activityId(activity.getUuid())
-                                                .releaseName(k8sStateHelper.getReleaseName(context, infraMapping))
+                                                .releaseName(fetchReleaseName(context, infraMapping))
                                                 .commandName(K8S_SCALE_COMMAND_NAME)
                                                 .k8sTaskType(K8sTaskType.SCALE)
                                                 .workload(context.renderExpression(this.workload))
@@ -109,7 +108,7 @@ public class K8sScale extends State {
                                                 .timeoutIntervalInMin(stateTimeoutInMinutes)
                                                 .build();
 
-      return k8sStateHelper.queueK8sDelegateTask(context, k8sTaskParameters);
+      return queueK8sDelegateTask(context, k8sTaskParameters);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -130,7 +129,7 @@ public class K8sScale extends State {
 
       K8sScaleResponse k8sScaleResponse = (K8sScaleResponse) executionResponse.getK8sTaskResponse();
 
-      activityService.updateStatus(k8sStateHelper.getActivityId(context), appId, executionStatus);
+      activityService.updateStatus(fetchActivityId(context), appId, executionStatus);
 
       K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
@@ -143,11 +142,11 @@ public class K8sScale extends State {
             .build();
       }
 
-      final List<K8sPod> newPods = k8sStateHelper.getNewPods(k8sScaleResponse.getK8sPodList());
-      InstanceElementListParam instanceElementListParam = k8sStateHelper.getInstanceElementListParam(newPods);
+      final List<K8sPod> newPods = fetchNewPods(k8sScaleResponse.getK8sPodList());
+      InstanceElementListParam instanceElementListParam = fetchInstanceElementListParam(newPods);
 
       stateExecutionData.setNewInstanceStatusSummaries(
-          k8sStateHelper.getInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
+          fetchInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
       return ExecutionResponse.builder()
           .executionStatus(executionStatus)
@@ -164,11 +163,11 @@ public class K8sScale extends State {
 
   private Activity createActivity(ExecutionContext context) {
     if (this.skipSteadyStateCheck) {
-      return k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
+      return createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
           ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
               new K8sDummyCommandUnit(K8sCommandUnitConstants.Scale)));
     } else {
-      return k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
+      return createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
           ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
               new K8sDummyCommandUnit(K8sCommandUnitConstants.Scale),
               new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState)));
@@ -177,4 +176,32 @@ public class K8sScale extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
+
+  @Override
+  public void validateParameters(ExecutionContext context) {}
+
+  @Override
+  public String commandName() {
+    return K8S_SCALE_COMMAND_NAME;
+  }
+
+  @Override
+  public String stateType() {
+    return getStateType();
+  }
+
+  @Override
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ExecutionResponse handleAsyncResponseForK8sTask(ExecutionContext context, Map<String, ResponseData> response) {
+    throw new UnsupportedOperationException();
+  }
 }

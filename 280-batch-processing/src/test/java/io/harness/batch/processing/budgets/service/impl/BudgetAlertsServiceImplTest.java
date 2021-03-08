@@ -1,25 +1,27 @@
 package io.harness.batch.processing.budgets.service.impl;
 
-import static io.harness.ccm.budget.entities.BudgetType.SPECIFIED_AMOUNT;
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.config.BillingDataPipelineConfig;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.batch.processing.shard.AccountShardService;
 import io.harness.batch.processing.slackNotification.CESlackNotificationService;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.AlertThresholdBase;
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetUtils;
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.AlertThresholdBase;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.ccm.budget.EnvironmentType;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.rule.Owner;
@@ -28,6 +30,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.datafetcher.budget.BudgetTimescaleQueryHelper;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
@@ -57,6 +60,7 @@ public class BudgetAlertsServiceImplTest extends CategoryTest {
   @Mock private BatchMainConfig mainConfiguration;
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Mock private AccountShardService accountShardService;
+  @Mock private CloudBillingHelper cloudBillingHelper;
   @InjectMocks private BudgetAlertsServiceImpl budgetAlertsService;
 
   @Mock Statement statement;
@@ -109,10 +113,14 @@ public class BudgetAlertsServiceImplTest extends CategoryTest {
     user = User.Builder.anUser().email("user@harness.io").build();
 
     when(mainConfiguration.getBaseUrl()).thenReturn(BASE_URL);
+    when(mainConfiguration.getBillingDataPipelineConfig())
+        .thenReturn(BillingDataPipelineConfig.builder().gcpProjectId("projectId").build());
     when(budgetUtils.listBudgetsForAccount(ACCOUNT_ID)).thenReturn(Collections.singletonList(budget));
     when(cloudToHarnessMappingService.getUserGroup(ACCOUNT_ID, userGroupIds[0], true)).thenReturn(userGroup);
     when(cloudToHarnessMappingService.getUser(MEMBER_ID)).thenReturn(user);
     when(ceSlackWebhookService.getByAccountId(budget.getAccountId())).thenReturn(ceSlackWebhook);
+    when(cloudBillingHelper.getCloudProviderTableName(anyString(), anyString(), anyString()))
+        .thenReturn("cloudProviderTable");
   }
 
   @Test

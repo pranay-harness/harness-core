@@ -13,11 +13,12 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.artifacts.gcr.exceptions.GcbClientException;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GcpConfig;
-import software.wings.exception.GcbClientException;
 import software.wings.helpers.ext.gcb.models.BuildOperationDetails;
 import software.wings.helpers.ext.gcb.models.BuildStep;
 import software.wings.helpers.ext.gcb.models.GcbBuildDetails;
@@ -27,7 +28,7 @@ import software.wings.helpers.ext.gcb.models.GcbTrigger;
 import software.wings.helpers.ext.gcb.models.OperationMeta;
 import software.wings.helpers.ext.gcb.models.RepoSource;
 import software.wings.helpers.ext.gcs.GcsRestClient;
-import software.wings.service.impl.GcpHelperService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -66,9 +67,10 @@ public class GcbServiceImplTest {
   @Mock private Call<ResponseBody> callForLogs;
   @Mock private GcbRestClient gcbRestClient;
   @Mock private GcsRestClient gcsRestClient;
+  @Mock private EncryptionService encryptionService;
   @Rule public final ExpectedException exceptionRule = ExpectedException.none();
 
-  private final GcbServiceImpl gcbService = spy(new GcbServiceImpl(gcpHelperService));
+  private final GcbServiceImpl gcbService = spy(new GcbServiceImpl(gcpHelperService, encryptionService));
 
   @Before
   public void setUp() throws IOException {

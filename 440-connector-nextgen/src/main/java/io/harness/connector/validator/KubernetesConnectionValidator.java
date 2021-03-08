@@ -1,9 +1,10 @@
 package io.harness.connector.validator;
 
+import static software.wings.beans.TaskType.VALIDATE_KUBERNETES_CONFIG;
+
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -19,22 +20,14 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class KubernetesConnectionValidator
-    extends AbstractConnectorValidator implements ConnectionValidator<KubernetesClusterConfigDTO> {
-  public ConnectorValidationResult validate(KubernetesClusterConfigDTO kubernetesClusterConfig,
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    DelegateResponseData responseData =
-        super.validateConnector(kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier);
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      log.info("Error in validation task for connector : [{}] with failure types [{}]",
-          errorNotifyResponseData.getErrorMessage(), errorNotifyResponseData.getFailureTypes());
-    }
+public class KubernetesConnectionValidator extends AbstractConnectorValidator {
+  @Override
+  public ConnectorValidationResult validate(ConnectorConfigDTO kubernetesClusterConfig, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    DelegateResponseData responseData = super.validateConnector(
+        kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;
-    return ConnectorValidationResult.builder()
-        .valid(taskResponse.getConnectionSuccessFul())
-        .errorMessage(taskResponse.getErrorMessage())
-        .build();
+    return taskResponse.getConnectorValidationResult();
   }
 
   private KubernetesAuthCredentialDTO getKubernetesAuthCredential(
@@ -62,6 +55,6 @@ public class KubernetesConnectionValidator
 
   @Override
   public String getTaskType() {
-    return "VALIDATE_KUBERNETES_CONFIG";
+    return VALIDATE_KUBERNETES_CONFIG.name();
   }
 }

@@ -61,6 +61,7 @@ public class ServiceTemplate extends Base {
 
   public static final String SERVICE_ID_KEY = "serviceId";
   public static final String ENVIRONMENT_ID_KEY = "envId";
+  public static final String APP_ID = "appId";
 
   @FdIndex @Getter @Setter private String accountId;
   @NotEmpty private String envId;
@@ -80,6 +81,10 @@ public class ServiceTemplate extends Base {
   @Getter @Setter private transient ManifestFile valuesOverrideManifestFile;
   @Getter @Setter private transient ApplicationManifest ocParamsOverrideAppManifest;
   @Getter @Setter private transient ManifestFile ocParamsOverrideFile;
+  @Getter @Setter private transient ApplicationManifest appSettingOverrideManifest;
+  @Getter @Setter private transient ApplicationManifest connStringsOverrideManifest;
+  @Getter @Setter private transient ManifestFile appSettingsOverrideManifestFile;
+  @Getter @Setter private transient ManifestFile connStringsOverrideManifestFile;
 
   private boolean defaultServiceTemplate;
 

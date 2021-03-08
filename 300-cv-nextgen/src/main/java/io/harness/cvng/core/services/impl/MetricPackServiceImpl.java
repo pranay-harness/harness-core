@@ -99,7 +99,7 @@ public class MetricPackServiceImpl implements MetricPackService {
                                              .filter(MetricPackKeys.orgIdentifier, orgIdentifier)
                                              .filter(MetricPackKeys.dataSourceType, dataSourceType)
                                              .asList();
-    // TODO: ideally we would like to do this as a listener to creation of the project.
+
     if (isEmpty(metricPacksFromDb)) {
       final Map<String, MetricPack> metricPackDefinitionsFromYaml =
           getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
@@ -114,6 +114,24 @@ public class MetricPackServiceImpl implements MetricPackService {
       }
     }));
     return metricPacksFromDb;
+  }
+
+  @Override
+  public void createDefaultMetricPackAndThresholds(String accountId, String orgIdentifier, String projectIdentifier) {
+    List<DataSourceType> dataSourceTypes = DataSourceType.getTimeSeriesThresholds();
+
+    for (DataSourceType dataSourceType : dataSourceTypes) {
+      final Map<String, MetricPack> metricPackDefinitionsFromYaml =
+          getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
+      final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
+
+      if (isEmpty(getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType))) {
+        hPersistence.save(metricPacks);
+        metricPacks.forEach(metricPack
+            -> createDefaultIgnoreThresholds(
+                accountId, orgIdentifier, projectIdentifier, metricPack.getIdentifier(), dataSourceType));
+      }
+    }
   }
 
   private Map<String, MetricPack> getMetricPackDefinitionsFromYaml(
@@ -197,7 +215,7 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Override
   public List<TimeSeriesThreshold> getMetricPackThresholds(String accountId, String orgIdentifier,
       String projectIdentifier, String metricPackIdentifier, DataSourceType dataSourceType) {
-    List<TimeSeriesThreshold> timeSeriesThresholdsFromDb =
+    List<TimeSeriesThreshold> timeSeriesThresholds =
         hPersistence.createQuery(TimeSeriesThreshold.class, excludeAuthority)
             .filter(TimeSeriesThresholdKeys.accountId, accountId)
             .filter(TimeSeriesThresholdKeys.orgIdentifier, orgIdentifier)
@@ -205,14 +223,12 @@ public class MetricPackServiceImpl implements MetricPackService {
             .filter(TimeSeriesThresholdKeys.metricPackIdentifier, metricPackIdentifier)
             .filter(TimeSeriesThresholdKeys.dataSourceType, dataSourceType)
             .asList();
-
-    // TODO: this should be done at the time of project creation
-    if (isEmpty(timeSeriesThresholdsFromDb)) {
+    if (isEmpty(timeSeriesThresholds)) {
       return createDefaultIgnoreThresholds(
           accountId, orgIdentifier, projectIdentifier, metricPackIdentifier, dataSourceType);
     }
 
-    return timeSeriesThresholdsFromDb;
+    return timeSeriesThresholds;
   }
 
   private List<TimeSeriesThreshold> createDefaultIgnoreThresholds(String accountId, String orgIdentifier,

@@ -59,7 +59,7 @@ public class UsageMetricsHelper {
     Service service = wingsPersistence.createQuery(Service.class)
                           .project(Workflow.NAME_KEY, true)
                           .filter(ServiceKeys.appId, appId)
-                          .filter(Service.ID_KEY2, serviceId)
+                          .filter(Service.ID, serviceId)
                           .get();
     notNullCheck("Service does not exist", service, USER);
     return service.getName();

@@ -1,10 +1,11 @@
 package io.harness.pms.yaml;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.protobuf.ByteString;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.validation.constraints.NotNull;
@@ -17,7 +18,8 @@ public class YamlField {
   String name;
   @NotNull YamlNode node;
 
-  public YamlField(String name, YamlNode node) {
+  @JsonCreator
+  public YamlField(@JsonProperty("name") String name, @JsonProperty("node") YamlNode node) {
     this.name = name;
     this.node = node;
   }
@@ -27,15 +29,31 @@ public class YamlField {
   }
 
   public YamlFieldBlob toFieldBlob() {
-    YamlFieldBlob.Builder builder = YamlFieldBlob.newBuilder().setBlob(ByteString.copyFrom(node.toString(), CHARSET));
+    YamlFieldBlob.Builder builder =
+        YamlFieldBlob.newBuilder().setBlob(ByteString.copyFrom(JsonUtils.asJson(this), CHARSET));
     if (name != null) {
       builder.setName(name);
     }
     return builder.build();
   }
 
-  public static YamlField fromFieldBlob(YamlFieldBlob fieldBlob) throws IOException {
-    YamlField field = YamlUtils.readTree(fieldBlob.getBlob().toString(CHARSET));
-    return new YamlField(EmptyPredicate.isEmpty(fieldBlob.getName()) ? null : fieldBlob.getName(), field.getNode());
+  /**
+   *  Check if parent of the above node is parallel or not
+   *
+   * @param expectedParent - The expected field name of the  parallel field's parent
+   * @return
+   */
+  public boolean checkIfParentIsParallel(String expectedParent) {
+    YamlNode parallelNode = YamlUtils.findParentNode(getNode(), YAMLFieldNameConstants.PARALLEL);
+    if (parallelNode != null) {
+      // YamlUtils#findParentNode might return the parallel node which might not be the direct parent therefore check if
+      // parallelNode is part of expected Parent. Currently expected parent can be Stage, Step and StepGroup
+      return YamlUtils.findParentNode(parallelNode, expectedParent) != null;
+    }
+    return false;
+  }
+
+  public static YamlField fromFieldBlob(YamlFieldBlob fieldBlob) {
+    return JsonUtils.asObject(fieldBlob.getBlob().toString(CHARSET), YamlField.class);
   }
 }

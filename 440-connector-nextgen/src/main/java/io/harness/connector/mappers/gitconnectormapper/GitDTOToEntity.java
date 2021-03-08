@@ -5,8 +5,6 @@ import io.harness.connector.entities.embedded.gitconnector.GitConfig;
 import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.connector.entities.embedded.gitconnector.GitUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
@@ -14,14 +12,13 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
 import com.google.inject.Singleton;
-import java.util.Collections;
-import java.util.List;
 
 @Singleton
-public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> {
+public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO, GitConfig> {
   @Override
   public GitConfig toConnectorEntity(GitConfigDTO configDTO) {
     GitConnectionType gitConnectionType = getGitConnectionLevel(configDTO);
@@ -37,11 +34,6 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
         .customCommitAttributes(customCommitAttributes)
         .authenticationDetails(gitAuthentication)
         .build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 
   private String getBranchName(GitConfigDTO gitConfigDTO) {
@@ -82,12 +74,15 @@ public class GitDTOToEntity implements ConnectorDTOToEntityMapper<GitConfigDTO> 
       GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO) {
     return GitUserNamePasswordAuthentication.builder()
         .userName(gitHTTPAuthenticationDTO.getUsername())
+        .userNameRef(SecretRefHelper.getSecretConfigString(gitHTTPAuthenticationDTO.getUsernameRef()))
         .passwordReference(SecretRefHelper.getSecretConfigString(gitHTTPAuthenticationDTO.getPasswordRef()))
         .build();
   }
 
   private GitSSHAuthentication getSSHGitAuthentication(GitSSHAuthenticationDTO gitSSHAuthenticationDTO) {
-    return GitSSHAuthentication.builder().sshKeyReference(gitSSHAuthenticationDTO.getEncryptedSshKey()).build();
+    return GitSSHAuthentication.builder()
+        .sshKeyReference(SecretRefHelper.getSecretConfigString(gitSSHAuthenticationDTO.getEncryptedSshKey()))
+        .build();
   }
 
   private String getGitURL(GitConfigDTO gitConfig) {

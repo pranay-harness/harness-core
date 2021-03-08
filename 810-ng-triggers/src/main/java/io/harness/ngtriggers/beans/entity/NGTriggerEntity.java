@@ -19,7 +19,11 @@ import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.springframework.data.annotation.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -46,7 +50,7 @@ public class NGTriggerEntity {
                 .build(),
             CompoundMongoIndex.builder()
                 .name("unique_accountId_organizationIdentifier_projectIdentifier_identifier")
-                .unique(true)
+                .unique(false)
                 .field(NGTriggerEntityKeys.accountId)
                 .field(NGTriggerEntityKeys.orgIdentifier)
                 .field(NGTriggerEntityKeys.projectIdentifier)
@@ -55,7 +59,10 @@ public class NGTriggerEntity {
             CompoundMongoIndex.builder()
                 .name("type_repoUrl")
                 .field(NGTriggerEntityKeys.type)
-                .field("metadata.webhook.repoURL")
+                .field("metadata.webhook.git.connectorIdentifier")
+                .field(NGTriggerEntityKeys.accountId)
+                .field(NGTriggerEntityKeys.orgIdentifier)
+                .field(NGTriggerEntityKeys.projectIdentifier)
                 .build())
         .build();
   }

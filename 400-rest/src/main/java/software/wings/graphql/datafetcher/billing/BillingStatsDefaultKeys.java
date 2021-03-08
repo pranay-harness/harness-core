@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BillingStatsDefaultKeys {
   private BillingStatsDefaultKeys() {}
 
@@ -43,4 +46,5 @@ public class BillingStatsDefaultKeys {
   public static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
   public static final int EFFICIENCY_SCORE = -1;
   public static final int EFFICIENCY_SCORE_TREND = -1;
+  public static final String INSTANCETYPE = "unknown";
 }

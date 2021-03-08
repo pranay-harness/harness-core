@@ -25,17 +25,19 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNAT
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.K8sGlobalConfigService;
+import io.harness.shell.ScriptProcessExecutor.StringBufferOutputStream;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
-import software.wings.core.ssh.executors.ScriptProcessExecutor.StringBufferOutputStream;
 import software.wings.settings.SettingValue;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -53,6 +55,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class ChartMuseumClientImpl implements ChartMuseumClient {
   private static final SecureRandom random = new SecureRandom();
 

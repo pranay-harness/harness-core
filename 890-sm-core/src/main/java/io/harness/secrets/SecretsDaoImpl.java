@@ -33,8 +33,6 @@ import io.harness.security.encryption.EncryptionType;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
@@ -140,6 +138,10 @@ public class SecretsDaoImpl implements SecretsDao {
       updateOperations.set(
           EncryptedDataKeys.inheritScopesFromSM, secretUpdateData.getUpdatedSecret().isInheritScopesFromSM());
       updateOperations.set(EncryptedDataKeys.scopedToAccount, secretUpdateData.getUpdatedSecret().isScopedToAccount());
+    }
+    if (secretUpdateData.isAdditonalMetadataChanged()) {
+      updateOperations.set(
+          EncryptedDataKeys.additionalMetadata, secretUpdateData.getUpdatedSecret().getAdditionalMetadata());
     }
     if (updatedEncryptedData != null) {
       updateOperations.set(EncryptedDataKeys.encryptionKey, updatedEncryptedData.getEncryptionKey());

@@ -7,15 +7,23 @@ import static io.harness.generator.SettingGenerator.Settings.AZURE_TEST_CLOUD_PR
 import static io.harness.generator.SettingGenerator.Settings.AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GCP_PLAYGROUND;
+import static io.harness.generator.SettingGenerator.Settings.OPENSHIFT_TEST_CLUSTER;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
 import static io.harness.generator.SettingGenerator.Settings.SPOTINST_TEST_CLOUD_PROVIDER;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.WINRM_TEST_CONNECTOR;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_FUNCTIONAL_TEST_APP_SERVICE_RESOURCE_GROUP;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_API_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASE_SCALE_SET_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BASIC_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_BLUE_GREEN_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_WEB_APP_API_INFRA_DEFINITION_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_WEB_APP_BLUE_GREEN_INFRA_DEFINITION_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_INFRA_DEFINITION_NAME;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_WEB_APP_CANARY_INFRA_DEFINITION_NAME;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.SSH_DEPLOY_HOST;
 import static io.harness.govern.Switch.unhandled;
 
@@ -66,7 +74,9 @@ import software.wings.infra.AwsLambdaInfrastructure;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureKubernetesService;
 import software.wings.infra.AzureVMSSInfra;
+import software.wings.infra.AzureWebAppInfra;
 import software.wings.infra.CustomInfrastructure;
+import software.wings.infra.DirectKubernetesInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
@@ -175,6 +185,8 @@ public class InfrastructureDefinitionGenerator {
     K8S_ROLLING_TEST,
     K8S_CANARY_TEST,
     K8S_BLUE_GREEN_TEST,
+    K8S_CUSTOM_MANIFEST,
+    OPENSHIFT_CUSTOM_MANIFEST,
     MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST,
     AZURE_HELM,
     GCP_HELM,
@@ -184,7 +196,11 @@ public class InfrastructureDefinitionGenerator {
     AWS_SSH_FUNCTIONAL_TEST_NAS,
     AZURE_VMSS_BASIC_TEST,
     AZURE_VMSS_BLUE_GREEN_TEST,
-    AZURE_VMSS_API_TEST
+    AZURE_VMSS_API_TEST,
+    AZURE_WEB_APP_BLUE_GREEN_TEST,
+    AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_TEST,
+    AZURE_WEB_APP_CANARY_TEST,
+    AZURE_WEB_APP_API_TEST
   }
 
   public InfrastructureDefinition ensurePredefined(
@@ -216,6 +232,10 @@ public class InfrastructureDefinitionGenerator {
         return ensureK8sTest(seed, owners, "fn-test-bg");
       case K8S_CANARY_TEST:
         return ensureK8sTest(seed, owners, "fn-test-canary");
+      case K8S_CUSTOM_MANIFEST:
+        return ensureK8sTest(seed, owners, "fn-test-custom-manifest");
+      case OPENSHIFT_CUSTOM_MANIFEST:
+        return ensureOpenshiftTest(seed, owners, "fn-test-custom-manifest");
       case MULTI_ARTIFACT_AWS_SSH_FUNCTIONAL_TEST:
         return ensureMultiArtifactAwsSshFunctionalTest(seed, owners);
       case AZURE_HELM:
@@ -234,6 +254,14 @@ public class InfrastructureDefinitionGenerator {
         return ensureAzureVMSSBlueGreenTest(seed, owners);
       case AZURE_VMSS_API_TEST:
         return ensureAzureVMSSAPITest(seed, owners);
+      case AZURE_WEB_APP_BLUE_GREEN_TEST:
+        return ensureAzureWebAppBlueGreenTest(seed, owners);
+      case AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_TEST:
+        return ensureAzureWebAppBlueGreenRollbackTest(seed, owners);
+      case AZURE_WEB_APP_CANARY_TEST:
+        return ensureAzureWebAppCanaryTest(seed, owners);
+      case AZURE_WEB_APP_API_TEST:
+        return ensureAzureWebAppAPITest(seed, owners);
       default:
         unhandled(infraType);
     }
@@ -319,7 +347,7 @@ public class InfrastructureDefinitionGenerator {
             .infrastructure(AzureInstanceInfrastructure.builder()
                                 .cloudProviderId(azureCloudProvider.getUuid())
                                 .winRmConnectionAttributes(winRmSettingAttribute.getUuid())
-                                .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
+                                .subscriptionId(AZURE_SUBSCRIPTION_ID)
                                 .resourceGroup(InfraDefinitionGeneratorConstants.AZURE_RESOURCE_GROUP)
                                 .usePublicDns(true)
                                 .build())
@@ -429,7 +457,32 @@ public class InfrastructureDefinitionGenerator {
             .appId(owners.obtainApplication().getUuid())
             .build();
 
-    return ensureInfrastructureDefinition(infrastructureDefinition);
+    InfrastructureDefinition savedInfraDef = ensureInfrastructureDefinition(infrastructureDefinition);
+    owners.add(savedInfraDef);
+    return savedInfraDef;
+  }
+
+  private InfrastructureDefinition ensureOpenshiftTest(Randomizer.Seed seed, Owners owners, String application) {
+    final SettingAttribute openshiftCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, OPENSHIFT_TEST_CLUSTER);
+    final Environment environment =
+        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
+
+    InfrastructureDefinition infrastructureDefinition =
+        InfrastructureDefinition.builder()
+            .name("openshift-fn-tests-" + application)
+            .infrastructure(DirectKubernetesInfrastructure.builder()
+                                .cloudProviderId(openshiftCloudProvider.getUuid())
+                                .namespace(application)
+                                .build())
+            .deploymentType(DeploymentType.KUBERNETES)
+            .cloudProviderType(CloudProviderType.KUBERNETES_CLUSTER)
+            .envId(environment.getUuid())
+            .appId(environment.getAppId())
+            .build();
+
+    owners.add(ensureInfrastructureDefinition(infrastructureDefinition));
+    return owners.obtainInfrastructureDefinition();
   }
 
   public InfrastructureDefinition ensurePredefinedCustomDeployment(
@@ -732,8 +785,8 @@ public class InfrastructureDefinitionGenerator {
     final SettingAttribute pcfCloudProvider = settingGenerator.ensurePredefined(seed, owners, Settings.PCF_CONNECTOR);
 
     PcfInfraStructure pcfInfraStructure = PcfInfraStructure.builder()
-                                              .organization("Harness")
-                                              .space("CD-Test-space")
+                                              .organization("harness")
+                                              .space("Qa_Verification_workflow_space")
                                               .cloudProviderId(pcfCloudProvider.getUuid())
                                               .build();
 
@@ -875,6 +928,22 @@ public class InfrastructureDefinitionGenerator {
     return ensureAzureVMSS(seed, owners, AZURE_VMSS_API_INFRA_DEFINITION_NAME);
   }
 
+  private InfrastructureDefinition ensureAzureWebAppAPITest(Seed seed, Owners owners) {
+    return ensureAzureWebApp(seed, owners, AZURE_WEB_APP_API_INFRA_DEFINITION_NAME);
+  }
+
+  private InfrastructureDefinition ensureAzureWebAppBlueGreenTest(Seed seed, Owners owners) {
+    return ensureAzureWebApp(seed, owners, AZURE_WEB_APP_BLUE_GREEN_INFRA_DEFINITION_NAME);
+  }
+
+  private InfrastructureDefinition ensureAzureWebAppBlueGreenRollbackTest(Seed seed, Owners owners) {
+    return ensureAzureWebApp(seed, owners, AZURE_WEB_APP_BLUE_GREEN_ROLLBACK_INFRA_DEFINITION_NAME);
+  }
+
+  private InfrastructureDefinition ensureAzureWebAppCanaryTest(Seed seed, Owners owners) {
+    return ensureAzureWebApp(seed, owners, AZURE_WEB_APP_CANARY_INFRA_DEFINITION_NAME);
+  }
+
   private InfrastructureDefinition ensureAzureVMSS(Seed seed, Owners owners, String infraDefName) {
     Environment environment = ensureEnv(seed, owners);
 
@@ -883,17 +952,16 @@ public class InfrastructureDefinitionGenerator {
     final SettingAttribute sshPublicKeySettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR);
 
-    AzureVMSSInfra azureVMSSInfra =
-        AzureVMSSInfra.builder()
-            .cloudProviderId(azureCloudProvider.getUuid())
-            .baseVMSSName(AZURE_VMSS_BASE_SCALE_SET_NAME)
-            .resourceGroupName(InfraDefinitionGeneratorConstants.AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP)
-            .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
-            .userName(AZURE_VMSS_VM_USERNAME)
-            .hostConnectionAttrs(sshPublicKeySettingAttribute.getName())
-            .vmssAuthType(VMSSAuthType.SSH_PUBLIC_KEY)
-            .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
-            .build();
+    AzureVMSSInfra azureVMSSInfra = AzureVMSSInfra.builder()
+                                        .cloudProviderId(azureCloudProvider.getUuid())
+                                        .baseVMSSName(AZURE_VMSS_BASE_SCALE_SET_NAME)
+                                        .resourceGroupName(AZURE_FUNCTIONAL_TEST_RESOURCE_GROUP)
+                                        .subscriptionId(AZURE_SUBSCRIPTION_ID)
+                                        .userName(AZURE_VMSS_VM_USERNAME)
+                                        .hostConnectionAttrs(sshPublicKeySettingAttribute.getName())
+                                        .vmssAuthType(VMSSAuthType.SSH_PUBLIC_KEY)
+                                        .vmssDeploymentType(VMSSDeploymentType.NATIVE_VMSS)
+                                        .build();
 
     InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
                                                             .name(infraDefName)
@@ -902,6 +970,30 @@ public class InfrastructureDefinitionGenerator {
                                                             .appId(environment.getAppId())
                                                             .envId(environment.getUuid())
                                                             .infrastructure(azureVMSSInfra)
+                                                            .build();
+
+    return ensureInfrastructureDefinition(infrastructureDefinition);
+  }
+
+  private InfrastructureDefinition ensureAzureWebApp(Seed seed, Owners owners, String infraDefName) {
+    Environment environment = ensureEnv(seed, owners);
+
+    final SettingAttribute azureCloudProvider =
+        settingGenerator.ensurePredefined(seed, owners, AZURE_TEST_CLOUD_PROVIDER);
+
+    AzureWebAppInfra azureWebAppInfra = AzureWebAppInfra.builder()
+                                            .cloudProviderId(azureCloudProvider.getUuid())
+                                            .resourceGroup(AZURE_FUNCTIONAL_TEST_APP_SERVICE_RESOURCE_GROUP)
+                                            .subscriptionId(AZURE_SUBSCRIPTION_ID)
+                                            .build();
+
+    InfrastructureDefinition infrastructureDefinition = InfrastructureDefinition.builder()
+                                                            .name(infraDefName)
+                                                            .cloudProviderType(CloudProviderType.AZURE)
+                                                            .deploymentType(DeploymentType.AZURE_WEBAPP)
+                                                            .appId(environment.getAppId())
+                                                            .envId(environment.getUuid())
+                                                            .infrastructure(azureWebAppInfra)
                                                             .build();
 
     return ensureInfrastructureDefinition(infrastructureDefinition);
@@ -1014,7 +1106,7 @@ public class InfrastructureDefinitionGenerator {
         AzureInstanceInfrastructure.builder()
             .cloudProviderId(azureCloudProvider.getUuid())
             .winRmConnectionAttributes(winRmConnectionAttr.getUuid())
-            .subscriptionId(InfraDefinitionGeneratorConstants.AZURE_SUBSCRIPTION_ID)
+            .subscriptionId(AZURE_SUBSCRIPTION_ID)
             .resourceGroup(InfraDefinitionGeneratorConstants.AZURE_RESOURCE_GROUP)
             .build();
 

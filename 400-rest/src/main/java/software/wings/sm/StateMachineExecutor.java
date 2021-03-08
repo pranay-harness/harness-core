@@ -168,7 +168,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
-  private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
   public static final String PIPELINE_STEP_NAME = "PIPELINE_STEP_NAME";
   public static final String PIPELINE_STEP = "PIPELINE_STEP";
@@ -179,6 +179,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   public static final String APPLICATION_NAME = "APPLICATION_NAME";
   public static final String APPLICATION_URL = "APPLICATION_URL";
   public static final String DEBUG_LINE = "stateMachine processor: ";
+  private static final String STATE_PARAMS = "stateParams";
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -549,12 +550,15 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     notNullCheck("currentState", currentState);
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
+      if (skipDelayedStepIfRequired(context, currentState)) {
+        return;
+      }
       StateExecutionData stateExecutionData =
           aStateExecutionData()
               .withWaitInterval(currentState.getWaitInterval())
               .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
               .build();
-      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null, null,
+      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, STARTING, null, null, null, null,
           null, evaluateExpiryTs(currentState, context));
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
@@ -568,6 +572,19 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     startStateExecution(context, stateExecutionInstance);
+  }
+
+  boolean skipDelayedStepIfRequired(ExecutionContextImpl context, State currentState) {
+    ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
+                                                                   .failureTypes(EnumSet.noneOf(FailureType.class))
+                                                                   .context(context)
+                                                                   .state(currentState)
+                                                                   .build());
+    if (executionEventAdvice != null && executionEventAdvice.isSkipState()) {
+      handleResponse(context, skipStateExecutionResponse(executionEventAdvice));
+      return true;
+    }
+    return false;
   }
 
   void startStateExecution(String appId, String executionUuid, String stateExecutionInstanceId) {
@@ -602,7 +619,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
   }
 
-  private void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
+  @VisibleForTesting
+  protected void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
@@ -702,6 +720,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param executionResponse the execution response
    * @return the state execution instance
    */
+  @SuppressWarnings("PMD")
   StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
@@ -842,7 +861,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
   }
 
-  private StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
+  @VisibleForTesting
+  protected StateExecutionInstance handleExecutionEventAdvice(ExecutionContextImpl context,
       StateExecutionInstance stateExecutionInstance, ExecutionStatus status,
       ExecutionEventAdvice executionEventAdvice) {
     // NOTE: Pre-requisites for calling this function:
@@ -877,7 +897,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         updateStatus(stateExecutionInstance, WAITING, brokeStatuses(), null, ops -> {
           ops.set(StateExecutionInstanceKeys.expiryTs, Long.MAX_VALUE);
           if (executionEventAdvice.getStateParams() != null) {
-            ops.set("stateParams", executionEventAdvice.getStateParams());
+            ops.set(STATE_PARAMS, executionEventAdvice.getStateParams());
           }
         });
 
@@ -891,7 +911,26 @@ public class StateMachineExecutor implements StateInspectionListener {
                 .name(context.getWorkflowExecutionName())
                 .build();
         openAnAlert(context, manualInterventionNeededAlert);
-        sendManualInterventionNeededNotification(context);
+        sendManualInterventionNeededNotification(context, Long.MAX_VALUE);
+        break;
+      }
+      case WAITING_FOR_MANUAL_INTERVENTION: {
+        log.info(
+            "[TimeOut Op]: Updating expiryTs considering manualInterventionTimeout on WAITING_FOR_MANUAL_INTERVENTION Advice for stateExecutionInstance id: {}, name: {}",
+            stateExecutionInstance.getUuid(), stateExecutionInstance.getDisplayName());
+        updateStateExecutionInstanceForManualInterventions(stateExecutionInstance, status, executionEventAdvice);
+
+        // Open an alert
+        Environment environment = context.getEnv();
+        ManualInterventionNeededAlert manualInterventionNeededAlert =
+            ManualInterventionNeededAlert.builder()
+                .envId(environment != null ? environment.getUuid() : null)
+                .stateExecutionInstanceId(stateExecutionInstance.getUuid())
+                .executionId(context.getWorkflowExecutionId())
+                .name(context.getWorkflowExecutionName())
+                .build();
+        openAnAlert(context, manualInterventionNeededAlert);
+        sendManualInterventionNeededNotification(context, stateExecutionInstance.getExpiryTs());
         break;
       }
       case PAUSE_FOR_INPUTS: {
@@ -1004,6 +1043,41 @@ public class StateMachineExecutor implements StateInspectionListener {
         StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
   }
 
+  private void updateStateExecutionInstanceForManualInterventions(StateExecutionInstance stateExecutionInstance,
+      ExecutionStatus status, ExecutionEventAdvice executionEventAdvice) {
+    Long expiryTs = System.currentTimeMillis() + executionEventAdvice.getTimeout();
+    UpdateOperations<StateExecutionInstance> ops =
+        wingsPersistence.createUpdateOperations(StateExecutionInstance.class);
+    stateExecutionInstance.setStatus(WAITING);
+    stateExecutionInstance.setWaitingForManualIntervention(true);
+    stateExecutionInstance.setActionAfterManualInterventionTimeout(
+        executionEventAdvice.getActionAfterManualInterventionTimeout());
+    stateExecutionInstance.setExpiryTs(expiryTs);
+    if (executionEventAdvice.getStateParams() != null) {
+      ops.set(STATE_PARAMS, executionEventAdvice.getStateParams());
+      stateExecutionInstance.setStateParams(executionEventAdvice.getStateParams());
+    }
+    ops.set(StateExecutionInstanceKeys.status, WAITING);
+    ops.set(StateExecutionInstanceKeys.waitingForManualIntervention, true);
+    ops.set(StateExecutionInstanceKeys.actionAfterManualInterventionTimeout,
+        executionEventAdvice.getActionAfterManualInterventionTimeout());
+    ops.set(StateExecutionInstanceKeys.expiryTs, expiryTs);
+
+    Query<StateExecutionInstance> query =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstanceKeys.appId, stateExecutionInstance.getAppId())
+            .filter(StateExecutionInstanceKeys.uuid, stateExecutionInstance.getUuid());
+    UpdateResults updateResult = wingsPersistence.update(query, ops);
+    if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
+      log.error("StateExecutionInstance status could not be updated - "
+              + "stateExecutionInstance: {},  status: {}",
+          stateExecutionInstance.getUuid(), status);
+    }
+
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
+  }
+
   private boolean checkIfOnDemand(String appId, String executionUuid) {
     return workflowExecutionService.checkIfOnDemand(appId, executionUuid);
   }
@@ -1020,7 +1094,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         AlertType.ManualInterventionNeeded);
   }
 
-  protected void sendManualInterventionNeededNotification(ExecutionContextImpl context) {
+  protected void sendManualInterventionNeededNotification(ExecutionContextImpl context, long expiryTs) {
     Application app = context.getApp();
     notNullCheck("app", app);
     Workflow workflow = workflowService.readWorkflow(app.getAppId(), context.getWorkflowId());
@@ -1031,7 +1105,11 @@ public class StateMachineExecutor implements StateInspectionListener {
       workflowNotificationHelper.renderExpressions(context, notificationRule);
     }
 
-    Map<String, String> placeholderValues = getManualInterventionPlaceholderValues(context);
+    Map<String, String> placeholderValues =
+        workflowNotificationHelper.getPlaceholderValues(context, app, context.getEnv(), PAUSED, null);
+    placeholderValues.put("EXPIRES_TS_SECS", String.valueOf(expiryTs / 1000L));
+    placeholderValues.put("EXPIRES_DATE", notificationMessageResolver.getFormattedExpiresTime(expiryTs));
+
     notificationService.sendNotificationAsync(
         InformationNotification.builder()
             .appId(app.getName())
@@ -2034,7 +2112,7 @@ public class StateMachineExecutor implements StateInspectionListener {
     ops.set("notifyElements", notifyElements);
 
     if (stateParams != null) {
-      ops.set("stateParams", stateParams);
+      ops.set(STATE_PARAMS, stateParams);
     }
 
     if (stateExecutionInstance.getEndTs() != null) {
@@ -2222,6 +2300,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         log.info(DEBUG_LINE + "inside run of SmExecutionDispatcher");
@@ -2259,6 +2338,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         stateMachineExecutor.handleExecuteResponse(

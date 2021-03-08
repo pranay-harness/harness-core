@@ -3,10 +3,14 @@ package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.computeProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.cost;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.effectiveCost;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.eksCpuInstanceType;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.eksMemoryInstanceType;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.eksNetworkInstanceType;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.networkProductFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.productFamily;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
 import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.serviceCode;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.usageType;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 
 import static java.lang.String.format;
@@ -18,6 +22,9 @@ import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData;
 import io.harness.batch.processing.pricing.data.VMInstanceServiceBillingData.VMInstanceServiceBillingDataBuilder;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
+
+import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordBuilder;
+import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
@@ -45,14 +52,21 @@ import org.springframework.stereotype.Service;
 @Service
 public class BigQueryHelperServiceImpl implements BigQueryHelperService {
   private BatchMainConfig mainConfig;
+  private CloudBillingHelper cloudBillingHelper;
+
+  private static final String preAggregated = "preAggregated";
+  private static final String countConst = "count";
+  private static final String cloudProviderConst = "cloudProvider";
 
   @Autowired
-  public BigQueryHelperServiceImpl(BatchMainConfig mainConfig) {
+  public BigQueryHelperServiceImpl(BatchMainConfig mainConfig, CloudBillingHelper cloudBillingHelper) {
     this.mainConfig = mainConfig;
+    this.cloudBillingHelper = cloudBillingHelper;
   }
 
   private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
   private static final String AWS_CUR_TABLE_NAME = "awscur_%s_%s";
+  private String resourceCondition = "resourceid like '%%%s%%'";
 
   @Override
   public Map<String, VMInstanceBillingData> getAwsEC2BillingData(
@@ -64,6 +78,25 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     return query(formattedQuery);
   }
 
+  @Override
+  public Map<String, VMInstanceBillingData> getEKSFargateBillingData(
+      List<String> resourceIds, Instant startTime, Instant endTime, String dataSetId) {
+    String query = BigQueryConstants.EKS_FARGATE_BILLING_QUERY;
+    String projectTableName = getAwsProjectTableName(startTime, dataSetId);
+    String formattedQuery =
+        format(query, projectTableName, getResourceConditionWhereClause(resourceIds), startTime, endTime);
+    log.info("EKS Fargate Billing Query: {}", formattedQuery);
+    return queryEKSFargate(formattedQuery);
+  }
+
+  private String getResourceConditionWhereClause(List<String> resourceIds) {
+    List<String> resourceIdConditions = new ArrayList<>();
+    for (String resourceId : resourceIds) {
+      resourceIdConditions.add(format(resourceCondition, resourceId));
+    }
+    return String.join(" OR ", resourceIdConditions);
+  }
+
   private Map<String, VMInstanceBillingData> query(String formattedQuery) {
     log.info("Formatted query {}", formattedQuery);
     BigQuery bigQueryService = getBigQueryService();
@@ -73,7 +106,21 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       result = bigQueryService.query(queryConfig);
       return convertToAwsInstanceBillingData(result);
     } catch (InterruptedException e) {
-      log.error("Failed to get PreAggregateBillingOverview. {}", e);
+      log.error("Failed to get AWS EC2 Billing Data. {}", e);
+      Thread.currentThread().interrupt();
+    }
+    return Collections.emptyMap();
+  }
+
+  private Map<String, VMInstanceBillingData> queryEKSFargate(String formattedQuery) {
+    BigQuery bigQueryService = getBigQueryService();
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
+    TableResult result = null;
+    try {
+      result = bigQueryService.query(queryConfig);
+      return convertToEksFargateInstanceBillingData(result);
+    } catch (InterruptedException e) {
+      log.error("Failed to get EKS Fargate Data from CUR. {}", e);
       Thread.currentThread().interrupt();
     }
     return Collections.emptyMap();
@@ -102,6 +149,37 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     return query(formattedQuery);
   }
 
+  @Override
+  public void updateCloudProviderMetaData(String accountId, CEMetadataRecordBuilder ceMetadataRecordBuilder) {
+    String tableName = cloudBillingHelper.getCloudProviderTableName(
+        mainConfig.getBillingDataPipelineConfig().getGcpProjectId(), accountId, preAggregated);
+    String formattedQuery = format(BigQueryConstants.CLOUD_PROVIDER_AGG_DATA, tableName);
+    QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(formattedQuery).build();
+    try {
+      TableResult result = getBigQueryService().query(queryConfig);
+      for (FieldValueList row : result.iterateAll()) {
+        String cloudProvider = row.get(cloudProviderConst).getStringValue();
+        switch (cloudProvider) {
+          case "AWS":
+            ceMetadataRecordBuilder.awsDataPresent(row.get(countConst).getDoubleValue() > 0);
+            break;
+          case "GCP":
+            ceMetadataRecordBuilder.gcpDataPresent(row.get(countConst).getDoubleValue() > 0);
+            break;
+          case "AZURE":
+            ceMetadataRecordBuilder.azureDataPresent(row.get(countConst).getDoubleValue() > 0);
+            break;
+          default:
+            break;
+        }
+      }
+
+    } catch (InterruptedException e) {
+      log.error("Failed to get CloudProvider overview data. {}", e);
+      Thread.currentThread().interrupt();
+    }
+  }
+
   public FieldList getFieldList(TableResult result) {
     Schema schema = result.getSchema();
     return schema.getFields();
@@ -120,10 +198,13 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
       for (Field field : fields) {
         switch (field.getName()) {
           case resourceId:
-            dataBuilder.resourceId(fetchStringValue(row, field));
+            dataBuilder.resourceId(getIdFromArn(fetchStringValue(row, field)));
             break;
           case serviceCode:
             dataBuilder.serviceCode(fetchStringValue(row, field));
+            break;
+          case usageType:
+            dataBuilder.usageType(fetchStringValue(row, field));
             break;
           case productFamily:
             dataBuilder.productFamily(fetchStringValue(row, field));
@@ -142,6 +223,10 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     }
     log.info("Resource Id data {} ", instanceServiceBillingDataList);
     return instanceServiceBillingDataList;
+  }
+
+  private String getIdFromArn(String arn) {
+    return arn.substring(arn.lastIndexOf('/') + 1);
   }
 
   private Map<String, VMInstanceBillingData> convertToAwsInstanceBillingData(TableResult result) {
@@ -173,6 +258,39 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
     });
 
     log.info("resource map data {} ", vmInstanceBillingDataMap);
+    return vmInstanceBillingDataMap;
+  }
+
+  private Map<String, VMInstanceBillingData> convertToEksFargateInstanceBillingData(TableResult result) {
+    List<VMInstanceServiceBillingData> vmInstanceServiceBillingDataList =
+        convertToAwsInstanceServiceBillingData(result);
+    Map<String, VMInstanceBillingData> vmInstanceBillingDataMap = new HashMap<>();
+    vmInstanceServiceBillingDataList.forEach(vmInstanceServiceBillingData -> {
+      String resourceId = vmInstanceServiceBillingData.getResourceId();
+      VMInstanceBillingData vmInstanceBillingData = VMInstanceBillingData.builder().resourceId(resourceId).build();
+      double cost = vmInstanceServiceBillingData.getCost();
+      if (vmInstanceBillingDataMap.containsKey(resourceId)) {
+        vmInstanceBillingData = vmInstanceBillingDataMap.get(resourceId);
+      }
+      if (null != vmInstanceServiceBillingData.getUsageType()) {
+        if (vmInstanceServiceBillingData.getUsageType().contains(eksNetworkInstanceType)) {
+          vmInstanceBillingData = vmInstanceBillingData.toBuilder().networkCost(cost).build();
+        }
+        if (vmInstanceServiceBillingData.getUsageType().contains(eksCpuInstanceType)) {
+          double memoryCost = vmInstanceBillingData.getMemoryCost();
+          vmInstanceBillingData =
+              vmInstanceBillingData.toBuilder().computeCost(memoryCost + cost).cpuCost(cost).build();
+        }
+        if (vmInstanceServiceBillingData.getUsageType().contains(eksMemoryInstanceType)) {
+          double cpuCost = vmInstanceBillingData.getMemoryCost();
+          vmInstanceBillingData =
+              vmInstanceBillingData.toBuilder().computeCost(cpuCost + cost).memoryCost(cost).build();
+        }
+      }
+      vmInstanceBillingDataMap.put(resourceId, vmInstanceBillingData);
+    });
+
+    log.info("EKS Fargate resource map data {} ", vmInstanceBillingDataMap);
     return vmInstanceBillingDataMap;
   }
 

@@ -12,11 +12,11 @@ import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 import io.harness.utils.AmbianceTestUtils;
-import io.harness.utils.DummyOutcome;
+import io.harness.utils.DummyOrchestrationOutcome;
 import io.harness.utils.DummySweepingOutput;
 
 import com.google.inject.Inject;
@@ -41,16 +41,17 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
     ambiance = AmbianceTestUtils.buildAmbiance();
     planExecutionService.save(PlanExecution.builder().uuid(ambiance.getPlanExecutionId()).build());
     pmsOutcomeService.consume(ambiance, OUTCOME_NAME,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummyOutcome.builder().test("harness").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("harness").build()), null,
+        false);
     pmsSweepingOutputService.consume(ambiance, OUTPUT_NAME,
-        DocumentOrchestrationUtils.convertToDocumentJson(DummySweepingOutput.builder().test("harness").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummySweepingOutput.builder().test("harness").build()), null);
   }
 
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestRenderExpressionOutcome() {
     String resolvedExpression =
         engineExpressionService.renderExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
@@ -61,8 +62,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestRenderExpressionOutput() {
     String resolvedExpression =
         engineExpressionService.renderExpression(ambiance, "${dummyOutput.test} == \"harness\"");
@@ -73,8 +74,8 @@ public class EngineExpressionServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestEvaluateExpression() {
     Object value = engineExpressionService.evaluateExpression(ambiance, "${dummyOutcome.test} == \"harness\"");
     assertThat(value).isNotNull();

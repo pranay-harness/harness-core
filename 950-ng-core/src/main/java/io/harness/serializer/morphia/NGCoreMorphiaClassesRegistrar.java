@@ -5,7 +5,6 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.ng.core.activityhistory.entity.ConnectivityCheckDetail;
 import io.harness.ng.core.activityhistory.entity.EntityUsageActivityDetail;
 import io.harness.ng.core.activityhistory.entity.NGActivity;
-import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.service.entity.ServiceEntity;
 
@@ -17,7 +16,6 @@ public class NGCoreMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(Environment.class);
     set.add(ServiceEntity.class);
     set.add(NGActivity.class);
-    set.add(EntitySetupUsage.class);
     set.add(ConnectivityCheckDetail.class);
     set.add(EntityUsageActivityDetail.class);
   }

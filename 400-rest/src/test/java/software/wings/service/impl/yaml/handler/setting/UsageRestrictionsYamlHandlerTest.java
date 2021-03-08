@@ -29,10 +29,10 @@ import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.JenkinsConfigVerificationYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueConfigYamlHandlerTestBase;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import com.google.common.collect.Sets;

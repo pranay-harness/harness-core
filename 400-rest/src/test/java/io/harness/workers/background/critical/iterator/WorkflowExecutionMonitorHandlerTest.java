@@ -3,6 +3,7 @@ package io.harness.workers.background.critical.iterator;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -25,11 +26,11 @@ import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.MongoPersistenceIteratorBuilder;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
@@ -58,7 +59,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   @Mock private ExecutionInterruptManager executionInterruptManager;
   @Mock private StateMachineExecutor stateMachineExecutor;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject @InjectMocks private WorkflowExecutionMonitorHandler workflowExecutionMonitorHandler;
   private ArgumentCaptor<MongoPersistenceIteratorBuilder> captor =
       ArgumentCaptor.forClass(MongoPersistenceIteratorBuilder.class);
@@ -72,7 +73,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
             invocationOnMock -> invocationOnMock.getArgumentAt(2, MongoPersistenceIteratorBuilder.class).build());
 
     workflowExecution = WorkflowExecution.builder().appId(APP_ID).uuid(WORKFLOW_EXECUTION_ID).build();
-    wingsPersistence.save(workflowExecution);
+    persistence.save(workflowExecution);
   }
 
   private StateExecutionInstance createExpiredStateExecutionInstance() {
@@ -82,7 +83,20 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
                                                                .status(ExecutionStatus.WAITING)
                                                                .build();
     expiredStateExecutionInstance.setExpiryTs(System.currentTimeMillis() - 1);
-    wingsPersistence.save(expiredStateExecutionInstance);
+    persistence.save(expiredStateExecutionInstance);
+    return expiredStateExecutionInstance;
+  }
+
+  private StateExecutionInstance createExpiredButWaitingForManualInterventionStateExecutionInstance() {
+    StateExecutionInstance expiredStateExecutionInstance = aStateExecutionInstance()
+                                                               .appId(APP_ID)
+                                                               .executionUuid(WORKFLOW_EXECUTION_ID)
+                                                               .status(ExecutionStatus.WAITING)
+                                                               .build();
+    expiredStateExecutionInstance.setActionAfterManualInterventionTimeout(ExecutionInterruptType.END_EXECUTION);
+    expiredStateExecutionInstance.setWaitingForManualIntervention(true);
+    expiredStateExecutionInstance.setExpiryTs(System.currentTimeMillis() - 1);
+    persistence.save(expiredStateExecutionInstance);
     return expiredStateExecutionInstance;
   }
 
@@ -93,7 +107,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
                                                                .status(ExecutionStatus.FAILED)
                                                                .callback(new StateMachineExecutionCallbackMock())
                                                                .build();
-    wingsPersistence.save(successStateExecutionInstance);
+    persistence.save(successStateExecutionInstance);
     return successStateExecutionInstance;
   }
 
@@ -120,7 +134,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
     verify(executionInterruptManager, times(1)).registerExecutionInterrupt(executionInterruptArgumentCaptor.capture());
     ExecutionInterrupt executionInterrupt = executionInterruptArgumentCaptor.getValue();
     assertThat(executionInterrupt.getExecutionInterruptType()).isEqualTo(ExecutionInterruptType.MARK_EXPIRED);
-    wingsPersistence.delete(expiredStateExecutionInstance);
+    persistence.delete(expiredStateExecutionInstance);
   }
 
   @Test
@@ -130,7 +144,7 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
     StateExecutionInstance failedStateExecutionInstance = createSuccessStateExecutionInstance();
     workflowExecutionMonitorHandler.handle(workflowExecution);
     verify(stateMachineExecutor, never()).executeCallback(any(), any(), any(), any());
-    wingsPersistence.delete(failedStateExecutionInstance);
+    persistence.delete(failedStateExecutionInstance);
   }
 
   @Test
@@ -145,11 +159,26 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
                                       .status(PREPARING)
                                       .message("Starting artifact collection")
                                       .build();
-    wingsPersistence.save(execution);
+    persistence.save(execution);
     workflowExecutionMonitorHandler.handle(execution);
-    WorkflowExecution updatedWorkflowExecution = wingsPersistence.get(WorkflowExecution.class, WORKFLOW_EXECUTION_ID);
+    WorkflowExecution updatedWorkflowExecution = persistence.get(WorkflowExecution.class, WORKFLOW_EXECUTION_ID);
     assertThat(updatedWorkflowExecution.getStatus()).isEqualTo(EXPIRED);
     assertThat(updatedWorkflowExecution.getMessage()).isNull();
-    wingsPersistence.delete(updatedWorkflowExecution);
+    persistence.delete(updatedWorkflowExecution);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldInterruptWaitingForManualInterventionExecution() {
+    StateExecutionInstance expiredStateExecutionInstance =
+        createExpiredButWaitingForManualInterventionStateExecutionInstance();
+    ArgumentCaptor<ExecutionInterrupt> executionInterruptArgumentCaptor =
+        ArgumentCaptor.forClass(ExecutionInterrupt.class);
+    workflowExecutionMonitorHandler.handle(workflowExecution);
+    verify(executionInterruptManager, times(1)).registerExecutionInterrupt(executionInterruptArgumentCaptor.capture());
+    ExecutionInterrupt executionInterrupt = executionInterruptArgumentCaptor.getValue();
+    assertThat(executionInterrupt.getExecutionInterruptType()).isEqualTo(ExecutionInterruptType.END_EXECUTION);
+    persistence.delete(expiredStateExecutionInstance);
   }
 }

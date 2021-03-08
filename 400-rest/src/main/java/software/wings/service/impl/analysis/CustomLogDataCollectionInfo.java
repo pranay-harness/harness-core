@@ -5,11 +5,11 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 import static software.wings.common.VerificationConstants.DELAY_MINUTES;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.utils.Utils;
@@ -74,8 +74,8 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
     executionCapabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         Utils.appendPathToBaseUrl(getBaseUrl(), getValidationUrl()), QUERY, maskingEvaluator));
-    executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
+    executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
   }
 }

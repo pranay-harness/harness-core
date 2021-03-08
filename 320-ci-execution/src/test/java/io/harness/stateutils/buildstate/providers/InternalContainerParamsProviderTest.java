@@ -6,6 +6,8 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_ARGS;
 import static io.harness.common.CIExecutionConstants.SETUP_ADDON_CONTAINER_NAME;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,7 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.rule.Owner;
@@ -27,7 +29,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InternalContainerParamsProviderTest extends CIExecutionTest {
+public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
   @Inject InternalContainerParamsProvider internalContainerParamsProvider;
 
   @Test
@@ -53,8 +55,11 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
     K8PodDetails k8PodDetails = K8PodDetails.builder().stageID("stage").build();
@@ -67,9 +72,11 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
     logEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     logEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
 
+    String tiToken = "token";
     String tiEndpoint = "http://localhost:8078";
     Map<String, String> tiEnvVars = new HashMap<>();
     tiEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+    tiEnvVars.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
 
     Map<String, String> volumeToMountPath = new HashMap<>();
 
@@ -80,11 +87,13 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
         publishArtifactConnectorDetailsMap, k8PodDetails, serialisedStage, serviceToken, stageCpuRequest,
-        stageMemoryRequest, null, logEnvVars, tiEnvVars, volumeToMountPath, "/step-exec/workspace", ambiance);
+        stageMemoryRequest, null, logEnvVars, tiEnvVars, volumeToMountPath, "/step-exec/workspace", "test", ambiance);
 
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     expectedEnv.put(LOG_SERVICE_TOKEN_VARIABLE, logSecret);
+    expectedEnv.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+    expectedEnv.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
 
     Map<String, String> gotEnv = containerParams.getEnvVars();
     assertThat(gotEnv).containsAllEntriesOf(expectedEnv);

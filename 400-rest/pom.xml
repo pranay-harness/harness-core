@@ -240,6 +240,10 @@
         </dependency>
         <dependency>
             <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-secretmanager</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-storage</artifactId>
         </dependency>
         <dependency>
@@ -308,12 +312,33 @@
             <artifactId>two-factor-auth</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.jcraft</groupId>
-            <artifactId>jsch</artifactId>
+            <groupId>com.jcraft.harness</groupId>
+            <artifactId>jsch-0-1-54-harness-patch</artifactId>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>msal4j</artifactId>
+            <version>1.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-common</artifactId>
+            <version>12.9.0</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>
@@ -739,6 +764,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>835-notification-senders</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>860-orchestration-steps</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -749,7 +779,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>870-cg-yaml-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>870-orchestration</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>878-pipeline-service-utilities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -784,12 +824,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>930-notification-service</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>940-delegate-beans</artifactId>
+            <artifactId>955-delegate-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -839,6 +874,21 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>954-connector-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>955-setup-usage-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>960-continuous-features</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -854,7 +904,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>970-api-services-beans</artifactId>
+            <artifactId>960-recaster</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

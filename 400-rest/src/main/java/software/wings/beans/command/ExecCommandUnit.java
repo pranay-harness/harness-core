@@ -4,9 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.command.CommandUnitType.EXEC;
 
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.shell.ScriptType;
 
 import software.wings.stencils.DefaultValue;
 

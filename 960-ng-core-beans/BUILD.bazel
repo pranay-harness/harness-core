@@ -1,16 +1,13 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
-load("//:macros.bzl", "sources")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
         "//970-api-services-beans:module",
+        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
         "//970-ng-commons:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
@@ -40,14 +37,5 @@ java_library(
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

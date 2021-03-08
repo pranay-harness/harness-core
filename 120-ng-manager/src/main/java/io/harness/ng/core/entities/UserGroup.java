@@ -1,9 +1,14 @@
 package io.harness.ng.core.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
@@ -30,6 +35,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "user-groups", noClassnameStored = true)
 @Document("user-groups")
 @TypeAlias("user-groups")
+@StoreIn(DbAliases.NG_MANAGER)
+@OwnedBy(PL)
 public class UserGroup implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -53,7 +60,7 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @NGEntityName String name;
   @NotNull @Singular List<String> users;
   @NotNull List<NotificationSettingConfig> notificationConfigs;
-  @Builder.Default boolean harnessManaged = false;
+  boolean harnessManaged;
 
   @NotNull @Size(max = 1024) String description;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
@@ -61,5 +68,5 @@ public class UserGroup implements PersistentEntity, NGAccountAccess {
   @CreatedDate long createdAt;
   @LastModifiedDate long lastModifiedAt;
   @Version long version;
-  @Builder.Default boolean deleted = false;
+  boolean deleted;
 }

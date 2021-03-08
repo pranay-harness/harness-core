@@ -5,9 +5,11 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.pms.notification.bean.NotificationRules;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -24,4 +26,5 @@ public class BasicPipeline {
 
   String description;
   Map<String, String> tags;
+  List<NotificationRules> notificationRules;
 }

@@ -1,7 +1,6 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static io.harness.yaml.core.failurestrategy.NGFailureType.ALL_ERRORS;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHENTICATION_ERROR;
 import static io.harness.yaml.core.failurestrategy.NGFailureType.AUTHORIZATION_ERROR;
 
@@ -11,14 +10,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
+import io.harness.yaml.core.failurestrategy.NGFailureType;
 import io.harness.yaml.core.failurestrategy.OnFailureConfig;
 import io.harness.yaml.core.failurestrategy.abort.AbortFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.ignore.IgnoreFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureSpecConfig;
+import io.harness.yaml.core.timeout.Timeout;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -49,37 +51,42 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     List<FailureStrategyConfig> stepFailureStrategies;
     stepFailureStrategies = Collections.singletonList(
         FailureStrategyConfig.builder()
-            .onFailure(
-                OnFailureConfig.builder()
-                    .errors(Collections.singletonList(AUTHENTICATION_ERROR))
-                    .action(
-                        RetryFailureActionConfig.builder()
-                            .specConfig(
-                                RetryFailureSpecConfig.builder().retryCount(2).retryInterval(asList("2", "20")).build())
-                            .build())
-                    .build())
+            .onFailure(OnFailureConfig.builder()
+                           .errors(Collections.singletonList(AUTHENTICATION_ERROR))
+                           .action(RetryFailureActionConfig.builder()
+                                       .specConfig(RetryFailureSpecConfig.builder()
+                                                       .retryCount(ParameterField.createValueField(2))
+                                                       .retryIntervals(ParameterField.createValueField(
+                                                           asList(Timeout.fromString("2s"), Timeout.fromString("20s"))))
+                                                       .build())
+                                       .build())
+                           .build())
             .build());
 
     List<FailureStrategyConfig> stageFailureStrategies;
     stageFailureStrategies = Collections.singletonList(
         FailureStrategyConfig.builder()
-            .onFailure(
-                OnFailureConfig.builder()
-                    .errors(Collections.singletonList(AUTHORIZATION_ERROR))
-                    .action(
-                        RetryFailureActionConfig.builder()
-                            .specConfig(
-                                RetryFailureSpecConfig.builder().retryCount(2).retryInterval(asList("2", "20")).build())
-                            .build())
-                    .build())
+            .onFailure(OnFailureConfig.builder()
+                           .errors(Collections.singletonList(AUTHORIZATION_ERROR))
+                           .action(RetryFailureActionConfig.builder()
+                                       .specConfig(RetryFailureSpecConfig.builder()
+                                                       .retryCount(ParameterField.createValueField(2))
+                                                       .retryIntervals(ParameterField.createValueField(
+                                                           asList(Timeout.fromString("2s"), Timeout.fromString("20s"))))
+                                                       .build())
+                                       .build())
+                           .build())
             .build());
     actionConfigCollectionMap =
         FailureStrategiesUtils.priorityMergeFailureStrategies(stepFailureStrategies, null, stageFailureStrategies);
     assertThat(
-        actionConfigCollectionMap.get(
-            RetryFailureActionConfig.builder()
-                .specConfig(RetryFailureSpecConfig.builder().retryCount(2).retryInterval(asList("2", "20")).build())
-                .build()))
+        actionConfigCollectionMap.get(RetryFailureActionConfig.builder()
+                                          .specConfig(RetryFailureSpecConfig.builder()
+                                                          .retryCount(ParameterField.createValueField(2))
+                                                          .retryIntervals(ParameterField.createValueField(asList(
+                                                              Timeout.fromString("2s"), Timeout.fromString("20s"))))
+                                                          .build())
+                                          .build()))
         .contains(FailureType.AUTHENTICATION_FAILURE, FailureType.AUTHORIZATION_FAILURE);
   }
 
@@ -92,15 +99,16 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     List<FailureStrategyConfig> stepFailureStrategies;
     stepFailureStrategies = Collections.singletonList(
         FailureStrategyConfig.builder()
-            .onFailure(
-                OnFailureConfig.builder()
-                    .errors(Collections.singletonList(AUTHENTICATION_ERROR))
-                    .action(
-                        RetryFailureActionConfig.builder()
-                            .specConfig(
-                                RetryFailureSpecConfig.builder().retryCount(2).retryInterval(asList("2", "20")).build())
-                            .build())
-                    .build())
+            .onFailure(OnFailureConfig.builder()
+                           .errors(Collections.singletonList(AUTHENTICATION_ERROR))
+                           .action(RetryFailureActionConfig.builder()
+                                       .specConfig(RetryFailureSpecConfig.builder()
+                                                       .retryCount(ParameterField.createValueField(2))
+                                                       .retryIntervals(ParameterField.createValueField(
+                                                           asList(Timeout.fromString("2s"), Timeout.fromString("20s"))))
+                                                       .build())
+                                       .build())
+                           .build())
             .build());
 
     List<FailureStrategyConfig> stageFailureStrategies;
@@ -110,8 +118,9 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
                            .errors(Collections.singletonList(AUTHORIZATION_ERROR))
                            .action(RetryFailureActionConfig.builder()
                                        .specConfig(RetryFailureSpecConfig.builder()
-                                                       .retryCount(4)
-                                                       .retryInterval(Collections.singletonList("2"))
+                                                       .retryCount(ParameterField.createValueField(4))
+                                                       .retryIntervals(ParameterField.createValueField(
+                                                           Collections.singletonList(Timeout.fromString("2s"))))
                                                        .build())
                                        .build())
                            .build())
@@ -119,23 +128,28 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     actionConfigCollectionMap =
         FailureStrategiesUtils.priorityMergeFailureStrategies(stepFailureStrategies, null, stageFailureStrategies);
     assertThat(
+        actionConfigCollectionMap.get(RetryFailureActionConfig.builder()
+                                          .specConfig(RetryFailureSpecConfig.builder()
+                                                          .retryCount(ParameterField.createValueField(2))
+                                                          .retryIntervals(ParameterField.createValueField(asList(
+                                                              Timeout.fromString("2s"), Timeout.fromString("20s"))))
+                                                          .build())
+                                          .build()))
+        .contains(FailureType.AUTHENTICATION_FAILURE);
+    assertThat(
         actionConfigCollectionMap.get(
             RetryFailureActionConfig.builder()
-                .specConfig(RetryFailureSpecConfig.builder().retryCount(2).retryInterval(asList("2", "20")).build())
+                .specConfig(RetryFailureSpecConfig.builder()
+                                .retryCount(ParameterField.createValueField(4))
+                                .retryIntervals(ParameterField.createValueField(asList(Timeout.fromString("2s"))))
+                                .build())
                 .build()))
-        .contains(FailureType.AUTHENTICATION_FAILURE);
-    assertThat(actionConfigCollectionMap.get(RetryFailureActionConfig.builder()
-                                                 .specConfig(RetryFailureSpecConfig.builder()
-                                                                 .retryCount(4)
-                                                                 .retryInterval(Collections.singletonList("2"))
-                                                                 .build())
-                                                 .build()))
         .contains(FailureType.AUTHORIZATION_FAILURE);
   }
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  public void shouldMergeFailureStrategiesOnAllErrors() {
+  public void shouldMergeFailureStrategiesOnOtherErrors() {
     Map<FailureStrategyActionConfig, Collection<FailureType>> actionConfigCollectionMap;
 
     List<FailureStrategyConfig> stepFailureStrategies;
@@ -151,7 +165,7 @@ public class FailureStrategiesUtilsTest extends OrchestrationStepsTestBase {
     stageFailureStrategies =
         Collections.singletonList(FailureStrategyConfig.builder()
                                       .onFailure(OnFailureConfig.builder()
-                                                     .errors(Collections.singletonList(ALL_ERRORS))
+                                                     .errors(Collections.singletonList(NGFailureType.ANY_OTHER_ERRORS))
                                                      .action(AbortFailureActionConfig.builder().build())
                                                      .build())
                                       .build());

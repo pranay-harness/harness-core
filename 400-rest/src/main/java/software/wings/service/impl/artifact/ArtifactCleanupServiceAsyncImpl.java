@@ -58,7 +58,10 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
     final TaskDataBuilder dataBuilder =
         TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name()).timeout(DEFAULT_ASYNC_CALL_TIMEOUT);
     DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder().setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID).waitId(waitId);
+        DelegateTask.builder()
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+            .waitId(waitId)
+            .expiry(artifactCollectionUtils.getDelegateQueueTimeout(artifactStream.getAccountId()));
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       ArtifactStreamAttributes artifactStreamAttributes =
@@ -80,7 +83,7 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
       delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(TimeUnit.MINUTES.toMillis(1));
-      delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
+      delegateTaskBuilder.tags(settingsService.getDelegateSelectors(settingAttribute));
       delegateTaskBuilder.data(dataBuilder.build());
     }
 

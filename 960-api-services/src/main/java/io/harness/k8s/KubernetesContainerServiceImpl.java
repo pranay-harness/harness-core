@@ -1,6 +1,5 @@
 package io.harness.k8s;
 
-import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -84,7 +83,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
@@ -103,7 +101,6 @@ import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
@@ -135,15 +132,12 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.apis.VersionApi;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
-import io.kubernetes.client.openapi.models.V1ConfigMapList;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
-import io.kubernetes.client.openapi.models.V1SecretList;
 import io.kubernetes.client.openapi.models.V1Service;
-import io.kubernetes.client.openapi.models.V1ServiceList;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -504,7 +498,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       log.error("validateMetricsServer:ApiException ", ex);
       return CEK8sDelegatePrerequisite.MetricsServerCheck.builder()
           .isInstalled(false)
-          .message(ex.getCode() + ":" + ex.getResponseBody())
+          .message(ex.getCode() + ":" + ex.getMessage())
           .build();
     }
   }
@@ -980,16 +974,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name, String namespace) {
-    return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
-                                  .services()
-                                  .inNamespace(isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace())
-                                  .withName(name)
-                                  .get()
-                            : null;
-  }
-
-  @Override
   public Service getServiceFabric8(KubernetesConfig kubernetesConfig, String name) {
     return isNotBlank(name) ? kubernetesHelperService.getKubernetesClient(kubernetesConfig)
                                   .services()
@@ -1007,16 +991,20 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
 
       ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-      String fieldSelector = format(K8S_SELECTOR_FORMAT, RESOURCE_NAME_FIELD, name);
-      V1ServiceList result = new CoreV1Api(apiClient).listNamespacedService(
-          namespace, null, null, null, fieldSelector, null, null, null, null, null);
-      return isEmpty(result.getItems()) ? null : result.getItems().get(0);
+      return new CoreV1Api(apiClient).readNamespacedService(name, namespace, null, null, null);
     } catch (ApiException exception) {
+      if (isResourceNotFoundException(exception.getCode())) {
+        return null;
+      }
       String message =
           format("Unable to get service. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       log.error(message);
       throw new InvalidRequestException(message, exception, USER);
     }
+  }
+
+  private boolean isResourceNotFoundException(int code) {
+    return code == 404;
   }
 
   @Override
@@ -1145,6 +1133,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .withName(name)
           .get();
     } catch (Exception e) {
+      log.error("Failed to get ConfigMap/{}", name, e);
       return null;
     }
   }
@@ -1153,11 +1142,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public V1ConfigMap getConfigMap(KubernetesConfig kubernetesConfig, String name) {
     try {
       ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-      String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, name);
-      V1ConfigMapList configMapList = new CoreV1Api(apiClient).listNamespacedConfigMap(
-          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
-      return isEmpty(configMapList.getItems()) ? null : configMapList.getItems().get(0);
+      return new CoreV1Api(apiClient).readNamespacedConfigMap(name, kubernetesConfig.getNamespace(), null, null, null);
     } catch (ApiException exception) {
+      if (isResourceNotFoundException(exception.getCode())) {
+        return null;
+      }
       String message =
           format("Failed to get ConfigMap. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       log.error(message);
@@ -1210,6 +1199,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .withName(name)
           .get();
     } catch (Exception e) {
+      log.error("Failed to get istio VirtualService/{}", name, e);
       return null;
     }
   }
@@ -1227,6 +1217,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .withName(name)
           .get();
     } catch (Exception e) {
+      log.error("Failed to get istio DestinationRule/{}", name, e);
       return null;
     }
   }
@@ -1353,12 +1344,13 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-    String fieldSelector = format("%s=%s", RESOURCE_NAME_FIELD, secretName);
     try {
-      V1SecretList secretList = new CoreV1Api(apiClient).listNamespacedSecret(
-          kubernetesConfig.getNamespace(), null, null, null, fieldSelector, null, null, null, null, null);
-      return isEmpty(secretList.getItems()) ? null : secretList.getItems().get(0);
+      return new CoreV1Api(apiClient).readNamespacedSecret(
+          secretName, kubernetesConfig.getNamespace(), null, null, null);
     } catch (ApiException exception) {
+      if (isResourceNotFoundException(exception.getCode())) {
+        return null;
+      }
       String message =
           format("Failed to get Secret. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       log.error(message);
@@ -1725,26 +1717,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public String fetchReleaseHistoryFromConfigMapFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
-    ConfigMap configMap = getConfigMapFabric8(kubernetesConfig, releaseName);
-    if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
-      return configMap.getData().get(ReleaseHistoryKeyName);
-    }
-
-    return EMPTY;
-  }
-
-  @Override
-  public String fetchReleaseHistoryFromSecretsFabric8(KubernetesConfig kubernetesConfig, String releaseName) {
-    Secret secret = getSecretFabric8(kubernetesConfig, releaseName);
-    if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
-      return decodeBase64ToString(secret.getData().get(ReleaseHistoryKeyName));
-    }
-
-    return EMPTY;
-  }
-
-  @Override
   public String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
     V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
@@ -1762,32 +1734,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     return EMPTY;
-  }
-
-  @Override
-  public void saveReleaseHistoryInConfigMapFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
-    try {
-      ConfigMap configMap = getConfigMapFabric8(kubernetesConfig, releaseName);
-      if (configMap == null) {
-        configMap = new ConfigMapBuilder()
-                        .withNewMetadata()
-                        .withName(releaseName)
-                        .withNamespace(kubernetesConfig.getNamespace())
-                        .endMetadata()
-                        .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))
-                        .build();
-      } else {
-        Map data = configMap.getData();
-        data.put(ReleaseHistoryKeyName, releaseHistory);
-        configMap.setData(data);
-      }
-      createOrReplaceConfigMapFabric8(kubernetesConfig, configMap);
-    } catch (Exception e) {
-      String message = "Failed to save release History. " + ExceptionUtils.getMessage(e);
-      log.error(message);
-      throw new InvalidRequestException(message, e, USER);
-    }
   }
 
   @Override
@@ -1812,46 +1758,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public void saveReleaseHistoryFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
-    if (storeInSecrets) {
-      saveReleaseHistoryInSecretsFabric8(kubernetesConfig, releaseName, releaseHistory);
-    } else {
-      saveReleaseHistoryInConfigMapFabric8(kubernetesConfig, releaseName, releaseHistory);
-    }
-  }
-
-  @Override
   public void saveReleaseHistory(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
     if (storeInSecrets) {
       saveReleaseHistoryInSecrets(kubernetesConfig, releaseName, releaseHistory);
     } else {
       saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistory);
-    }
-  }
-
-  @Override
-  public void saveReleaseHistoryInSecretsFabric8(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
-    try {
-      Secret secret = getSecretFabric8(kubernetesConfig, releaseName);
-      if (secret == null) {
-        secret = new SecretBuilder()
-                     .withNewMetadata()
-                     .withName(releaseName)
-                     .withNamespace(kubernetesConfig.getNamespace())
-                     .endMetadata()
-                     .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64(releaseHistory)))
-                     .build();
-      } else {
-        Map data = secret.getData();
-        data.put(ReleaseHistoryKeyName, encodeBase64(releaseHistory));
-        secret.setData(data);
-      }
-      createOrReplaceSecretFabric8(kubernetesConfig, secret);
-    } catch (Exception e) {
-      throw new GeneralException("Failed to save release History in secrets. " + ExceptionUtils.getMessage(e), e);
     }
   }
 
@@ -1914,13 +1826,6 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           format("Unable to get running pods. Code: %s, message: %s", exception.getCode(), exception.getResponseBody());
       throw new InvalidRequestException(message, exception, USER);
     }
-  }
-
-  @Override
-  public String getVersionAsStringFabric8(KubernetesConfig kubernetesConfig) {
-    io.fabric8.kubernetes.client.VersionInfo versionInfo =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig).getVersion();
-    return format("%s.%s", versionInfo.getMajor(), versionInfo.getMinor());
   }
 
   @Override

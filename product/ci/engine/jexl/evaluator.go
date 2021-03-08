@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/gogo/protobuf/jsonpb"
 	"github.com/pkg/errors"
 	pb "github.com/wings-software/portal/960-expression-service/src/main/proto/io/harness/expression/service"
 	"github.com/wings-software/portal/commons/go/lib/expression-service/grpc"
+	jexlexpr "github.com/wings-software/portal/commons/go/lib/expressions"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	"go.uber.org/zap"
@@ -19,7 +19,6 @@ import (
 )
 
 const (
-	jexlRegex              = `\$\{.*\}`
 	delegateSvcEndpointEnv = "DELEGATE_SERVICE_ENDPOINT"
 	delegateSvcTokenEnv    = "DELEGATE_SERVICE_TOKEN"
 	delegateSvcIDEnv       = "DELEGATE_SERVICE_ID"
@@ -32,17 +31,14 @@ var (
 	newExpressionEvalClient = grpc.NewExpressionEvalClient
 )
 
-// isJEXLExpression returns whether the input is a JEXL expression or not
-func isJEXLExpression(input string) (bool, error) {
-	return regexp.MatchString(jexlRegex, input)
-}
-
 // EvaluateJEXL evaluates list of JEXL expressions based on outputs. It does nothing if expression is not JEXL.
+// It only sends the expressions which matches jexl expression regex to expression service
+// If force is set to true, it force evaulates all the expressions.
 // Returns a map with key as JEXL expression and value as evaluated value of JEXL expression
-func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
-	map[string]string, error) {
+func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
+	force bool, log *zap.SugaredLogger) (map[string]string, error) {
 	start := time.Now()
-	arg, err := getRequestArg(stepID, expressions, o, log)
+	arg, err := getRequestArg(stepID, expressions, o, force, log)
 	if err != nil {
 		log.Errorw(
 			"Failed to create arguments for JEXL evaluation",
@@ -91,8 +87,8 @@ func EvaluateJEXL(ctx context.Context, stepID string, expressions []string, o ou
 }
 
 // getRequestArg returns arguments for expression service request to evaluate JEXL expression
-func getRequestArg(stepID string, expressions []string, o output.StageOutput, log *zap.SugaredLogger) (
-	*pb.ExpressionRequest, error) {
+func getRequestArg(stepID string, expressions []string, o output.StageOutput, force bool,
+	log *zap.SugaredLogger) (*pb.ExpressionRequest, error) {
 	data, err := json.Marshal(o)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal stage output")
@@ -101,9 +97,7 @@ func getRequestArg(stepID string, expressions []string, o output.StageOutput, lo
 
 	var queries []*pb.ExpressionQuery
 	for _, expression := range expressions {
-		if isJEXL, err := isJEXLExpression(expression); err != nil {
-			return nil, err
-		} else if !isJEXL {
+		if !force && !jexlexpr.IsJEXL(expression) {
 			continue
 		}
 

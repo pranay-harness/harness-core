@@ -11,6 +11,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
 import static software.wings.app.ManagerCacheRegistrar.USER_CACHE;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -46,6 +47,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.cache.HarnessCacheManager;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
 import io.harness.data.encoding.EncodingUtils;
@@ -67,8 +69,10 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
+import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -110,6 +114,7 @@ import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
@@ -167,7 +172,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
@@ -198,6 +202,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.cache.Cache;
+import javax.cache.expiry.AccessedExpiryPolicy;
+import javax.cache.expiry.Duration;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -253,7 +259,6 @@ public class UserServiceImpl implements UserService {
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private AppService appService;
-  @Inject @Named(USER_CACHE) private Cache<String, User> userCache;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
   @Inject private SSOSettingService ssoSettingService;
@@ -271,6 +276,19 @@ public class UserServiceImpl implements UserService {
   @Inject private TOTPAuthHandler totpAuthHandler;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private LicenseService licenseService;
+  @Inject private HarnessCacheManager harnessCacheManager;
+  @Inject private VersionInfoManager versionInfoManager;
+  @Inject private ConfigurationController configurationController;
+  @Inject private HtmlInputSanitizer userNameSanitizer;
+
+  private Cache<String, User> getUserCache() {
+    if (configurationController.isPrimary()) {
+      return harnessCacheManager.getCache(PRIMARY_CACHE_PREFIX + USER_CACHE, String.class, User.class,
+          AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES));
+    }
+    return harnessCacheManager.getCache(USER_CACHE, String.class, User.class,
+        AccessedExpiryPolicy.factoryOf(Duration.THIRTY_MINUTES), versionInfoManager.getVersionInfo().getBuildNo());
+  }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -342,7 +360,6 @@ public class UserServiceImpl implements UserService {
     if (userRequestContext == null) {
       return true;
     }
-
     if (!accountId.equals(userRequestContext.getAccountId())) {
       return false;
     }
@@ -533,9 +550,7 @@ public class UserServiceImpl implements UserService {
           format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
           account.getUuid());
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", loginUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), loginUrl);
       templateModel.put("company", account.getCompanyName());
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -552,6 +567,10 @@ public class UserServiceImpl implements UserService {
     } catch (URISyntaxException use) {
       log.error("Add account email couldn't be sent for accountId={}", account.getUuid(), use);
     }
+  }
+
+  public String sanitizeUserName(String name) {
+    return userNameSanitizer.sanitizeInput(name);
   }
 
   @Override
@@ -658,9 +677,7 @@ public class UserServiceImpl implements UserService {
     String loginUrl =
         buildAbsoluteUrl(format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
             account.getUuid());
-    Map<String, String> model = new HashMap<>();
-    model.put("name", user.getName());
-    model.put("url", loginUrl);
+    Map<String, String> model = getTemplateModel(user.getName(), loginUrl);
     model.put("company", account.getCompanyName());
     model.put(
         "subject", "You have been invited to the " + account.getCompanyName().toUpperCase() + " account at Harness");
@@ -700,6 +717,13 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  private Map<String, String> getTemplateModel(String userName, String url) {
+    Map<String, String> templateModel = new HashMap<>();
+    templateModel.put("name", sanitizeUserName(userName));
+    templateModel.put("url", url);
+    return templateModel;
+  }
+
   private void sendVerificationEmail(User user) {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
@@ -708,9 +732,7 @@ public class UserServiceImpl implements UserService {
           buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
               user.getDefaultAccountId());
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", verificationUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
@@ -798,7 +820,6 @@ public class UserServiceImpl implements UserService {
   @Override
   public List<InviteOperationResponse> inviteUsers(UserInvite userInvite) {
     String accountId = userInvite.getAccountId();
-    limitCheck(accountId, userInvite);
 
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
     if (userInvite.getEmails().isEmpty()) {
@@ -847,14 +868,11 @@ public class UserServiceImpl implements UserService {
         log.error("No account found for accountId={}", accountId);
         return;
       }
-
-      PageRequest<User> request = aPageRequest()
-                                      .addFilter(UserKeys.accounts, IN, Collections.singletonList(account).toArray())
-                                      .withLimit(PageRequest.UNLIMITED)
-                                      .build();
-
-      List<User> existingUsersAndInvites = list(request, false);
-      userServiceLimitChecker.limitCheck(accountId, existingUsersAndInvites, new HashSet<>(userInvite.getEmails()));
+      Query<User> query = getListUserQuery(accountId, true);
+      query.criteria(UserKeys.disabled).notEqual(true);
+      List<User> existingUsersAndInvites = query.asList();
+      userServiceLimitChecker.limitCheck(
+          accountId, existingUsersAndInvites, new HashSet<>(Arrays.asList(userInvite.getEmail())));
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -869,6 +887,8 @@ public class UserServiceImpl implements UserService {
     signupService.checkIfEmailIsValid(userInvite.getEmail());
 
     String accountId = userInvite.getAccountId();
+    limitCheck(accountId, userInvite);
+
     Account account = accountService.get(accountId);
 
     User user = getUserByEmail(userInvite.getEmail());
@@ -1044,12 +1064,10 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account, User user)
       throws URISyntaxException {
-    Map<String, String> model = new HashMap<>();
     String inviteUrl = getUserInviteUrl(userInvite, account);
+    Map<String, String> model = getTemplateModel(userInvite.getEmail(), inviteUrl);
     model.put("company", account.getCompanyName());
     model.put("accountname", account.getAccountName());
-    model.put("name", userInvite.getEmail());
-    model.put("url", inviteUrl);
     boolean shouldMailContainTwoFactorInfo = user.isTwoFactorAuthenticationEnabled();
     model.put("shouldMailContainTwoFactorInfo", Boolean.toString(shouldMailContainTwoFactorInfo));
     model.put("totpSecret", user.getTotpSecretKey());
@@ -1080,11 +1098,8 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getEmailVerificationTemplateModel(
       String name, String url, Map<String, String> params, String accountId) {
-    Map<String, String> model = new HashMap<>();
-    model.put("name", name);
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-    model.put("url", authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
-    return model;
+    return getTemplateModel(name, authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
   }
 
   @Override
@@ -1123,7 +1138,7 @@ public class UserServiceImpl implements UserService {
             account.getUuid());
 
     Map<String, Object> model = new HashMap<>();
-    model.put("name", user.getName());
+    model.put("name", sanitizeUserName(user.getName()));
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
     model.put(
@@ -1669,7 +1684,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendPasswordChangeEmail(User user) {
     Map<String, Object> templateModel = new HashMap<>();
-    templateModel.put("name", user.getName());
+    templateModel.put("name", sanitizeUserName(user.getName()));
     templateModel.put("email", user.getEmail());
     List<String> toList = new ArrayList<>();
     toList.add(user.getEmail());
@@ -1823,9 +1838,7 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", resetPasswordUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
@@ -2254,6 +2267,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User getUserFromCacheOrDB(String userId) {
+    Cache<String, User> userCache = getUserCache();
     User user = null;
     try {
       user = userCache.get(userId);
@@ -2275,8 +2289,7 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void evictUserFromCache(String userId) {
-    Preconditions.checkNotNull(userCache, "User cache can't be null");
-    userCache.remove(userId);
+    getUserCache().remove(userId);
   }
 
   /* (non-Javadoc)
@@ -2740,9 +2753,7 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", resetPasswordUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       templateModel.put("passExpirationDays", passExpirationDays.toString());
 
       List<String> toList = new ArrayList<>();
@@ -2785,9 +2796,7 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", resetPasswordUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
 
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -2859,7 +2868,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public void sendAccountLockedNotificationMail(User user, int lockoutExpirationTime) {
     Map<String, String> templateModel = new HashMap<>();
-    templateModel.put("name", user.getName());
+    templateModel.put("name", sanitizeUserName(user.getName()));
     templateModel.put("lockoutExpirationTime", Integer.toString(lockoutExpirationTime));
 
     List<String> toList = new ArrayList<>();

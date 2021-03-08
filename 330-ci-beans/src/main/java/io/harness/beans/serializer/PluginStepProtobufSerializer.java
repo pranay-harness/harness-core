@@ -8,6 +8,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.product.ci.engine.proto.PluginStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,7 +21,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
 
   @Override
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PluginStepInfo pluginStepInfo = (PluginStepInfo) ciStepInfo;
 
@@ -49,6 +50,7 @@ public class PluginStepProtobufSerializer implements ProtobufStepSerializer<Plug
         .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
         .setPlugin(pluginStep)
+        .setLogKey(logKey)
         .build();
   }
 }

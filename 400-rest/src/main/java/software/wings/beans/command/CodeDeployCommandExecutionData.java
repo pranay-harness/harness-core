@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import io.harness.delegate.command.CommandExecutionData;
+import io.harness.shell.CommandExecutionData;
 
 import com.amazonaws.services.ec2.model.Instance;
 import java.util.ArrayList;

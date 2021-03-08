@@ -2,6 +2,7 @@ package io.harness.ng.core.impl;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
@@ -14,7 +15,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
@@ -62,13 +64,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ProjectServiceImpl implements ProjectService {
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
-  private final AbstractProducer eventProducer;
+  private final Producer eventProducer;
   private final NgUserService ngUserService;
   private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) AbstractProducer eventProducer, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.eventProducer = eventProducer;
@@ -89,13 +91,14 @@ public class ProjectServiceImpl implements ProjectService {
       return savedProject;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
-          String.format("Try using different project identifier, [%s] cannot be used", project.getIdentifier()),
+          String.format("A project with identifier %s and orgIdentifier %s is already present or was deleted",
+              project.getIdentifier(), orgIdentifier),
           USER_SRE, ex);
     }
   }
 
   private void performActionsPostProjectCreation(Project project) {
-    publishEvent(project, EventsFrameworkConstants.CREATE_ACTION);
+    publishEvent(project, EventsFrameworkMetadataConstants.CREATE_ACTION);
     createUserProjectMap(project);
   }
 
@@ -149,7 +152,7 @@ public class ProjectServiceImpl implements ProjectService {
       project.setModules(moduleTypeList);
       validate(project);
       Project updatedProject = projectRepository.save(project);
-      publishEvent(existingProject, EventsFrameworkConstants.UPDATE_ACTION);
+      publishEvent(existingProject, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return updatedProject;
     }
     throw new InvalidRequestException(
@@ -159,12 +162,13 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void publishEvent(Project project, String action) {
     try {
-      eventProducer.send(Message.newBuilder()
-                             .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
-                                 EventsFrameworkConstants.ENTITY_TYPE_METADATA, EventsFrameworkConstants.PROJECT_ENTITY,
-                                 EventsFrameworkConstants.ACTION_METADATA, action))
-                             .setData(getProjectPayload(project))
-                             .build());
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", project.getAccountIdentifier(),
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.PROJECT_ENTITY,
+                  EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(getProjectPayload(project))
+              .build());
     } catch (ProducerShutdownException e) {
       log.error("Failed to send event to events framework projectIdentifier: " + project.getIdentifier(), e);
     }
@@ -227,6 +231,9 @@ public class ProjectServiceImpl implements ProjectService {
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.key).regex(projectFilterDTO.getSearchTerm(), "i"),
           Criteria.where(ProjectKeys.tags + "." + NGTagKeys.value).regex(projectFilterDTO.getSearchTerm(), "i"));
     }
+    if (isNotEmpty(projectFilterDTO.getIdentifiers())) {
+      criteria.and(ProjectKeys.identifier).in(projectFilterDTO.getIdentifiers());
+    }
     return criteria;
   }
 
@@ -241,15 +248,34 @@ public class ProjectServiceImpl implements ProjectService {
                        .orgIdentifier(orgIdentifier)
                        .identifier(projectIdentifier)
                        .build(),
-          EventsFrameworkConstants.DELETE_ACTION);
+          EventsFrameworkMetadataConstants.DELETE_ACTION);
     }
     return delete;
+  }
+
+  @Override
+  public boolean restore(String accountIdentifier, String orgIdentifier, String identifier) {
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
+    boolean success = projectRepository.restore(accountIdentifier, orgIdentifier, identifier);
+    if (success) {
+      publishEvent(Project.builder()
+                       .accountIdentifier(accountIdentifier)
+                       .orgIdentifier(orgIdentifier)
+                       .identifier(identifier)
+                       .build(),
+          EventsFrameworkMetadataConstants.RESTORE_ACTION);
+    }
+    return success;
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
                                Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
+  }
+
+  private void validateParentOrgExists(String accountIdentifier, String orgIdentifier) {
     if (!organizationService.get(accountIdentifier, orgIdentifier).isPresent()) {
       throw new InvalidArgumentsException(
           String.format("Organization [%s] in Account [%s] does not exist", orgIdentifier, accountIdentifier),
@@ -263,5 +289,6 @@ public class ProjectServiceImpl implements ProjectService {
                                Pair.of(orgIdentifier, project.getOrgIdentifier())),
         true);
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
+    validateParentOrgExists(accountIdentifier, orgIdentifier);
   }
 }

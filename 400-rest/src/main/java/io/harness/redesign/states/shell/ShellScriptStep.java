@@ -16,12 +16,12 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
@@ -41,6 +41,11 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.shell.AccessType;
+import io.harness.shell.AuthenticationScheme;
+import io.harness.shell.KerberosConfig;
+import io.harness.shell.ScriptType;
+import io.harness.shell.ShellExecutionData;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 
@@ -48,16 +53,13 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KerberosConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
-import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.beans.delegation.ShellScriptParameters.ShellScriptParametersBuilder;
 import software.wings.exception.ShellScriptException;
@@ -68,7 +70,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -113,8 +115,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
     String keyPath = null;
     boolean keyless = false;
     Integer port = null;
-    HostConnectionAttributes.AccessType accessType = null;
-    HostConnectionAttributes.AuthenticationScheme authenticationScheme = null;
+    AccessType accessType = null;
+    AuthenticationScheme authenticationScheme = null;
     String keyName = null;
     WinRmConnectionAttributes winRmConnectionAttributes = null;
     List<EncryptedDataDetail> winrmEdd = emptyList();
@@ -230,7 +232,7 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
     return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, new LinkedHashMap<>(), TaskCategory.DELEGATE_TASK_V1);
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1, Collections.emptyList(), true);
   }
 
   @Override

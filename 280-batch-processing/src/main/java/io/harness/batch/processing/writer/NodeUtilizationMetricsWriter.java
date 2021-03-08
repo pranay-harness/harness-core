@@ -60,8 +60,7 @@ public class NodeUtilizationMetricsWriter extends EventWriter implements ItemWri
             k8sGranularUtilizationDataList.add(k8sGranularUtilizationData);
           }
         });
-    if (!k8sGranularUtilizationDataList.isEmpty()) {
-      k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
-    }
+
+    k8sUtilizationGranularDataService.create(k8sGranularUtilizationDataList);
   }
 }

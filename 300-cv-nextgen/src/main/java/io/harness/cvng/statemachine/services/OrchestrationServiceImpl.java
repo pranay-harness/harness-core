@@ -1,5 +1,6 @@
 package io.harness.cvng.statemachine.services;
 
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -16,7 +17,13 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class OrchestrationServiceImpl implements OrchestrationService {
@@ -26,30 +33,23 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
   @Override
   public void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime) {
-    boolean isFirstAnalysis = false;
     AnalysisInput inputForAnalysis =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
     validateAnalysisInputs(inputForAnalysis);
 
-    AnalysisOrchestrator orchestrator = getOrchestrator(verificationTaskId);
-
-    if (orchestrator == null) {
-      orchestrator = AnalysisOrchestrator.builder()
-                         .verificationTaskId(inputForAnalysis.getVerificationTaskId())
-                         .status(AnalysisStatus.CREATED)
-                         .build();
-      isFirstAnalysis = true;
-    }
     AnalysisStateMachine stateMachine = stateMachineService.createStateMachine(inputForAnalysis);
-    // TODO: can we move it inside null if condition?
-    if (orchestrator.getAnalysisStateMachineQueue() == null) {
-      orchestrator.setAnalysisStateMachineQueue(new ArrayList<>());
-    }
-    orchestrator.getAnalysisStateMachineQueue().add(stateMachine);
-    hPersistence.save(orchestrator);
-    if (isFirstAnalysis) {
-      orchestrateNewAnalysisStateMachine(orchestrator);
-    }
+
+    Query<AnalysisOrchestrator> orchestratorQuery =
+        hPersistence.createQuery(AnalysisOrchestrator.class)
+            .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId);
+
+    UpdateOperations<AnalysisOrchestrator> updateOperations =
+        hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
+            .setOnInsert(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+            .setOnInsert(AnalysisOrchestratorKeys.status, AnalysisStatus.CREATED)
+            .addToSet(AnalysisOrchestratorKeys.analysisStateMachineQueue, Arrays.asList(stateMachine));
+
+    hPersistence.upsert(orchestratorQuery, updateOperations);
   }
 
   private void validateAnalysisInputs(AnalysisInput inputs) {
@@ -73,6 +73,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     orchestrateAtRunningState(orchestrator);
   }
 
+  @Override
+  public void orchestrate(AnalysisOrchestrator orchestrator) {
+    Preconditions.checkNotNull(orchestrator, "orchestrator cannot be null when trying to orchestrate");
+    orchestrateAtRunningState(orchestrator);
+  }
+
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
       String errMsg = "No orchestrator available to execute currently.";
@@ -80,16 +86,24 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       return;
     }
 
+    if (isNotEmpty(orchestrator.getAnalysisStateMachineQueue())
+        && orchestrator.getAnalysisStateMachineQueue().size() > 5) {
+      log.info("For verification task ID {}, orchestrator has more than 5 tasks waiting."
+              + " Please check if there is a growing backlog.",
+          orchestrator.getVerificationTaskId());
+    }
+
     AnalysisStateMachine currentlyExecutingStateMachine =
         stateMachineService.getExecutingStateMachine(orchestrator.getVerificationTaskId());
     if (orchestrator.getStatus() == AnalysisStatus.CREATED) {
       currentlyExecutingStateMachine = orchestrator.getAnalysisStateMachineQueue().get(0);
     }
+
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:
       case IGNORED:
-        orchestrateNewAnalysisStateMachine(orchestrator);
+        orchestrateNewAnalysisStateMachine(orchestrator.getVerificationTaskId());
         break;
       case RUNNING:
         log.info("For {}, state machine is currently RUNNING. "
@@ -103,25 +117,75 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         break;
       case COMPLETED:
         log.info("Analysis for the entire duration is done. Time to close down");
+        orchestrator.setStatus(AnalysisStatus.COMPLETED);
         break;
       default:
         log.info("Unknown analysis status of the state machine under execution");
     }
-    hPersistence.save(orchestrator);
   }
 
   private void orchestrateFailedStateMachine(AnalysisStateMachine currentStateMachine) {
     stateMachineService.retryStateMachineAfterFailure(currentStateMachine);
   }
 
-  private void orchestrateNewAnalysisStateMachine(AnalysisOrchestrator orchestrator) {
-    if (isNotEmpty(orchestrator.getAnalysisStateMachineQueue())) {
-      AnalysisStateMachine analysisStateMachine = orchestrator.getAnalysisStateMachineQueue().remove(0);
-      stateMachineService.initiateStateMachine(orchestrator.getVerificationTaskId(), analysisStateMachine);
-      orchestrator.setStatus(AnalysisStatus.RUNNING);
-      hPersistence.save(orchestrator);
-    } else {
-      log.info("There is currently nothing new to analyze for cvConfig: {}", orchestrator.getVerificationTaskId());
+  private AnalysisStateMachine getFrontOfStateMachineQueue(String verificationTaskId) {
+    Query<AnalysisOrchestrator> orchestratorQuery =
+        hPersistence.createQuery(AnalysisOrchestrator.class)
+            .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId);
+    UpdateOperations<AnalysisOrchestrator> updateOperations =
+        hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
+            .removeFirst(AnalysisOrchestratorKeys.analysisStateMachineQueue);
+    AnalysisOrchestrator orchestrator =
+        hPersistence.findAndModify(orchestratorQuery, updateOperations, new FindAndModifyOptions().returnNew(false));
+
+    return orchestrator.getAnalysisStateMachineQueue() != null && orchestrator.getAnalysisStateMachineQueue().size() > 0
+        ? orchestrator.getAnalysisStateMachineQueue().get(0)
+        : null;
+  }
+
+  private void orchestrateNewAnalysisStateMachine(String verificationTaskId) {
+    int ignoredCount = 0;
+    List<AnalysisStateMachine> ignoredStatemachines = new ArrayList<>();
+    AnalysisStateMachine analysisStateMachine = null;
+    while (ignoredCount < STATE_MACHINE_IGNORE_LIMIT) {
+      analysisStateMachine = getFrontOfStateMachineQueue(verificationTaskId);
+
+      if (analysisStateMachine == null) {
+        log.info("There is currently nothing to analyze for verificationTaskId {}", verificationTaskId);
+        return;
+      }
+
+      Optional<AnalysisStateMachine> ignoredStateMachine = analysisStateMachine == null
+          ? Optional.empty()
+          : stateMachineService.ignoreOldStatemachine(analysisStateMachine);
+      if (!ignoredStateMachine.isPresent()) {
+        break;
+      }
+      ignoredCount++;
+
+      // add to ignored list and remove from queue
+      ignoredStatemachines.add(ignoredStateMachine.get());
     }
+    if (ignoredCount > 0) {
+      // save all the ignored state machines.
+      stateMachineService.save(ignoredStatemachines);
+    }
+
+    if (analysisStateMachine != null && ignoredCount < STATE_MACHINE_IGNORE_LIMIT) {
+      stateMachineService.initiateStateMachine(verificationTaskId, analysisStateMachine);
+    }
+
+    updateStatusOfOrchestrator(verificationTaskId, AnalysisStatus.RUNNING);
+  }
+
+  private void updateStatusOfOrchestrator(String verificationTaskId, AnalysisStatus status) {
+    Query<AnalysisOrchestrator> orchestratorQuery =
+        hPersistence.createQuery(AnalysisOrchestrator.class)
+            .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId);
+
+    UpdateOperations<AnalysisOrchestrator> updateOperations =
+        hPersistence.createUpdateOperations(AnalysisOrchestrator.class).set(AnalysisOrchestratorKeys.status, status);
+
+    hPersistence.update(orchestratorQuery, updateOperations);
   }
 }

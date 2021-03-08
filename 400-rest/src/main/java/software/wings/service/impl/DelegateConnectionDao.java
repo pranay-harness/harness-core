@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.upToOne;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 import static software.wings.beans.DelegateConnection.TTL;
@@ -11,6 +12,8 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.DelegateConnection;
@@ -33,6 +36,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public class DelegateConnectionDao {
   @Inject private HPersistence persistence;
 
@@ -44,6 +48,16 @@ public class DelegateConnectionDao {
     UpdateOperations<DelegateConnection> updateOperations = persistence.createUpdateOperations(DelegateConnection.class)
                                                                 .set(DelegateConnectionKeys.disconnected, Boolean.TRUE);
     persistence.update(query, updateOperations);
+  }
+
+  public long numberOfActiveDelegateConnectionsPerVersion(String version) {
+    return persistence.createQuery(DelegateConnection.class, excludeAuthority)
+        .field(DelegateConnectionKeys.disconnected)
+        .notEqual(Boolean.TRUE)
+        .field(DelegateConnectionKeys.lastHeartbeat)
+        .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
+        .filter(DelegateConnectionKeys.version, version)
+        .count();
   }
 
   public Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> obtainActiveDelegateConnections(

@@ -124,7 +124,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.k8s.K8sStateHelper;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -168,7 +167,6 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
-  @Mock private K8sStateHelper mockK8sStateHelper;
   @Mock private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
@@ -348,7 +346,6 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
-    doReturn(null).when(mockK8sStateHelper).getDelegateNameAsTagFromK8sCloudProvider(anyString(), any());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
   }
 

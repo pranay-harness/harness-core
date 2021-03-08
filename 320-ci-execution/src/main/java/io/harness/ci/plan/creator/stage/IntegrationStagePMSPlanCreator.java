@@ -13,17 +13,25 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STAGES;
 import static java.lang.Character.toLowerCase;
 import static org.apache.commons.lang3.CharUtils.isAsciiAlphanumeric;
 
+import io.harness.beans.execution.BranchWebhookEvent;
+import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.PRWebhookEvent;
+import io.harness.beans.execution.WebhookEvent;
+import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
+import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -54,7 +62,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageElementConfig> {
   @Inject private KryoSerializer kryoSerializer;
 
@@ -73,15 +83,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     final String podName = generatePodName(stageElementConfig.getIdentifier());
     YamlField executionField = ctx.getCurrentField().getNode().getField(SPEC).getNode().getField(EXECUTION);
 
-    CodeBase ciCodeBase = null;
-    try {
-      YamlNode properties = YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), PROPERTIES);
-      YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
-      ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
-    } catch (Exception ex) {
-      throw new CIStageExecutionUserException("Failed to retrieve ciCodeBase from pipeline");
-    }
-
+    CodeBase ciCodeBase = getCICodebase(ctx);
     ExecutionElementConfig executionElementConfig;
 
     try {
@@ -90,8 +92,9 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       throw new InvalidRequestException("Invalid yaml", e);
     }
     YamlNode parentNode = executionField.getNode().getParentNode();
-    ExecutionElementConfig modifiedExecutionPlan = ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(
-        executionElementConfig, stageElementConfig, ctx, podName, ciCodeBase);
+    ExecutionElementConfig modifiedExecutionPlan =
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(executionElementConfig, stageElementConfig, ctx,
+            podName, ciCodeBase, IntegrationStageStepParametersPMS.getInfrastructure(stageElementConfig, ctx));
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
@@ -109,8 +112,9 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   @Override
   public PlanNode createPlanForParentNode(
       PlanCreationContext ctx, StageElementConfig stageElementConfig, List<String> childrenNodeIds) {
-    StepParameters stepParameters =
-        IntegrationStageStepParametersPMS.getStepParameters(stageElementConfig, childrenNodeIds.get(0));
+    BuildStatusUpdateParameter buildStatusUpdateParameter = obtainBuildStatusUpdateParameter(ctx, stageElementConfig);
+    StepParameters stepParameters = IntegrationStageStepParametersPMS.getStepParameters(
+        stageElementConfig, childrenNodeIds.get(0), buildStatusUpdateParameter, ctx);
 
     return PlanNode.builder()
         .uuid(stageElementConfig.getUuid())
@@ -120,6 +124,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
         .stepParameters(stepParameters)
         .stepType(IntegrationStageStepPMS.STEP_TYPE)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }
@@ -127,7 +132,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (currentField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
       YamlField siblingField =
@@ -154,14 +159,6 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
     return Collections.singletonMap(STAGE, Collections.singleton(STAGE_NAME));
   }
 
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STAGES) != null;
-    }
-    return false;
-  }
-
   private String generatePodName(String identifier) {
     return POD_NAME_PREFIX + "-" + getK8PodIdentifier(identifier) + "-"
         + generateRandomAlphaNumericString(RANDOM_LENGTH);
@@ -186,5 +183,60 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       sb.append(SOURCE.charAt(random.nextInt(SOURCE.length())));
     }
     return sb.toString();
+  }
+
+  private BuildStatusUpdateParameter obtainBuildStatusUpdateParameter(
+      PlanCreationContext ctx, StageElementConfig stageElementConfig) {
+    PlanCreationContextValue planCreationContextValue = ctx.getGlobalContext().get("metadata");
+    ExecutionMetadata executionMetadata = planCreationContextValue.getMetadata();
+
+    CodeBase codeBase = getCICodebase(ctx);
+
+    if (codeBase == null) {
+      //  code base is not mandatory in case git clone is false, Sending status won't be possible
+      return null;
+    }
+
+    ExecutionSource executionSource = IntegrationStageUtils.buildExecutionSource(
+        executionMetadata, stageElementConfig.getIdentifier(), codeBase.getBuild());
+
+    if (executionSource != null && executionSource.getType() == ExecutionSource.Type.WEBHOOK) {
+      String sha = retrieveLastCommitSha((WebhookExecutionSource) executionSource);
+      return BuildStatusUpdateParameter.builder()
+          .sha(sha)
+          .connectorIdentifier(codeBase.getConnectorRef())
+          .name(stageElementConfig.getName())
+          .identifier(stageElementConfig.getIdentifier())
+          .build();
+    } else {
+      return null;
+    }
+  }
+
+  private String retrieveLastCommitSha(WebhookExecutionSource webhookExecutionSource) {
+    if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
+      PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
+      return prWebhookEvent.getBaseAttributes().getAfter();
+    } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
+      BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
+      return branchWebhookEvent.getBaseAttributes().getAfter();
+    }
+
+    log.error("Non supported event type, status will be empty");
+    return "";
+  }
+
+  private CodeBase getCICodebase(PlanCreationContext ctx) {
+    CodeBase ciCodeBase = null;
+    try {
+      YamlNode properties = YamlUtils.getGivenYamlNodeFromParentPath(ctx.getCurrentField().getNode(), PROPERTIES);
+      YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
+      ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
+    } catch (Exception ex) {
+      // Ignore exception because code base is not mandatory in case git clone is false
+      log.warn("Failed to retrieve ciCodeBase from pipeline");
+    }
+
+    return ciCodeBase;
   }
 }

@@ -33,12 +33,16 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
+import io.harness.delegate.beans.DelegateSetupDetails;
+import io.harness.delegate.beans.DelegateSize;
+import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.CEDelegateStatus;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.exception.WingsExceptionMapper;
@@ -57,6 +61,7 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +86,7 @@ public class DelegateSetupResourceTest {
   private static DelegateScopeService delegateScopeService = mock(DelegateScopeService.class);
   private static DownloadTokenService downloadTokenService = mock(DownloadTokenService.class);
   private static SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
+  private static DelegateCache delegateCache = mock(DelegateCache.class);
 
   @Parameter public String apiUrl;
 
@@ -90,17 +96,18 @@ public class DelegateSetupResourceTest {
   }
 
   @ClassRule
-  public final ResourceTestRule RESOURCES = ResourceTestRule.builder()
-                                                .instance(new DelegateSetupResource(delegateService,
-                                                    delegateScopeService, downloadTokenService, subdomainUrlHelper))
-                                                .instance(new AbstractBinder() {
-                                                  @Override
-                                                  protected void configure() {
-                                                    bind(httpServletRequest).to(HttpServletRequest.class);
-                                                  }
-                                                })
-                                                .type(WingsExceptionMapper.class)
-                                                .build();
+  public static final ResourceTestRule RESOURCES =
+      ResourceTestRule.builder()
+          .instance(new DelegateSetupResource(
+              delegateService, delegateScopeService, downloadTokenService, subdomainUrlHelper, delegateCache))
+          .instance(new AbstractBinder() {
+            @Override
+            protected void configure() {
+              bind(httpServletRequest).to(HttpServletRequest.class);
+            }
+          })
+          .type(WingsExceptionMapper.class)
+          .build();
 
   @Test
   @Owner(developers = ROHITKARELIA)
@@ -185,6 +192,29 @@ public class DelegateSetupResourceTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldFetchDelegateSizes() {
+    List<DelegateSizeDetails> delegateSizes = Collections.singletonList(DelegateSizeDetails.builder()
+                                                                            .size(DelegateSize.EXTRA_SMALL)
+                                                                            .label("Extra Small")
+                                                                            .replicas(1)
+                                                                            .taskLimit(50)
+                                                                            .cpu(0.5)
+                                                                            .ram(1650)
+                                                                            .build());
+    when(delegateService.fetchAvailableSizes()).thenReturn(delegateSizes);
+    RestResponse<List<DelegateSizeDetails>> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/delegate-sizes?accountId=" + ACCOUNT_ID)
+            .request()
+            .get(new GenericType<RestResponse<List<DelegateSizeDetails>>>() {});
+    verify(delegateService, atLeastOnce()).fetchAvailableSizes();
+    assertThat(restResponse.getResource().size()).isEqualTo(1);
+    assertThat(restResponse.getResource()).isEqualTo(delegateSizes);
+  }
+
+  @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void shouldValidateCEDelegate() {
@@ -211,13 +241,13 @@ public class DelegateSetupResourceTest {
   public void shouldGet() {
     Delegate delegate = Delegate.builder().uuid(ID_KEY).build();
 
-    when(delegateService.get(ACCOUNT_ID, ID_KEY, true)).thenReturn(delegate);
+    when(delegateCache.get(ACCOUNT_ID, ID_KEY, true)).thenReturn(delegate);
     RestResponse<Delegate> restResponse = RESOURCES.client()
                                               .target("/setup/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID)
                                               .request()
                                               .get(new GenericType<RestResponse<Delegate>>() {});
 
-    verify(delegateService, atLeastOnce()).get(ACCOUNT_ID, ID_KEY, true);
+    verify(delegateCache, atLeastOnce()).get(ACCOUNT_ID, ID_KEY, true);
     assertThat(restResponse.getResource()).isEqualTo(delegate);
   }
 
@@ -259,6 +289,66 @@ public class DelegateSetupResourceTest {
     Delegate resource = restResponse.getResource();
     assertThat(resource.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(resource.getUuid()).isEqualTo(ID_KEY);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldValidateKubernetesYaml() {
+    String accountId = generateUuid();
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .name("name")
+                                            .description("desc")
+                                            .size(DelegateSize.LARGE)
+                                            .delegateConfigurationId("delConfigId")
+                                            .build();
+
+    when(delegateService.validateKubernetesYaml(accountId, setupDetails)).thenReturn(setupDetails);
+    RestResponse<DelegateSetupDetails> restResponse =
+        RESOURCES.client()
+            .target("/setup/delegates/validate-kubernetes-yaml?accountId=" + accountId)
+            .request()
+            .post(entity(setupDetails, MediaType.APPLICATION_JSON),
+                new GenericType<RestResponse<DelegateSetupDetails>>() {});
+
+    DelegateSetupDetails resource = restResponse.getResource();
+    assertThat(resource).isEqualTo(setupDetails);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesYaml() throws Exception {
+    String accountId = generateUuid();
+
+    File file = File.createTempFile("test", ".txt");
+    try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
+      IOUtils.write("Test", outputStreamWriter);
+    }
+
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .sessionIdentifier("sessionId")
+                                            .name("name")
+                                            .description("desc")
+                                            .size(DelegateSize.LARGE)
+                                            .delegateConfigurationId("delConfigId")
+                                            .build();
+
+    when(delegateService.generateKubernetesYaml(
+             eq(accountId), eq(setupDetails), anyString(), anyString(), any(MediaType.class)))
+        .thenReturn(file);
+    Response restResponse = RESOURCES.client()
+                                .target("/setup/delegates/generate-kubernetes-yaml?accountId=" + accountId)
+                                .request()
+                                .post(entity(setupDetails, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
+
+    verify(delegateService, atLeastOnce())
+        .generateKubernetesYaml(eq(accountId), eq(setupDetails), anyString(), anyString(), any(MediaType.class));
+
+    assertThat(restResponse.getHeaderString("Content-Disposition"))
+        .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");
+    assertThat(IOUtils.readLines((InputStream) restResponse.getEntity(), Charset.defaultCharset()).get(0))
+        .isEqualTo("Test");
   }
 
   @Test
@@ -321,7 +411,7 @@ public class DelegateSetupResourceTest {
     DelegateTags delegateTags = new DelegateTags();
     delegateTags.setTags(asList("tag"));
 
-    when(delegateService.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
+    when(delegateCache.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
 
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
@@ -342,7 +432,7 @@ public class DelegateSetupResourceTest {
     delegateScopes.setIncludeScopeIds(asList("Scope1", "Scope2"));
     delegateScopes.setExcludeScopeIds(asList("Scope3", "Scope4"));
 
-    when(delegateService.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
+    when(delegateCache.get(anyString(), anyString(), anyBoolean())).thenReturn(delegate);
 
     RestResponse<Delegate> restResponse =
         RESOURCES.client()
@@ -558,7 +648,7 @@ public class DelegateSetupResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(delegateService.downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString(), false))
+    when(delegateService.downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/setup/delegates/kubernetes?accountId=" + ACCOUNT_ID + "&delegateName="
@@ -569,7 +659,7 @@ public class DelegateSetupResourceTest {
 
     verify(downloadTokenService, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
     verify(delegateService, atLeastOnce())
-        .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString(), false);
+        .downloadKubernetes(anyString(), anyString(), anyString(), anyString(), anyString());
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))
         .isEqualTo("attachment; filename=" + DelegateServiceImpl.KUBERNETES_DELEGATE + ".tar.gz");

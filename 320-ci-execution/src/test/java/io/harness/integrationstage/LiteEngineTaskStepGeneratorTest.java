@@ -6,7 +6,7 @@ import io.harness.beans.stages.IntegrationStage;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.integrationstage.LiteEngineTaskStepGenerator;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 import io.harness.yaml.core.ExecutionElement;
 
@@ -14,7 +14,7 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class LiteEngineTaskStepGeneratorTest extends CIExecutionTest {
+public class LiteEngineTaskStepGeneratorTest extends CIExecutionTestBase {
   @Inject LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
   @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 

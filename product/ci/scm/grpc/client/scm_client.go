@@ -52,7 +52,8 @@ func NewSCMClient(port uint, log *zap.SugaredLogger) (SCMClient, error) {
 		fmt.Sprintf(":%d", port),
 		grpc.WithInsecure(),
 		grpc.WithStreamInterceptor(grpc_retry.StreamClientInterceptor(opts...)),
-		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)))
+		grpc.WithUnaryInterceptor(grpc_retry.UnaryClientInterceptor(opts...)),
+		grpc.WithNoProxy())
 	if err != nil {
 		log.Errorw("Could not create a client to CI SCM", "error_msg", zap.Error(err))
 		return nil, err

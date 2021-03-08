@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.exception.InvalidRequestException;
@@ -55,6 +57,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWithAggregationListAndTags<QLCEAggregation,
     QLCEFilter, QLCEGroupBy, QLCESort, QLCETagType, QLCETagAggregation, QLCELabelAggregation, QLCEEntityGroupBy> {
   @Inject private TimeScaleDBService timeScaleDBService;
@@ -171,8 +174,6 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       Double idleCost = null;
       Double unallocatedCost = null;
       Double systemCost = null;
-      Double maxCpuUtilization = null;
-      Double maxMemoryUtilization = null;
       Double avgCpuUtilization = null;
       Double avgMemoryUtilization = null;
       Double cpuRequest = null;
@@ -182,6 +183,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       String region = "";
       String namespace = "";
       String workload = "";
+      String workloadType = "";
       String node = "";
       String pod = "";
       String task = "";
@@ -213,16 +215,16 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             break;
           case SUM:
           case TOTALCOST:
-            totalCost = resultSet.getDouble(field.getFieldName());
+            totalCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case IDLECOST:
-            idleCost = resultSet.getDouble(field.getFieldName());
+            idleCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case UNALLOCATEDCOST:
-            unallocatedCost = resultSet.getDouble(field.getFieldName());
+            unallocatedCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case SYSTEMCOST:
-            systemCost = resultSet.getDouble(field.getFieldName());
+            systemCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           case REGION:
             region = resultSet.getString(field.getFieldName());
@@ -240,6 +242,9 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             workload = resultSet.getString(field.getFieldName());
             workloads.add(workload);
             break;
+          case WORKLOADTYPE:
+            workloadType = resultSet.getString(field.getFieldName());
+            break;
           case NAMESPACE:
             namespace
             = resultSet.getString(field.getFieldName());
@@ -254,36 +259,30 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           case INSTANCETYPE:
             instanceType = resultSet.getString(field.getFieldName());
             break;
-          case MAXCPUUTILIZATION:
-            maxCpuUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case MAXMEMORYUTILIZATION:
-            maxMemoryUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case AVGCPUUTILIZATION:
-            avgCpuUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case AVGMEMORYUTILIZATION:
-            avgMemoryUtilization = resultSet.getDouble(field.getFieldName());
-            break;
-          case CPUREQUEST:
-            cpuRequest = resultSet.getDouble(field.getFieldName());
-            break;
-          case CPULIMIT:
-            cpuLimit = resultSet.getDouble(field.getFieldName());
-            break;
-          case MEMORYREQUEST:
-            memoryRequest = resultSet.getDouble(field.getFieldName());
-            break;
-          case MEMORYLIMIT:
-            memoryLimit = resultSet.getDouble(field.getFieldName());
-            break;
           case STARTTIME:
           case TIME_SERIES:
             startTime = resultSet.getTimestamp(field.getFieldName(), utils.getDefaultCalendar()).getTime();
             break;
           case INSTANCENAME:
             instanceName = resultSet.getString(field.getFieldName());
+            break;
+          case AGGREGATEDCPULIMIT:
+            cpuLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDCPUREQUEST:
+            cpuRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDCPUUTILIZATIONVALUE:
+            avgCpuUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDMEMORYLIMIT:
+            memoryLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDMEMORYREQUEST:
+            memoryRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            break;
+          case AGGREGATEDMEMORYUTILIZATIONVALUE:
+            avgMemoryUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
             break;
           default:
             break;
@@ -294,6 +293,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
         node = instanceName;
       } else if (instanceType.equals("K8S_POD")) {
         pod = instanceName;
+      } else if (instanceType.equals("K8S_POD_FARGATE")) {
+        pod = instanceName;
       }
 
       final QLCEDataEntryBuilder dataEntryBuilder = QLCEDataEntry.builder();
@@ -301,8 +302,6 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           .idleCost(idleCost)
           .unallocatedCost(unallocatedCost)
           .systemCost(systemCost)
-          .maxCpuUtilization(maxCpuUtilization)
-          .maxMemoryUtilization(maxMemoryUtilization)
           .avgCpuUtilization(avgCpuUtilization)
           .avgMemoryUtilization(avgMemoryUtilization)
           .cpuLimit(cpuLimit)
@@ -312,7 +311,13 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           .region(region)
           .harness(
               QLCEHarnessEntity.builder().application(application).service(service).environment(environment).build())
-          .k8s(QLCEK8sEntity.builder().namespace(namespace).node(node).pod(pod).workload(workload).build())
+          .k8s(QLCEK8sEntity.builder()
+                   .namespace(namespace)
+                   .node(node)
+                   .pod(pod)
+                   .workload(workload)
+                   .workloadType(workloadType)
+                   .build())
           .ecs(QLCEEcsEntity.builder().launchType(launchType).service(ecsService).taskId(task).build())
           .cluster(cluster)
           .clusterId(clusterId)
@@ -433,6 +438,10 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           break;
       }
     }
+  }
+
+  private double getRoundedDoubleValue(double value) {
+    return Math.round(value * 100D) / 100D;
   }
 
   @Override

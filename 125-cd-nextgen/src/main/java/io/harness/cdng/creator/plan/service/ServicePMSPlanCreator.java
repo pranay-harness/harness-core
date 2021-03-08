@@ -3,12 +3,15 @@ package io.harness.cdng.creator.plan.service;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executionplan.plancreator.beans.PlanCreatorConstants;
+import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -35,30 +38,32 @@ public class ServicePMSPlanCreator {
       YamlField serviceField, ServiceConfig serviceConfig, KryoSerializer kryoSerializer) {
     YamlNode serviceNode = serviceField.getNode();
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
-    if (!actualServiceConfig.getName().isExpression()
-        && EmptyPredicate.isEmpty(actualServiceConfig.getName().getValue())) {
-      actualServiceConfig.setName(actualServiceConfig.getIdentifier());
+    ServiceYaml actualServiceYaml = actualServiceConfig.getService();
+    if (actualServiceYaml != null && EmptyPredicate.isEmpty(actualServiceYaml.getName())) {
+      actualServiceYaml.setName(actualServiceYaml.getIdentifier());
     }
     ServiceConfig serviceOverrides = null;
     if (actualServiceConfig.getUseFromStage() != null) {
       ServiceUseFromStage.Overrides overrides = actualServiceConfig.getUseFromStage().getOverrides();
       if (overrides != null) {
-        serviceOverrides =
-            ServiceConfig.builder().name(overrides.getName()).description(overrides.getDescription()).build();
+        ServiceYaml overriddenEntity =
+            ServiceYaml.builder().name(overrides.getName().getValue()).description(overrides.getDescription()).build();
+        serviceOverrides = ServiceConfig.builder().service(overriddenEntity).build();
       }
     }
     StepParameters stepParameters =
-        ServiceStepParameters.builder().service(serviceConfig).serviceOverrides(serviceOverrides).build();
+        ServiceStepParameters.builder().service(actualServiceConfig).serviceOverrides(serviceOverrides).build();
     return PlanNode.builder()
         .uuid(serviceNode.getUuid())
         .stepType(ServiceStep.STEP_TYPE)
         .name(PlanCreatorConstants.SERVICE_NODE_NAME)
-        .identifier(PlanCreatorConstants.SERVICE_NODE_IDENTIFIER)
+        .identifier(YamlTypes.SERVICE_CONFIG)
         .stepParameters(stepParameters)
+        .stepInputs(stepParameters.toViewJson())
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder().setType(TaskChainFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode, kryoSerializer))
-        .skipExpressionChain(false)
+        .skipExpressionChain(true)
         .build();
   }
 
@@ -70,13 +75,14 @@ public class ServicePMSPlanCreator {
       }
       try {
         //  Add validation for not chaining of stages
-        DeploymentStageConfig deploymentStage = YamlUtils.read(
+        StageElementConfig stageElementConfig = YamlUtils.read(
             PlanCreatorUtils.getStageConfig(serviceField, serviceConfig.getUseFromStage().getStage().getValue())
                 .getNode()
                 .toString(),
-            DeploymentStageConfig.class);
+            StageElementConfig.class);
+        DeploymentStageConfig deploymentStage = (DeploymentStageConfig) stageElementConfig.getStageType();
         if (deploymentStage != null) {
-          return serviceConfig.applyUseFromStage(deploymentStage.getService());
+          return serviceConfig.applyUseFromStage(deploymentStage.getServiceConfig());
         } else {
           throw new InvalidArgumentsException("Stage identifier given in useFromStage doesn't exist.");
         }

@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import static io.harness.annotations.dev.Module._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
 import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
@@ -17,6 +18,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
@@ -75,6 +77,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 @Slf4j
+@TargetModule(_420_DELEGATE_AGENT)
 public class DelegateApplication {
   private static String processId = String.valueOf(ProcessControl.myProcessId());
   private static DelegateConfiguration configuration;

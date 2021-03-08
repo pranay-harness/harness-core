@@ -2,13 +2,13 @@ package software.wings.service.impl.template;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.delegate.task.shell.ScriptType.BASH;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.shell.ScriptType.BASH;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -58,6 +58,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.beans.CommandCategory;
@@ -115,6 +116,8 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
   @Inject private TemplateServiceImpl templateServiceImpl;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
   @Inject private ImportedTemplateService importedTemplateService;
+  @Inject private HPersistence persistence;
+
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
@@ -441,7 +444,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                             .customSecretsManagerShellScript(script)
                                             .testVariables(new HashSet<>())
                                             .build();
-    wingsPersistence.save(config);
+    persistence.save(config);
     templateService.delete(savedTemplate.getAccountId(), savedTemplate.getUuid());
   }
 
@@ -1250,7 +1253,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                      .templateUuid(template.getUuid())
                                      .templateType(SSH)
                                      .build();
-    wingsPersistence.save(newVersion);
+    persistence.save(newVersion);
     saveImportedTemplate(getSshCommandTemplate("test", GLOBAL_APP_ID), commandName_1, commandStoreName, "2.1", false);
 
     List<ImportedCommand> importedTemplateLatestVersions = templateVersionService.listLatestVersionOfImportedTemplates(
@@ -1529,7 +1532,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
                                               .commandStoreName(commandStoreName)
                                               .templateId(template.getUuid())
                                               .build();
-      wingsPersistence.save(importedTemplate);
+      persistence.save(importedTemplate);
     }
 
     return templateService.get(template.getUuid());

@@ -14,11 +14,11 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.TaskType;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
@@ -29,6 +29,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.stackdriver.StackDriverDataCollectionInfo;
 import software.wings.service.impl.stackdriver.StackdriverDataFetchParameters;
 import software.wings.service.intfc.analysis.ClusterLevel;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.stackdriver.StackDriverDelegateService;
 import software.wings.sm.StateType;
 
@@ -65,6 +66,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
   @Inject private StackDriverDelegateService stackDriverDelegateService;
   @Inject private DelegateLogService delegateLogService;
   @Inject private GcpHelperService gcpHelperService;
+  @Inject private EncryptionService encryptionService;
 
   public StackDriverDataCollectionTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
@@ -215,12 +217,14 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
     }
 
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(
-        StackdriverDataFetchParameters dataFetchParameters) throws IOException {
+        StackdriverDataFetchParameters dataFetchParameters) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
 
       String projectId = stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
-      Monitoring monitoring = gcpHelperService.getMonitoringService(
-          dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), projectId);
+      encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
+      Monitoring monitoring =
+          gcpHelperService.getMonitoringService(dataCollectionInfo.getGcpConfig().getServiceAccountKeyFileContent(),
+              projectId, dataCollectionInfo.getGcpConfig().isUseDelegate());
       dataFetchParameters.setProjectId(projectId);
       dataFetchParameters.setMonitoring(monitoring);
 
@@ -375,7 +379,7 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
           if (isPredictiveAnalysis) {
             collectionStartTime = startTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
           } else {
-            return dataCollectionMinute;
+            return (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
           }
           collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
         }
@@ -399,8 +403,8 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
 
-      long endTime = collectionStartTime;
-      long startTime = endTime - TimeUnit.MINUTES.toMillis(1);
+      long startTime = collectionStartTime;
+      long endTime = startTime + TimeUnit.MINUTES.toMillis(1);
 
       if (!isEmpty(dataCollectionInfo.getTimeSeriesToCollect())) {
         Map<String, String> hostToGroupNameMap = new HashMap<>();
@@ -424,9 +428,11 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
                   Optional.ofNullable(timeSeriesDefinition.getAggregation().getPerSeriesAligner()));
               dataFetchParameters.setCrossSeriesReducer(
                   Optional.ofNullable(timeSeriesDefinition.getAggregation().getCrossSeriesReducer()));
-              dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
-              dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
-                  + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+              if (is24X7Task()) {
+                dataFetchParameters.setStartTime(dataCollectionInfo.getStartTime());
+                dataFetchParameters.setEndTime(dataCollectionInfo.getStartTime()
+                    + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime()));
+              }
               callables.add(() -> getMetricDataRecords(dataFetchParameters));
             }));
       }

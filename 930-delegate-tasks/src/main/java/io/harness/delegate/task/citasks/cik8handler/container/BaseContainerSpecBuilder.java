@@ -7,11 +7,16 @@ package io.harness.delegate.task.citasks.cik8handler.container;
  */
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.k8s.KubernetesConvention.getKubernetesRegistrySecretName;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DIND_TAG_REGEX;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DOCKER_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_ACR_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_DOCKER_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_ECR_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_GCR_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_HEROKU_IMAGE_NAME;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.ci.pod.ContainerParams;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
@@ -31,6 +36,7 @@ import io.fabric8.kubernetes.api.model.ResourceRequirements;
 import io.fabric8.kubernetes.api.model.ResourceRequirementsBuilder;
 import io.fabric8.kubernetes.api.model.SecretKeySelectorBuilder;
 import io.fabric8.kubernetes.api.model.SecretVolumeSourceBuilder;
+import io.fabric8.kubernetes.api.model.SecurityContextBuilder;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
 import io.fabric8.kubernetes.api.model.VolumeMount;
@@ -89,10 +95,8 @@ public abstract class BaseContainerSpecBuilder {
 
     LocalObjectReference imageSecret = null;
     ImageDetails imageDetails = containerParams.getImageDetailsWithConnector().getImageDetails();
-    if (isNotBlank(imageDetails.getRegistryUrl()) && isNotBlank(imageDetails.getUsername())
-        && isNotBlank(imageDetails.getPassword())) {
-      String secretName = getKubernetesRegistrySecretName(imageDetails);
-      imageSecret = new LocalObjectReference(secretName);
+    if (containerParams.getImageSecret() != null) {
+      imageSecret = new LocalObjectReference(containerParams.getImageSecret());
     }
 
     ResourceRequirements resourceRequirements = getResourceRequirements(containerParams.getContainerResourceParams());
@@ -101,6 +105,7 @@ public abstract class BaseContainerSpecBuilder {
     if (isNotEmpty(imageDetails.getTag())) {
       imageName = imageName + ":" + imageDetails.getTag();
     }
+
     ContainerBuilder containerBuilder = new ContainerBuilder()
                                             .withName(containerParams.getName())
                                             .withImage(imageName)
@@ -111,6 +116,10 @@ public abstract class BaseContainerSpecBuilder {
                                             .withPorts(containerPorts)
                                             .withVolumeMounts(volumeMounts);
 
+    if (isPrivilegedImage(imageDetails)) {
+      containerBuilder.withSecurityContext(new SecurityContextBuilder().withPrivileged(true).build());
+    }
+
     if (isNotEmpty(containerParams.getWorkingDir())) {
       containerBuilder.withWorkingDir(containerParams.getWorkingDir());
     }
@@ -120,6 +129,21 @@ public abstract class BaseContainerSpecBuilder {
         .imageSecret(imageSecret)
         .volumes(volumes)
         .build();
+  }
+
+  private boolean isPrivilegedImage(ImageDetails imageDetails) {
+    String imageName = imageDetails.getName();
+    String tag = imageDetails.getTag();
+    if (imageName.equals(PLUGIN_DOCKER_IMAGE_NAME) || imageName.equals(PLUGIN_ECR_IMAGE_NAME)
+        || imageName.equals(PLUGIN_ACR_IMAGE_NAME) || imageName.equals(PLUGIN_GCR_IMAGE_NAME)
+        || imageName.equals(PLUGIN_HEROKU_IMAGE_NAME)) {
+      return true;
+    }
+
+    if (imageName.equals(DOCKER_IMAGE_NAME) && isNotEmpty(tag) && tag.matches(DIND_TAG_REGEX)) {
+      return true;
+    }
+    return false;
   }
 
   private ResourceRequirements getResourceRequirements(ContainerResourceParams containerResourceParams) {

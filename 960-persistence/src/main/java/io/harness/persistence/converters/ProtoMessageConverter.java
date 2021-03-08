@@ -1,4 +1,5 @@
 package io.harness.persistence.converters;
+
 import com.google.inject.Singleton;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;

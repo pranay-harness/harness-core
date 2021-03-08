@@ -42,11 +42,13 @@ public class FailureStrategy {
     private String repairActionCodeAfterRetry;
     private FailureCriteria failureCriteria;
     private List<String> specificSteps = new ArrayList<>();
+    private String actionAfterTimeout;
+    private Long manualInterventionTimeout;
 
     @Builder
     public Yaml(List<String> failureTypes, String executionScope, String repairActionCode, int retryCount,
         List<Integer> retryIntervals, String repairActionCodeAfterRetry, FailureCriteria failureCriteria,
-        List<String> specificSteps) {
+        List<String> specificSteps, String actionAfterTimeout, Long manualInterventionTimeout) {
       this.failureTypes = failureTypes;
       this.executionScope = executionScope;
       this.repairActionCode = repairActionCode;
@@ -55,6 +57,8 @@ public class FailureStrategy {
       this.repairActionCodeAfterRetry = repairActionCodeAfterRetry;
       this.failureCriteria = failureCriteria;
       this.specificSteps = specificSteps;
+      this.actionAfterTimeout = actionAfterTimeout;
+      this.manualInterventionTimeout = manualInterventionTimeout;
     }
   }
 }

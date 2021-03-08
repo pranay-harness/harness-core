@@ -5,6 +5,7 @@ import static java.util.Collections.singletonList;
 
 import io.harness.cache.CacheConfig;
 import io.harness.ccm.setup.config.CESetUpConfig;
+import io.harness.cf.CfClientConfig;
 import io.harness.commandlibrary.CommandLibraryServiceConfig;
 import io.harness.config.DatadogConfig;
 import io.harness.config.GcpMarketplaceConfig;
@@ -168,6 +169,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

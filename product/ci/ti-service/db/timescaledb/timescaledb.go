@@ -4,19 +4,26 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/go-multierror"
 	"github.com/wings-software/portal/commons/go/lib/db"
 	"go.uber.org/zap"
+	"gopkg.in/guregu/null.v4/zero"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
 const (
-	defaultOffset = "0"
-	defaultLimit  = "100"
-	asc           = "ASC"
-	desc          = "DESC"
+	defaultOffset  = "0"
+	defaultLimit   = "100"
+	asc            = "ASC"
+	desc           = "DESC"
+	writeBatchSize = 1000 // Write this many test cases at a time
+)
+
+var (
+	now = time.Now
 )
 
 // TimeScaleDb is a wrapper on top of a timescale DB connection.
@@ -41,38 +48,75 @@ func New(username, password, host, port, dbName string, log *zap.SugaredLogger) 
 	return &TimeScaleDb{Conn: db, Log: log}, nil
 }
 
+func constructPsqlInsertStmt(low, high int) string {
+	s := "("
+	for i := low; i <= high; i++ {
+		s = s + fmt.Sprintf("$%d", i)
+		if i != high {
+			s = s + ", "
+		}
+	}
+	s = s + ")"
+	return s
+}
+
 // Write writes test cases to DB
 func (tdb *TimeScaleDb) Write(ctx context.Context, table, accountId, orgId, projectId, pipelineId,
 	buildId, stageId, stepId, report string, tests ...*types.TestCase) error {
-	query := fmt.Sprintf(
-		`
-		INSERT INTO %s
-		(time, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
-		class_name, duration_ms, status, message, type, description, stdout, stderr)
-		VALUES
-		(Now(), $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`, table)
-
-	var merror error
-
+	t := now()
+	entries := 19
+	valueStrings := make([]string, 0, len(tests))
+	valueArgs := make([]interface{}, 0, len(tests)*entries)
+	i := 1
+	cnt := 0
 	for _, test := range tests {
-		timeMs := test.Duration.Milliseconds()
-		status := test.Result.Status
-
-		_, err := tdb.Conn.Exec(query, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, test.Name, test.SuiteName, test.ClassName, timeMs, status,
-			test.Result.Message, test.Result.Type, test.Result.Desc, test.SystemOut, test.SystemErr)
-		if err != nil {
-			// Log the error but continue
-			tdb.Log.Errorw("errored while trying to write testcases to DB", zap.Error(err))
-			merror = multierror.Append(merror, err)
+		// Do a batch insert to avoid frequent DB calls
+		valueStrings = append(valueStrings, constructPsqlInsertStmt(i, i+entries-1))
+		valueArgs = append(valueArgs, t, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, test.Name, test.SuiteName,
+			test.ClassName, test.DurationMs, test.Result.Status, test.Result.Message, test.Result.Type, test.Result.Desc,
+			test.SystemOut, test.SystemErr)
+		i = i + entries
+		cnt++
+		if cnt%writeBatchSize == 0 {
+			stmt := fmt.Sprintf(
+				`
+					INSERT INTO %s
+					(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
+					class_name, duration_ms, result, message, type, description, stdout, stderr)
+					VALUES %s`, table, strings.Join(valueStrings, ","))
+			_, err := tdb.Conn.Exec(stmt, valueArgs...)
+			if err != nil {
+				tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+				return err
+			}
+			// Reset all the values
+			cnt = 0
+			i = 1
+			valueStrings = []string{}
+			valueArgs = []interface{}{}
 		}
 	}
-	return merror
+	if cnt > 0 {
+		stmt := fmt.Sprintf(
+			`
+				INSERT INTO %s
+				(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, report, name, suite_name,
+				class_name, duration_ms, result, message, type, description, stdout, stderr)
+				VALUES %s`, table, strings.Join(valueStrings, ","))
+		_, err := tdb.Conn.Exec(stmt, valueArgs...)
+		if err != nil {
+			tdb.Log.Errorw("could not write test data to database", zap.Error(err))
+			return err
+		}
+	}
+	return nil
 }
 
 // Summary provides test case summary by querying the DB
-func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, pipelineId, buildId, report string) (types.SummaryResponse, error) {
+func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, projectId, pipelineId,
+	buildId, report string) (types.SummaryResponse, error) {
 	query := fmt.Sprintf(`
-		SELECT duration_ms, status, name FROM %s WHERE account_id = $1
+		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
 		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6;`, table)
 
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, report)
@@ -81,20 +125,21 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, table, accountId, orgId, pr
 		return types.SummaryResponse{}, err
 	}
 	total := 0
-	timeTakenMs := 0
+	var timeTakenMs int64
 	tests := []types.TestSummary{}
 	for rows.Next() {
-		var time int
+		var zdur zero.Int
 		var status string
 		var testName string
-		err = rows.Scan(&time, &status, &testName)
+		err = rows.Scan(&zdur, &status, &testName)
 		if err != nil {
 			// Log error and return
 			tdb.Log.Errorw("could not read summary response from DB", zap.Error(err))
 			return types.SummaryResponse{}, err
 		}
 		total++
-		timeTakenMs = timeTakenMs + time
+		timeTakenMs = timeTakenMs + zdur.ValueOrZero()
+
 		tests = append(tests, types.TestSummary{Name: testName, Status: types.Status(status)})
 	}
 	if rows.Err() != nil {
@@ -118,10 +163,10 @@ func (tdb *TimeScaleDb) GetTestCases(
 	// default order is to display failed and errored tests first
 	failureOrder := `
 	CASE
-		WHEN status = 'failed' THEN 1
-		WHEN status = 'error' THEN 2
-		WHEN status = 'skipped' THEN 3
-		WHEN status = 'passed' THEN 4
+		WHEN result = 'failed' THEN 1
+		WHEN result = 'error' THEN 2
+		WHEN result = 'skipped' THEN 3
+		WHEN result = 'passed' THEN 4
 		ELSE 5
 	END`
 	if offset == "" {
@@ -150,10 +195,10 @@ func (tdb *TimeScaleDb) GetTestCases(
 	}
 	query := fmt.Sprintf(
 		`
-		SELECT name, suite_name, class_name, duration_ms, status, message,
+		SELECT name, suite_name, class_name, duration_ms, result, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND suite_name = $7 AND result IN (%s)
 		ORDER BY %s %s, %s %s
 		LIMIT $8 OFFSET $9;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
 	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, report, suiteName, limit, offset)
@@ -165,13 +210,23 @@ func (tdb *TimeScaleDb) GetTestCases(
 	total := 0
 	for rows.Next() {
 		var t types.TestCase
-		err = rows.Scan(&t.Name, &t.SuiteName, &t.ClassName, &t.Duration, &t.Result.Status, &t.Result.Message,
-			&t.Result.Desc, &t.Result.Type, &t.SystemOut, &t.SystemErr, &total)
+		// Postgres may return null for empty strings for some versions
+		var zsuite, zclass, zmessage, zdesc, ztype, zout, zerr zero.String
+		var zdur zero.Int
+		err = rows.Scan(&t.Name, &zsuite, &zclass, &zdur, &t.Result.Status, &zmessage, &zdesc, &ztype, &zout, &zerr, &total)
 		if err != nil {
 			// Log error and return
 			tdb.Log.Errorw("could not read test case response from DB", zap.Error(err))
 			return types.TestCases{}, err
 		}
+		t.SuiteName = zsuite.ValueOrZero()
+		t.ClassName = zclass.ValueOrZero()
+		t.Result.Message = zmessage.ValueOrZero()
+		t.Result.Desc = zdesc.ValueOrZero()
+		t.Result.Type = ztype.ValueOrZero()
+		t.SystemOut = zout.ValueOrZero()
+		t.SystemErr = zerr.ValueOrZero()
+		t.DurationMs = zdur.ValueOrZero()
 		tests = append(tests, t)
 	}
 	if rows.Err() != nil {
@@ -232,13 +287,13 @@ func (tdb *TimeScaleDb) GetTestSuites(
 	query := fmt.Sprintf(
 		`
 		SELECT suite_name, SUM(duration_ms) AS duration_ms, COUNT(*) AS total_tests,
-		SUM(CASE WHEN status = 'skipped' THEN 1 ELSE 0 END) AS skipped_tests,
-		SUM(CASE WHEN status = 'passed' THEN 1 ELSE 0 END) AS passed_tests,
-		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) AS failed_tests,
-		SUM(CASE WHEN status = 'failed' OR status = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
+		SUM(CASE WHEN result = 'skipped' THEN 1 ELSE 0 END) AS skipped_tests,
+		SUM(CASE WHEN result = 'passed' THEN 1 ELSE 0 END) AS passed_tests,
+		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) AS failed_tests,
+		SUM(CASE WHEN result = 'failed' OR result = 'error' THEN 1 ELSE 0 END) * 100 / COUNT(*) AS fail_pct,
 		COUNT(*) OVER() AS full_count
 		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND status IN (%s)
+		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND report = $6 AND result IN (%s)
 		GROUP BY suite_name
 		ORDER BY %s %s, %s %s
 		LIMIT $7 OFFSET $8;`, table, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
@@ -251,12 +306,14 @@ func (tdb *TimeScaleDb) GetTestSuites(
 	total := 0
 	for rows.Next() {
 		var t types.TestSuite
-		err = rows.Scan(&t.Name, &t.TimeMs, &t.TotalTests, &t.SkippedTests, &t.PassedTests, &t.FailedTests, &t.FailPct, &total)
+		var zdur zero.Int
+		err = rows.Scan(&t.Name, &zdur, &t.TotalTests, &t.SkippedTests, &t.PassedTests, &t.FailedTests, &t.FailPct, &total)
 		if err != nil {
 			// Log the error and return
 			tdb.Log.Errorw("could not read suite response from DB", zap.Error(err))
 			return types.TestSuites{}, err
 		}
+		t.DurationMs = zdur.ValueOrZero()
 		testSuites = append(testSuites, t)
 	}
 	if rows.Err() != nil {

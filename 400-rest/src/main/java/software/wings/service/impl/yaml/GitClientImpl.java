@@ -9,9 +9,11 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.shell.AuthenticationScheme.HTTP_PASSWORD;
+import static io.harness.shell.AuthenticationScheme.KERBEROS;
+import static io.harness.shell.SshSessionFactory.generateTGTUsingSshConfig;
+import static io.harness.shell.SshSessionFactory.getSSHSession;
 
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_HELM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
@@ -19,8 +21,6 @@ import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
-import static software.wings.core.ssh.executors.SshSessionFactory.generateTGTUsingSshConfig;
-import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -28,6 +28,8 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitClientException;
@@ -39,12 +41,13 @@ import io.harness.git.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
 import io.harness.git.model.GitRepositoryType;
+import io.harness.logging.NoopExecutionCallback;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitOperationContext;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.beans.yaml.GitCheckoutResult;
 import software.wings.beans.yaml.GitCloneResult;
 import software.wings.beans.yaml.GitCommitRequest;
@@ -54,7 +57,6 @@ import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.service.intfc.yaml.GitClient;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -129,6 +131,7 @@ import org.eclipse.jgit.util.HttpSupport;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
 
@@ -907,7 +910,7 @@ public class GitClientImpl implements GitClient {
       LsRemoteCommand lsRemoteCommand = Git.lsRemoteRepository();
       lsRemoteCommand = (LsRemoteCommand) getAuthConfiguredCommand(lsRemoteCommand, gitConfig);
       Collection<Ref> refs = lsRemoteCommand.setRemote(repoUrl).setHeads(true).setTags(true).call();
-      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches [{}]", refs);
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Remote branches found, validation success.");
     } catch (Exception e) {
       log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}]", e);
 

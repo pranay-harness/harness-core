@@ -1,14 +1,18 @@
 package io.harness.ngtriggers.helpers;
 
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.FAILED_TO_FETCH_PR_DETAILS;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOUND_FOR_REPO;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_PROJECT;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
-import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static io.grpc.Status.UNAVAILABLE;
@@ -17,9 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.execution.PlanExecution;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
-import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
@@ -27,6 +29,7 @@ import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse.ParsePayloadResponseBuilder;
+import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.rule.Owner;
 
 import io.grpc.StatusRuntimeException;
@@ -87,10 +90,14 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
   public void testIsFinalStatusAnEvent() {
     assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(INVALID_PAYLOAD)).isTrue();
     assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_REPO)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOUND_FOR_REPO)).isTrue();
     assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(INVALID_RUNTIME_INPUT_YAML)).isTrue();
     assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(TARGET_DID_NOT_EXECUTE)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(TARGET_EXECUTION_REQUESTED)).isTrue();
+    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS)).isTrue();
+    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE)).isTrue();
+    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_EVENT_ACTION)).isTrue();
+    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOR_PROJECT)).isTrue();
+    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(EXCEPTION_WHILE_PROCESSING)).isTrue();
+    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(FAILED_TO_FETCH_PR_DETAILS)).isTrue();
   }
 
   @Test
@@ -101,8 +108,10 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
         TriggerWebhookEvent.builder().createdAt(123l).payload("payload").accountId("accountId").build();
 
     ParsePayloadResponseBuilder parsePayloadResponse =
-        ParsePayloadResponse.builder().originalEvent(event).exceptionOccured(true).exception(
-            new InvalidRequestException("test"));
+        ParsePayloadResponse.builder()
+            .webhookPayloadData(WebhookPayloadData.builder().originalEvent(event).build())
+            .exceptionOccured(true)
+            .exception(new InvalidRequestException("test"));
 
     WebhookEventResponse webhookEventResponse =
         WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse.build());

@@ -33,6 +33,7 @@ import io.harness.distribution.constraint.UnableToLoadConstraintException;
 import io.harness.distribution.constraint.UnableToRegisterConsumerException;
 import io.harness.distribution.constraint.UnableToSaveConstraintException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint;
 import io.harness.steps.resourcerestraint.beans.ResourceConstraint.ResourceConstraintKeys;
@@ -107,6 +108,17 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   @ValidationGroups(Update.class)
   public void update(ResourceConstraint resourceConstraint) {
+    List<ResourceConstraintInstance> resourceConstraintInstances =
+        wingsPersistence.createQuery(ResourceConstraintInstance.class, excludeAuthority)
+            .filter(ResourceConstraintInstanceKeys.resourceConstraintId, resourceConstraint.getUuid())
+            .filter(ResourceConstraintInstanceKeys.state, State.ACTIVE.name())
+            .project(ResourceConstraintInstanceKeys.permits, true)
+            .asList();
+    int currentUsage = resourceConstraintInstances.stream().mapToInt(ResourceConstraintInstance::getPermits).sum();
+    if (resourceConstraint.getCapacity() < currentUsage) {
+      throw new InvalidRequestException(
+          "Resource Constraint capacity cannot be less than the current usage", WingsException.USER);
+    }
     wingsPersistence.merge(resourceConstraint);
   }
 

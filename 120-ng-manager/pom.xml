@@ -62,6 +62,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>130-resource-group</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>136-git-sync-manager</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -77,7 +82,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>900-yaml-sdk</artifactId>
+            <artifactId>909-access-control-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>920-delegate-service-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -102,7 +112,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>955-setup-usage-sdk</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-notification-beans</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>960-yaml-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -233,19 +253,6 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>software.wings</groupId>
-                <artifactId>899-yaml-schema-plugin</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>compile</phase>
                     </execution>
                 </executions>
             </plugin>

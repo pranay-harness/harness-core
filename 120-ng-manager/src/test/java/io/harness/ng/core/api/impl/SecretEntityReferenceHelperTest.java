@@ -14,7 +14,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.EntitySetupUsageHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
@@ -38,7 +38,7 @@ import org.mockito.MockitoAnnotations;
 public class SecretEntityReferenceHelperTest extends CategoryTest {
   @InjectMocks SecretEntityReferenceHelper secretEntityReferenceHelper;
   @Mock EntitySetupUsageClient entityReferenceClient;
-  @Mock AbstractProducer abstractProducer;
+  @Mock Producer eventProducer;
   @Mock EntitySetupUsageHelper entityReferenceHelper;
   @Mock IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
 
@@ -73,7 +73,7 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     secretEntityReferenceHelper.createSetupUsageForSecretManager(encryptedDataDTO);
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     try {
-      verify(abstractProducer, times(1)).send(argumentCaptor.capture());
+      verify(eventProducer, times(1)).send(argumentCaptor.capture());
     } catch (ProducerShutdownException e) {
       e.printStackTrace();
     }
@@ -113,7 +113,7 @@ public class SecretEntityReferenceHelperTest extends CategoryTest {
     ArgumentCaptor<Message> argumentCaptor = ArgumentCaptor.forClass(Message.class);
     secretEntityReferenceHelper.deleteSecretEntityReferenceWhenSecretGetsDeleted(encryptedDataDTO);
     try {
-      verify(abstractProducer, times(1)).send(argumentCaptor.capture());
+      verify(eventProducer, times(1)).send(argumentCaptor.capture());
     } catch (ProducerShutdownException e) {
       e.printStackTrace();
     }

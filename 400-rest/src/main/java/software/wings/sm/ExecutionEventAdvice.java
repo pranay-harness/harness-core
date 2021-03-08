@@ -32,6 +32,7 @@ public class ExecutionEventAdvice {
   private Long timeout;
   private List<String> userGroupIdsToNotify;
   private ExecutionResponse executionResponse;
+  private ExecutionInterruptType actionAfterManualInterventionTimeout;
 
   public static final class ExecutionEventAdviceBuilder {
     private ExecutionInterruptType executionInterruptType;
@@ -48,6 +49,7 @@ public class ExecutionEventAdvice {
     private RepairActionCode actionOnTimeout;
     private List<String> userGroupIdsToNotify;
     private ExecutionResponse executionResponse;
+    private ExecutionInterruptType actionAfterManualInterventionTimeout;
 
     private ExecutionEventAdviceBuilder() {}
 
@@ -125,6 +127,12 @@ public class ExecutionEventAdvice {
       return this;
     }
 
+    public ExecutionEventAdviceBuilder withActionAfterManualInterventionTimeout(
+        ExecutionInterruptType actionAfterManualInterventionTimeout) {
+      this.actionAfterManualInterventionTimeout = actionAfterManualInterventionTimeout;
+      return this;
+    }
+
     public ExecutionEventAdvice build() {
       ExecutionEventAdvice executionEventAdvice = new ExecutionEventAdvice();
       executionEventAdvice.setExecutionInterruptType(executionInterruptType);
@@ -141,6 +149,7 @@ public class ExecutionEventAdvice {
       executionEventAdvice.setTimeout(timeout);
       executionEventAdvice.setExecutionResponse(executionResponse);
       executionEventAdvice.setUserGroupIdsToNotify(userGroupIdsToNotify);
+      executionEventAdvice.setActionAfterManualInterventionTimeout(actionAfterManualInterventionTimeout);
       return executionEventAdvice;
     }
   }

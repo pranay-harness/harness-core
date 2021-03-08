@@ -1,8 +1,7 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
-
-import static software.wings.core.ssh.executors.SshSessionFactory.getCopyOfKey;
+import static io.harness.shell.SshSessionFactory.getCopyOfKey;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -10,6 +9,8 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.shell.SshSessionConfig;
+import io.harness.shell.SshSessionFactory;
 
 import java.io.File;
 import org.junit.Test;

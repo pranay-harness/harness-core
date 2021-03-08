@@ -40,12 +40,17 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>960-recaster</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>950-timeout-engine</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>890-pms-contracts-proto</artifactId>
+            <artifactId>890-pms-contracts</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

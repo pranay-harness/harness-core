@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -21,8 +22,11 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   private final MongoTemplate mongoTemplate;
 
   @Override
-  public Page<Organization> findAll(Criteria criteria, Pageable pageable) {
+  public Page<Organization> findAll(Criteria criteria, Pageable pageable, boolean ignoreCase) {
     Query query = new Query(criteria).with(pageable);
+    if (ignoreCase) {
+      query.collation(Collation.of("en").strength(Collation.ComparisonLevel.primary()));
+    }
     List<Organization> organizations = mongoTemplate.find(query, Organization.class);
     return PageableExecutionUtils.getPage(
         organizations, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), Organization.class));
@@ -32,6 +36,19 @@ public class OrganizationRepositoryCustomImpl implements OrganizationRepositoryC
   public List<Organization> findAll(Criteria criteria) {
     Query query = new Query(criteria);
     return mongoTemplate.find(query, Organization.class);
+  }
+
+  @Override
+  public boolean restore(String accountIdentifier, String identifier) {
+    Criteria criteria = Criteria.where(OrganizationKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(OrganizationKeys.identifier)
+                            .is(identifier)
+                            .and(OrganizationKeys.deleted)
+                            .is(Boolean.TRUE);
+    Query query = new Query(criteria);
+    Update update = new Update().set(OrganizationKeys.deleted, Boolean.FALSE);
+    return mongoTemplate.findAndModify(query, update, Organization.class) != null;
   }
 
   @Override

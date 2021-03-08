@@ -1,6 +1,6 @@
 package io.harness.pms.plan.execution;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
@@ -38,7 +38,7 @@ public class PipelineExecuteHelper {
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
-      String eventPayload, ExecutionTriggerInfo triggerInfo) throws IOException {
+      ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -47,16 +47,18 @@ public class PipelineExecuteHelper {
 
     String pipelineYaml;
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
+                                                             .setExecutionUuid(generateUuid())
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
 
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
-      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml);
+      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
       executionMetadataBuilder.setInputSetYaml(inputSetPipelineYaml);
     }
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
+    executionMetadataBuilder.setYaml(pipelineYaml);
 
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }
@@ -71,13 +73,16 @@ public class PipelineExecuteHelper {
     }
 
     ExecutionMetadata.Builder executionMetadataBuilder = ExecutionMetadata.newBuilder()
+                                                             .setExecutionUuid(generateUuid())
                                                              .setTriggerInfo(triggerInfo)
                                                              .setRunSequence(pipelineEntity.get().getRunSequence());
     String mergedRuntimeInputYaml = validateAndMergeHelper.getMergeInputSetFromPipelineTemplate(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetReferences);
-    String pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml);
+    String pipelineYaml =
+        MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), mergedRuntimeInputYaml, true);
     executionMetadataBuilder.setPipelineIdentifier(pipelineIdentifier);
     executionMetadataBuilder.setInputSetYaml(mergedRuntimeInputYaml);
+    executionMetadataBuilder.setYaml(pipelineYaml);
 
     return startExecution(accountId, orgIdentifier, projectIdentifier, pipelineYaml, executionMetadataBuilder.build());
   }

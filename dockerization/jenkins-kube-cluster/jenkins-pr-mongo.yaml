@@ -1,0 +1,91 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pr-mongo-data
+  namespace: jenkins
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 200Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: mongo
+  name: jenkins-pr-mongo
+  namespace: jenkins
+spec:
+  updateStrategy:
+    type: RollingUpdate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  serviceName: mongo
+  template:
+    metadata:
+      labels:
+        app: mongo
+    spec:
+      containers:
+        - command:
+            - mongod
+          args:
+            - --bind_ip=0.0.0.0
+            - --wiredTigerCacheSizeGB=3
+          image: mongo:4.2.8
+          imagePullPolicy: IfNotPresent
+          name: mongo
+          readinessProbe:
+            exec:
+              command:
+                - mongo
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            exec:
+              command:
+                - mongo
+                - --eval
+                - "db.adminCommand('ping')"
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 2
+          resources:
+            limits:
+              cpu: "1"
+              memory: 8Gi
+            requests:
+              cpu: "1"
+              memory: 8Gi
+          volumeMounts:
+            - mountPath: /data/db
+              name: data
+              subPath: data
+      restartPolicy: Always
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pr-mongo-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mongo
+  name: jenkins-pr-mongo
+  namespace: jenkins
+spec:
+  ports:
+    - name: http
+      port: 27017
+      protocol: TCP
+      targetPort: 27017
+  selector:
+    app: mongo
+  type: ClusterIP

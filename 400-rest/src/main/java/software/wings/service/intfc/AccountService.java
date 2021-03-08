@@ -46,6 +46,8 @@ public interface AccountService {
 
   Account get(String accountId);
 
+  List<Account> getAccounts(List<String> identifiers);
+
   Account getFromCache(String accountId);
 
   String getAccountStatus(String accountId);
@@ -146,6 +148,10 @@ public interface AccountService {
 
   Account updateAccountName(String accountId, String accountName, String companyName);
 
+  boolean updateAccountName(String accountId, String accountName);
+
+  boolean updateCompanyName(String accountId, String companyName);
+
   Boolean updateCloudCostEnabled(String accountId, boolean cloudCostEnabled);
 
   boolean updateCeAutoCollectK8sEvents(String accountId, boolean ceK8sEventCollectionEnabled);
@@ -199,4 +205,6 @@ public interface AccountService {
   Map<String, Long> obtainAccountDataRetentionMap();
 
   void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses);
+
+  boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
 }

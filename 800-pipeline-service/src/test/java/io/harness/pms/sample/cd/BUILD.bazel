@@ -1,11 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 java_library(
     name = "maven_deps",
@@ -26,6 +22,10 @@ java_binary(
     srcs = glob([
         "**/*.java",
     ]),
+    data = [
+        "cert.pem",
+        "key.pem",
+    ],
     main_class = "io.harness.pms.sample.cd.CdServiceApplication",
     visibility = ["//visibility:public"],
     deps = [

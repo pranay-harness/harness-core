@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfile;
@@ -9,6 +11,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 
+@TargetModule(Module._420_DELEGATE_SERVICE)
 public interface DelegateProfileService extends OwnedByAccount {
   PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest);
   DelegateProfile get(String accountId, String delegateProfileId);
@@ -19,4 +22,5 @@ public interface DelegateProfileService extends OwnedByAccount {
   DelegateProfile add(DelegateProfile delegateProfile);
   void delete(String accountId, String delegateProfileId);
   DelegateProfile updateDelegateProfileSelectors(String delegateProfileId, String accountId, List<String> selectors);
+  List<String> getDelegatesForProfile(String accountId, String profileId);
 }

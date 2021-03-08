@@ -4,6 +4,8 @@ import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFro
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -25,6 +27,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;
@@ -48,9 +51,8 @@ public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
 
     String namespace = k8sInstanceSyncTaskParameters.getNamespace();
     String releaseName = k8sInstanceSyncTaskParameters.getReleaseName();
-    List<K8sPod> k8sPodList = k8sInstanceSyncTaskParameters.isDeprecateFabric8Enabled()
-        ? k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis)
-        : k8sTaskHelperBase.getPodDetailsFabric8(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis);
+    List<K8sPod> k8sPodList =
+        k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, steadyStateTimeoutInMillis);
 
     K8sInstanceSyncResponse k8sInstanceSyncResponse =
         K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build();

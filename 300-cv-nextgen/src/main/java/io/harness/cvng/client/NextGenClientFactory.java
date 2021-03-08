@@ -6,10 +6,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.remote.NGObjectMapperHelper;
 import io.harness.security.ServiceTokenGenerator;
-import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -33,27 +31,22 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
   private static final String CLIENT_ID = "NextGenManager";
   private NGManagerServiceConfig ngManagerServiceConfig;
   private ServiceTokenGenerator tokenGenerator;
-  @Inject private KryoConverterFactory kryoConverterFactory;
+  private final ObjectMapper objectMapper;
 
   public NextGenClientFactory(NGManagerServiceConfig ngManagerServiceConfig, ServiceTokenGenerator tokenGenerator) {
     this.tokenGenerator = tokenGenerator;
     this.ngManagerServiceConfig = ngManagerServiceConfig;
+    this.objectMapper = new ObjectMapper();
+    NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
   }
 
   private CircuitBreaker getCircuitBreaker() {
     return CircuitBreaker.ofDefaults(NG_MANAGER_CIRCUIT_BREAKER);
   }
 
-  private ObjectMapper getObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
-    return objectMapper;
-  }
-
   @Override
   public NextGenClient get() {
     String baseUrl = ngManagerServiceConfig.getNgManagerUrl();
-    ObjectMapper objectMapper = getObjectMapper();
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(baseUrl)
                                   .client(getUnsafeOkHttpClient(baseUrl))

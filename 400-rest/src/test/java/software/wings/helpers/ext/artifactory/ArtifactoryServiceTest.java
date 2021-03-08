@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -10,10 +11,14 @@ import static software.wings.utils.ArtifactType.WAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.ListNotifyResponseData;
+import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -21,14 +26,17 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.exception.ArtifactoryServerException;
+import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl.ArtifactoryErrorResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.RepositoryType;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,11 +44,18 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.ProtocolVersion;
+import org.apache.http.message.BasicStatusLine;
+import org.jfrog.artifactory.client.Artifactory;
+import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
+import org.jfrog.artifactory.client.ArtifactoryResponse;
+import org.jfrog.artifactory.client.impl.ArtifactoryResponseImpl;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -52,17 +67,21 @@ public class ArtifactoryServiceTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(9881);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig =
-      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-
-  private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
+  private ArtifactoryConfig artifactoryConfig;
+  private ArtifactoryConfig artifactoryConfigAnonymous;
 
   @Before
   public void setUp() throws IllegalAccessException {
+    url = String.format("http://localhost:%d/artifactory/", wireMockRule.port());
+    artifactoryConfig =
+        ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+    artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
     FieldUtils.writeField(
         artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
   }
@@ -291,6 +310,82 @@ public class ArtifactoryServiceTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith407StatusCode() throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponse.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 407, "407 Related Exception Phrase"));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("407 Related Exception Phrase");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories()
+      throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
   public void testGetRepositoriesWithRepositoryType() {
@@ -374,5 +469,54 @@ public class ArtifactoryServiceTest extends CategoryTest {
         artifactoryService.getFilePaths(artifactoryConfigAnonymous, null, "harness-maven", "//myartifact/", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(BuildDetails::getNumber).contains("myartifact2");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldAppendProxyConfig() {
+    System.setProperty("http.proxyHost", "proxyHost");
+    System.setProperty("proxyScheme", "http");
+    System.setProperty("http.proxyPort", "123");
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
+    ((ArtifactoryServiceImpl) artifactoryService)
+        .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
+
+    assertThat(artifactoryClientBuilder.getProxy()).isNotNull();
+    assertThat(artifactoryClientBuilder.getProxy().getHost()).isEqualTo("proxyHost");
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendProxyConfigIfArtifactoryUrlIsInNonProxyList() {
+    System.setProperty("http.proxyHost", "proxyHost");
+    System.setProperty("http.proxyPort", "123");
+    System.setProperty("http.nonProxyHosts", "url");
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
+    ((ArtifactoryServiceImpl) artifactoryService)
+        .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
+
+    assertThat(artifactoryClientBuilder.getProxy()).isNull();
+
+    System.clearProperty("http.proxyHost");
+    System.clearProperty("http.proxyPort");
+    System.clearProperty("http.nonProxyHosts");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldNotAppendProxyConfigWhenProxyIsNotEnabled() {
+    ArtifactoryConfig artifactoryConfig = ArtifactoryConfig.builder().artifactoryUrl("url").build();
+    ArtifactoryClientBuilder artifactoryClientBuilder = ArtifactoryClientBuilder.create();
+    ((ArtifactoryServiceImpl) artifactoryService)
+        .checkIfUseProxyAndAppendConfig(artifactoryClientBuilder, artifactoryConfig);
+
+    assertThat(artifactoryClientBuilder.getProxy()).isNull();
   }
 }

@@ -2,6 +2,8 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.VerificationServiceClient;
 
 import software.wings.delegatetasks.LogAnalysisStoreService;
@@ -14,11 +16,9 @@ import com.google.inject.Singleton;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by rsingh on 06/20/17.
- */
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
   @Inject private VerificationServiceClient verificationServiceClient;
 

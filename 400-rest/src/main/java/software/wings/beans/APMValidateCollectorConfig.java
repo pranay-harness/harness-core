@@ -5,12 +5,12 @@ import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGe
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.utils.Utils;
 
@@ -50,8 +50,8 @@ public class APMValidateCollectorConfig implements ExecutionCapabilityDemander {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>();
-    executionCapabilities.addAll(
-        CapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, maskingEvaluator));
+    executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+        encryptedDataDetails, maskingEvaluator));
     executionCapabilities.addAll(
         Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             Utils.appendPathToBaseUrl(baseUrl, getUrl()), QUERY, maskingEvaluator)));

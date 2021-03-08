@@ -7,14 +7,12 @@ import com.google.common.base.Strings;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.jayway.jsonpath.internal.Utils;
-import java.net.SocketException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Properties;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
 

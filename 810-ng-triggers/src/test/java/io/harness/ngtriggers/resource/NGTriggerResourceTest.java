@@ -1,10 +1,12 @@
 package io.harness.ngtriggers.resource;
 
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -28,7 +30,6 @@ import io.harness.rule.Owner;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.google.common.io.Resources;
-import com.google.inject.Inject;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -41,7 +42,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 public class NGTriggerResourceTest extends CategoryTest {
@@ -73,10 +78,7 @@ public class NGTriggerResourceTest extends CategoryTest {
 
     ngTriggerConfig = YamlPipelineUtils.read(ngTriggerYaml, NGTriggerConfig.class);
     WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
-    WebhookMetadata metadata = WebhookMetadata.builder()
-                                   .type(webhookTriggerConfig.getType())
-                                   .repoURL(webhookTriggerConfig.getSpec().getRepoUrl())
-                                   .build();
+    WebhookMetadata metadata = WebhookMetadata.builder().type(webhookTriggerConfig.getType()).build();
     NGTriggerMetadata ngTriggerMetadata = NGTriggerMetadata.builder().webhook(metadata).build();
 
     ngTriggerResponseDTO = NGTriggerResponseDTO.builder()
@@ -202,5 +204,18 @@ public class NGTriggerResourceTest extends CategoryTest {
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(1);
     assertThat(content.get(0).getName()).isEqualTo(ngTriggerDetailsResponseDTO.getName());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testGitConnectorTrigger() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String filename = "ng-trigger-git-connector.yaml";
+    String triggerYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
+    WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
+    assertThat(webhookTriggerConfig.getSpec().getRepoSpec().getIdentifier()).isEqualTo("account.gitAccount");
   }
 }

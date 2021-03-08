@@ -1,5 +1,8 @@
 package software.wings.delegatetasks;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 
@@ -14,6 +17,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by rishi on 12/19/16.
  */
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@BreakDependencyOn("io.harness.delegate.service.DelegateAgentFileService")
+@BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
 public interface DelegateFileManager {
   DelegateFile upload(DelegateFile delegateFile, InputStream contentSource);
   String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId) throws IOException;

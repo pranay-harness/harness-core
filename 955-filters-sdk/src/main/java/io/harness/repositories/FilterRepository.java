@@ -13,4 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 public interface FilterRepository extends FilterCustomRepository, PagingAndSortingRepository<Filter, String> {
   long deleteByFullyQualifiedIdentifierAndFilterType(String fullyQualifiedIdentifier, FilterType filterType);
   Optional<Filter> findByFullyQualifiedIdentifierAndFilterType(String fullyQualifiedIdentifier, FilterType filterType);
+  Optional<Filter> findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndName(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String name);
 }

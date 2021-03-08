@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.registries.registrar.TimeoutRegistrar;
-import io.harness.timeout.Dimension;
 import io.harness.timeout.TimeoutTrackerFactory;
+import io.harness.timeout.contracts.Dimension;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import com.google.inject.Inject;

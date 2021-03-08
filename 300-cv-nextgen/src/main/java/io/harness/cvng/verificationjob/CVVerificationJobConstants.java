@@ -6,4 +6,5 @@ public interface CVVerificationJobConstants {
   String ENV_IDENTIFIER_KEY = "envIdentifier";
   String DURATION_KEY = "duration";
   String SENSITIVITY_KEY = "sensitivity";
+  String RUNTIME_STRING = "<+input>";
 }

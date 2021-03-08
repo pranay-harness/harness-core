@@ -7,12 +7,13 @@ import static io.harness.k8s.kubectl.Utils.executeCommand;
 
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.HelmInstallationParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
-import io.harness.delegate.task.executioncapability.CapabilityCheck;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
@@ -20,7 +21,7 @@ import io.harness.k8s.model.HelmVersion;
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 
-public class HelmInstallationCapabilityCheck implements CapabilityCheck {
+public class HelmInstallationCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   @Override
@@ -31,8 +32,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck {
       return CapabilityResponse.builder().validated(false).delegateCapability(capability).build();
     }
     String helmVersionCommand =
-        HelmCommandTemplateFactory
-            .getHelmCommandTemplate(HelmCommandTemplateFactory.HelmCliCommandType.VERSION, HelmVersion.V3)
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, HelmVersion.V3)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
             .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
     return CapabilityResponse.builder()
@@ -41,8 +41,9 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck {
         .build();
   }
 
+  @Override
   public CapabilitySubjectPermission performCapabilityCheckWithProto(CapabilityParameters parameters) {
-    CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
+    CapabilitySubjectPermissionBuilder builder = CapabilitySubjectPermission.builder();
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.HELM_INSTALLATION_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
@@ -52,8 +53,7 @@ public class HelmInstallationCapabilityCheck implements CapabilityCheck {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
     String helmVersionCommand =
-        HelmCommandTemplateFactory
-            .getHelmCommandTemplate(HelmCommandTemplateFactory.HelmCliCommandType.VERSION, HelmVersion.V3)
+        HelmCommandTemplateFactory.getHelmCommandTemplate(HelmCliCommandType.VERSION, HelmVersion.V3)
             .replace(HELM_PATH_PLACEHOLDER, encloseWithQuotesIfNeeded(helmPath))
             .replace("${COMMAND_FLAGS}", StringUtils.EMPTY);
     return builder

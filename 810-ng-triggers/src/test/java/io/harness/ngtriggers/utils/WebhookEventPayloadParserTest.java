@@ -1,14 +1,16 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.ngtriggers.Constants.BITBUCKET_CLOUD_HEADER_KEY;
+import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
 import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.PR;
 import static io.harness.product.ci.scm.proto.GitProvider.BITBUCKET;
 import static io.harness.product.ci.scm.proto.GitProvider.GITHUB;
 import static io.harness.product.ci.scm.proto.GitProvider.GITLAB;
+import static io.harness.product.ci.scm.proto.GitProvider.STASH;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -25,7 +27,6 @@ import io.harness.ngtriggers.beans.scm.WebhookEvent;
 import io.harness.ngtriggers.beans.scm.WebhookGitUser;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.product.ci.scm.proto.Action;
-import io.harness.product.ci.scm.proto.GitProvider;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.product.ci.scm.proto.PullRequest;
 import io.harness.product.ci.scm.proto.PullRequestHook;
@@ -195,6 +196,30 @@ public class WebhookEventPayloadParserTest extends CategoryTest {
     headerKeys1.addAll(headerKeys);
     headerKeys1.add("x-event-key");
     assertThat(webhookEventPayloadParser.obtainWebhookSource(headerKeys1)).isEqualTo(BITBUCKET);
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testIsBitbucketServer() {
+    assertThat(webhookEventPayloadParser.isBitbucketServer(
+                   new HashSet<>(Arrays.asList("X-Event-Key", BITBUCKET_CLOUD_HEADER_KEY))))
+        .isFalse();
+    assertThat(webhookEventPayloadParser.isBitbucketServer(
+                   new HashSet<>(Arrays.asList("X-Event-Key", BITBUCKET_SERVER_HEADER_KEY))))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetBitbucketProvider() {
+    assertThat(webhookEventPayloadParser.getBitbucketProvider(
+                   new HashSet<>(Arrays.asList("X-Event-Key", BITBUCKET_CLOUD_HEADER_KEY))))
+        .isEqualTo(BITBUCKET);
+    assertThat(webhookEventPayloadParser.getBitbucketProvider(
+                   new HashSet<>(Arrays.asList("X-Event-Key", BITBUCKET_SERVER_HEADER_KEY))))
+        .isEqualTo(STASH);
   }
 
   @Test

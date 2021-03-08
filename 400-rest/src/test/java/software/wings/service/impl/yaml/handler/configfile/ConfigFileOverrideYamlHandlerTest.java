@@ -16,7 +16,6 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -52,7 +51,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -82,7 +80,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files/SERVICE_NAME/configFile.txt";
   private static final String configFilePathForAllServices =
       "Setup/Applications/APP_NAME/Environments/ENV_NAME/Config Files/__all_service__/configFile.txt";
-  private static final String resourcePath = "./configfiles/Environment";
+  private static final String resourcePath = "400-rest/src/test/resources/configfiles/Environment";
 
   private static final String UNENCRYPTED_OVERRIDE_YAML = "unEncryptedFileOverride.yaml";
   private static final String UNENCRYPTED_OVERRIDE_YAML_2 = "unEncryptedFileOverride2.yaml";
@@ -435,12 +433,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
 
   private String getYamlFile(String yamlFileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
     assertThat(yamlFile).isNotNull();
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }

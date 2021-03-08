@@ -121,14 +121,14 @@ public class ChildChainStrategy implements ExecuteStrategy {
                                                 .build();
     pmsNodeExecutionService.queueNodeExecution(childNodeExecution);
 
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
+    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
         ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(),
         Collections.singletonList(childInstanceId));
   }
 
   private void suspendChain(ChildChainExecutableResponse childChainResponse, NodeExecutionProto nodeExecution) {
     String ignoreNotifyId = "ignore-" + nodeExecution.getUuid();
-    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.UNRECOGNIZED,
+    pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
         ExecutableResponse.newBuilder().setChildChain(childChainResponse).build(), Collections.emptyList());
 
     PlanNodeProto planNode = nodeExecution.getNode();

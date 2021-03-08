@@ -85,6 +85,11 @@ public class ClusterDataToBigQueryTaskletTest extends CategoryTest {
                                                   .unallocatedCost(BigDecimal.ZERO)
                                                   .cpuUnallocatedCost(BigDecimal.ZERO)
                                                   .memoryUnallocatedCost(BigDecimal.ZERO)
+                                                  .storageBillingAmount(BigDecimal.ZERO)
+                                                  .storageActualIdleCost(BigDecimal.ZERO)
+                                                  .storageUnallocatedCost(BigDecimal.ZERO)
+                                                  .storageUtilizationValue(0D)
+                                                  .storageRequest(0D)
                                                   .build();
 
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(BATCH_SIZE).build());

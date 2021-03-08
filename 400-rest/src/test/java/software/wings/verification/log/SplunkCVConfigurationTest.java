@@ -91,6 +91,7 @@ public class SplunkCVConfigurationTest extends WingsBaseTest {
     assertThat(dataCollectionInfo.getEndTime()).isNull();
     assertThat(dataCollectionInfo.getQuery()).isEqualTo(query);
     assertThat(dataCollectionInfo.getHostnameField()).isEqualTo(hostnameField);
+    assertThat(dataCollectionInfo.getEnvId()).isEqualTo(envId);
     assertThat(dataCollectionInfo.isAdvancedQuery()).isEqualTo(splunkCVConfiguration.isAdvancedQuery());
   }
 

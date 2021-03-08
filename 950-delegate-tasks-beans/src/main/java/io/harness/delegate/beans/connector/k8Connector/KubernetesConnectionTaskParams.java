@@ -18,6 +18,6 @@ public class KubernetesConnectionTaskParams implements TaskParameters, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return kubernetesClusterConfig.fetchRequiredExecutionCapabilities(maskingEvaluator);
+    return K8sTaskCapabilityHelper.fetchRequiredExecutionCapabilities(kubernetesClusterConfig, maskingEvaluator);
   }
 }

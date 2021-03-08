@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 public class RestoreCacheStepProtobufSerializer implements ProtobufStepSerializer<RestoreCacheStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     RestoreCacheStepInfo restoreCacheStepInfo = (RestoreCacheStepInfo) ciStepInfo;
 
@@ -27,7 +27,7 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufStepSerialize
 
     RestoreCacheStep.Builder restoreCacheBuilder = RestoreCacheStep.newBuilder();
     restoreCacheBuilder.setKey(RunTimeInputHandler.resolveStringParameter(
-        "Key", "RestoreCache", restoreCacheStepInfo.getIdentifier(), restoreCacheStepInfo.getKey(), true));
+        "Key", "RestoreCache", step.getIdentifier(), restoreCacheStepInfo.getKey(), true));
     restoreCacheBuilder.setFailIfNotExist(
         RunTimeInputHandler.resolveBooleanParameter(restoreCacheStepInfo.getFailIfNotExist(), false));
 
@@ -39,6 +39,7 @@ public class RestoreCacheStepProtobufSerializer implements ProtobufStepSerialize
         .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setRestoreCache(restoreCacheBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setLogKey(logKey)
         .build();
   }
 }

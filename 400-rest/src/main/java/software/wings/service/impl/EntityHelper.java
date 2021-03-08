@@ -23,7 +23,9 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.context.GlobalContextData;
 import io.harness.dashboard.DashboardSettings;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateProfile;
+import io.harness.delegate.beans.DelegateScope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.globalcontex.AuditGlobalContextData;
@@ -41,8 +43,6 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.Delegate;
-import software.wings.beans.DelegateScope;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentKeys;
@@ -77,6 +77,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -825,6 +826,8 @@ public class EntityHelper {
       } else if (entity instanceof Template) {
         Template template = (Template) entity;
         finalYaml = format("%s/%s%s", yamlPrefix, template.getName(), YAML_EXTENSION);
+      } else if (entity instanceof GovernanceConfig) {
+        finalYaml = format("%s/%s%s", yamlPrefix, YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER, YAML_EXTENSION);
       } else {
         finalYaml = yamlPrefix;
       }

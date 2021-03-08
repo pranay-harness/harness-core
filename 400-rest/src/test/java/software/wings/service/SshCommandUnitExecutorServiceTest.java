@@ -3,11 +3,16 @@ package software.wings.service;
 import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.shell.AccessType.USER_PASSWORD;
+import static io.harness.shell.AuthenticationScheme.SSH_KEY;
+import static io.harness.shell.ExecutorType.BASTION_HOST;
+import static io.harness.shell.ExecutorType.KEY_AUTH;
+import static io.harness.shell.ExecutorType.PASSWORD_AUTH;
+import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
 import static software.wings.beans.BastionConnectionAttributes.Builder.aBastionConnectionAttributes;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -17,10 +22,6 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.ScpCommandUnit.Builder.aScpCommandUnit;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.core.ssh.executors.ExecutorType.BASTION_HOST;
-import static software.wings.core.ssh.executors.ExecutorType.KEY_AUTH;
-import static software.wings.core.ssh.executors.ExecutorType.PASSWORD_AUTH;
-import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -51,9 +52,13 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
+import io.harness.shell.AccessType;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ScriptSshExecutor;
+import io.harness.shell.ShellExecutorConfig;
+import io.harness.shell.SshSessionConfig;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.Command;
@@ -68,13 +73,9 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Host.Builder;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
 import software.wings.core.ssh.executors.FileBasedSshScriptExecutor;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
-import software.wings.core.ssh.executors.ScriptSshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
-import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.CommandUnitExecutorService;
@@ -600,5 +601,81 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .contains("start.sh");
 
     verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
+  }
+
+  /**
+   * Should execute init command without unresolved env variables
+   *
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldExecuteInitCommandWithoutUnresolvedEnvironmentVariables() throws IOException {
+    // this path name should not be added as Env Variable
+    String badSubstitutionPathName = "/test/${service.name}/${env.name}/backup";
+
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    InitSshCommandUnit commandUnit = new InitSshCommandUnit();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
+    Command command =
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
+            .build();
+    commandUnit.setCommand(command);
+
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(fileBasedSshScriptExecutor.copyFiles(anyString(), anyListOf(String.class)))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+
+    sshCommandUnitExecutorService.execute(commandUnit,
+        commandExecutionContextBuider.but()
+            .stagingPath(badSubstitutionPathName)
+            .runtimePath(badSubstitutionPathName)
+            .backupPath(badSubstitutionPathName)
+            .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+            .build());
+
+    assertThat(commandUnit.getExecutionStagingDir()).isEqualTo("/tmp/ACTIVITY_ID");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_RUNTIME_PATH")).isEqualTo(null);
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_STAGING_PATH")).isEqualTo(null);
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_BACKUP_PATH")).isEqualTo(null);
+  }
+
+  /**
+   * Should execute init command with resolved env variables
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldExecuteInitCommandWithResolvedEnvironmentVariables() throws IOException {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+
+    InitSshCommandUnit commandUnit = new InitSshCommandUnit();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
+    Command command =
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
+            .build();
+    commandUnit.setCommand(command);
+
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(fileBasedSshScriptExecutor.copyFiles(anyString(), anyListOf(String.class)))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+
+    sshCommandUnitExecutorService.execute(
+        commandUnit, commandExecutionContextBuider.but().hostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
+
+    assertThat(commandUnit.getExecutionStagingDir()).isEqualTo("/tmp/ACTIVITY_ID");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_RUNTIME_PATH")).isEqualTo("/tmp/runtime");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_STAGING_PATH")).isEqualTo("/tmp/staging");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_BACKUP_PATH")).isEqualTo("/tmp/backup");
   }
 }

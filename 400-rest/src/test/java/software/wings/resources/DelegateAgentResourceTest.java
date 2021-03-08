@@ -5,6 +5,7 @@ import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuild
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -28,6 +29,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
@@ -35,17 +37,24 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
+import io.harness.managerclient.AccountPreference;
+import io.harness.managerclient.AccountPreferenceQuery;
+import io.harness.managerclient.GetDelegatePropertiesRequest;
+import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.service.intfc.DelegateTaskService;
 
-import software.wings.beans.Delegate;
+import software.wings.beans.Account;
+import software.wings.beans.AccountPreferences;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.buildsource.BuildSourceResponse;
@@ -62,6 +71,8 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.utils.ResourceTestRule;
 
 import com.google.common.collect.Lists;
+import com.google.protobuf.Any;
+import com.google.protobuf.TextFormat;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +108,7 @@ public class DelegateAgentResourceTest {
   private static final SubdomainUrlHelperIntfc subdomainUrlHelper = mock(SubdomainUrlHelperIntfc.class);
   private static final InstanceHelper instanceSyncResponseHandler = mock(InstanceHelper.class);
   private static final ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
+  private static final DelegateTaskService delegateTaskService = mock(DelegateTaskService.class);
 
   static {
     artifactCollectionResponseHandler = mock(ArtifactCollectionResponseHandler.class);
@@ -359,6 +371,39 @@ public class DelegateAgentResourceTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateScriptsNg() throws IOException {
+    String delegateVersion = "0.0.0";
+    String verificationUrl = httpServletRequest.getScheme() + "://" + httpServletRequest.getServerName() + ":"
+        + httpServletRequest.getServerPort();
+    DelegateScripts delegateScripts = DelegateScripts.builder()
+                                          .delegateScript("delegateScript")
+                                          .doUpgrade(false)
+                                          .setupProxyScript("proxyScript")
+                                          .startScript("startScript")
+                                          .stopScript("stopScript")
+                                          .build();
+    when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl,
+             DelegateSize.EXTRA_SMALL))
+        .thenReturn(delegateScripts);
+
+    RestResponse<DelegateScripts> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/delegateScriptsNg?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
+                + "&delegateSize=EXTRA_SMALL")
+            .request()
+            .get(new GenericType<RestResponse<DelegateScripts>>() {});
+
+    verify(delegateService, atLeastOnce())
+        .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl,
+            DelegateSize.EXTRA_SMALL);
+    assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
+  }
+
+  @Test
   @Owner(developers = NIKOLA)
   @Category(UnitTests.class)
   public void shouldGetDelegateScripts() throws IOException {
@@ -462,7 +507,7 @@ public class DelegateAgentResourceTest {
         .target("/agent/delegates/" + DELEGATE_ID + "/tasks/" + taskId + "?accountId=" + ACCOUNT_ID)
         .request()
         .post(entity(taskResponse, "application/x-kryo"), new GenericType<RestResponse<String>>() {});
-    verify(delegateService, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, taskId, taskResponse);
+    verify(delegateTaskService, atLeastOnce()).processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, taskId, taskResponse);
   }
 
   @Test
@@ -491,5 +536,31 @@ public class DelegateAgentResourceTest {
             .request()
             .post(entity(taskResponse, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
     verify(connectorHearbeatPublisher, atLeastOnce()).pushConnectivityCheckActivity(ACCOUNT_ID, taskResponse);
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateProperties() throws TextFormat.ParseException {
+    GetDelegatePropertiesRequest request = GetDelegatePropertiesRequest.newBuilder()
+                                               .setAccountId(ACCOUNT_ID)
+                                               .addRequestEntry(Any.pack(AccountPreferenceQuery.newBuilder().build()))
+                                               .build();
+
+    Account account =
+        Account.Builder.anAccount()
+            .withUuid(ACCOUNT_ID)
+            .withAccountPreferences(AccountPreferences.builder().delegateSecretsCacheTTLInHours(new Integer(2)).build())
+            .build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    RestResponse<String> restResponse = RESOURCES.client()
+                                            .target("/agent/delegates/properties?accountId=" + ACCOUNT_ID)
+                                            .request()
+                                            .post(entity(request.toByteArray(), MediaType.APPLICATION_OCTET_STREAM),
+                                                new GenericType<RestResponse<String>>() {});
+    GetDelegatePropertiesResponse responseProto =
+        TextFormat.parse(restResponse.getResource(), GetDelegatePropertiesResponse.class);
+    assertThat(responseProto).isNotNull();
+    assertThat(responseProto.getResponseEntryList().get(0).is(AccountPreference.class)).isTrue();
   }
 }

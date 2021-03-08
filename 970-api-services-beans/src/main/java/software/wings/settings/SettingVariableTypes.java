@@ -239,6 +239,8 @@ public enum SettingVariableTypes {
 
   VAULT,
 
+  VAULT_SSH,
+
   AWS_SECRETS_MANAGER,
 
   CYBERARK,
@@ -267,11 +269,15 @@ public enum SettingVariableTypes {
 
   CE_GCP("Continuous Efficiency GCP"),
 
+  CE_AZURE("Continuous Efficiency AZURE"),
+
   AZURE_VAULT("Azure Vault Secrets Manager"),
 
   KUBERNETES_CLUSTER_NG("Kubernetes Cluster"),
 
-  GIT_NG("Git Ng");
+  GIT_NG("Git Ng"),
+
+  GCP_SECRETS_MANAGER;
 
   @Getter private String displayName;
 

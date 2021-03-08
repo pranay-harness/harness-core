@@ -2,12 +2,12 @@ package io.harness.pms.sdk.core.plan.creation.beans;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.contracts.plan.*;
+import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.sdk.core.plan.PlanNode;
-import io.harness.pms.sdk.core.plan.creation.mappers.PlanNodeProtoMapper;
 import io.harness.pms.yaml.YamlField;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +22,7 @@ public class PlanCreationResponse {
   GraphLayoutResponse graphLayoutResponse;
 
   String startingNodeId;
+  @Singular List<String> errorMessages;
 
   public void merge(PlanCreationResponse other) {
     addNodes(other.getNodes());
@@ -119,31 +120,5 @@ public class PlanCreationResponse {
       throw new InvalidRequestException(
           String.format("Received different set of starting nodes: %s and %s", startingNodeId, otherStartingNodeId));
     }
-  }
-
-  public PlanCreationBlobResponse toBlobResponse() {
-    PlanCreationBlobResponse.Builder finalBlobResponseBuilder = PlanCreationBlobResponse.newBuilder();
-    if (EmptyPredicate.isNotEmpty(nodes)) {
-      Map<String, PlanNodeProto> newNodes = new HashMap<>();
-      nodes.forEach((k, v) -> newNodes.put(k, PlanNodeProtoMapper.toPlanNodeProto(v)));
-      finalBlobResponseBuilder.putAllNodes(newNodes);
-    }
-    if (EmptyPredicate.isNotEmpty(dependencies)) {
-      for (Map.Entry<String, YamlField> dependency : dependencies.entrySet()) {
-        finalBlobResponseBuilder.putDependencies(dependency.getKey(), dependency.getValue().toFieldBlob());
-      }
-    }
-    if (EmptyPredicate.isNotEmpty(startingNodeId)) {
-      finalBlobResponseBuilder.setStartingNodeId(startingNodeId);
-    }
-    if (EmptyPredicate.isNotEmpty(contextMap)) {
-      for (Map.Entry<String, PlanCreationContextValue> dependency : contextMap.entrySet()) {
-        finalBlobResponseBuilder.putContext(dependency.getKey(), dependency.getValue());
-      }
-    }
-    if (graphLayoutResponse != null) {
-      finalBlobResponseBuilder.setGraphLayoutInfo(graphLayoutResponse.getLayoutNodeInfo());
-    }
-    return finalBlobResponseBuilder.build();
   }
 }

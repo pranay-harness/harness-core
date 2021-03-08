@@ -1,5 +1,8 @@
 package io.harness.batch.processing.anomalydetection;
 
+import io.harness.batch.processing.anomalydetection.helpers.AnomalyDetectionHelper;
+import io.harness.ccm.anomaly.entities.Anomaly;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -13,7 +16,18 @@ import lombok.extern.slf4j.Slf4j;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @Slf4j
-public class AnomalyDetectionTimeSeries extends AnomalyDetectionInfo {
+public class AnomalyDetectionTimeSeries extends Anomaly {
+  public static AnomalyDetectionTimeSeries initialiseNewTimeSeries(TimeSeriesMetaData timeSeriesMetaData) {
+    AnomalyDetectionTimeSeries timeSeries = AnomalyDetectionTimeSeries.builder()
+                                                .accountId(timeSeriesMetaData.getAccountId())
+                                                .timeGranularity(timeSeriesMetaData.getTimeGranularity())
+                                                .build();
+    timeSeries.initialiseTrainData(
+        timeSeriesMetaData.getTrainStart(), timeSeriesMetaData.getTrainEnd(), ChronoUnit.DAYS);
+    timeSeries.initialiseTestData(timeSeriesMetaData.getTestStart(), timeSeriesMetaData.getTestEnd(), ChronoUnit.DAYS);
+    return timeSeries;
+  }
+
   private List<Instant> trainTimePointsList;
   private List<Double> trainDataPointsList;
   private List<Instant> testTimePointsList;
@@ -79,11 +93,14 @@ public class AnomalyDetectionTimeSeries extends AnomalyDetectionInfo {
     }
   }
 
-  public int getTrainDataSize() {
-    return trainDataPointsList.size();
+  @Override
+  public String getId() {
+    return super.getId() == null ? getHash() : super.getId();
   }
 
-  public int getTestDataSize() {
-    return testDataPointsList.size();
+  public String getHash() {
+    return AnomalyDetectionHelper.generateHash(
+        String.join(",", getTestTimePointsList().get(0).toString(), getClusterId(), getNamespace(), getWorkloadName(),
+            getGcpProject(), getGcpProduct(), getGcpSKUId(), getAwsAccount(), getAwsService(), getAwsUsageType()));
   }
 }

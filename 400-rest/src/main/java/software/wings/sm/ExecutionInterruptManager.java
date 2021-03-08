@@ -347,8 +347,7 @@ public class ExecutionInterruptManager {
   }
 
   WorkflowState getWorkflowState(StateExecutionInstance stateExecutionInstance, ExecutionContextImpl context) {
-    State currentState = stateMachineExecutor.getStateForExecution(context, stateExecutionInstance);
-    return (WorkflowState) currentState;
+    return (WorkflowState) stateMachineExecutor.getStateForExecution(context, stateExecutionInstance);
   }
 
   private StateExecutionInstance getStateExecutionInstance(

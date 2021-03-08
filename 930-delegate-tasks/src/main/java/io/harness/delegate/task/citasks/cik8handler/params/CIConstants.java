@@ -23,4 +23,13 @@ public final class CIConstants {
   public static final String SECRET_VOLUME_NAME = "secrets";
   public static final int SECRET_FILE_MODE = 256;
   public static final String DEFAULT_SECRET_MOUNT_PATH = "/etc/secrets/";
+
+  public static final String PLUGIN_DOCKER_IMAGE_NAME = "plugins/docker";
+  public static final String PLUGIN_ECR_IMAGE_NAME = "plugins/ecr";
+  public static final String PLUGIN_ACR_IMAGE_NAME = "plugins/acr";
+  public static final String PLUGIN_GCR_IMAGE_NAME = "plugins/gcr";
+  public static final String PLUGIN_HEROKU_IMAGE_NAME = "plugins/heroku";
+
+  public static final String DOCKER_IMAGE_NAME = "docker";
+  public static final String DIND_TAG_REGEX = "(.*)dind(.*)";
 }

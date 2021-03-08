@@ -98,6 +98,10 @@ else
   yq delete -i $CONFIG_FILE events-mongo
 fi
 
+if [[ "" != "$CF_CLIENT_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfClientConfig.apiKey "$CF_CLIENT_API_KEY"
+fi
+
 if [[ "" != "$ELASTICSEARCH_URI" ]]; then
   yq write -i $CONFIG_FILE elasticsearch.uri "$ELASTICSEARCH_URI"
 fi
@@ -203,6 +207,10 @@ fi
 
 if [[ "" != "$jwtNextGenManagerSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtNextGenManagerSecret "$jwtNextGenManagerSecret"
+fi
+
+if [[ "" != "$jwtNextGenManagerSecret" ]]; then
+  yq write -i $CONFIG_FILE cvngClientConfig.cvNgServiceSecret "$jwtNextGenManagerSecret"
 fi
 
 if [[ "" != "$FEATURES" ]]; then
@@ -327,6 +335,14 @@ fi
 
 if [[ "" != "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.linkedAccountCloudFormationTemplateLink "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_AZURE_CLIENTSECRET" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.azureAppClientSecret "$CE_SETUP_CONFIG_AZURE_CLIENTSECRET"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_AZURE_CLIENTID" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.azureAppClientId "$CE_SETUP_CONFIG_AZURE_CLIENTID"
 fi
 
 if [[ "" != "$DATADOG_ENABLED" ]]; then
@@ -672,10 +688,6 @@ if [[ "" != "$ACCOUNT_LICENSE_CHECK_JOB_FREQUENCY" ]]; then
   yq write -i $CONFIG_FILE jobsFrequencyConfig.accountLicenseCheckJobFrequencyInMinutes "$ACCOUNT_LICENSE_CHECK_JOB_FREQUENCY"
 fi
 
-if [[ "" != "$ACCOUNT_BACKGROUND_JOB_FREQUENCY" ]]; then
-  yq write -i $CONFIG_FILE jobsFrequencyConfig.accountBackgroundJobFrequencyInMinutes "$ACCOUNT_BACKGROUND_JOB_FREQUENCY"
-fi
-
 if [[ "" != "$ACCOUNT_DELETION_JOB_FREQUENCY" ]]; then
   yq write -i $CONFIG_FILE jobsFrequencyConfig.accountDeletionJobFrequencyInMinutes "$ACCOUNT_DELETION_JOB_FREQUENCY"
 fi
@@ -724,6 +736,10 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.sentinel "$EVENTS_FRAMEWORK_USE_SENTINEL"
 fi
@@ -739,4 +755,16 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
     yq write -i $CONFIG_FILE eventsFramework.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
+fi
+
+if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
+fi
+
+if [[ "" != "$CVNG_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
 fi

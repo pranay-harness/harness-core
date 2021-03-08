@@ -2,6 +2,9 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
  * Replace secret values with mask for safe display
  */
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class GenericLogSanitizer extends LogSanitizer {
   private final Set<String> secretLines;
 

@@ -53,6 +53,8 @@ import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -253,7 +255,8 @@ public class UpdateCloudProviderDataFetcherTest extends AbstractDataFetcherTestB
                     .clusterDetailsType(RequestField.ofNullable(QLClusterDetailsType.INHERIT_CLUSTER_DETAILS))
                     .inheritClusterDetails(
                         RequestField.ofNullable(QLUpdateInheritClusterDetails.builder()
-                                                    .delegateName(RequestField.ofNullable("DELEGATE"))
+                                                    .delegateSelectors(RequestField.ofNullable(
+                                                        new HashSet<>(Collections.singletonList("DELEGATE"))))
                                                     .build()))
                     .build())
             .build(),

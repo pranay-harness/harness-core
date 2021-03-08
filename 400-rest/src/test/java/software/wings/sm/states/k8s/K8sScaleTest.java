@@ -5,19 +5,23 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static software.wings.common.WorkflowConstants.K8S_SCALE;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -30,6 +34,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
@@ -68,9 +73,10 @@ public class K8sScaleTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private K8sStateHelper k8sStateHelper;
 
-  @InjectMocks private K8sScale k8sScale;
+  @InjectMocks private K8sScale k8sScale = spy(new K8sScale(K8S_SCALE));
 
   private static final String ERROR_MESSAGE = "errorMessage";
+  private static final String RELEASE_NAME = "releaseName";
   private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams().withAppId(APP_ID).build();
   private StateExecutionInstance stateExecutionInstance =
       aStateExecutionInstance()
@@ -96,7 +102,8 @@ public class K8sScaleTest extends WingsBaseTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForFailure() {
-    when(k8sStateHelper.getActivityId(context)).thenReturn(ACTIVITY_ID);
+    doReturn(ACTIVITY_ID).when(k8sScale).fetchActivityId(context);
+    doReturn(APP_ID).when(k8sScale).fetchAppId(context);
     K8sTaskExecutionResponse k8sTaskExecutionResponse = K8sTaskExecutionResponse.builder()
                                                             .errorMessage("errorMessage")
                                                             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -128,9 +135,8 @@ public class K8sScaleTest extends WingsBaseTest {
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testHandleAbortEvent() {
-    K8sScale k8sScaleSpy = spy(k8sScale);
-    k8sScaleSpy.handleAbortEvent(context);
-    verify(k8sScaleSpy, times(1)).handleAbortEvent(any(ExecutionContext.class));
+    k8sScale.handleAbortEvent(context);
+    verify(k8sScale, times(1)).handleAbortEvent(any(ExecutionContext.class));
   }
 
   @Test
@@ -140,12 +146,16 @@ public class K8sScaleTest extends WingsBaseTest {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     when(executionContext.renderExpression(anyString())).thenReturn("1");
     k8sScale.setSkipSteadyStateCheck(true);
-    when(k8sStateHelper.getK8sElement(any(ExecutionContext.class))).thenReturn(K8sElement.builder().build());
-    when(k8sStateHelper.createK8sActivity(
-             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList()))
-        .thenReturn(new Activity());
+    when(k8sStateHelper.fetchK8sElement(any(ExecutionContext.class))).thenReturn(K8sElement.builder().build());
+    doReturn(new Activity())
+        .when(k8sScale)
+        .createK8sActivity(
+            any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
+    doReturn(ExecutionResponse.builder().build()).when(k8sScale).queueK8sDelegateTask(any(), any());
+    doReturn(RELEASE_NAME).when(k8sScale).fetchReleaseName(any(), any());
+
     k8sScale.execute(executionContext);
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sScale, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
   }
 
   @Test
@@ -154,12 +164,15 @@ public class K8sScaleTest extends WingsBaseTest {
   public void testExecute() {
     ExecutionContextImpl executionContext = mock(ExecutionContextImpl.class);
     when(executionContext.renderExpression(anyString())).thenReturn("1");
-    when(k8sStateHelper.getK8sElement(any(ExecutionContext.class))).thenReturn(K8sElement.builder().build());
-    when(k8sStateHelper.createK8sActivity(
-             any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList()))
-        .thenReturn(new Activity());
+    when(k8sStateHelper.fetchK8sElement(any(ExecutionContext.class))).thenReturn(K8sElement.builder().build());
+    doReturn(RELEASE_NAME).when(k8sScale).fetchReleaseName(any(), any());
+    doReturn(new Activity())
+        .when(k8sScale)
+        .createK8sActivity(
+            any(ExecutionContext.class), anyString(), anyString(), any(ActivityService.class), anyList());
+    doReturn(ExecutionResponse.builder().build()).when(k8sScale).queueK8sDelegateTask(any(), any());
     k8sScale.execute(executionContext);
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
+    verify(k8sScale, times(1)).queueK8sDelegateTask(any(ExecutionContext.class), any(K8sTaskParameters.class));
   }
 
   @Test
@@ -167,7 +180,7 @@ public class K8sScaleTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteWingsException() {
     InvalidArgumentsException exceptionToBeThrown = new InvalidArgumentsException(Pair.of("args", "missing"));
-    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
 
     assertThatThrownBy(() -> k8sScale.execute(context)).isSameAs(exceptionToBeThrown);
   }
@@ -177,7 +190,7 @@ public class K8sScaleTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteAnyException() {
     IllegalStateException exceptionToBeThrown = new IllegalStateException();
-    doThrow(exceptionToBeThrown).when(k8sStateHelper).getContainerInfrastructureMapping(context);
+    doThrow(exceptionToBeThrown).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
 
     assertThatThrownBy(() -> k8sScale.execute(context)).isInstanceOf(InvalidRequestException.class);
   }
@@ -192,7 +205,10 @@ public class K8sScaleTest extends WingsBaseTest {
                                                             .build();
     Map<String, ResponseData> response = new HashMap<>();
     response.put(ACTIVITY_ID, k8sTaskExecutionResponse);
-    when(k8sStateHelper.getInstanceElementListParam(anyList())).thenReturn(InstanceElementListParam.builder().build());
+    doReturn(InstanceElementListParam.builder().build())
+        .when(k8sScale)
+        .fetchInstanceElementListParam(anyListOf(K8sPod.class));
+    doReturn(emptyList()).when(k8sScale).fetchInstanceStatusSummaries(any(), any());
     k8sScale.handleAsyncResponse(context, response);
     verify(activityService, times(1)).updateStatus(anyString(), anyString(), any(ExecutionStatus.class));
   }

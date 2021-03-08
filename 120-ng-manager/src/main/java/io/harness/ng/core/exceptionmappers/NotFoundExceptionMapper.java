@@ -16,8 +16,8 @@ public class NotFoundExceptionMapper implements ExceptionMapper<NotFoundExceptio
   @Override
   public Response toResponse(NotFoundException exception) {
     log.error("Exception occurred: " + ExceptionUtils.getMessage(exception), exception);
-    FailureDTO failureDTO = FailureDTO.toBody(
-        Status.FAILURE, ErrorCode.RESOURCE_NOT_FOUND_EXCEPTION, "Request failed as Resource Not Found.", null);
+    FailureDTO failureDTO =
+        FailureDTO.toBody(Status.FAILURE, ErrorCode.RESOURCE_NOT_FOUND_EXCEPTION, exception.getMessage(), null);
     return Response.status(Response.Status.BAD_REQUEST).entity(failureDTO).type(MediaType.APPLICATION_JSON).build();
   }
 }

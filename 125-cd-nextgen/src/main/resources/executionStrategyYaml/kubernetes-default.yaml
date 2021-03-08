@@ -1,0 +1,6 @@
+failureStrategies:
+  - onFailure:
+      errors:
+        - AnyOther
+      action:
+        type: StageRollback

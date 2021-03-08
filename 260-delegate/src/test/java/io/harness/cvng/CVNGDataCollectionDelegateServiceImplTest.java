@@ -10,7 +10,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.datacollection.DataCollectionDSLService;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;

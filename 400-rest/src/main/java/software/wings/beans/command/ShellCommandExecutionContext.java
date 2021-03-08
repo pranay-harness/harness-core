@@ -2,10 +2,10 @@ package software.wings.beans.command;
 
 import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.shell.BaseScriptExecutor;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
-import software.wings.core.BaseScriptExecutor;
 import software.wings.core.ssh.executors.FileBasedScriptExecutor;
 
 import java.util.List;

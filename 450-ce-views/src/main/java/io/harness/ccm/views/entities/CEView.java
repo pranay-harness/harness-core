@@ -41,6 +41,8 @@ public class CEView implements PersistentEntity, UuidAware, CreatedAtAware, Upda
   ViewType viewType = ViewType.CUSTOMER;
 
   ViewState viewState = ViewState.DRAFT;
+
+  double totalCost;
   long createdAt;
   long lastUpdatedAt;
   private EmbeddedUser createdBy;

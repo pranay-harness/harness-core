@@ -1,5 +1,7 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
@@ -13,6 +15,8 @@ import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIAB
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.SECRET_KEY_MINIO_VARIABLE;
 import static io.harness.common.CIExecutionConstants.TI_SERVICE_ENDPOINT_VARIABLE;
+import static io.harness.common.CIExecutionConstants.TI_SERVICE_TOKEN_VARIABLE;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.VISTAAR;
 
@@ -38,7 +42,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -53,6 +57,8 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tiserviceclient.TIServiceUtils;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -69,26 +75,27 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 @Slf4j
-public class K8BuildSetupUtilsTest extends CIExecutionTest {
+public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
-  @Inject private SecretVariableUtils secretVariableUtils;
-  @Inject private TIServiceConfig tiServiceConfig;
+  @Inject private SecretUtils secretUtils;
 
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private SecretNGManagerClient secretNGManagerClient;
   @Mock private ConnectorUtils connectorUtils;
   @Mock CILogServiceUtils logServiceUtils;
+  @Mock TIServiceUtils tiServiceUtils;
 
   @Before
   public void setUp() {
     on(k8BuildSetupUtils).set("connectorUtils", connectorUtils);
-    on(secretVariableUtils).set("secretNGManagerClient", secretNGManagerClient);
-    on(secretVariableUtils).set("secretManagerClientService", secretManagerClientService);
-    on(k8BuildSetupUtils).set("secretVariableUtils", secretVariableUtils);
+    on(secretUtils).set("secretNGManagerClient", secretNGManagerClient);
+    on(secretUtils).set("secretManagerClientService", secretManagerClientService);
+    on(k8BuildSetupUtils).set("secretUtils", secretUtils);
     on(k8BuildSetupUtils).set("executionSweepingOutputResolver", executionSweepingOutputResolver);
     on(k8BuildSetupUtils).set("logServiceUtils", logServiceUtils);
+    on(k8BuildSetupUtils).set("tiServiceUtils", tiServiceUtils);
   }
 
   @Test
@@ -109,6 +116,12 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     when(logServiceUtils.getLogServiceConfig()).thenReturn(logServiceConfig);
     when(logServiceUtils.getLogServiceToken(eq(accountID))).thenReturn(logToken);
 
+    String tiEndpoint = "http://localhost:8078";
+    String tiToken = "token";
+    TIServiceConfig tiServiceConfig = TIServiceConfig.builder().baseUrl(tiEndpoint).globalToken(tiToken).build();
+    when(tiServiceUtils.getTiServiceConfig()).thenReturn(tiServiceConfig);
+    when(tiServiceUtils.getTIServiceToken(eq(accountID))).thenReturn(tiToken);
+
     Call<ResponseDTO<SecretResponseWrapper>> getSecretCall = mock(Call.class);
     ResponseDTO<SecretResponseWrapper> responseDTO = ResponseDTO.newResponse(
         SecretResponseWrapper.builder().secret(SecretDTOV2.builder().type(SecretType.SecretText).build()).build());
@@ -125,8 +138,11 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     setupAbstractions.put("accountId", "account");
     setupAbstractions.put("projectIdentifier", "project");
     setupAbstractions.put("orgIdentifier", "org");
-    ExecutionMetadata executionMetadata =
-        ExecutionMetadata.newBuilder().setRunSequence(buildID).setPipelineIdentifier("pipeline").build();
+    ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
+                                              .setExecutionUuid(generateUuid())
+                                              .setRunSequence(buildID)
+                                              .setPipelineIdentifier("pipeline")
+                                              .build();
     Ambiance ambiance =
         Ambiance.newBuilder().putAllSetupAbstractions(setupAbstractions).setMetadata(executionMetadata).build();
 
@@ -136,7 +152,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), true, null, true,
-        "workspace", null, ambiance);
+        "workspace", null, "foo", null, ambiance);
 
     List<SecretVariableDetails> secretVariableDetails =
         new ArrayList<>(ciExecutionPlanTestHelper.getSecretVariableDetails());
@@ -164,7 +180,8 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);
     stepEnvVars.put(LOG_SERVICE_TOKEN_VARIABLE, logToken);
-    stepEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiServiceConfig.getBaseUrl());
+    stepEnvVars.put(TI_SERVICE_ENDPOINT_VARIABLE, tiEndpoint);
+    stepEnvVars.put(TI_SERVICE_TOKEN_VARIABLE, tiToken);
     stepEnvVars.put(HARNESS_ACCOUNT_ID_VARIABLE, accountID);
     stepEnvVars.put(HARNESS_ORG_ID_VARIABLE, orgID);
     stepEnvVars.put(HARNESS_PROJECT_ID_VARIABLE, projectID);
@@ -226,5 +243,25 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     //
     //    verify(logServiceUtils, times(1)).getLogServiceConfig();
     //    verify(logServiceUtils, times(1)).getLogServiceToken(accountID);
+  }
+
+  @Test
+  @Owner(developers = VISTAAR)
+  @Category(UnitTests.class)
+  public void shouldGetAwsCodeCommitGitEnvVariables() {
+    ConnectorDetails gitConnector =
+        ConnectorDetails.builder()
+            .connectorConfig(
+                ciExecutionPlanTestHelper.getAwsCodeCommitConnectorDTO().getConnectorInfo().getConnectorConfig())
+            .connectorType(
+                ciExecutionPlanTestHelper.getAwsCodeCommitConnectorDTO().getConnectorInfo().getConnectorType())
+            .build();
+
+    CodeBase codeBase = CodeBase.builder().repoName("test").build();
+    Map<String, String> gitEnvVariables = k8BuildSetupUtils.getGitEnvVariables(gitConnector, codeBase);
+    assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_AWS_REGION);
+    assertThat(gitEnvVariables.get(DRONE_REMOTE_URL))
+        .isEqualTo("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test.git");
+    assertThat(gitEnvVariables.get(DRONE_AWS_REGION)).isEqualTo("eu-central-1");
   }
 }

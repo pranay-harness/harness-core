@@ -5,9 +5,9 @@ import static io.harness.rule.OwnerRule.SRINIVAS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.expression.SecretString;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 
 import software.wings.WingsBaseTest;
 

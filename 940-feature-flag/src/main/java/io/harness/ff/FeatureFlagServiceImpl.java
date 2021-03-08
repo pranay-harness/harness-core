@@ -19,7 +19,7 @@ import io.harness.beans.FeatureFlag.Scope;
 import io.harness.beans.FeatureName;
 import io.harness.configuration.DeployMode;
 import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
@@ -32,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,7 +55,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   @Inject(optional = true)
   @Nullable
   @Named(EventsFrameworkConstants.FEATURE_FLAG_STREAM)
-  private AbstractProducer eventProducer;
+  private Producer eventProducer;
 
   private long lastEpoch;
   private final Map<FeatureName, FeatureFlag> cache = new HashMap<>();
@@ -147,6 +148,18 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     log.info("Enabled feature name :[{}] globally", featureName.name());
   }
 
+  @Override
+  public List<FeatureFlag> getGloballyEnabledFeatureFlags() {
+    List<FeatureFlag> globallyEnabledFeatureFlag = new ArrayList<>();
+
+    getAllFeatureFlags().forEach(featureFlag -> {
+      if (featureFlag.isEnabled()) {
+        globallyEnabledFeatureFlag.add(featureFlag);
+      }
+    });
+
+    return globallyEnabledFeatureFlag;
+  }
   @Override
   public boolean isGlobalEnabled(FeatureName featureName) {
     if (featureName.getScope() != Scope.GLOBAL) {

@@ -1,37 +1,34 @@
 package io.harness.delegate.service;
 
-import static io.harness.network.SafeHttpCall.execute;
-
 import static java.util.stream.Collectors.groupingBy;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordGroupValue;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue;
 import io.harness.datacollection.entity.TimeSeriesRecord;
-import io.harness.rest.RestResponse;
 import io.harness.verificationclient.CVNextGenServiceClient;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * Created by raghu on 5/19/17.
- */
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class TimeSeriesDataStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private CVNGRequestExecutor cvngRequestExecutor;
 
   @VisibleForTesting
   List<TimeSeriesDataCollectionRecord> convertToCollectionRecords(
@@ -88,19 +85,9 @@ public class TimeSeriesDataStoreService {
     }
     List<TimeSeriesDataCollectionRecord> dataCollectionRecords =
         convertToCollectionRecords(accountId, verificationTaskId, timeSeriesRecords);
-    try {
-      RestResponse<Boolean> restResponse = timeLimiter.callWithTimeout(
-          ()
-              -> execute(cvNextGenServiceClient.saveTimeSeriesMetrics(accountId, dataCollectionRecords)),
-          30, TimeUnit.SECONDS, true);
-      if (restResponse == null) {
-        return false;
-      }
-
-      return restResponse.getResource();
-    } catch (Exception e) {
-      log.error("error saving new apm metrics", e);
-      return false;
-    }
+    return cvngRequestExecutor
+        .executeWithTimeout(
+            cvNextGenServiceClient.saveTimeSeriesMetrics(accountId, dataCollectionRecords), Duration.ofSeconds(30))
+        .getResource();
   }
 }

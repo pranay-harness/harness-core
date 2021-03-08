@@ -2,6 +2,7 @@ package io.harness.cvng.statemachine.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -11,6 +12,7 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -29,13 +31,33 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "analysisOrchestrators", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class AnalysisOrchestrator implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class AnalysisOrchestrator
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   @Id private String uuid;
   @FdIndex private String verificationTaskId;
-  private List<AnalysisStateMachine> analysisStateMachineQueue;
+  @Builder.Default private List<AnalysisStateMachine> analysisStateMachineQueue = new ArrayList<>();
   private AnalysisStatus status;
   private long createdAt;
   private long lastUpdatedAt;
 
   @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());
+
+  @FdIndex private Long analysisOrchestrationIteration;
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (AnalysisOrchestratorKeys.analysisOrchestrationIteration.equals(fieldName)) {
+      this.analysisOrchestrationIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (AnalysisOrchestratorKeys.analysisOrchestrationIteration.equals(fieldName)) {
+      return this.analysisOrchestrationIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
 }

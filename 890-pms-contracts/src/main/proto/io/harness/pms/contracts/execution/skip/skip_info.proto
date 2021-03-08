@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.skip;
+
+option java_multiple_files = true;
+
+message SkipInfo {
+  string skipCondition = 1;
+  bool evaluatedCondition = 2;
+}

@@ -59,4 +59,6 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
+
+  private String identifier;
 }

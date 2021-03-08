@@ -18,7 +18,8 @@ public class PmsExecutionServiceInfoProvider implements ExecutionSummaryModuleIn
   public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
     return PmsNoopModuleInfo.builder().build();
   }
+
+  @Data
+  @Builder
+  public static class PmsNoopModuleInfo implements PipelineModuleInfo, StageModuleInfo {}
 }
-@Data
-@Builder
-class PmsNoopModuleInfo implements PipelineModuleInfo, StageModuleInfo {}

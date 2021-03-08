@@ -49,9 +49,9 @@ import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
+import io.harness.shell.ScriptType;
 
 import software.wings.api.DeploymentType;
 import software.wings.api.SimpleWorkflowParam;
@@ -80,6 +80,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
@@ -120,6 +121,7 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
   @Mock private ActivityHelperService activityHelperService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private DelegateService delegateService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private CommandState commandState = new CommandState(COMMAND_NAME, COMMAND_NAME);
 

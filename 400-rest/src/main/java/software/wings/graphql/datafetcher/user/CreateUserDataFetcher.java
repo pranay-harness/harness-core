@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.user;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.utils.RequestField;
 
@@ -32,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CreateUserDataFetcher extends BaseMutatorDataFetcher<QLCreateUserInput, QLCreateUserPayload> {
   @Inject private UserService userService;
   @Inject UserGroupController userGroupController;

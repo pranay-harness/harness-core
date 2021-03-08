@@ -4,6 +4,7 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
+import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewCustomField;
 import io.harness.ccm.views.entities.ViewCustomFunction;
 import io.harness.ccm.views.entities.ViewField;
@@ -47,6 +48,7 @@ public class ViewCustomFieldResource {
   private BigQueryService bigQueryService;
   private CloudBillingHelper cloudBillingHelper;
   private ViewCustomFieldDao customFieldDao;
+  private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
 
   @Inject
   public ViewCustomFieldResource(ViewCustomFieldService viewCustomFieldService,
@@ -94,8 +96,8 @@ public class ViewCustomFieldResource {
                          .fieldId(ViewsMetaDataFields.LABEL_KEY.getFieldName())
                          .identifier(ViewFieldIdentifier.LABEL)
                          .build());
-      userDefinedExpression = userDefinedExpression.replaceAll(
-          labelsPatternMatcher.group(), ViewsMetaDataFields.LABEL_VALUE.getFieldName());
+      userDefinedExpression =
+          userDefinedExpression.replaceAll(labelsPatternMatcher.group(), String.format(labelsSubQuery, labelKey));
     }
 
     HashMap<String, ViewField> viewFieldsHashMap = customFieldExpressionHelper.getViewFieldsHashMap();
@@ -149,8 +151,9 @@ public class ViewCustomFieldResource {
   @DELETE
   @Timed
   @ExceptionMetered
-  public Response delete(@QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId) {
-    viewCustomFieldService.delete(customFieldId, accountId);
+  public Response delete(@QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId,
+      @Valid @RequestBody CEView ceView) {
+    viewCustomFieldService.delete(customFieldId, accountId, ceView);
     RestResponse rr = new RestResponse("Successfully deleted the view");
     return prepareResponse(rr, Response.Status.OK);
   }

@@ -1,0 +1,166 @@
+package software.wings.utils;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.exception.ConstraintViolationExceptionMapper;
+
+import software.wings.jersey.KryoMessageBodyProvider;
+
+import com.codahale.metrics.MetricRegistry;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.common.base.Preconditions;
+import io.dropwizard.jackson.Jackson;
+import io.dropwizard.jersey.DropwizardResourceConfig;
+import io.dropwizard.jersey.jackson.JacksonMessageBodyProvider;
+import io.dropwizard.jersey.validation.Validators;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import javax.servlet.ServletConfig;
+import javax.validation.Validator;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.core.Context;
+import lombok.Builder;
+import lombok.Builder.Default;
+import lombok.Getter;
+import lombok.Singular;
+import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.server.ServerProperties;
+import org.glassfish.jersey.servlet.ServletProperties;
+import org.glassfish.jersey.test.DeploymentContext;
+import org.glassfish.jersey.test.JerseyTest;
+import org.glassfish.jersey.test.ServletDeploymentContext;
+import org.glassfish.jersey.test.inmemory.InMemoryTestContainerFactory;
+import org.glassfish.jersey.test.spi.TestContainerFactory;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+
+@Getter
+@Builder
+public class ResourceTestRule implements TestRule {
+  @Singular private final Set<Object> instances;
+  @Singular private final Set<Class<?>> types;
+  @Singular private final Map<String, Object> properties;
+  @Default private ObjectMapper mapper = Jackson.newObjectMapper();
+  @Default private Validator validator = Validators.newValidator();
+  @Default private TestContainerFactory testContainerFactory = new InMemoryTestContainerFactory();
+
+  private JerseyTest test;
+
+  /**
+   * Client client.
+   *
+   * @return the client
+   */
+  public Client client() {
+    return test.client();
+  }
+
+  @Override
+  public Statement apply(Statement base, Description description) {
+    ResourceTestRule rule = this;
+    String ruleId = String.valueOf(rule.hashCode());
+    return new Statement() {
+      @Override
+      public void evaluate() throws Throwable {
+        try {
+          test = new JerseyTest() {
+            @Override
+            protected TestContainerFactory getTestContainerFactory() {
+              return testContainerFactory;
+            }
+
+            @Override
+            protected DeploymentContext configureDeployment() {
+              ResourceTestResourceConfig resourceConfig = new ResourceTestResourceConfig(ruleId, rule);
+              return ServletDeploymentContext.builder(resourceConfig)
+                  .initParam(ServletProperties.JAXRS_APPLICATION_CLASS, ResourceTestResourceConfig.class.getName())
+                  .initParam(ResourceTestResourceConfig.RULE_ID, ruleId)
+                  .build();
+            }
+
+            @Override
+            protected void configureClient(ClientConfig config) {
+              config.register(KryoMessageBodyProvider.class, 0);
+
+              JacksonJsonProvider jsonProvider = new JacksonJsonProvider();
+              jsonProvider.setMapper(mapper);
+              config.register(jsonProvider);
+            }
+          };
+          test.setUp();
+          base.evaluate();
+        } finally {
+          ResourceTestResourceConfig.RULE_ID_TO_RULE.remove(ruleId);
+          if (test != null) {
+            test.tearDown();
+          }
+        }
+      }
+    };
+  }
+
+  /**
+   * The type Resource test resource config.
+   */
+  public static class ResourceTestResourceConfig extends DropwizardResourceConfig {
+    private static final String RULE_ID = "io.dropwizard.testing.junit.resourceTestRuleId";
+    private static final Map<String, ResourceTestRule> RULE_ID_TO_RULE = new HashMap<>();
+
+    /**
+     * Instantiates a new Resource test resource config.
+     *
+     * @param ruleId           the rule id
+     * @param resourceTestRule the resource test rule
+     */
+    public ResourceTestResourceConfig(String ruleId, ResourceTestRule resourceTestRule) {
+      super(true, new MetricRegistry());
+      RULE_ID_TO_RULE.put(ruleId, resourceTestRule);
+      configure(resourceTestRule);
+    }
+
+    /**
+     * Instantiates a new Resource test resource config.
+     *
+     * @param servletConfig the servlet config
+     */
+    public ResourceTestResourceConfig(@Context ServletConfig servletConfig) {
+      super(true, new MetricRegistry());
+      String ruleId = servletConfig.getInitParameter(RULE_ID);
+      Preconditions.checkNotNull(ruleId);
+
+      ResourceTestRule resourceTestRule = RULE_ID_TO_RULE.get(ruleId);
+      Preconditions.checkNotNull(resourceTestRule);
+      configure(resourceTestRule);
+    }
+
+    private void configure(ResourceTestRule resourceTestRule) {
+      register(new ConstraintViolationExceptionMapper());
+      register(new JacksonMessageBodyProvider(resourceTestRule.mapper));
+      // TODO: refactor to allow initialization of KryoFeature
+      // register(KryoFeature.class);
+
+      property(ServerProperties.RESPONSE_SET_STATUS_OVER_SEND_ERROR, "true");
+
+      if (isNotEmpty(resourceTestRule.types)) {
+        for (Class<?> provider : resourceTestRule.types) {
+          register(provider);
+        }
+      }
+
+      if (isNotEmpty(resourceTestRule.properties)) {
+        for (Map.Entry<String, Object> property : resourceTestRule.properties.entrySet()) {
+          property(property.getKey(), property.getValue());
+        }
+      }
+
+      if (isNotEmpty(resourceTestRule.instances)) {
+        for (Object instance : resourceTestRule.instances) {
+          register(instance);
+        }
+      }
+    }
+  }
+}

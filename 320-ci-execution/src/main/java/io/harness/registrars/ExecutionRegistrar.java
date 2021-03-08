@@ -19,10 +19,11 @@ import io.harness.states.RestoreCacheGCSStep;
 import io.harness.states.RestoreCacheS3Step;
 import io.harness.states.RestoreCacheStep;
 import io.harness.states.RunStep;
+import io.harness.states.RunTestsStep;
 import io.harness.states.SaveCacheGCSStep;
 import io.harness.states.SaveCacheS3Step;
 import io.harness.states.SaveCacheStep;
-import io.harness.states.TestIntelligenceStep;
+import io.harness.states.UploadToArtifactoryStep;
 import io.harness.states.UploadToGCSStep;
 import io.harness.states.UploadToS3Step;
 
@@ -56,9 +57,10 @@ public class ExecutionRegistrar {
     engineSteps.put(UploadToGCSStep.STEP_TYPE, UploadToGCSStep.class);
     engineSteps.put(SaveCacheGCSStep.STEP_TYPE, SaveCacheGCSStep.class);
     engineSteps.put(RestoreCacheGCSStep.STEP_TYPE, RestoreCacheGCSStep.class);
-    engineSteps.put(TestIntelligenceStep.STEP_TYPE, TestIntelligenceStep.class);
+    engineSteps.put(UploadToArtifactoryStep.STEP_TYPE, UploadToArtifactoryStep.class);
+    engineSteps.put(RunTestsStep.STEP_TYPE, RunTestsStep.class);
     engineSteps.put(IntegrationStageStepPMS.STEP_TYPE, IntegrationStageStepPMS.class);
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
+    engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;
   }
 }

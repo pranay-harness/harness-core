@@ -45,7 +45,9 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -57,6 +59,7 @@ import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -118,6 +121,7 @@ import software.wings.service.ArtifactStreamHelper;
 import software.wings.service.impl.AppLogContext;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.TriggerLogContext;
+import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.AppService;
@@ -172,6 +176,7 @@ import org.quartz.TriggerKey;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class TriggerServiceImpl implements TriggerService {
   public static final String TRIGGER_SLOWNESS_ERROR_MESSAGE = "Trigger rejected due to slowness in the product";
   @Inject private WingsPersistence wingsPersistence;
@@ -193,6 +198,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ApplicationManifestService applicationManifestService;
   @Inject private HelmChartService helmChartService;
+  @Inject private DeploymentFreezeUtils deploymentFreezeUtils;
 
   @Value
   @Builder
@@ -708,16 +714,20 @@ public class TriggerServiceImpl implements TriggerService {
               featureFlagService.isEnabled(FeatureName.ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER, accountId);
           if (preferArtifactSelectionOverTriggeringArtifact) {
             List<Artifact> artifactsFromSelection = new ArrayList<>();
+            List<HelmChart> helmCharts = new ArrayList<>();
             if (isNotEmpty(trigger.getArtifactSelections())) {
               log.info("Artifact selections found collecting artifacts as per artifactStream selections");
               addArtifactsFromSelectionsTriggeringArtifactSource(
                   trigger.getAppId(), trigger, artifactsFromSelection, artifacts);
             }
+            if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+              addHelmChartsFromSelections(appId, trigger, helmCharts);
+            }
             if (isNotEmpty(artifactsFromSelection)) {
               log.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
                   artifactsFromSelection.stream().map(Artifact::getUuid).collect(toList()));
               try {
-                triggerDeployment(artifactsFromSelection, new ArrayList<>(), null, trigger);
+                triggerDeployment(artifactsFromSelection, helmCharts, null, trigger);
               } catch (WingsException exception) {
                 ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
               }
@@ -987,7 +997,8 @@ public class TriggerServiceImpl implements TriggerService {
                 appManifest.getAccountId(), appManifest.getUuid(), manifestSelection.getVersionRegex()));
   }
 
-  private WorkflowExecution triggerDeployment(
+  @VisibleForTesting
+  WorkflowExecution triggerDeployment(
       List<Artifact> artifacts, List<HelmChart> helmCharts, TriggerExecution triggerExecution, Trigger trigger) {
     return triggerDeployment(artifacts, helmCharts, null, triggerExecution, trigger);
   }
@@ -1018,12 +1029,24 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     WorkflowExecution workflowExecution;
-    if (ORCHESTRATION == trigger.getWorkflowType()) {
-      workflowExecution = triggerOrchestrationDeployment(trigger, executionArgs, triggerExecution);
-    } else {
-      workflowExecution = triggerPipelineDeployment(trigger, triggerExecution, executionArgs);
+    try {
+      if (ORCHESTRATION == trigger.getWorkflowType()) {
+        workflowExecution = triggerOrchestrationDeployment(trigger, executionArgs, triggerExecution);
+      } else {
+        workflowExecution = triggerPipelineDeployment(trigger, triggerExecution, executionArgs);
+      }
+      return workflowExecution;
+    } catch (DeploymentFreezeException dfe) {
+      log.warn(dfe.getMessage());
+      // TODO: Notification Handling for rejected triggers
+      if (!dfe.isMasterFreeze()) {
+        Map<String, String> placeholderValues = triggerServiceHelper.getPlaceholderValues(trigger.getAccountId(),
+            trigger.getAppId(), trigger.getName(), trigger.getWorkflowId(), trigger.getWorkflowType());
+        deploymentFreezeUtils.sendTriggerRejectedNotification(
+            trigger.getAccountId(), trigger.getAppId(), dfe.getDeploymentFreezeIds(), placeholderValues);
+      }
+      throw dfe;
     }
-    return workflowExecution;
   }
 
   private WorkflowExecution triggerPipelineDeployment(
@@ -1894,7 +1917,8 @@ public class TriggerServiceImpl implements TriggerService {
     Map<String, String> parameters = new LinkedHashMap<>();
     List<Variable> variables = new ArrayList<>();
     if (PIPELINE == trigger.getWorkflowType()) {
-      Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+      Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
+          trigger.getAppId(), trigger.getWorkflowId(), trigger.getWorkflowVariables());
       services = pipeline.getServices();
       if (pipeline.isHasBuildWorkflow()) {
         artifactOrManifestNeeded = false;

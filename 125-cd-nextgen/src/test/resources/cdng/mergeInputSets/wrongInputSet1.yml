@@ -8,8 +8,7 @@ inputSet:
           identifier: qa
           type: Deployment
           spec:
-            service:
-              identifier: service1 #adding comments to check
+            serviceConfig:
               serviceDefinition:
                 type: Kubernetes # Can it be type to make it consistent with other types
                 spec:
@@ -24,7 +23,7 @@ inputSet:
                           identifier: sidecar1
                           type: Dockerhub
                           spec:
-                            imagePath: ${input}
+                            imagePath: <+input>
                             tag: tag1
                   manifests:
                     - manifest:
@@ -53,13 +52,10 @@ inputSet:
                                     connectorRef: my-git-connector
                                     branch: masterOverride1
             infrastructure:
-              environment:
-                name: env
-                identifier: env1
               infrastructureDefinition:
                 type: KubernetesDirect
                 spec:
-                  connectorRef: ${input}
+                  connectorRef: <+input>
                   namespace: prod
             execution:
               steps:

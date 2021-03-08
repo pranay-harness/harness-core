@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.serializer.persistence.DocumentOrchestrationUtils;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -26,7 +26,7 @@ public class EngineExpressionServiceImpl implements EngineExpressionService {
     String json = pmsEngineExpressionService.evaluateExpression(ambiance, expression);
     Object result;
     try {
-      result = DocumentOrchestrationUtils.convertFromDocumentJson(json);
+      result = RecastOrchestrationUtils.fromDocumentJson(json, Object.class);
     } catch (Exception e) {
       result = json;
     }

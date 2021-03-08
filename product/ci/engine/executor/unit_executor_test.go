@@ -193,7 +193,9 @@ func TestStepRunSuccess(t *testing.T) {
 
 	outputKey := "foo"
 	outputVal := "bar"
-	o := &output.StepOutput{Output: map[string]string{outputKey: outputVal}}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = map[string]string{outputKey: outputVal}
 	retries := int32(3)
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -217,7 +219,7 @@ func TestStepRunSuccess(t *testing.T) {
 	e := NewUnitExecutor(tmpFilePath, log.Sugar())
 	ret, err := e.Run(ctx, stepProto, nil, accountID)
 	assert.Equal(t, err, nil)
-	assert.Equal(t, ret.Output[outputKey], outputVal)
+	assert.Equal(t, ret.Output.Variables[outputKey], outputVal)
 }
 
 func TestStepPluginSuccess(t *testing.T) {
@@ -255,7 +257,7 @@ func TestStepPluginSuccess(t *testing.T) {
 
 	oldStep := pluginStep
 	defer func() { pluginStep = oldStep }()
-	pluginStep = func(step *pb.UnitStep, log *zap.SugaredLogger) steps.PluginStep {
+	pluginStep = func(step *pb.UnitStep, so output.StageOutput, log *zap.SugaredLogger) steps.PluginStep {
 		return mockStep
 	}
 
@@ -341,9 +343,9 @@ func TestStepSaveCacheSuccess(t *testing.T) {
 		CallbackToken: callbackToken,
 		TaskId:        taskID,
 	}
-	o := &output.StepOutput{
-		Output: map[string]string{"key": key},
-	}
+
+	o := &output.StepOutput{}
+	o.Output.Variables = map[string]string{"key": key}
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	mockStep := msteps.NewMockSaveCacheStep(ctrl)
@@ -741,7 +743,7 @@ func TestStepSkipSuccess(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		log *zap.SugaredLogger) (map[string]string, error) {
+		force bool, log *zap.SugaredLogger) (map[string]string, error) {
 		return nil, nil
 	}
 
@@ -781,7 +783,7 @@ func TestStepInvalidSkipCondition(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		log *zap.SugaredLogger) (map[string]string, error) {
+		force bool, log *zap.SugaredLogger) (map[string]string, error) {
 		return nil, nil
 	}
 
@@ -821,7 +823,7 @@ func TestStepInvalidJEXLSkipCondition(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		log *zap.SugaredLogger) (map[string]string, error) {
+		force bool, log *zap.SugaredLogger) (map[string]string, error) {
 		return nil, fmt.Errorf("Invalid JEXL")
 	}
 
@@ -861,7 +863,7 @@ func TestStepJEXLSkipCondition(t *testing.T) {
 	}
 
 	evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-		log *zap.SugaredLogger) (map[string]string, error) {
+		force bool, log *zap.SugaredLogger) (map[string]string, error) {
 		m := make(map[string]string)
 		m[expr] = "true"
 		return m, nil

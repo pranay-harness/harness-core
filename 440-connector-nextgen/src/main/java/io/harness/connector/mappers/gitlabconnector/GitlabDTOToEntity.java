@@ -4,13 +4,12 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabAuthenticati
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuth;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
+import io.harness.connector.entities.embedded.gitlabconnector.GitlabKerberos;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentication;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernameToken;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabApiAccessSpecDTO;
@@ -20,17 +19,16 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
-import java.util.Collections;
-import java.util.List;
-
-public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConnectorDTO> {
+public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConnectorDTO, GitlabConnector> {
   @Override
   public GitlabConnector toConnectorEntity(GitlabConnectorDTO configDTO) {
     GitAuthType gitAuthType = getAuthType(configDTO.getAuthentication());
@@ -59,7 +57,7 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
       case SSH:
         final GitlabSshCredentialsDTO sshCredentialsDTO = (GitlabSshCredentialsDTO) credentialsDTO;
         return GitlabSshAuthentication.builder()
-            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSpec().getSshKeyRef()))
+            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSshKeyRef()))
             .build();
       case HTTP:
         final GitlabHttpCredentialsDTO httpCredentialsDTO = (GitlabHttpCredentialsDTO) credentialsDTO;
@@ -91,6 +89,11 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
             .username(gitlabUsernameTokenDTO.getUsername())
             .usernameRef(usernameReference)
             .build();
+      case KERBEROS:
+        final GitlabKerberosDTO gitlabKerberosDTO = (GitlabKerberosDTO) httpCredentialsDTO.getHttpCredentialsSpec();
+        return GitlabKerberos.builder()
+            .kerberosKeyRef(SecretRefHelper.getSecretConfigString(gitlabKerberosDTO.getKerberosKeyRef()))
+            .build();
       default:
         throw new UnknownEnumTypeException("Gitlab Http Auth Type", type == null ? null : type.getDisplayName());
     }
@@ -120,10 +123,5 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
 
   private GitAuthType getAuthType(GitlabAuthenticationDTO authentication) {
     return authentication.getAuthType();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.CODE_REPO);
   }
 }

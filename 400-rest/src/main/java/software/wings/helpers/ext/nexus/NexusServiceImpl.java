@@ -2,8 +2,6 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
@@ -61,7 +59,7 @@ public class NexusServiceImpl implements NexusService {
   @Inject private TimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
-    throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", ExceptionUtils.getMessage(e));
+    throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
   }
 
   public static boolean isSuccessful(Response<?> response) {
@@ -75,12 +73,11 @@ public class NexusServiceImpl implements NexusService {
         case 404:
           return false;
         case 401:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Invalid Nexus credentials");
+          throw new InvalidArtifactServerException("Invalid Nexus credentials", USER);
         case 405:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-              .addParam("message", "Method not allowed" + response.message());
+          throw new InvalidArtifactServerException("Method not allowed " + response.message(), USER);
         default:
-          throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", response.message());
+          throw new InvalidArtifactServerException(response.message(), USER);
       }
     }
     return true;
@@ -112,8 +109,7 @@ public class NexusServiceImpl implements NexusService {
       return timeLimiter.callWithTimeout(() -> {
         if (isNexusTwo) {
           if (RepositoryFormat.docker.name().equals(repositoryFormat)) {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-                .addParam("message", "Nexus 2.x does not support Docker artifact type");
+            throw new InvalidArtifactServerException("Nexus 2.x does not support Docker artifact type", USER);
           }
           return nexusTwoService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         } else {
@@ -128,7 +124,7 @@ public class NexusServiceImpl implements NexusService {
     } catch (Exception e) {
       log.error("Error occurred while retrieving Repositories from Nexus server " + nexusConfig.getNexusUrl(), e);
       if (e.getCause() != null && e.getCause() instanceof XMLStreamException) {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Nexus may not be running");
+        throw new InvalidArtifactServerException("Nexus may not be running", USER);
       }
       checkSSLHandshakeException(e);
       return emptyMap();
@@ -284,7 +280,7 @@ public class NexusServiceImpl implements NexusService {
       }
     } catch (IOException e) {
       log.error("Error occurred while downloading the artifact", e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", ExceptionUtils.getMessage(e));
+      throw new ArtifactServerException(ExceptionUtils.getMessage(e), USER);
     }
   }
 

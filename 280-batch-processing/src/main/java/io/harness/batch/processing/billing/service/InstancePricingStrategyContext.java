@@ -15,9 +15,10 @@ public class InstancePricingStrategyContext {
 
   @Autowired
   public InstancePricingStrategyContext(InstancePricingStrategy computeInstancePricingStrategy,
-      InstancePricingStrategy ecsFargateInstancePricingStrategy) {
+      InstancePricingStrategy ecsFargateInstancePricingStrategy, InstancePricingStrategy storagePricingStrategy) {
     pricingStrategyContext.put(PricingGroup.COMPUTE, computeInstancePricingStrategy);
     pricingStrategyContext.put(PricingGroup.ECS_FARGATE, ecsFargateInstancePricingStrategy);
+    pricingStrategyContext.put(PricingGroup.STORAGE, storagePricingStrategy);
   }
 
   InstancePricingStrategy getInstancePricingStrategy(InstanceType instanceType) {

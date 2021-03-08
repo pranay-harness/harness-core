@@ -5,6 +5,8 @@ import static software.wings.beans.s3.FetchS3FilesExecutionResponse.FetchS3Files
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -45,6 +47,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.util.StreamUtils;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class S3FetchFilesTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private AwsHelperService awsHelperService;

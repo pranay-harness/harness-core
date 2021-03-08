@@ -7,6 +7,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -31,6 +32,7 @@ import lombok.AllArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NextGenManagerAuth
 public class NGSecretManagerResource {
   @Inject private final NGSecretManagerService ngSecretManagerService;
 

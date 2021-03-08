@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -116,6 +117,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
 
   @InjectMocks @Spy private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
   public static final String REGION = "us-east-1";
+  public static final String USER_DATA_NON_EMPTY = "// echo \"test\"";
+  public static final String USER_DATA_EMPTY = "";
 
   @Before
   public void setup() {
@@ -706,6 +709,42 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         .isEqualTo(baseLaunchTemplateVersion.getLaunchTemplateName());
     assertThat(awsAmiServiceSetupResponse.getBaseLaunchTemplateVersion())
         .isEqualTo(String.valueOf(baseLaunchTemplateVersion.getVersionNumber()));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testCreateAwsAmiSetupRequest() {
+    LbDetailsForAlbTrafficShift lbDetails = LbDetailsForAlbTrafficShift.builder()
+                                                .loadBalancerName("lbName")
+                                                .loadBalancerArn("lbArn")
+                                                .listenerPort("port")
+                                                .listenerArn("listArn")
+                                                .useSpecificRule(true)
+                                                .ruleArn("ruleArn")
+                                                .prodTargetGroupName("prodTarget")
+                                                .prodTargetGroupArn("prodTargetArn")
+                                                .stageTargetGroupName("stageTarget")
+                                                .stageTargetGroupArn("stageTargetArn")
+                                                .build();
+
+    AwsConfig awsConfig = AwsConfig.builder().build();
+    AwsAmiServiceTrafficShiftAlbSetupRequest trafficShiftAlbSetupRequest =
+        AwsAmiServiceTrafficShiftAlbSetupRequest.builder()
+            .awsConfig(awsConfig)
+            .region(REGION)
+            .encryptionDetails(emptyList())
+            .lbDetails(singletonList(LbDetailsForAlbTrafficShift.builder().build()))
+            .newAsgNamePrefix("new_Asg")
+            .minInstances(1)
+            .maxInstances(4)
+            .desiredInstances(2)
+            .userData(USER_DATA_NON_EMPTY)
+            .build();
+
+    AwsAmiServiceSetupRequest request =
+        awsAmiHelperServiceDelegate.createAwsAmiSetupRequest(trafficShiftAlbSetupRequest, singletonList(lbDetails));
+    assertThat(request.getUserData()).isEqualTo(trafficShiftAlbSetupRequest.getUserData());
   }
 
   @Test

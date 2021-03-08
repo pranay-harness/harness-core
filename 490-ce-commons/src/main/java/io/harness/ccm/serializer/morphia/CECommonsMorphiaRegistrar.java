@@ -1,5 +1,9 @@
 package io.harness.ccm.serializer.morphia;
 
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.Budget;
+import io.harness.ccm.budget.ClusterBudgetScope;
+import io.harness.ccm.budget.PerspectiveBudgetScope;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.LatestClusterInfo;
 import io.harness.morphia.MorphiaRegistrar;
@@ -17,9 +21,12 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(LatestClusterInfo.class);
     set.add(K8sWorkloadRecommendation.class);
     set.add(PartialRecommendationHistogram.class);
+    set.add(Budget.class);
   }
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
-    // no classes to register
+    h.put("ccm.budget.ApplicationBudgetScope", ApplicationBudgetScope.class);
+    h.put("ccm.budget.ClusterBudgetScope", ClusterBudgetScope.class);
+    h.put("ccm.budget.PerspectiveBudgetScope", PerspectiveBudgetScope.class);
   }
 }

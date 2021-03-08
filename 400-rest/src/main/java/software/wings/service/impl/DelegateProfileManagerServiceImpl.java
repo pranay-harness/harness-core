@@ -10,6 +10,7 @@ import static io.harness.tasks.Cd1SetupFields.SERVICE_ID_FIELD;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -31,7 +32,6 @@ import io.harness.paging.PageRequestGrpc;
 
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -298,6 +298,10 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
       delegateProfileGrpcBuilder.addAllScopingRules(convert(delegateProfile.getScopingRules()));
     }
 
+    if (isNotBlank(delegateProfile.getIdentifier())) {
+      delegateProfileGrpcBuilder.setIdentifier(delegateProfile.getIdentifier());
+    }
+
     return delegateProfileGrpcBuilder.build();
   }
 
@@ -387,6 +391,10 @@ public class DelegateProfileManagerServiceImpl implements DelegateProfileManager
                          .serviceIds(extractScopingEntityIds(grpcScopingRule.getScopingEntitiesMap(), SERVICE_ID_FIELD))
                          .build())
               .collect(Collectors.toList()));
+    }
+
+    if (isNotBlank(delegateProfileGrpc.getIdentifier())) {
+      delegateProfileDetailsBuilder.identifier(delegateProfileGrpc.getIdentifier());
     }
 
     return delegateProfileDetailsBuilder.build();

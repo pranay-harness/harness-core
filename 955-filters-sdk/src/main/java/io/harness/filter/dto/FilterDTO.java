@@ -2,6 +2,7 @@ package io.harness.filter.dto;
 
 import static io.harness.filter.dto.FilterVisibility.EVERYONE;
 
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,7 +24,7 @@ import lombok.experimental.FieldNameConstants;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FilterDTO implements PersistentEntity {
   @NotNull String name;
-  @NotNull String identifier;
+  @NotNull @EntityIdentifier String identifier;
   String orgIdentifier;
   String projectIdentifier;
   @NotNull FilterPropertiesDTO filterProperties;

@@ -11,21 +11,23 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
-import software.wings.service.impl.GcpHelperService;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.util.Collections;
 import org.junit.Test;
@@ -37,6 +39,7 @@ import org.mockito.Mock;
 public class GcpHelperServiceManagerTest extends WingsBaseTest {
   @Mock private GcpHelperService gcpHelperService;
   @Mock private DelegateService delegateService;
+  @Mock private EncryptionService encryptionService;
   @InjectMocks private GcpHelperServiceManager gcpHelperServiceManager;
 
   @Test
@@ -45,14 +48,18 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
   public void validateCredentialsServiceAccountFile() {
     final GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent("secret".toCharArray()).build();
     gcpHelperServiceManager.validateCredential(gcpConfig, Collections.emptyList());
-    verify(gcpHelperService).getGkeContainerService(gcpConfig, Collections.emptyList(), false);
+    verify(gcpHelperService)
+        .getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
   }
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void validateCredentialDelegateSelector() throws InterruptedException {
-    doReturn(GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build())
+    doReturn(
+        GcpValidationTaskResponse.builder()
+            .connectorValidationResult(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
+            .build())
         .when(delegateService)
         .executeTask(any(DelegateTask.class));
 
@@ -71,7 +78,7 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).containsExactly("foo");
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TaskData.DEFAULT_SYNC_CALL_TIMEOUT);
     assertThat(delegateTask.getData().getParameters()[0])
-        .isEqualTo(GcpValidationRequest.builder().delegateSelector("foo").build());
+        .isEqualTo(GcpValidationRequest.builder().delegateSelectors(Collections.singleton("foo")).build());
   }
 
   @Test
@@ -100,6 +107,8 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
         .withMessage("Unknown response from delegate: [AwsEc2ListInstancesResponse]");
 
     gcpHelperServiceManager.validateDelegateSuccessForSyncTask(
-        GcpValidationTaskResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build());
+        GcpValidationTaskResponse.builder()
+            .connectorValidationResult(ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build())
+            .build());
   }
 }

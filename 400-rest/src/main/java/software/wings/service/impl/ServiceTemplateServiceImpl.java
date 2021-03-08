@@ -25,6 +25,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.validation.PersistenceValidator;
 
+import software.wings.api.DeploymentType;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -253,7 +254,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public ServiceTemplate get(@NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String environmentId) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
-        .filter(ServiceTemplate.APP_ID_KEY2, appId)
+        .filter(ServiceTemplate.APP_ID, appId)
         .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
         .filter(ServiceTemplate.ENVIRONMENT_ID_KEY, environmentId)
         .get();
@@ -286,7 +287,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public List<Key<ServiceTemplate>> getTemplateRefKeysByService(String appId, String serviceId, String envId) {
     Query<ServiceTemplate> templateQuery = wingsPersistence.createQuery(ServiceTemplate.class)
-                                               .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                               .filter(ServiceTemplate.APP_ID, appId)
                                                .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId);
 
     if (isNotBlank(envId)) {
@@ -299,7 +300,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void updateDefaultServiceTemplateName(
       String appId, String serviceId, String oldServiceName, String newServiceName) {
     Query<ServiceTemplate> query = wingsPersistence.createQuery(ServiceTemplate.class)
-                                       .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                       .filter(ServiceTemplate.APP_ID, appId)
                                        .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
                                        .filter(ServiceTemplateKeys.defaultServiceTemplate, true)
                                        .filter(ServiceTemplateKeys.name, oldServiceName);
@@ -311,7 +312,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public boolean exist(String appId, String templateId) {
     return wingsPersistence.createQuery(ServiceTemplate.class)
-               .filter(ServiceTemplate.APP_ID_KEY2, appId)
+               .filter(ServiceTemplate.APP_ID, appId)
                .filter(ID_KEY, templateId)
                .getKey()
         != null;
@@ -389,6 +390,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       return;
     }
 
+    if (DeploymentType.AZURE_WEBAPP == service.getDeploymentType()) {
+      populateAzureAppServiceOverrideApplicationManifest(serviceTemplate);
+      return;
+    }
+
     AppManifestKind appManifestKind = AppManifestKind.VALUES;
     if (ArtifactType.PCF == service.getArtifactType()) {
       appManifestKind = AppManifestKind.PCF_OVERRIDE;
@@ -414,9 +420,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
   }
 
+  private void populateAzureAppServiceOverrideApplicationManifest(ServiceTemplate serviceTemplate) {
+    serviceTemplate.setAppSettingOverrideManifest(applicationManifestService.getAppManifest(serviceTemplate.getAppId(),
+        serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE));
+    serviceTemplate.setConnStringsOverrideManifest(applicationManifestService.getAppManifest(serviceTemplate.getAppId(),
+        serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE));
+  }
+
   private void populateServiceAndOverrideValuesManifestFile(ServiceTemplate template) {
     Service service = serviceResourceService.get(template.getAppId(), template.getServiceId());
     if (service == null) {
+      return;
+    }
+
+    if (DeploymentType.AZURE_WEBAPP == service.getDeploymentType()) {
+      populateAzureAppServiceOverrideValuesManifestFile(template);
       return;
     }
 
@@ -440,6 +458,26 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     template.setValuesOverrideManifestFile(manifestFiles.get(0));
   }
 
+  private void populateAzureAppServiceOverrideValuesManifestFile(ServiceTemplate serviceTemplate) {
+    serviceTemplate.setAppSettingsOverrideManifestFile(
+        getOverrideManifestFile(serviceTemplate, AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE));
+    serviceTemplate.setConnStringsOverrideManifestFile(
+        getOverrideManifestFile(serviceTemplate, AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE));
+  }
+  private ManifestFile getOverrideManifestFile(ServiceTemplate serviceTemplate, AppManifestKind overrideKind) {
+    ApplicationManifest appManifest = applicationManifestService.getAppManifest(
+        serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getServiceId(), overrideKind);
+    if (appManifest == null) {
+      return null;
+    }
+    List<ManifestFile> manifestFiles =
+        applicationManifestService.getManifestFilesByAppManifestId(appManifest.getAppId(), appManifest.getUuid());
+    if (isEmpty(manifestFiles)) {
+      return null;
+    }
+    return manifestFiles.get(0);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#delete(java.lang.String, java.lang.String,
    * java.lang.String)
@@ -448,7 +486,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public void delete(String appId, String serviceTemplateId) {
     // TODO: move to the prune pattern
     boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(ServiceTemplate.class)
-                                                  .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                                  .filter(ServiceTemplate.APP_ID, appId)
                                                   .filter(ID_KEY, serviceTemplateId));
     if (deleted) {
       executorService.submit(() -> infrastructureMappingService.deleteByServiceTemplate(appId, serviceTemplateId));
@@ -461,7 +499,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByEnvironment(String appId, String envId) {
     List<Key<ServiceTemplate>> keys = wingsPersistence.createQuery(ServiceTemplate.class)
-                                          .filter(ServiceTemplate.APP_ID_KEY2, appId)
+                                          .filter(ServiceTemplate.APP_ID, appId)
                                           .filter(ServiceTemplateKeys.envId, envId)
                                           .asKeyList();
     for (Key<ServiceTemplate> key : keys) {
@@ -472,7 +510,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   @Override
   public void pruneByService(String appId, String serviceId) {
     wingsPersistence.createQuery(ServiceTemplate.class)
-        .filter(ServiceTemplate.APP_ID_KEY2, appId)
+        .filter(ServiceTemplate.APP_ID, appId)
         .filter(ServiceTemplate.SERVICE_ID_KEY, serviceId)
         .asList()
         .forEach(serviceTemplate -> delete(serviceTemplate.getAppId(), serviceTemplate.getUuid()));

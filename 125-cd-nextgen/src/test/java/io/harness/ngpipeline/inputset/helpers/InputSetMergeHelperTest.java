@@ -9,7 +9,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -47,7 +48,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Slf4j
-public class InputSetMergeHelperTest extends CDNGBaseTest {
+public class InputSetMergeHelperTest extends CDNGTestBase {
   @Inject InputSetMergeHelper inputSetMergeHelper;
   @Inject NGPipelineService ngPipelineService;
   @Inject InputSetEntityService inputSetEntityService;
@@ -67,6 +68,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testGetTemplateFromPipeline() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
     String pipelineFilename = "pipeline-extensive.yaml";
@@ -85,6 +87,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = OwnerRule.ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testMergingInputSets() throws IOException {
     Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
     doReturn(request).when(entitySetupUsageClient).save(any());
@@ -103,6 +106,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = OwnerRule.ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testMergingInputSetsWithWrongTemplate() throws IOException {
     Call<ResponseDTO<Page<EntitySetupUsageDTO>>> request = mock(Call.class);
     doReturn(request).when(entitySetupUsageClient).save(any());
@@ -129,13 +133,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     Map<String, VisitorErrorResponseWrapper> uuidToErrorResponseMap = mergeInputSetResponse.getUuidToErrorResponseMap();
     assertThat(uuidToErrorResponseMap.keySet().size()).isEqualTo(5);
 
-    String key = "myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.primary.spec.tag";
+    String key = "myPipeline1.stages.qa.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.tag";
     String expectedIdentifier = "wrongInput1";
     String expectedFieldName = "tag";
     String expectedMessage = "Input Set field cannot have value if not marked as runtime in original pipeline.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.qa.spec.service.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath";
+    key = "myPipeline1.stages.qa.spec.serviceConfig.serviceDefinition.spec.artifacts.sidecars.sidecar.spec.imagePath";
     expectedFieldName = "imagePath";
     expectedMessage = "Value inside input set cannot be another runtime expression.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
@@ -144,12 +148,13 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
     expectedFieldName = "connectorRef";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef";
+    key =
+        "myPipeline1.stages.prod.spec.serviceConfig.stageOverrides.manifests.prodOverride.spec.store.spec.connectorRef";
     expectedIdentifier = "wrongInput2";
     expectedFieldName = "connectorRef";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
 
-    key = "myPipeline1.stages.prod.spec.service.stageOverrides.manifests.prodOverride.spec.store.spec.metadata";
+    key = "myPipeline1.stages.prod.spec.serviceConfig.stageOverrides.manifests.prodOverride.spec.store.spec.metadata";
     expectedFieldName = "gitFetchType";
     expectedMessage = "Input Set field cannot have value if not marked as runtime in original pipeline.";
     validateAssertOnErrorResponse(uuidToErrorResponseMap, key, expectedIdentifier, expectedFieldName, expectedMessage);
@@ -245,6 +250,7 @@ public class InputSetMergeHelperTest extends CDNGBaseTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("Tests a feature that is not used anymore")
   public void testRemoveRuntimeInputFromInputSet() throws IOException {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "input-set-with-runtime-input.yaml";

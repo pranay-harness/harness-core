@@ -1,10 +1,13 @@
 package io.harness.perpetualtask.k8s.metrics.client.model.common;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.k8s.model.KubernetesListObject;
+import io.harness.k8s.model.KubernetesObject;
+
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.gson.annotations.SerializedName;
-import io.kubernetes.client.common.KubernetesListObject;
-import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.openapi.models.V1ListMeta;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,7 @@ import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
 @JsonDeserialize(using = JsonDeserializer.None.class)
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class CustomResourceList<T extends KubernetesObject> implements KubernetesListObject {
   @SerializedName("apiVersion") private String apiVersion;
   @SerializedName("items") private List<T> items = new ArrayList();

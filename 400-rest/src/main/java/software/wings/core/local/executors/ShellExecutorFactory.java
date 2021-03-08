@@ -1,9 +1,13 @@
 package software.wings.core.local.executors;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ShellExecutorConfig;
+
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.core.ssh.executors.FileBasedProcessScriptExecutor;
 import software.wings.core.ssh.executors.FileBasedScriptExecutor;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -11,16 +15,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@TargetModule(Module._960_API_SERVICES)
 public class ShellExecutorFactory {
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager fileService;
 
   public ScriptProcessExecutor getExecutor(ShellExecutorConfig config) {
-    return new ScriptProcessExecutor(fileService, getExecutionLogCallback(config), true, config);
+    return new ScriptProcessExecutor(getExecutionLogCallback(config), true, config);
   }
 
   public ScriptProcessExecutor getExecutor(ShellExecutorConfig config, boolean shouldSaveExecutionLogs) {
-    return new ScriptProcessExecutor(fileService, getExecutionLogCallback(config), shouldSaveExecutionLogs, config);
+    return new ScriptProcessExecutor(getExecutionLogCallback(config), shouldSaveExecutionLogs, config);
   }
 
   public FileBasedScriptExecutor getFileBasedExecutor(ShellExecutorConfig config) {

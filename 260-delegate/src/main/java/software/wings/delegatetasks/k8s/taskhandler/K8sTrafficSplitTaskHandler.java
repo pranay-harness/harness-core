@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.TrafficSplit;
+import static io.harness.k8s.manifest.ObjectYamlUtils.toYaml;
 import static io.harness.k8s.model.K8sExpressions.virtualServiceNameExpression;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -15,6 +16,8 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.KubernetesContainerService;
@@ -38,7 +41,6 @@ import software.wings.helpers.ext.k8s.response.K8sTrafficSplitResponse;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import io.fabric8.kubernetes.api.KubernetesHelper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +53,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -135,8 +138,8 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
     executionLogCallback.saveExecutionLog(
         color("\nRelease name: " + k8sTrafficSplitTaskParameters.getReleaseName(), White, Bold));
 
-    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(kubernetesConfig,
-        k8sTrafficSplitTaskParameters.getReleaseName(), k8sTrafficSplitTaskParameters.isDeprecateFabric8Enabled());
+    String releaseHistoryData = k8sTaskHelperBase.getReleaseHistoryDataFromConfigMap(
+        kubernetesConfig, k8sTrafficSplitTaskParameters.getReleaseName());
 
     if (StringUtils.isEmpty(releaseHistoryData)) {
       executionLogCallback.saveExecutionLog("\nNo release history found for release ");
@@ -187,7 +190,9 @@ public class K8sTrafficSplitTaskHandler extends K8sTaskHandler {
 
     try {
       updateVirtualServiceWithDestinationWeights(k8sTrafficSplitTaskParameters, executionLogCallback);
-      executionLogCallback.saveExecutionLog("\n" + KubernetesHelper.toYaml(virtualService));
+      if (virtualService != null) {
+        executionLogCallback.saveExecutionLog("\n" + toYaml(virtualService));
+      }
 
       virtualService =
           (VirtualService) kubernetesContainerService.createOrReplaceIstioResource(kubernetesConfig, virtualService);

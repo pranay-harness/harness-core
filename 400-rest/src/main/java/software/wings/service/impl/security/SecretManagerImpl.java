@@ -41,6 +41,7 @@ import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretChangeLog.SecretChangeLogKeys;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
 import io.harness.exception.InvalidRequestException;
@@ -184,6 +185,11 @@ public class SecretManagerImpl implements SecretManager {
 
     SecretManagerConfig encryptionConfig = secretManagerConfigService.getSecretManager(
         accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+
+    if (encryptionConfig == null) {
+      log.error("No secret manager found with id {}", encryptedData.getKmsId());
+      return Optional.empty();
+    }
 
     if (encryptionConfig.isTemplatized() && isNotEmpty(workflowExecutionId)) {
       encryptionConfig = updateRuntimeParametersAndGetConfig(workflowExecutionId, encryptionConfig);
@@ -929,6 +935,12 @@ public class SecretManagerImpl implements SecretManager {
   public boolean canUseSecretsInAppAndEnv(
       @NonNull Set<String> secretIds, @NonNull String accountId, String appIdFromRequest, String envIdFromRequest) {
     return secretService.hasAccessToReadSecrets(accountId, secretIds, appIdFromRequest, envIdFromRequest);
+  }
+
+  @Override
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    return secretService.filterSecretIdsByReadPermission(secretIds, accountId, appIdFromRequest, envIdFromRequest);
   }
 
   public boolean hasUpdateAccessToSecrets(@NonNull Set<String> secretIds, @NonNull String accountId) {

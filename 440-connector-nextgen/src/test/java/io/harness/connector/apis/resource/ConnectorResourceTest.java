@@ -12,17 +12,17 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.connector.apis.dto.ConnectorCatalogueItem;
-import io.harness.connector.apis.dto.ConnectorCatalogueResponseDTO;
-import io.harness.connector.apis.dto.ConnectorDTO;
-import io.harness.connector.apis.dto.ConnectorFilterPropertiesDTO;
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
-import io.harness.connector.apis.dto.ConnectorResponseDTO;
+import io.harness.connector.ConnectorCatalogueItem;
+import io.harness.connector.ConnectorCatalogueResponseDTO;
+import io.harness.connector.ConnectorCategory;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorFilterPropertiesDTO;
+import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.CatalogueHelper;
 import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
@@ -33,6 +33,7 @@ import io.harness.rule.OwnerRule;
 import io.harness.utils.PageTestUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -62,13 +63,14 @@ public class ConnectorResourceTest extends CategoryTest {
             .name("connector")
             .identifier("identifier")
             .connectorType(KUBERNETES_CLUSTER)
-            .connectorConfig(
-                KubernetesClusterConfigDTO.builder()
-                    .credential(KubernetesCredentialDTO.builder()
-                                    .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                                    .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
-                                    .build())
-                    .build())
+            .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                 .credential(KubernetesCredentialDTO.builder()
+                                                 .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                                                 .config(KubernetesDelegateDetailsDTO.builder()
+                                                             .delegateSelectors(Collections.singleton("delegateName"))
+                                                             .build())
+                                                 .build())
+                                 .build())
             .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
@@ -162,14 +164,6 @@ public class ConnectorResourceTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void validateTest() {
-    ResponseDTO<ConnectorValidationResult> result = connectorResource.validate(connectorRequest, accountIdentifier);
-    Mockito.verify(connectorService, times(1)).validate(eq(connectorRequest), eq(accountIdentifier));
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.DEEPAK)
-  @Category(UnitTests.class)
   public void testConnectionResourceTest() {
     ResponseDTO<ConnectorValidationResult> validationResult = connectorResource.testConnection(
         "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
@@ -198,8 +192,7 @@ public class ConnectorResourceTest extends CategoryTest {
     assertThat(catalogue.size()).isEqualTo(ConnectorCategory.values().length);
     final int totalConnectorsWithinAllCategories =
         catalogue.stream().map(item -> item.getConnectors().size()).mapToInt(Integer::intValue).sum();
-    // Handling it specially for git.
-    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length - 1);
+    assertThat(totalConnectorsWithinAllCategories).isEqualTo(ConnectorType.values().length);
     Mockito.verify(connectorService, times(1)).getConnectorCatalogue();
   }
 }

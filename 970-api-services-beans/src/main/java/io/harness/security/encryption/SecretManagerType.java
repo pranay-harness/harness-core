@@ -5,7 +5,8 @@ import lombok.Getter;
 public enum SecretManagerType {
   KMS,
   VAULT,
-  CUSTOM;
+  CUSTOM,
+  SSH;
 
   @Getter private final String name;
 

@@ -16,12 +16,12 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.delegate.task.shell.ScriptType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.ScriptType;
 
 import software.wings.beans.AWSTemporaryCredentials;
 import software.wings.beans.AwsConfig;

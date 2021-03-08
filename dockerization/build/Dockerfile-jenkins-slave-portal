@@ -4,7 +4,9 @@ FROM base_jdk
 
 USER root
 
-RUN yum install -y git-core hostname unzip wget
+COPY mongodb-org-4.4.repo /etc/yum.repos.d/
+
+RUN yum install -y git-core hostname unzip wget mongodb-org-shell
 RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
 RUN tar -xzf gsutil.tar.gz -C /opt
 
@@ -49,8 +51,13 @@ RUN curl -O https://releases.hashicorp.com/terraform/0.12.11/terraform_0.12.11_l
 RUN wget -O /etc/yum.repos.d/cloudfoundry-cli.repo https://packages.cloudfoundry.org/fedora/cloudfoundry-cli.repo \
     && yum install -y cf-cli
 
-RUN curl -o /etc/yum.repos.d/bazel.repo https://copr.fedorainfracloud.org/coprs/vbatts/bazel/repo/epel-7/vbatts-bazel-epel-7.repo
-RUN yum -y install bazel3
+#RUN curl -o /etc/yum.repos.d/bazel.repo https://copr.fedorainfracloud.org/coprs/vbatts/bazel/repo/epel-7/vbatts-bazel-epel-7.repo
+#RUN yum -y install bazel3
+
+RUN curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/download/v1.7.4/bazelisk-linux-amd64 && \
+    chown root:root /usr/local/bin/bazel && \
+    chmod 0755 /usr/local/bin/bazel
+RUN bazel version
 
 ARG KUBECTL_VERSION=v1.13.2
 ARG PLATFORM=linux

@@ -4,22 +4,19 @@ import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryCo
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector.ArtifactoryConnectorBuilder;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.connector.mappers.SecretRefHelper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryUsernamePasswordAuthDTO;
+import io.harness.encryption.SecretRefHelper;
 
 import com.google.inject.Singleton;
-import java.util.Collections;
-import java.util.List;
 
 @Singleton
-public class ArtifactoryDTOToEntity implements ConnectorDTOToEntityMapper<ArtifactoryConnectorDTO> {
+public class ArtifactoryDTOToEntity
+    implements ConnectorDTOToEntityMapper<ArtifactoryConnectorDTO, ArtifactoryConnector> {
   @Override
   public ArtifactoryConnector toConnectorEntity(ArtifactoryConnectorDTO configDTO) {
-    ArtifactoryAuthType artifactoryAuthType =
-        configDTO.getAuth() != null ? configDTO.getAuth().getAuthType() : ArtifactoryAuthType.NO_AUTH;
+    ArtifactoryAuthType artifactoryAuthType = configDTO.getAuth().getAuthType();
     ArtifactoryConnectorBuilder artifactoryConnectorBuilder =
         ArtifactoryConnector.builder().url(configDTO.getArtifactoryServerUrl()).authType(artifactoryAuthType);
     if (artifactoryAuthType == ArtifactoryAuthType.USER_PASSWORD) {
@@ -31,15 +28,11 @@ public class ArtifactoryDTOToEntity implements ConnectorDTOToEntityMapper<Artifa
     return artifactoryConnectorBuilder.build();
   }
 
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.ARTIFACTORY);
-  }
-
   private ArtifactoryUserNamePasswordAuthentication createArtifactoryAuthentication(
       ArtifactoryUsernamePasswordAuthDTO artifactoryUsernamePasswordAuthDTO) {
     return ArtifactoryUserNamePasswordAuthentication.builder()
         .username(artifactoryUsernamePasswordAuthDTO.getUsername())
+        .usernameRef(SecretRefHelper.getSecretConfigString(artifactoryUsernamePasswordAuthDTO.getUsernameRef()))
         .passwordRef(SecretRefHelper.getSecretConfigString(artifactoryUsernamePasswordAuthDTO.getPasswordRef()))
         .build();
   }

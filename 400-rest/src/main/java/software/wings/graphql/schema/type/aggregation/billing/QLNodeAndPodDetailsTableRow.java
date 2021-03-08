@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -12,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLNodeAndPodDetailsTableRow {
   String name;
   String id;
@@ -39,4 +43,15 @@ public class QLNodeAndPodDetailsTableRow {
   long createTime;
   long deleteTime;
   String qosClass;
+  double storageCost;
+  double storageUtilizationValue;
+  double storageRequest;
+  double storageActualIdleCost;
+  double memoryBillingAmount;
+  double cpuBillingAmount;
+  double storageUnallocatedCost;
+  double memoryUnallocatedCost;
+  double cpuUnallocatedCost;
+  double memoryIdleCost;
+  double cpuIdleCost;
 }

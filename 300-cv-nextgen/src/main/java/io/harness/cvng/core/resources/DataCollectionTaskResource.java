@@ -2,6 +2,7 @@ package io.harness.cvng.core.resources;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.DELEGATE_DATA_COLLECTION_TASK;
 
+import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -13,6 +14,7 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.GET;
@@ -24,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Api(DELEGATE_DATA_COLLECTION_TASK)
 @Path(DELEGATE_DATA_COLLECTION_TASK)
 @Produces("application/json")
+@ExposeInternalException
 public class DataCollectionTaskResource {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
 
@@ -36,6 +39,17 @@ public class DataCollectionTaskResource {
   public RestResponse<Optional<DataCollectionTaskDTO>> getNextTask(@QueryParam("accountId") @NotNull String accountId,
       @QueryParam("dataCollectionWorkerId") String dataCollectionWorkerId) {
     return new RestResponse<>(dataCollectionTaskService.getNextTaskDTO(accountId, dataCollectionWorkerId));
+  }
+
+  @GET
+  @Path("next-tasks")
+  @Timed
+  @ExceptionMetered
+  @DelegateAuth
+  @ApiOperation(value = "gets next tasks for data collection", nickname = "getNextDataCollectionTasks")
+  public RestResponse<List<DataCollectionTaskDTO>> getNextTasks(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("dataCollectionWorkerId") String dataCollectionWorkerId) {
+    return new RestResponse<>(dataCollectionTaskService.getNextTaskDTOs(accountId, dataCollectionWorkerId));
   }
 
   @POST

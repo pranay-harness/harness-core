@@ -464,8 +464,6 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     selectedFields.add(CEDataEntryKeys.idleCost);
     selectedFields.add(CEDataEntryKeys.unallocatedCost);
     selectedFields.add(CEDataEntryKeys.systemCost);
-    selectedFields.add(CEDataEntryKeys.maxCpuUtilization);
-    selectedFields.add(CEDataEntryKeys.maxMemoryUtilization);
     selectedFields.add(CEDataEntryKeys.avgCpuUtilization);
     selectedFields.add(CEDataEntryKeys.avgMemoryUtilization);
     selectedFields.add(CEDataEntryKeys.cpuRequest);

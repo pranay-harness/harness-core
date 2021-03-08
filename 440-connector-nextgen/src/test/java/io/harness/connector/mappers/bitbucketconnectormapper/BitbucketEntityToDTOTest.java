@@ -3,14 +3,13 @@ package io.harness.connector.mappers.bitbucketconnectormapper;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketUsernamePasswordApiAccess;
-import io.harness.connector.mappers.SecretRefHelper;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
@@ -18,8 +17,9 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthentication
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -61,10 +61,10 @@ public class BitbucketEntityToDTOTest {
 
     final BitbucketApiAccessDTO bitbucketApiAccessDTO =
         BitbucketApiAccessDTO.builder()
-            .type(BitbucketApiAccessType.USERNAME_AND_PASSWORD)
-            .spec(BitbucketUsernamePasswordApiAccessDTO.builder()
+            .type(BitbucketApiAccessType.USERNAME_AND_TOKEN)
+            .spec(BitbucketUsernameTokenApiAccessDTO.builder()
                       .usernameRef(SecretRefHelper.createSecretRef(privateKeyRef))
-                      .passwordRef(SecretRefHelper.createSecretRef(privateKeyRef))
+                      .tokenRef(SecretRefHelper.createSecretRef(privateKeyRef))
                       .build())
             .build();
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
@@ -78,10 +78,8 @@ public class BitbucketEntityToDTOTest {
         BitbucketConnector.builder()
             .hasApiAccess(true)
             .url(url)
-            .bitbucketApiAccess(BitbucketUsernamePasswordApiAccess.builder()
-                                    .usernameRef(privateKeyRef)
-                                    .passwordRef(privateKeyRef)
-                                    .build())
+            .bitbucketApiAccess(
+                BitbucketUsernamePasswordApiAccess.builder().usernameRef(privateKeyRef).tokenRef(privateKeyRef).build())
             .connectionType(GitConnectionType.REPO)
             .authType(HTTP)
             .authenticationDetails(

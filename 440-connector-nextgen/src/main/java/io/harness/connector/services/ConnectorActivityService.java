@@ -1,6 +1,6 @@
 package io.harness.connector.services;
 
-import io.harness.connector.apis.dto.ConnectorInfoDTO;
+import io.harness.connector.ConnectorInfoDTO;
 import io.harness.ng.core.activityhistory.NGActivityType;
 
 public interface ConnectorActivityService {

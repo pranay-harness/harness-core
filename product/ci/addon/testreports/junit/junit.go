@@ -6,6 +6,7 @@ import (
 	"github.com/mattn/go-zglob"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	gojunit "github.com/wings-software/portal/product/ci/addon/gojunit"
+	"github.com/wings-software/portal/product/ci/addon/testreports"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
@@ -36,7 +37,7 @@ func getFiles(path string) ([]string, error) {
 }
 
 // New returns a new Junit test reporter
-func New(paths []string, log *zap.SugaredLogger) *Junit {
+func New(paths []string, log *zap.SugaredLogger) testreports.TestReporter {
 	var filenames []string
 	set := make(map[string]struct{}) // unique set of XML files
 	for _, path := range paths {
@@ -80,8 +81,11 @@ func (j *Junit) GetTests(ctx context.Context) (<-chan *types.TestCase, <-chan er
 			for _, suite := range suites {
 				for _, test := range suite.Tests {
 					ct := convert(test, suite)
-					testc <- ct
-					total = total + 1
+					if ct.Name != "" {
+						testc <- ct
+						total = total + 1
+					}
+
 				}
 			}
 		}
@@ -95,13 +99,13 @@ func convert(testCase gojunit.Test, testSuite gojunit.Suite) *types.TestCase {
 	testCase.Result.Desc = restrictLength(testCase.Result.Desc)
 	testCase.Result.Message = restrictLength(testCase.Result.Message)
 	return &types.TestCase{
-		Name:      testCase.Name,
-		SuiteName: testSuite.Name,
-		ClassName: testCase.Classname,
-		Duration:  testCase.Duration,
-		Result:    testCase.Result,
-		SystemOut: restrictLength(testCase.SystemOut),
-		SystemErr: restrictLength(testCase.SystemErr),
+		Name:       testCase.Name,
+		SuiteName:  testSuite.Name,
+		ClassName:  testCase.Classname,
+		DurationMs: testCase.DurationMs,
+		Result:     testCase.Result,
+		SystemOut:  restrictLength(testCase.SystemOut),
+		SystemErr:  restrictLength(testCase.SystemErr),
 	}
 }
 

@@ -7,6 +7,17 @@
             <id>harness-internal</id>
             <username>${REPLACE_USERNAME_HERE}</username>
             <password>${REPLACE_PASSWORD_HERE}</password>
+            <configuration>
+                <connectionTimeout>240000</connectionTimeout>
+                <readTimeout>240000</readTimeout>
+            </configuration>
+        </server>
+        <server>
+            <id>harness</id>
+            <configuration>
+                <connectionTimeout>240000</connectionTimeout>
+                <readTimeout>240000</readTimeout>
+            </configuration>
         </server>
     </servers>
 </settings>

@@ -11,50 +11,6 @@ extend type Query {
   ): WorkloadHistogramData @dataFetcher(name: k8sWorkloadHistogram)
 }
 
-input WorkloadFilter {
-  cluster: IdFilter
-  namespace: IdFilter
-  workloadName: IdFilter
-  workloadType: IdFilter
-}
-
-type WorkloadRecommendationConnection {
-  pageInfo: PageInfo
-  nodes: [WorkloadRecommendation]
-}
-
-type WorkloadRecommendation {
-  clusterId: String
-  clusterName: String
-  namespace: String
-  workloadType: String
-  workloadName: String
-  containerRecommendations: [ContainerRecommendation]
-  estimatedSavings: Number
-  numDays: Int
-}
-
-type ContainerRecommendation {
-  containerName: String
-  current: ResourceRequirements
-  burstable: ResourceRequirements
-  guaranteed: ResourceRequirements
-  recommended: ResourceRequirements
-  numDays: Int
-  totalSamplesCount: Int
-}
-
-type ResourceRequirements {
-  yaml: String
-  limits: [ResourceEntry]
-  requests: [ResourceEntry]
-}
-
-type ResourceEntry {
-  name: String
-  quantity: String
-}
-
 type WorkloadHistogramData {
   containerHistogramDataList: [ContainerHistogramData]
 }
@@ -69,6 +25,9 @@ type HistogramExp {
   firstBucketSize: Number
   growthRatio: Number
   numBuckets: Int
+  minBucket: Int
+  maxBucket: Int
   bucketWeights: [Number]
   totalWeight: Number
+  precomputed: [Number]
 }

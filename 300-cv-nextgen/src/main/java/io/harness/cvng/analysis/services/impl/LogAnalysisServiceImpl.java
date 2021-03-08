@@ -145,10 +145,12 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       if (baselineVerificationJobInstanceId != null) {
         VerificationJobInstance baselineVerificationJobInstance =
             verificationJobInstanceService.getVerificationJobInstance(baselineVerificationJobInstanceId);
-        String baselineVerificationTaskId = verificationTaskService.findBaselineVerificationTaskId(
+        Optional<String> baselineVerificationTaskId = verificationTaskService.findBaselineVerificationTaskId(
             input.getVerificationTaskId(), verificationJobInstance);
-        task.setControlDataUrl(createDeploymentDataUrl(baselineVerificationTaskId,
-            baselineVerificationJobInstance.getStartTime(), baselineVerificationJobInstance.getEndTime()));
+        task.setControlDataUrl(baselineVerificationTaskId.isPresent()
+                ? createDeploymentDataUrl(baselineVerificationTaskId.get(),
+                    baselineVerificationJobInstance.getStartTime(), baselineVerificationJobInstance.getEndTime())
+                : null);
       }
     }
     task.setPreviousAnalysisUrl(
@@ -293,9 +295,9 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .isFinalState(
                 true) // TODO: analysis is the final state now. We need to change it once feedback is implemented
             .log("Log analysis")
+            .verificationTaskId(inputs.getVerificationTaskId())
             .build();
-    verificationJobInstanceService.logProgress(
-        verificationTaskService.getVerificationJobInstanceId(inputs.getVerificationTaskId()), progressLog);
+    verificationJobInstanceService.logProgress(progressLog);
   }
 
   @Override

@@ -2,8 +2,8 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.Budget;
 import io.harness.rest.RestResponse;
 
 import software.wings.security.annotations.Scope;
@@ -66,6 +66,15 @@ public class BudgetResource {
   public RestResponse<List<Budget>> list(@NotEmpty @QueryParam("accountId") String accountId,
       @QueryParam("count") Integer count, @QueryParam("startIndex") Integer startIndex) {
     return new RestResponse<>(budgetService.list(accountId, count, startIndex));
+  }
+
+  @GET
+  @Path("perspectiveBudgets")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<Budget>> list(
+      @NotEmpty @QueryParam("accountId") String accountId, @QueryParam("viewId") String viewId) {
+    return new RestResponse<>(budgetService.list(accountId, viewId));
   }
 
   @PUT

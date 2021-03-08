@@ -16,8 +16,8 @@ import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.YamlUtils;
 import io.harness.states.LiteEngineTaskStep;
 import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
@@ -40,25 +40,33 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     String branch = null;
     String tag = null;
 
-    if (isLiteEngineNodeAndCompleted(nodeExecutionProto.getNode())) {
-      try {
-        LiteEngineTaskStepInfo liteEngineTaskStepInfo =
-            YamlUtils.read(nodeExecutionProto.getResolvedStepParameters(), LiteEngineTaskStepInfo.class);
-
-        ParameterField<Build> buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
-        Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
-        if (build != null && build.getType().equals(BuildType.BRANCH)) {
-          branch = (String) ((BranchBuildSpec) build.getSpec()).getBranch().fetchFinalValue();
-        }
-
-        if (build != null && build.getType().equals(BuildType.TAG)) {
-          tag = (String) ((TagBuildSpec) build.getSpec()).getTag().fetchFinalValue();
-        }
-      } catch (Exception ex) {
-        log.error("Failed to retrieve branch and tag for filtering", ex);
-      }
+    if (!isLiteEngineNodeAndCompleted(nodeExecutionProto.getNode())) {
+      return null;
     }
 
+    try {
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo = RecastOrchestrationUtils.fromDocumentJson(
+          nodeExecutionProto.getResolvedStepParameters(), LiteEngineTaskStepInfo.class);
+      if (liteEngineTaskStepInfo == null) {
+        return null;
+      }
+
+      ParameterField<Build> buildParameterField = null;
+      if (liteEngineTaskStepInfo.getCiCodebase() != null) {
+        buildParameterField = liteEngineTaskStepInfo.getCiCodebase().getBuild();
+      }
+
+      Build build = RunTimeInputHandler.resolveBuild(buildParameterField);
+      if (build != null && build.getType().equals(BuildType.BRANCH)) {
+        branch = (String) ((BranchBuildSpec) build.getSpec()).getBranch().fetchFinalValue();
+      }
+
+      if (build != null && build.getType().equals(BuildType.TAG)) {
+        tag = (String) ((TagBuildSpec) build.getSpec()).getTag().fetchFinalValue();
+      }
+    } catch (Exception ex) {
+      log.error("Failed to retrieve branch and tag for filtering", ex);
+    }
     ExecutionSource executionSource = null;
     try {
       executionSource = getWebhookExecutionSource(nodeExecutionProto.getAmbiance().getMetadata());

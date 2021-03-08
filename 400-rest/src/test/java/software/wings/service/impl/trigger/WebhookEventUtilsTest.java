@@ -17,9 +17,9 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
+import io.harness.shell.AuthenticationScheme;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
@@ -40,17 +40,22 @@ import org.mockito.Mock;
 
 public class WebhookEventUtilsTest extends WingsBaseTest {
   @Inject @InjectMocks private WebhookEventUtils webhookEventUtils;
-  static final String GH_PUSH_REQ_FILE = "software/wings/service/impl/webhook/github_push_request.json";
-  static final String GH_PULL_REQ_FILE = "software/wings/service/impl/webhook/github_pull_request.json";
-  static final String GITLAB_PUSH_REQ_FILE = "software/wings/service/impl/webhook/gitlab_push_request.json";
-  static final String GITLAB_PULL_REQ_FILE = "software/wings/service/impl/webhook/gitlab_pullrequest.json";
-  static final String BITBUCKET_PUSH_REQ_FILE = "software/wings/service/impl/webhook/bitbucket_push_request.json";
+  static final String GH_PUSH_REQ_FILE =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/github_push_request.json";
+  static final String GH_PULL_REQ_FILE =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/github_pull_request.json";
+  static final String GITLAB_PUSH_REQ_FILE =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/gitlab_push_request.json";
+  static final String GITLAB_PULL_REQ_FILE =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/gitlab_pullrequest.json";
+  static final String BITBUCKET_PUSH_REQ_FILE =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_push_request.json";
   static final String BITBUCKET_PULL_REQ_FILE =
-      "software/wings/service/impl/webhook/bitbucket_pull_request_created.json";
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_pull_request_created.json";
   static final String BITBUCKET_REF_CHANGES_REQ_FILE =
-      "software/wings/service/impl/webhook/bitbucket_ref_changes_request.json";
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_ref_changes_request.json";
   static final String BITBUCKET_SERVER_PR_OPENED_FILE =
-      "software/wings/service/impl/webhook/bitbucket_server_pr_opened.json";
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_server_pr_opened.json";
 
   @Mock HttpHeaders httpHeaders;
 
@@ -326,9 +331,7 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
   }
 
   private Map<String, Object> obtainPayload(String filePath) throws IOException {
-    ClassLoader classLoader = getClass().getClassLoader();
-
-    File file = new File(classLoader.getResource(filePath).getFile());
+    File file = new File(filePath);
     return JsonUtils.asObject(
         FileUtils.readFileToString(file, Charset.defaultCharset()), new TypeReference<Map<String, Object>>() {});
   }

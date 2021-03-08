@@ -46,6 +46,7 @@ public final class BillingDataPipelineRecord implements PersistentEntity, UuidAw
   private String preAggregatedScheduledQueryStatus;
   private String awsFallbackTableScheduledQueryStatus;
   private Instant lastSuccessfulS3Sync;
+  private Instant lastSuccessfulStorageSync;
 
   private List<String> awsLinkedAccountsToExclude;
   private List<String> awsLinkedAccountsToInclude;

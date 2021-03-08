@@ -1,11 +1,8 @@
 package io.harness.ccm.budget;
 
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.AlertThresholdBase;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.BudgetScope;
-import io.harness.ccm.budget.entities.BudgetScopeType;
+import io.harness.ccm.budget.dao.BudgetDao;
+import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
+import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -47,6 +44,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -61,6 +59,8 @@ public class BudgetServiceImpl implements BudgetService {
   @Inject @Named(CeBudgetFeature.FEATURE_NAME) private UsageLimitedFeature ceBudgetFeature;
   @Inject BudgetUtils budgetUtils;
   @Inject CeAccountExpirationChecker accountChecker;
+  @Inject CEViewService viewService;
+
   private String NOTIFICATION_TEMPLATE = "%s | %s exceed %s ($%s)";
   private String DATE_TEMPLATE = "MM-dd-yyyy";
   private double BUDGET_AMOUNT_UPPER_LIMIT = 100000000;
@@ -87,6 +87,7 @@ public class BudgetServiceImpl implements BudgetService {
     validateBudget(budget, true);
     removeEmailDuplicates(budget);
     validateAppliesToField(budget);
+    budgetUtils.updateBudgetCosts(budget, null);
     return budgetDao.save(budget);
   }
 
@@ -104,6 +105,9 @@ public class BudgetServiceImpl implements BudgetService {
                              .scope(budget.getScope())
                              .type(budget.getType())
                              .budgetAmount(budget.getBudgetAmount())
+                             .actualCost(budget.getActualCost())
+                             .forecastCost(budget.getForecastCost())
+                             .lastMonthCost(budget.getLastMonthCost())
                              .alertThresholds(budget.getAlertThresholds())
                              .userGroupIds(budget.getUserGroupIds())
                              .emailAddresses(budget.getEmailAddresses())
@@ -125,6 +129,7 @@ public class BudgetServiceImpl implements BudgetService {
     validateBudget(budget, false);
     removeEmailDuplicates(budget);
     validateAppliesToField(budget);
+    budgetUtils.updateBudgetCosts(budget, null);
     budgetDao.update(budgetId, budget);
   }
 
@@ -161,6 +166,14 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
+  public List<Budget> list(String accountId, String viewId) {
+    List<Budget> budgets = budgetDao.list(accountId, Integer.MAX_VALUE - 1, 0);
+    return budgets.stream()
+        .filter(budget -> budgetUtils.isBudgetBasedOnGivenView(budget, viewId))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public int getBudgetCount(String accountId) {
     return list(accountId).size();
   }
@@ -180,14 +193,18 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public double getForecastCost(Budget budget) {
-    return budgetUtils.getForecastCost(budget);
+    return budgetUtils.getForecastCost(budget, null);
   }
 
   @Override
   public QLBudgetDataList getBudgetData(Budget budget) {
     Preconditions.checkNotNull(budget.getAccountId());
+    // if budget is based on perspective
+    if (budgetUtils.isPerspectiveBudget(budget)) {
+      return generatePerspectiveBudgetData(budget);
+    }
     List<QLBillingDataFilter> filters = new ArrayList<>();
-    filters.add(budget.getScope().getBudgetScopeFilter());
+    filters.add(budgetUtils.getBudgetScopeFilter(budget));
     budgetUtils.addAdditionalFiltersBasedOnScope(budget, filters);
     filters.add(getFilterForCurrentBillingCycle());
     QLCCMAggregationFunction aggregationFunction = budgetUtils.makeBillingAmtAggregation();
@@ -205,8 +222,7 @@ public class BudgetServiceImpl implements BudgetService {
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        Double budgetedAmount = budget.getBudgetAmount();
-        return generateBudgetData(resultSet, queryData, budgetedAmount);
+        return generateBudgetData(resultSet, queryData, budget.getBudgetAmount(), budget.getForecastCost());
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -242,9 +258,9 @@ public class BudgetServiceImpl implements BudgetService {
       }
     }
     BudgetScope scope = budget.getScope();
-    String scopeType = getScopeType(scope);
+
     String environment = "-";
-    if (scopeType.equals(BudgetScopeType.APPLICATION) && scope != null) {
+    if (scope.getBudgetScopeType().equals(BudgetScopeType.APPLICATION)) {
       ApplicationBudgetScope applicationBudgetScope = (ApplicationBudgetScope) scope;
       environment = applicationBudgetScope.getEnvironmentType().toString();
     }
@@ -252,20 +268,22 @@ public class BudgetServiceImpl implements BudgetService {
         .name(budget.getName())
         .id(budget.getUuid())
         .type(budget.getType().toString())
-        .scopeType(scopeType)
+        .scopeType(scope.getBudgetScopeType())
         .appliesTo(getAppliesTo(scope, budget.getAccountId()))
         .appliesToIds(getAppliesToIds(scope))
         .environment(environment)
         .alertAt(alertAt.toArray(new Double[0]))
         .notifications(notificationMessages.toArray(new String[0]))
         .budgetedAmount(budget.getBudgetAmount())
-        .actualAmount(getActualCost(budget))
+        .actualAmount(budget.getActualCost())
+        .forecastCost(budget.getForecastCost())
+        .lastMonthCost(budget.getLastMonthCost())
         .lastUpdatedAt(budget.getLastUpdatedAt())
         .build();
   }
 
-  private QLBudgetDataList generateBudgetData(
-      ResultSet resultSet, BillingDataQueryMetadata queryData, Double budgetedAmount) throws SQLException {
+  private QLBudgetDataList generateBudgetData(ResultSet resultSet, BillingDataQueryMetadata queryData,
+      Double budgetedAmount, Double forecastCost) throws SQLException {
     List<QLBudgetData> budgetTableDataList = new ArrayList<>();
     if (budgetedAmount == null) {
       budgetedAmount = 0.0;
@@ -302,6 +320,40 @@ public class BudgetServiceImpl implements BudgetService {
               .build();
       budgetTableDataList.add(qlBudgetData);
     }
+    return QLBudgetDataList.builder().data(budgetTableDataList).forecastCost(forecastCost).build();
+  }
+
+  private QLBudgetDataList generatePerspectiveBudgetData(Budget budget) {
+    List<QLBudgetData> budgetTableDataList = new ArrayList<>();
+    Double budgetedAmount = budget.getBudgetAmount();
+    if (budgetedAmount == null) {
+      budgetedAmount = 0.0;
+    }
+
+    String viewId = budget.getScope().getEntityIds().get(0);
+    long timeFilterValue = getFilterForCurrentBillingCycle().getStartTime().getValue().longValue();
+    try {
+      List<QLCEViewTimeSeriesData> monthlyCostData =
+          budgetUtils.getPerspectiveBudgetMonthlyCostData(viewId, budget.getAccountId(), timeFilterValue);
+
+      for (QLCEViewTimeSeriesData data : monthlyCostData) {
+        Double actualCost =
+            data.getValues().stream().map(dataPoint -> dataPoint.getValue().doubleValue()).reduce(0D, Double::sum);
+        Double budgetVariance = getBudgetVariance(budgetedAmount, actualCost);
+        Double budgetVariancePercentage = getBudgetVariancePercentage(budgetVariance, budgetedAmount);
+        QLBudgetData qlBudgetData =
+            QLBudgetData.builder()
+                .actualCost(billingDataHelper.getRoundedDoubleValue(actualCost))
+                .budgeted(billingDataHelper.getRoundedDoubleValue(budgetedAmount))
+                .budgetVariance(billingDataHelper.getRoundedDoubleValue(budgetVariance))
+                .budgetVariancePercentage(billingDataHelper.getRoundedDoubleValue(budgetVariancePercentage))
+                .time(data.getTime())
+                .build();
+        budgetTableDataList.add(qlBudgetData);
+      }
+    } catch (Exception e) {
+      log.info("Error in generating data for budget : {}", budget.getUuid());
+    }
     return QLBudgetDataList.builder().data(budgetTableDataList).build();
   }
 
@@ -329,28 +381,19 @@ public class BudgetServiceImpl implements BudgetService {
         .build();
   }
 
-  private String getScopeType(BudgetScope scope) {
-    String scopeType = "-";
-    if (scope != null) {
-      if (scope.getBudgetScopeFilter().getCluster() != null) {
-        scopeType = BudgetScopeType.CLUSTER;
-      } else {
-        scopeType = BudgetScopeType.APPLICATION;
-      }
-    }
-    return scopeType;
-  }
-
   private String[] getAppliesTo(BudgetScope scope, String accountId) {
     String[] entityIds = {};
     if (scope == null) {
       return entityIds;
     }
+    if (scope.getEntityNames() != null) {
+      return scope.getEntityNames().toArray(new String[0]);
+    }
     entityIds = getAppliesToIds(scope);
     List<String> entityNames = new ArrayList<>();
     BillingDataQueryMetadata.BillingDataMetaDataFields entityType =
         BillingDataQueryMetadata.BillingDataMetaDataFields.CLUSTERID;
-    if (scope.getBudgetScopeFilter().getApplication() != null) {
+    if (scope.getBudgetScopeType().equals(BudgetScopeType.APPLICATION)) {
       entityType = BillingDataQueryMetadata.BillingDataMetaDataFields.APPID;
     }
     for (String entityId : entityIds) {
@@ -364,12 +407,7 @@ public class BudgetServiceImpl implements BudgetService {
     if (scope == null) {
       return entityIds;
     }
-    if (scope.getBudgetScopeFilter().getCluster() != null) {
-      entityIds = scope.getBudgetScopeFilter().getCluster().getValues();
-    } else if (scope.getBudgetScopeFilter().getApplication() != null) {
-      entityIds = scope.getBudgetScopeFilter().getApplication().getValues();
-    }
-    return entityIds;
+    return scope.getEntityIds().toArray(new String[0]);
   }
 
   private void validateBudget(Budget budget, boolean validateCount) {
@@ -430,12 +468,14 @@ public class BudgetServiceImpl implements BudgetService {
       return;
     }
     entityIds = getAppliesToIds(scope);
-    if (scope.getBudgetScopeFilter().getCluster() != null) {
+    if (scope.getBudgetScopeType().equals(BudgetScopeType.CLUSTER)) {
       valid = statsHelper.validateIds(
           BillingDataMetaDataFields.CLUSTERID, new HashSet<>(Arrays.asList(entityIds)), budget.getAccountId());
-    } else if (scope.getBudgetScopeFilter().getApplication() != null) {
+    } else if (scope.getBudgetScopeType().equals(BudgetScopeType.APPLICATION)) {
       valid = statsHelper.validateIds(
           BillingDataMetaDataFields.APPID, new HashSet<>(Arrays.asList(entityIds)), budget.getAccountId());
+    } else if (scope.getBudgetScopeType().equals(BudgetScopeType.PERSPECTIVE)) {
+      valid = viewService.get(entityIds[0]) != null;
     }
     if (!valid) {
       throw new InvalidRequestException(INVALID_ENTITY_ID_EXCEPTION);

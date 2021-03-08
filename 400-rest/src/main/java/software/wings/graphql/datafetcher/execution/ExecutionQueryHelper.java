@@ -3,7 +3,9 @@ package software.wings.graphql.datafetcher.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -31,6 +33,7 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ExecutionQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;
@@ -116,7 +119,7 @@ public class ExecutionQueryHelper {
       }
 
       if (filter.getTriggeredBy() != null) {
-        field = query.field(WorkflowExecutionKeys.triggeredBy);
+        field = query.field(WorkflowExecutionKeys.triggeredByID);
         QLIdFilter idFilter = filter.getTriggeredBy();
         utils.setIdFilter(field, idFilter);
       }

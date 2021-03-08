@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.budget;
 
+import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
+import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
+import static io.harness.ccm.budget.BudgetType.SPECIFIED_AMOUNT;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,16 +13,14 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.ApplicationBudgetScope;
+import io.harness.ccm.budget.Budget;
+import io.harness.ccm.budget.Budget.BudgetBuilder;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.AlertThreshold;
-import io.harness.ccm.budget.entities.AlertThresholdBase;
-import io.harness.ccm.budget.entities.ApplicationBudgetScope;
-import io.harness.ccm.budget.entities.Budget;
-import io.harness.ccm.budget.entities.Budget.BudgetBuilder;
-import io.harness.ccm.budget.entities.BudgetScopeType;
-import io.harness.ccm.budget.entities.BudgetType;
-import io.harness.ccm.budget.entities.ClusterBudgetScope;
-import io.harness.ccm.budget.entities.EnvironmentType;
+import io.harness.ccm.budget.BudgetType;
+import io.harness.ccm.budget.ClusterBudgetScope;
+import io.harness.ccm.budget.EnvironmentType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -54,16 +55,19 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
   private String[] clusterIds = {"clusterId"};
   private String[] appIds = {"appId"};
   private Double[] alertAt = {50.0};
-  private BudgetType budgetType = BudgetType.SPECIFIED_AMOUNT;
+  private BudgetType budgetType = SPECIFIED_AMOUNT;
   private EnvironmentType environmentType = EnvironmentType.PROD;
   private AlertThreshold[] alertThresholds;
   private long createdAt = System.currentTimeMillis();
   private long lastUpdatedAt = System.currentTimeMillis();
   private double budgetAmount = 25000.0;
+  private double actualCost = 15000.0;
+  private double forecastCost = 30000.0;
   private long alertSentAt = 15;
   private QLBudgetQueryParameters queryParameters;
   private static final String ACTUAL_COST_LABEL = "Actual vs. budgeted";
   private static final String FORECASTED_COST_LABEL = "Forecasted vs. budgeted";
+  private static final String STATUS_NOT_ON_TRACK = "Not on Track";
 
   @Before
   public void setup() throws SQLException {
@@ -81,17 +85,16 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
                         .environment(environmentType.toString())
                         .alertAt(alertAt)
                         .budgetedAmount(budgetAmount)
-                        .actualAmount(0.0)
+                        .actualAmount(actualCost)
+                        .forecastCost(forecastCost)
                         .build();
 
-    alertThresholds = new AlertThreshold[] {AlertThreshold.builder()
-                                                .crossedAt(alertSentAt)
-                                                .basedOn(AlertThresholdBase.ACTUAL_COST)
-                                                .alertsSent(1)
-                                                .percentage(50.0)
-                                                .build()};
+    alertThresholds = new AlertThreshold[] {
+        AlertThreshold.builder().crossedAt(alertSentAt).basedOn(ACTUAL_COST).alertsSent(1).percentage(50.0).build()};
     when(budgetService.getBudgetDetails(any(Budget.class))).thenReturn(budgetDetails);
     when(billingDataHelper.getRoundedDoubleValue(budgetAmount)).thenReturn(budgetAmount);
+    when(billingDataHelper.getRoundedDoubleValue(actualCost)).thenReturn(actualCost);
+    when(billingDataHelper.getRoundedDoubleValue(forecastCost)).thenReturn(forecastCost);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
   }
 
@@ -104,7 +107,9 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
                                       .createdAt(createdAt)
                                       .lastUpdatedAt(lastUpdatedAt)
                                       .type(budgetType)
-                                      .budgetAmount(budgetAmount);
+                                      .budgetAmount(budgetAmount)
+                                      .actualCost(actualCost)
+                                      .forecastCost(forecastCost);
     if (scope.equals("CLUSTER")) {
       budgetBuilder.scope(ClusterBudgetScope.builder().clusterIds(clusterIds).build());
     } else {
@@ -127,17 +132,18 @@ public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testFetch() {
-    when(budgetService.get(budgetId, accountId)).thenReturn(mockBudget(BudgetScopeType.APPLICATION));
+    when(budgetService.get(budgetId, accountId)).thenReturn(mockBudget(APPLICATION));
     QLBudgetTrendStats budgetTrendStats = budgetTrendStatsDataFetcher.fetch(queryParameters, accountId);
     assertThat(budgetTrendStats.getTotalCost().getStatsLabel()).isEqualTo(ACTUAL_COST_LABEL);
-    assertThat(budgetTrendStats.getTotalCost().getStatsValue()).isEqualTo("$0.0 / $25000.0");
+    assertThat(budgetTrendStats.getTotalCost().getStatsValue()).isEqualTo("$15000.0 / $25000.0");
     assertThat(budgetTrendStats.getForecastCost().getStatsLabel()).isEqualTo(FORECASTED_COST_LABEL);
-    assertThat(budgetTrendStats.getForecastCost().getStatsValue()).isEqualTo("$0.0 / $25000.0");
+    assertThat(budgetTrendStats.getForecastCost().getStatsValue()).isEqualTo("$30000.0 / $25000.0");
     assertThat(budgetTrendStats.getBudgetDetails().getName()).isEqualTo(budgetName);
     assertThat(budgetTrendStats.getBudgetDetails().getId()).isEqualTo(budgetId);
     assertThat(budgetTrendStats.getBudgetDetails().getScopeType()).isEqualTo("APPLICATION");
     assertThat(budgetTrendStats.getBudgetDetails().getType()).isEqualTo(budgetType.toString());
     assertThat(budgetTrendStats.getBudgetDetails().getAppliesTo()[0]).isEqualTo("appId");
     assertThat(budgetTrendStats.getBudgetDetails().getEnvironment()).isEqualTo(environmentType.toString());
+    assertThat(budgetTrendStats.getStatus().equals(STATUS_NOT_ON_TRACK));
   }
 }

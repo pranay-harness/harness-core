@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.beans;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 
 import lombok.Builder;
@@ -18,7 +19,7 @@ public class ActivityVerificationSummary {
   int progressPercentage;
   Long startTime;
   Long durationMs;
-  @Builder.Default Double riskScore = -1.0;
+  Risk risk;
 
   public ActivityVerificationStatus getAggregatedStatus() {
     if (total == passed) {

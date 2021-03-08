@@ -18,6 +18,8 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.service.DelegateAgentFileService;
@@ -115,6 +117,7 @@ import org.apache.logging.log4j.util.Strings;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
   String REPOSITORY_DIR_PATH = "./repository";
@@ -126,7 +129,7 @@ public class AwsLambdaHelperServiceDelegateImpl
   @VisibleForTesting
   public AWSLambdaClient getAmazonLambdaClient(String region, AwsConfig awsConfig) {
     AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AWSLambdaClient) builder.build();
   }
 

@@ -157,14 +157,15 @@ public class JiraHelperService {
         JiraTaskParameters.builder().accountId(accountId).jiraAction(JiraAction.GET_PROJECTS).build();
 
     JiraExecutionData jiraExecutionData = runTask(accountId, appId, connectorId, jiraTaskParameters);
+
     if (jiraExecutionData.getExecutionStatus() != ExecutionStatus.SUCCESS) {
-      throw new HarnessJiraException("Failed to fetch Projects", WingsException.USER);
+      throw new InvalidRequestException(jiraExecutionData.getErrorMessage(), USER);
     }
     return jiraExecutionData.getProjects();
   }
 
-  public JiraExecutionData fetchIssue(JiraApprovalParams jiraApprovalParams, String accountId, String appId,
-      String workflowExecutionId, String approvalId) {
+  public JiraExecutionData fetchIssue(
+      JiraApprovalParams jiraApprovalParams, String accountId, String appId, String approvalId) {
     JiraTaskParameters jiraTaskParameters = JiraTaskParameters.builder()
                                                 .accountId(accountId)
                                                 .appId(appId)

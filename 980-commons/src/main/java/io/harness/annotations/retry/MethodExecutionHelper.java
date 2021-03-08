@@ -1,10 +1,6 @@
 package io.harness.annotations.retry;
 
 import com.google.inject.Singleton;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
-import java.time.Duration;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +21,9 @@ public class MethodExecutionHelper {
    * @param retryOnExceptions Configure specific exceptions you want to retryOn (Default: Exception.class)
    * @param <T> Configured Type inside methodWrapper
    * @return
-   * @throws Throwable
    */
   @SafeVarargs
+  @SuppressWarnings("PMD")
   public final <T> T execute(IMethodWrapper<T> method, int noOfRetryAttempts, long sleepInterval,
       Class<? extends Throwable>... retryOnExceptions) throws Throwable {
     // if someone calls this method directly instead of going via @RetryOnException rout
@@ -35,15 +31,19 @@ public class MethodExecutionHelper {
     if (noOfRetryAttempts < 1) {
       noOfRetryAttempts = 1;
     }
-    Set<Class<? extends Throwable>> retryOnExceptionSet = new HashSet<Class<? extends Throwable>>();
+    Set<Class<? extends Throwable>> retryOnExceptionSet = new HashSet<>();
     populateRetryableExceptionSet(retryOnExceptionSet, retryOnExceptions);
 
-    log.debug("noOfRetryAttempts = " + noOfRetryAttempts);
-    log.debug("retryOnExceptionsSet = " + retryOnExceptionSet);
+    if (log.isDebugEnabled()) {
+      log.debug("noOfRetryAttempts = " + noOfRetryAttempts);
+      log.debug("retryOnExceptionsSet = " + retryOnExceptionSet);
+    }
 
     T result = null;
     for (int retryCount = 1; retryCount <= noOfRetryAttempts; retryCount++) {
-      log.debug("Executing the method. Attempt #" + retryCount);
+      if (log.isDebugEnabled()) {
+        log.debug("Executing the method. Attempt #" + retryCount);
+      }
       try {
         result = method.execute();
         break;

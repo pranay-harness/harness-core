@@ -6,7 +6,9 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -37,9 +39,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ExecutionInputsDataFetcher
     extends AbstractObjectDataFetcher<QLExecutionInputs, QLServiceInputsForExecutionParams> {
   @Inject WorkflowExecutionController workflowExecutionController;
@@ -100,7 +104,7 @@ public class ExecutionInputsDataFetcher
 
   private void validateAppBelongsToAccount(QLServiceInputsForExecutionParams params, String accountId) {
     String accountIdFromApp = appService.getAccountIdByAppId(params.getApplicationId());
-    if (!accountIdFromApp.equals(accountId)) {
+    if (StringUtils.isBlank(accountIdFromApp) || !accountIdFromApp.equals(accountId)) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
   }

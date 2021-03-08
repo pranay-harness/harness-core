@@ -8,6 +8,7 @@ import io.harness.beans.SecretChangeLog;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
 
+import software.wings.beans.BaseVaultConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.KmsSetupAlert;
 
@@ -18,7 +19,7 @@ import java.util.List;
  */
 @OwnedBy(PL)
 public interface VaultService {
-  String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validate);
+  String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingTestSecret);
 
   boolean deleteVaultConfig(String accountId, String vaultConfigId);
 
@@ -30,15 +31,17 @@ public interface VaultService {
 
   VaultConfig getVaultConfigByName(String accountId, String name);
 
-  void renewToken(VaultConfig vaultConfig);
+  void renewToken(BaseVaultConfig baseVaultConfig);
 
-  void renewAppRoleClientToken(VaultConfig vaultConfig);
+  void renewAppRoleClientToken(BaseVaultConfig vaultConfig);
 
   List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig);
 
-  KmsSetupAlert getRenewalAlert(VaultConfig vaultConfig);
+  KmsSetupAlert getRenewalAlert(BaseVaultConfig baseVaultConfig);
 
   void validateVaultConfig(String accountId, VaultConfig vaultConfig);
 
-  VaultAppRoleLoginResult appRoleLogin(VaultConfig vaultConfig);
+  void validateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingDummySecret);
+
+  VaultAppRoleLoginResult appRoleLogin(BaseVaultConfig baseVaultConfig);
 }

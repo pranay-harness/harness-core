@@ -64,7 +64,7 @@ public class WaitStep implements AsyncExecutable<WaitStepParameters> {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, WaitStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, WaitStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
     // TODO : Handle Abort
   }
 }

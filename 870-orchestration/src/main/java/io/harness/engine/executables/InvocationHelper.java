@@ -24,7 +24,8 @@ public class InvocationHelper {
 
   public Map<String, ResponseData> accumulateResponses(String planExecutionId, String notifyId) {
     Map<String, ResponseData> response = new HashMap<>();
-    List<NodeExecution> childExecutions = nodeExecutionService.fetchNodeExecutionsByNotifyId(planExecutionId, notifyId);
+    List<NodeExecution> childExecutions =
+        nodeExecutionService.fetchNodeExecutionsByNotifyId(planExecutionId, notifyId, false);
     for (NodeExecution childExecution : childExecutions) {
       PlanNodeProto node = childExecution.getNode();
       StepResponseNotifyData notifyData = StepResponseNotifyData.builder()
@@ -34,6 +35,7 @@ public class InvocationHelper {
                                               .status(childExecution.getStatus())
                                               .failureInfo(childExecution.getFailureInfo())
                                               .stepOutcomeRefs(childExecution.getOutcomeRefs())
+                                              .adviserResponse(childExecution.getAdviserResponse())
                                               .build();
       response.put(node.getUuid(), notifyData);
     }

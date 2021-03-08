@@ -6,6 +6,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.schema.YamlBaseUrlService;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -40,6 +41,7 @@ import org.apache.commons.io.FileUtils;
 @Consumes({"application/json", "text/yaml", "text/html"})
 @Deprecated
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@NextGenManagerAuth
 public class YamlSchemaResource {
   @Inject YamlBaseUrlService yamlBaseUrlService;
 

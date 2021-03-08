@@ -10,6 +10,7 @@ type Config struct {
 	Trace bool `envconfig:"LOG_SERVICE_TRACE"`
 
 	Secrets struct {
+		DisableAuth bool   `envconfig:"LOG_SERVICE_DISABLE_AUTH"`
 		LogSecret   string `envconfig:"LOG_SERVICE_SECRET" default:"secret"`
 		GlobalToken string `envconfig:"LOG_SERVICE_GLOBAL_TOKEN" default:"token"`
 	}

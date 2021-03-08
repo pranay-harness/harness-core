@@ -29,7 +29,6 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.service.impl.EventEmitter;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.NotificationService;
@@ -49,7 +48,6 @@ import org.mockito.Mock;
 public class ArtifactCollectionCallbackTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
-  @Mock private EventEmitter eventEmitter;
   @Mock private NotificationService notificationService;
 
   @InjectMocks @Inject private ArtifactCollectionCallback artifactCollectionCallback;

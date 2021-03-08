@@ -25,8 +25,8 @@ public class AnnotationParametersCheckTest extends AbstractModuleTestSupport {
   public void testIssues() throws Exception {
     final String[] expected = {
         "8:1: The annotation FieldNameConstants does not meet expectation: Parameter innerTypeName is not provided.",
-        "11:3: The annotation Ignore does not meet expectation: The default parameter value does not match the expected pattern '.{30,120}'.",
-        "16:3: The annotation Ignore does not meet expectation: The default parameter value does not match the expected pattern '.{30,120}'."};
+        "11:3: The annotation Ignore does not meet expectation: The default parameter value does not match the expected pattern '.{25,110}'.",
+        "16:3: The annotation Ignore does not meet expectation: The default parameter value does not match the expected pattern '.{25,110}'."};
 
     verify(config(), getPath("AnnotationParametersCheckIssues.jv"), expected);
   }

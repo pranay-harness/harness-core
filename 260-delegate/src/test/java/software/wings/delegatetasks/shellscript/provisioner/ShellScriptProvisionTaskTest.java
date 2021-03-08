@@ -26,17 +26,17 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.ExecuteCommandResponse;
+import io.harness.shell.ScriptProcessExecutor;
+import io.harness.shell.ShellExecutorConfig;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.shellscript.provision.ShellScriptProvisionExecutionData;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
-import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.local.executors.ShellExecutorFactory;
-import software.wings.core.ssh.executors.ScriptProcessExecutor;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -117,17 +117,17 @@ public class ShellScriptProvisionTaskTest extends WingsBaseTest {
                                                         .scriptBody(scriptBody)
                                                         .build();
 
-    CommandExecutionResult commandExecutionResult =
-        CommandExecutionResult.builder().status(CommandExecutionStatus.FAILURE).errorMessage(errorMessage).build();
+    ExecuteCommandResponse executeCommandResponse =
+        ExecuteCommandResponse.builder().status(CommandExecutionStatus.FAILURE).build();
 
     ScriptProcessExecutor scriptProcessExecutor = mock(ScriptProcessExecutor.class);
-    when(scriptProcessExecutor.executeCommandString(anyString(), anyList())).thenReturn(commandExecutionResult);
+    when(scriptProcessExecutor.executeCommandString(anyString(), anyList(), anyList()))
+        .thenReturn(executeCommandResponse);
     when(shellExecutorFactory.getExecutor(any(ShellExecutorConfig.class))).thenReturn(scriptProcessExecutor);
 
     ShellScriptProvisionExecutionData shellScriptProvisionExecutionData = shellScriptProvisionTask.run(taskParameters);
-    assertThat(shellScriptProvisionExecutionData.getErrorMsg()).isEqualTo(errorMessage);
     assertThat(shellScriptProvisionExecutionData.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
-    verify(scriptProcessExecutor, times(1)).executeCommandString(eq(scriptBody), eq(emptyList()));
+    verify(scriptProcessExecutor, times(1)).executeCommandString(eq(scriptBody), eq(emptyList()), eq(emptyList()));
   }
 
   @Test

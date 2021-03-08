@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.pcf.request;
 
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.sm.states.pcf.PcfStateTestHelper.ORG;
 import static software.wings.sm.states.pcf.PcfStateTestHelper.SPACE;
@@ -13,37 +14,47 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.VaultConfig;
 
 import com.google.common.collect.ImmutableList;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class PcfCommandTaskParametersTest extends WingsBaseTest {
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = {PRASHANT, TMACARI})
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilities() {
     PcfCommandTaskParameters taskParameters =
         PcfCommandTaskParameters.builder()
-            .pcfCommandRequest(PcfCommandDeployRequest.builder().useAppAutoscalar(true).build())
-            .encryptedDataDetails(new ArrayList<>())
+            .pcfCommandRequest(PcfCommandDeployRequest.builder()
+                                   .pcfConfig(PcfConfig.builder().endpointUrl("pcfUrl").build())
+                                   .useAppAutoscalar(true)
+                                   .build())
+            .encryptedDataDetails(Collections.singletonList(EncryptedDataDetail.builder()
+                                                                .fieldName("test")
+                                                                .encryptionConfig(VaultConfig.builder().build())
+                                                                .encryptedData(EncryptedRecordData.builder().build())
+                                                                .build()))
             .build();
 
     List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
-    assertThat(executionCapabilities).hasSize(3);
+    assertThat(executionCapabilities).hasSize(4);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
-        .containsExactlyInAnyOrder(
-            CapabilityType.PCF_CONNECTIVITY, CapabilityType.PROCESS_EXECUTOR, CapabilityType.PCF_AUTO_SCALAR);
+        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP,
+            CapabilityType.PROCESS_EXECUTOR, CapabilityType.PCF_AUTO_SCALAR);
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = {PRASHANT, TMACARI})
   @Category(UnitTests.class)
   public void shouldFetchRequiredExecutionCapabilitiesPluginRequest() {
     PcfCommandTaskParameters taskParameters =
@@ -51,7 +62,7 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
             .pcfCommandRequest(
                 PcfRunPluginCommandRequest.builder()
                     .pcfCommandType(PcfCommandRequest.PcfCommandType.SETUP)
-                    .pcfConfig(PcfConfig.builder().build())
+                    .pcfConfig(PcfConfig.builder().endpointUrl("pcfUrl").build())
                     .useCLIForPcfAppCreation(true)
                     .useAppAutoscalar(false)
                     .organization(ORG)
@@ -66,12 +77,17 @@ public class PcfCommandTaskParametersTest extends WingsBaseTest {
                                                        .build()))
                     .filePathsInScript(ImmutableList.of("/manifest.yml"))
                     .build())
-            .encryptedDataDetails(new ArrayList<>())
+            .encryptedDataDetails(Collections.singletonList(EncryptedDataDetail.builder()
+                                                                .fieldName("test")
+                                                                .encryptionConfig(VaultConfig.builder().build())
+                                                                .encryptedData(EncryptedRecordData.builder().build())
+                                                                .build()))
             .build();
 
     List<ExecutionCapability> executionCapabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
-    assertThat(executionCapabilities).hasSize(2);
+    assertThat(executionCapabilities).hasSize(3);
     assertThat(executionCapabilities.stream().map(ExecutionCapability::getCapabilityType))
-        .containsExactlyInAnyOrder(CapabilityType.PCF_CONNECTIVITY, CapabilityType.PROCESS_EXECUTOR);
+        .containsExactlyInAnyOrder(
+            CapabilityType.PCF_CONNECTIVITY, CapabilityType.HTTP, CapabilityType.PROCESS_EXECUTOR);
   }
 }

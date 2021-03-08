@@ -39,6 +39,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
   public static final String ARN = "ARN";
   public static final String SECRET_KEY = "SECRET_KEY";
   public static final String ACCESS_KEY = "ACCESS_KEY";
+  public static final String DEFAULT_REGION = "DEFAULT_REGION";
 
   @Mock private UsageScopeController usageScopeController;
 
@@ -68,6 +69,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
                                             .crossAccountRoleArn(RequestField.ofNullable(ARN))
                                             .externalId(RequestField.ofNullable(EXTERN_ID))
                                             .build()))
+            .defaultRegion(RequestField.ofNullable(DEFAULT_REGION))
             .build();
 
     SettingAttribute setting = helper.toSettingAttribute(input, ACCOUNT_ID);
@@ -81,6 +83,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     assertThat(config.getCrossAccountAttributes()).isNotNull();
     assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
     assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
+    assertThat(config.getDefaultRegion()).isEqualTo(DEFAULT_REGION);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -149,6 +152,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
                                             .crossAccountRoleArn(RequestField.ofNullable(ARN))
                                             .externalId(RequestField.ofNullable(EXTERN_ID))
                                             .build()))
+            .defaultRegion(RequestField.ofNullable(DEFAULT_REGION))
             .build();
 
     SettingAttribute setting = SettingAttribute.Builder.aSettingAttribute()
@@ -165,6 +169,7 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     assertThat(config.getCrossAccountAttributes()).isNotNull();
     assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
     assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
+    assertThat(config.getDefaultRegion()).isEqualTo(DEFAULT_REGION);
   }
 
   @Test

@@ -1,10 +1,14 @@
 package software.wings.helpers.ext.ecs.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class EcsListenerUpdateRequestConfigData {
   private String prodListenerArn;
   private String stageListenerArn;

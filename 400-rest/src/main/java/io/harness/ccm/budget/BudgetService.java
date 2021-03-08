@@ -1,7 +1,5 @@
 package io.harness.ccm.budget;
 
-import io.harness.ccm.budget.entities.Budget;
-
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetDataList;
 import software.wings.graphql.schema.type.aggregation.budget.QLBudgetTableData;
 
@@ -19,6 +17,7 @@ public interface BudgetService {
 
   List<Budget> list(String accountId);
   List<Budget> list(String accountId, Integer count, Integer startIndex);
+  List<Budget> list(String accountId, String viewId);
   int getBudgetCount(String accountId);
 
   boolean delete(String budgetId, String accountId);

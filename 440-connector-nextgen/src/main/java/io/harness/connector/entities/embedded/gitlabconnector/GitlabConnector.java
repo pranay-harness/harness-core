@@ -14,11 +14,11 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@FieldNameConstants(innerTypeName = "GitlabConnectorKeys")
-@Entity(value = "connectors", noClassnameStored = true)
 @EqualsAndHashCode(callSuper = true)
-@TypeAlias("io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector")
+@FieldNameConstants(innerTypeName = "GitlabConnectorKeys")
 @Persistent
+@Entity(value = "connectors", noClassnameStored = true)
+@TypeAlias("io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector")
 public class GitlabConnector extends Connector {
   GitConnectionType connectionType;
   String url;

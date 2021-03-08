@@ -5,7 +5,7 @@ import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.ng.core.utils.NGUtils.getConnectorRequestDTO;
 import static io.harness.ng.core.utils.NGUtils.getDefaultHarnessSecretManagerName;
 
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.ConnectorDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.ng.core.DefaultOrganization;
 import io.harness.ng.core.OrgIdentifier;

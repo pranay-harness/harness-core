@@ -3,7 +3,7 @@ package io.harness.commandlibrary.server.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.commandlibrary.server.CommandLibraryServerBaseTest;
+import io.harness.commandlibrary.server.CommandLibraryServerTestBase;
 import io.harness.network.Http;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -14,7 +14,7 @@ import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
-import io.dropwizard.testing.ResourceHelpers;
+import java.io.File;
 import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.GenericType;
@@ -25,7 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CommandLibraryServerApplicationTest extends CommandLibraryServerBaseTest {
+public class CommandLibraryServerApplicationTest extends CommandLibraryServerTestBase {
   public static DropwizardTestSupport<CommandLibraryServerConfig> SUPPORT;
   public static MongoServer MONGO_SERVER;
 
@@ -51,7 +51,8 @@ public class CommandLibraryServerApplicationTest extends CommandLibraryServerBas
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
     SUPPORT = new DropwizardTestSupport<CommandLibraryServerConfig>(CommandLibraryServerApplication.class,
-        ResourceHelpers.resourceFilePath("command-library-server-config-test.yml"),
+        String.valueOf(
+            new File("210-command-library-server/src/test/resources/command-library-server-config-test.yml")),
         ConfigOverride.config("server.applicationConnectors[0].port", "0"),
         ConfigOverride.config("server.applicationConnectors[0].type", "https"),
         ConfigOverride.config("server.adminConnectors[0].type", "https"),

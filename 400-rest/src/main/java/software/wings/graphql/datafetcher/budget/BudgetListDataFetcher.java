@@ -1,7 +1,9 @@
 package software.wings.graphql.datafetcher.budget;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
-import io.harness.ccm.budget.entities.Budget;
 
 import software.wings.graphql.datafetcher.AbstractArrayDataFetcher;
 import software.wings.graphql.schema.query.QLBudgetQueryParameters;
@@ -17,6 +19,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BudgetListDataFetcher extends AbstractArrayDataFetcher<QLBudgetTableData, QLBudgetQueryParameters> {
   @Inject BudgetService budgetService;
   @Inject CeAccountExpirationChecker accountChecker;

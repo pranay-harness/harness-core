@@ -2,12 +2,15 @@ package software.wings.graphql.schema.type.connector;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLUser;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,6 +18,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLDockerConnector implements QLConnector {
   private String id;
   private String name;
@@ -24,6 +28,7 @@ public class QLDockerConnector implements QLConnector {
   private String userName;
   private String URL;
   private String passwordSecretId;
+  private List<String> delegateSelectors;
 
   public static class QLDockerConnectorBuilder implements QLConnectorBuilder {}
 }

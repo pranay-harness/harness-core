@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -28,6 +29,7 @@ import io.harness.testframework.framework.utils.FileUtils;
 import io.harness.testframework.graphql.GraphQLTestMixin;
 import io.harness.testframework.restutils.ArtifactStreamRestUtils;
 import io.harness.testframework.restutils.PipelineRestUtils;
+import io.harness.testframework.restutils.UserRestUtils;
 import io.harness.testframework.restutils.WorkflowRestUtils;
 
 import software.wings.api.DeploymentType;
@@ -91,7 +93,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
 
   protected static String bearerToken;
   protected static User adminUser;
-
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
 
@@ -130,7 +131,7 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   @Getter static Account account;
 
   @Before
-  public void testSetup() throws IOException {
+  public void testSetup() throws IOException, InterruptedException {
     account = accountSetupService.ensureAccount();
     adminUser = Setup.loginUser(ADMIN_USER, "admin");
     bearerToken = adminUser.getToken();
@@ -414,10 +415,13 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     }
   }
 
-  protected void enableFeatureFlag(FeatureName featureName, String accountId) {
-    if (!featureFlagService.isEnabled(featureName, accountId)) {
-      featureFlagService.enableAccount(featureName, accountId);
+  protected void logManagerFeatureFlags(String accountId) {
+    Collection<FeatureFlag> managerFeatureFlags = UserRestUtils.listFeatureFlags(accountId, bearerToken);
+    StringBuilder featureFlagListAsString = new StringBuilder();
+    for (FeatureFlag featureFlag : managerFeatureFlags) {
+      featureFlagListAsString.append(String.format("%s: %b\n", featureFlag.getName(), featureFlag.isEnabled()));
     }
-    assertThat(featureFlagService.isEnabled(featureName, accountId));
+
+    log.info("Feature flags on manager:\n{}", featureFlagListAsString.toString());
   }
 }

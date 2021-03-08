@@ -17,6 +17,7 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
   private static final String SCRIPT_TYPE = "scriptType";
   private static final String SCRIPT_STRING = "scriptString";
   private static final String OUTPUT_VARS = "outputVars";
+  private static final String SECRET_OUTPUT_VARS = "secretOutputVars";
   private static final String TIMEOUT_MILLIS = "timeoutMillis";
   private static final String VARIABLES = "variables";
 
@@ -42,6 +43,9 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
     if (isNotEmpty(shellScriptTemplate.getOutputVars())) {
       properties.put(OUTPUT_VARS, shellScriptTemplate.getOutputVars());
     }
+    if (isNotEmpty(shellScriptTemplate.getSecretOutputVars())) {
+      properties.put(SECRET_OUTPUT_VARS, shellScriptTemplate.getSecretOutputVars());
+    }
 
     properties.put(TIMEOUT_MILLIS, shellScriptTemplate.getTimeoutMillis());
   }
@@ -49,7 +53,7 @@ public class ShellScriptTemplateProcessor extends StateTemplateProcessor {
   @Override
   public List<String> fetchTemplateProperties() {
     List<String> templateProperties = super.fetchTemplateProperties();
-    templateProperties.addAll(asList(SCRIPT_TYPE, SCRIPT_STRING, OUTPUT_VARS, VARIABLES));
+    templateProperties.addAll(asList(SCRIPT_TYPE, SCRIPT_STRING, OUTPUT_VARS, VARIABLES, SECRET_OUTPUT_VARS));
     return templateProperties;
   }
 }

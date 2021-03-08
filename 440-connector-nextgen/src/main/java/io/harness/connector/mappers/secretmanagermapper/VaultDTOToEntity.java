@@ -1,17 +1,12 @@
 package io.harness.connector.mappers.secretmanagermapper;
 
-import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
-import io.harness.delegate.beans.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 
-import java.util.Collections;
-import java.util.List;
-
-public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnectorDTO> {
+public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnectorDTO, VaultConnector> {
   @Override
-  public Connector toConnectorEntity(VaultConnectorDTO connectorDTO) {
+  public VaultConnector toConnectorEntity(VaultConnectorDTO connectorDTO) {
     return VaultConnector.builder()
         .accessType(connectorDTO.getAccessType())
         .isDefault(connectorDTO.isDefault())
@@ -19,14 +14,10 @@ public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnect
         .secretEngineName(connectorDTO.getSecretEngineName())
         .vaultUrl(connectorDTO.getVaultUrl())
         .secretEngineVersion(connectorDTO.getSecretEngineVersion())
-        .renewalIntervalHours(connectorDTO.getRenewIntervalHours())
+        .secretEngineManuallyConfigured(connectorDTO.isSecretEngineManuallyConfigured())
+        .renewalIntervalMinutes(connectorDTO.getRenewalIntervalMinutes())
         .appRoleId(connectorDTO.getAppRoleId())
         .basePath(connectorDTO.getBasePath())
         .build();
-  }
-
-  @Override
-  public List<ConnectorCategory> getConnectorCategory() {
-    return Collections.singletonList(ConnectorCategory.SECRET_MANAGER);
   }
 }

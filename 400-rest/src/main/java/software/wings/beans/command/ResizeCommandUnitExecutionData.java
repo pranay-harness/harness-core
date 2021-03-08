@@ -1,7 +1,7 @@
 package software.wings.beans.command;
 
 import io.harness.container.ContainerInfo;
-import io.harness.delegate.command.CommandExecutionData;
+import io.harness.shell.CommandExecutionData;
 
 import software.wings.api.ContainerServiceData;
 

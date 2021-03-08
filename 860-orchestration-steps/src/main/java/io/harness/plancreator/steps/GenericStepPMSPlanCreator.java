@@ -11,17 +11,18 @@ import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.govern.Switch;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.utils.SkipInfoUtils;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviserParameters;
-import io.harness.pms.sdk.core.adviser.fail.OnFailAdviser;
-import io.harness.pms.sdk.core.adviser.fail.OnFailAdviserParameters;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviser;
 import io.harness.pms.sdk.core.adviser.ignore.IgnoreAdviserParameters;
 import io.harness.pms.sdk.core.adviser.manualintervention.ManualInterventionAdviser;
@@ -30,20 +31,35 @@ import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviser;
 import io.harness.pms.sdk.core.adviser.marksuccess.OnMarkSuccessAdviserParameters;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviser;
 import io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters;
+import io.harness.pms.sdk.core.adviser.rollback.RollbackNodeType;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
+import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.sdk.core.steps.io.RollbackInfo.RollbackInfoBuilder;
+import io.harness.pms.sdk.core.steps.io.RollbackStrategy;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.timeout.TimeoutParameters;
+import io.harness.timeout.contracts.TimeoutObtainment;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
+import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
+import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
@@ -56,10 +72,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
+  private static final String DEFAULT_TIMEOUT = "10m";
   @Inject private KryoSerializer kryoSerializer;
 
   public abstract Set<String> getSupportedStepTypes();
@@ -80,41 +98,112 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
-    String nodeName;
+    StepParameters stepParameters = stepElement.getStepSpecType().getStepParameters();
+    RollbackInfoBuilder rollbackInfoBuilder = RollbackInfo.builder();
+    List<AdviserObtainment> adviserObtainmentFromMetaData =
+        getAdviserObtainmentFromMetaData(ctx.getCurrentField(), rollbackInfoBuilder);
 
-    if (EmptyPredicate.isEmpty(stepElement.getName())) {
-      nodeName = stepElement.getIdentifier();
-    } else {
-      nodeName = stepElement.getName();
+    if (stepElement.getTimeout() != null && stepElement.getTimeout().isExpression()) {
+      throw new InvalidRequestException("Timeout field must be resolved in step: " + stepElement.getIdentifier());
     }
 
+    if (stepElement.getStepSpecType() instanceof WithRollbackInfo) {
+      // Failure strategy should be present.
+      List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
+      if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+        throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+      }
+
+      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
+      // type is involved
+      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
+        throw new InvalidRequestException(
+            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+      }
+
+      String timeout = DEFAULT_TIMEOUT;
+      if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
+        timeout = stepElement.getTimeout().getValue().getTimeoutString();
+      }
+      RollbackInfo rollbackInfo = rollbackInfoBuilder.build();
+      BaseStepParameterInfo baseStepParameterInfo =
+          BaseStepParameterInfo.builder()
+              .timeout(ParameterField.createValueField(timeout))
+              .rollbackInfo(rollbackInfo.getStrategy() != null ? rollbackInfo : null)
+              .description(stepElement.getDescription())
+              .skipCondition(stepElement.getSkipCondition())
+              .name(stepElement.getName())
+              .description(stepElement.getDescription())
+              .build();
+      stepParameters =
+          ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
+    }
     PlanNode stepPlanNode =
         PlanNode.builder()
             .uuid(ctx.getCurrentField().getNode().getUuid())
-            .name(nodeName)
+            .name(getName(stepElement))
             .identifier(stepElement.getIdentifier())
             .stepType(stepElement.getStepSpecType().getStepType())
             .group(StepOutcomeGroup.STEP.name())
-            .stepParameters(stepElement.getStepSpecType().getStepParameters())
+            .stepParameters(stepParameters)
             .facilitatorObtainment(FacilitatorObtainment.newBuilder()
                                        .setType(FacilitatorType.newBuilder()
                                                     .setType(stepElement.getStepSpecType().getFacilitatorType())
                                                     .build())
                                        .build())
-            .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
+            .adviserObtainments(adviserObtainmentFromMetaData)
+            .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
+            .timeoutObtainment(
+                TimeoutObtainment.newBuilder()
+                    .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                    .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                        AbsoluteTimeoutParameters.builder().timeoutMillis(getTimeoutInMillis(stepElement)).build())))
+                    .build())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }
 
-  private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
+  public boolean containsOnlyAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAnyOther = false;
+    for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
+      if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
+          && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
+                 NGFailureTypeConstants.ANY_OTHER_ERRORS)
+              == true) {
+        containsOnlyAnyOther = true;
+      }
+    }
+    return containsOnlyAnyOther;
+  }
+
+  protected String getName(StepElementConfig stepElement) {
+    String nodeName;
+    if (EmptyPredicate.isEmpty(stepElement.getName())) {
+      nodeName = stepElement.getIdentifier();
+    } else {
+      nodeName = stepElement.getName();
+    }
+    return nodeName;
+  }
+
+  protected long getTimeoutInMillis(StepElementConfig stepElement) {
+    long timeoutInMillis;
+    if (ParameterField.isNull(stepElement.getTimeout())) {
+      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
+    } else {
+      timeoutInMillis = stepElement.getTimeout().getValue().getTimeoutInMillis();
+    }
+    return timeoutInMillis;
+  }
+
+  protected List<AdviserObtainment> getAdviserObtainmentFromMetaData(
+      YamlField currentField, RollbackInfoBuilder rollbackInfoBuilder) {
     List<AdviserObtainment> adviserObtainmentList = new ArrayList<>();
     AdviserObtainment onSuccessAdviserObtainment = getOnSuccessAdviserObtainment(currentField);
     if (onSuccessAdviserObtainment != null) {
       adviserObtainmentList.add(onSuccessAdviserObtainment);
     }
-    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
-      return adviserObtainmentList;
-    }
+
     List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(currentField, STAGE);
     List<FailureStrategyConfig> stepGroupFailureStrategies = getFieldFailureStrategies(currentField, STEP_GROUP);
     List<FailureStrategyConfig> stepFailureStrategies = getFailureStrategies(currentField.getNode());
@@ -131,11 +220,21 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       String nextNodeUuid = null;
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
           currentField.getName(), Arrays.asList(STEP, PARALLEL, STEP_GROUP));
-      if (siblingField != null) {
+      // Check if step is in parallel section then dont have nextNodeUUid set.
+      if (siblingField != null && !checkIfStepIsInParallelSection(currentField)) {
         nextNodeUuid = siblingField.getNode().getUuid();
       }
 
       AdviserObtainment.Builder adviserObtainmentBuilder = AdviserObtainment.newBuilder();
+      if (rollbackInfoBuilder != null) {
+        getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
+      }
+      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+        if (actionType == NGFailureActionType.STAGE_ROLLBACK || actionType == NGFailureActionType.STEP_GROUP_ROLLBACK) {
+          throw new InvalidRequestException("Step inside rollback section cannot have Rollback as failure strategy.");
+        }
+      }
+
       switch (actionType) {
         case IGNORE:
           adviserObtainmentList.add(
@@ -148,21 +247,30 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           break;
         case RETRY:
           RetryFailureActionConfig retryAction = (RetryFailureActionConfig) action;
-          adviserObtainmentList.add(adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
-                                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                                            RetryAdviserParameters.builder()
-                                                .applicableFailureTypes(failureTypes)
-                                                .nextNodeId(nextNodeUuid)
-                                                .repairActionCodeAfterRetry(toRepairAction(
-                                                    retryAction.getSpecConfig().getOnRetryFailure().getAction()))
-                                                .retryCount(retryAction.getSpecConfig().getRetryCount())
-                                                .waitIntervalList(retryAction.getSpecConfig()
-                                                                      .getRetryInterval()
-                                                                      .stream()
-                                                                      .map(Integer::valueOf)
-                                                                      .collect(Collectors.toList()))
-                                                .build())))
-                                        .build());
+          ParameterField<Integer> retryCount = retryAction.getSpecConfig().getRetryCount();
+          if (retryCount.isExpression()) {
+            throw new InvalidRequestException("RetryCount fixed value is not given.");
+          }
+          if (retryAction.getSpecConfig().getRetryIntervals().isExpression()) {
+            throw new InvalidRequestException("RetryIntervals cannot be expression/runtime input. Please give values.");
+          }
+          adviserObtainmentList.add(
+              adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
+                  .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
+                      RetryAdviserParameters.builder()
+                          .applicableFailureTypes(failureTypes)
+                          .nextNodeId(nextNodeUuid)
+                          .repairActionCodeAfterRetry(toRepairAction(
+                              retryAction.getSpecConfig().getOnRetryFailure().getAction(), rollbackInfoBuilder))
+                          .retryCount(retryCount.getValue())
+                          .waitIntervalList(retryAction.getSpecConfig()
+                                                .getRetryIntervals()
+                                                .getValue()
+                                                .stream()
+                                                .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(s, 0))
+                                                .collect(Collectors.toList()))
+                          .build())))
+                  .build());
 
           break;
         case MARK_AS_SUCCESS:
@@ -183,31 +291,30 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                   .build());
           break;
         case STAGE_ROLLBACK:
-          adviserObtainmentList.add(adviserObtainmentBuilder.setType(OnFailAdviser.ADVISER_TYPE)
-                                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                                            OnFailAdviserParameters.builder()
-                                                .applicableFailureTypes(failureTypes)
-                                                .nextNodeId(getStageRollbackStepsNodeId(currentField))
-                                                .build())))
-                                        .build());
+          if (rollbackInfoBuilder != null) {
+            rollbackInfoBuilder.strategy(RollbackStrategy.STAGE_ROLLBACK);
+          }
           break;
         case STEP_GROUP_ROLLBACK:
-          adviserObtainmentList.add(adviserObtainmentBuilder.setType(OnFailAdviser.ADVISER_TYPE)
-                                        .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                                            OnFailAdviserParameters.builder()
-                                                .applicableFailureTypes(failureTypes)
-                                                .nextNodeId(getStepGroupRollbackStepsNodeId(currentField))
-                                                .build())))
-                                        .build());
-
+          if (rollbackInfoBuilder != null) {
+            rollbackInfoBuilder.strategy(RollbackStrategy.STEP_GROUP_ROLLBACK);
+          }
           break;
         case MANUAL_INTERVENTION:
+          ManualInterventionFailureActionConfig actionConfig = (ManualInterventionFailureActionConfig) action;
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(ManualInterventionAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                      ManualInterventionAdviserParameters.builder().applicableFailureTypes(failureTypes).build())))
+                      ManualInterventionAdviserParameters.builder()
+                          .applicableFailureTypes(failureTypes)
+                          .timeoutAction(toRepairAction(
+                              actionConfig.getSpecConfig().getOnTimeout().getAction(), rollbackInfoBuilder))
+                          .timeout((int) TimeoutUtils.getTimeoutInSeconds(actionConfig.getSpecConfig().getTimeout(), 0))
+                          .build())))
                   .build());
           break;
+        default:
+          Switch.unhandled(actionType);
       }
     }
 
@@ -216,7 +323,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {
     if (currentField != null && currentField.getNode() != null) {
-      if (checkIfParentIsParallel(currentField)) {
+      if (checkIfStepIsInParallelSection(currentField)) {
         return null;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
@@ -232,15 +339,48 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return null;
   }
 
+  private void getBasicRollbackInfo(
+      YamlField currentField, Set<FailureType> failureTypes, RollbackInfoBuilder rollbackInfoBuilder) {
+    rollbackInfoBuilder.failureTypes(failureTypes);
+    rollbackInfoBuilder.identifier(currentField.getNode().getIdentifier());
+    rollbackInfoBuilder.group(RollbackNodeType.STEP.name());
+    String rollbackStepsNodeId = getStageRollbackStepsNodeId(currentField);
+    String executionStepsNodeId = getExecutionStepsNodeId(currentField);
+    rollbackInfoBuilder.nodeTypeToUuid(
+        RollbackNodeType.STAGE.name(), rollbackStepsNodeId == null ? null : rollbackStepsNodeId + "_executionrollback");
+
+    // Check if stepGroupsRollback is there or not.
+    YamlNode executionField = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
+    if (PlanCreatorUtils.checkIfAnyStepGroupRollback(executionField)) {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STEP_GROUP_COMBINED.name(),
+          executionStepsNodeId == null ? null : executionStepsNodeId + "_stepGrouprollback");
+    } else {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.STEP_GROUP_COMBINED.name(), null);
+    }
+
+    rollbackInfoBuilder.nodeTypeToUuid(
+        RollbackNodeType.STEP_GROUP.name(), getStepGroupRollbackStepsNodeId(currentField));
+    if (PlanCreatorUtils.checkIfStageRollbackStepsPresent(executionField)) {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(),
+          executionStepsNodeId == null ? null : executionStepsNodeId + "_combinedRollback");
+    } else {
+      rollbackInfoBuilder.nodeTypeToUuid(RollbackNodeType.BOTH_STEP_GROUP_STAGE.name(), null);
+    }
+  }
+
   private String getStepGroupRollbackStepsNodeId(YamlField currentField) {
     YamlNode stepGroup = YamlUtils.findParentNode(currentField.getNode(), STEP_GROUP);
-
     return getRollbackStepsNodeId(stepGroup);
   }
 
   private String getStageRollbackStepsNodeId(YamlField currentField) {
     YamlNode execution = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
     return getRollbackStepsNodeId(execution);
+  }
+
+  private String getExecutionStepsNodeId(YamlField currentField) {
+    YamlNode execution = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
+    return Objects.requireNonNull(Objects.requireNonNull(execution).getField(STEPS)).getNode().getUuid();
   }
 
   private String getRollbackStepsNodeId(YamlNode currentNode) {
@@ -255,18 +395,30 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return uuid;
   }
 
-  private RepairActionCode toRepairAction(FailureStrategyActionConfig action) {
+  private RepairActionCode toRepairAction(FailureStrategyActionConfig action, RollbackInfoBuilder rollbackInfoBuilder) {
     switch (action.getType()) {
       case IGNORE:
         return RepairActionCode.IGNORE;
+      case MARK_AS_SUCCESS:
+        return RepairActionCode.MARK_AS_SUCCESS;
       case ABORT:
-      case STAGE_ROLLBACK:
-      case STEP_GROUP_ROLLBACK:
         return RepairActionCode.END_EXECUTION;
+      case STAGE_ROLLBACK:
+        if (rollbackInfoBuilder != null) {
+          rollbackInfoBuilder.strategy(RollbackStrategy.STAGE_ROLLBACK);
+        }
+        return RepairActionCode.ON_FAIL;
+      case STEP_GROUP_ROLLBACK:
+        if (rollbackInfoBuilder != null) {
+          rollbackInfoBuilder.strategy(RollbackStrategy.STEP_GROUP_ROLLBACK);
+        }
+        return RepairActionCode.ON_FAIL;
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
       default:
-        throw new InvalidRequestException("Invalid yaml");
+        throw new InvalidRequestException(
+
+            action.toString() + " Failure action doesn't have corresponding RepairAction Code.");
     }
   }
 
@@ -293,10 +445,15 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return failureStrategyConfigs;
   }
 
-  private boolean checkIfParentIsParallel(YamlField currentField) {
-    YamlNode parallelNode = YamlUtils.findParentNode(currentField.getNode(), PARALLEL);
-    if (parallelNode != null) {
-      return YamlUtils.findParentNode(parallelNode, STEPS) != null;
+  // This is required as step can be inside stepGroup which can have Parallel and stepGroup itself can
+  // be inside Parallel section.
+  private boolean checkIfStepIsInParallelSection(YamlField currentField) {
+    if (currentField != null && currentField.getNode() != null) {
+      if (currentField.checkIfParentIsParallel(STEPS) || currentField.checkIfParentIsParallel(ROLLBACK_STEPS)) {
+        // Check if step is inside StepGroup and StepGroup is inside Parallel but not the step.
+        return YamlUtils.findParentNode(currentField.getNode(), STEP_GROUP) == null
+            || currentField.checkIfParentIsParallel(STEP_GROUP);
+      }
     }
     return false;
   }

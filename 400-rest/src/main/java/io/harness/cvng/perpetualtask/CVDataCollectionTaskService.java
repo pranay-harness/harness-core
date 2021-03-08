@@ -1,5 +1,6 @@
 package io.harness.cvng.perpetualtask;
 
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 
@@ -13,6 +14,8 @@ public interface CVDataCollectionTaskService {
   String create(String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle);
   void delete(String accountId, String taskId);
 
+  CVNGPerpetualTaskDTO getCVNGPerpetualTaskDTO(String taskId);
+
   String getDataCollectionResult(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionRequest dataCollectionRequest);
 
@@ -20,4 +23,6 @@ public interface CVDataCollectionTaskService {
       DataCollectionConnectorBundle bundle) throws ApiException;
   List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
       String filter, DataCollectionConnectorBundle bundle) throws ApiException;
+  List<String> checkCapabilityToGetEvents(String accountId, String orgIdentifier, String projectIdentifier,
+      DataCollectionConnectorBundle bundle) throws ApiException;
 }

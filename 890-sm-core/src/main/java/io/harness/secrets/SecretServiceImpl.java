@@ -30,7 +30,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretScopeMetadata;
+import io.harness.beans.SecretState;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
 import io.harness.data.encoding.EncodingUtils;
@@ -61,6 +63,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,6 +74,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @ValidateOnExecution
 @Singleton
@@ -135,6 +139,7 @@ public class SecretServiceImpl implements SecretService {
                                                     .hideFromListing(secret.isHideFromListing())
                                                     .scopedToAccount(secret.isScopedToAccount())
                                                     .usageRestrictions(secret.getUsageRestrictions())
+                                                    .additionalMetadata(secret.getAdditionalMetadata())
                                                     .inheritScopesFromSM(secret.isInheritScopesFromSM());
 
     EncryptedData encryptedData;
@@ -303,13 +308,12 @@ public class SecretServiceImpl implements SecretService {
       if (secretManagerType.equals(KMS)) {
         encryptedRecord = encryptSecret(accountId, secretText.getValue(), secretManagerConfig);
       } else {
-        encryptedRecord =
-            upsertSecret(accountId, secretText.getName(), secretText.getValue(), null, secretManagerConfig);
+        encryptedRecord = upsertSecret(accountId, secretText, null, secretManagerConfig);
       }
       encryptedDataBuilder.encryptionKey(encryptedRecord.getEncryptionKey())
           .encryptedValue(encryptedRecord.getEncryptedValue());
     } else if (secretText.isReferencedSecret()) {
-      validateReference(accountId, secretText.getPath(), secretManagerConfig);
+      validateReference(accountId, secretText, secretManagerConfig);
       encryptedDataBuilder.path(secretText.getPath());
     } else if (secretManagerType.equals(CUSTOM)) {
       validateParameters(accountId, secretText.getParameters(), secretManagerConfig);
@@ -331,9 +335,17 @@ public class SecretServiceImpl implements SecretService {
       encryptedRecord = EncryptedRecordData.builder()
                             .encryptedValue(encryptedFileId.toCharArray())
                             .encryptionKey(encryptedRecord.getEncryptionKey())
+                            .additionalMetadata(secretFile.getAdditionalMetadata())
                             .build();
     } else {
-      encryptedRecord = upsertSecret(accountId, secretFile.getName(), fileContent, null, secretManagerConfig);
+      //   encryptedRecord = upsertSecret(accountId, secretFile.getName(), fileContent, null, secretManagerConfig);
+      encryptedRecord = upsertSecret(accountId,
+          SecretText.builder()
+              .name(secretFile.getName())
+              .additionalMetadata(secretFile.getAdditionalMetadata())
+              .value(fileContent)
+              .build(),
+          null, secretManagerConfig);
     }
     return encryptedDataBuilder.type(CONFIG_FILE)
         .base64Encoded(true)
@@ -352,10 +364,9 @@ public class SecretServiceImpl implements SecretService {
     if (secretUpdateData.shouldRencryptUsingKms(secretManagerType)) {
       updatedEncryptedData = encryptSecret(accountId, secretText.getValue(), secretManagerConfig);
     } else if (secretUpdateData.shouldRencryptUsingVault(secretManagerType)) {
-      updatedEncryptedData =
-          upsertSecret(accountId, secretText.getName(), secretText.getValue(), existingRecord, secretManagerConfig);
+      updatedEncryptedData = upsertSecret(accountId, secretText, existingRecord, secretManagerConfig);
     } else if (secretUpdateData.validateReferenceUsingVault(secretManagerType)) {
-      validateReference(accountId, secretText.getPath(), secretManagerConfig);
+      validateReference(accountId, secretText, secretManagerConfig);
       if (existingRecord.isInlineSecret()) {
         deleteSecret(accountId, existingRecord, secretManagerConfig);
       }
@@ -384,7 +395,10 @@ public class SecretServiceImpl implements SecretService {
                                  .build();
       secretsFileService.deleteFile(existingRecord.getEncryptedValue());
     } else if (secretUpdateData.shouldRencryptUsingVault(secretManagerType)) {
-      updatedEncryptedData = upsertSecret(accountId, secretUpdateData.getUpdatedSecret().getName(), updatedFileContent,
+      /*updatedEncryptedData = upsertSecret(accountId, secretUpdateData.getUpdatedSecret().getName(),
+         updatedFileContent, existingRecord, secretManagerConfig);*/
+      updatedEncryptedData = upsertSecret(accountId,
+          SecretText.builder().name(secretUpdateData.getUpdatedSecret().getName()).value(updatedFileContent).build(),
           existingRecord, secretManagerConfig);
     }
     return updatedEncryptedData;
@@ -397,26 +411,26 @@ public class SecretServiceImpl implements SecretService {
     return encryptedRecord;
   }
 
-  private EncryptedRecord upsertSecret(String accountId, String name, String value, EncryptedRecord existingRecord,
+  private EncryptedRecord upsertSecret(String accountId, SecretText secretText, EncryptedRecord existingRecord,
       SecretManagerConfig secretManagerConfig) {
     VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
     EncryptedRecord encryptedRecord;
     if (existingRecord == null) {
-      encryptedRecord = vaultEncryptor.createSecret(accountId, name, value, secretManagerConfig);
-    } else if (value != null && !value.equals(SECRET_MASK)) {
-      encryptedRecord = vaultEncryptor.updateSecret(accountId, name, value, existingRecord, secretManagerConfig);
+      encryptedRecord = vaultEncryptor.createSecret(accountId, secretText, secretManagerConfig);
+    } else if (secretText.getValue() != null && !secretText.getValue().equals(SECRET_MASK)) {
+      encryptedRecord = vaultEncryptor.updateSecret(accountId, secretText, existingRecord, secretManagerConfig);
     } else {
-      encryptedRecord = vaultEncryptor.renameSecret(accountId, name, existingRecord, secretManagerConfig);
+      encryptedRecord = vaultEncryptor.renameSecret(accountId, secretText, existingRecord, secretManagerConfig);
     }
     validateEncryptedData(encryptedRecord);
     return encryptedRecord;
   }
 
-  private void validateReference(String accountId, String path, SecretManagerConfig secretManagerConfig) {
+  private void validateReference(String accountId, SecretText secretText, SecretManagerConfig secretManagerConfig) {
     VaultEncryptor vaultEncryptor = vaultRegistry.getVaultEncryptor(secretManagerConfig.getEncryptionType());
-    boolean isValidReference = vaultEncryptor.validateReference(accountId, path, secretManagerConfig);
+    boolean isValidReference = vaultEncryptor.validateReference(accountId, secretText, secretManagerConfig);
     if (!isValidReference) {
-      String message = format("Could not find the secret at the path %s or the secret was empty", path);
+      String message = format("Could not find the secret at the path %s or the secret was empty", secretText.getPath());
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
     }
   }
@@ -666,25 +680,66 @@ public class SecretServiceImpl implements SecretService {
   @Override
   public boolean hasAccessToReadSecrets(String accountId, Set<String> secretIds, String appId, String envId) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
-    try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
-        SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(
-            accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-        secretScopeMetadataSet.add(SecretScopeMetadata.builder()
-                                       .secretId(encryptedData.getUuid())
-                                       .secretScopes(encryptedData)
-                                       .inheritScopesFromSM(encryptedData.isInheritScopesFromSM())
-                                       .secretsManagerScopes(secretManagerConfig)
-                                       .build());
-      }
-    }
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
     return secretsRBACService.hasAccessToReadSecrets(accountId, secretScopeMetadataSet, appId, envId);
+  }
+
+  @Override
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
+    Set<String> foundInDatabase =
+        secretScopeMetadataSet.stream().map(SecretScopeMetadata::getSecretId).collect(Collectors.toSet());
+    // collect not available Secret Ids
+    Set<String> notFoundInDatabase = new HashSet<>(secretIds);
+    notFoundInDatabase.removeAll(foundInDatabase);
+    // collect readable secret Ids
+    Set<String> readableSecretIds = secretsRBACService
+                                        .filterSecretsByReadPermission(accountId,
+                                            new ArrayList<>(secretScopeMetadataSet), appIdFromRequest, envIdFromRequest)
+                                        .stream()
+                                        .map(SecretScopeMetadata::getSecretId)
+                                        .collect(Collectors.toSet());
+    // collect not readable Secret Ids
+    Set<String> notReadableSecretIds = new HashSet<>(secretIds);
+    notReadableSecretIds.removeAll(notFoundInDatabase);
+    notReadableSecretIds.removeAll(readableSecretIds);
+
+    return buildAndGetResult(notFoundInDatabase, notReadableSecretIds, readableSecretIds);
+  }
+
+  @NotNull
+  private List<SecretMetadata> buildAndGetResult(
+      Set<String> notFoundInDatabase, Set<String> notReadableSecretIds, Set<String> readableSecretIds) {
+    List<SecretMetadata> result = new ArrayList<>();
+    result.addAll(notFoundInDatabase.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.NOT_FOUND).build();
+                      })
+                      .collect(Collectors.toList()));
+    result.addAll(notReadableSecretIds.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.CANNOT_READ).build();
+                      })
+                      .collect(Collectors.toList()));
+    result.addAll(readableSecretIds.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.CAN_READ).build();
+                      })
+                      .collect(Collectors.toList()));
+    return result;
   }
 
   @Override
   public boolean hasAccessToEditSecrets(String accountId, Set<String> secretIds) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
+    return secretsRBACService.hasAccessToEditSecrets(accountId, secretScopeMetadataSet);
+  }
+
+  private void buildSecretScopeMetadataSet(
+      String accountId, Set<String> secretIds, Set<SecretScopeMetadata> secretScopeMetadataSet) {
     try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
@@ -698,7 +753,6 @@ public class SecretServiceImpl implements SecretService {
                                        .build());
       }
     }
-    return secretsRBACService.hasAccessToEditSecrets(accountId, secretScopeMetadataSet);
   }
 
   @Override

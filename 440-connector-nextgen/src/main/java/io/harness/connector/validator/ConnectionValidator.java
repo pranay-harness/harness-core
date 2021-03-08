@@ -1,9 +1,9 @@
 package io.harness.connector.validator;
 
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
-import io.harness.delegate.beans.connector.ConnectorValidationResult;
 
 public interface ConnectionValidator<T extends ConnectorConfigDTO> {
   ConnectorValidationResult validate(
-      T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+      T connectorDTO, String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

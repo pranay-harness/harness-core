@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.INDER;
@@ -14,6 +16,7 @@ import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.PULL;
 import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -30,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -51,21 +55,23 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.manifest.CustomSourceConfig;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.Event;
+import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.prune.PruneEvent;
@@ -81,6 +87,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
@@ -99,7 +106,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private YamlPushService yamlPushService;
   @Mock private SettingsService settingsService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private HelmChartService helmChartService;
   @Spy private HelmHelper helmHelper;
@@ -109,7 +116,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setup() {
-    Reflect.on(applicationManifestServiceImpl).set("wingsPersistence", wingsPersistence);
+    Reflect.on(applicationManifestServiceImpl).set("wingsPersistence", persistence);
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
   }
 
   @Test
@@ -179,11 +187,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
             .storeType(HelmChartRepo)
             .build();
 
-    try {
-      applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
-    } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
-    }
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest));
 
     applicationManifest.setServiceId("s1");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
@@ -211,7 +216,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault("a1", "s1");
 
-    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
+    HelmCommandFlagConfig helmCommandFlag =
+        HelmCommandFlagConfig.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
     applicationManifest.setHelmCommandFlag(helmCommandFlag);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
@@ -278,9 +284,14 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setGitFileConfig(GitFileConfig.builder().build());
     // No GitConfig
     verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
+    applicationManifest.setGitFileConfig(null);
+
+    // CustomManifest Config
+    applicationManifest.setCustomSourceConfig(CustomSourceConfig.builder().build());
+    verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
+    applicationManifest.setCustomSourceConfig(null);
 
     HelmChartConfig helmChartConfig = HelmChartConfig.builder().build();
-    applicationManifest.setGitFileConfig(null);
     applicationManifest.setHelmChartConfig(helmChartConfig);
     // Empty connectorId and chartName
     verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
@@ -333,8 +344,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     assertThat(savedApplicationManifest).isNotNull();
     assertThat(manifest).isEqualTo(savedApplicationManifest);
     verify(yamlPushService, times(1))
-        .pushYamlChangeSet(
-            anyString(), eq(null), eq(savedApplicationManifest), eq(Event.Type.CREATE), eq(false), eq(false));
+        .pushYamlChangeSet(anyString(), eq(null), eq(savedApplicationManifest), eq(Type.CREATE), eq(false), eq(false));
   }
 
   @Test
@@ -354,8 +364,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     assertThat(savedApplicationManifest).isNotNull();
     assertThat(manifest).isEqualTo(savedApplicationManifest);
     verify(yamlPushService, times(1))
-        .pushYamlChangeSet(anyString(), eq(savedApplicationManifest), eq(savedApplicationManifest),
-            eq(Event.Type.UPDATE), eq(false), eq(false));
+        .pushYamlChangeSet(anyString(), eq(savedApplicationManifest), eq(savedApplicationManifest), eq(Type.UPDATE),
+            eq(false), eq(false));
     verify(applicationManifestServiceImpl, times(1)).resetReadOnlyProperties(manifest);
   }
 
@@ -439,7 +449,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     try {
       applicationManifestServiceImpl.validateHelmChartRepoAppManifest(applicationManifest);
     } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
+      assertThat(e).isInstanceOf(InvalidRequestException.class);
     }
   }
 
@@ -453,7 +463,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     try {
       applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
     } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
+      assertThat(e).isInstanceOf(InvalidRequestException.class);
     }
   }
 
@@ -518,15 +528,42 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     doReturn(attribute).when(settingsService).get("connector-id");
 
-    try {
-      applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
-    } catch (Exception e) {
-      assertThat(e instanceof InvalidRequestException).isTrue();
-    }
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest));
 
     gitFileConfig.setRepoName("repo-name");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateCustomAppManifest() {
+    CustomSourceConfig manifestConfig = CustomSourceConfig.builder().build();
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().serviceId("service").envId("env").kind(K8S_MANIFEST).storeType(CUSTOM).build();
+    applicationManifest.setAppId("application");
+    doReturn("account").when(appService).getAccountIdByAppId("application");
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, "account");
+
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Manifest feature is not enabled");
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, "account");
+
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Source Config is mandatory");
+
+    applicationManifest.setCustomSourceConfig(manifestConfig);
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Path can't be empty");
+
+    manifestConfig.setPath("/local");
+    assertThatCode(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .doesNotThrowAnyException();
   }
 
   @Test
@@ -728,7 +765,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setAccountId(ACCOUNT_ID);
     applicationManifest.setAppId(APP_ID);
     applicationManifest.setPollForChanges(true);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
     applicationManifestServiceImpl.deleteAppManifest(APP_ID, applicationManifest.getUuid());
@@ -778,27 +815,28 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute().withName(SETTING_NAME).withValue(helmRepoConfig).build());
 
     Map<String, String> properties = applicationManifestServiceImpl.fetchAppManifestProperties(APP_ID, MANIFEST_ID);
-    assertThat(properties.get("url")).isEqualTo("gs://" + BUCKET_NAME + "/base_path");
-    assertThat(properties.get("basePath")).isEqualTo("base_path");
-    assertThat(properties.get("repositoryName")).isEqualTo(SETTING_NAME);
-    assertThat(properties.get("bucketName")).isEqualTo(BUCKET_NAME);
+    assertThat(properties)
+        .containsEntry("url", "gs://" + BUCKET_NAME + "/base_path")
+        .containsEntry("basePath", "base_path")
+        .containsEntry("repositoryName", SETTING_NAME)
+        .containsEntry("bucketName", BUCKET_NAME);
   }
 
   private void setUpForListPollingEnabled() {
     ApplicationManifest applicationManifest = getHelmChartApplicationManifest();
     applicationManifest.setAppId(APP_ID);
-    wingsPersistence.save(applicationManifest);
+    persistence.save(applicationManifest);
 
     ApplicationManifest applicationManifest1 = getHelmChartApplicationManifest();
     applicationManifest1.setAppId(APP_ID);
     applicationManifest1.setPollForChanges(true);
-    wingsPersistence.save(applicationManifest1);
+    persistence.save(applicationManifest1);
 
     ApplicationManifest applicationManifest2 = getHelmChartApplicationManifest();
     applicationManifest2.setAppId(APP_ID);
     applicationManifest2.setPollForChanges(true);
     applicationManifest2.setServiceId("SERVICE_ID_1");
-    wingsPersistence.save(applicationManifest2);
+    persistence.save(applicationManifest2);
 
     when(serviceResourceService.getServiceNames(anyString(), anySet()))
         .thenReturn(Collections.singletonMap(SERVICE_ID, SERVICE_NAME));
@@ -829,5 +867,76 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     InOrder inOrder = inOrder(helmChartService, triggerService);
     inOrder.verify(helmChartService).pruneByApplicationManifest(APP_ID, MANIFEST_ID);
     inOrder.verify(triggerService).pruneByApplicationManifest(APP_ID, MANIFEST_ID);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testSaveApplicationManifest() {
+    ApplicationManifest applicationManifest = buildApplicationManifest();
+
+    ManifestFile manifestFile = buildManifestFile(applicationManifest);
+
+    applicationManifestServiceImpl.upsertApplicationManifestFile(manifestFile, applicationManifest, true);
+    verify(yamlPushService, times(1)).pushYamlChangeSet(ACCOUNT_ID, null, manifestFile, Type.CREATE, false, false);
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testRenameApplicationManifest() {
+    ApplicationManifest applicationManifest = buildApplicationManifest();
+
+    ManifestFile oldManifestFile = buildManifestFile(applicationManifest);
+
+    persistence.save(oldManifestFile);
+
+    ManifestFile newManifestFile = buildManifestFile(applicationManifest);
+    newManifestFile.setUuid(oldManifestFile.getUuid());
+    newManifestFile.setFileName(oldManifestFile.getFileName() + "_newName");
+
+    applicationManifestServiceImpl.upsertApplicationManifestFile(newManifestFile, applicationManifest, false);
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(
+            eq(ACCOUNT_ID), any(ManifestFile.class), eq(newManifestFile), eq(Type.UPDATE), eq(false), eq(true));
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void testUpdateApplicationManifest() {
+    ApplicationManifest applicationManifest = buildApplicationManifest();
+
+    ManifestFile oldManifestFile = buildManifestFile(applicationManifest);
+
+    persistence.save(oldManifestFile);
+
+    ManifestFile newManifestFile = buildManifestFile(applicationManifest);
+    newManifestFile.setUuid(oldManifestFile.getUuid());
+    newManifestFile.setFileContent("name: abc");
+
+    applicationManifestServiceImpl.upsertApplicationManifestFile(newManifestFile, applicationManifest, false);
+    verify(yamlPushService, times(1))
+        .pushYamlChangeSet(ACCOUNT_ID, oldManifestFile, newManifestFile, Type.UPDATE, false, false);
+  }
+
+  @NotNull
+  private ApplicationManifest buildApplicationManifest() {
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().storeType(Local).accountId(ACCOUNT_ID).build();
+    applicationManifest.setAppId(APP_ID);
+    applicationManifest.setUuid(generateUuid());
+    return applicationManifest;
+  }
+
+  @NotNull
+  private ManifestFile buildManifestFile(ApplicationManifest applicationManifest) {
+    ManifestFile manifestFile = ManifestFile.builder()
+                                    .fileName("abc.yaml")
+                                    .accountId(ACCOUNT_ID)
+                                    .applicationManifestId(applicationManifest.getUuid())
+                                    .build();
+    manifestFile.setAppId(APP_ID);
+    return manifestFile;
   }
 }

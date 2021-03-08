@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static io.harness.beans.FeatureName.CD_PAGE_PERFORMANCE;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -163,29 +162,26 @@ public class ExecutionResource {
         -> pageRequest.addFilter(WorkflowExecutionKeys.startTs, GE,
             EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(val, "UTC")));
 
-    boolean isFlagEnabled = featureFlagService.isEnabled(CD_PAGE_PERFORMANCE, accountId);
-    if (isFlagEnabled) {
-      List<PageRequest.Option> options = pageRequest.getOptions();
-      if (options == null) {
-        options = new ArrayList<>();
-      }
-      options.add(PageRequest.Option.SKIPCOUNT);
-      pageRequest.setOptions(options);
-      // We will ask for one more than limit, and if its not exactly one more, we know we are at the end of the list.
-      pageRequest.setLimit(Integer.toString(Integer.parseInt(pageRequest.getLimit()) + 1));
+    // With skipcount option, we won't have count query while fetching the executions.
+    List<PageRequest.Option> options = pageRequest.getOptions();
+    if (options == null) {
+      options = new ArrayList<>();
     }
+    options.add(PageRequest.Option.SKIPCOUNT);
+    pageRequest.setOptions(options);
+    // We will ask for one more than limit, and if its not exactly one more, we know we are at the end of the list.
+    pageRequest.setLimit(Integer.toString(Integer.parseInt(pageRequest.getLimit()) + 1));
+
     PageResponse<WorkflowExecution> workflowExecutions =
         workflowExecutionService.listExecutions(pageRequest, includeGraph, true, true, false);
 
-    if (isFlagEnabled) {
-      int offset = Integer.parseInt(pageRequest.getOffset());
-      int limit = Integer.parseInt(pageRequest.getLimit()) - 1;
-      workflowExecutions.setTotal(offset + (long) workflowExecutions.size());
-      if (workflowExecutions.size() == limit + 1) {
-        workflowExecutions.remove(workflowExecutions.size() - 1);
-      }
-      workflowExecutions.setLimit(Integer.toString(limit));
+    int offset = Integer.parseInt(pageRequest.getOffset());
+    int limit = Integer.parseInt(pageRequest.getLimit()) - 1;
+    workflowExecutions.setTotal(offset + (long) workflowExecutions.size());
+    if (workflowExecutions.size() == limit + 1) {
+      workflowExecutions.remove(workflowExecutions.size() - 1);
     }
+    workflowExecutions.setLimit(Integer.toString(limit));
 
     workflowExecutions.forEach(we -> we.setStateMachine(null));
     return new RestResponse<>(workflowExecutions);

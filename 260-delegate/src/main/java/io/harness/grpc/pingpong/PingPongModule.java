@@ -1,5 +1,7 @@
 package io.harness.grpc.pingpong;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.PingPongServiceGrpc;
 import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.govern.ProviderModule;
@@ -11,6 +13,7 @@ import com.google.inject.name.Named;
 import io.grpc.CallCredentials;
 import io.grpc.Channel;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class PingPongModule extends ProviderModule {
   @Provides
   @Singleton

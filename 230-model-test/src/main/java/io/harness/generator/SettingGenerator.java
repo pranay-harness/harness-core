@@ -13,6 +13,7 @@ import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_USERNAME;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.shell.AccessType.KEY;
 import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitAccountSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createEcsFunctionalTestGitRepoSetting;
 import static io.harness.testframework.framework.utils.SettingUtils.createGitHubRepoSetting;
@@ -23,7 +24,6 @@ import static io.harness.testframework.framework.utils.SettingUtils.createTerraf
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
-import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -37,6 +37,7 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.SettingUtils;
@@ -49,8 +50,8 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.ServiceNowConfig;
@@ -95,6 +96,7 @@ public class SettingGenerator {
   private static final String HARNESS_AZURE_ARTIFACTS = "Harness Azure Artifacts";
   private static final String ELK_CONNECTOR = "Elk Connector";
   private static final String HARNESS_ACCOUNT_GIT_CONNECTOR = "Harness Account Git Connector";
+  private static final String OPENSHIFT_TEST_CLUSTER = "Openshift Test Cluster";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -105,6 +107,7 @@ public class SettingGenerator {
   private static final String HELM_S3 = "HELM S3";
   private static final String REGION_US_EAST_1 = "us-east-1";
   private static final String HARNESS_ADMIN = "harnessadmin";
+  private static final String OPENSHIFT_TEST_CLUSTER_MASTER_URL = "https://34.66.254.71:8443";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -150,7 +153,8 @@ public class SettingGenerator {
     HELM_GCS_CONNECTOR,
     ELK,
     ACCOUNT_LEVEL_GIT_CONNECTOR,
-    AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR
+    AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR,
+    OPENSHIFT_TEST_CLUSTER,
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -233,6 +237,8 @@ public class SettingGenerator {
         return ensureAccountLevelGitConnector(seed, owners);
       case AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR:
         return ensureAzureVMSSSSHPublicKey(seed, owners);
+      case OPENSHIFT_TEST_CLUSTER:
+        return ensureOpenshiftTestCluster(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -854,7 +860,7 @@ public class SettingGenerator {
                            .repoUrl("https://github.com/wings-software/")
                            .urlType(GitConfig.UrlType.ACCOUNT)
                            .generateWebhookUrl(true)
-                           .authenticationScheme(HostConnectionAttributes.AuthenticationScheme.HTTP_PASSWORD)
+                           .authenticationScheme(io.harness.shell.AuthenticationScheme.HTTP_PASSWORD)
                            .username(String.valueOf(
                                new ScmSecret().decryptToCharArray(new SecretName("git_automation_username"))))
                            .password(password.toCharArray())
@@ -883,6 +889,26 @@ public class SettingGenerator {
                                                                  .build())
                                                   .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                                   .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureOpenshiftTestCluster(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String openshiftTestClusterSaToken =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("openshift_test_cluster_sa_token").build());
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName(OPENSHIFT_TEST_CLUSTER)
+            .withAccountId(account.getUuid())
+            .withValue(KubernetesClusterConfig.builder()
+                           .masterUrl(OPENSHIFT_TEST_CLUSTER_MASTER_URL)
+                           .authType(KubernetesClusterAuthType.SERVICE_ACCOUNT)
+                           .serviceAccountToken(openshiftTestClusterSaToken.toCharArray())
+                           .accountId(account.getUuid())
+                           .build())
+            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

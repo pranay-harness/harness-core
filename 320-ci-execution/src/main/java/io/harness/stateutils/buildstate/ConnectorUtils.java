@@ -2,6 +2,7 @@ package io.harness.stateutils.buildstate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
@@ -9,10 +10,11 @@ import static java.lang.String.format;
 
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
-import io.harness.connector.apis.client.ConnectorResourceClient;
-import io.harness.connector.apis.dto.ConnectorDTO;
+import io.harness.connector.ConnectorDTO;
+import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails.ConnectorDetailsBuilder;
+import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryConnectorDTO;
@@ -21,6 +23,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
+import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -32,12 +35,24 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.network.SafeHttpCall;
@@ -48,6 +63,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,11 +76,13 @@ import lombok.extern.slf4j.Slf4j;
 public class ConnectorUtils {
   private final ConnectorResourceClient connectorResourceClient;
   private final SecretManagerClientService secretManagerClientService;
+  private final SecretUtils secretUtils;
 
   @Inject
-  public ConnectorUtils(
-      ConnectorResourceClient connectorResourceClient, SecretManagerClientService secretManagerClientService) {
+  public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
+      SecretManagerClientService secretManagerClientService) {
     this.connectorResourceClient = connectorResourceClient;
+    this.secretUtils = secretUtils;
     this.secretManagerClientService = secretManagerClientService;
   }
 
@@ -115,15 +133,10 @@ public class ConnectorUtils {
         connectorDetails = getK8sConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
       case GIT:
-        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
-        break;
       case GITHUB:
-        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
-        break;
       case GITLAB:
-        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
-        break;
       case BITBUCKET:
+      case CODECOMMIT:
         connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
       case GCP:
@@ -141,6 +154,21 @@ public class ConnectorUtils {
     log.info(
         "Successfully fetched encryption details for  connector id:[{}] type:[{}]", connectorIdentifier, connectorType);
     return connectorDetails;
+  }
+
+  public String fetchUserName(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return fetchUserNameFromGithubConnector(gitConfigDTO);
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return fetchUserNameFromGitlabConnector(gitConfigDTO);
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return fetchUserNameFromBitbucketConnector(gitConfigDTO, gitConnector.getIdentifier());
+    } else {
+      throw new CIStageExecutionException("Unsupported git connector " + gitConnector.getConnectorType());
+    }
   }
 
   private ConnectorDetails getArtifactoryConnectorDetails(
@@ -199,6 +227,8 @@ public class ConnectorUtils {
       return buildGitlabConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else if (connectorDTO.getConnectorInfo().getConnectorType() == BITBUCKET) {
       return buildBitBucketConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else if (connectorDTO.getConnectorInfo().getConnectorType() == CODECOMMIT) {
+      return buildAwsCodeCommitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else {
       throw new CIStageExecutionException(
           "Unsupported git connector " + connectorDTO.getConnectorInfo().getConnectorType());
@@ -214,8 +244,26 @@ public class ConnectorUtils {
           (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(ngAccess, gitlabHttpCredentialsDTO.getHttpCredentialsSpec());
-
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails.addAll(
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      }
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
+      GitlabSshCredentialsDTO gitlabSshCredentialsDTO =
+          (GitlabSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitlabSshCredentialsDTO.getSshKeyRef());
+      if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
+        throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
+            + gitConfigDTO.getAuthentication().getAuthType());
+      }
+      connectorDetailsBuilder.sshKeyDetails(sshKey);
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails =
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec());
+        connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails);
+      }
+      return connectorDetailsBuilder.build();
     } else {
       throw new CIStageExecutionException(
           "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
@@ -232,7 +280,26 @@ public class ConnectorUtils {
           (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails =
           secretManagerClientService.getEncryptionDetails(ngAccess, githubHttpCredentialsDTO.getHttpCredentialsSpec());
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails.addAll(
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      }
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
+      GithubSshCredentialsDTO githubSshCredentialsDTO =
+          (GithubSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, githubSshCredentialsDTO.getSshKeyRef());
+      if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
+        throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
+            + gitConfigDTO.getAuthentication().getAuthType());
+      }
+      connectorDetailsBuilder.sshKeyDetails(sshKey);
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails =
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec());
+        connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails);
+      }
+      return connectorDetailsBuilder.build();
     } else {
       throw new CIStageExecutionException(
           "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
@@ -248,20 +315,58 @@ public class ConnectorUtils {
           (BitbucketHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
       encryptedDataDetails = secretManagerClientService.getEncryptionDetails(
           ngAccess, bitbucketHttpCredentialsDTO.getHttpCredentialsSpec());
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails.addAll(
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec()));
+      }
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.SSH) {
+      BitbucketSshCredentialsDTO bitbucketSshCredentialsDTO =
+          (BitbucketSshCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, bitbucketSshCredentialsDTO.getSshKeyRef());
+      connectorDetailsBuilder.sshKeyDetails(sshKey);
+      if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
+        throw new CIStageExecutionException("Unsupported ssh key format, passphrase is unsupported in git connector: "
+            + gitConfigDTO.getAuthentication().getAuthType());
+      }
+      if (gitConfigDTO.getApiAccess() != null && gitConfigDTO.getApiAccess().getSpec() != null) {
+        encryptedDataDetails =
+            secretManagerClientService.getEncryptionDetails(ngAccess, gitConfigDTO.getApiAccess().getSpec());
+        connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails);
+      }
+      return connectorDetailsBuilder.build();
     } else {
       throw new CIStageExecutionException(
           "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
   }
 
+  private ConnectorDetails buildAwsCodeCommitConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    AwsCodeCommitConnectorDTO gitConfigDTO =
+        (AwsCodeCommitConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    gitConfigDTO.getDecryptableEntities().forEach(decryptableEntity
+        -> encryptedDataDetails.addAll(secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntity)));
+    connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails);
+    return connectorDetailsBuilder.build();
+  }
+
   private ConnectorDetails getDockerConnectorDetails(
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
     List<EncryptedDataDetail> encryptedDataDetails;
     DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
-    encryptedDataDetails =
-        secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
-    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    DockerAuthType dockerAuthType = dockerConnectorDTO.getAuth().getAuthType();
+    if (dockerAuthType == DockerAuthType.USER_PASSWORD) {
+      encryptedDataDetails =
+          secretManagerClientService.getEncryptionDetails(ngAccess, dockerConnectorDTO.getAuth().getCredentials());
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (dockerAuthType == DockerAuthType.ANONYMOUS) {
+      return connectorDetailsBuilder.build();
+    } else {
+      throw new InvalidArgumentsException(
+          format("Unsupported docker credential type:[%s] on connector:[%s]", dockerAuthType, dockerConnectorDTO));
+    }
   }
 
   private ConnectorDetails getK8sConnectorDetails(
@@ -298,10 +403,10 @@ public class ConnectorUtils {
 
     } catch (Exception e) {
       log.error(format("Unable to get connector information : [%s] with scope: [%s]", connectorRef.getIdentifier(),
-          connectorRef.getScope()));
-      throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
-                                              connectorRef.getIdentifier(), connectorRef.getScope()),
+                    connectorRef.getScope()),
           e);
+      throw new CIStageExecutionException(format("Unable to get connector information : [%s] with scope: [%s]",
+          connectorRef.getIdentifier(), connectorRef.getScope()));
     }
 
     if (!connectorDTO.isPresent()) {
@@ -309,5 +414,54 @@ public class ConnectorUtils {
           connectorRef.getIdentifier(), connectorRef.getScope()));
     }
     return connectorDTO.get();
+  }
+
+  private String fetchUserNameFromGitlabConnector(GitlabConnectorDTO gitConfigDTO) {
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GitlabHttpCredentialsDTO gitlabHttpCredentialsDTO =
+          (GitlabHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        GitlabUsernamePasswordDTO GitlabHttpCredentialsSpecDTO =
+            (GitlabUsernamePasswordDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
+        return GitlabHttpCredentialsSpecDTO.getUsername();
+      } else if (gitlabHttpCredentialsDTO.getType() == GitlabHttpAuthenticationType.USERNAME_AND_TOKEN) {
+        GitlabUsernameTokenDTO GitlabHttpCredentialsSpecDTO =
+            (GitlabUsernameTokenDTO) gitlabHttpCredentialsDTO.getHttpCredentialsSpec();
+        return GitlabHttpCredentialsSpecDTO.getUsername();
+      }
+    }
+
+    return null;
+  }
+
+  private String fetchUserNameFromBitbucketConnector(BitbucketConnectorDTO gitConfigDTO, String identifier) {
+    try {
+      if (gitConfigDTO.getApiAccess().getType() == BitbucketApiAccessType.USERNAME_AND_TOKEN) {
+        return ((BitbucketUsernameTokenApiAccessDTO) gitConfigDTO.getApiAccess().getSpec()).getUsername();
+      }
+    } catch (Exception ex) {
+      log.error(format("Unable to get username information from api access for identifier %s", identifier), ex);
+      throw new CIStageExecutionException(
+          format("Unable to get username information from api access for identifier %s", identifier));
+    }
+    throw new CIStageExecutionException(
+        format("Unable to get username information from api access for identifier %s", identifier));
+  }
+
+  private String fetchUserNameFromGithubConnector(GithubConnectorDTO gitConfigDTO) {
+    if (gitConfigDTO.getAuthentication().getAuthType() == GitAuthType.HTTP) {
+      GithubHttpCredentialsDTO githubHttpCredentialsDTO =
+          (GithubHttpCredentialsDTO) gitConfigDTO.getAuthentication().getCredentials();
+      if (githubHttpCredentialsDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_PASSWORD) {
+        GithubUsernamePasswordDTO githubHttpCredentialsSpecDTO =
+            (GithubUsernamePasswordDTO) githubHttpCredentialsDTO.getHttpCredentialsSpec();
+        return githubHttpCredentialsSpecDTO.getUsername();
+      } else if (githubHttpCredentialsDTO.getType() == GithubHttpAuthenticationType.USERNAME_AND_TOKEN) {
+        GithubUsernameTokenDTO githubHttpCredentialsSpecDTO =
+            (GithubUsernameTokenDTO) githubHttpCredentialsDTO.getHttpCredentialsSpec();
+        return githubHttpCredentialsSpecDTO.getUsername();
+      }
+    }
+    return null;
   }
 }

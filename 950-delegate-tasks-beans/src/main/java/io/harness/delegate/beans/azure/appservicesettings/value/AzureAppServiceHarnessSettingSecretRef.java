@@ -25,10 +25,10 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("AzureAppServiceHarnessSettingSecretRef")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AzureAppServiceHarnessSettingSecretRef implements DecryptableEntity {
-  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData secretRef;
+  @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 
   @Builder
-  public AzureAppServiceHarnessSettingSecretRef(SecretRefData secretRef) {
-    this.secretRef = secretRef;
+  public AzureAppServiceHarnessSettingSecretRef(SecretRefData passwordRef) {
+    this.passwordRef = passwordRef;
   }
 }

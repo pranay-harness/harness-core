@@ -24,5 +24,6 @@ public class ShellScriptTemplate implements BaseTemplate {
   private String scriptType;
   private String scriptString;
   private String outputVars;
+  private String secretOutputVars;
   @Builder.Default private int timeoutMillis = 600000;
 }

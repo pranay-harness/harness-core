@@ -9,7 +9,7 @@ import lombok.Data;
 @Data
 @Builder
 public class CDStageModuleInfo implements StageModuleInfo {
-  ServiceExecutionSummary serviceInfoList;
-  String infrastructureIdentifiers;
+  ServiceExecutionSummary serviceInfo;
+  InfraExecutionSummary infraExecutionSummary;
   String nodeExecutionId;
 }

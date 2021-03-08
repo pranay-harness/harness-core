@@ -3,8 +3,8 @@ package software.wings.service;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.SAHIL;
+import static io.harness.shell.AccessType.USER_PASSWORD;
 
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -45,6 +45,7 @@ import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.Map;
@@ -62,6 +63,7 @@ public class ServiceCommandExecutorServiceTest extends WingsBaseTest {
   @Mock private SshCommandUnitExecutorServiceImpl sshCommandUnitExecutorService;
   @Mock private CommandUnitExecutorService commandUnitExecutorService;
   @Mock private EncryptionService encryptionService;
+  @Mock private SSHVaultService sshVaultService;
   @InjectMocks private ServiceCommandExecutorService cmdExecutorService = new ServiceCommandExecutorServiceImpl();
 
   private SettingAttribute hostConnAttrPwd =

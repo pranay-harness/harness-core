@@ -20,7 +20,6 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
@@ -31,7 +30,9 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDC)
@@ -53,12 +54,11 @@ public class OrchestrationAdjacencyListGenerator {
     nodeExecutions.sort(Comparator.comparing(NodeExecution::getCreatedAt));
 
     for (NodeExecution nodeExecution : nodeExecutions) {
-      populateAdjacencyList(adjacencyListInternal, nodeExecution);
+      addVertex(adjacencyListInternal, nodeExecution);
     }
   }
 
-  public void populateAdjacencyList(
-      OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
+  public void addVertex(OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
     Map<String, GraphVertex> graphVertexMap = adjacencyListInternal.getGraphVertexMap();
     Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
 
@@ -87,6 +87,26 @@ public class OrchestrationAdjacencyListGenerator {
             .prevIds(prevIds)
             .parentId(parentId)
             .build());
+  }
+
+  public void removeVertex(OrchestrationAdjacencyListInternal adjacencyListInternal, NodeExecution nodeExecution) {
+    Map<String, GraphVertex> graphVertexMap = adjacencyListInternal.getGraphVertexMap();
+    Map<String, EdgeListInternal> adjacencyList = adjacencyListInternal.getAdjacencyMap();
+
+    String currentUuid = nodeExecution.getUuid();
+
+    String parentId;
+    if (isIdPresent(nodeExecution.getPreviousId())) {
+      EdgeListInternal previousEdgeList = adjacencyList.get(nodeExecution.getPreviousId());
+      previousEdgeList.getNextIds().remove(currentUuid);
+    } else if (isIdPresent(nodeExecution.getParentId())) {
+      parentId = nodeExecution.getParentId();
+      EdgeListInternal parentEdgeList = adjacencyList.get(parentId);
+      parentEdgeList.getEdges().remove(currentUuid);
+    }
+
+    graphVertexMap.remove(currentUuid);
+    adjacencyList.remove(currentUuid);
   }
 
   public OrchestrationAdjacencyListInternal generatePartialAdjacencyList(
@@ -205,10 +225,10 @@ public class OrchestrationAdjacencyListGenerator {
         String currentNodeId = queue.removeFirst();
         NodeExecution nodeExecution = nodeExIdMap.get(currentNodeId);
 
-        List<Outcome> outcomes = new ArrayList<>();
+        List<Document> outcomes = new ArrayList<>();
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToOutcome(
-              pmsOutcomeService.findAllByRuntimeId(nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
+          outcomes = PmsOutcomeMapper.convertJsonToDocument(pmsOutcomeService.findAllByRuntimeId(
+              nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId, true));
         }
 
         GraphVertex graphVertex = GraphVertexConverter.convertFrom(nodeExecution, outcomes);
@@ -221,6 +241,7 @@ public class OrchestrationAdjacencyListGenerator {
 
         List<String> edges = new ArrayList<>();
         List<String> nextIds = new ArrayList<>();
+        List<String> prevIds = new ArrayList<>();
 
         if (parentIdMap.containsKey(currentNodeId) && !parentIdMap.get(currentNodeId).isEmpty()) {
           List<String> childNodeIds = parentIdMap.get(currentNodeId);
@@ -236,20 +257,30 @@ public class OrchestrationAdjacencyListGenerator {
         }
 
         String nextNodeId = nodeExecution.getNextId();
+        String parentNodeId = nodeExecution.getParentId();
         if (EmptyPredicate.isNotEmpty(nextNodeId)) {
           if (chainMap.containsKey(currentNodeId)) {
             chainMap.put(nextNodeId, chainMap.get(currentNodeId));
             chainMap.remove(currentNodeId);
           }
-          queue.add(nextNodeId);
-          nextIds.add(nextNodeId);
+          if (!Objects.equals(parentNodeId, nextNodeId)) {
+            queue.add(nextNodeId);
+            nextIds.add(nextNodeId);
+          }
         } else if (chainMap.containsKey(currentNodeId)) {
           nextNodeId = chainMap.get(currentNodeId);
-          queue.add(nextNodeId);
-          nextIds.add(nextNodeId);
+          if (!Objects.equals(parentNodeId, nextNodeId)) {
+            queue.add(nextNodeId);
+            nextIds.add(nextNodeId);
+          }
         }
 
-        adjacencyList.put(currentNodeId, EdgeListInternal.builder().edges(edges).nextIds(nextIds).build());
+        String prevNodeId = nodeExecution.getPreviousId();
+        if (EmptyPredicate.isNotEmpty(prevNodeId)) {
+          prevIds.add(prevNodeId);
+        }
+        adjacencyList.put(currentNodeId,
+            EdgeListInternal.builder().edges(edges).nextIds(nextIds).prevIds(prevIds).parentId(parentNodeId).build());
       }
 
       return OrchestrationAdjacencyListInternal.builder()

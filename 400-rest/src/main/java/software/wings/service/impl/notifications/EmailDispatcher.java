@@ -110,6 +110,12 @@ public class EmailDispatcher {
         .replaceAll("<<aborted-color>>", ABORTED_COLOR + ";\">")
         .replaceAll("<<rejected-color>>", FAILED_COLOR + ";\">")
         .replaceAll("<<expired-color>>", FAILED_COLOR + ";\">")
+        .replaceAll("\\*Application:\\*", "<b>Application:</b>")
+        .replaceAll("\\*Services:\\*", "<b>Services:</b>")
+        .replaceAll("\\*Artifacts:\\*", "<b>Artifacts:</b>")
+        .replaceAll("\\*Environment:\\*", "<b>Environment:</b>")
+        .replaceAll("\\*Infrastructure Definitions:\\*", "<b>Infrastructure Definitions:</b>")
+        .replaceAll("\\*TriggeredBy:\\*", "<b>TriggeredBy:</b>")
         .replaceAll("<<img-path>>", "<div><span><img src=\"https://s3.amazonaws.com/wings-assets/slackicons/")
         .replaceAll("<<img-suffix>>",
             ".png\" height=\"13\" width=\"13\" style=\"padding-right:5px; padding-top:5px;\"></span>"

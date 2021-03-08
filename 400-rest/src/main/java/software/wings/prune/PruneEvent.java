@@ -21,16 +21,26 @@ public class PruneEvent extends Queuable {
   private String appId;
   private String entityId;
   private String entityClass;
+  private boolean syncFromGit;
 
   public PruneEvent(Class clz, String appId, String entityId) {
-    this(clz.getCanonicalName(), appId, entityId);
+    this(clz, appId, entityId, false);
   }
 
-  public PruneEvent(String classCanonicalName, String appId, String entityId) {
+  public PruneEvent(Class clz, String appId, String entityId, boolean syncFromGit) {
+    this(clz.getCanonicalName(), appId, entityId, syncFromGit);
+  }
+
+  public PruneEvent(String classCanonicalName, String appId, String entityId, boolean syncFromGit) {
     setEarliestGet(Date.from(OffsetDateTime.now().plus(DELAY).toInstant()));
     setRetries(MAX_RETRIES);
     this.appId = appId;
     this.entityId = entityId;
     this.entityClass = classCanonicalName;
+    this.syncFromGit = syncFromGit;
+  }
+
+  public PruneEvent(String classCanonicalName, String appId, String entityId) {
+    this(classCanonicalName, appId, entityId, false);
   }
 }

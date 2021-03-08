@@ -4,6 +4,8 @@ import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -43,6 +45,7 @@ import org.apache.commons.io.FileUtils;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ContainerDeploymentDelegateHelper {
   @Inject private AzureHelperService azureHelperService;
   @Inject private GkeClusterService gkeClusterService;
@@ -150,16 +153,15 @@ public class ContainerDeploymentDelegateHelper {
     return kubernetesConfig;
   }
 
-  public boolean useK8sSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled, boolean deprecateFabric8Enabled,
-      ContainerServiceParams containerServiceParams, LogCallback logCallback) {
+  public boolean useK8sSteadyStateCheck(
+      boolean isK8sSteadyStateCheckEnabled, ContainerServiceParams containerServiceParams, LogCallback logCallback) {
     if (!isK8sSteadyStateCheckEnabled) {
       return false;
     }
 
     KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
-    String versionAsString = deprecateFabric8Enabled
-        ? kubernetesContainerService.getVersionAsString(kubernetesConfig)
-        : kubernetesContainerService.getVersionAsStringFabric8(kubernetesConfig);
+    String versionAsString = kubernetesContainerService.getVersionAsString(kubernetesConfig);
+
     logCallback.saveExecutionLog(format("Kubernetes version [%s]", versionAsString));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionAsString));
 

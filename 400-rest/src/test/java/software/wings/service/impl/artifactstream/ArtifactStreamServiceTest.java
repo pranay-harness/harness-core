@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -56,6 +57,7 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.WingsException;
@@ -86,6 +88,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.AzureArtifactsArtifactStream.ProtocolType;
+import software.wings.beans.artifact.AzureMachineImageArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
@@ -166,6 +169,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    SettingAttribute anotherSettingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
+    when(settingsService.get(ANOTHER_SETTING_ID)).thenReturn(anotherSettingAttribute);
     when(settingsService.fetchAccountIdBySettingId(SETTING_ID)).thenReturn(ACCOUNT_ID);
     when(azureResourceService.listContainerRegistries(anyString(), anyString()))
         .thenReturn(ImmutableList.of(
@@ -224,6 +230,25 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
     assertThat(supportedBuildSourceTypes.containsKey(AMI.name())).isTrue();
     assertThat(supportedBuildSourceTypes.containsValue(AMI.name())).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void shouldGetSupportedBuildSourceTypesForAzureWebApp() {
+    when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
+        .thenReturn(Service.builder().appId(APP_ID).artifactType(ArtifactType.AZURE_WEBAPP).uuid(SERVICE_ID).build());
+
+    Map<String, String> supportedBuildSourceTypes =
+        artifactStreamService.getSupportedBuildSourceTypes(APP_ID, SERVICE_ID);
+    assertThat(supportedBuildSourceTypes.containsKey(DOCKER.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(DOCKER.name())).isTrue();
+
+    assertThat(supportedBuildSourceTypes.containsKey(ARTIFACTORY.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(ARTIFACTORY.name())).isTrue();
+
+    assertThat(supportedBuildSourceTypes.containsKey(AZURE_ARTIFACTS.name())).isTrue();
+    assertThat(supportedBuildSourceTypes.containsValue(AZURE_ARTIFACTS.name())).isTrue();
   }
 
   @Test
@@ -1959,6 +1984,20 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(buildSourceService).validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
 
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldFailCreationWhenInvalidSettingId() {
+    DockerArtifactStream dockerArtifactStream = DockerArtifactStream.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .appId(GLOBAL_APP_ID)
+                                                    .settingId("invalidSettingId")
+                                                    .imageName("wingsplugins/todolist")
+                                                    .autoPopulate(true)
+                                                    .build();
+    assertThatThrownBy(() -> artifactStreamService.create(dockerArtifactStream)).isInstanceOf(GeneralException.class);
+  }
+
   private void assertDockerArtifactStream(ArtifactStream savedArtifactSteam, String appId) {
     assertThat(savedArtifactSteam.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(savedArtifactSteam.getUuid()).isNotEmpty();
@@ -3156,7 +3195,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
     verify(alertService).deleteByArtifactStream(any(), eq(updatedArtifactStream.getUuid()));
-    verify(artifactStreamServiceBindingService).deleteByArtifactStream(eq(updatedArtifactStream.getUuid()));
+    verify(artifactStreamServiceBindingService).deleteByArtifactStream(eq(updatedArtifactStream.getUuid()), eq(false));
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
@@ -3264,8 +3303,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                                          .build()))
                                               .build();
 
-    when(buildSourceService.validateArtifactSource(customArtifactStream)).thenThrow(ShellExecutionException.class);
-    assertThatThrownBy(() -> createArtifactStream(customArtifactStream)).isInstanceOf(ShellExecutionException.class);
+    when(buildSourceService.validateArtifactSource(customArtifactStream))
+        .thenThrow(new ShellExecutionException("script error"));
+    assertThatThrownBy(() -> createArtifactStream(customArtifactStream))
+        .isInstanceOf(ShellExecutionException.class)
+        .hasMessage(
+            "Custom Artifact script execution failed with following error: script error, Please verify the script.");
   }
 
   @Test
@@ -3520,6 +3563,58 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
         .extracting(Variable::getName, Variable::getValue)
         .contains(tuple("path", "pp11"));
     verify(buildSourceService, times(0)).validateArtifactSource(artifactStream);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testThrowExceptionWhenInvalidSettingForArtifactStream() {
+    when(settingsService.get(eq("DOCKER_SETTING_ID")))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(new DockerConfig()).build());
+    when(settingsService.get(eq("AZURE_SETTING_ID")))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(new AzureConfig()).build());
+
+    // existing artifact stream
+    ArtifactStream existingArtifactStream =
+        AzureMachineImageArtifactStream.builder()
+            .osType(AzureMachineImageArtifactStream.OSType.LINUX)
+            .imageType(AzureMachineImageArtifactStream.ImageType.IMAGE_GALLERY)
+            .subscriptionId("subId")
+            .imageDefinition(AzureMachineImageArtifactStream.ImageDefinition.builder()
+                                 .resourceGroup("resourceGroup")
+                                 .imageGalleryName("galleryName")
+                                 .imageDefinitionName("definitionName")
+                                 .build())
+            .name("test")
+            .settingId("AZURE_SETTING_ID")
+            .serviceId(SERVICE_ID)
+            .uuid(ARTIFACT_STREAM_ID)
+            .appId(APP_ID)
+            .build();
+
+    createArtifactStream(existingArtifactStream);
+
+    // Incoming artifact stream
+    ArtifactStream artifactStream = AzureMachineImageArtifactStream.builder()
+                                        .osType(AzureMachineImageArtifactStream.OSType.LINUX)
+                                        .imageType(AzureMachineImageArtifactStream.ImageType.IMAGE_GALLERY)
+                                        .subscriptionId("subId")
+                                        .imageDefinition(AzureMachineImageArtifactStream.ImageDefinition.builder()
+                                                             .resourceGroup("resourceGroup")
+                                                             .imageGalleryName("galleryName")
+                                                             .imageDefinitionName("definitionName")
+                                                             .build())
+                                        .name("test")
+                                        .settingId("DOCKER_SETTING_ID")
+                                        .serviceId(SERVICE_ID)
+                                        .uuid(ARTIFACT_STREAM_ID)
+                                        .appId(APP_ID)
+                                        .build();
+
+    assertThatThrownBy(() -> artifactStreamService.update(artifactStream, true, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .extracting("detailMessage")
+        .isEqualTo("Invalid setting type DOCKER for artifact stream type AZURE_MACHINE_IMAGE");
   }
 
   @NotNull

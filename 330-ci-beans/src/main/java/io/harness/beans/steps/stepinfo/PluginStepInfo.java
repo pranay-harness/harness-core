@@ -1,17 +1,22 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.common.SwaggerConstants.STRING_MAP_CLASSPATH;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
+
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
 import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.Map;
 import java.util.Optional;
@@ -20,6 +25,7 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
@@ -31,27 +37,30 @@ public class PluginStepInfo implements CIStepInfo {
 
   @JsonIgnore public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.PLUGIN).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(CIStepInfoType.PLUGIN.name()).build();
-  @NotNull @EntityIdentifier private String identifier;
-  private String name;
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(CIStepInfoType.PLUGIN.getDisplayName()).build();
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
   @Min(MIN_RETRY) @Max(MAX_RETRY) private int retry;
 
+  @YamlSchemaTypes(value = {string})
+  @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> settings;
-  @NotNull private ParameterField<String> image;
-  private ParameterField<String> connector;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> image;
+  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connector", "resources"})
+  @ConstructorProperties({"identifier", "name", "retry", "settings", "image", "connectorRef", "resources"})
   public PluginStepInfo(String identifier, String name, Integer retry, ParameterField<Map<String, String>> settings,
-      ParameterField<String> image, ParameterField<String> connector, ContainerResource resources) {
+      ParameterField<String> image, ParameterField<String> connectorRef, ContainerResource resources) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.settings = settings;
     this.image = image;
-    this.connector = connector;
+    this.connectorRef = connectorRef;
     this.resources = resources;
   }
 

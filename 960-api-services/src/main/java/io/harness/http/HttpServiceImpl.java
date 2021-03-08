@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static com.google.common.base.Ascii.toUpperCase;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import io.harness.beans.KeyValuePair;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.http.beans.HttpInternalConfig;
@@ -20,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
@@ -29,10 +29,21 @@ import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.*;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 
@@ -96,13 +107,9 @@ public class HttpServiceImpl implements HttpService {
     HttpUriRequest httpUriRequest = getMethodSpecificHttpRequest(
         toUpperCase(httpInternalConfig.getMethod()), httpInternalConfig.getUrl(), httpInternalConfig.getBody());
 
-    if (httpInternalConfig.getHeader() != null) {
-      for (String header : HEADERS_SPLITTER.split(httpInternalConfig.getHeader())) {
-        List<String> headerPair = HEADER_SPLITTER.splitToList(header);
-
-        if (headerPair.size() == 2) {
-          httpUriRequest.addHeader(headerPair.get(0), headerPair.get(1));
-        }
+    if (isNotEmpty(httpInternalConfig.getHeaders())) {
+      for (KeyValuePair header : httpInternalConfig.getHeaders()) {
+        httpUriRequest.addHeader(header.getKey(), header.getValue());
       }
     }
 

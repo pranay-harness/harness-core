@@ -1,6 +1,7 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
@@ -14,6 +15,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
+import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -52,6 +54,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
@@ -60,6 +63,7 @@ import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -76,6 +80,7 @@ import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -104,6 +109,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.CommandUnit;
@@ -117,6 +123,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
@@ -396,6 +403,55 @@ public class PcfSetupStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExceptionThrownWhenArtifactProcessingScriptIsSetForDockerDeployment() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    stateExecutionInstance.setStateExecutionMap(new HashMap<>());
+    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(2);
+    pcfSetupState.setUseArtifactProcessingScript(true);
+    pcfSetupState.setArtifactProcessingScript("test");
+    doReturn(true).when(featureFlagService).isEnabled(eq(CF_CUSTOM_EXTRACTION), any());
+
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), anyMap(), any(), any());
+
+    doReturn(DockerArtifactStream.builder().build()).when(artifactStreamService).get(any());
+
+    assertThatThrownBy(() -> pcfSetupState.execute(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Docker based deployment shouldn't contain an artifact processing script");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteWithCustomExtractionEnabled() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    stateExecutionInstance.setStateExecutionMap(new HashMap<>());
+    pcfSetupState.setUseCurrentRunningCount(false);
+    pcfSetupState.setMaxInstances(2);
+    pcfSetupState.setUseArtifactProcessingScript(true);
+    pcfSetupState.setArtifactProcessingScript("script");
+    doReturn(true).when(featureFlagService).isEnabled(eq(CF_CUSTOM_EXTRACTION), any());
+
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), anyMap(), any(), any());
+
+    ExecutionResponse executionResponse = pcfSetupState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    PcfSetupStateExecutionData stateExecutionData =
+        (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
+    PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(pcfCommandSetupRequest.getArtifactProcessingScript()).isEqualTo("script");
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecuteForFetchFiles() {
@@ -473,6 +529,25 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     pcfSetupState.handleAsyncInternal(context, response);
     verify(activityService, times(1)).updateStatus("activityId", APP_ID, FAILED);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForPcfTaskInErrorCase() {
+    PcfCommandExecutionResponse pcfCommandExecutionResponse =
+        PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", pcfCommandExecutionResponse);
+
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setTaskType(PCF_COMMAND_TASK);
+    pcfSetupStateExecutionData.setActivityId("activityId");
+
+    ExecutionResponse executionResponse = pcfSetupState.handleAsyncInternal(context, response);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
   }
 
   @Test
@@ -680,6 +755,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
                                                                 .resizeStrategy(RESIZE_NEW_FIRST)
                                                                 .tempRoutesOnSetupState(tempRoutes)
                                                                 .finalRoutesOnSetupState(finalRoutes)
+                                                                .useArtifactProcessingScript(true)
+                                                                .artifactProcessingScript("test script")
                                                                 .timeout(6)
                                                                 .build();
 
@@ -693,6 +770,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getPcfAppName()).isNull();
     assertThat(state.getTempRouteMap()).isNull();
     assertThat(state.getFinalRouteMap()).isNull();
+    assertThat(state.isUseArtifactProcessingScript()).isFalse();
+    assertThat(state.getArtifactProcessingScript()).isNull();
 
     state.restoreStateDataAfterGitFetchIfNeeded(pcfSetupStateExecutionData);
 
@@ -706,6 +785,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getPcfAppName()).isEqualTo(APP_NAME);
     assertThat(state.getTempRouteMap()).isEqualTo(tempRoutes);
     assertThat(state.getFinalRouteMap()).isEqualTo(finalRoutes);
+    assertThat(state.isUseArtifactProcessingScript()).isTrue();
+    assertThat(state.getArtifactProcessingScript().equalsIgnoreCase("test script")).isTrue();
 
     // test for NPE
     state.restoreStateDataAfterGitFetchIfNeeded(null);

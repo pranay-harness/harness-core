@@ -2,7 +2,9 @@ package io.harness.cdng.pipeline;
 
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -22,12 +24,16 @@ import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.StageOverridesConfig;
+import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
 import io.harness.cdng.variables.beans.NGVariableOverrideSets;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.validation.InputSetValidatorType;
 import io.harness.rule.Owner;
+import io.harness.steps.common.script.ShellScriptInlineSource;
+import io.harness.steps.common.script.ShellScriptStepParameters;
+import io.harness.steps.common.script.ShellType;
 import io.harness.yaml.core.ParallelStepElement;
 import io.harness.yaml.core.StageElement;
 import io.harness.yaml.core.StepElement;
@@ -39,6 +45,7 @@ import io.harness.yaml.core.failurestrategy.NGFailureType;
 import io.harness.yaml.core.failurestrategy.OnFailureConfig;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.NumberNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
@@ -48,6 +55,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -55,6 +63,7 @@ public class PipelineYamlTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testPipelineWithRuntimeInputYaml() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/pipelineWithRuntimeInput.yml");
@@ -90,16 +99,16 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.CONNECTIVITY_ERROR);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MANUAL_INTERVENTION);
     ManualInterventionFailureActionConfig manualAction = (ManualInterventionFailureActionConfig) onFailure.getAction();
-    assertThat(manualAction.getSpecConfig().getTimeout()).isEqualTo("1d");
+    assertThat(manualAction.getSpecConfig().getTimeout().getValue()).isEqualTo(Timeout.fromString("1d"));
     assertThat(manualAction.getSpecConfig().getOnTimeout().getAction().getType()).isEqualTo(NGFailureActionType.IGNORE);
 
     onFailure = stageElement.getFailureStrategies().get(2).getOnFailure();
     assertThat(onFailure.getErrors().size()).isEqualTo(1);
-    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.RETRY);
     RetryFailureActionConfig retryAction = (RetryFailureActionConfig) onFailure.getAction();
-    assertThat(retryAction.getSpecConfig().getRetryCount()).isEqualTo(3);
-    assertThat(retryAction.getSpecConfig().getRetryInterval().size()).isEqualTo(2);
+    assertThat(retryAction.getSpecConfig().getRetryCount().getValue()).isEqualTo(3);
+    assertThat(retryAction.getSpecConfig().getRetryIntervals().getValue().size()).isEqualTo(2);
     assertThat(retryAction.getSpecConfig().getOnRetryFailure().getAction().getType())
         .isEqualTo(NGFailureActionType.ABORT);
 
@@ -117,7 +126,7 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(numberNGVariable.getValue().getValue()).isEqualTo(12);
 
     // Service
-    ServiceConfig service = deploymentStage.getService();
+    ServiceConfig service = deploymentStage.getServiceConfig();
 
     // Test Service Tags
     List<NGTag> tags = convertToList(service.getTags());
@@ -127,9 +136,7 @@ public class PipelineYamlTest extends CategoryTest {
 
     KubernetesServiceSpec serviceSpec = (KubernetesServiceSpec) service.getServiceDefinition().getServiceSpec();
     assertThat(serviceSpec).isNotNull();
-    assertThat(service.getIdentifier()).isInstanceOf(ParameterField.class);
-    assertThat(service.getIdentifier().isExpression()).isTrue();
-    assertThat(service.getIdentifier().getExpressionValue()).isEqualTo("${input}");
+    assertThat(service.getService().getIdentifier()).isEqualTo("service1");
 
     // Service Variables
     assertThat(serviceSpec.getVariables().size()).isEqualTo(2);
@@ -148,7 +155,7 @@ public class PipelineYamlTest extends CategoryTest {
     DockerHubArtifactConfig dockerArtifact = (DockerHubArtifactConfig) primary;
     assertThat(dockerArtifact.getImagePath()).isInstanceOf(ParameterField.class);
     assertThat(dockerArtifact.getImagePath().isExpression()).isTrue();
-    assertThat(dockerArtifact.getImagePath().getExpressionValue()).isEqualTo("${input}");
+    assertThat(dockerArtifact.getImagePath().getExpressionValue()).isEqualTo("<+input>");
 
     // Sidecar Artifact
     SidecarArtifactWrapper sidecarArtifactWrapper = serviceSpec.getArtifacts().getSidecars().get(0);
@@ -157,7 +164,7 @@ public class PipelineYamlTest extends CategoryTest {
     dockerArtifact = (DockerHubArtifactConfig) sidecarArtifact.getArtifactConfig();
     assertThat(dockerArtifact.getTag()).isInstanceOf(ParameterField.class);
     assertThat(dockerArtifact.getTag().isExpression()).isTrue();
-    assertThat(dockerArtifact.getTag().getExpressionValue()).isEqualTo("${input}");
+    assertThat(dockerArtifact.getTag().getExpressionValue()).isEqualTo("<+input>");
     assertThat(dockerArtifact.getTag().getInputSetValidator()).isNull();
 
     // Manifests
@@ -166,7 +173,7 @@ public class PipelineYamlTest extends CategoryTest {
     GitStore storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getPaths()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getPaths().isExpression()).isTrue();
-    assertThat(storeConfig.getPaths().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getPaths().getExpressionValue()).isEqualTo("<+input>");
     assertThat(storeConfig.getPaths().getInputSetValidator()).isNotNull();
     assertThat(storeConfig.getPaths().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -174,17 +181,21 @@ public class PipelineYamlTest extends CategoryTest {
         .isEqualTo("['paths1', 'master/paths2', 'paths3']");
 
     // manifestOverrideSet
-    manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getManifests().get(0);
+    manifestConfigWrapper = serviceSpec.getManifestOverrideSets().get(0).getOverrideSet().getManifests().get(0);
     manifestConfig = manifestConfigWrapper.getManifest();
     storeConfig = (GitStore) manifestConfig.getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
-    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("<+input>");
     assertThat(storeConfig.getPaths().getInputSetValidator()).isNull();
 
     // VariableOverrideSets
     assertThat(serviceSpec.getVariableOverrideSets().size()).isEqualTo(1);
-    NGVariableOverrideSets ngVariableOverrideSets = serviceSpec.getVariableOverrideSets().get(0);
+    NGVariableOverrideSets ngVariableOverrideSets = serviceSpec.getVariableOverrideSets()
+                                                        .stream()
+                                                        .map(NGVariableOverrideSetWrapper::getOverrideSet)
+                                                        .collect(toList())
+                                                        .get(0);
     assertThat(ngVariableOverrideSets.getIdentifier()).isEqualTo("VariableoverrideSet");
     assertThat(ngVariableOverrideSets.getVariables().size()).isEqualTo(1);
     numberNGVariable = (NumberNGVariable) ngVariableOverrideSets.getVariables().get(0);
@@ -195,12 +206,8 @@ public class PipelineYamlTest extends CategoryTest {
     // Infrastructure & environment
     PipelineInfrastructure infrastructure = deploymentStage.getInfrastructure();
     EnvironmentYaml environment = infrastructure.getEnvironment();
-    assertThat(environment.getIdentifier()).isInstanceOf(ParameterField.class);
-    assertThat(environment.getIdentifier().isExpression()).isTrue();
-    assertThat(environment.getIdentifier().getExpressionValue()).isEqualTo("${input}");
-    assertThat(environment.getName()).isInstanceOf(ParameterField.class);
-    assertThat(environment.getName().isExpression()).isTrue();
-    assertThat(environment.getName().getExpressionValue()).isEqualTo("${input}");
+    assertThat(environment.getIdentifier()).isEqualTo("env1");
+    assertThat(environment.getName()).isEqualTo("env1");
 
     // Assert Env Tags
     assertThat(environment.getTags().size()).isEqualTo(2);
@@ -212,7 +219,7 @@ public class PipelineYamlTest extends CategoryTest {
         (K8SDirectInfrastructure) infrastructure.getInfrastructureDefinition().getInfrastructure();
     assertThat(infraDefinition.getNamespace()).isInstanceOf(ParameterField.class);
     assertThat(infraDefinition.getNamespace().isExpression()).isTrue();
-    assertThat(infraDefinition.getNamespace().getExpressionValue()).isEqualTo("${input}");
+    assertThat(infraDefinition.getNamespace().getExpressionValue()).isEqualTo("<+input>");
     assertThat(infraDefinition.getNamespace().getInputSetValidator()).isNotNull();
     assertThat(infraDefinition.getNamespace().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -224,15 +231,9 @@ public class PipelineYamlTest extends CategoryTest {
     ParallelStepElement parallelStepElement = (ParallelStepElement) steps.get(0);
     StepElement stepElement = (StepElement) parallelStepElement.getSections().get(0);
     K8sRollingStepInfo k8sStepInfo = (K8sRollingStepInfo) stepElement.getStepSpecType();
-    assertThat(k8sStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
-    assertThat(k8sStepInfo.getTimeout().isExpression()).isTrue();
-    assertThat(k8sStepInfo.getTimeout().getExpressionValue()).isEqualTo("${input}");
-    assertThat(k8sStepInfo.getTimeout().getInputSetValidator().getParameters()).isEqualTo("100, 1000, 100");
-    assertThat(k8sStepInfo.getTimeout().getInputSetValidator().getValidatorType())
-        .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
     assertThat(k8sStepInfo.getSkipDryRun()).isInstanceOf(ParameterField.class);
     assertThat(k8sStepInfo.getSkipDryRun().isExpression()).isTrue();
-    assertThat(k8sStepInfo.getSkipDryRun().getExpressionValue()).isEqualTo("${input}");
+    assertThat(k8sStepInfo.getSkipDryRun().getExpressionValue()).isEqualTo("<+input>");
     assertThat(k8sStepInfo.getSkipDryRun().getInputSetValidator().getParameters()).isEqualTo("true, false");
     assertThat(k8sStepInfo.getSkipDryRun().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
@@ -260,17 +261,11 @@ public class PipelineYamlTest extends CategoryTest {
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.STAGE_ROLLBACK);
     onFailure = stepElement.getFailureStrategies().get(2).getOnFailure();
     assertThat(onFailure.getErrors().size()).isEqualTo(1);
-    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.OTHER_ERRORS);
+    assertThat(onFailure.getErrors().get(0)).isEqualTo(NGFailureType.ANY_OTHER_ERRORS);
     assertThat(onFailure.getAction().getType()).isEqualTo(NGFailureActionType.MARK_AS_SUCCESS);
 
     stepElement = (StepElement) deploymentStage.getExecution().getRollbackSteps().get(0);
     K8sRollingRollbackStepInfo rollbackStepInfo = (K8sRollingRollbackStepInfo) stepElement.getStepSpecType();
-    assertThat(rollbackStepInfo.getTimeout()).isInstanceOf(ParameterField.class);
-    assertThat(rollbackStepInfo.getTimeout().isExpression()).isTrue();
-    assertThat(rollbackStepInfo.getTimeout().getExpressionValue()).isEqualTo("${input}");
-    assertThat(rollbackStepInfo.getTimeout().getInputSetValidator().getParameters()).isEqualTo("100, 1000, 100");
-    assertThat(rollbackStepInfo.getTimeout().getInputSetValidator().getValidatorType())
-        .isEqualTo(InputSetValidatorType.ALLOWED_VALUES);
 
     // Second stage
     stageWrapper = ngPipeline.getStages().get(1);
@@ -278,11 +273,11 @@ public class PipelineYamlTest extends CategoryTest {
     deploymentStage = (DeploymentStage) stageElement.getStageType();
 
     // Service
-    service = deploymentStage.getService();
+    service = deploymentStage.getServiceConfig();
     assertThat(service.getUseFromStage()).isNotNull();
     assertThat(service.getUseFromStage().getStage()).isInstanceOf(ParameterField.class);
     assertThat(service.getUseFromStage().getStage().isExpression()).isTrue();
-    assertThat(service.getUseFromStage().getStage().getExpressionValue()).isEqualTo("${input}");
+    assertThat(service.getUseFromStage().getStage().getExpressionValue()).isEqualTo("<+input>");
     assertThat(service.getUseFromStage().getStage().getInputSetValidator().getParameters()).isEqualTo("^prod*");
     assertThat(service.getUseFromStage().getStage().getInputSetValidator().getValidatorType())
         .isEqualTo(InputSetValidatorType.REGEX);
@@ -291,12 +286,27 @@ public class PipelineYamlTest extends CategoryTest {
         (GitStore) stageOverrides.getManifests().get(0).getManifest().getManifestAttributes().getStoreConfig();
     assertThat(storeConfig.getConnectorRef()).isInstanceOf(ParameterField.class);
     assertThat(storeConfig.getConnectorRef().isExpression()).isTrue();
-    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("${input}");
+    assertThat(storeConfig.getConnectorRef().getExpressionValue()).isEqualTo("<+input>");
     assertThat(storeConfig.getConnectorRef().getInputSetValidator()).isNull();
 
     // useVariableOverrideSets
     List<String> variablesUseList = stageOverrides.getUseVariableOverrideSets().getValue();
     assertThat(variablesUseList.size()).isEqualTo(1);
     assertThat(variablesUseList.get(0)).isEqualTo("VariableoverrideSet");
+  }
+
+  @Test
+  @Owner(developers = VAIBHAV_SI)
+  @Category(UnitTests.class)
+  public void testShellScriptStepSerialization() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("cdng/shellScriptStep.yml");
+    ShellScriptStepParameters shellScriptStepParameters =
+        YamlPipelineUtils.read(testFile, ShellScriptStepParameters.class);
+    assertThat(shellScriptStepParameters.getOnDelegate().getValue()).isEqualTo(true);
+    assertThat(shellScriptStepParameters.getShell()).isEqualTo(ShellType.Bash);
+    assertThat(shellScriptStepParameters.getSource().getType()).isEqualTo("Inline");
+    assertThat(((ShellScriptInlineSource) shellScriptStepParameters.getSource().getSpec()).getScript().getValue())
+        .isEqualTo("echo hi");
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.beans.FeatureName.CV_DEMO;
 import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.beans.FeatureName.SEARCH_REQUEST;
 import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.NANDAN;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
@@ -20,6 +21,9 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.AccessLevel;
@@ -131,6 +135,38 @@ public class FeatureFlagServiceTest extends FeatureFlagTestBase {
     assertThat(featureFlagOptional.isPresent()).isTrue();
     assertThat(featureFlagOptional.get().isEnabled()).isTrue();
     assertThat(featureFlagOptional.get().getName()).isEqualTo(featureFlag.getName());
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void testGetGloballyEnabledFeatureFlags() {
+    FeatureFlag testFeatureFlag_1 = FeatureFlag.builder()
+                                        .name("test_1")
+                                        .enabled(true)
+                                        .obsolete(false)
+                                        .accountIds(Collections.singleton("test"))
+                                        .build();
+
+    FeatureFlag testFeatureFlag_2 = FeatureFlag.builder()
+                                        .name("test_2")
+                                        .enabled(false)
+                                        .obsolete(false)
+                                        .accountIds(Collections.singleton("test"))
+                                        .build();
+
+    persistence.save(testFeatureFlag_1);
+    persistence.save(testFeatureFlag_2);
+
+    List<FeatureFlag> featureFlags = new ArrayList<>();
+
+    featureFlags.add(testFeatureFlag_1);
+    featureFlags.add(testFeatureFlag_2);
+
+    List<FeatureFlag> globallyEnabledFeatureFlags = featureFlagService.getGloballyEnabledFeatureFlags();
+
+    assertThat(globallyEnabledFeatureFlags.size() == 1).isTrue();
+    assertThat(globallyEnabledFeatureFlags.get(0).getName()).isEqualTo("test_1");
   }
 
   @Test(expected = InvalidRequestException.class)

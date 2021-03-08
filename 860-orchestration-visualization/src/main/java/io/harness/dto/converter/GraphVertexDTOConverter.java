@@ -1,6 +1,7 @@
 package io.harness.dto.converter;
 
 import io.harness.beans.GraphVertex;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.dto.GraphVertexDTO;
 
 import java.util.function.Function;
@@ -22,13 +23,15 @@ public class GraphVertexDTOConverter {
              .stepType(graphVertex.getStepType())
              .status(graphVertex.getStatus())
              .failureInfo(graphVertex.getFailureInfo())
+             .skipInfo(graphVertex.getSkipInfo())
              .stepParameters(graphVertex.getStepParameters())
              .mode(graphVertex.getMode())
-             .executableResponsesMetadata(graphVertex.getExecutableResponsesMetadata())
+             .executableResponses(CollectionUtils.emptyIfNull(graphVertex.getExecutableResponses()))
              .interruptHistories(graphVertex.getInterruptHistories())
              .retryIds(graphVertex.getRetryIds())
              .skipType(graphVertex.getSkipType())
              .outcomes(graphVertex.getOutcomeDocuments())
              .progressDataMap(graphVertex.getProgressDataMap())
+             .unitProgresses(graphVertex.getUnitProgresses())
              .build();
 }

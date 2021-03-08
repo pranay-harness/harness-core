@@ -5,9 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -111,6 +115,7 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags<QLDeploymentAggregationFunction,
     QLDeploymentFilter, QLDeploymentAggregation, QLDeploymentSortCriteria, QLDeploymentTagType,
     QLDeploymentTagAggregation, QLDeploymentEntityAggregation> {
@@ -118,6 +123,8 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
   @Inject QLStatsHelper statsHelper;
   @Inject ExecutionQueryHelper executionQueryHelper;
   @Inject TagHelper tagHelper;
+  @Inject FeatureFlagService featureFlagService;
+
   private DeploymentTableSchema schema = new DeploymentTableSchema();
   private static final long weekOffset = 7 * 24 * 60 * 60 * 1000;
   private static final String startTimeDBFieldName = "starttime";
@@ -569,7 +576,11 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       fieldNames.add(DeploymentMetaDataFields.INSTANCES_DEPLOYED);
     }
 
-    selectQuery.addCustomFromTable(schema.getDeploymentTable());
+    if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
+      selectQuery.addCustomFromTable("deployment_parent t0");
+    } else {
+      selectQuery.addCustomFromTable(schema.getDeploymentTable());
+    }
 
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTags(accountId, filters);
@@ -713,7 +724,13 @@ public class DeploymentStatsDataFetcher extends AbstractStatsDataFetcherWithTags
       existsQuery.addCustomColumns(new CustomSql(DeploymentMetaDataFields.INSTANCES_DEPLOYED.getFieldName()));
       addGroupByTimeToExistsQuery(groupByTime, isValidGroupByTime, existsQuery);
     }
-    existsQuery.addCustomFromTable("deployment t0");
+
+    if (featureFlagService.isEnabled(FeatureName.CUSTOM_DASHBOARD_DEPLOYMENT_FETCH_LONGER_RETENTION_DATA, accountId)) {
+      existsQuery.addCustomFromTable("deployment_parent t0");
+    } else {
+      existsQuery.addCustomFromTable("deployment t0");
+    }
+
     existsQuery.addCondition(new UnaryCondition(UnaryCondition.Op.EXISTS, selectTags));
     if (isValidGroupByTime(groupByTime)) {
       selectQuery.addCustomColumns(new CustomSql("TIME_BUCKET"));

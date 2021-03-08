@@ -18,11 +18,6 @@ public interface Constants {
    */
   String HARNESS_NAME = "Harness";
 
-  /**
-   * The cloudwatch metric url.
-   */
-  String HARNESS_KUBE_CONFIG_PATH = "HARNESS_KUBE_CONFIG_PATH";
-
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
 
   /**

@@ -6,10 +6,11 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.PRANJAL;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SAINATH;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 
-import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -18,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
@@ -41,6 +43,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.AccessType;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
@@ -49,7 +52,6 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
-import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.NameValuePair;
@@ -983,6 +985,8 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
 
+    gcpConfig.setDelegateSelector("delegate1");
+
     // useDelegate = true, skipValidation = true
     gcpConfig.setUseDelegate(true);
     gcpConfig.setSkipValidation(true);
@@ -1007,5 +1011,31 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     gcpConfig.setSkipValidation(false);
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(2)).validateCredential(any(), any());
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testGcpConfigDelegateSelector() throws IllegalAccessException {
+    GcpConfig gcpConfig = GcpConfig.builder().build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(gcpConfig);
+
+    GcpHelperServiceManager gcpHelperServiceManager = mock(GcpHelperServiceManager.class);
+
+    FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
+
+    // useDelegate = true, delegateSelector Provided
+    gcpConfig.setUseDelegate(true);
+    gcpConfig.setDelegateSelector("delegate1");
+    settingValidationService.validate(attribute);
+    verify(gcpHelperServiceManager, times(1)).validateCredential(any(), any());
+
+    // useDelegate = true, no delegateSelector Provided
+    gcpConfig.setUseDelegate(true);
+    gcpConfig.setDelegateSelector(null);
+    assertThatThrownBy(() -> settingValidationService.validate(attribute))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessage("Delegate Selector must be provided if inherit from delegate option is selected.");
   }
 }

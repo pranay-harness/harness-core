@@ -43,6 +43,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.ImageDetails;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
@@ -75,7 +76,6 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
@@ -111,7 +111,7 @@ import org.mongodb.morphia.query.Query;
 public class ArtifactCollectionServiceTest extends WingsBaseTest {
   public static final String LATEST_BUILD_NUMBER = "latest";
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
-  @Inject @Spy private WingsPersistence wingsPersistence;
+  @Inject @Spy private HPersistence persistence;
   @InjectMocks @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
   @InjectMocks @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
@@ -142,7 +142,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(wingsPersistence.get(Artifact.class, ARTIFACT_ID)).thenReturn(artifact);
+    when(persistence.get(Artifact.class, ARTIFACT_ID)).thenReturn(artifact);
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
   }
 

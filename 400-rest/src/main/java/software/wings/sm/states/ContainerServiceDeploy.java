@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -20,7 +19,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.command.CommandExecutionData;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
@@ -29,6 +27,7 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.CommandExecutionData;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
@@ -80,6 +79,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.k8s.K8sStateHelper;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -104,7 +104,6 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject protected FeatureFlagService featureFlagService;
   @Inject private AwsCommandHelper awsCommandHelper;
   @Inject private SweepingOutputService sweepingOutputService;
-  @Inject private K8sStateHelper k8sStateHelper;
   @Inject private ContainerMasterUrlHelper containerMasterUrlHelper;
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
@@ -199,24 +198,24 @@ public abstract class ContainerServiceDeploy extends State {
       CommandStateExecutionData executionData = executionDataBuilder.build();
       executionData.setServiceCounts(params.getOriginalServiceCounts());
 
-      CommandExecutionContext commandExecutionContext = aCommandExecutionContext()
-                                                            .accountId(contextData.app.getAccountId())
-                                                            .appId(contextData.app.getUuid())
-                                                            .envId(contextData.env.getUuid())
-                                                            .activityId(activity.getUuid())
-                                                            .cloudProviderSetting(contextData.settingAttribute)
-                                                            .cloudProviderCredentials(contextData.encryptedDataDetails)
-                                                            .containerResizeParams(params)
-                                                            .deploymentType(deploymentType.name())
-                                                            .build();
+      List<String> delegateSelectorsFromK8sCloudProvider =
+          K8sStateHelper.fetchDelegateSelectorsFromK8sCloudProvider(contextData.settingAttribute.getValue());
+
+      CommandExecutionContext commandExecutionContext =
+          aCommandExecutionContext()
+              .accountId(contextData.app.getAccountId())
+              .appId(contextData.app.getUuid())
+              .envId(contextData.env.getUuid())
+              .activityId(activity.getUuid())
+              .cloudProviderSetting(contextData.settingAttribute)
+              .cloudProviderCredentials(contextData.encryptedDataDetails)
+              .containerResizeParams(params)
+              .deploymentType(deploymentType.name())
+              .delegateSelectors(
+                  isNotEmpty(delegateSelectorsFromK8sCloudProvider) ? delegateSelectorsFromK8sCloudProvider : null)
+              .build();
 
       List<String> allTaskTags = new ArrayList<>();
-      List<String> cloudProviderTags = k8sStateHelper.getDelegateNameAsTagFromK8sCloudProvider(
-          contextData.settingAttribute.getAccountId(), contextData.settingAttribute.getValue());
-      if (isNotEmpty(cloudProviderTags)) {
-        allTaskTags.addAll(cloudProviderTags);
-      }
-
       List<String> awsConfigTags = awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext);
       if (isNotEmpty(awsConfigTags)) {
         allTaskTags.addAll(awsConfigTags);
@@ -236,7 +235,9 @@ public abstract class ContainerServiceDeploy extends State {
                         .timeout(TimeUnit.HOURS.toMillis(1))
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, contextData.env.getUuid())
+              .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, contextData.env.getEnvironmentType().name())
               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, contextData.infrastructureMappingId)
+              .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, contextData.service.getUuid())
               .build());
 
       return ExecutionResponse.builder()
@@ -284,14 +285,16 @@ public abstract class ContainerServiceDeploy extends State {
     }
   }
 
-  private void saveInstanceDetailsToSweepingOutput(
+  @VisibleForTesting
+  void saveInstanceDetailsToSweepingOutput(
       ExecutionContext context, List<InstanceElement> instanceElements, List<InstanceDetails> instanceDetails) {
+    boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
     sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
                                    .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                    .value(InstanceInfoVariables.builder()
                                               .instanceElements(instanceElements)
                                               .instanceDetails(instanceDetails)
-                                              .skipVerification(isEmpty(instanceDetails))
+                                              .skipVerification(skipVerification)
                                               .build())
                                    .build());
   }

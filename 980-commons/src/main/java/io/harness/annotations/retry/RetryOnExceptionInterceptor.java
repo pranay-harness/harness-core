@@ -25,11 +25,7 @@ public class RetryOnExceptionInterceptor implements MethodInterceptor {
     IMethodWrapper<Object> task = new IMethodWrapper<Object>() {
       @Override
       public Object execute() throws Throwable {
-        try {
-          return methodInvocation.proceed();
-        } catch (Throwable e) {
-          throw e;
-        }
+        return methodInvocation.proceed();
       }
     };
     return methodExecutionHelper.execute(task, retryAttempts, sleepInterval, retryOnExceptions);

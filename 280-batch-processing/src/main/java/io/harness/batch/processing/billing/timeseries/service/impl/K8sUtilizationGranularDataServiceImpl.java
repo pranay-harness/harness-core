@@ -2,6 +2,7 @@ package io.harness.batch.processing.billing.timeseries.service.impl;
 
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -32,16 +33,26 @@ public class K8sUtilizationGranularDataServiceImpl {
   private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;
   static final String INSERT_STATEMENT =
-      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, MAXCPU, MAXMEMORY,  INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID) VALUES (?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+      "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, MAXCPU, MAXMEMORY,  INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID, STORAGEREQUESTVALUE, STORAGEUSAGEVALUE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   static final String SELECT_DISTINCT_INSTANCEID =
       "SELECT DISTINCT INSTANCEID FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s'";
   static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(MAXCPU) as CPUUTILIZATIONMAX, MAX(MAXMEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG,"
+      "SELECT MAX(MAXCPU) as CPUUTILIZATIONMAX, MAX(MAXMEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG, "
       + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
+
+  static final String UTILIZATION_DATA_QUERY_OF_INSTANCETYPE =
+      "SELECT AVG(STORAGEREQUESTVALUE) as STORAGEREQUESTVALUEAVG, AVG(STORAGEUSAGEVALUE) as STORAGEUSAGEVALUEAVG, "
+      + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCETYPE = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' "
+      + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
+
   static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'kubernetes_utilization_data')";
 
   public boolean create(List<K8sGranularUtilizationData> k8sGranularUtilizationDataList) {
+    if (k8sGranularUtilizationDataList.isEmpty()) {
+      return true;
+    }
+
     boolean successfulInsert = false;
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
@@ -105,6 +116,8 @@ public class K8sUtilizationGranularDataServiceImpl {
     statement.setString(9, k8sGranularUtilizationData.getClusterId());
     statement.setString(10, k8sGranularUtilizationData.getAccountId());
     statement.setString(11, k8sGranularUtilizationData.getSettingId());
+    statement.setDouble(12, k8sGranularUtilizationData.getStorageRequestValue());
+    statement.setDouble(13, k8sGranularUtilizationData.getStorageUsageValue());
   }
 
   public List<String> getDistinctInstantIds(String accountId, long startDate, long endDate) {
@@ -160,6 +173,44 @@ public class K8sUtilizationGranularDataServiceImpl {
                 .cpuUtilizationAvg(cpuAvg)
                 .memoryUtilizationMax(memMax)
                 .memoryUtilizationAvg(memAvg)
+                .build());
+      }
+      return instanceUtilizationDataMap;
+    } catch (SQLException e) {
+      log.error("Error while fetching Aggregated Utilization Data : exception ", e);
+    } finally {
+      DBUtils.close(resultSet);
+    }
+    return null;
+  }
+
+  public Map<String, InstanceUtilizationData> getAggregatedUtilizationDataOfType(
+      String accountId, InstanceType instanceType, long startDate, long endDate) {
+    ResultSet resultSet = null;
+    String query = String.format(UTILIZATION_DATA_QUERY_OF_INSTANCETYPE, accountId, instanceType.name(),
+        Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+
+    Map<String, InstanceUtilizationData> instanceUtilizationDataMap = new HashMap<>();
+
+    try (Connection connection = timeScaleDBService.getDBConnection();
+         Statement statement = connection.createStatement()) {
+      resultSet = statement.executeQuery(query);
+      while (resultSet.next()) {
+        String instanceId = resultSet.getString("INSTANCEID");
+        String clusterId = resultSet.getString("CLUSTERID");
+        String settingId = resultSet.getString("SETTINGID");
+        double storageUsageAvg = resultSet.getDouble("STORAGEUSAGEVALUEAVG");
+        double storageRequestAvg = resultSet.getDouble("STORAGEREQUESTVALUEAVG");
+
+        instanceUtilizationDataMap.put(instanceId,
+            InstanceUtilizationData.builder()
+                .accountId(accountId)
+                .clusterId(clusterId)
+                .settingId(settingId)
+                .instanceType(instanceType.name())
+                .instanceId(instanceId)
+                .storageUsageAvgValue(storageUsageAvg)
+                .storageRequestAvgValue(storageRequestAvg)
                 .build());
       }
       return instanceUtilizationDataMap;

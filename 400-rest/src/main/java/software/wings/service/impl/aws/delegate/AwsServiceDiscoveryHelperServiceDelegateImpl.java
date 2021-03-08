@@ -2,6 +2,8 @@ package software.wings.service.impl.aws.delegate;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -22,12 +24,13 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsServiceDiscoveryHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsServiceDiscoveryHelperServiceDelegate {
   @VisibleForTesting
   AWSServiceDiscovery getAmazonServiceDiscoveryClient(String region, AwsConfig awsConfig) {
     AWSServiceDiscoveryClientBuilder builder = AWSServiceDiscoveryClientBuilder.standard().withRegion(region);
-    attachCredentials(builder, awsConfig);
+    attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return builder.build();
   }
 

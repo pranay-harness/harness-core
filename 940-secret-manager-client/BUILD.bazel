@@ -1,19 +1,15 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
-        "//900-yaml-sdk:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",
+        "//960-yaml-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_google_code_findbugs_annotations",
@@ -35,9 +31,6 @@ java_library(
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//940-secret-manager-client/src/main/resources:resource",
-    ],
     visibility = ["//visibility:public"],
     deps = [
         "maven_deps",
@@ -46,14 +39,5 @@ java_library(
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

@@ -47,6 +47,8 @@ public class MongoConfig {
   private byte[] encryptedUri;
   private byte[] encryptedLocksUri;
 
+  private String aliasDBName;
+
   @JsonProperty(defaultValue = "30000") @Default @NotEmpty private int connectTimeout = 30000;
 
   @JsonProperty(defaultValue = "90000") @Default @NotEmpty private int serverSelectionTimeout = 90000;
@@ -54,6 +56,8 @@ public class MongoConfig {
   @JsonProperty(defaultValue = "600000") @Default @NotEmpty private int maxConnectionIdleTime = 600000;
 
   @JsonProperty(defaultValue = "300") @Default @NotEmpty private int connectionsPerHost = 300;
+
+  private boolean transactionsEnabled;
 
   @JsonProperty(defaultValue = "MANUAL") @Default @NotEmpty private IndexManager.Mode indexManagerMode = MANUAL;
 

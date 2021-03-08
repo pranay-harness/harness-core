@@ -1,12 +1,15 @@
 package io.harness.perpetualtask.k8s.metrics.collector;
 
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.RECOMMENDER_VERSION;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.checkpointToProto;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.RECOMMENDER_VERSION;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.checkpointToProto;
 
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.AggregatedStorage;
@@ -43,6 +46,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class K8sMetricCollector {
   private static final TemporalAmount AGGREGATION_WINDOW = Duration.ofMinutes(20);
 
@@ -52,6 +56,7 @@ public class K8sMetricCollector {
     String name;
     @Nullable String namespace;
     @Nullable String containerName;
+    @Nullable String uid;
   }
 
   private final EventPublisher eventPublisher;
@@ -100,15 +105,19 @@ public class K8sMetricCollector {
     isNodeProcessed.entrySet().stream().filter(e -> !e.getValue()).map(Map.Entry::getKey).forEach(nodeName -> {
       try {
         for (PodStats podStats : k8sMetricsClient.podStats().list(nodeName).getObject().getItems()) {
+          String podUid = ofNullable(podStats.getPodRef().getUid()).orElse("");
           for (Volume volume : podStats.getVolumeList()) {
-            long capacity = K8sResourceStandardizer.getMemoryByte(volume.getCapacityBytes());
-            long used = K8sResourceStandardizer.getMemoryByte(volume.getUsedBytes());
-            String namespace = ofNullable(volume.getPvcRef()).map(PVCRef::getNamespace).orElse("");
-            String name = ofNullable(volume.getPvcRef()).map(PVCRef::getName).orElse("");
+            PVCRef pvcRef = volume.getPvcRef();
+            if (pvcRef != null) {
+              long capacity = K8sResourceStandardizer.getMemoryByte(volume.getCapacityBytes());
+              long used = K8sResourceStandardizer.getMemoryByte(volume.getUsedBytes());
 
-            requireNonNull(pvMetricsCache.get(CacheKey.builder().name(name).namespace(namespace).build(),
-                               key -> new Aggregates(com.google.protobuf.Duration.newBuilder().setNanos(0).build())))
-                .updateStorage(capacity, used, volume.getTime());
+              requireNonNull(
+                  pvMetricsCache.get(
+                      CacheKey.builder().name(pvcRef.getName()).namespace(pvcRef.getNamespace()).uid(podUid).build(),
+                      key -> new Aggregates(com.google.protobuf.Duration.newBuilder().setNanos(0).build())))
+                  .updateStorage(capacity, used, volume.getTime());
+            }
           }
         }
         isNodeProcessed.put(nodeName, Boolean.TRUE);
@@ -201,6 +210,7 @@ public class K8sMetricCollector {
               .setClusterId(clusterDetails.getClusterId())
               .setKubeSystemUid(clusterDetails.getKubeSystemUid())
               .setName(e.getKey().getNamespace() + "/" + e.getKey().getName())
+              .setPodUid(e.getKey().getUid())
               .setTimestamp(aggregates.getAggregateTimestamp())
               .setWindow(aggregates.getAggregateWindow())
               .setAggregatedStorage(AggregatedStorage.newBuilder()

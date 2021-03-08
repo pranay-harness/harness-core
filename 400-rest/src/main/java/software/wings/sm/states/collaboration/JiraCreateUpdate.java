@@ -1,6 +1,7 @@
 package software.wings.sm.states.collaboration;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -8,7 +9,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.TaskType.JIRA;
 
@@ -43,9 +43,9 @@ import software.wings.beans.JiraConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.JiraHelperService;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -118,7 +118,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Inject @Transient private JiraHelperService jiraHelperService;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
-  @Inject @Transient private DelegateServiceImpl delegateService;
+  @Inject @Transient private DelegateService delegateService;
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
   @Inject @Transient private SettingsService settingsService;
@@ -259,6 +259,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
             .accountId(executionContext.getApp().getAccountId())
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .description(jiraAction != null ? jiraAction.getDisplayName() : "Jira Task")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(JIRA.name())
@@ -266,8 +267,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                       .timeout(JIRA_TASK_TIMEOUT_MILLIS)
                       .build())
             .workflowExecutionId(context.getWorkflowExecutionId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -559,6 +562,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
         .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
         .map(Entry::getValue)
+        .filter(jiraField -> customFields.containsKey(jiraField.getKey()))
         .filter(jiraField
             -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
                 || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null))
@@ -569,7 +573,13 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                    .collect(toMap(ob
                        -> ob.get(VALUE) != null ? ((String) ob.get(VALUE)).toLowerCase()
                                                 : ((String) ob.get("name")).toLowerCase(),
-                       ob -> ob.get("id")))));
+                       ob -> ob.get("id"), (id, duplicateId) -> {
+                         throw new HarnessJiraException(
+                             String.format(
+                                 "Can not process value for field [%s] since there are multiple values with the same name.",
+                                 jiraField.getName()),
+                             null);
+                       }))));
   }
 
   String parseDateTimeValue(String fieldValue, ExecutionContext context) {
@@ -844,5 +854,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Override
   public KryoSerializer getKryoSerializer() {
     return kryoSerializer;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

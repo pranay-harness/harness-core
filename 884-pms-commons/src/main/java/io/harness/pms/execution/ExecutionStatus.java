@@ -13,7 +13,7 @@ import java.util.Set;
 public enum ExecutionStatus {
   @JsonProperty("Running")
   RUNNING(Sets.newHashSet(Status.RUNNING, Status.ASYNC_WAITING, Status.TASK_WAITING, Status.TIMED_WAITING), "Running"),
-  @JsonProperty("Failed") FAILED(Sets.newHashSet(Status.ERRORED, Status.FAILED), "Failed"),
+  @JsonProperty("Failed") FAILED(Sets.newHashSet(Status.ERRORED, Status.FAILED, Status.IGNORE_FAILED), "Failed"),
   @JsonProperty("NotStarted") NOT_STARTED(Sets.newHashSet(), "NotStarted"),
   @JsonProperty("Expired") EXPIRED(Sets.newHashSet(Status.EXPIRED), "Expired"),
   @JsonProperty("Aborted") ABORTED(Sets.newHashSet(Status.ABORTED, Status.DISCONTINUING), "Aborted"),
@@ -21,7 +21,8 @@ public enum ExecutionStatus {
   @JsonProperty("Paused") PAUSED(Sets.newHashSet(Status.PAUSED), "Paused"),
   @JsonProperty("Waiting") WAITING(Sets.newHashSet(Status.INTERVENTION_WAITING), "Waiting"),
   @JsonProperty("Success") SUCCESS(Sets.newHashSet(Status.SUCCEEDED), "Success"),
-  @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended");
+  @JsonProperty("Suspended") SUSPENDED(Sets.newHashSet(Status.SUSPENDED), "Suspended"),
+  @JsonProperty("Skipped") SKIPPED(Sets.newHashSet(Status.SKIPPED), "Skipped");
 
   static final Set<ExecutionStatus> TERMINAL_STATUSES = Sets.newHashSet(FAILED, SUCCESS, ABORTED, EXPIRED);
   public static final Set<Status> BROKE_STATUSES = EnumSet.of(Status.FAILED, Status.ERRORED);

@@ -49,6 +49,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
@@ -56,6 +57,7 @@ import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -71,7 +73,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
@@ -89,7 +90,6 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PodInstanceKey;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.sync.ContainerSync;
@@ -135,7 +135,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @InjectMocks @Inject ContainerInstanceHandler containerInstanceHandler;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Before
   public void setUp() {
@@ -775,7 +775,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
 
-    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+    when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")
                                .namespace("default")
@@ -788,12 +788,12 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     final Map<String, String> metadata = new HashMap<>();
     metadata.put("image", "image1:version1");
-    wingsPersistence.save(anArtifact()
-                              .withUuid(ARTIFACT_ID)
-                              .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                              .withAppId("app_id")
-                              .withMetadata(metadata)
-                              .build());
+    persistence.save(anArtifact()
+                         .withUuid(ARTIFACT_ID)
+                         .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                         .withAppId("app_id")
+                         .withMetadata(metadata)
+                         .build());
 
     containerInstanceHandler.handleNewDeployment(Arrays.asList(DeploymentSummary.builder()
                                                                    .deploymentInfo(K8sDeploymentInfo.builder()
@@ -818,7 +818,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(instance.getLastArtifactSourceName()).isEqualTo("image1");
     assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
 
-    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+    when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")
                                .namespace("default")
@@ -850,8 +850,8 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     assertThat(instance.getLastArtifactSourceName()).isEqualTo("image1");
     assertThat(instance.getLastArtifactBuildNum()).isEqualTo("version1");
 
-    wingsPersistence.delete(Artifact.class, ARTIFACT_ID);
-    when(k8sStateHelper.getPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
+    persistence.delete(Artifact.class, ARTIFACT_ID);
+    when(k8sStateHelper.fetchPodList(any(GcpKubernetesInfrastructureMapping.class), anyString(), anyString()))
         .thenReturn(asList(K8sPod.builder()
                                .name("podName")
                                .namespace("default")
@@ -944,7 +944,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -980,7 +980,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1018,7 +1018,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                             K8sContainer.builder().image("sidecar").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1053,7 +1053,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:1.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1088,7 +1088,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         Arrays.asList(
@@ -1243,7 +1243,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                         .containerList(asList(K8sContainer.builder().image("nginx:0.1").build()))
                         .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         asList(getDeploymentSummaryWithHelmChartInfo(
@@ -1295,7 +1295,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                      .containerList(singletonList(K8sContainer.builder().image("nginx:0.1").build()))
                      .build()))
         .when(k8sStateHelper)
-        .getPodList(any(), anyString(), anyString());
+        .fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         singletonList(getDeploymentSummaryWithHelmChartInfo(helmChartInfoWithVersion("1.1.0"))), false,
@@ -1328,7 +1328,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
                                .containerList(singletonList(K8sContainer.builder().image("helm-image:1.0").build()))
                                .build()))
         .when(k8sStateHelper)
-        .getPodList(any(ContainerInfrastructureMapping.class), anyString(), anyString());
+        .fetchPodList(any(ContainerInfrastructureMapping.class), anyString(), anyString());
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.ITERATOR);
 
@@ -1490,7 +1490,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
-    doReturn(pods).when(k8sStateHelper).getPodList(any(), anyString(), anyString());
+    doReturn(pods).when(k8sStateHelper).fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.handleNewDeployment(
         singletonList(deploymentSummary), false, OnDemandRollbackInfo.builder().onDemandRollback(false).build());
@@ -1561,7 +1561,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
         .when(infraMappingService)
         .get(anyString(), anyString());
     doReturn(instances).when(instanceService).getInstancesForAppAndInframapping(anyString(), anyString());
-    doReturn(pods).when(k8sStateHelper).getPodList(any(), anyString(), anyString());
+    doReturn(pods).when(k8sStateHelper).fetchPodList(any(), anyString(), anyString());
 
     containerInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID, InstanceSyncFlow.ITERATOR);
 

@@ -416,13 +416,14 @@ public class PcfDeployState extends State {
       // This sweeping element will be used by verification or other consumers.
       List<InstanceDetails> instanceDetails =
           pcfStateHelper.generateInstanceDetails(pcfDeployCommandResponse.getPcfInstanceElements());
+      boolean skipVerification = instanceDetails.stream().noneMatch(InstanceDetails::isNewInstance);
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
                                      .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
                                      .value(InstanceInfoVariables.builder()
                                                 .instanceElements(pcfStateHelper.generateInstanceElement(
                                                     pcfDeployCommandResponse.getPcfInstanceElements()))
                                                 .instanceDetails(instanceDetails)
-                                                .skipVerification(isEmpty(instanceDetails))
+                                                .skipVerification(skipVerification)
                                                 .build())
                                      .build());
     }

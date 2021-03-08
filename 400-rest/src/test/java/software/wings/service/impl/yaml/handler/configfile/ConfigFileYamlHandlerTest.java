@@ -10,7 +10,6 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -41,7 +40,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -65,7 +63,7 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
       "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files/configFile.txt.yaml";
   private static final String configFilePath =
       "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files/configFile.txt";
-  private static final String resourcePath = "./configfiles/Service";
+  private static final String resourcePath = "400-rest/src/test/resources/configfiles/Service";
   private static final String UNENCRYPTED_CONFIG_FILE_YAML = "unEncryptedConfigFile.yaml";
   private static final String UNENCRYPTED_CONFIG_FILE_YAML_2 = "unEncryptedConfigFile2.yaml";
   private static final String ENCRYPTED_CONFIG_FILE_YAML = "encryptedConfigFile.yaml";
@@ -228,12 +226,9 @@ public class ConfigFileYamlHandlerTest extends YamlHandlerTestBase {
 
   private String getYamlFile(String yamlFileName) throws IOException {
     File yamlFile = null;
-    try {
-      yamlFile =
-          new File(getClass().getClassLoader().getResource(resourcePath + PATH_DELIMITER + yamlFileName).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find yaml file " + yamlFileName);
-    }
+
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
     assertThat(yamlFile).isNotNull();
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }

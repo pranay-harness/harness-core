@@ -29,7 +29,6 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ngpipeline.executions.mapper.ExecutionGraphMapper;
@@ -41,6 +40,7 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
@@ -168,11 +168,8 @@ public class NgPipelineExecutionServiceImplTest extends CategoryTest {
             .planExecutionId(PLAN_EXECUTION_ID)
             .build();
     when(orchestrationService.registerInterrupt(interruptPackage))
-        .thenReturn(Interrupt.builder()
-                        .uuid("uuid")
-                        .type(ExecutionInterruptType.ABORT_ALL)
-                        .planExecutionId(PLAN_EXECUTION_ID)
-                        .build());
+        .thenReturn(
+            Interrupt.builder().uuid("uuid").type(InterruptType.ABORT_ALL).planExecutionId(PLAN_EXECUTION_ID).build());
 
     ngPipelineExecutionService.registerInterrupt(PipelineExecutionInterruptType.ABORT, PLAN_EXECUTION_ID);
 

@@ -2,6 +2,8 @@ package io.harness.perpetualtask.k8s.metrics.collector;
 
 import static com.google.common.base.Preconditions.checkState;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.grpc.utils.HTimestamps;
 
 import com.google.protobuf.Duration;
@@ -10,6 +12,7 @@ import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
 import lombok.Getter;
 
+@TargetModule(Module._420_DELEGATE_AGENT)
 class Aggregates {
   @Getter private Aggregate cpu;
   @Getter private Aggregate memory;

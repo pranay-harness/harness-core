@@ -2,6 +2,8 @@ package io.harness.delegate.service;
 
 import static io.harness.network.SafeHttpCall.execute;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.managerclient.DelegateAgentManagerClient;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.KryoSerializer;
@@ -17,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class DelegateConfigServiceImpl implements DelegateConfigService {
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private KryoSerializer kryoSerializer;

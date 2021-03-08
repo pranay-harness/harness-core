@@ -1,80 +1,52 @@
 package io.harness.cvng.verificationjob.entities;
 
-import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
+import io.harness.cvng.beans.job.BlueGreenVerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobDTO;
+import io.harness.cvng.beans.job.VerificationJobType;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Preconditions.checkState;
-
-import io.harness.cvng.core.beans.TimeRange;
-import io.harness.cvng.verificationjob.beans.BlueGreenVerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.Sensitivity;
-import io.harness.cvng.verificationjob.beans.VerificationJobDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobType;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "BlueGreenVerificationJobKeys")
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class BlueGreenVerificationJob extends VerificationJob {
-  private Sensitivity sensitivity;
-  private Integer trafficSplitPercentage;
+public class BlueGreenVerificationJob extends CanaryBlueGreenVerificationJob {
   @Override
   public VerificationJobType getType() {
     return VerificationJobType.BLUE_GREEN;
   }
 
   @Override
+  public void fromDTO(VerificationJobDTO verificationJobDTO) {
+    BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = (BlueGreenVerificationJobDTO) verificationJobDTO;
+    this.setSensitivity(blueGreenVerificationJobDTO.getSensitivity(),
+        VerificationJobDTO.isRuntimeParam(blueGreenVerificationJobDTO.getSensitivity()));
+    this.setTrafficSplitPercentage(blueGreenVerificationJobDTO.getTrafficSplitPercentage());
+    addCommonFileds(verificationJobDTO);
+  }
+
+  @Override
   public VerificationJobDTO getVerificationJobDTO() {
     BlueGreenVerificationJobDTO blueGreenVerificationJobDTO = new BlueGreenVerificationJobDTO();
-    blueGreenVerificationJobDTO.setSensitivity(sensitivity);
-    blueGreenVerificationJobDTO.setTrafficSplitPercentage(trafficSplitPercentage);
+    blueGreenVerificationJobDTO.setSensitivity(getSensitivity() == null ? null : getSensitivity().name());
+    blueGreenVerificationJobDTO.setTrafficSplitPercentage(this.getTrafficSplitPercentage());
     populateCommonFields(blueGreenVerificationJobDTO);
     return blueGreenVerificationJobDTO;
   }
 
-  @Override
-  public boolean shouldDoDataCollection() {
-    return true;
-  }
-
-  @Override
-  protected void validateParams() {
-    checkNotNull(sensitivity, generateErrorMessageFromParam(BlueGreenVerificationJobKeys.sensitivity));
-    Optional.ofNullable(trafficSplitPercentage)
-        .ifPresent(percentage
-            -> checkState(percentage >= 0 && percentage <= 100,
-                BlueGreenVerificationJobKeys.trafficSplitPercentage + " is not in appropriate range"));
-  }
-
-  @Override
-  public Optional<TimeRange> getPreActivityTimeRange(Instant deploymentStartTime) {
-    throw new UnsupportedOperationException("Not implemented");
-  }
-
-  @Override
-  public Optional<TimeRange> getPostActivityTimeRange(Instant deploymentStartTime) {
-    throw new UnsupportedOperationException("Not implemented");
-  }
-
-  @Override
-  public List<TimeRange> getDataCollectionTimeRanges(Instant startTime) {
-    return null;
-  }
-
-  @Override
-  public void resolveJobParams(Map<String, String> runtimeParameters) {}
-
-  @Override
-  public boolean collectHostData() {
-    return true;
+  public static class BlueGreenVerificationUpdatableEntity<T extends BlueGreenVerificationJob, D
+                                                               extends BlueGreenVerificationJobDTO>
+      extends VerificationJobUpdatableEntity<T, D> {
+    @Override
+    public void setUpdateOperations(UpdateOperations<T> updateOperations, D dto) {
+      setCommonOperations(updateOperations, dto);
+      updateOperations.set(CanaryVerificationJob.DeploymentVerificationJobKeys.sensitivity, dto.getSensitivity())
+          .set(CanaryVerificationJob.DeploymentVerificationJobKeys.trafficSplitPercentage,
+              dto.getTrafficSplitPercentage());
+    }
   }
 }

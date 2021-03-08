@@ -19,6 +19,7 @@ public class BuildStatusUpdateParameter implements BuildUpdateParameters {
   private String buildNumber;
   private String sha;
   private String identifier;
+  private String name;
   private String connectorIdentifier;
   // Harsh TODO Also add github app or connector details. It is not finalised yet.
 }

@@ -4,7 +4,7 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
-import io.harness.exception.GeneralException;
+import io.harness.exception.WingsException;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -21,25 +21,31 @@ public class SecretGenerator {
   @Inject ScmSecret scmSecret;
   @Inject SecretManager secretManager;
 
-  public String ensureStored(String accountId, SecretName name) {
-    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name.getValue());
+  public String ensureSecretText(String accountId, String name, String value) {
+    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name);
     if (encryptedData != null) {
       return encryptedData.getUuid();
     }
 
-    SecretText secretText = SecretText.builder()
-                                .name(name.getValue())
-                                .value(scmSecret.decryptToString(name))
-                                .usageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                .build();
+    SecretText secretText =
+        SecretText.builder().name(name).value(value).usageRestrictions(getAllAppAllEnvUsageRestrictions()).build();
     try {
       return secretManager.saveSecretUsingLocalMode(accountId, secretText);
-    } catch (GeneralException ge) {
-      if (ge.getCause() instanceof DuplicateKeyException) {
-        return secretManager.getSecretByName(accountId, name.getValue()).getUuid();
+    } catch (WingsException we) {
+      if (we.getCause() instanceof DuplicateKeyException) {
+        return secretManager.getSecretByName(accountId, name).getUuid();
       }
-      throw ge;
+      throw we;
     }
+  }
+
+  public String ensureSecretText(Owners owners, String name, String value) {
+    final Account account = owners.obtainAccount();
+    return ensureSecretText(account.getUuid(), name, value);
+  }
+
+  public String ensureStored(String accountId, SecretName name) {
+    return ensureSecretText(accountId, name.getValue(), scmSecret.decryptToString(name));
   }
 
   public String ensureStored(Owners owners, SecretName name) {

@@ -172,7 +172,8 @@ public class CVConfigurationIntegrationTest extends IntegrationTestBase {
     settingAttributeId = settingAttribute.getUuid();
 
     service = Service.builder().name("someServiceName").appId(appId).build();
-    serviceId = wingsPersistence.saveAndGet(Service.class, service).getUuid();
+    wingsPersistence.save(service);
+    serviceId = service.getUuid();
 
     createNewRelicConfig(true);
     createAppDynamicsConfig();

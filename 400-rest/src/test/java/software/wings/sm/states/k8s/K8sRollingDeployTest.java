@@ -13,16 +13,21 @@ import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.states.k8s.K8sRollingDeploy.K8S_ROLLING_DEPLOY_COMMAND_NAME;
-import static software.wings.sm.states.k8s.K8sStateHelper.getSafeTimeoutInMillis;
+import static software.wings.sm.states.k8s.K8sStateHelper.fetchSafeTimeoutInMillis;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,7 +42,6 @@ import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElementListParam;
-import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.appmanifest.AppManifestKind;
@@ -52,6 +56,7 @@ import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
@@ -59,7 +64,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +82,7 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private AppService appService;
   @Mock private ActivityService activityService;
-  @InjectMocks K8sRollingDeploy k8sRollingDeploy;
+  @InjectMocks K8sRollingDeploy k8sRollingDeploy = spy(new K8sRollingDeploy(K8S_DEPLOYMENT_ROLLING.name()));
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
 
@@ -96,24 +100,25 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecute() {
     when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
-    when(k8sStateHelper.getRenderedValuesFiles(any(), any())).thenReturn(Collections.emptyList());
-    when(k8sStateHelper.createDelegateManifestConfig(any(), any()))
-        .thenReturn(K8sDelegateManifestConfig.builder().build());
-    when(k8sStateHelper.queueK8sDelegateTask(any(), any())).thenReturn(ExecutionResponse.builder().build());
-    when(k8sStateHelper.getContainerInfrastructureMapping(context))
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
         .thenReturn(aGcpKubernetesInfrastructureMapping().build());
-    when(k8sStateHelper.getReleaseName(any(), any())).thenReturn(RELEASE_NAME);
-    when(k8sStateHelper.getK8sElement(context)).thenReturn(K8sElement.builder().build());
+
+    doReturn(RELEASE_NAME).when(k8sRollingDeploy).fetchReleaseName(any(), any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sRollingDeploy)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sRollingDeploy).fetchRenderedValuesFiles(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingDeploy).queueK8sDelegateTask(any(), any());
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
     Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
     applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
-    when(k8sStateHelper.getApplicationManifests(any())).thenReturn(applicationManifestMap);
+    doReturn(applicationManifestMap).when(k8sRollingDeploy).fetchApplicationManifests(any());
 
     k8sRollingDeploy.executeK8sTask(context, ACTIVITY_ID);
 
     ArgumentCaptor<K8sTaskParameters> k8sTaskParamsArgumentCaptor = ArgumentCaptor.forClass(K8sTaskParameters.class);
-    verify(k8sStateHelper, times(1)).queueK8sDelegateTask(any(), k8sTaskParamsArgumentCaptor.capture());
+    verify(k8sRollingDeploy, times(1)).queueK8sDelegateTask(any(), k8sTaskParamsArgumentCaptor.capture());
     K8sRollingDeployTaskParameters taskParams = (K8sRollingDeployTaskParameters) k8sTaskParamsArgumentCaptor.getValue();
 
     assertThat(taskParams.getReleaseName()).isEqualTo(RELEASE_NAME);
@@ -129,10 +134,13 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDelegateExecuteToK8sStateHelper() {
+    doReturn(ExecutionResponse.builder().build())
+        .when(k8sRollingDeploy)
+        .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
     k8sRollingDeploy.execute(context);
-    verify(k8sStateHelper, times(1))
+    verify(k8sRollingDeploy, times(1))
         .executeWrapperWithManifest(
-            k8sRollingDeploy, context, getSafeTimeoutInMillis(k8sRollingDeploy.getTimeoutMillis()));
+            k8sRollingDeploy, context, fetchSafeTimeoutInMillis(k8sRollingDeploy.getTimeoutMillis()));
   }
 
   @Test
@@ -160,8 +168,12 @@ public class K8sRollingDeployTest extends WingsBaseTest {
 
     doReturn(Application.Builder.anApplication().uuid("uuid").build()).when(appService).get(anyString());
     doReturn(InstanceElementListParam.builder().build())
-        .when(k8sStateHelper)
-        .getInstanceElementListParam(anyListOf(K8sPod.class));
+        .when(k8sRollingDeploy)
+        .fetchInstanceElementListParam(anyListOf(K8sPod.class));
+    doReturn(emptyList()).when(k8sRollingDeploy).fetchInstanceStatusSummaries(any(), any());
+    doNothing().when(k8sRollingDeploy).saveK8sElement(any(), any());
+    doNothing().when(k8sRollingDeploy).saveInstanceInfoToSweepingOutput(any(), any(), any());
+    doReturn(APP_ID).when(k8sRollingDeploy).fetchAppId(context);
     ExecutionResponse executionResponse =
         k8sRollingDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of("response", taskExecutionResponse));
     K8sStateExecutionData executionData = (K8sStateExecutionData) executionResponse.getStateExecutionData();
@@ -211,7 +223,8 @@ public class K8sRollingDeployTest extends WingsBaseTest {
 
     context.pushContextElement(standardParams);
     doReturn(app).when(appService).get(APP_ID);
-    doReturn(ACTIVITY_ID).when(k8sStateHelper).getActivityId(context);
+    doReturn(ACTIVITY_ID).when(k8sRollingDeploy).fetchActivityId(context);
+    doReturn(APP_ID).when(k8sRollingDeploy).fetchAppId(context);
 
     ExecutionResponse executionResponse =
         k8sRollingDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskResponse));
@@ -225,10 +238,13 @@ public class K8sRollingDeployTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDelegateHandleAsyncResponseToK8sStateHelper() {
+    doReturn(ExecutionResponse.builder().build())
+        .when(k8sRollingDeploy)
+        .handleAsyncResponseWrapper(any(K8sStateExecutor.class), any(ExecutionContext.class), anyMap());
     K8sTaskExecutionResponse response = K8sTaskExecutionResponse.builder().build();
     Map<String, ResponseData> responseMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     k8sRollingDeploy.handleAsyncResponse(context, responseMap);
-    verify(k8sStateHelper, times(1)).handleAsyncResponseWrapper(k8sRollingDeploy, context, responseMap);
+    verify(k8sRollingDeploy, times(1)).handleAsyncResponseWrapper(k8sRollingDeploy, context, responseMap);
   }
 }

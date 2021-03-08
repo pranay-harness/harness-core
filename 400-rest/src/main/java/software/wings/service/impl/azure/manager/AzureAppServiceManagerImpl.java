@@ -18,13 +18,14 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.AzureTaskResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
-import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotNamesParameters;
+import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppDeploymentSlotsParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppInstancesParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppListWebAppNamesParameters;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
-import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppDeploymentSlotsResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppInstancesResponse;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppNamesResponse;
+import io.harness.delegate.task.azure.appservice.webapp.response.DeploymentSlotData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -57,18 +58,17 @@ public class AzureAppServiceManagerImpl implements AzureAppServiceManager {
   }
 
   @Override
-  public List<String> getAppServiceDeploymentSlotNames(AzureConfig azureConfig,
+  public List<DeploymentSlotData> getAppServiceDeploymentSlots(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String appId, String subscriptionId, String resourceGroup,
       String appType, String appName) {
-    AzureWebAppListWebAppDeploymentSlotNamesParameters parameters =
-        AzureWebAppListWebAppDeploymentSlotNamesParameters.builder()
-            .subscriptionId(subscriptionId)
-            .resourceGroupName(resourceGroup)
-            .appServiceType(appType)
-            .appName(appName)
-            .build();
+    AzureWebAppListWebAppDeploymentSlotsParameters parameters = AzureWebAppListWebAppDeploymentSlotsParameters.builder()
+                                                                    .subscriptionId(subscriptionId)
+                                                                    .resourceGroupName(resourceGroup)
+                                                                    .appServiceType(appType)
+                                                                    .appName(appName)
+                                                                    .build();
     AzureTaskResponse azureTaskExecutionResponse = executeTask(parameters, azureConfig, encryptionDetails, appId);
-    return ((AzureWebAppListWebAppDeploymentSlotNamesResponse) azureTaskExecutionResponse).getDeploymentSlotNames();
+    return ((AzureWebAppListWebAppDeploymentSlotsResponse) azureTaskExecutionResponse).getDeploymentSlots();
   }
 
   @Override

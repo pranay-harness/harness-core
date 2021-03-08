@@ -36,6 +36,12 @@ public class NoOpAlertService implements AlertService {
   }
 
   @Override
+  public Future closeExistingAlertsAndOpenNew(
+      String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData) {
     throw new UnsupportedOperationException();
   }

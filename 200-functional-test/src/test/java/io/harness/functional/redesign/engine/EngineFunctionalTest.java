@@ -1,5 +1,6 @@
 package io.harness.functional.redesign.engine;
 
+import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
@@ -19,9 +20,9 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
-import io.harness.pms.serializer.json.JsonOrchestrationUtils;
+import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
 import io.harness.rule.Owner;
@@ -88,7 +89,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = PRASHANT, intermittent = true)
   @Category(FunctionalTests.class)
   public void shouldExecuteSectionChainPlan() {
     PlanExecution httpForkResponse =
@@ -135,7 +136,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "http-retry-ignore");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(SUCCEEDED);
     List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(4);
 
@@ -153,17 +154,18 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     List<Interrupt> interrupts = testSetupHelper.getPlanInterrupts(httpRetryResponse.getUuid());
     assertThat(interrupts).hasSize(2);
     assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
-        .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
+        .containsExactly(InterruptType.RETRY, InterruptType.RETRY);
   }
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(FunctionalTests.class)
+  @Ignore("Change in abort helper to handle if no node of finalizable status is found.")
   public void shouldExecuteHttpRetryAbortPlan() {
     PlanExecution httpRetryResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "http-retry-abort");
 
-    assertThat(httpRetryResponse.getStatus()).isEqualTo(FAILED);
+    assertThat(httpRetryResponse.getStatus()).isEqualTo(ABORTED);
     List<NodeExecution> nodeExecutions = testSetupHelper.getNodeExecutions(httpRetryResponse.getUuid());
     assertThat(nodeExecutions).hasSize(3);
 
@@ -181,7 +183,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     List<Interrupt> interrupts = testSetupHelper.getPlanInterrupts(httpRetryResponse.getUuid());
     assertThat(interrupts).hasSize(2);
     assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
-        .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
+        .containsExactly(InterruptType.RETRY, InterruptType.RETRY);
   }
 
   @Test
@@ -312,8 +314,9 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = ALEXEI, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Ingore while issues with setExpressionFunctorToken() will be resolved")
   public void shouldExecuteTaskChain() {
     PlanExecution taskChainResponse =
         testSetupHelper.executePlan(bearerToken, application.getAccountId(), application.getAppId(), "task-chain-v1");
@@ -328,7 +331,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
 
     ShellScriptStepParameters shellScriptStepParameters = nodeExecution.getResolvedStepParameters() == null
         ? null
-        : JsonOrchestrationUtils.asObject(
+        : RecastOrchestrationUtils.fromDocumentJson(
             nodeExecution.getResolvedStepParameters().toJson(), ShellScriptStepParameters.class);
     assertThat(shellScriptStepParameters).isNotNull();
     return shellScriptStepParameters.getScriptString();

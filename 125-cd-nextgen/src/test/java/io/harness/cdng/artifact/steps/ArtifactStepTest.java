@@ -7,9 +7,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.DockerArtifactOutcome;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactStepHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -23,7 +22,9 @@ import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -35,6 +36,7 @@ import io.harness.tasks.ResponseData;
 import software.wings.beans.TaskType;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +51,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public class ArtifactStepTest extends CDNGBaseTest {
+public class ArtifactStepTest extends CDNGTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactStepHelper artifactStepHelper;
@@ -69,7 +71,13 @@ public class ArtifactStepTest extends CDNGBaseTest {
   @Category(UnitTests.class)
   public void testObtainingArtifactTaskForDocker() {
     Ambiance ambiance =
-        Ambiance.newBuilder().putAllSetupAbstractions(ImmutableMap.of("accountId", "ACCOUNT_ID")).build();
+        Ambiance.newBuilder()
+            .putAllSetupAbstractions(ImmutableMap.of(
+                "accountId", "ACCOUNT_ID", "orgIdentifier", "ORG_ID", "projectIdentifier", "PROJECT_ID"))
+            .addAllLevels(Lists.newArrayList(Level.newBuilder().setRuntimeId("node1").build(),
+                Level.newBuilder().setRuntimeId("node2").build(), Level.newBuilder().setRuntimeId("node3").build()))
+            .setExpressionFunctorToken(1234)
+            .build();
     ArtifactStepParameters stepParameters = getStepParametersForDocker();
     when(artifactStepHelper.toSourceDelegateRequest(artifactStep.applyArtifactsOverlay(stepParameters), ambiance))
         .thenReturn(getDelegateRequest());

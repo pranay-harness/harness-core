@@ -14,4 +14,5 @@ public interface GraphGenerationService {
   OrchestrationGraphDTO generatePartialOrchestrationGraphFromSetupNodeId(
       String startingSetupNodeId, String planExecutionId);
   OrchestrationGraphDTO generatePartialOrchestrationGraphFromIdentifier(String identifier, String planExecutionId);
+  OrchestrationGraph buildOrchestrationGraph(String planExecutionId);
 }

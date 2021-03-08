@@ -8,7 +8,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPTION_MSG;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
@@ -17,7 +19,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.EntityType;
-import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Service;
@@ -79,6 +80,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class WorkflowExecutionController {
   @Inject private HPersistence persistence;
   @Inject AuthHandler authHandler;
@@ -95,6 +97,7 @@ public class WorkflowExecutionController {
     QLCause cause = null;
     List<QLDeploymentTag> tags = new ArrayList<>();
     List<QLArtifact> artifacts = new ArrayList<>();
+    List<QLArtifact> rollbackArtifacts = new ArrayList<>();
 
     if (workflowExecution.getPipelineExecutionId() != null) {
       cause =
@@ -144,6 +147,17 @@ public class WorkflowExecutionController {
                       .collect(Collectors.toList());
     }
 
+    if (isNotEmpty(workflowExecution.getRollbackArtifacts())) {
+      rollbackArtifacts = workflowExecution.getRollbackArtifacts()
+                              .stream()
+                              .map(artifact -> {
+                                QLArtifactBuilder qlArtifactBuilder = QLArtifact.builder();
+                                ArtifactController.populateArtifact(artifact, qlArtifactBuilder);
+                                return qlArtifactBuilder.build();
+                              })
+                              .collect(Collectors.toList());
+    }
+
     builder.id(workflowExecution.getUuid())
         .workflowId(workflowExecution.getWorkflowId())
         .appId(workflowExecution.getAppId())
@@ -154,7 +168,8 @@ public class WorkflowExecutionController {
         .cause(cause)
         .notes(workflowExecution.getExecutionArgs() == null ? null : workflowExecution.getExecutionArgs().getNotes())
         .tags(tags)
-        .artifacts(artifacts);
+        .artifacts(artifacts)
+        .rollbackArtifacts(rollbackArtifacts);
   }
 
   QLStartExecutionPayload startWorkflowExecution(
@@ -354,34 +369,18 @@ public class WorkflowExecutionController {
     if (!workflow.checkEnvironmentTemplatized()) {
       return workflow.getEnvId();
     }
-    if (!isEmpty(variableInputs)) {
-      OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-      String envVarName =
-          WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow.getUserVariables());
-      if (envVarName != null) {
-        QLVariableInput envVarInput =
-            variableInputs.stream().filter(t -> envVarName.equals(t.getName())).findFirst().orElse(null);
-        if (envVarInput != null) {
-          QLVariableValue envVarValue = envVarInput.getVariableValue();
-          switch (envVarValue.getType()) {
-            case ID:
-              String envId = envVarValue.getValue();
-              Environment environment = environmentService.get(workflow.getAppId(), envId);
-              notNullCheck("Environment [" + envId + "] doesn't exist in specified application " + workflow.getAppId(),
-                  environment, USER);
-              return envId;
-            case NAME:
-              String envName = envVarValue.getValue();
-              Environment environmentFromName = environmentService.getEnvironmentByName(workflow.getAppId(), envName);
-              notNullCheck(
-                  "Environment [" + envName + "] doesn't exist in specified application " + workflow.getAppId(),
-                  environmentFromName, USER);
-              return environmentFromName.getUuid();
-            default:
-              throw new InvalidRequestException("Value Type " + envVarValue.getType() + " Not supported");
-          }
-        }
-      }
+
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    String envVarName =
+        WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow.getUserVariables());
+    if (envVarName == null) {
+      log.info("Environment is Not templatized in workflow {} ", workflow.getUuid());
+      return null;
+    }
+
+    String envId = executionController.getEnvId(envVarName, workflow.getAppId(), variableInputs);
+    if (envId != null) {
+      return envId;
     }
     throw new InvalidRequestException(
         "Workflow [" + workflow.getName() + "] has environment parameterized. However, the value not supplied", USER);

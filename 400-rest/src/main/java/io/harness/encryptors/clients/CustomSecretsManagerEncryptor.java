@@ -21,8 +21,8 @@ import io.harness.security.encryption.EncryptedDataParams;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
+import io.harness.shell.ShellExecutionData;
 
-import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.delegatetasks.ShellScriptTaskHandler;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;

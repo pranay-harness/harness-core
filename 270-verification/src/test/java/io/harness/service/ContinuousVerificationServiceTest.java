@@ -46,9 +46,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
+import io.harness.alert.AlertData;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -72,7 +74,6 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
@@ -111,6 +112,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.splunk.LogAnalysisResult;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.impl.sumo.SumoDataCollectionInfo;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DataStoreService;
@@ -178,7 +180,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Slf4j
-public class ContinuousVerificationServiceTest extends VerificationBaseTest {
+public class ContinuousVerificationServiceTest extends VerificationBase {
   private String accountId;
   private String appId;
   private String envId;
@@ -198,6 +200,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DataStoreService dataStoreService;
+  @Inject Map<AlertType, Class<? extends AlertData>> alertTypeClassMap;
 
   @Mock private CVConfigurationService cvConfigurationService;
   @Mock private CVTaskService cvTaskService;
@@ -211,6 +214,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
   @Mock private AppService appService;
   @Mock private CVActivityLogService cvActivityLogService;
   @Mock private Logger activityLogger;
+  @Mock private AccountService accountService;
 
   private SumoConfig sumoConfig;
   private DatadogConfig datadogConfig;
@@ -280,6 +284,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     when(cvConfigurationService.listConfigurations(accountId))
         .thenReturn(Lists.newArrayList(logsCVConfiguration, datadogCVConfiguration));
+    when(accountService.isCertValidationRequired(anyString())).thenReturn(false);
     writeField(continuousVerificationService, "cvConfigurationService", cvConfigurationService, true);
     writeField(continuousVerificationService, "metricRegistry", metricRegistry, true);
     writeField(continuousVerificationService, "cvTaskService", cvTaskService, true);
@@ -308,6 +313,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(managerVerificationService, "cvActivityLogService", cvActivityLogService, true);
     writeField(managerVerificationService, "dataCollectionService", dataCollectionService, true);
     writeField(managerVerificationService, "dataStoreService", dataStoreService, true);
+    writeField(managerVerificationService, "accountService", accountService, true);
 
     writeField(managerVerificationService, "environmentService", environmentService, true);
     when(environmentService.get(anyString(), anyString()))
@@ -317,6 +323,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     writeField(alertService, "wingsPersistence", wingsPersistence, true);
     writeField(alertService, "executorService", Executors.newSingleThreadScheduledExecutor(), true);
     writeField(alertService, "injector", injector, true);
+    writeField(alertService, "alertTypeClassMap", alertTypeClassMap, true);
     writeField(managerVerificationService, "alertService", alertService, true);
     when(cvActivityLogService.getLoggerByStateExecutionId(anyString(), anyString())).thenReturn(mock(Logger.class));
     when(cvActivityLogService.getLoggerByCVConfigId(anyString(), anyString(), anyLong())).thenReturn(activityLogger);
@@ -462,7 +469,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     LogsCVConfiguration logsCVConfiguration =
         (LogsCVConfiguration) wingsPersistence.get(CVConfiguration.class, cvConfigId);
 
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_24_7_LOG_DATA);
 
@@ -504,7 +510,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
             - 1);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
     assertThat(customLogDataCollectionInfo.getCvConfigId()).isEqualTo(datadogCvConfigId);
     assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
@@ -557,7 +562,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_24_7_LOG_DATA);
     assertThat(sumoDataCollectionInfo.getCvConfigId()).isEqualTo(cvConfigId);
     assertThat(sumoDataCollectionInfo.getApplicationId()).isEqualTo(appId);
@@ -592,7 +596,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     delegateTask = delegateTasks.get(2);
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_24_7_LOG_DATA);
     sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
@@ -645,7 +648,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(delegateTasks).hasSize(2);
     DelegateTask delegateTask = delegateTasks.get(1);
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
     CustomLogDataCollectionInfo customLogDataCollectionInfo =
         (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
@@ -681,7 +683,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
 
     delegateTask = delegateTasks.get(3);
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
     customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertThat(customLogDataCollectionInfo.getCvConfigId()).isEqualTo(datadogCvConfigId);
@@ -778,7 +779,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     assertThat(delegateTasks).hasSize(2);
     DelegateTask delegateTask = delegateTasks.get(1);
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_COLLECT_24_7_LOG_DATA);
     CustomLogDataCollectionInfo customLogDataCollectionInfo =
         (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
@@ -832,7 +832,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     DelegateTask delegateTask = delegateTasks.get(0);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.SUMO_COLLECT_LOG_DATA);
     SumoDataCollectionInfo sumoDataCollectionInfo = (SumoDataCollectionInfo) delegateTask.getData().getParameters()[0];
     assertThat(sumoDataCollectionInfo.getSumoConfig()).isEqualTo(sumoConfig);
@@ -859,7 +858,6 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     DelegateTask delegateTask = delegateTasks.get(0);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
-    assertThat(delegateTask.getAppId()).isEqualTo(appId);
     assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_LOG_COLLECTION_TASK);
     CustomLogDataCollectionInfo customLogDataCollectionInfo =
         (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
@@ -1457,7 +1455,7 @@ public class ContinuousVerificationServiceTest extends VerificationBaseTest {
     cvConfiguration.setStateType(StateType.NEW_RELIC);
     String configId = wingsPersistence.save(cvConfiguration);
 
-    File file = new File(getClass().getClassLoader().getResource("./metric_records.json").getFile());
+    File file = new File("270-verification/src/test/resources/metric_records.json");
     final Gson gson1 = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();

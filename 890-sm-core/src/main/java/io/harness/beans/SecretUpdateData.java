@@ -23,6 +23,7 @@ public class SecretUpdateData {
   boolean parametersChanged;
   boolean referenceChanged;
   boolean usageScopeChanged;
+  boolean additonalMetadataChanged;
 
   public SecretUpdateData(HarnessSecret updatedSecret, EncryptedData existingRecord) {
     this.updatedSecret = updatedSecret;
@@ -51,6 +52,8 @@ public class SecretUpdateData {
         !Objects.equals(updatedSecret.getUsageRestrictions(), existingRecord.getUsageRestrictions())
         || updatedSecret.isScopedToAccount() != existingRecord.isScopedToAccount()
         || updatedSecret.isInheritScopesFromSM() != existingRecord.isInheritScopesFromSM();
+    additonalMetadataChanged = updatedSecret.getAdditionalMetadata() != null
+        && !updatedSecret.getAdditionalMetadata().equals(existingRecord.getAdditionalMetadata());
   }
 
   public String getChangeSummary() {
@@ -69,6 +72,9 @@ public class SecretUpdateData {
     }
     if (usageScopeChanged) {
       builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
+    }
+    if (additonalMetadataChanged) {
+      builder.append(builder.length() > 0 ? " & additional metadata" : "Changed additional metadata");
     }
     return builder.toString();
   }

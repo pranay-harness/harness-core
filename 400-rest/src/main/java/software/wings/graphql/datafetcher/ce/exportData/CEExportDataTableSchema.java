@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
@@ -12,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "CEExportDataTableKeys")
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CEExportDataTableSchema {
   DbSpec dbSpec;
   DbSchema dbSchema;
@@ -52,6 +56,12 @@ public class CEExportDataTableSchema {
   DbColumn memoryRequest;
   DbColumn cpuLimit;
   DbColumn memoryLimit;
+  DbColumn effectiveCpuRequest;
+  DbColumn effectiveMemoryRequest;
+  DbColumn effectiveCpuLimit;
+  DbColumn effectiveMemoryLimit;
+  DbColumn effectiveCpuUtilizationValue;
+  DbColumn effectiveMemoryUtilizationValue;
 
   private static String varcharType = "varchar(40)";
   private static String doubleType = "double";
@@ -96,5 +106,13 @@ public class CEExportDataTableSchema {
     memoryRequest = billingDataTable.addColumn("memoryrequest", doubleType, null);
     cpuLimit = billingDataTable.addColumn("cpulimit", doubleType, null);
     memoryLimit = billingDataTable.addColumn("memorylimit", doubleType, null);
+    effectiveCpuRequest = billingDataTable.addColumn("cpurequest*usagedurationseconds", doubleType, null);
+    effectiveMemoryRequest = billingDataTable.addColumn("memoryrequest*usagedurationseconds", doubleType, null);
+    effectiveCpuLimit = billingDataTable.addColumn("cpulimit*usagedurationseconds", doubleType, null);
+    effectiveMemoryLimit = billingDataTable.addColumn("memorylimit*usagedurationseconds", doubleType, null);
+    effectiveCpuUtilizationValue =
+        billingDataTable.addColumn("avgcpuutilizationvalue*usagedurationseconds", doubleType, null);
+    effectiveMemoryUtilizationValue =
+        billingDataTable.addColumn("avgmemoryutilizationvalue*usagedurationseconds", doubleType, null);
   }
 }

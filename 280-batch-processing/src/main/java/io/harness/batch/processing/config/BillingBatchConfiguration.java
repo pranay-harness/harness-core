@@ -12,6 +12,7 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,10 +20,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @Slf4j
 public class BillingBatchConfiguration {
-  @Bean
-  public Tasklet billingDataGeneratedMailTasklet() {
-    return new BillingDataGeneratedMailTasklet();
-  }
+  @Autowired private StepBuilderFactory stepBuilderFactory;
+  @Autowired private JobBuilderFactory jobBuilderFactory;
 
   @Bean
   public Tasklet instanceBillingDataTasklet() {
@@ -30,32 +29,25 @@ public class BillingBatchConfiguration {
   }
 
   @Bean
-  public Tasklet instanceBillingAggregationDataTasklet() {
-    return new InstanceBillingAggregationDataTasklet();
+  public Step instanceBillingStep() {
+    return stepBuilderFactory.get("instanceBillingStep").tasklet(instanceBillingDataTasklet()).build();
   }
 
   @Bean
-  @Qualifier(value = "instanceBillingJob")
-  public Job instanceBillingJob(JobBuilderFactory jobBuilderFactory, Step instanceBillingStep) {
-    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING.name())
-        .incrementer(new RunIdIncrementer())
-        .start(instanceBillingStep)
-        .build();
+  public Tasklet billingDataGeneratedMailTasklet() {
+    return new BillingDataGeneratedMailTasklet();
   }
 
   @Bean
-  @Qualifier(value = "instanceBillingAggregationJob")
-  public Job instanceBillingAggregationJob(JobBuilderFactory jobBuilderFactory, Step instanceBillingAggregationStep) {
-    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_AGGREGATION.name())
-        .incrementer(new RunIdIncrementer())
-        .start(instanceBillingAggregationStep)
+  public Step billingDataGeneratedNotificationStep() {
+    return stepBuilderFactory.get("billingDataGeneratedNotificationStep")
+        .tasklet(billingDataGeneratedMailTasklet())
         .build();
   }
 
   @Bean
   @Qualifier(value = "instanceBillingHourlyJob")
-  public Job instanceBillingHourlyJob(
-      JobBuilderFactory jobBuilderFactory, Step instanceBillingStep, Step billingDataGeneratedNotificationStep) {
+  public Job instanceBillingHourlyJob(Step instanceBillingStep, Step billingDataGeneratedNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_HOURLY.name())
         .incrementer(new RunIdIncrementer())
         .start(instanceBillingStep)
@@ -63,22 +55,53 @@ public class BillingBatchConfiguration {
         .build();
   }
 
+  // ------------------------------------------------------------------------------------------
+
   @Bean
-  public Step billingDataGeneratedNotificationStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("billingDataGeneratedNotificationStep")
-        .tasklet(billingDataGeneratedMailTasklet())
+  @Qualifier(value = "instanceBillingJob")
+  public Job instanceBillingJob(Step instanceBillingStep) {
+    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING.name())
+        .incrementer(new RunIdIncrementer())
+        .start(instanceBillingStep)
+        .build();
+  }
+
+  // ------------------------------------------------------------------------------------------
+
+  @Bean
+  public Tasklet instanceBillingAggregationDataTasklet() {
+    return new InstanceBillingAggregationDataTasklet();
+  }
+
+  @Bean
+  public Step instanceBillingHourlyAggregationStep() {
+    return stepBuilderFactory.get("instanceBillingHourlyAggregationStep")
+        .tasklet(instanceBillingAggregationDataTasklet())
         .build();
   }
 
   @Bean
-  public Step instanceBillingStep(StepBuilderFactory stepBuilderFactory) {
-    return stepBuilderFactory.get("instanceBillingStep").tasklet(instanceBillingDataTasklet()).build();
+  @Qualifier(value = "instanceBillingHourlyAggregationJob")
+  public Job instanceBillingHourlyAggregationJob(Step instanceBillingHourlyAggregationStep) {
+    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION.name())
+        .incrementer(new RunIdIncrementer())
+        .start(instanceBillingHourlyAggregationStep)
+        .build();
   }
 
   @Bean
-  public Step instanceBillingAggregationStep(StepBuilderFactory stepBuilderFactory) {
+  public Step instanceBillingAggregationStep() {
     return stepBuilderFactory.get("instanceBillingAggregationStep")
         .tasklet(instanceBillingAggregationDataTasklet())
+        .build();
+  }
+
+  @Bean
+  @Qualifier(value = "instanceBillingAggregationJob")
+  public Job instanceBillingAggregationJob(Step instanceBillingAggregationStep) {
+    return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_AGGREGATION.name())
+        .incrementer(new RunIdIncrementer())
+        .start(instanceBillingAggregationStep)
         .build();
   }
 }

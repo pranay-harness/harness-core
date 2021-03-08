@@ -54,7 +54,7 @@ func NewRemoteWriter(client client.Client, key string) (*RemoteWriter, error) {
 		key:      key,
 		now:      time.Now(),
 		limit:    defaultLimit,
-		interval: time.Second,
+		interval: defaultInterval,
 		close:    make(chan struct{}),
 		ready:    make(chan struct{}, 1),
 		log:      l.Sugar(),
@@ -114,8 +114,15 @@ func (b *RemoteWriter) Write(p []byte) (n int, err error) {
 		return len(p), nil
 	}
 
-	res = append(b.prev, p...)
-	b.prev = []byte{}
+	// Contains a new line. It may actually contain multiple new line characters
+	// depending on the flushing logic. We find the index of the last \n and
+	// add everything before it to res. Prev becomes whatever is left over.
+	// Eg: Write(A)           ---> prev is A
+	//     Write(BC\nDEF\nGH) ---> res becomes ABC\nDEF\n and prev becomes GH
+	first, second := splitLast(p)
+
+	res = append(b.prev, first...)
+	b.prev = second
 
 	for _, part := range split(res) {
 		if len(part) == 0 {
@@ -202,7 +209,7 @@ func (b *RemoteWriter) upload() error {
 		return err
 	}
 
-	b.log.Infow("uploading logs", "key", b.key, "link", link.Value, "num_lines", len(b.history))
+	b.log.Infow("uploading logs", "key", b.key, "num_lines", len(b.history))
 	err = b.client.UploadUsingLink(context.Background(), link.Value, data)
 	if err != nil {
 		b.log.Errorw("failed to upload using link", "key", b.key, "link", link.Value, zap.Error(err))
@@ -281,6 +288,19 @@ func (b *RemoteWriter) Start() error {
 			}
 		}
 	}
+}
+
+// return back two byte arrays after splitting on last \n.
+// Eg: ABC\nDEF\nGH will return ABC\nDEF\n and GH
+func splitLast(p []byte) ([]byte, []byte) {
+	if !bytes.Contains(p, []byte("\n")) {
+		return p, []byte{} // If no \n is present, return the string itself
+	}
+	s := string(p)
+	last := strings.LastIndex(s, "\n")
+	first := s[:last+1]
+	second := s[last+1:]
+	return []byte(first), []byte(second)
 }
 
 func split(p []byte) []string {

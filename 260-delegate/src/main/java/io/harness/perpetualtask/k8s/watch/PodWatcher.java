@@ -7,6 +7,8 @@ import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_P
 import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.util.Optional.ofNullable;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -43,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class PodWatcher implements ResourceEventHandler<V1Pod> {
   private static final TypeRegistry TYPE_REGISTRY =
       TypeRegistry.newBuilder().add(PodInfo.getDescriptor()).add(PodEvent.getDescriptor()).build();
@@ -151,21 +154,23 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
     if (podScheduledCondition != null && !publishedPods.contains(uid)) {
       Timestamp creationTimestamp = HTimestamps.fromMillis(pod.getMetadata().getCreationTimestamp().getMillis());
 
-      PodInfo podInfo = PodInfo.newBuilder(podInfoPrototype)
-                            .setPodUid(uid)
-                            .setPodName(pod.getMetadata().getName())
-                            .setNamespace(pod.getMetadata().getNamespace())
-                            .setNodeName(pod.getSpec().getNodeName())
-                            .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
-                            .addAllVolume(getAllVolumes(pod))
-                            .setQosClass(pod.getStatus().getQosClass())
-                            .setCreationTimestamp(creationTimestamp)
-                            .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
-                            .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
-                            .putAllNamespaceLabels(firstNonNull(
-                                getNamespaceLabels(pod.getMetadata().getNamespace()), Collections.emptyMap()))
-                            .setTopLevelOwner(controllerFetcher.getTopLevelOwner(pod))
-                            .build();
+      PodInfo podInfo =
+          PodInfo.newBuilder(podInfoPrototype)
+              .setPodUid(uid)
+              .setPodName(pod.getMetadata().getName())
+              .setNamespace(pod.getMetadata().getNamespace())
+              .setNodeName(pod.getSpec().getNodeName())
+              .setTotalResource(K8sResourceUtils.getEffectiveResources(pod.getSpec()))
+              .addAllVolume(getAllVolumes(pod))
+              .setQosClass(pod.getStatus().getQosClass())
+              .setCreationTimestamp(creationTimestamp)
+              .addAllContainers(getAllContainers(pod.getSpec().getContainers()))
+              .putAllLabels(firstNonNull(pod.getMetadata().getLabels(), Collections.emptyMap()))
+              .putAllMetadataAnnotations(firstNonNull(pod.getMetadata().getAnnotations(), Collections.emptyMap()))
+              .putAllNamespaceLabels(
+                  firstNonNull(getNamespaceLabels(pod.getMetadata().getNamespace()), Collections.emptyMap()))
+              .setTopLevelOwner(controllerFetcher.getTopLevelOwner(pod))
+              .build();
       logMessage(podInfo);
 
       eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));

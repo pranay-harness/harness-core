@@ -13,6 +13,7 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
+import static software.wings.beans.appmanifest.AppManifestKind.AZURE_APP_SERVICE_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
@@ -21,6 +22,8 @@ import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.APPLICATION_TEMPLATE_LIBRARY_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_SOURCES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.ARTIFACT_STREAMS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.AZURE_CONN_STRINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.CLOUD_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COLLABORATION_PROVIDERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.COMMANDS_FOLDER;
@@ -31,6 +34,7 @@ import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_F
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.GOVERNANCE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
@@ -38,6 +42,7 @@ import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER_APP_SERVICE;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -73,6 +78,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
+import io.harness.governance.GovernanceFreezeConfig;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -107,6 +113,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
@@ -141,6 +148,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -188,6 +196,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -224,6 +233,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AuthService authService;
   @Inject private GitSyncErrorService gitSyncErrorService;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private GovernanceConfigService governanceConfigService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -400,6 +410,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             }
             yaml = yamlResourceService.getTemplateLibrary(accountId, appId, entityId).getResource().getYaml();
             break;
+          case "GovernanceConfig":
+            yaml = yamlResourceService.getGovernanceConfig(accountId).getResource().getYaml();
+            break;
 
           default:
             log.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
@@ -571,6 +584,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       }
     }));
 
+    if (isNewDeploymentFreezeFFenabled(accountId)) {
+      // Governance Folder
+      futureList.add(executorService.submit(() -> {
+        try (UserThreadLocal.Guard guard = userGuard(user)) {
+          return doGovernance(accountId, yamlDirectoryFetchPayload.getAppId(), directoryPath.clone());
+        }
+      }));
+    }
+
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
 
@@ -600,6 +622,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(map.get(SOURCE_REPO_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(VERIFICATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(NOTIFICATION_GROUPS_FOLDER));
+    if (map.containsKey(YamlConstants.GOVERNANCE_FOLDER)) {
+      configFolder.addChild(map.get(YamlConstants.GOVERNANCE_FOLDER));
+    }
+
     if (map.containsKey(GLOBAL_TEMPLATE_LIBRARY_FOLDER)) {
       configFolder.addChild(map.get(GLOBAL_TEMPLATE_LIBRARY_FOLDER));
     }
@@ -611,6 +637,30 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     log.info("********* ELAPSED_TIME: " + elapsedTime + " *********");
 
     return configFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode doGovernance(String accountId, String entityId, DirectoryPath directoryPath) {
+    FolderNode governanceFolder = new FolderNode(accountId, YamlConstants.GOVERNANCE_FOLDER, GovernanceConfig.class,
+        directoryPath.add(YamlConstants.GOVERNANCE_FOLDER), yamlGitSyncService);
+
+    doGovernanceConfig(accountId, directoryPath, governanceFolder, entityId);
+    return governanceFolder;
+  }
+
+  private void doGovernanceConfig(
+      String accountId, DirectoryPath directoryPath, FolderNode parentFolder, String entityId) {
+    String yamlFileName = "Deployment Governance" + YAML_EXTENSION;
+    DirectoryPath cpPath = directoryPath.clone();
+
+    // get entityId for the YAML file
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+
+    // if governance config exists
+    if (isNotEmpty(governanceConfig.getUuid())) {
+      parentFolder.addChild(new AccountLevelYamlNode(accountId, governanceConfig.getUuid(), yamlFileName,
+          GovernanceConfig.class, cpPath.add(yamlFileName), yamlGitSyncService, Type.GOVERNANCE_CONFIG));
+    }
   }
 
   @VisibleForTesting
@@ -879,6 +929,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private boolean isTriggerYamlEnabled(String accountId) {
     return featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId);
+  }
+
+  private boolean isNewDeploymentFreezeFFenabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId);
   }
 
   private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
@@ -1173,15 +1227,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateApplicationManifestNodeForService(
       String accountId, Service service, DirectoryPath servicePath) {
-    DirectoryPath applicationManifestPath = servicePath.clone().add(MANIFEST_FOLDER);
+    DirectoryPath applicationManifestPath = getApplicationManifestDirectoryPath(service, servicePath);
 
-    FolderNode applicationManifestFolder = new FolderNode(accountId, MANIFEST_FOLDER, ApplicationManifest.class,
+    String manifestFolderName = getApplicationManifestFolderName(service);
+
+    FolderNode applicationManifestFolder = new FolderNode(accountId, manifestFolderName, ApplicationManifest.class,
         applicationManifestPath, service.getAppId(), yamlGitSyncService);
 
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
 
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
+    ApplicationManifest applicationManifest = getApplicationManifestByService(service);
     if (applicationManifest != null) {
       applicationManifestFolder.addChild(new ServiceLevelYamlNode(accountId, applicationManifest.getUuid(),
           service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
@@ -1197,6 +1252,27 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return null;
+  }
+
+  @NotNull
+  private DirectoryPath getApplicationManifestDirectoryPath(Service service, DirectoryPath servicePath) {
+    return isAzureAppServiceDeploymentType(service) ? servicePath.clone().add(MANIFEST_FOLDER_APP_SERVICE)
+                                                    : servicePath.clone().add(MANIFEST_FOLDER);
+  }
+
+  @NotNull
+  private String getApplicationManifestFolderName(Service service) {
+    return isAzureAppServiceDeploymentType(service) ? MANIFEST_FOLDER_APP_SERVICE : MANIFEST_FOLDER;
+  }
+
+  private ApplicationManifest getApplicationManifestByService(Service service) {
+    AppManifestKind appManifestKind =
+        isAzureAppServiceDeploymentType(service) ? AZURE_APP_SERVICE_MANIFEST : K8S_MANIFEST;
+    return applicationManifestService.getByServiceId(service.getAppId(), service.getUuid(), appManifestKind);
+  }
+
+  private boolean isAzureAppServiceDeploymentType(Service service) {
+    return service != null && DeploymentType.AZURE_WEBAPP == service.getDeploymentType();
   }
 
   private FolderNode generateManifestFileFolderNode(
@@ -1238,8 +1314,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode generateManifestFileFoldeNodeForServiceView(String accountId, Service service) {
-    ApplicationManifest applicationManifest =
-        applicationManifestService.getManifestByServiceId(service.getAppId(), service.getUuid());
+    ApplicationManifest applicationManifest = getApplicationManifestByService(service);
     DirectoryPath manifestFilePath = new DirectoryPath(MANIFEST_FILE_FOLDER);
     return generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
   }
@@ -1492,6 +1567,22 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           envFolder.addChild(ocParamsFolder);
         }
         // ------------------- END OC PARAMS FILES SECTION -----------------------
+
+        // ------------------- AZURE APP SETTINGS FILES SECTION -----------------------
+        FolderNode azureAppSettingsOverrideFolder =
+            generateEnvAzureAppSettingsOverridesFolder(accountId, environment, envPath);
+        if (azureAppSettingsOverrideFolder != null) {
+          envFolder.addChild(azureAppSettingsOverrideFolder);
+        }
+        // ------------------- END AZURE APP SETTINGS FILES SECTION -----------------------
+
+        // ------------------- AZURE CONN STRINGS FILES SECTION -----------------------
+        FolderNode azureConnStringsOverrideFolder =
+            generateEnvAzureConnStringsOverridesFolder(accountId, environment, envPath);
+        if (azureConnStringsOverrideFolder != null) {
+          envFolder.addChild(azureConnStringsOverrideFolder);
+        }
+        // ------------------- END AZURE APP SETTINGS FILES SECTION -----------------------
       }
     }
 
@@ -1578,6 +1669,115 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return helmOverridesFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode generateEnvAzureAppSettingsOverridesFolder(String accountId, Environment env, DirectoryPath envPath) {
+    List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
+        env.getAppId(), env.getUuid(), AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    DirectoryPath appSettingsOverridesPath = envPath.clone().add(AZURE_APP_SETTINGS_OVERRIDES_FOLDER);
+    FolderNode appSettingsOverridesFolder = new FolderNode(accountId, AZURE_APP_SETTINGS_OVERRIDES_FOLDER,
+        ApplicationManifest.class, appSettingsOverridesPath, env.getAppId(), yamlGitSyncService);
+
+    // add env overrides
+    ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(
+        env.getAppId(), env.getUuid(), AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+    addIndexAndManifestFilesToFolderNode(
+        accountId, env, appSettingsOverridesPath, appSettingsOverridesFolder, applicationManifest);
+
+    // add service specific env overrides
+    FolderNode serviceSpecificOverridesFolder = generateEnvServiceSpecificOverridesFolder(
+        accountId, env, appSettingsOverridesPath, AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+    if (serviceSpecificOverridesFolder != null) {
+      appSettingsOverridesFolder.addChild(serviceSpecificOverridesFolder);
+    }
+
+    return appSettingsOverridesFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode generateEnvAzureConnStringsOverridesFolder(String accountId, Environment env, DirectoryPath envPath) {
+    List<ApplicationManifest> applicationManifests = applicationManifestService.getAllByEnvIdAndKind(
+        env.getAppId(), env.getUuid(), AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    DirectoryPath connStringsOverridesPath = envPath.clone().add(AZURE_CONN_STRINGS_OVERRIDES_FOLDER);
+    FolderNode connStringsOverridesFolder = new FolderNode(accountId, AZURE_CONN_STRINGS_OVERRIDES_FOLDER,
+        ApplicationManifest.class, connStringsOverridesPath, env.getAppId(), yamlGitSyncService);
+
+    // add env overrides
+    ApplicationManifest applicationManifest = applicationManifestService.getByEnvId(
+        env.getAppId(), env.getUuid(), AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+    addIndexAndManifestFilesToFolderNode(
+        accountId, env, connStringsOverridesPath, connStringsOverridesFolder, applicationManifest);
+
+    // add service specific env overrides
+    FolderNode serviceSpecificOverridesFolder = generateEnvServiceSpecificOverridesFolder(
+        accountId, env, connStringsOverridesPath, AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+    if (serviceSpecificOverridesFolder != null) {
+      connStringsOverridesFolder.addChild(serviceSpecificOverridesFolder);
+    }
+
+    return connStringsOverridesFolder;
+  }
+
+  private void addIndexAndManifestFilesToFolderNode(String accountId, Environment env, DirectoryPath directoryPath,
+      FolderNode folderNode, ApplicationManifest applicationManifest) {
+    if (applicationManifest != null) {
+      folderNode.addChild(new EnvLevelYamlNode(accountId, applicationManifest.getUuid(), env.getAppId(), env.getUuid(),
+          INDEX_YAML, ApplicationManifest.class, directoryPath.clone().add(INDEX_YAML), yamlGitSyncService,
+          Type.APPLICATION_MANIFEST));
+
+      if (StoreType.Local == applicationManifest.getStoreType()) {
+        List<ManifestFile> manifestFiles =
+            applicationManifestService.getManifestFilesByAppManifestId(env.getAppId(), applicationManifest.getUuid());
+
+        if (isNotEmpty(manifestFiles)) {
+          for (ManifestFile manifestFile : manifestFiles) {
+            folderNode.addChild(new EnvLevelYamlNode(accountId, manifestFile.getUuid(), env.getAppId(), env.getUuid(),
+                manifestFile.getFileName(), ManifestFile.class, directoryPath.clone().add(manifestFile.getFileName()),
+                yamlGitSyncService, Type.APPLICATION_MANIFEST_FILE));
+          }
+        }
+      }
+    }
+  }
+
+  private FolderNode generateEnvServiceSpecificOverridesFolder(
+      String accountId, Environment env, DirectoryPath valuesPath, AppManifestKind overrideManifestKind) {
+    List<ApplicationManifest> applicationManifests =
+        applicationManifestService.getAllByEnvIdAndKind(env.getAppId(), env.getUuid(), overrideManifestKind);
+
+    if (isEmpty(applicationManifests)) {
+      return null;
+    }
+
+    DirectoryPath serviceOverridesPath = valuesPath.clone().add(SERVICES_FOLDER);
+    FolderNode overridesServicesFolder = new FolderNode(accountId, SERVICES_FOLDER, ApplicationManifest.class,
+        serviceOverridesPath, env.getAppId(), yamlGitSyncService);
+
+    for (ApplicationManifest appManifest : applicationManifests) {
+      Service service = isNotBlank(appManifest.getServiceId())
+          ? serviceResourceService.get(env.getAppId(), appManifest.getServiceId(), false)
+          : null;
+      if (isNotBlank(appManifest.getEnvId()) && service != null) {
+        DirectoryPath serviceFolderPath = serviceOverridesPath.clone().add(service.getName());
+        FolderNode serviceFolder = new FolderNode(accountId, service.getName(), ApplicationManifest.class,
+            serviceFolderPath, env.getAppId(), yamlGitSyncService);
+        overridesServicesFolder.addChild(serviceFolder);
+        addIndexAndManifestFilesToFolderNode(accountId, env, serviceFolderPath, serviceFolder, appManifest);
+      }
+    }
+
+    return overridesServicesFolder;
   }
 
   private FolderNode getEnvOverrideFolderNode(
@@ -1940,6 +2140,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
       }
     }
+  }
+
+  private String getDeploymentFreezeConfigName(GovernanceFreezeConfig governanceFreezeConfig) {
+    return governanceFreezeConfig.getName() + YAML_EXTENSION;
   }
 
   private String getSettingAttributeYamlName(SettingAttribute settingAttribute) {
@@ -2317,6 +2521,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case OC_PARAMS:
         folderName = OC_PARAMS_FOLDER;
         break;
+      case AZURE_APP_SETTINGS_OVERRIDE:
+        folderName = AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
+        break;
+      case AZURE_CONN_STRINGS_OVERRIDE:
+        folderName = AZURE_CONN_STRINGS_OVERRIDES_FOLDER;
+        break;
 
       default:
         folderName = VALUES_FOLDER;
@@ -2650,6 +2860,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathForTags();
     } else if (entity instanceof Template) {
       return getRootPathByTemplate((Template) entity);
+    } else if (entity instanceof GovernanceConfig) {
+      return getRootPathForGovernanceConfig();
     }
 
     throw new InvalidRequestException(
@@ -2668,6 +2880,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private String getRootPathForTags() {
     return getRootPath() + PATH_DELIMITER;
+  }
+
+  private String getRootPathForGovernanceConfig() {
+    return getRootPath() + PATH_DELIMITER + GOVERNANCE_FOLDER + PATH_DELIMITER;
   }
 
   class DirectoryComparator implements Comparator<DirectoryNode> {

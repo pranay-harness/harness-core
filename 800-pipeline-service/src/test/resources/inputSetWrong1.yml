@@ -44,7 +44,7 @@ inputSet:
               environment:
                 identifier: "stagingInfra"
                 tags:
-                  team: "${input}"
+                  team: "<+input>"
               infrastructureDefinition:
                 spec:
                   namespace: default

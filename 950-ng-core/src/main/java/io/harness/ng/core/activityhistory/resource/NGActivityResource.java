@@ -1,16 +1,17 @@
 package io.harness.ng.core.activityhistory.resource;
 
+import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.activityhistory.NGActivityStatus;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckSummaryDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivityDTO;
-import io.harness.ng.core.activityhistory.dto.NGActivityListDTO;
 import io.harness.ng.core.activityhistory.dto.NGActivitySummaryDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
-import io.harness.ng.core.activityhistory.service.EntityActivitySummaryService;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
+import io.harness.ng.core.activityhistory.service.NGActivitySummaryService;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -33,12 +34,13 @@ import org.springframework.data.domain.Page;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@NextGenManagerAuth
 public class NGActivityResource {
   public static final String TIME_GROUP_TYPE = "timeGroupType";
   public static final String INCLUDE_CONNECTIVITY_SUMMARY = "includeConnectivitySummary";
   public static final String TIMEZONE = "timezone";
   NGActivityService activityHistoryService;
-  EntityActivitySummaryService entityActivitySummaryService;
+  NGActivitySummaryService ngActivitySummaryService;
 
   @GET
   @ApiOperation(value = "Get Activities where this resource was used", nickname = "listActivities")
@@ -51,9 +53,12 @@ public class NGActivityResource {
       @NotEmpty @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
       @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime,
-      @QueryParam(NGCommonEntityConstants.STATUS) NGActivityStatus status) {
-    return ResponseDTO.newResponse(activityHistoryService.list(page, size, accountIdentifier, orgIdentifier,
-        projectIdentifier, referredEntityIdentifier, startTime, endTime, status));
+      @QueryParam(NGCommonEntityConstants.STATUS) NGActivityStatus status,
+      @NotNull @QueryParam(NGCommonEntityConstants.REFERRED_ENTITY_TYPE) EntityType referredEntityType,
+      @QueryParam(NGCommonEntityConstants.REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
+    return ResponseDTO.newResponse(
+        activityHistoryService.list(page, size, accountIdentifier, orgIdentifier, projectIdentifier,
+            referredEntityIdentifier, startTime, endTime, status, referredEntityType, referredByEntityType));
   }
 
   @GET
@@ -86,8 +91,11 @@ public class NGActivityResource {
       @NotEmpty @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) String referredEntityIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START) long startTime,
       @NotNull @QueryParam(NGResourceFilterConstants.END) long endTime,
-      @NotNull @QueryParam(TIME_GROUP_TYPE) TimeGroupType timeGroupType) {
-    return ResponseDTO.newResponse(entityActivitySummaryService.listActivitySummary(accountIdentifier, orgIdentifier,
-        projectIdentifier, referredEntityIdentifier, timeGroupType, startTime, endTime));
+      @NotNull @QueryParam(TIME_GROUP_TYPE) TimeGroupType timeGroupType,
+      @NotNull @QueryParam(NGCommonEntityConstants.REFERRED_ENTITY_TYPE) EntityType referredEntityType,
+      @QueryParam(NGCommonEntityConstants.REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType) {
+    return ResponseDTO.newResponse(
+        ngActivitySummaryService.listActivitySummary(accountIdentifier, orgIdentifier, projectIdentifier,
+            referredEntityIdentifier, timeGroupType, startTime, endTime, referredEntityType, referredByEntityType));
   }
 }

@@ -1,6 +1,7 @@
 package io.harness.governance;
 
-import software.wings.beans.Environment.EnvironmentType;
+import io.harness.beans.EnvironmentType;
+
 import software.wings.resources.stats.model.WeeklyRange;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,8 +28,17 @@ public class WeeklyFreezeConfig extends GovernanceFreezeConfig {
   public WeeklyFreezeConfig(@JsonProperty("freezeForAllApps") boolean freezeForAllApps,
       @JsonProperty("appIds") List<String> appIds,
       @JsonProperty("environmentTypes") List<EnvironmentType> environmentTypes,
-      @JsonProperty("weeklyRange") WeeklyRange weeklyRange) {
-    super(freezeForAllApps, appIds, environmentTypes);
+      @JsonProperty("weeklyRange") WeeklyRange weeklyRange, @JsonProperty("name") String name,
+      @JsonProperty("description") String description, @JsonProperty("applicable") boolean applicable,
+      @JsonProperty("appSelections") List<ApplicationFilter> appSelections,
+      @JsonProperty("userGroups") List<String> userGroups, @JsonProperty("uuid") String uuid) {
+    super(freezeForAllApps, appIds, environmentTypes, name, description, applicable, appSelections, userGroups, uuid);
     this.weeklyRange = weeklyRange;
+  }
+
+  @Override
+  public long fetchEndTime() {
+    // TODO: return correct end time
+    return 0;
   }
 }

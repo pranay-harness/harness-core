@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package io.harness.timeout.contracts;
+
+option java_multiple_files = true;
+
+message TimeoutObtainment {
+  Dimension dimension = 1;
+  bytes parameters = 2;
+}
+
+message Dimension {
+  string type = 1;
+}

@@ -1,11 +1,11 @@
 package io.harness.ccm.budget.entities;
 
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
-import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
+import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.Arrays;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -22,9 +22,17 @@ public class ClusterBudgetScope implements BudgetScope {
   String[] clusterIds;
 
   @Override
-  public QLBillingDataFilter getBudgetScopeFilter() {
-    return QLBillingDataFilter.builder()
-        .cluster(QLIdFilter.builder().operator(QLIdOperator.IN).values(clusterIds).build())
-        .build();
+  public String getBudgetScopeType() {
+    return CLUSTER;
+  }
+
+  @Override
+  public List<String> getEntityIds() {
+    return Arrays.asList(clusterIds);
+  }
+
+  @Override
+  public List<String> getEntityNames() {
+    return null;
   }
 }

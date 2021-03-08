@@ -5,6 +5,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.CEView.CEViewKeys;
 import io.harness.ccm.views.entities.ViewState;
+import io.harness.ccm.views.entities.ViewType;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -39,7 +40,19 @@ public class CEViewDao {
                                                     .set(CEViewKeys.viewState, ViewState.COMPLETED)
                                                     .set(CEViewKeys.dataSources, ceView.getDataSources());
     hPersistence.update(query, updateOperations);
-    log.info(query.toString());
+    return (CEView) query.asList().get(0);
+  }
+
+  public CEView updateTotalCost(String viewId, String accountId, double totalCost) {
+    Query query = hPersistence.createQuery(CEView.class)
+                      .field(CEViewKeys.accountId)
+                      .equal(accountId)
+                      .field(CEViewKeys.uuid)
+                      .equal(viewId);
+
+    UpdateOperations<CEView> updateOperations =
+        hPersistence.createUpdateOperations(CEView.class).set(CEViewKeys.totalCost, totalCost);
+    hPersistence.update(query, updateOperations);
     return (CEView) query.asList().get(0);
   }
 
@@ -65,5 +78,19 @@ public class CEViewDao {
 
   public List<CEView> findByAccountId(String accountId) {
     return hPersistence.createQuery(CEView.class).filter(CEViewKeys.accountId, accountId).asList();
+  }
+
+  public List<CEView> findByAccountIdAndState(String accountId, ViewState viewState) {
+    return hPersistence.createQuery(CEView.class)
+        .filter(CEViewKeys.accountId, accountId)
+        .filter(CEViewKeys.viewState, viewState)
+        .asList();
+  }
+
+  public List<CEView> findByAccountIdAndType(String accountId, ViewType viewType) {
+    return hPersistence.createQuery(CEView.class)
+        .filter(CEViewKeys.accountId, accountId)
+        .filter(CEViewKeys.viewType, viewType)
+        .asList();
   }
 }

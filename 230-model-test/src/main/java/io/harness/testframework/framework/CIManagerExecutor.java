@@ -79,7 +79,8 @@ public class CIManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get(directory.getPath(), MODULE, TARGET, CAPSULE_JAR);
+    final Path jar = Paths.get("/home/jenkins"
+        + "/.bazel-dirs/bin/310-ci-manager/module_deploy.jar");
     final Path config = Paths.get(directory.getPath(), MODULE, CONFIG_YML);
     String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 

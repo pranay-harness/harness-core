@@ -7,10 +7,11 @@ import static io.harness.azure.model.AzureConstants.DOCKER_REGISTRY_SERVER_USERN
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
 import io.harness.azure.model.AzureAppServiceConnectionString;
-import io.harness.azure.model.AzureAppServiceDockerSetting;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.delegate.beans.azure.registry.AzureRegistry;
@@ -27,7 +28,6 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidArgumentsException;
 
-import software.wings.delegatetasks.azure.appservice.AzureAppServiceConfigurationDTOMapper;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 
@@ -36,6 +36,8 @@ import com.microsoft.azure.management.containerregistry.AccessKeyType;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -43,6 +45,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,
@@ -54,14 +57,17 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         buildAzureWebClientContext(azureWebAppSlotSetupParameters, azureConfig);
     AzureAppServiceDockerDeploymentContext dockerDeploymentContext = toAzureAppServiceDockerDeploymentContext(
         azureWebAppSlotSetupParameters, azureWebClientContext, azureConfig, logStreamingTaskClient);
-
     AzureAppServicePreDeploymentData azureAppServicePreDeploymentData =
-        getAzureAppServicePreDeploymentData(dockerDeploymentContext);
-
+        azureAppServiceDeploymentService
+            .getDefaultPreDeploymentDataBuilder(
+                azureWebAppSlotSetupParameters.getAppName(), azureWebAppSlotSetupParameters.getSlotName())
+            .build();
     try {
-      azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext);
+      azureAppServicePreDeploymentData = getAzureAppServicePreDeploymentData(dockerDeploymentContext);
+      azureAppServiceDeploymentService.deployDockerImage(dockerDeploymentContext, azureAppServicePreDeploymentData);
       List<AzureAppDeploymentData> azureAppDeploymentData = azureAppServiceDeploymentService.fetchDeploymentData(
           azureWebClientContext, azureWebAppSlotSetupParameters.getSlotName());
+      markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
 
       return AzureWebAppSlotSetupResponse.builder()
           .azureAppDeploymentData(azureAppDeploymentData)
@@ -70,7 +76,6 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
-      updatePreDeploymentData(azureAppServicePreDeploymentData);
       return AzureWebAppSlotSetupResponse.builder()
           .errorMsg(message)
           .preDeploymentData(azureAppServicePreDeploymentData)
@@ -84,17 +89,19 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
     ConnectorConfigDTO connectorConfigDTO = azureWebAppSlotSetupParameters.getConnectorConfigDTO();
     AzureRegistryType azureRegistryType = azureWebAppSlotSetupParameters.getAzureRegistryType();
 
-    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd =
-        AzureAppServiceConfigurationDTOMapper.getAzureAppServiceAppSettings(
-            azureWebAppSlotSetupParameters.getAppSettings());
-    Map<String, AzureAppServiceConnectionString> connSettingsToAdd =
-        AzureAppServiceConfigurationDTOMapper.getAzureAppServiceConnStrings(
-            azureWebAppSlotSetupParameters.getConnSettings());
+    List<AzureAppServiceApplicationSetting> applicationSettings =
+        azureWebAppSlotSetupParameters.getApplicationSettings();
+    Map<String, AzureAppServiceApplicationSetting> appSettingsToAdd = applicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
 
-    Map<String, AzureAppServiceDockerSetting> dockerSettings =
+    List<AzureAppServiceConnectionString> connectionStrings = azureWebAppSlotSetupParameters.getConnectionStrings();
+    Map<String, AzureAppServiceConnectionString> connSettingsToAdd = connectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
+
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings =
         getAzureAppServiceDockerSettings(connectorConfigDTO, azureRegistryType, azureConfig);
 
-    String imagePathAndTag = AzureResourceUtility.getDockerImagePathAndTagPath(
+    String imagePathAndTag = AzureResourceUtility.getDockerImageFullNameAndTag(
         azureWebAppSlotSetupParameters.getImageName(), azureWebAppSlotSetupParameters.getImageTag());
 
     return AzureAppServiceDockerDeploymentContext.builder()
@@ -104,15 +111,17 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
         .dockerSettings(dockerSettings)
         .imagePathAndTag(imagePathAndTag)
         .slotName(azureWebAppSlotSetupParameters.getSlotName())
+        .targetSlotName(azureWebAppSlotSetupParameters.getTargetSlotName())
         .azureWebClientContext(azureWebClientContext)
         .steadyStateTimeoutInMin(azureWebAppSlotSetupParameters.getTimeoutIntervalInMin())
         .build();
   }
 
-  private Map<String, AzureAppServiceDockerSetting> getAzureAppServiceDockerSettings(
+  private Map<String, AzureAppServiceApplicationSetting> getAzureAppServiceDockerSettings(
       ConnectorConfigDTO connectorConfigDTO, AzureRegistryType azureRegistryType, AzureConfig azureConfig) {
     AzureRegistry azureRegistry = AzureRegistryFactory.getAzureRegistry(azureRegistryType);
-    Map<String, AzureAppServiceDockerSetting> dockerSettings = azureRegistry.getContainerSettings(connectorConfigDTO);
+    Map<String, AzureAppServiceApplicationSetting> dockerSettings =
+        azureRegistry.getContainerSettings(connectorConfigDTO);
 
     if (AzureRegistryType.ACR == azureRegistryType) {
       RegistryCredentials registryCredentials = azureAppServiceDeploymentService.getContainerRegistryCredentials(
@@ -124,19 +133,19 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
   }
 
   private void updateACRDockerSettingByCredentials(
-      Map<String, AzureAppServiceDockerSetting> dockerSettings, RegistryCredentials registryCredentials) {
+      Map<String, AzureAppServiceApplicationSetting> dockerSettings, RegistryCredentials registryCredentials) {
     String username = getACRUsername(registryCredentials);
     String accessKey = getACRAccessKey(registryCredentials);
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_USERNAME_PROPERTY_NAME)
             .sticky(false)
             .value(username)
             .build());
 
     dockerSettings.put(DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME,
-        AzureAppServiceDockerSetting.builder()
+        AzureAppServiceApplicationSetting.builder()
             .name(DOCKER_REGISTRY_SERVER_SECRET_PROPERTY_NAME)
             .sticky(false)
             .value(accessKey)
@@ -171,16 +180,12 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
   private AzureAppServicePreDeploymentData getAzureAppServicePreDeploymentData(
       AzureAppServiceDockerDeploymentContext dockerDeploymentContext) {
     String slotName = dockerDeploymentContext.getSlotName();
+    String targetSlotName = dockerDeploymentContext.getTargetSlotName();
     AzureWebClientContext azureWebClientContext = dockerDeploymentContext.getAzureWebClientContext();
     Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings = dockerDeploymentContext.getAppSettingsToAdd();
     Map<String, AzureAppServiceConnectionString> userAddedConnSettings = dockerDeploymentContext.getConnSettingsToAdd();
-
-    return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(
-        azureWebClientContext, slotName, userAddedAppSettings, userAddedConnSettings);
-  }
-
-  private void updatePreDeploymentData(AzureAppServicePreDeploymentData azureAppServicePreDeploymentData) {
-    azureAppServicePreDeploymentData.setFailedTaskType(
-        AzureAppServiceTaskParameters.AzureAppServiceTaskType.SLOT_SETUP);
+    return azureAppServiceDeploymentService.getAzureAppServicePreDeploymentData(azureWebClientContext, slotName,
+        targetSlotName, userAddedAppSettings, userAddedConnSettings,
+        dockerDeploymentContext.getLogStreamingTaskClient());
   }
 }

@@ -8,10 +8,12 @@ public interface CVConstants {
   /**
    * This should be set in findOption for the queries that are potentially working with large data.
    * This should be used for anything that is using
-   * io.harness.cvng.core.utils.CVParallelExecutor#executeParallel(java.util.List) Ex: new
+   * io.harness.cvng.utils.CVNGParallelExecutor#executeParallel(java.util.List) Ex: new
    * FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
    */
   int MONGO_QUERY_TIMEOUT_SEC = 5;
   double DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD = 0.5;
-  String DEFAULT_HEALTH_JOB_NAME = "_DEFAULT_HEALTH_JOB";
+  String DEFAULT_HEALTH_JOB_NAME = "Built-in health verification";
+  String DEFAULT_HEALTH_JOB_ID = DEFAULT_HEALTH_JOB_NAME.replace(" ", "_");
+  int STATE_MACHINE_IGNORE_LIMIT = 100;
 }

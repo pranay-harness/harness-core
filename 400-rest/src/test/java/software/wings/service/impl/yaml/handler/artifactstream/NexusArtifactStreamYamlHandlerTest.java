@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.artifactstream;
 
 import static io.harness.git.model.ChangeType.MODIFY;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -14,6 +15,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,8 +35,10 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.RepositoryFormat;
+import software.wings.utils.RepositoryType;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -196,5 +200,38 @@ public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(artifactStream.getJobname()).isEqualTo("${repo}");
     assertThat(artifactStream.getGroupId()).isEqualTo("${groupId}");
     assertThat(artifactStream.getArtifactPaths().get(0)).isEqualTo("${artifactId}");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void toYaml() {
+    NexusArtifactStream acrArtifactStream = NexusArtifactStream.builder()
+                                                .settingId(SETTING_ID)
+                                                .repositoryFormat(RepositoryType.maven.name())
+                                                .jobname("harness")
+                                                .groupId("com.harness.tgz")
+                                                .artifactPaths(Lists.newArrayList("path", "another/path"))
+                                                .classifier("classifier")
+                                                .extension("rpm")
+                                                .build();
+    when(settingsService.get(eq(SETTING_ID)))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
+    NexusArtifactStream.Yaml yaml = yamlHandler.toYaml(acrArtifactStream, APP_ID);
+    assertThat(yaml.getRepositoryFormat()).isEqualTo(RepositoryType.maven.name());
+    assertThat(yaml.getRepositoryName()).isEqualTo("harness");
+    assertThat(yaml.getGroupId()).isEqualTo("com.harness.tgz");
+    assertThat(yaml.getArtifactPaths()).isNotEmpty();
+    assertThat(yaml.getArtifactPaths()).hasSize(2);
+    assertThat(yaml.getArtifactPaths()).isEqualTo(Lists.newArrayList("path", "another/path"));
+    assertThat(yaml.getClassifier()).isEqualTo("classifier");
+    assertThat(yaml.getExtension()).isEqualTo("rpm");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetYamlClass() {
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(NexusArtifactStream.Yaml.class);
   }
 }

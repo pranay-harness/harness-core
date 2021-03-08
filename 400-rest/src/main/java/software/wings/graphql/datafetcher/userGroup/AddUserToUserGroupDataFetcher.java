@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AddUserToUserGroupDataFetcher
     extends BaseMutatorDataFetcher<QLAddUserToUserGroupInput, QLAddUserToUserGroupPayload> {
   @Inject UserGroupService userGroupService;
