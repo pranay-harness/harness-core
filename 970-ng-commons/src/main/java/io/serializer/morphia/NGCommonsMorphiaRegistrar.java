@@ -2,14 +2,10 @@ package io.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.NGOrgAccess;
 import io.harness.ng.core.NGProjectAccess;
-import io.harness.ng.core.OrgScope;
-import io.harness.ng.core.ProjectScope;
-import io.harness.ng.core.ResourceScope;
 
 import java.util.Set;
 
@@ -20,11 +16,6 @@ public class NGCommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(NGAccess.class);
     set.add(NGProjectAccess.class);
     set.add(NGOrgAccess.class);
-
-    set.add(ResourceScope.class);
-    set.add(AccountScope.class);
-    set.add(OrgScope.class);
-    set.add(ProjectScope.class);
   }
 
   @Override
