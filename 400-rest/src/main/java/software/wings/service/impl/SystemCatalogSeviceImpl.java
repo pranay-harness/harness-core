@@ -7,7 +7,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.beans.PageRequest;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.logging.Misc;
 import io.harness.stream.BoundedInputStream;
 

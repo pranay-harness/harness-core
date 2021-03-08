@@ -1,10 +1,6 @@
 package io.harness.delegate.beans;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.ChecksumType;
-import io.harness.beans.FileMetadata;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.File;
@@ -12,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
 public class DelegateFile extends FileMetadata {
   private String fileId;
   private FileBucket bucket;
@@ -97,20 +92,10 @@ public class DelegateFile extends FileMetadata {
     this.appId = appId;
   }
 
-  /**
-   * Getter for property 'length'.
-   *
-   * @return Value for property 'length'.
-   */
   public long getLength() {
     return length;
   }
 
-  /**
-   * Setter for property 'length'.
-   *
-   * @param length Value to set for property 'length'.
-   */
   public void setLength(long length) {
     this.length = length;
   }
