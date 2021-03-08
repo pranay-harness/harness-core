@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -90,6 +91,7 @@ public class BillingDataQueryBuilder {
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
   public static final String BILLING_DATA_PRE_AGGREGATED_TABLE = "billing_data_aggregated t0";
+  public static final String BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE = "billing_data_hourly_aggregated t0";
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final String EMPTY = "";
   protected static final String INVALID_FILTER_MSG = "Invalid combination of group by and filters";
@@ -152,7 +154,13 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
@@ -203,7 +211,13 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
@@ -249,7 +263,12 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     if (isGroupByClusterPresent(groupBy)) {
