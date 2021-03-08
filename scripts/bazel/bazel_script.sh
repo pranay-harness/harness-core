@@ -4,13 +4,11 @@ set -ex
 
 local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
-if [ "${PLATFORM}" == "jenkins" ]
-then
+if [ "${PLATFORM}" == "jenkins" ]; then
   GCP="--google_credentials=${GCP_KEY}"
   bazelrc=--bazelrc=bazelrc.remote
   local_repo=/root/.m2/repository
-  if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]
-  then
+  if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
     bash scripts/bazel/testDistribute.sh
   fi
 fi
@@ -22,28 +20,24 @@ if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
 fi
 
-if [ "${STEP}" == "dockerization" ]
-then
+if [ "${STEP}" == "dockerization" ]; then
   GCP=""
 fi
 
-if [ "${RUN_BAZEL_TESTS}" == "true" ]
-then
+if [ "${RUN_BAZEL_TESTS}" == "true" ]; then
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...
-  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/...  -//200-functional-test/... -//190-deployment-functional-tests/... || true
+  bazel ${bazelrc} test --keep_going ${GCP} ${BAZEL_ARGUMENTS} -- //... -//product/... -//commons/... -//200-functional-test/... -//190-deployment-functional-tests/... || true
   exit 0
 fi
 
-if [ "${RUN_CHECKS}" == "true" ]
-then
-  TARGETS=`bazel query 'attr(tags, "checkstyle", //...:*)'`
+if [ "${RUN_CHECKS}" == "true" ]; then
+  TARGETS=$(bazel query 'attr(tags, "checkstyle", //...:*)')
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
 
-if [ "${RUN_PMDS}" == "true" ]
-then
-  TARGETS=`bazel query 'attr(tags, "pmd", //...:*)'`
+if [ "${RUN_PMDS}" == "true" ]; then
+  TARGETS=$(bazel query 'attr(tags, "pmd", //...:*)')
   bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} -k ${TARGETS}
   exit 0
 fi
@@ -128,6 +122,7 @@ BAZEL_MODULES="\
   //950-events-api/src/main/proto:all \
   //950-events-api:module \
   //950-events-framework:module \
+  //950-git-sync-sdk:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-log-client:module \
@@ -148,6 +143,8 @@ BAZEL_MODULES="\
   //960-persistence:supporter-test \
   //960-recaster:module \
   //960-yaml-sdk:module \
+  //965-git-sync-commons:module \
+  //965-git-sync-commons/src/main/proto:all \
   //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
@@ -170,22 +167,21 @@ build_bazel_module() {
   module=$1
   BAZEL_MODULE="//${module}:module"
 
-  if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
+  if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/libmodule.jar"
-  then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/libmodule.jar"; then
     mvn -B install:install-file \
-     -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
-     -DgroupId=software.wings \
-     -DartifactId=${module} \
-     -Dversion=0.0.1-SNAPSHOT \
-     -Dpackaging=jar \
-     -DgeneratePom=true \
-     -DpomFile=${module}/pom.xml \
-     -DlocalRepositoryPath=${local_repo}
+      -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
+      -DgroupId=software.wings \
+      -DartifactId=${module} \
+      -Dversion=0.0.1-SNAPSHOT \
+      -Dpackaging=jar \
+      -DgeneratePom=true \
+      -DpomFile=${module}/pom.xml \
+      -DlocalRepositoryPath=${local_repo}
   fi
 }
 
@@ -193,23 +189,22 @@ build_bazel_tests() {
   module=$1
   BAZEL_MODULE="//${module}:supporter-test"
 
-  if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
+  if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-tests.jar" "${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar"
-  then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-tests.jar" "${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar"; then
     mvn -B install:install-file \
-     -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
-     -DgroupId=software.wings \
-     -DartifactId=${module} \
-     -Dversion=0.0.1-SNAPSHOT \
-     -Dclassifier=tests \
-     -Dpackaging=jar \
-     -DgeneratePom=true \
-     -DpomFile=${module}/pom.xml \
-     -DlocalRepositoryPath=${local_repo}
+      -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
+      -DgroupId=software.wings \
+      -DartifactId=${module} \
+      -Dversion=0.0.1-SNAPSHOT \
+      -Dclassifier=tests \
+      -Dpackaging=jar \
+      -DgeneratePom=true \
+      -DpomFile=${module}/pom.xml \
+      -DlocalRepositoryPath=${local_repo}
   fi
 }
 
@@ -220,41 +215,39 @@ build_bazel_application() {
 
   bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS}
 
-  if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
+  if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
   fi
 
-  if ! grep -q "$BAZEL_DEPLOY_MODULE" <<< "$BAZEL_MODULES"; then
+  if ! grep -q "$BAZEL_DEPLOY_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_DEPLOY_MODULE is not in the list of modules"
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"
-  then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"; then
     mvn -B install:install-file \
-     -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
-     -DgroupId=software.wings \
-     -DartifactId=${module} \
-     -Dversion=0.0.1-SNAPSHOT \
-     -Dpackaging=jar \
-     -DgeneratePom=true \
-     -DpomFile=${module}/pom.xml \
-     -DlocalRepositoryPath=${local_repo}
+      -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+      -DgroupId=software.wings \
+      -DartifactId=${module} \
+      -Dversion=0.0.1-SNAPSHOT \
+      -Dpackaging=jar \
+      -DgeneratePom=true \
+      -DpomFile=${module}/pom.xml \
+      -DlocalRepositoryPath=${local_repo}
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-capsule.jar" "${BAZEL_DIRS}/bin/${module}/module_deploy.jar"
-  then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-capsule.jar" "${BAZEL_DIRS}/bin/${module}/module_deploy.jar"; then
     mvn -B install:install-file \
-     -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
-     -DgroupId=software.wings \
-     -DartifactId=${module} \
-     -Dversion=0.0.1-SNAPSHOT \
-     -Dclassifier=capsule \
-     -Dpackaging=jar \
-     -DgeneratePom=true \
-     -DpomFile=${module}/pom.xml \
-     -DlocalRepositoryPath=${local_repo}
+      -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
+      -DgroupId=software.wings \
+      -DartifactId=${module} \
+      -Dversion=0.0.1-SNAPSHOT \
+      -Dclassifier=capsule \
+      -Dpackaging=jar \
+      -DgeneratePom=true \
+      -DpomFile=${module}/pom.xml \
+      -DlocalRepositoryPath=${local_repo}
   fi
 }
 
@@ -268,22 +261,21 @@ build_bazel_application_module() {
     bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${GCP} ${BAZEL_ARGUMENTS}
   fi
 
-  if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
+  if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
   fi
 
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"
-  then
+  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"; then
     mvn -B install:install-file \
-     -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
-     -DgroupId=software.wings \
-     -DartifactId=${module} \
-     -Dversion=0.0.1-SNAPSHOT \
-     -Dpackaging=jar \
-     -DgeneratePom=true \
-     -DpomFile=${module}/pom.xml \
-     -DlocalRepositoryPath=${local_repo}
+      -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
+      -DgroupId=software.wings \
+      -DartifactId=${module} \
+      -Dversion=0.0.1-SNAPSHOT \
+      -Dpackaging=jar \
+      -DgeneratePom=true \
+      -DpomFile=${module}/pom.xml \
+      -DlocalRepositoryPath=${local_repo}
   fi
 }
 
@@ -300,24 +292,23 @@ build_proto_module() {
 
   BAZEL_MODULE="//${modulePath}:all"
 
-  if ! grep -q "$BAZEL_MODULE" <<< "$BAZEL_MODULES"; then
+  if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
   fi
 
-  bazel_library=`echo ${module} | tr '-' '_'`
+  bazel_library=$(echo ${module} | tr '-' '_')
 
-  if ! cmp -s "${local_repo}/software/wings/${module}-proto/0.0.1-SNAPSHOT/${module}-proto-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar"
-  then
+  if ! cmp -s "${local_repo}/software/wings/${module}-proto/0.0.1-SNAPSHOT/${module}-proto-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar"; then
     mvn -B install:install-file \
-     -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
-     -DgroupId=software.wings \
-     -DartifactId=${module}-proto \
-     -Dversion=0.0.1-SNAPSHOT \
-     -Dpackaging=jar \
-     -DgeneratePom=true \
-     -DlocalRepositoryPath=${local_repo} \
-     -f scripts/bazel/proto_pom.xml
+      -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
+      -DgroupId=software.wings \
+      -DartifactId=${module}-proto \
+      -Dversion=0.0.1-SNAPSHOT \
+      -Dpackaging=jar \
+      -DgeneratePom=true \
+      -DlocalRepositoryPath=${local_repo} \
+      -f scripts/bazel/proto_pom.xml
   fi
 }
 
@@ -396,6 +387,7 @@ build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
+build_bazel_module 950-git-sync-sdk
 build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
@@ -413,6 +405,7 @@ build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
 build_bazel_module 960-recaster
 build_bazel_module 960-yaml-sdk
+build_bazel_module 965-git-sync-commons
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons

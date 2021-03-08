@@ -1,5 +1,6 @@
 package io.harness;
 
+import io.harness.gitsync.sdk.GitSyncGrpcClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -40,6 +41,7 @@ public class GitSyncTestModule extends AbstractModule {
       }
     });
     install(new SpringPersistenceModule());
+    install(GitSyncGrpcClientModule.getInstance());
     bind(HPersistence.class).to(MongoPersistence.class);
     install(new AbstractModule() {
       @Override

@@ -4,10 +4,16 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
+import io.harness.govern.ProviderModule;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.maintenance.MaintenanceController;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -15,6 +21,8 @@ import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +32,7 @@ import org.reflections.Reflections;
 
 @Slf4j
 public class GitSyncTestApplication extends Application<GitSyncTestConfiguration> {
-  private static final String APPLICATION_NAME = "Git Sync Application";
+  private static final String APPLICATION_NAME = "Git Sync Sample Application";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -52,7 +60,17 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
   public void run(GitSyncTestConfiguration config, Environment environment) {
     log.info("Starting Git Sync Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new GitSyncTestModule(config));
+    List<Module> modules = new ArrayList<>();
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named("GitSyncGrpcClientConfig")
+      public GrpcClientConfig grpcClientConfig() {
+        return config.getGrpcClientConfig();
+      }
+    });
+    modules.add(new GitSyncTestModule(config));
+    Injector injector = Guice.createInjector(modules);
 
     registerJerseyProviders(environment, injector);
     registerResources(environment, injector);
