@@ -7,13 +7,12 @@ import log_manager
 # python3 workflow_driver.py "https://qa.harness.io/gateway" "cHg3eGRfQkZSQ2ktcGZXUFlYVmp2dzo6ZEs3bkRPRVNGcG1XcWhuaEVRR2R3NjN6ZnVqYlFMZ1ZZT2pmNGEyb3dBMVdJQlBuNTVXclVVdEZjYWdCQkdJd0xwMFdPa3RxUml4VTRwRWw=" "px7xd_BFRCi-pfWPYXVjvw" "NEW" "/Users/mohitgarg" "sample" "" "" "" "12/02/2020 00:00:00" "12/05/2020 00:00:00"
 
 TOTAL_ARGS = 13
-NULL_VALUE = "null"
 
 if __name__ == "__main__":
     args = sys.argv[1:]
 
     try:
-        print(args)
+        # print(args)
         if len(args) < TOTAL_ARGS:
             raise Exception("Incomplete args, please try again")
 
@@ -39,22 +38,16 @@ if __name__ == "__main__":
         else:
             file_operation = script.FILE_OPERATION_NEW
 
-        if entity_type == "WORKFLOW" or entity_type == "PIPELINE" or entity_type == NULL_VALUE:
-            if entity_type == NULL_VALUE:
-                entity_type = script.ENTITY_ALL_EXECUTION
-            else:
-                if entity_type == "WORKFLOW":
-                    entity_type = script.ENTITY_WORKFLOW_EXECUTION
-                else:
-                    entity_type = script.ENTITY_PIPELINE_EXECUTION
-        else:
+        if entity_type not in script.POSSIBLE_SEARCH_ENTITY_TYPES:
             raise Exception("Invalid entity type (Workflow/Pipeline/All) : {}".format(entity_type))
 
-        if entity_type != script.ENTITY_ALL_EXECUTION:
-            if entity_id == NULL_VALUE:
-                raise Exception("Empty entity id (Workflow id/Pipeline id)")
+        if entity_id == script.NULL_VALUE:
+            entity_id = ""
+        # if entity_type != script.ENTITY_ALL_EXECUTION:
+        #     if entity_id == NULL_VALUE:
+        #         raise Exception("Empty entity id (Workflow id/Pipeline id)")
 
-        start_time_obj = helper.get_date_obj_from_str(start_time_date, helper.DATE_FORMAT_MM_DD_YYYY_HH_MM_SS)
+        start_time_obj = helper.get_date_obj_from_str(start_time_date, helper.DATE_FORMAT_DD_MM_YYYY_HH_MM_SS)
         if start_time_obj is not None:
             # convert date time object into local timezone
             start_time_obj = helper.convert_date_to_local_timezone(start_time_obj)
@@ -67,7 +60,7 @@ if __name__ == "__main__":
             end_time_epoch = helper.get_current_time_in_epoch_in_seconds()
             end_time_obj = helper.get_date_obj_from_epoch(end_time_epoch)
         else:
-            end_time_obj = helper.get_date_obj_from_str(end_time_date, helper.DATE_FORMAT_MM_DD_YYYY_HH_MM_SS)
+            end_time_obj = helper.get_date_obj_from_str(end_time_date, helper.DATE_FORMAT_DD_MM_YYYY_HH_MM_SS)
         if end_time_obj is not None:
             end_time_obj = helper.convert_date_to_local_timezone(end_time_obj)
             end_time_epoch = helper.convert_date_to_timestamp(end_time_obj)
@@ -76,7 +69,7 @@ if __name__ == "__main__":
 
         tags_names_list = []
         tags_values_list = []
-        if tags_entity_type == NULL_VALUE:
+        if tags_entity_type == script.NULL_VALUE:
             tags_entity_type = ""
         else:
             tags_list = helper.get_list_from_string(tags, ",")

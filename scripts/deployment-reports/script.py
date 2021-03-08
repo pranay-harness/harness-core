@@ -51,6 +51,12 @@ CAUSE_EXECUTED_BY_API_KEY = "ExecutedByAPIKey"
 CAUSE_EXECUTED_BY_TRIGGER = "ExecutedByTrigger"
 CAUSE_EXECUTED_ALONG_PIPELINE = "ExecutedAlongPipeline"
 
+SEARCH_ENTITY_TYPE_ALL_EXECUTION = "ALL"
+SEARCH_ENTITY_TYPE_PIPELINE_EXECUTION = "PIPELINE"
+SEARCH_ENTITY_TYPE_WORKFLOW_EXECUTION = "WORKFLOW"
+SEARCH_ENTITY_TYPE_PIPELINE_WITH_STAGES_EXECUTION = "PIPELINE_WITH_STAGES"
+POSSIBLE_SEARCH_ENTITY_TYPES = [SEARCH_ENTITY_TYPE_ALL_EXECUTION, SEARCH_ENTITY_TYPE_PIPELINE_EXECUTION, SEARCH_ENTITY_TYPE_WORKFLOW_EXECUTION, SEARCH_ENTITY_TYPE_PIPELINE_WITH_STAGES_EXECUTION]
+
 ENTITY_PIPELINE_EXECUTION = "PipelineExecution"
 ENTITY_WORKFLOW_EXECUTION = "WorkflowExecution"
 ENTITY_ALL_EXECUTION = "AllExecution"
@@ -88,6 +94,7 @@ REQUEST_HEADERS = {
 REQUEST_RETRY_COUNT = 3
 
 MISSING_VALUE_PLACE_HOLDER = "<< DELETED >>"
+NULL_VALUE = "null"
 TEMP_CSV_FILE_NAME = "temp.csv"
 DEBUG_LOG_FILE_NAME = "debug.txt"
 ERROR_LOG_FILE_NAME = "error.txt"
@@ -107,17 +114,22 @@ def construct_graphql_filter(entity_type, entity_id, start_time_epoch, end_time_
                              tags_names_list, tags_values_list):
     graphql_filter = GRAPHQL_FILTER
 
-    if entity_type == ENTITY_PIPELINE_EXECUTION:
-        graphql_filter = graphql_filter.replace(PIPELINE_FILTER_PLACE_HOLDER, GRAPHQL_PIPELINE_FILTER)
-        graphql_filter = graphql_filter.replace(PIPELINE_ID_FILTER_PLACE_HOLDER, entity_id)
+    if entity_id != "":
+        if entity_type == SEARCH_ENTITY_TYPE_PIPELINE_EXECUTION or entity_type == SEARCH_ENTITY_TYPE_PIPELINE_WITH_STAGES_EXECUTION or entity_type == SEARCH_ENTITY_TYPE_ALL_EXECUTION:
+            graphql_filter = graphql_filter.replace(PIPELINE_FILTER_PLACE_HOLDER, GRAPHQL_PIPELINE_FILTER)
+            graphql_filter = graphql_filter.replace(PIPELINE_ID_FILTER_PLACE_HOLDER, entity_id)
+        else:
+            graphql_filter = graphql_filter.replace(PIPELINE_FILTER_PLACE_HOLDER, "")
+
+        if entity_type == SEARCH_ENTITY_TYPE_WORKFLOW_EXECUTION or entity_type == SEARCH_ENTITY_TYPE_ALL_EXECUTION:
+            graphql_filter = graphql_filter.replace(WORKFLOW_FILTER_PLACE_HOLDER, GRAPHQL_WORKFLOW_FILTER)
+            graphql_filter = graphql_filter.replace(WORKFLOW_ID_FILTER_PLACE_HOLDER, entity_id)
+        else:
+            graphql_filter = graphql_filter.replace(WORKFLOW_FILTER_PLACE_HOLDER, "")
     else:
         graphql_filter = graphql_filter.replace(PIPELINE_FILTER_PLACE_HOLDER, "")
-
-    if entity_type == ENTITY_WORKFLOW_EXECUTION:
-        graphql_filter = graphql_filter.replace(WORKFLOW_FILTER_PLACE_HOLDER, GRAPHQL_WORKFLOW_FILTER)
-        graphql_filter = graphql_filter.replace(WORKFLOW_ID_FILTER_PLACE_HOLDER, entity_id)
-    else:
         graphql_filter = graphql_filter.replace(WORKFLOW_FILTER_PLACE_HOLDER, "")
+
 
     if start_time_epoch is None:
         graphql_filter = graphql_filter.replace(AFTER_DATE_FILTER_PLACE_HOLDER, "")
@@ -443,7 +455,7 @@ def prepare_csv_row(entry_details):
     return csv_row
 
 
-def create_csv_data(executions):
+def create_csv_data(executions, create_csv_data_params):
     data_rows = []
 
     for execution in executions:
@@ -464,13 +476,23 @@ def create_csv_data(executions):
         trigger_type = get_field(execution, CSV_COL_TRIGGER_TYPE)
         trigger_name = get_trigger_details(execution, trigger_type)
 
+        # for pending executions, end date should be marked empty
+        if status in config.EXECUTION_PENDING_STATUS:
+            end_time = ""
+            end_date = ""
+
         # fetch env, services and artifacts details from workflow/s
         workflows = []
-
         if entity_type == ENTITY_PIPELINE_EXECUTION:
-            workflows = execution['memberExecutions']['nodes']
+            if create_csv_data_params[ARGS_SEARCH_ENTITY_TYPE_KEY] != SEARCH_ENTITY_TYPE_WORKFLOW_EXECUTION:
+                workflows = execution['memberExecutions']['nodes']
+            else:
+                continue
         else:
-            workflows.append(execution)
+            if create_csv_data_params[ARGS_SEARCH_ENTITY_TYPE_KEY] not in [SEARCH_ENTITY_TYPE_PIPELINE_EXECUTION, SEARCH_ENTITY_TYPE_PIPELINE_WITH_STAGES_EXECUTION]:
+                workflows.append(execution)
+            else:
+                continue
 
         env, services, artifacts, artifacts_sources, sub_execution_details = get_workflow_details(workflows)
 
@@ -496,12 +518,12 @@ def create_csv_data(executions):
 
         data_rows.append(prepare_csv_row(main_execution_details))
 
-        if entity_type == ENTITY_PIPELINE_EXECUTION:
+        # if execution is a pipeline and search input entity type is PIPELINE_WITH_STAGES, then also add stages
+        if entity_type == ENTITY_PIPELINE_EXECUTION and create_csv_data_params[ARGS_SEARCH_ENTITY_TYPE_KEY] == SEARCH_ENTITY_TYPE_PIPELINE_WITH_STAGES_EXECUTION:
             # append workflow executions as separate entries in the csv
             for sub_execution in sub_execution_details:
                 # add pipeline name to the sub execution
                 sub_execution[CSV_COL_PIPELINE_NAME] = pipeline_name
-
                 data_rows.append(prepare_csv_row(sub_execution))
 
     return data_rows, False
@@ -545,8 +567,8 @@ def validate_input(input_args):
         raise exception.InputException("Output file doesn't exist : " + absolute_file_path)
 
     entity_type = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
-    if entity_type != ENTITY_ALL_EXECUTION and entity_type != ENTITY_PIPELINE_EXECUTION and entity_type != ENTITY_WORKFLOW_EXECUTION:
-        raise exception.InputException("Invalid entity type (Workflow/Pipeline/All) : " + entity_type)
+    if entity_type not in POSSIBLE_SEARCH_ENTITY_TYPES:
+        raise exception.InputException("Invalid entity type (Workflow/Pipeline/PipelineWithStages/All) : " + entity_type)
 
     tag_entity_type = input_args.get(ARGS_TAGS_ENTITY_TYPE_KEY)
     if tag_entity_type != "":
@@ -565,6 +587,7 @@ def compile_data(input_args):
     error_log_file_path = helper.get_current_working_directory_path_str()
 
     try:
+        create_csv_data_params = {}
         log_manager.log_input_params(input_args)
         # do input validation
         validate_input(input_args)
@@ -583,6 +606,8 @@ def compile_data(input_args):
         tags_entity_type = input_args.get(ARGS_TAGS_ENTITY_TYPE_KEY, "")
         tags_names_list = input_args.get(ARGS_TAGS_NAMES_LIST_KEY)
         tags_values_list = input_args.get(ARGS_TAGS_VALUES_LIST_KEY)
+
+        create_csv_data_params[ARGS_SEARCH_ENTITY_TYPE_KEY] = input_args.get(ARGS_SEARCH_ENTITY_TYPE_KEY)
 
         output_file_path = helper.get_file_path(output_file_dir, output_filename)
         if file_operation == FILE_OPERATION_NEW:
@@ -614,7 +639,7 @@ def compile_data(input_args):
             executions = get_pipeline_executions(deployments_result)
 
             # parse and create data rows out of the executions
-            data_rows, is_threshold_breached = create_csv_data(executions)
+            data_rows, is_threshold_breached = create_csv_data(executions, create_csv_data_params)
 
             # append all data rows to the temp csv
             file_manager.append_to_csv_file(temp_file_path, data_rows)
