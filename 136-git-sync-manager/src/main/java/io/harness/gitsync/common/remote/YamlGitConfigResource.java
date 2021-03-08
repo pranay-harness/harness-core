@@ -1,6 +1,5 @@
 package io.harness.gitsync.common.remote;
 
-import static io.harness.gitsync.common.remote.YamlGitConfigMapper.applyUpdateToYamlGitConfigDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toSetupGitSyncDTO;
 import static io.harness.gitsync.common.remote.YamlGitConfigMapper.toYamlGitConfigDTO;
 
@@ -49,32 +48,27 @@ public class YamlGitConfigResource {
   public GitSyncConfigDTO update(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("identifier") @NotEmpty String identifier, @NotNull @Valid GitSyncConfigDTO updateGitSyncConfigDTO) {
-    YamlGitConfigDTO yamlGitConfigDTO =
-        yamlGitConfigService.getByIdentifier(projectId, organizationId, accountId, identifier);
-    if (yamlGitConfigDTO != null) {
-      YamlGitConfigDTO yamlGitConfigDTOUpdated = yamlGitConfigService.update(
-          applyUpdateToYamlGitConfigDTO(yamlGitConfigDTO, toYamlGitConfigDTO(updateGitSyncConfigDTO)));
-      return toSetupGitSyncDTO(yamlGitConfigDTOUpdated);
-    }
-    return null;
+    YamlGitConfigDTO yamlGitConfigDTOUpdated = yamlGitConfigService.update(toYamlGitConfigDTO(updateGitSyncConfigDTO));
+    return toSetupGitSyncDTO(yamlGitConfigDTOUpdated);
   }
 
   @PUT
   @Path("{identifier}/folder/{folderIdentifier}/default")
   @ApiOperation(value = "Update Git Sync default by id", nickname = "putGitSyncDefault")
-  public List<GitSyncConfigDTO> updateDefault(@QueryParam("projectId") String projectId,
+  public GitSyncConfigDTO updateDefault(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("identifier") @NotEmpty String identifier,
       @PathParam("folderIdentifier") @NotEmpty String folderIdentifier) {
-    yamlGitConfigService.updateDefault(projectId, organizationId, accountId, identifier, folderIdentifier);
-    return list(projectId, organizationId, accountId);
+    YamlGitConfigDTO yamlGitConfigDTO =
+        yamlGitConfigService.updateDefault(projectId, organizationId, accountId, identifier, folderIdentifier);
+    return toSetupGitSyncDTO(yamlGitConfigDTO);
   }
 
   @GET
   @ApiOperation(value = "List Git Sync", nickname = "listGitSync")
   public List<GitSyncConfigDTO> list(@QueryParam("projectId") String projectId,
       @QueryParam("organizationId") String organizationId, @QueryParam("accountId") @NotEmpty String accountId) {
-    List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.orderedGet(projectId, organizationId, accountId);
+    List<YamlGitConfigDTO> yamlGitConfigDTOs = yamlGitConfigService.list(projectId, organizationId, accountId);
     return yamlGitConfigDTOs.stream().map(YamlGitConfigMapper::toSetupGitSyncDTO).collect(Collectors.toList());
   }
 }

@@ -155,7 +155,8 @@ public enum FeatureName {
   WHITELIST_PUBLIC_API,
   WHITELIST_GRAPHQL,
   ENABLE_LOGIN_AUDITS,
-  CUSTOM_MANIFEST;
+  CUSTOM_MANIFEST,
+  GIT_SYNC_NG;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
