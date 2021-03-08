@@ -1,6 +1,7 @@
 package software.wings.service.impl.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -146,6 +147,14 @@ public class ArtifactCollectionUtils {
   @Inject private PerpetualTaskService perpetualTaskService;
 
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
+
+  public long getDelegateQueueTimeout(String accountId) {
+    long timeout = DELEGATE_QUEUE_TIMEOUT;
+    if (featureFlagService.isEnabled(ARTIFACT_STREAM_DELEGATE_TIMEOUT, accountId)) {
+      timeout = Duration.ofSeconds(15).toMillis();
+    }
+    return System.currentTimeMillis() + timeout;
+  }
 
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
@@ -294,10 +303,11 @@ public class ArtifactCollectionUtils {
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
+    String accountId = artifactStreamAttributes.getAccountId();
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
                                                   .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
                                                   .waitId(waitId)
-                                                  .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+                                                  .expiry(getDelegateQueueTimeout(accountId));
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
@@ -320,8 +330,6 @@ public class ArtifactCollectionUtils {
       // To remove if any empty tags in case saved for custom artifact stream
       tags = tags.stream().filter(EmptyPredicate::isNotEmpty).distinct().collect(toList());
     }
-
-    String accountId = artifactStreamAttributes.getAccountId();
 
     // Set timeout. Labels are not fetched for CUSTOM artifact streams.
     long timeout = isEmpty(artifactStreamAttributes.getCustomScriptTimeout())
@@ -759,7 +767,7 @@ public class ArtifactCollectionUtils {
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .tags(tags)
-        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
+        .expiry(getDelegateQueueTimeout(accountId))
         .build();
   }
 
