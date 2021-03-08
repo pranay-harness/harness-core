@@ -8,9 +8,12 @@ load("//:macros.bzl", "sources")
 sources()
 
 shared_dependencies = [
+    "//:lombok",
+    "//970-ng-commons:module",
+    "//980-commons:module",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:io_swagger_swagger_annotations",
-    "//:lombok",
+    "@maven//:org_hibernate_hibernate_validator",
 ]
 
 java_library(

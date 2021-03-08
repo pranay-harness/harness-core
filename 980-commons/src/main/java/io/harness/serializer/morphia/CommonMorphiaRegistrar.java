@@ -8,6 +8,10 @@ import io.harness.limits.impl.model.StaticLimit;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.security.SimpleEncryption;
+import io.harness.security.dto.ApiKeyPrincipal;
+import io.harness.security.dto.Principal;
+import io.harness.security.dto.ServicePrincipal;
+import io.harness.security.dto.UserPrincipal;
 import io.harness.tasks.Task;
 
 import java.io.Serializable;
@@ -20,6 +24,11 @@ public class CommonMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Serializable.class);
     set.add(Encryptable.class);
     set.add(DecryptableEntity.class);
+
+    set.add(Principal.class);
+    set.add(UserPrincipal.class);
+    set.add(ApiKeyPrincipal.class);
+    set.add(ServicePrincipal.class);
   }
 
   @Override
