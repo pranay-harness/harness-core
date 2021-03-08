@@ -24,11 +24,11 @@ type WorkloadRecommendation {
   containerRecommendations: [ContainerRecommendation]
   estimatedSavings: Number
   numDays: Int
-  unitPrice: UnitPrice @deprecated(reason: "Will be removed in few days.")
+  lastDayCost: LastDayCost @deprecated(reason: "Will be removed in few days.")
   preset: K8sWorkloadRecommendationPreset @deprecated(reason: "Will be removed in few days.")
 }
 
-type UnitPrice {
+type LastDayCost {
   cpu: Number
   memory: Number
   info: String

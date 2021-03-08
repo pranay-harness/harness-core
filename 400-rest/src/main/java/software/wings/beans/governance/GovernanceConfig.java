@@ -5,8 +5,6 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -51,7 +49,6 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "governanceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @Slf4j
-@TargetModule(Module._980_COMMONS)
 public class GovernanceConfig
     implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess, ApplicationAccess, PersistentCronIterable {
   @Id private String uuid;

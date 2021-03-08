@@ -12,7 +12,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
 public class DelegateFile extends FileMetadata {
   private String fileId;
   private FileBucket bucket;

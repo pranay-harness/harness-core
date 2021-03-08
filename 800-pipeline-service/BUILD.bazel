@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_binary(
@@ -83,6 +82,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//800-pipeline-service/src/test/resources:resource"],
     visibility = ["//visibility:public"],

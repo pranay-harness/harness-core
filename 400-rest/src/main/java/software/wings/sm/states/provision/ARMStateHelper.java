@@ -15,6 +15,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.GitFile;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -168,6 +169,10 @@ public class ARMStateHelper {
 
   String extractJsonFromGitResponse(final ARMStateExecutionData stateExecutionData, final String key) {
     List<GitFile> files = getGitFiles(stateExecutionData, key);
+    if (files.size() != 1) {
+      throw new InvalidArgumentsException(format("Found %s JSON files, required one file, key: %s", files.size(), key));
+    }
+
     return files.get(0).getFileContent();
   }
 

@@ -1,6 +1,5 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(

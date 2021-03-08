@@ -3,7 +3,6 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
 
 shared_dependencies = [
     "//955-delegate-beans:module",
@@ -35,6 +34,23 @@ java_library(
     #        ":1-io_harness_logstreaming",
     #    ],
 )
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)
+
+run_tests()
 
 checkstyle()
 

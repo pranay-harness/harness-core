@@ -56,6 +56,7 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.timeout.TimeoutUtils;
@@ -112,6 +113,14 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
         throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
       }
+
+      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
+      // type is involved
+      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
+        throw new InvalidRequestException(
+            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+      }
+
       String timeout = DEFAULT_TIMEOUT;
       if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
         timeout = stepElement.getTimeout().getValue().getTimeoutString();
@@ -154,6 +163,19 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }
 
+  public boolean containsOnlyAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAnyOther = false;
+    for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
+      if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
+          && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
+                 NGFailureTypeConstants.ANY_OTHER_ERRORS)
+              == true) {
+        containsOnlyAnyOther = true;
+      }
+    }
+    return containsOnlyAnyOther;
+  }
+
   protected String getName(StepElementConfig stepElement) {
     String nodeName;
     if (EmptyPredicate.isEmpty(stepElement.getName())) {
@@ -181,9 +203,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     if (onSuccessAdviserObtainment != null) {
       adviserObtainmentList.add(onSuccessAdviserObtainment);
     }
-    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
-      return adviserObtainmentList;
-    }
+
     List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(currentField, STAGE);
     List<FailureStrategyConfig> stepGroupFailureStrategies = getFieldFailureStrategies(currentField, STEP_GROUP);
     List<FailureStrategyConfig> stepFailureStrategies = getFailureStrategies(currentField.getNode());
@@ -209,6 +229,12 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (rollbackInfoBuilder != null) {
         getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
       }
+      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+        if (actionType == NGFailureActionType.STAGE_ROLLBACK || actionType == NGFailureActionType.STEP_GROUP_ROLLBACK) {
+          throw new InvalidRequestException("Step inside rollback section cannot have Rollback as failure strategy.");
+        }
+      }
+
       switch (actionType) {
         case IGNORE:
           adviserObtainmentList.add(
@@ -221,6 +247,13 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           break;
         case RETRY:
           RetryFailureActionConfig retryAction = (RetryFailureActionConfig) action;
+          ParameterField<Integer> retryCount = retryAction.getSpecConfig().getRetryCount();
+          if (retryCount.isExpression()) {
+            throw new InvalidRequestException("RetryCount fixed value is not given.");
+          }
+          if (retryAction.getSpecConfig().getRetryIntervals().isExpression()) {
+            throw new InvalidRequestException("RetryIntervals cannot be expression/runtime input. Please give values.");
+          }
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
@@ -229,9 +262,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                           .nextNodeId(nextNodeUuid)
                           .repairActionCodeAfterRetry(toRepairAction(
                               retryAction.getSpecConfig().getOnRetryFailure().getAction(), rollbackInfoBuilder))
-                          .retryCount(retryAction.getSpecConfig().getRetryCount())
+                          .retryCount(retryCount.getValue())
                           .waitIntervalList(retryAction.getSpecConfig()
                                                 .getRetryIntervals()
+                                                .getValue()
                                                 .stream()
                                                 .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(s, 0))
                                                 .collect(Collectors.toList()))

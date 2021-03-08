@@ -140,6 +140,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  password: ""
 
 pmsSdkGrpcServerConfig:
   connectors:
@@ -178,5 +179,11 @@ ResoureGroupConfig:
     baseUrl: http://localhost:3457/api/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+
+
 accessControlClient:
-  clientType: NO_OP
+  enableAccessControl: false

@@ -1,7 +1,5 @@
 package io.harness.governance;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -28,7 +26,6 @@ import org.codehaus.jackson.annotate.JsonCreator;
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
 @ParametersAreNonnullByDefault
-@TargetModule(Module._980_COMMONS)
 public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   // if freezeForAllApps=true, ignore appIds
   @Setter private TimeRange timeRange;

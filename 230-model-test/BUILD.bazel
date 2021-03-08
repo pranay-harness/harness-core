@@ -1,6 +1,5 @@
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
 
 java_library(
     name = "module",
@@ -14,7 +13,6 @@ java_library(
     deps = [
         "//:lombok",
         "//400-rest:supporter-test",
-        "//960-persistence:supporter-test",
         "//970-rbac-core:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
