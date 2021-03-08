@@ -757,6 +757,10 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
+fi
+
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
 fi

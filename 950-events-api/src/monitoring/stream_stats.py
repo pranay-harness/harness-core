@@ -29,7 +29,7 @@ def get_behind_count(redis_key, start_id, end_id):
 
   return count
 
-for key in client.scan_iter("streams:*"):
+for key in client.scan_iter("*streams:*"):
   redis_key = key.decode("utf-8")
   usecase_name = redis_key.replace("streams:", "")
   if redis_key.startswith("streams:deadletter_queue:"):
