@@ -50,6 +50,7 @@ test_dependencies = shared_dependencies + [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(
         ["src/test/**/*.java"],
     ),

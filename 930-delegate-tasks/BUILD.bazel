@@ -54,6 +54,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//930-delegate-tasks/src/test/resources:resource"],
     visibility = ["//visibility:public"],

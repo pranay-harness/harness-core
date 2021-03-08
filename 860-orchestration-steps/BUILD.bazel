@@ -40,6 +40,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//860-orchestration-steps/src/test/resources:resource"],
     visibility = ["//visibility:public"],
