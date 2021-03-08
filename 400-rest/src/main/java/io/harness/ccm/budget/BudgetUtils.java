@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.TimeZone;
@@ -482,5 +483,16 @@ public class BudgetUtils {
       default:
         return null;
     }
+  }
+
+  public AlertThreshold[] getSortedAlertThresholds(AlertThresholdBase costType, AlertThreshold[] alertThresholds) {
+    List<AlertThreshold> alerts = new ArrayList<>();
+    for (AlertThreshold alertThreshold : alertThresholds) {
+      if (alertThreshold.getBasedOn() == costType) {
+        alerts.add(alertThreshold);
+      }
+    }
+    alerts.sort(Comparator.comparing(AlertThreshold::getPercentage).reversed());
+    return alerts.toArray(new AlertThreshold[0]);
   }
 }
