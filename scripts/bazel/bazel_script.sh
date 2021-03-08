@@ -161,6 +161,11 @@ BAZEL_MODULES="\
 
 bazel ${bazelrc} build $BAZEL_MODULES ${GCP} ${BAZEL_ARGUMENTS} --remote_download_outputs=all
 
+if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
+  bazel ${bazelrc} build ${GCP} ${BAZEL_ARGUMENTS} 360-cg-manager:module_deploy.jar
+  bazel ${bazelrc} run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app &
+fi
+
 build_bazel_module() {
   module=$1
   BAZEL_MODULE="//${module}:module"
