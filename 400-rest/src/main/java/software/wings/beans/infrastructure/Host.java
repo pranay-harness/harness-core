@@ -4,15 +4,17 @@ import static software.wings.beans.infrastructure.Host.HostKeys;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 
 import software.wings.beans.Base;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import lombok.experimental.FieldNameConstants;
@@ -26,10 +28,16 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = false)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "HostKeys")
-@CdIndex(
-    name = "app_inframappingid", fields = { @Field(value = HostKeys.appId)
-                                            , @Field(value = HostKeys.infraMappingId) })
 public class Host extends Base {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("app_inframappingid")
+                 .field(HostKeys.appId)
+                 .field(HostKeys.infraMappingId)
+                 .build())
+        .build();
+  }
   @NotEmpty private String envId;
   @FdIndex private String serviceTemplateId;
   private String infraMappingId;
