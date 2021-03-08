@@ -3,11 +3,8 @@ package software.wings.helpers.ext.ecr;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.security.encryption.EncryptedDataDetail;
-
-import software.wings.beans.AwsConfig;
-import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.helpers.ext.jenkins.BuildDetails;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.aws.beans.AwsInternalConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -26,8 +23,8 @@ public interface EcrService {
    * @param maxNumberOfBuilds the max number of builds
    * @return the builds
    */
-  List<BuildDetails> getBuilds(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      String imageName, int maxNumberOfBuilds);
+  List<BuildDetailsInternal> getBuilds(
+      AwsInternalConfig awsConfig, String imageUrl, String region, String imageName, int maxNumberOfBuilds);
 
   /**
    * Gets last successful build.
@@ -36,8 +33,7 @@ public interface EcrService {
    * @param imageName the image name
    * @return the last successful build
    */
-  BuildDetails getLastSuccessfulBuild(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String imageName);
+  BuildDetailsInternal getLastSuccessfulBuild(AwsInternalConfig awsConfig, String imageName);
 
   /**
    * Validates the Image
@@ -47,8 +43,7 @@ public interface EcrService {
    * @param imageName the image name
    * @return the boolean
    */
-  boolean verifyRepository(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName);
+  boolean verifyRepository(AwsInternalConfig awsConfig, String region, String imageName);
 
   /**
    * Lists aws regions
@@ -56,7 +51,7 @@ public interface EcrService {
    * @param awsConfig aws config
    * @return
    */
-  List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
+  List<String> listRegions(AwsInternalConfig awsConfig);
 
   /**
    * List ecr registry list.
@@ -64,8 +59,7 @@ public interface EcrService {
    * @param awsConfig the ecr config
    * @return the list
    */
-  List<String> listEcrRegistry(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+  List<String> listEcrRegistry(AwsInternalConfig awsConfig, String region);
 
-  List<Map<String, String>> getLabels(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, List<String> tags);
+  List<Map<String, String>> getLabels(AwsInternalConfig awsConfig, String imageName, String region, List<String> tags);
 }
