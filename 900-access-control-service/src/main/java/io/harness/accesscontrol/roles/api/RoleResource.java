@@ -2,7 +2,7 @@ package io.harness.accesscontrol.roles.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
-import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toDTO;
+import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toResponseDTO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roles.Role;
@@ -63,7 +63,7 @@ public class RoleResource {
       @QueryParam("includeHarnessManaged") boolean includeHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     PageResponse<Role> pageResponse = roleService.list(pageRequest, scopeIdentifier, includeHarnessManaged);
-    return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toDTO));
+    return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toResponseDTO));
   }
 
   @GET
@@ -72,7 +72,7 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> get(@NotEmpty @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toDTO(
+    return ResponseDTO.newResponse(toResponseDTO(
         roleService.get(identifier, scopeIdentifier, isHarnessManaged).<InvalidRequestException>orElseThrow(() -> {
           throw new InvalidRequestException("Role not found with the given scope and identifier");
         })));
@@ -84,7 +84,7 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
+    return ResponseDTO.newResponse(toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
   }
 
   @POST
@@ -94,7 +94,7 @@ public class RoleResource {
     if (isEmpty(roleDTO.getAllowedScopeLevels())) {
       roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));
     }
-    return ResponseDTO.newResponse(toDTO(roleService.create(fromDTO(scope.toString(), roleDTO))));
+    return ResponseDTO.newResponse(toResponseDTO(roleService.create(fromDTO(scope.toString(), roleDTO))));
   }
 
   @DELETE
@@ -103,6 +103,6 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> delete(
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toDTO(roleService.delete(identifier, scopeIdentifier, false)));
+    return ResponseDTO.newResponse(toResponseDTO(roleService.delete(identifier, scopeIdentifier, false)));
   }
 }

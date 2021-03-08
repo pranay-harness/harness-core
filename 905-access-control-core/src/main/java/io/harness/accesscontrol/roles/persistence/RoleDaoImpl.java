@@ -15,6 +15,7 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.client.result.UpdateResult;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
@@ -61,6 +62,15 @@ public class RoleDaoImpl implements RoleDao {
     }
     Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
     return PageUtils.getNGPageResponse(rolePages.map(RoleDBOMapper::fromDBO));
+  }
+
+  @Override
+  public List<Role> list(List<String> roleIdentifiers, String scopeIdentifier) {
+    Pageable pageable = PageUtils.getPageRequest(PageRequest.builder().pageSize(roleIdentifiers.size()).build());
+    Criteria criteria = Criteria.where(RoleDBOKeys.scopeIdentifier).is(scopeIdentifier);
+    criteria.and(RoleDBOKeys.identifier).in(roleIdentifiers);
+    Page<RoleDBO> rolePages = roleRepository.findAll(criteria, pageable);
+    return (rolePages.map(RoleDBOMapper::fromDBO)).getContent();
   }
 
   @Override

@@ -5,6 +5,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 
 import io.swagger.annotations.ApiModel;
 import java.util.Set;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,7 +16,7 @@ public class RoleAssignmentFilterDTO {
   Set<String> resourceGroupFilter;
   Set<String> roleFilter;
   Set<PrincipalType> principalTypeFilter;
-  Set<PrincipalDTO> principalFilter;
+  @Size(max = 100) Set<PrincipalDTO> principalFilter;
   Set<Boolean> harnessManagedFilter;
   Set<Boolean> disabledFilter;
 }
