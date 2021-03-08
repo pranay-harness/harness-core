@@ -873,6 +873,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+          bind(Producer.class)
+              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -886,6 +889,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
                   EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
+          bind(Producer.class)
+              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
+                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE));
         }
       }
     });

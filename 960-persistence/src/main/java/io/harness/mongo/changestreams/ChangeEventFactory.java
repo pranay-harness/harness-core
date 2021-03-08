@@ -1,13 +1,12 @@
-package software.wings.search.framework.changestreams;
+package io.harness.mongo.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.UnexpectedException;
+import io.harness.mongo.changestreams.ChangeEvent.ChangeEventBuilder;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
-
-import software.wings.dl.WingsPersistence;
-import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
 
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
@@ -21,8 +20,8 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 
 @OwnedBy(PL)
-class ChangeEventFactory {
-  @Inject private WingsPersistence wingsPersistence;
+public class ChangeEventFactory {
+  @Inject private HPersistence persistence;
 
   private static Document convertBsonDocumentToDocument(BsonDocument bsonDocument) {
     Codec<Document> codec = MongoClient.getDefaultCodecRegistry().get(Document.class);
@@ -54,7 +53,7 @@ class ChangeEventFactory {
 
   private <T extends PersistentEntity> ChangeEvent<T> buildInsertChangeEvent(
       ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument, Class<T> entityClass) {
-    T entityObject = wingsPersistence.convertToEntity(entityClass, fullDocument);
+    T entityObject = persistence.convertToEntity(entityClass, fullDocument);
     changeEventBuilder.fullDocument(entityObject);
     changeEventBuilder.changes(null);
     changeEventBuilder.changeType(ChangeType.INSERT);
@@ -63,7 +62,7 @@ class ChangeEventFactory {
 
   private <T extends PersistentEntity> ChangeEvent<T> buildUpdateChangeEvent(ChangeEventBuilder<T> changeEventBuilder,
       ChangeStreamDocument<DBObject> changeStreamDocument, Class<T> entityClass) {
-    T fullDocument = wingsPersistence.convertToEntity(entityClass, changeStreamDocument.getFullDocument());
+    T fullDocument = persistence.convertToEntity(entityClass, changeStreamDocument.getFullDocument());
     DBObject dbObject = getChangeDocumentfromChangeStream(changeStreamDocument);
     changeEventBuilder.fullDocument(fullDocument);
     changeEventBuilder.changes(dbObject);
@@ -74,7 +73,7 @@ class ChangeEventFactory {
       ChangeStreamDocument<DBObject> changeStreamDocument, Class<T> entityClass) {
     ChangeType changeType = getChangeTypefromChangeStream(changeStreamDocument);
 
-    ChangeEventBuilder<T> changeEventBuilder = ChangeEvent.builder();
+    ChangeEventBuilder<T> changeEventBuilder = ChangeEvent.<T>builder();
     changeEventBuilder.entityType(entityClass);
     changeEventBuilder.changeType(changeType);
     changeEventBuilder.token(getResumeTokenAsJson(changeStreamDocument));

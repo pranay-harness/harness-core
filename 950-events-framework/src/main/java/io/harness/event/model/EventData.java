@@ -1,5 +1,6 @@
 package io.harness.event.model;
 
+import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -11,7 +12,7 @@ import lombok.Data;
 @Data
 @Builder
 public class EventData {
-  @Default private Map<String, String> properties;
+  @Default private Map<String, String> properties = new HashMap<>();
   // TODO : Remove this value once prometheus is deprecated
   private double value;
 

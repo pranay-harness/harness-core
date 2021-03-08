@@ -1,4 +1,4 @@
-package software.wings.search.framework.changestreams;
+package io.harness.mongo.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

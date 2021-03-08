@@ -1,4 +1,4 @@
-package software.wings.search.framework.changestreams;
+package io.harness.mongo.changestreams;
 
 /**
  * Possible types of operations that can take place.

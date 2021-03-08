@@ -1,7 +1,7 @@
 xxxxxxxx
   applicationConnectors:
     - type: https
-      port: 7090
+      port: 8725
       keyStorePath: keystore.jks
       keyStorePassword: password
       trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
@@ -19,4 +19,8 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+
+gitSyncClientConfig:
+  target: localhost:13001
+  authority: localhost
 

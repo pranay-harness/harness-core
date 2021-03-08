@@ -1,4 +1,4 @@
-package software.wings.search.framework.changestreams;
+package io.harness.mongo.changestreams;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -13,6 +13,8 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -20,6 +22,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 /**
  * The change tracking task collection class which handles
@@ -32,18 +35,20 @@ import org.bson.Document;
 @OwnedBy(PL)
 @Value
 @Slf4j
-class ChangeTrackingTask implements Runnable {
+public class ChangeTrackingTask implements Runnable {
   private ChangeStreamSubscriber changeStreamSubscriber;
   private MongoCollection<DBObject> collection;
   private ClientSession clientSession;
   private CountDownLatch latch;
   private BsonDocument resumeToken;
+  private List<Bson> pipeline;
 
-  ChangeTrackingTask(ChangeStreamSubscriber changeStreamSubscriber, MongoCollection<DBObject> collection,
-      ClientSession clientSession, CountDownLatch latch, String tokenParam) {
+  public ChangeTrackingTask(ChangeStreamSubscriber changeStreamSubscriber, MongoCollection<DBObject> collection,
+      ClientSession clientSession, CountDownLatch latch, String tokenParam, List<Bson> pipeline) {
     this.changeStreamSubscriber = changeStreamSubscriber;
     this.collection = collection;
     this.clientSession = clientSession;
+    this.pipeline = pipeline;
     if (tokenParam != null) {
       this.resumeToken =
           Document.parse(tokenParam).toBsonDocument(BsonDocument.class, MongoClient.getDefaultCodecRegistry());
@@ -58,8 +63,13 @@ class ChangeTrackingTask implements Runnable {
   }
 
   private void openChangeStream(Consumer<ChangeStreamDocument<DBObject>> changeStreamDocumentConsumer) {
-    ChangeStreamIterable<DBObject> changeStreamIterable =
-        clientSession == null ? collection.watch() : collection.watch(clientSession);
+    ChangeStreamIterable<DBObject> changeStreamIterable;
+    if (Objects.isNull(clientSession)) {
+      changeStreamIterable = pipeline == null ? collection.watch() : collection.watch(pipeline);
+    } else {
+      changeStreamIterable =
+          pipeline == null ? collection.watch(clientSession) : collection.watch(clientSession, pipeline);
+    }
     changeStreamIterable =
         changeStreamIterable.fullDocument(FullDocument.UPDATE_LOOKUP).maxAwaitTime(1, TimeUnit.MINUTES);
     MongoCursor<ChangeStreamDocument<DBObject>> mongoCursor = null;

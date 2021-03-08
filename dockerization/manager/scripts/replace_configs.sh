@@ -768,3 +768,7 @@ fi
 if [[ "" != "$CVNG_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
 fi
+
+if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
+  yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
+fi

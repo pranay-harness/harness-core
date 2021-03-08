@@ -1,0 +1,11 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.useraccountmembership;
+
+option java_multiple_files = true;
+
+message UserAccountMembershipDTO {
+  string action = 1;
+  string userId = 2;
+  string userEmail = 3;
+  repeated string accounts = 4;
+}
