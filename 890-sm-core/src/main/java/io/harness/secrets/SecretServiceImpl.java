@@ -30,7 +30,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretScopeMetadata;
+import io.harness.beans.SecretState;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
 import io.harness.data.encoding.EncodingUtils;
@@ -61,6 +63,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,6 +74,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @ValidateOnExecution
 @Singleton
@@ -676,25 +680,66 @@ public class SecretServiceImpl implements SecretService {
   @Override
   public boolean hasAccessToReadSecrets(String accountId, Set<String> secretIds, String appId, String envId) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
-    try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
-      while (iterator.hasNext()) {
-        EncryptedData encryptedData = iterator.next();
-        SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(
-            accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
-        secretScopeMetadataSet.add(SecretScopeMetadata.builder()
-                                       .secretId(encryptedData.getUuid())
-                                       .secretScopes(encryptedData)
-                                       .inheritScopesFromSM(encryptedData.isInheritScopesFromSM())
-                                       .secretsManagerScopes(secretManagerConfig)
-                                       .build());
-      }
-    }
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
     return secretsRBACService.hasAccessToReadSecrets(accountId, secretScopeMetadataSet, appId, envId);
+  }
+
+  @Override
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
+    Set<String> foundInDatabase =
+        secretScopeMetadataSet.stream().map(SecretScopeMetadata::getSecretId).collect(Collectors.toSet());
+    // collect not available Secret Ids
+    Set<String> notFoundInDatabase = new HashSet<>(secretIds);
+    notFoundInDatabase.removeAll(foundInDatabase);
+    // collect readable secret Ids
+    Set<String> readableSecretIds = secretsRBACService
+                                        .filterSecretsByReadPermission(accountId,
+                                            new ArrayList<>(secretScopeMetadataSet), appIdFromRequest, envIdFromRequest)
+                                        .stream()
+                                        .map(SecretScopeMetadata::getSecretId)
+                                        .collect(Collectors.toSet());
+    // collect not readable Secret Ids
+    Set<String> notReadableSecretIds = new HashSet<>(secretIds);
+    notReadableSecretIds.removeAll(notFoundInDatabase);
+    notReadableSecretIds.removeAll(readableSecretIds);
+
+    return buildAndGetResult(notFoundInDatabase, notReadableSecretIds, readableSecretIds);
+  }
+
+  @NotNull
+  private List<SecretMetadata> buildAndGetResult(
+      Set<String> notFoundInDatabase, Set<String> notReadableSecretIds, Set<String> readableSecretIds) {
+    List<SecretMetadata> result = new ArrayList<>();
+    result.addAll(notFoundInDatabase.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.NOT_FOUND).build();
+                      })
+                      .collect(Collectors.toList()));
+    result.addAll(notReadableSecretIds.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.CANNOT_READ).build();
+                      })
+                      .collect(Collectors.toList()));
+    result.addAll(readableSecretIds.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.CAN_READ).build();
+                      })
+                      .collect(Collectors.toList()));
+    return result;
   }
 
   @Override
   public boolean hasAccessToEditSecrets(String accountId, Set<String> secretIds) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
+    buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
+    return secretsRBACService.hasAccessToEditSecrets(accountId, secretScopeMetadataSet);
+  }
+
+  private void buildSecretScopeMetadataSet(
+      String accountId, Set<String> secretIds, Set<SecretScopeMetadata> secretScopeMetadataSet) {
     try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
@@ -708,7 +753,6 @@ public class SecretServiceImpl implements SecretService {
                                        .build());
       }
     }
-    return secretsRBACService.hasAccessToEditSecrets(accountId, secretScopeMetadataSet);
   }
 
   @Override

@@ -9,6 +9,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
 import io.harness.secrets.setupusage.SecretSetupUsage;
@@ -273,5 +274,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
   @Override
   public void deleteByAccountId(String accountId) {
     // no-op
+  }
+
+  @Override
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
+    throw new UnsupportedOperationException();
   }
 }
