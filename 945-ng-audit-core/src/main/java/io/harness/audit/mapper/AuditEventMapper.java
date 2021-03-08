@@ -3,11 +3,17 @@ package io.harness.audit.mapper;
 import io.harness.audit.AuditEvent;
 import io.harness.audit.beans.AuditEventDTO;
 
-import lombok.experimental.UtilityClass;
+import com.google.inject.Inject;
+import java.util.Map;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 
-@UtilityClass
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class AuditEventMapper {
-  public static AuditEvent fromDTO(AuditEventDTO dto) {
+  private final Map<String, AuditEventDataEntityToDTOMapper> auditEventDataEntityToDTOMapper;
+  private final Map<String, AuditEventDataDTOToEntityMapper> auditEventDataDTOtoEntityMapper;
+
+  public AuditEvent fromDTO(AuditEventDTO dto) {
     return AuditEvent.builder()
         .id(dto.getId())
         .accountIdentifier(dto.getAccountIdentifier())
@@ -20,12 +26,15 @@ public class AuditEventMapper {
         .resource(dto.getResource())
         .action(dto.getAction())
         .yamlDiff(dto.getYamlDiff())
-        .auditEventData(dto.getAuditEventData())
+        .auditEventData(dto.getAuditEventData() != null
+                ? null
+                : auditEventDataDTOtoEntityMapper.get(dto.getAuditEventData().getType())
+                      .fromDTO(dto.getAuditEventData()))
         .additionalInfo(dto.getAdditionalInfo())
         .build();
   }
 
-  public static AuditEventDTO toDTO(AuditEvent auditEvent) {
+  public AuditEventDTO toDTO(AuditEvent auditEvent) {
     return AuditEventDTO.builder()
         .id(auditEvent.getId())
         .accountIdentifier(auditEvent.getAccountIdentifier())
@@ -38,7 +47,10 @@ public class AuditEventMapper {
         .resource(auditEvent.getResource())
         .action(auditEvent.getAction())
         .yamlDiff(auditEvent.getYamlDiff())
-        .auditEventData(auditEvent.getAuditEventData())
+        .auditEventData(auditEvent.getAuditEventData() == null
+                ? null
+                : auditEventDataEntityToDTOMapper.get(auditEvent.getAuditEventData().getType())
+                      .toDTO(auditEvent.getAuditEventData()))
         .additionalInfo(auditEvent.getAdditionalInfo())
         .build();
   }

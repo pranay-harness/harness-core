@@ -2,7 +2,6 @@ package io.harness.audit;
 
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
-import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
 import io.harness.audit.beans.HttpRequestInfo;
@@ -55,7 +54,7 @@ public class AuditEvent {
   @NotBlank String action;
 
   YamlDiff yamlDiff;
-  AuditEventData auditEventData;
+  @Valid AuditEventData auditEventData;
 
   Map<String, String> additionalInfo;
 
