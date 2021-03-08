@@ -7,6 +7,7 @@ import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.OrgScope;
 import io.harness.ng.core.ProjectScope;
+import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.Status;
 import io.harness.ng.core.common.beans.NGTag;
@@ -34,5 +35,6 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(AccountScope.class, 22006);
     kryo.register(OrgScope.class, 22007);
     kryo.register(ProjectScope.class, 22008);
+    kryo.register(Resource.class, 22009);
   }
 }

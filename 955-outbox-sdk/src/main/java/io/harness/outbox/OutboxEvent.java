@@ -2,11 +2,13 @@ package io.harness.outbox;
 
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,8 +27,7 @@ public class OutboxEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
 
   @NotNull ResourceScope resourceScope;
-  @NotNull String resourceIdentifier;
-  @NotNull String resourceType;
+  @NotNull @Valid Resource resource;
 
   @NotNull String eventType;
   @NotNull JsonNode eventData;

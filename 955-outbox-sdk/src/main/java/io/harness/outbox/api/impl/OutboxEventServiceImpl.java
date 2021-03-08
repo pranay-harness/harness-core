@@ -30,8 +30,7 @@ public class OutboxEventServiceImpl implements OutboxEventService {
   public OutboxEvent save(HEvent event) {
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .resourceScope(event.getResourceScope())
-                                  .resourceIdentifier(event.getResourceIdentifier())
-                                  .resourceType(event.getResourceType())
+                                  .resource(event.getResource())
                                   .eventData(objectMapper.valueToTree(event.getEventData()))
                                   .eventType(event.getEventType())
                                   .build();
