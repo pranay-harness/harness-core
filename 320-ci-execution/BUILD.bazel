@@ -441,6 +441,7 @@ test_deps = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = test_deps + shared_dependencies + [
