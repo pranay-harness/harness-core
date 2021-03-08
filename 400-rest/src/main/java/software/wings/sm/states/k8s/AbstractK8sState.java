@@ -358,6 +358,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     Environment env = K8sStateHelper.fetchEnvFromExecutionContext(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    String serviceTemplateId = infraMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
 
     DelegateTask delegateTask =
         DelegateTask.builder()
@@ -366,6 +367,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
             .data(TaskData.builder()
                       .async(true)

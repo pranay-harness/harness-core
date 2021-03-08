@@ -1,6 +1,5 @@
 package io.harness.gitsync.common.remote;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.encryption.ScopeHelper.getScope;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
@@ -9,8 +8,6 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.common.beans.YamlGitConfig;
-import io.harness.gitsync.common.beans.YamlGitFolderConfig;
-import io.harness.gitsync.common.beans.YamlGitFolderConfig.YamlGitFolderConfigBuilder;
 import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO;
 import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO.GitSyncFolderConfigDTOBuilder;
@@ -18,7 +15,6 @@ import io.harness.gitsync.common.dtos.GitSyncFolderConfigDTO.GitSyncFolderConfig
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 
@@ -33,72 +29,23 @@ public class YamlGitConfigMapper {
         .repo(yamlGitConfigDTO.getRepo())
         .gitConnectorId(yamlGitConfigDTO.getGitConnectorId())
         .scope(yamlGitConfigDTO.getScope())
+        .rootFolders(yamlGitConfigDTO.getRootFolders())
+        .defaultRootFolder(yamlGitConfigDTO.getDefaultRootFolder())
         .build();
   }
 
-  public static final List<YamlGitFolderConfig> toYamlGitFolderConfig(YamlGitConfigDTO yamlGitConfigDTO) {
-    return yamlGitConfigDTO.getRootFolders()
-        .stream()
-        .map(rootFolder -> {
-          YamlGitFolderConfigBuilder yamlGitFolderConfigBuilder =
-              YamlGitFolderConfig.builder()
-                  .accountId(yamlGitConfigDTO.getAccountId())
-                  .organizationId(nullIfEmpty(yamlGitConfigDTO.getOrganizationId()))
-                  .uuid(nullIfEmpty(rootFolder.getIdentifier()))
-                  .projectId(nullIfEmpty(yamlGitConfigDTO.getProjectId()))
-                  .branch(yamlGitConfigDTO.getBranch())
-                  .repo(yamlGitConfigDTO.getRepo())
-                  .gitConnectorId(yamlGitConfigDTO.getGitConnectorId())
-                  .scope(yamlGitConfigDTO.getScope());
-          yamlGitFolderConfigBuilder.rootFolder(rootFolder.getRootFolder())
-              .enabled(rootFolder.isEnabled())
-              .yamlGitConfigId(yamlGitConfigDTO.getIdentifier());
-          if (rootFolder.equals(yamlGitConfigDTO.getDefaultRootFolder())) {
-            yamlGitFolderConfigBuilder.isDefault(true);
-          }
-          return yamlGitFolderConfigBuilder.build();
-        })
-        .collect(Collectors.toList());
-  }
-
-  public static final YamlGitConfigDTO toYamlGitConfigDTOFromFolderConfigWithSameYamlGitConfigId(
-      List<YamlGitFolderConfig> yamlGitFolderConfigs) {
-    if (isEmpty(yamlGitFolderConfigs)) {
-      return null;
-    }
-    AtomicReference<YamlGitConfigDTO.RootFolder> defaultFolder = new AtomicReference<>();
-    List<YamlGitConfigDTO.RootFolder> rootFolders =
-        yamlGitFolderConfigs.stream()
-            .map(yamlGitFolderConfig -> {
-              if (yamlGitFolderConfig.isDefault()) {
-                defaultFolder.set(YamlGitConfigDTO.RootFolder.builder()
-                                      .identifier(yamlGitFolderConfig.getUuid())
-                                      .rootFolder(yamlGitFolderConfig.getRootFolder())
-                                      .enabled(yamlGitFolderConfig.isEnabled())
-                                      .build());
-              }
-              // assuming uuid = identifier.
-              return YamlGitConfigDTO.RootFolder.builder()
-                  .identifier(yamlGitFolderConfig.getUuid())
-                  .rootFolder(yamlGitFolderConfig.getRootFolder())
-                  .enabled(yamlGitFolderConfig.isEnabled())
-                  .build();
-            })
-            .collect(Collectors.toList());
-
-    YamlGitFolderConfig baseYamlGitFolderConfig = yamlGitFolderConfigs.get(0);
-
+  public static final YamlGitConfigDTO toYamlGitConfigDTO(YamlGitConfig yamlGitConfig) {
     return YamlGitConfigDTO.builder()
-        .accountId(baseYamlGitFolderConfig.getAccountId())
-        .organizationId(baseYamlGitFolderConfig.getOrganizationId())
-        .projectId(baseYamlGitFolderConfig.getProjectId())
-        .scope(baseYamlGitFolderConfig.getScope())
-        .rootFolders(rootFolders)
-        .defaultRootFolder(defaultFolder.get())
-        .gitConnectorId(baseYamlGitFolderConfig.getGitConnectorId())
-        .branch(baseYamlGitFolderConfig.getBranch())
-        .repo(baseYamlGitFolderConfig.getRepo())
-        .identifier(baseYamlGitFolderConfig.getYamlGitConfigId())
+        .accountId(yamlGitConfig.getAccountId())
+        .organizationId(nullIfEmpty(yamlGitConfig.getOrganizationId()))
+        .identifier(nullIfEmpty(yamlGitConfig.getUuid()))
+        .projectId(nullIfEmpty(yamlGitConfig.getProjectId()))
+        .branch(yamlGitConfig.getBranch())
+        .repo(yamlGitConfig.getRepo())
+        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .scope(yamlGitConfig.getScope())
+        .rootFolders(yamlGitConfig.getRootFolders())
+        .defaultRootFolder(yamlGitConfig.getDefaultRootFolder())
         .build();
   }
 

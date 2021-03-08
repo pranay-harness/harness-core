@@ -412,6 +412,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
         "//330-ci-beans/src/test/resources:resource",

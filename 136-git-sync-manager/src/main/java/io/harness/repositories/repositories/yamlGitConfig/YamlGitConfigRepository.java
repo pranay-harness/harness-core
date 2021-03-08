@@ -7,6 +7,7 @@ import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.repository.CrudRepository;
 
 @HarnessRepo
@@ -17,4 +18,13 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
 
   List<YamlGitConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScope(
       String accountId, String organizationIdentifier, String projectIdentifier, Scope scope);
+
+  Optional<YamlGitConfig> findByAccountIdAndOrganizationIdAndProjectIdAndUuid(
+      String accountId, String organizationIdentifier, String projectIdentifier, String uuid);
+
+  List<YamlGitConfig> findByAccountIdAndOrganizationIdAndProjectIdAndScopeOrderByCreatedAtAsc(
+      String accountId, String organizationIdentifier, String projectIdentifier, Scope scope);
+
+  List<YamlGitConfig> findByGitConnectorIdAndRepoAndBranchAndAccountId(
+      String gitConnectorId, String repo, String branchName, String accountId);
 }

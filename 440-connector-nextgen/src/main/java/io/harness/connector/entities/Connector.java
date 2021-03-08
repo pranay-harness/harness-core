@@ -52,7 +52,6 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
-  // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty io.harness.encryption.Scope scope;
   String description;
   @Trimmed @NotEmpty String accountIdentifier;
