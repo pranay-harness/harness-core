@@ -167,12 +167,12 @@ public class OrganizationServiceImpl implements OrganizationService {
                                                              .and(OrganizationKeys.deleted)
                                                              .ne(Boolean.TRUE),
         organizationFilterDTO);
-    return organizationRepository.findAll(criteria, pageable);
+    return organizationRepository.findAll(criteria, pageable, organizationFilterDTO.isIgnoreCase());
   }
 
   @Override
   public Page<Organization> list(Criteria criteria, Pageable pageable) {
-    return organizationRepository.findAll(criteria, pageable);
+    return organizationRepository.findAll(criteria, pageable, false);
   }
 
   @Override
