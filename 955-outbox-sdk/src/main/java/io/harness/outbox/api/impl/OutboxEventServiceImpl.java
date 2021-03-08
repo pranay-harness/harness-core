@@ -14,7 +14,6 @@ import io.harness.outbox.OutboxEvent.OutboxEventKeys;
 import io.harness.outbox.api.OutboxEventService;
 import io.harness.repositories.OutboxEventRepository;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -28,12 +27,12 @@ public class OutboxEventServiceImpl implements OutboxEventService {
   private final ObjectMapper objectMapper;
 
   @Override
-  public OutboxEvent save(HEvent event) throws JsonProcessingException {
+  public OutboxEvent save(HEvent event) {
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .resourceScope(event.getResourceScope())
                                   .resourceIdentifier(event.getResourceIdentifier())
                                   .resourceType(event.getResourceType())
-                                  .eventData(objectMapper.writeValueAsString(event.getEventData()))
+                                  .eventData(objectMapper.valueToTree(event.getEventData()))
                                   .eventType(event.getEventType())
                                   .build();
     return outboxRepository.save(outboxEvent);

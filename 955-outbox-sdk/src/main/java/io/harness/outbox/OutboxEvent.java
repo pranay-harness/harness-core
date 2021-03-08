@@ -4,6 +4,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.ResourceScope;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -28,7 +29,7 @@ public class OutboxEvent {
   @NotNull String resourceType;
 
   @NotNull String eventType;
-  @NotNull String eventData;
+  @NotNull JsonNode eventData;
 
   @CreatedDate Long createdAt;
 
