@@ -100,7 +100,7 @@ public class ScopeEventHandler implements EventHandler {
   private void deleteRoleAssignments(Scope scope) {
     RoleAssignmentFilter roleAssignmentFilter =
         RoleAssignmentFilter.builder().scopeFilter(scope.toString()).includeChildScopes(true).build();
-    roleAssignmentService.deleteMany(roleAssignmentFilter);
+    roleAssignmentService.deleteMulti(roleAssignmentFilter);
   }
 
   private void deleteRoles(Scope scope) {
