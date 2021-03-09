@@ -50,16 +50,16 @@ public class ViewsQueryBuilder {
   public static final String ECS_TASK_EC2 = "ECS_TASK_EC2";
   public static final String ECS_CONTAINER_INSTANCE = "ECS_CONTAINER_INSTANCE";
   @Inject ViewCustomFieldDao viewCustomFieldDao;
-  private static final String distinct = " DISTINCT(%s)";
-  private static final String aliasStartTimeMaxMin = "%s_%s";
-  private static final String searchFilter = "REGEXP_CONTAINS( LOWER(%s), LOWER('%s') )";
-  private static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
-  private static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labelsUnnested";
-  private static final String leftJoinSelectiveLabels =
+  protected static final String distinct = " DISTINCT(%s)";
+  protected static final String aliasStartTimeMaxMin = "%s_%s";
+  protected static final String searchFilter = "REGEXP_CONTAINS( LOWER(%s), LOWER('%s') )";
+  protected static final String labelsSubQuery = "(SELECT value FROM UNNEST(labels) WHERE KEY='%s')";
+  protected static final String leftJoinLabels = " LEFT JOIN UNNEST(labels) as labelsUnnested";
+  protected static final String leftJoinSelectiveLabels =
       " LEFT JOIN UNNEST(labels) as labelsUnnested ON labelsUnnested.key IN (%s)";
-  private static final ImmutableSet<String> podInfoImmutableSet =
+  protected static final ImmutableSet<String> podInfoImmutableSet =
       ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId");
-  private static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
+  protected static final ImmutableSet<String> clusterFilterImmutableSet = ImmutableSet.of("product", "region");
 
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
@@ -119,7 +119,7 @@ public class ViewsQueryBuilder {
     return selectQuery;
   }
 
-  private List<ViewField> collectCustomFieldList(
+  protected List<ViewField> collectCustomFieldList(
       List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewFieldInput> groupByEntity) {
     List<ViewField> customFieldLists = new ArrayList<>();
     for (ViewRule rule : rules) {
@@ -156,7 +156,7 @@ public class ViewsQueryBuilder {
         .build();
   }
 
-  private void modifyQueryWithInstanceTypeFilter(List<ViewRule> rules, List<QLCEViewFilter> filters,
+  protected void modifyQueryWithInstanceTypeFilter(List<ViewRule> rules, List<QLCEViewFilter> filters,
       List<QLCEViewFieldInput> groupByEntity, List<ViewField> customFields, SelectQuery selectQuery) {
     boolean isClusterConditionOrFilterPresent = false;
     boolean isPodFilterPresent = false;
@@ -482,7 +482,7 @@ public class ViewsQueryBuilder {
         .collect(Collectors.toList());
   }
 
-  private void decorateQueryWithSortCriteria(SelectQuery selectQuery, List<QLCEViewSortCriteria> sortCriteriaList) {
+  protected void decorateQueryWithSortCriteria(SelectQuery selectQuery, List<QLCEViewSortCriteria> sortCriteriaList) {
     for (QLCEViewSortCriteria sortCriteria : sortCriteriaList) {
       addOrderBy(selectQuery, sortCriteria);
     }
@@ -505,7 +505,7 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomOrdering(sortKey, dir);
   }
 
-  private void decorateQueryWithAggregations(SelectQuery selectQuery, List<QLCEViewAggregation> aggregations) {
+  protected void decorateQueryWithAggregations(SelectQuery selectQuery, List<QLCEViewAggregation> aggregations) {
     for (QLCEViewAggregation aggregation : aggregations) {
       decorateQueryWithAggregation(selectQuery, aggregation);
     }
@@ -539,7 +539,7 @@ public class ViewsQueryBuilder {
     }
   }
 
-  private void decorateQueryWithGroupByTime(SelectQuery selectQuery, QLCEViewTimeTruncGroupBy groupByTime) {
+  protected void decorateQueryWithGroupByTime(SelectQuery selectQuery, QLCEViewTimeTruncGroupBy groupByTime) {
     selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
         new TimeTruncatedExpression(
             new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName()), groupByTime.getResolution()),
@@ -568,7 +568,7 @@ public class ViewsQueryBuilder {
     return null;
   }
 
-  private Condition getConsolidatedRuleCondition(List<ViewRule> rules) {
+  protected Condition getConsolidatedRuleCondition(List<ViewRule> rules) {
     List<Condition> conditionList = new ArrayList<>();
     for (ViewRule rule : rules) {
       conditionList.add(getPerRuleCondition(rule));
@@ -696,18 +696,21 @@ public class ViewsQueryBuilder {
     }
   }
 
-  private void decorateQueryWithFilters(SelectQuery selectQuery, List<QLCEViewFilter> filters) {
+  // AD-Compat
+  protected void decorateQueryWithFilters(SelectQuery selectQuery, List<QLCEViewFilter> filters) {
     for (QLCEViewFilter filter : filters) {
       selectQuery.addCondition(getCondition(filter));
     }
   }
 
-  private void decorateQueryWithTimeFilters(SelectQuery selectQuery, List<QLCEViewTimeFilter> timeFilters) {
+  // AD-Compat
+  protected void decorateQueryWithTimeFilters(SelectQuery selectQuery, List<QLCEViewTimeFilter> timeFilters) {
     for (QLCEViewTimeFilter timeFilter : timeFilters) {
       selectQuery.addCondition(getCondition(timeFilter));
     }
   }
 
+  // AD-Compat
   private Condition getCondition(QLCEViewFilter filter) {
     Object conditionKey = getSQLObjectFromField(filter.getField());
     if (conditionKey.toString().equals(ViewsMetaDataFields.LABEL_VALUE.getFieldName())) {
@@ -745,6 +748,7 @@ public class ViewsQueryBuilder {
     }
   }
 
+  // AD-Compat
   private Condition getCondition(QLCEViewTimeFilter timeFilter) {
     Object conditionKey = getSQLObjectFromField(timeFilter.getField());
     QLCEViewTimeFilterOperator operator = timeFilter.getOperator();
@@ -759,7 +763,7 @@ public class ViewsQueryBuilder {
     }
   }
 
-  private Object getSQLObjectFromField(QLCEViewFieldInput field) {
+  protected Object getSQLObjectFromField(QLCEViewFieldInput field) {
     switch (field.getIdentifier()) {
       case AWS:
       case GCP:
