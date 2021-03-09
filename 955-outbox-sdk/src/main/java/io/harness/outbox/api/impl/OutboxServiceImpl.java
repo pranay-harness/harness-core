@@ -9,20 +9,20 @@ import io.harness.Event;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.OutboxEvent;
-import io.harness.outbox.api.OutboxEventService;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.OutboxEventRepository;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import org.springframework.data.domain.Pageable;
 
-public class OutboxEventServiceImpl implements OutboxEventService {
+public class OutboxServiceImpl implements OutboxService {
   private final OutboxEventRepository outboxRepository;
   private final Gson gson;
   private final PageRequest pageRequest;
 
   @Inject
-  public OutboxEventServiceImpl(OutboxEventRepository outboxRepository, Gson gson) {
+  public OutboxServiceImpl(OutboxEventRepository outboxRepository, Gson gson) {
     this.outboxRepository = outboxRepository;
     this.gson = gson;
     this.pageRequest = DEFAULT_OUTBOX_POLL_PAGE_REQUEST;

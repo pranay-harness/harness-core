@@ -6,7 +6,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.ng.beans.PageRequest;
 import io.harness.outbox.api.OutboxEventHandler;
-import io.harness.outbox.api.OutboxEventService;
+import io.harness.outbox.api.OutboxService;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class OutboxEventPollJob implements Runnable {
-  private final OutboxEventService outboxEventService;
+  private final OutboxService outboxService;
   private final OutboxEventHandler outboxEventHandler;
   private final PersistentLocker persistentLocker;
   private final PageRequest pageRequest;
@@ -23,8 +23,8 @@ public class OutboxEventPollJob implements Runnable {
 
   @Inject
   public OutboxEventPollJob(
-      OutboxEventService outboxEventService, OutboxEventHandler outboxEventHandler, PersistentLocker persistentLocker) {
-    this.outboxEventService = outboxEventService;
+      OutboxService outboxService, OutboxEventHandler outboxEventHandler, PersistentLocker persistentLocker) {
+    this.outboxService = outboxService;
     this.outboxEventHandler = outboxEventHandler;
     this.persistentLocker = persistentLocker;
     this.pageRequest = DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
@@ -45,11 +45,11 @@ public class OutboxEventPollJob implements Runnable {
         log.error("Could not acquire lock for outbox poll job");
         return;
       }
-      List<OutboxEvent> outboxEvents = outboxEventService.list(pageRequest).getContent();
+      List<OutboxEvent> outboxEvents = outboxService.list(pageRequest).getContent();
       outboxEvents.forEach(outbox -> {
         try {
           if (outboxEventHandler.handle(outbox)) {
-            outboxEventService.delete(outbox.getId());
+            outboxService.delete(outbox.getId());
           }
         } catch (Exception exception) {
           log.error(String.format("Error occurred while handling outbox event with id %s and type %s", outbox.getId(),

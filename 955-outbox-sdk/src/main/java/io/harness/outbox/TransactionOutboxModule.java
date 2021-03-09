@@ -1,8 +1,8 @@
 package io.harness.outbox;
 
 import io.harness.mongo.MongoConfig;
-import io.harness.outbox.api.OutboxEventService;
-import io.harness.outbox.api.impl.OutboxEventServiceImpl;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.springdata.HTransactionTemplate;
 
 import com.google.inject.AbstractModule;
@@ -19,7 +19,7 @@ public class TransactionOutboxModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(OutboxEventService.class).to(OutboxEventServiceImpl.class);
+    bind(OutboxService.class).to(OutboxServiceImpl.class);
   }
 
   @Provides

@@ -5,7 +5,7 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.OutboxEvent;
 
-public interface OutboxEventService {
+public interface OutboxService {
   OutboxEvent save(Event event);
 
   PageResponse<OutboxEvent> list(PageRequest pageRequest);
