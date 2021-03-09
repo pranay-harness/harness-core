@@ -11,6 +11,7 @@ java_library(
         "//:lombok",
         "//960-persistence:module",
         "//970-grpc:module",
+        "@maven//:com_healthmarketscience_sqlbuilder_sqlbuilder",
     ],
 )
 
