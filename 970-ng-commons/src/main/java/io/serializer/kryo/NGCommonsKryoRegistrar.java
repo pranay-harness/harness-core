@@ -29,7 +29,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(ErrorDTO.class, 19461);
 
     kryo.register(Resource.class, 22009);
-    
+
     kryo.register(HttpHeaderConfig.class, 19462);
   }
 }
