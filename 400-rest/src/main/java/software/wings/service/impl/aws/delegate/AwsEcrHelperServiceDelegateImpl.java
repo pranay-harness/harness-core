@@ -15,7 +15,9 @@ import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 
 import com.amazonaws.services.ecr.AmazonECRClient;
+import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
@@ -26,6 +28,12 @@ import java.util.List;
 public class AwsEcrHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcrHelperServiceDelegate {
   @Inject AwsEcrApiHelperServiceDelegateImpl awsEcrApiHelperServiceDelegateImpl;
+
+  @VisibleForTesting
+  AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
+    awsEcrApiHelperServiceDelegateImpl.getAmazonEcrClient(
+        AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region);
+  }
 
   @Override
   public String getEcrImageUrl(
@@ -39,8 +47,7 @@ public class AwsEcrHelperServiceDelegateImpl
   public String getAmazonEcrAuthToken(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
     encryptionService.decrypt(awsConfig, encryptionDetails, false);
-    AmazonECRClient ecrClient = awsEcrApiHelperServiceDelegateImpl.getAmazonEcrClient(
-        AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region);
+    AmazonECRClient ecrClient = getAmazonEcrClient(awsConfig, region);
     tracker.trackECRCall("Get Ecr Auth Token");
     return ecrClient
         .getAuthorizationToken(new GetAuthorizationTokenRequest().withRegistryIds(singletonList(awsAccount)))
