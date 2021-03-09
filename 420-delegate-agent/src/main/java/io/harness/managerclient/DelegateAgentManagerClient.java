@@ -1,6 +1,7 @@
 package io.harness.managerclient;
 
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateParams;
@@ -12,7 +13,6 @@ import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
 import io.harness.logging.AccessTokenBean;
 import io.harness.rest.RestResponse;

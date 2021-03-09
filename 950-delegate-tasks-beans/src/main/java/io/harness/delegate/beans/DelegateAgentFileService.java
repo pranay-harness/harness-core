@@ -1,4 +1,4 @@
-package io.harness.delegate.service;
+package io.harness.delegate.beans;
 
 public interface DelegateAgentFileService {
   enum FileBucket {

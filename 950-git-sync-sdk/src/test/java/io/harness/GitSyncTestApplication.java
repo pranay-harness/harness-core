@@ -3,17 +3,14 @@ package io.harness;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
+import io.harness.gitsync.AbstractGitSyncSdkModule;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
-import io.harness.govern.ProviderModule;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.maintenance.MaintenanceController;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -61,15 +58,13 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     log.info("Starting Git Sync Application ...");
     MaintenanceController.forceMaintenance(true);
     List<Module> modules = new ArrayList<>();
-    modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      @Named("GitSyncGrpcClientConfig")
-      public GrpcClientConfig grpcClientConfig() {
+    modules.add(new GitSyncTestModule(config));
+    modules.add(new AbstractGitSyncSdkModule() {
+      @Override
+      public GrpcClientConfig getGitSyncGrpcClientConfig() {
         return config.getGrpcClientConfig();
       }
     });
-    modules.add(new GitSyncTestModule(config));
     Injector injector = Guice.createInjector(modules);
 
     registerJerseyProviders(environment, injector);

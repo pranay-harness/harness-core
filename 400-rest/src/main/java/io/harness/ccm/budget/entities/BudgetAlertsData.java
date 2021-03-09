@@ -1,5 +1,7 @@
 package io.harness.ccm.budget.entities;
 
+import io.harness.ccm.budget.AlertThresholdBase;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +15,7 @@ public class BudgetAlertsData {
   String budgetId;
   String accountId;
   double alertThreshold;
+  AlertThresholdBase alertBasedOn;
   double actualCost;
   double budgetedCost;
 }

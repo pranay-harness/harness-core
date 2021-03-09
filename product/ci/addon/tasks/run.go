@@ -2,28 +2,17 @@ package tasks
 
 import (
 	"bufio"
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
-	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/pkg/errors"
-	"github.com/wings-software/portal/product/ci/addon/testreports"
-	"github.com/wings-software/portal/product/ci/addon/testreports/junit"
-	"github.com/wings-software/portal/product/ci/common/external"
-	grpcclient "github.com/wings-software/portal/product/ci/engine/grpc/client"
-
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/engine/consts"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-	"mvdan.cc/sh/v3/syntax"
 )
 
 //go:generate mockgen -source run.go -package=tasks -destination mocks/run_mock.go RunTask
@@ -34,11 +23,6 @@ const (
 	outputEnvSuffix    string        = ".out"
 	cmdExitWaitTime    time.Duration = time.Duration(0)
 	batchSize                        = 100
-)
-
-var (
-	getTIClient = external.GetTiHTTPClient
-	newJunit    = junit.New
 )
 
 // RunTask represents interface to execute a run step
@@ -103,7 +87,7 @@ func (r *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	for i := int32(1); i <= r.numRetries; i++ {
 		if o, err = r.execute(ctx, i); err == nil {
 			st := time.Now()
-			err = r.collectTestReports(ctx)
+			err = collectTestReports(ctx, r.reports, r.id, r.log)
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
@@ -119,7 +103,7 @@ func (r *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect reports, ignore any errors during report collection itself
-		errc := r.collectTestReports(ctx)
+		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
 		}
@@ -202,132 +186,12 @@ func (r *runTask) getScript(outputVarFile string) string {
 	}
 
 	command := fmt.Sprintf("set -e\n %s %s", r.command, outputVarCmd)
-	logCmd, err := getLoggableCmd(command)
+	logCmd, err := utils.GetLoggableCmd(command)
 	if err != nil {
 		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
 		return fmt.Sprintf("echo '---%s'\n%s", command, command)
 	}
 	return logCmd
-}
-
-func getLoggableCmd(cmd string) (string, error) {
-	parser := syntax.NewParser(syntax.KeepComments(false))
-	printer := syntax.NewPrinter(syntax.Minify(false))
-
-	r := strings.NewReader(cmd)
-	prog, err := parser.Parse(r, "")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to parse command")
-	}
-
-	var stmts []*syntax.Stmt
-	for _, stmt := range prog.Stmts {
-		// convert the statement to a string and then encode special characters.
-		var buf bytes.Buffer
-		if printer.Print(&buf, stmt); err != nil {
-			return "", errors.Wrap(err, "failed to parse statement")
-		}
-
-		// create a new statement that echos the
-		// original shell statement.
-		echo := &syntax.Stmt{
-			Cmd: &syntax.CallExpr{
-				Args: []*syntax.Word{
-					{
-						Parts: []syntax.WordPart{
-							&syntax.Lit{
-								Value: "echo",
-							},
-						},
-					},
-					{
-						Parts: []syntax.WordPart{
-							&syntax.SglQuoted{
-								Dollar: false,
-								Value:  "--- " + buf.String(),
-							},
-						},
-					},
-				},
-			},
-		}
-		// append the echo statement and the statement
-		stmts = append(stmts, echo)
-		stmts = append(stmts, stmt)
-	}
-	// replace original statements with new statements
-	prog.Stmts = stmts
-
-	buf := new(bytes.Buffer)
-	printer.Print(buf, prog)
-	return buf.String(), nil
-}
-
-func (r *runTask) collectTestReports(ctx context.Context) error {
-	// Test cases from reports are identified at a per-step level and won't cause overwriting/clashes
-	// at the backend.
-	if len(r.reports) == 0 {
-		return nil
-	}
-	// Create TI proxy client (lite engine)
-	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, r.log)
-	if err != nil {
-		return err
-	}
-	defer client.CloseConn()
-	for _, report := range r.reports {
-		var rep testreports.TestReporter
-		var err error
-
-		x := report.GetType() // pass in report type in proto when other reports are reqd
-		switch x {
-		case pb.Report_UNKNOWN:
-			return errors.New("report type is unknown")
-		case pb.Report_JUNIT:
-			rep = newJunit(report.GetPaths(), r.log)
-		}
-
-		var tests []string
-		testc, _ := rep.GetTests(ctx)
-		for t := range testc {
-			jt, _ := json.Marshal(t)
-			tests = append(tests, string(jt))
-		}
-
-		if len(tests) == 0 {
-			return nil // We're not erroring even if we can't find any tests to report
-		}
-
-		stream, err := client.Client().WriteTests(ctx, grpc_retry.Disable())
-		if err != nil {
-			return err
-		}
-		var curr []string
-		for _, t := range tests {
-			curr = append(curr, t)
-			if len(curr)%batchSize == 0 {
-				in := &pb.WriteTestsRequest{StepId: r.id, Tests: curr}
-				if serr := stream.Send(in); serr != nil {
-					r.log.Errorw("write tests RPC failed", zap.Error(serr))
-				}
-				curr = []string{} // ignore RPC failures, try to write whatever you can
-			}
-		}
-		if len(curr) > 0 {
-			in := &pb.WriteTestsRequest{StepId: r.id, Tests: curr}
-			if serr := stream.Send(in); serr != nil {
-				r.log.Errorw("write tests RPC failed", zap.Error(serr))
-			}
-			curr = []string{}
-		}
-
-		// Close the stream and receive result
-		_, err = stream.CloseAndRecv()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func logCommandExecErr(log *zap.SugaredLogger, errMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {
