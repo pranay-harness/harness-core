@@ -139,26 +139,29 @@ public class K8sStepHelper {
     return connectorDTO.get().getConnector();
   }
 
-  private void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO) {
+  private void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO, String message) {
     switch (manifestStoreType) {
       case ManifestStoreType.GIT:
         if (!(connectorInfoDTO.getConnectorConfig() instanceof GitConfigDTO)) {
-          throw new InvalidRequestException("Invalid connector selected. Select Git connector");
+          throw new InvalidRequestException(format("Invalid connector selected in %s. Select Git connector", message));
         }
         break;
       case ManifestStoreType.GITHUB:
         if (!(connectorInfoDTO.getConnectorConfig() instanceof GithubConnectorDTO)) {
-          throw new InvalidRequestException("Invalid connector selected. Select Github connector");
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select Github connector", message));
         }
         break;
       case ManifestStoreType.GITLAB:
         if (!(connectorInfoDTO.getConnectorConfig() instanceof GitlabConnectorDTO)) {
-          throw new InvalidRequestException("Invalid connector selected. Select GitLab connector");
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select GitLab connector", message));
         }
         break;
       case ManifestStoreType.BITBUCKET:
         if (!(connectorInfoDTO.getConnectorConfig() instanceof BitbucketConnectorDTO)) {
-          throw new InvalidRequestException("Invalid connector selected. Select Bitbucket connector");
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select Bitbucket connector", message));
         }
         break;
       default:
@@ -171,13 +174,15 @@ public class K8sStepHelper {
       case ManifestType.K8Manifest:
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
         return K8sManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(k8sManifestOutcome.getStore(), ambiance))
+            .storeDelegateConfig(
+                getStoreDelegateConfig(k8sManifestOutcome.getStore(), ambiance, manifestOutcome.getType()))
             .build();
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
         return HelmChartManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance))
+            .storeDelegateConfig(getStoreDelegateConfig(
+                helmChartManifestOutcome.getStore(), ambiance, manifestOutcome.getType() + " manifest"))
             .skipResourceVersioning(helmChartManifestOutcome.isSkipResourceVersioning())
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
             .helmCommandFlag(getDelegateHelmCommandFlag(helmChartManifestOutcome.getCommandFlags()))
@@ -188,11 +193,11 @@ public class K8sStepHelper {
     }
   }
 
-  public StoreDelegateConfig getStoreDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
+  public StoreDelegateConfig getStoreDelegateConfig(StoreConfig storeConfig, Ambiance ambiance, String manifestType) {
     if (supportedManifestGitStores.contains(storeConfig.getKind())) {
       GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), connectorDTO);
+      validateManifest(storeConfig.getKind(), connectorDTO, manifestType);
 
       GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
@@ -308,7 +313,8 @@ public class K8sStepHelper {
         GitStoreConfig gitStoreConfig = (GitStoreConfig) valuesManifest.getStore();
         String connectorId = gitStoreConfig.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
-        validateManifest(valuesManifest.getStore().getKind(), connectorDTO);
+        validateManifest(valuesManifest.getStore().getKind(), connectorDTO,
+            format("Values YAML with Id [%s]", valuesManifest.getIdentifier()));
 
         GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
         NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
