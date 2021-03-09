@@ -18,6 +18,7 @@ import static io.harness.beans.ExecutionStatus.activeStatuses;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.FeatureName.NEW_DEPLOYMENT_FREEZE;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -1184,6 +1185,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
       }
     }
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      if (trigger != null && user != null && trigger.getWebHookToken() != null) {
+        deploymentAuthHandler.authorizePipelineExecution(appId, pipelineId);
+        if (isNotEmpty(pipeline.getEnvIds())) {
+          pipeline.getEnvIds().forEach(s -> authService.checkIfUserAllowedToDeployPipelineToEnv(appId, s));
+        }
+      }
+    }
+
     checkPreDeploymentConditions(accountId, appId);
 
     PreDeploymentChecker deploymentFreezeChecker = new DeploymentFreezeChecker(governanceConfigService,
@@ -1329,6 +1340,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (trigger == null && user != null && isEmpty(pipelineExecutionId)) {
       deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
       authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+    }
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      if (trigger != null && user != null && trigger.getWebHookToken() != null && isEmpty(pipelineExecutionId)) {
+        deploymentAuthHandler.authorizeWorkflowExecution(appId, workflowId);
+        authService.checkIfUserAllowedToDeployWorkflowToEnv(appId, envId);
+      }
     }
 
     // Doing this check here so that workflow is already fetched from databae.
