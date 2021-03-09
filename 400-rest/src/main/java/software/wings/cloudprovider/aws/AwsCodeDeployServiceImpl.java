@@ -8,10 +8,12 @@ import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Failed;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Stopped;
 import static com.amazonaws.services.codedeploy.model.DeploymentStatus.Succeeded;
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -44,7 +46,6 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.Instance;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,7 +53,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -62,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Inject private AwsHelperService awsHelperService;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
 
   @Override
   public List<String> listApplications(
@@ -227,12 +227,12 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
       String region, String deploymentId, int timeout) {
     try {
       Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMinutes(timeout), () -> {
         while (!deploymentCompleted(awsConfig, encryptedDataDetails, region, deploymentId, finalDeploymentStatus)) {
           sleep(ofSeconds(10));
         }
         return true;
-      }, timeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for deployment to complete");
     } catch (WingsException e) {

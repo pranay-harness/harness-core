@@ -5,10 +5,13 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
@@ -25,7 +28,6 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -37,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.xml.stream.XMLStreamException;
@@ -56,7 +57,7 @@ import retrofit2.Retrofit;
 public class NexusServiceImpl implements NexusService {
   @Inject private NexusThreeServiceImpl nexusThreeService;
   @Inject private NexusTwoServiceImpl nexusTwoService;
-  @Inject private TimeLimiter timeLimiter;
+  private HTimeLimiter timeLimiter;
 
   public static void handleException(IOException e) {
     throw new InvalidArtifactServerException(ExceptionUtils.getMessage(e), USER);
@@ -106,7 +107,7 @@ public class NexusServiceImpl implements NexusService {
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofSeconds(20), () -> {
         if (isNexusTwo) {
           if (RepositoryFormat.docker.name().equals(repositoryFormat)) {
             throw new InvalidArtifactServerException("Nexus 2.x does not support Docker artifact type", USER);
@@ -118,7 +119,7 @@ public class NexusServiceImpl implements NexusService {
           }
           return nexusThreeService.getRepositories(nexusConfig, encryptionDetails, repositoryFormat);
         }
-      }, 20L, TimeUnit.SECONDS, true);
+      });
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -138,38 +139,32 @@ public class NexusServiceImpl implements NexusService {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
       if (isNexusTwo) {
-        timeLimiter.callWithTimeout(
-            ()
-                -> nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat),
-            20L, TimeUnit.SECONDS, true);
+        timeLimiter.callInterruptible(ofSeconds(20),
+            () -> nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat));
       } else {
         if (repositoryFormat != null) {
           switch (repositoryFormat) {
             case "nuget":
             case "npm":
-              return timeLimiter.callWithTimeout(()
-                                                     -> nexusThreeService.getPackageNames(nexusConfig,
-                                                         encryptionDetails, repoId, repositoryFormat, groupIds),
-                  20L, TimeUnit.SECONDS, true);
-            case "maven":
-              return timeLimiter.callWithTimeout(()
-                                                     -> nexusThreeService.getGroupIds(nexusConfig, encryptionDetails,
-                                                         repoId, repositoryFormat, groupIds),
-                  20L, TimeUnit.SECONDS, true);
-            case "docker":
-              return timeLimiter.callWithTimeout(
+              return timeLimiter.callInterruptible(ofSeconds(20),
                   ()
-                      -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
-                  20L, TimeUnit.SECONDS, true);
+                      -> nexusThreeService.getPackageNames(
+                          nexusConfig, encryptionDetails, repoId, repositoryFormat, groupIds));
+            case "maven":
+              return timeLimiter.callInterruptible(ofSeconds(20),
+                  ()
+                      -> nexusThreeService.getGroupIds(
+                          nexusConfig, encryptionDetails, repoId, repositoryFormat, groupIds));
+            case "docker":
+              return timeLimiter.callInterruptible(ofSeconds(20),
+                  () -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds));
             default:
               throw new WingsException("Unsupported repositoryFormat for Nexus 3.x");
           }
         } else {
           // for backward compatibility  with old UI when repositoryFormat is null
-          return timeLimiter.callWithTimeout(
-              ()
-                  -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
-              20L, TimeUnit.SECONDS, true);
+          return timeLimiter.callInterruptible(
+              ofSeconds(20), () -> nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds));
         }
       }
     } catch (WingsException e) {
@@ -202,10 +197,8 @@ public class NexusServiceImpl implements NexusService {
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat) {
     List<String> groupIds = new ArrayList<>();
     try {
-      return timeLimiter.callWithTimeout(
-          ()
-              -> nexusThreeService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat),
-          5L, TimeUnit.MINUTES, true);
+      return timeLimiter.callInterruptible(ofMinutes(5),
+          () -> nexusThreeService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds, repositoryFormat));
     } catch (WingsException e) {
       throw e;
     } catch (SocketTimeoutException e) {
@@ -322,11 +315,10 @@ public class NexusServiceImpl implements NexusService {
     Set<String> artifactIds = new HashSet<>();
     try {
       if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
-        return timeLimiter.callWithTimeout(
+        return timeLimiter.callInterruptible(ofMinutes(5),
             ()
                 -> new ArrayList<>(nexusThreeService.getArtifactNamesUsingPrivateApis(
-                    nexusConfig, encryptionDetails, repoId, path, artifactIds, repositoryFormat)),
-            5L, TimeUnit.MINUTES, true);
+                    nexusConfig, encryptionDetails, repoId, path, artifactIds, repositoryFormat)));
       }
     } catch (final Exception e) {
       throw new ArtifactServerException(

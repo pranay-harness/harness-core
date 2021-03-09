@@ -11,8 +11,10 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
 
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.exception.CommandExecutionException;
@@ -27,11 +29,9 @@ import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.delegatetasks.ShellScriptTaskHandler;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
@@ -40,10 +40,10 @@ import javax.validation.executable.ValidateOnExecution;
 public class CustomSecretsManagerEncryptor implements CustomEncryptor {
   private final ShellScriptTaskHandler shellScriptTaskHandler;
   private static final String OUTPUT_VARIABLE = "secret";
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
 
   @Inject
-  public CustomSecretsManagerEncryptor(TimeLimiter timeLimiter, ShellScriptTaskHandler shellScriptTaskHandler) {
+  public CustomSecretsManagerEncryptor(HTimeLimiter timeLimiter, ShellScriptTaskHandler shellScriptTaskHandler) {
     this.shellScriptTaskHandler = shellScriptTaskHandler;
     this.timeLimiter = timeLimiter;
   }
@@ -62,8 +62,8 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig), 20, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(20), () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig));
       } catch (SecretManagementDelegateException e) {
         throw e;
       } catch (Exception e) {

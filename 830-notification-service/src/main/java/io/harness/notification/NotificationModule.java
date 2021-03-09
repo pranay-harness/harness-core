@@ -24,6 +24,7 @@ import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.version.VersionModule;
 
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,7 +35,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;

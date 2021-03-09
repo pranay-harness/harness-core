@@ -31,6 +31,7 @@ import static software.wings.beans.container.KubernetesServiceType.None;
 import static software.wings.beans.container.Label.Builder.aLabel;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -42,6 +43,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -82,7 +84,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -132,7 +133,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
@@ -186,7 +186,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
-  @Inject private transient TimeLimiter timeLimiter;
+  @Inject private transient HTimeLimiter timeLimiter;
   @Inject private transient Clock clock;
   @Inject private transient AzureHelperService azureHelperService;
   @Inject private EncryptionService encryptionService;
@@ -1414,7 +1414,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             || (isNotBlank(loadBalancerIP) && !loadBalancerIP.equals(loadBalancer.getIngress().get(0).getIp())))) {
       executionLogCallback.saveExecutionLog("Waiting for service " + serviceName + " load balancer to be ready");
       try {
-        return timeLimiter.callWithTimeout(() -> {
+        return timeLimiter.callInterruptible(ofMinutes(timeoutInMinutes), () -> {
           while (true) {
             LoadBalancerStatus loadBalancerStatus =
                 kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceName)
@@ -1426,7 +1426,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             }
             sleep(ofSeconds(1));
           }
-        }, timeoutInMinutes, TimeUnit.MINUTES, true);
+        });
       } catch (UncheckedTimeoutException e) {
         executionLogCallback.saveExecutionLog(
             format("Timed out waiting for service [%s] load balancer to be ready", serviceName), LogLevel.ERROR);

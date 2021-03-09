@@ -8,7 +8,10 @@ import static software.wings.beans.command.CommandExecutionContext.Builder.aComm
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
+import static java.time.Duration.ofMinutes;
+
 import io.harness.beans.ExecutionStatus;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.NoopExecutionCallback;
@@ -28,9 +31,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManagementDelegateService;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,7 +40,6 @@ import com.jcraft.jsch.Session;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -47,8 +47,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 public class HostValidationServiceImpl implements HostValidationService {
   @Inject private EncryptionService encryptionService;
-  @Inject private TimeLimiter timeLimiter;
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
+  @Inject private HTimeLimiter timeLimiter;
 
   @Override
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,
@@ -63,7 +62,7 @@ public class HostValidationServiceImpl implements HostValidationService {
           (HostConnectionAttributes) connectionSetting.getValue(), sshVaultConfig);
     }
     try {
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMinutes(1), () -> {
         hostNames.forEach(hostName -> {
           HostValidationResponse response;
           if (connectionSetting.getValue() instanceof WinRmConnectionAttributes) {
@@ -74,7 +73,7 @@ public class HostValidationServiceImpl implements HostValidationService {
           hostValidationResponses.add(response);
         });
         return true;
-      }, 1, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException ex) {
       log.warn("Host validation timed out", ex);
       // populate timeout error for rest of the hosts
