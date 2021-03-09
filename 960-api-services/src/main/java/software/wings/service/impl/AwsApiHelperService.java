@@ -11,8 +11,8 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.artifacts.ecr.beans.AwsInternalConfig;
 import io.harness.aws.AwsCallTracker;
-import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
 import io.harness.exception.InvalidRequestException;

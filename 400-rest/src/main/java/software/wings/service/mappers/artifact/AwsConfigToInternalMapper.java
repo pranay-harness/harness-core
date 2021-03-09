@@ -1,6 +1,6 @@
 package software.wings.service.mappers.artifact;
 
-import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.artifacts.ecr.beans.AwsInternalConfig;
 
 import software.wings.beans.AwsConfig;
 

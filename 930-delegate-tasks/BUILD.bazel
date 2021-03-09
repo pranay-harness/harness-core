@@ -22,6 +22,7 @@ shared_dependencies = [
     "@maven//:com_amazonaws_aws_java_sdk_ec2",
     "@maven//:com_amazonaws_aws_java_sdk_ecr",
     "@maven//:com_amazonaws_aws_java_sdk_ecs",
+    "@maven//:com_amazonaws_aws_java_sdk_cloudwatch",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_protobuf_protobuf_java",

@@ -1,4 +1,4 @@
-package io.harness.aws.beans;
+package io.harness.artifacts.ecr.beans;
 
 import io.harness.encryption.Encrypted;
 

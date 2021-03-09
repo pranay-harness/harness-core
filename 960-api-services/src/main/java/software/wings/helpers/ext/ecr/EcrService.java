@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
-import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.artifacts.ecr.beans.AwsInternalConfig;
+import io.harness.artifacts.ecr.beans.EcrInternalConfig;
+import io.harness.artifacts.gcr.beans.GcrInternalConfig;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +16,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 public interface EcrService {
+  int MAX_NO_OF_TAGS_PER_IMAGE = 10000;
   /**
    * Gets builds.
    *
@@ -62,4 +65,25 @@ public interface EcrService {
   List<String> listEcrRegistry(AwsInternalConfig awsConfig, String region);
 
   List<Map<String, String>> getLabels(AwsInternalConfig awsConfig, String imageName, String region, List<String> tags);
+
+  /**
+   * Gets the last successful build with input as tag regex.
+   */
+  BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex);
+
+  /**
+   * Validates the Image Tag
+   */
+  BuildDetailsInternal verifyBuildNumber(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
+
+  boolean validateCredentials(AwsInternalConfig awsConfig, String imageName);
+
+  /**
+   * Validates the Image
+   *
+   * @param awsConfig
+   */
+  boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region);
 }
