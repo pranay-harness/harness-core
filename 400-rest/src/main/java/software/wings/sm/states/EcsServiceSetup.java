@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -322,6 +323,8 @@ public class EcsServiceSetup extends State {
                                          .region(ecsSetupParams.getRegion())
                                          .safeDisplayServiceVariables(variables.getSafeDisplayServiceVariables())
                                          .serviceVariables(variables.getServiceVariables())
+                                         .timeoutErrorSupported(featureFlagService.isEnabled(
+                                             TIMEOUT_FAILURE_SUPPORT, ecsSetUpDataBag.getApplication().getAccountId()))
                                          .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(

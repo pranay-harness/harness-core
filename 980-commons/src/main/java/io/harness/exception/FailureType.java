@@ -11,7 +11,8 @@ public enum FailureType {
   AUTHENTICATION(""),
   VERIFICATION_FAILURE(""),
   APPLICATION_ERROR(""),
-  AUTHORIZATION_ERROR("");
+  AUTHORIZATION_ERROR(""),
+  TIMEOUT_ERROR("");
 
   String errorMessage;
 
