@@ -73,9 +73,12 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
       log.error("Could not get auth tokens", e);
       throw new InvalidRequestException("Could not get auth tokens - " + e.getMessage(), USER);
     }
+    AwsInternalConfig awsInternalConfig =
+        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider());
+    String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
+        awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     boolean validateCredentials = ecrService.validateCredentials(
-        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider()),
-        attributesRequest.getImagePath());
+        awsInternalConfig, ecrimageUrl, attributesRequest.getRegion(), attributesRequest.getImagePath());
     return ArtifactTaskExecutionResponse.builder().isArtifactServerValid(validateCredentials).build();
   }
 
@@ -88,9 +91,12 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
       log.error("Could not get auth tokens", e);
       throw new InvalidRequestException("Could not get auth tokens - " + e.getMessage(), USER);
     }
+    AwsInternalConfig awsInternalConfig =
+        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider());
+    String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
+        awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     boolean verifyImageName = ecrService.verifyImageName(
-        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider()),
-        attributesRequest.getImagePath(), attributesRequest.getRegion());
+        awsInternalConfig, ecrimageUrl, attributesRequest.getRegion(), attributesRequest.getImagePath());
     return ArtifactTaskExecutionResponse.builder().isArtifactSourceValid(verifyImageName).build();
   }
 
