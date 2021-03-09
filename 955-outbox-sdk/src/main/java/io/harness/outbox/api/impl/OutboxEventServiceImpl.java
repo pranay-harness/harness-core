@@ -5,7 +5,7 @@ import static io.harness.outbox.OutboxSDKConstants.OUTBOX_POLL_JOB_PAGE_REQUEST;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
-import io.harness.HEvent;
+import io.harness.Event;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.OutboxEvent;
@@ -31,7 +31,7 @@ public class OutboxEventServiceImpl implements OutboxEventService {
   }
 
   @Override
-  public OutboxEvent save(HEvent event) {
+  public OutboxEvent save(Event event) {
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .resourceScope(event.getResourceScope())
                                   .resource(event.getResource())
