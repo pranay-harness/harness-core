@@ -34,9 +34,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public PageResponse<RoleAssignment> list(
-      PageRequest pageRequest, String parentIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
-    return roleAssignmentDao.list(pageRequest, parentIdentifier, roleAssignmentFilter);
+  public PageResponse<RoleAssignment> list(PageRequest pageRequest, RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.list(pageRequest, roleAssignmentFilter);
   }
 
   @Override
@@ -55,7 +54,7 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public long deleteMany(String scopeIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
-    return roleAssignmentDao.deleteMany(scopeIdentifier, roleAssignmentFilter);
+  public long deleteMany(RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.deleteMany(roleAssignmentFilter);
   }
 }
