@@ -10,6 +10,7 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -172,12 +173,14 @@ public class OrganizationServiceImplTest extends CategoryTest {
     String searchTerm = randomAlphabetic(5);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
 
-    when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
+    when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class), anyBoolean()))
+        .thenReturn(getPage(emptyList(), 0));
 
     Page<Organization> organizationPage = organizationService.list(
         accountIdentifier, unpaged(), OrganizationFilterDTO.builder().searchTerm(searchTerm).build());
 
-    verify(organizationRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
+    verify(organizationRepository, times(1))
+        .findAll(criteriaArgumentCaptor.capture(), any(Pageable.class), anyBoolean());
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();

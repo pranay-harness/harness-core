@@ -3,9 +3,9 @@ package software.wings.beans.infrastructure.instance;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -18,6 +18,8 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.infrastructure.instance.info.ServerlessInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.AwsLambdaInstanceKey;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -29,27 +31,55 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
-
-@CdIndex(name = "serverless_instance_index1", fields = { @Field("appId")
-                                                         , @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "serverless_instance_index2",
-    fields = { @Field("appId")
-               , @Field("infraMappingId"), @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "serverless_instance_index3",
-    fields = { @Field("accountId")
-               , @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "serverless_instance_index5",
-    fields = { @Field("appId")
-               , @Field("serviceId"), @Field("createdAt"), @Field("isDeleted"), @Field("deletedAt") })
-@CdIndex(name = "serverless_instance_index7", fields = { @Field("accountId")
-                                                         , @Field("isDeleted") })
-@CdIndex(name = "serverless_instance_index8", fields = { @Field("appId")
-                                                         , @Field("serviceId"), @Field("isDeleted") })
 @FieldNameConstants(innerTypeName = "ServerlessInstanceKeys")
 @Entity(value = "serverlessInstance", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class ServerlessInstance implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("serverless_instance_index1")
+                 .field(ServerlessInstanceKeys.appId)
+                 .field(ServerlessInstanceKeys.isDeleted)
+                 .field(ServerlessInstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("serverless_instance_index2")
+                 .field(ServerlessInstanceKeys.appId)
+                 .field(ServerlessInstanceKeys.infraMappingId)
+                 .field(ServerlessInstanceKeys.isDeleted)
+                 .field(ServerlessInstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("serverless_instance_index3")
+                 .field(ServerlessInstanceKeys.accountId)
+                 .field(ServerlessInstanceKeys.createdAt)
+                 .field(ServerlessInstanceKeys.isDeleted)
+                 .field(ServerlessInstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("serverless_instance_index5")
+                 .field(ServerlessInstanceKeys.appId)
+                 .field(ServerlessInstanceKeys.serviceId)
+                 .field(ServerlessInstanceKeys.createdAt)
+                 .field(ServerlessInstanceKeys.isDeleted)
+                 .field(ServerlessInstanceKeys.deletedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("serverless_instance_index7")
+                 .field(ServerlessInstanceKeys.accountId)
+                 .field(ServerlessInstanceKeys.isDeleted)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("serverless_instance_index8")
+                 .field(ServerlessInstanceKeys.appId)
+                 .field(ServerlessInstanceKeys.serviceId)
+                 .field(ServerlessInstanceKeys.isDeleted)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) private String uuid;
 
   @FdIndex @NotNull protected String appId;

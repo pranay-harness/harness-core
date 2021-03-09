@@ -1067,12 +1067,14 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     DirectKubernetesInfrastructureMapping infrastructureMapping =
         DirectKubernetesInfrastructureMapping.builder().build();
     infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+    String serviceTemplateId = "serviceTemplateId";
 
     doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID);
     doReturn(infrastructureMapping).when(infrastructureMappingService).get(APP_ID, null);
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
     doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
     doReturn(mockParams).when(applicationManifestUtils).createCustomManifestValuesFetchParams(context, appManifestMap);
+    doReturn(serviceTemplateId).when(serviceTemplateHelper).fetchServiceTemplateId(infrastructureMapping);
     abstractK8SState.executeWrapperWithManifest(k8sStateExecutor, context, 90000);
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -1083,6 +1085,8 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     assertThat(queuedTask.getData()).isNotNull();
     assertThat(queuedTask.getData().getParameters()).isNotEmpty();
     assertThat(queuedTask.getData().getParameters()[0]).isSameAs(mockParams);
+    assertThat(queuedTask.getSetupAbstractions().get(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD))
+        .isEqualTo(serviceTemplateId);
   }
 
   @Test

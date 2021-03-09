@@ -9,14 +9,19 @@ import io.harness.accesscontrol.acl.models.ParentMetadata;
 import io.harness.accesscontrol.acl.models.SourceMetadata;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.roles.filter.ManagedFilter;
 import io.harness.aggregator.services.apis.ACLAggregatorService;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collection;
@@ -62,50 +67,63 @@ public class HACLAggregatorServiceImpl implements ACLAggregatorService {
     String principalIdentifier = hPrincipal.getPrincipalIdentifier();
     PrincipalType principalType = hPrincipal.getPrincipalType();
 
-    List<RoleAssignment> roleBindings = roleAssignmentService.get(principalIdentifier, principalType);
-
-    for (RoleAssignment roleAssignment : roleBindings) {
-      Optional<Role> role =
-          roleService.get(roleAssignment.getRoleIdentifier(), roleAssignment.getScopeIdentifier(), true);
-      if (role.isPresent()) {
-        Set<String> permissions = role.get().getPermissions();
-        String resourceIdentifier = roleAssignment.getResourceGroupIdentifier();
-        Optional<ParentMetadata> parentMetadataOptional = getIdentifiersFromFQN(roleAssignment.getScopeIdentifier());
-        if (parentMetadataOptional.isPresent()) {
-          ParentMetadata parentMetadata = parentMetadataOptional.get();
-          ResourceGroupDTO resourceGroup =
-              NGRestUtils
-                  .getResponse(
-                      resourceGroupClient.getResourceGroup(resourceIdentifier, parentMetadata.getAccountIdentifier(),
-                          parentMetadata.getOrgIdentifier(), parentMetadata.getProjectIdentifier()))
-                  .getResourceGroup();
-          permissions.forEach(permission
-              -> resourceGroup.getResourceSelectors()
-                     .stream()
-                     .map(HResource::fromResourceSelector)
-                     .flatMap(Collection::stream)
-                     .filter(Optional::isPresent)
-                     .map(Optional::get)
-                     .forEach(hResource -> {
-                       HACL acl = HACL.builder()
-                                      .permission(permission)
-                                      .resource(hResource)
-                                      .sourceMetadata(SourceMetadata.builder()
-                                                          .roleIdentifier(role.get().getIdentifier())
-                                                          .userGroupIdentifier(null)
-                                                          .roleAssignmentIdentifier(roleAssignment.getIdentifier())
-                                                          .build())
-                                      .resourceGroupIdentifier(resourceGroup.getIdentifier())
-                                      .principal(hPrincipal)
-                                      .aclQueryString(
-                                          HACL.getAclQueryString(parentMetadata, hResource, hPrincipal, permission))
-                                      .parentMetadata(parentMetadata)
-                                      .build();
-                       acldao.save(acl);
-                     }));
+    RoleAssignmentFilter roleAssignmentFilter =
+        RoleAssignmentFilter.builder()
+            .principalFilter(Sets.newHashSet(io.harness.accesscontrol.principals.Principal.builder()
+                                                 .principalIdentifier(principalIdentifier)
+                                                 .principalType(principalType)
+                                                 .build()))
+            .build();
+    int currentPageIndex = 0;
+    PageResponse<RoleAssignment> currentPage;
+    do {
+      PageRequest currentPageRequest = PageRequest.builder().pageSize(100).pageIndex(currentPageIndex).build();
+      currentPage = roleAssignmentService.list(currentPageRequest, roleAssignmentFilter);
+      List<RoleAssignment> roleBindings = currentPage.getContent();
+      for (RoleAssignment roleAssignment : roleBindings) {
+        Optional<Role> role = roleService.get(
+            roleAssignment.getRoleIdentifier(), roleAssignment.getScopeIdentifier(), ManagedFilter.NO_FILTER);
+        if (role.isPresent()) {
+          Set<String> permissions = role.get().getPermissions();
+          String resourceIdentifier = roleAssignment.getResourceGroupIdentifier();
+          Optional<ParentMetadata> parentMetadataOptional = getIdentifiersFromFQN(roleAssignment.getScopeIdentifier());
+          if (parentMetadataOptional.isPresent()) {
+            ParentMetadata parentMetadata = parentMetadataOptional.get();
+            ResourceGroupDTO resourceGroup =
+                NGRestUtils
+                    .getResponse(
+                        resourceGroupClient.getResourceGroup(resourceIdentifier, parentMetadata.getAccountIdentifier(),
+                            parentMetadata.getOrgIdentifier(), parentMetadata.getProjectIdentifier()))
+                    .getResourceGroup();
+            permissions.forEach(permission
+                -> resourceGroup.getResourceSelectors()
+                       .stream()
+                       .map(HResource::fromResourceSelector)
+                       .flatMap(Collection::stream)
+                       .filter(Optional::isPresent)
+                       .map(Optional::get)
+                       .forEach(hResource -> {
+                         HACL acl = HACL.builder()
+                                        .permission(permission)
+                                        .resource(hResource)
+                                        .sourceMetadata(SourceMetadata.builder()
+                                                            .roleIdentifier(role.get().getIdentifier())
+                                                            .userGroupIdentifier(null)
+                                                            .roleAssignmentIdentifier(roleAssignment.getIdentifier())
+                                                            .build())
+                                        .resourceGroupIdentifier(resourceGroup.getIdentifier())
+                                        .principal(hPrincipal)
+                                        .aclQueryString(
+                                            HACL.getAclQueryString(parentMetadata, hResource, hPrincipal, permission))
+                                        .parentMetadata(parentMetadata)
+                                        .build();
+                         acldao.save(acl);
+                       }));
+          }
         }
       }
-    }
+      currentPageIndex++;
+    } while (currentPageIndex < currentPage.getTotalPages());
     return true;
   }
 }

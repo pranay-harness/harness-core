@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.PLATFORMS;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -11,7 +11,7 @@ import static org.atteo.evo.inflector.English.plural;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.Misc;
 import io.harness.scheduler.PersistentScheduler;

@@ -4,11 +4,11 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.changestreams.ChangeEvent;
 import io.harness.persistence.PersistentEntity;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.search.framework.SearchSourceEntitySyncState.SearchSourceEntitySyncStateKeys;
-import software.wings.search.framework.changestreams.ChangeEvent;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.time.Duration;

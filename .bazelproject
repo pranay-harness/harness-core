@@ -22,6 +22,7 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
+  370-users-syncbridge
   380-cg-graphql
   390-db-migration
   400-rest
@@ -95,6 +96,7 @@ directories:
   960-persistence
   960-recaster
   960-yaml-sdk
+  965-git-sync-commons
   970-api-services-beans
   970-grpc
   970-ng-commons

@@ -28,6 +28,7 @@ import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.yaml.ParameterField;
@@ -194,9 +195,8 @@ public class K8sStepHelperTest extends CategoryTest {
     ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
     assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.K8S_MANIFEST);
     assertThat(delegateConfig).isInstanceOf(K8sManifestDelegateConfig.class);
-    assertThat(((K8sManifestDelegateConfig) delegateConfig).getStoreDelegateConfig()).isNotNull();
-    assertThat(((K8sManifestDelegateConfig) delegateConfig).getStoreDelegateConfig())
-        .isInstanceOf(GitStoreDelegateConfig.class);
+    assertThat(delegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(delegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
   }
 
   @Test
@@ -238,5 +238,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
     assertThat(helmChartDelegateConfig.getHelmVersion()).isEqualTo(HelmVersion.V3);
     assertThat(helmChartDelegateConfig.isSkipResourceVersioning()).isTrue();
+    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap())
+        .containsKeys(HelmSubCommandType.FETCH, HelmSubCommandType.VERSION);
+    assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsValues("--test", "--test2");
   }
 }

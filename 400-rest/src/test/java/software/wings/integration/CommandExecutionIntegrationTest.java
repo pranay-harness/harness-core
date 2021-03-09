@@ -1,6 +1,6 @@
 package software.wings.integration;
 
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.ARTIFACTS;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.SRINIVAS;

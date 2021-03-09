@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.DelegateAgentFileService;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;

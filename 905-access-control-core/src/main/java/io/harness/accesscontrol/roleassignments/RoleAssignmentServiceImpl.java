@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.roleassignments;
 
+import static lombok.AccessLevel.PRIVATE;
+
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
@@ -12,20 +14,17 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @ValidateOnExecution
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class RoleAssignmentServiceImpl implements RoleAssignmentService {
-  private final ScopeService scopeService;
-  private final RoleAssignmentDao roleAssignmentDao;
-  private final RoleAssignmentValidator roleAssignmentValidator;
-
-  @Inject
-  public RoleAssignmentServiceImpl(
-      ScopeService scopeService, RoleAssignmentDao roleAssignmentDao, RoleAssignmentValidator roleAssignmentValidator) {
-    this.scopeService = scopeService;
-    this.roleAssignmentDao = roleAssignmentDao;
-    this.roleAssignmentValidator = roleAssignmentValidator;
-  }
+  ScopeService scopeService;
+  RoleAssignmentDao roleAssignmentDao;
+  RoleAssignmentValidator roleAssignmentValidator;
 
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
@@ -35,9 +34,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public PageResponse<RoleAssignment> list(
-      PageRequest pageRequest, String parentIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
-    return roleAssignmentDao.list(pageRequest, parentIdentifier, roleAssignmentFilter);
+  public PageResponse<RoleAssignment> list(PageRequest pageRequest, RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.list(pageRequest, roleAssignmentFilter);
   }
 
   @Override
@@ -56,7 +54,7 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public long deleteMany(String scopeIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
-    return roleAssignmentDao.deleteMany(scopeIdentifier, roleAssignmentFilter);
+  public long deleteMany(RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.deleteMany(roleAssignmentFilter);
   }
 }
