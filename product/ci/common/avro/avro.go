@@ -16,6 +16,7 @@ type CallgrSerialzer struct {
 // based on the schema received in the input
 func NewCallgrSer(file string) (*CallgrSerialzer, error) {
 	schema, err := ioutil.ReadFile(file)
+	fmt.Print(string(schema))
 	if err != nil {
 		// handle this seperately
 		panic(err)

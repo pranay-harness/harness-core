@@ -7,3 +7,4 @@ go_library(
     visibility = ["//visibility:public"],
     deps = ["@com_github_linkedin_goavro_v2//:go_default_library"],
 )
+

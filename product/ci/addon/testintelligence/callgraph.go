@@ -30,18 +30,18 @@ func NewCallGraph(log *zap.SugaredLogger) *CallGraph {
 }
 
 // Parse callgraph and return nodes and relations
-func (cg *CallGraph) Parse(file string) ([]Relation, []Node, error) {
+func (cg *CallGraph) Parse(file string) (CGphDTO, error) {
 	f, err := os.Open(file)
 	if err != nil {
 		// cg.log.ErrorW(fmt.Sprintf("failed to open callgraph file at path %s", file), zap.Error(err))
-		return nil, nil, err
+		return CGphDTO{}, err
 	}
 	r := bufio.NewReader(f)
 	cgStr, err := readF(r)
 	return parseInt(cgStr)
 }
 
-func parseInt(cgStr []string) ([]Relation, []Node, error) {
+func parseInt(cgStr []string) (CGphDTO, error) {
 	var (
 		err error
 		inp []Input
@@ -53,12 +53,16 @@ func parseInt(cgStr []string) ([]Relation, []Node, error) {
 		if err != nil {
 			fmt.Printf("failed to parse json")
 			log.Fatal(err)
-			return nil, nil, err
+			return CGphDTO{}, err
 		}
 		inp = append(inp, *tinp)
 	}
 	rels, dets := process(inp)
-	return rels, dets, nil
+	cgphDTO := CGphDTO{
+		Nodes:     dets,
+		Relations: rels,
+	}
+	return cgphDTO, nil
 }
 
 func process(inps []Input) ([]Relation, []Node) {
@@ -155,45 +159,77 @@ type CGphDTO struct {
 }
 
 //ToStringMap converts CallgraphDto to string for avro encoding
-func (cg *CGphDTO) ToStringMap(map[string]interface{}, error) {
+func (cg *CGphDTO) ToStringMap() (map[string]interface{}, error) {
 	var nodes, relations []interface{}
-	for _, v := range *cg.Nodes {
+	for _, v := range (*cg).Nodes {
 		datumIn := map[string]interface{}{
-			"package": string(u.Pkg),
-			"method":  string(u.Method),
+			"package": string(v.Pkg),
+			"method":  string(v.Method),
 		}
-		names = append(names, datumIn)
+		nodes = append(nodes, datumIn)
 	}
-	for _, v = range *cg.Relations {
-		relations = append(relations, v)
+	for _, v := range (*cg).Relations {
+		fmt.Println("source", int(v.Source))
+		datumIn := map[string]interface{}{
+			"source": int(v.Source),
+			"tests":  v.Tests,
+		}
+		relations = append(relations, datumIn)
 	}
 
 	datum := map[string]interface{}{
 		"nodes":     nodes,
 		"relations": relations,
 	}
-	return datum
+	return datum, nil
 }
 
 //FromStringMap converts CallgraphDto to string for avro encoding
-func (cg *CGphDTO) FromStringMap(data map[string]interface{}) map[string]interface{} {
+func (cg *CGphDTO) FromStringMap(data map[string]interface{}) (*CGphDTO, error) {
+	var fNodes []Node
+	var fRelations []Relation
 	for k, v := range data {
 		switch k {
 		case "nodes":
 			if nodes, ok := v.([]interface{}); ok {
-				for _, node := range nodes {
-					fields := node.(map[string]interface{})
+				for _, t := range nodes {
+					fields := t.(map[string]interface{})
+					var node Node
 					for f, v := range fields {
 						switch f {
 						case "method":
-							fmt.Println("method", v.(string))
+							node.Method = v.(string)
 						case "package":
-							fmt.Println("package", v.(string))
+							node.Pkg = v.(string)
 						}
 					}
+					fNodes = append(fNodes, node)
+				}
+			}
+		case "relations":
+			if relations, ok := v.([]interface{}); ok {
+				for _, reln := range relations {
+					var relation Relation
+					fields := reln.(map[string]interface{})
+					for k, v := range fields {
+						switch k {
+						case "source":
+							relation.Source = int(v.(int32))
+						case "tests":
+							var testsN []int
+							for _, v := range v.([]interface{}) {
+								testsN = append(testsN, int(v.(int32)))
+							}
+							relation.Tests = testsN
+						}
+					}
+					fRelations = append(fRelations, relation)
 				}
 			}
 		}
 	}
-	return nil
+	return &CGphDTO{
+		Relations: fRelations,
+		Nodes:     fNodes,
+	}, nil
 }
