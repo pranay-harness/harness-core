@@ -1,7 +1,5 @@
 package io.harness.outbox;
 
-import static io.harness.outbox.OutboxSDKConstants.OUTBOX_TRANSACTION_TEMPLATE;
-
 import io.harness.mongo.MongoConfig;
 import io.harness.outbox.api.OutboxEventService;
 import io.harness.outbox.api.impl.OutboxEventServiceImpl;
@@ -17,6 +15,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
 public class TransactionOutboxModule extends AbstractModule {
+  public static final String OUTBOX_TRANSACTION_TEMPLATE = "OUTBOX_TRANSACTION_TEMPLATE";
+
   @Override
   protected void configure() {
     bind(OutboxEventService.class).to(OutboxEventServiceImpl.class);

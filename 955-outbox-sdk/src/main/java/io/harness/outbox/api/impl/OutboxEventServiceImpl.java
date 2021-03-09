@@ -1,7 +1,7 @@
 package io.harness.outbox.api.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.outbox.OutboxSDKConstants.OUTBOX_POLL_JOB_PAGE_REQUEST;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -14,7 +14,6 @@ import io.harness.repositories.OutboxEventRepository;
 
 import com.google.gson.Gson;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import org.springframework.data.domain.Pageable;
 
 public class OutboxEventServiceImpl implements OutboxEventService {
@@ -23,11 +22,10 @@ public class OutboxEventServiceImpl implements OutboxEventService {
   private final PageRequest pageRequest;
 
   @Inject
-  public OutboxEventServiceImpl(
-      OutboxEventRepository outboxRepository, Gson gson, @Named(OUTBOX_POLL_JOB_PAGE_REQUEST) PageRequest pageRequest) {
+  public OutboxEventServiceImpl(OutboxEventRepository outboxRepository, Gson gson) {
     this.outboxRepository = outboxRepository;
     this.gson = gson;
-    this.pageRequest = pageRequest;
+    this.pageRequest = DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
   }
 
   @Override
