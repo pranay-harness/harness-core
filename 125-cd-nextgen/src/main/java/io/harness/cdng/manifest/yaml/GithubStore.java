@@ -1,7 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
+import io.harness.cdng.visitor.helper.GithubStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
@@ -22,10 +22,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName(ManifestStoreType.GIT)
-@SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
-@TypeAlias("gitStore")
-public class GitStore implements GitStoreConfig, Visitable {
+@JsonTypeName(ManifestStoreType.GITHUB)
+@SimpleVisitorHelper(helperClass = GithubStoreVisitorHelper.class)
+@TypeAlias("githubStore")
+public class GithubStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 
   @Wither private FetchType gitFetchType;
@@ -41,11 +41,11 @@ public class GitStore implements GitStoreConfig, Visitable {
 
   @Override
   public String getKind() {
-    return ManifestStoreType.GIT;
+    return ManifestStoreType.GITHUB;
   }
 
-  public GitStore cloneInternal() {
-    return GitStore.builder()
+  public GithubStore cloneInternal() {
+    return GithubStore.builder()
         .connectorRef(connectorRef)
         .gitFetchType(gitFetchType)
         .branch(branch)
@@ -56,24 +56,24 @@ public class GitStore implements GitStoreConfig, Visitable {
 
   @Override
   public StoreConfig applyOverrides(StoreConfig overrideConfig) {
-    GitStore gitStore = (GitStore) overrideConfig;
-    GitStore resultantGitStore = this;
-    if (!ParameterField.isNull(gitStore.getConnectorRef())) {
-      resultantGitStore = resultantGitStore.withConnectorRef(gitStore.getConnectorRef());
+    GithubStore githubStore = (GithubStore) overrideConfig;
+    GithubStore resultantGithubStore = this;
+    if (!ParameterField.isNull(githubStore.getConnectorRef())) {
+      resultantGithubStore = resultantGithubStore.withConnectorRef(githubStore.getConnectorRef());
     }
-    if (!ParameterField.isNull(gitStore.getPaths())) {
-      resultantGitStore = resultantGitStore.withPaths(gitStore.getPaths());
+    if (!ParameterField.isNull(githubStore.getPaths())) {
+      resultantGithubStore = resultantGithubStore.withPaths(githubStore.getPaths());
     }
-    if (gitStore.getGitFetchType() != null) {
-      resultantGitStore = resultantGitStore.withGitFetchType(gitStore.getGitFetchType());
+    if (githubStore.getGitFetchType() != null) {
+      resultantGithubStore = resultantGithubStore.withGitFetchType(githubStore.getGitFetchType());
     }
-    if (!ParameterField.isNull(gitStore.getBranch())) {
-      resultantGitStore = resultantGitStore.withBranch(gitStore.getBranch());
+    if (!ParameterField.isNull(githubStore.getBranch())) {
+      resultantGithubStore = resultantGithubStore.withBranch(githubStore.getBranch());
     }
-    if (!ParameterField.isNull(gitStore.getCommitId())) {
-      resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
+    if (!ParameterField.isNull(githubStore.getCommitId())) {
+      resultantGithubStore = resultantGithubStore.withCommitId(githubStore.getCommitId());
     }
-    return resultantGitStore;
+    return resultantGithubStore;
   }
 
   @Override
