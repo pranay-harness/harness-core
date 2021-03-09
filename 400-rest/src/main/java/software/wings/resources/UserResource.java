@@ -35,18 +35,7 @@ import io.harness.rest.RestResponse.Builder;
 import io.harness.security.annotations.PublicApi;
 
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Account;
-import software.wings.beans.AccountJoinRequest;
-import software.wings.beans.AccountRole;
-import software.wings.beans.ApplicationRole;
-import software.wings.beans.BugsnagTab;
-import software.wings.beans.ErrorData;
-import software.wings.beans.LoginRequest;
-import software.wings.beans.LoginTypeRequest;
-import software.wings.beans.PublicUser;
-import software.wings.beans.User;
-import software.wings.beans.UserInvite;
-import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.*;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
@@ -616,8 +605,7 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> nglogin(LoginRequest loginBody, @QueryParam("accountId") String accountId,
-                                  @QueryParam("captcha") @Nullable String captchaToken) {
+  public RestResponse<User> nglogin(NGLoginRequest loginBody, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(User.Builder.anUser()
                                           .accountName(accountId)
                                           .defaultAccountId("testDefaultAccount")
