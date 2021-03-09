@@ -89,11 +89,12 @@ func convCgph(inps []Input) (map[int][]int, map[int]Node) {
 	nodeMap := make(map[int]Node)
 
 	for _, inp := range inps {
+		// processing nodeMap
 		test := inp.Test
 		test.Type = "test"
 		testID := test.ID
 		nodeMap[testID] = test
-
+		// processing relmap
 		source := inp.Source
 		source.Type = "source"
 		sourceID := source.ID

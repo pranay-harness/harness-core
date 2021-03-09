@@ -11,20 +11,20 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 	cg := Callgraph{
 		Nodes: []Node{
 			Node{
-				Pkg:    "package1",
-				Method: "m1",
-				ID:     1,
-				Params: "param1",
-				Class:  "class1",
-				Type:   "source",
+				Package: "package1",
+				Method:  "m1",
+				ID:      1,
+				Params:  "param1",
+				Class:   "class1",
+				Type:    "source",
 			},
 			Node{
-				Pkg:    "package2",
-				Method: "m2",
-				ID:     1,
-				Params: "param2",
-				Class:  "class2",
-				Type:   "test",
+				Package: "package2",
+				Method:  "m2",
+				ID:      1,
+				Params:  "param2",
+				Class:   "class2",
+				Type:    "test",
 			},
 		},
 		Relns: []Relation{
@@ -63,7 +63,7 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 						case "method":
 							node.Method = v.(string)
 						case "package":
-							node.Pkg = v.(string)
+							node.Package = v.(string)
 						case "id":
 							node.ID = v.(int)
 						case "paramas":

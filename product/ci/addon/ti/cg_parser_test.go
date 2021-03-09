@@ -34,12 +34,12 @@ func TestCallGraphParser_Parse(t *testing.T) {
 
 	// Validate if a sepcific node exisits in the parsed list
 	sNode := Node{
-		Pkg:    "io.haness.exception",
-		Method: "<init>",
-		ID:     2139952358,
-		Params: "java.lang.Sting,java.util.EnumSet",
-		Class:  "InvalidAgumentsException",
-		Type:   "source",
+		Package: "io.haness.exception",
+		Method:  "<init>",
+		ID:      2139952358,
+		Params:  "java.lang.Sting,java.util.EnumSet",
+		Class:   "InvalidAgumentsException",
+		Type:    "source",
 	}
 
 	contains := false

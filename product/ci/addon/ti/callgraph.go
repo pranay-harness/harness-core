@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Callgraph object is used to upload data to TI server
+// Callgraph object used to upload data to TI server
 type Callgraph struct {
 	Nodes []Node
 	Relns []Relation
@@ -16,7 +16,7 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 	var nodes, relns []interface{}
 	for _, v := range (*cg).Nodes {
 		data := map[string]interface{}{
-			"package": v.Pkg,
+			"package": v.Package,
 			"method":  v.Method,
 			"id":      v.ID,
 			"params":  v.Params,
@@ -55,7 +55,7 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 						case "method":
 							node.Method = v.(string)
 						case "package":
-							node.Pkg = v.(string)
+							node.Package = v.(string)
 						case "id":
 							node.ID = v.(int)
 						case "paramas":
@@ -71,7 +71,7 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 					fNodes = append(fNodes, node)
 				}
 			} else {
-				return nil, errors.New("failed to parse ")
+				return nil, errors.New("failed to parse nodes in callgraph")
 			}
 		case "relns":
 			if relns, ok := v.([]interface{}); ok {
@@ -94,6 +94,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 					}
 					fRel = append(fRel, relation)
 				}
+			} else {
+				return nil, errors.New("failed to parse relns in callgraph")
 			}
 		}
 	}
@@ -103,14 +105,14 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 	}, nil
 }
 
-//Node type represent details of node in callgraph
+//Node type represents detail of node in callgraph
 type Node struct {
-	Pkg    string `json:"package"`
-	Method string
-	ID     int
-	Params string
-	Class  string
-	Type   string
+	Package string
+	Method  string
+	ID      int
+	Params  string
+	Class   string
+	Type    string
 }
 
 // Input is the go representation of each line in callgraph file
@@ -121,6 +123,6 @@ type Input struct {
 
 //Relation b/w source and test
 type Relation struct {
-	Source int   `json:"source"`
-	Tests  []int `json:"tests"`
+	Source int
+	Tests  []int
 }
