@@ -18,6 +18,7 @@ import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -84,6 +85,17 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
 
   private transient Map<String, String> defaults = new HashMap<>();
   private boolean sample;
+
+  @JsonProperty("isManualTriggerAuthorized")
+  public boolean isManualTriggerAuthorized() {
+    return isManualTriggerAuthorized;
+  }
+
+  public void setManualTriggerAuthorized(boolean manualTriggerAuthorized) {
+    isManualTriggerAuthorized = manualTriggerAuthorized;
+  }
+
+  private boolean isManualTriggerAuthorized;
 
   public boolean isSample() {
     return sample;
@@ -340,6 +352,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     private Map<String, String> defaults;
     private YamlGitConfig yamlGitConfig;
     private boolean sample;
+    private boolean isManualTriggerAuthorized;
 
     private Builder() {}
 
@@ -437,6 +450,11 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       return this;
     }
 
+    public Builder isManualTriggerAuthorized(boolean isManualTriggerAuthorized) {
+      this.isManualTriggerAuthorized = isManualTriggerAuthorized;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .name(name)
@@ -455,7 +473,8 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
           .lastUpdatedBy(lastUpdatedBy)
           .lastUpdatedAt(lastUpdatedAt)
           .yamlGitConfig(yamlGitConfig)
-          .sample(sample);
+          .sample(sample)
+          .isManualTriggerAuthorized(isManualTriggerAuthorized);
     }
 
     public Application build() {
@@ -478,6 +497,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       application.setDefaults(defaults);
       application.setYamlGitConfig(yamlGitConfig);
       application.setSample(sample);
+      application.setManualTriggerAuthorized(isManualTriggerAuthorized);
       return application;
     }
   }
@@ -494,6 +514,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
+    @JsonProperty("isManualTriggerAuthorized") private boolean isManualTriggerAuthorized;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String description) {

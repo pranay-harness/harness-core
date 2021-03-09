@@ -1,7 +1,11 @@
 package software.wings.service.impl.yaml.handler.app;
 
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
+
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
+
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
@@ -27,6 +31,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;
   @Inject YamlGitService yamlGitService;
+  @Inject FeatureFlagService featureFlagService;
 
   @Override
   public void delete(ChangeContext<Yaml> changeContext) {
@@ -45,6 +50,9 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
                     .harnessApiVersion(getHarnessApiVersion())
                     .build();
 
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, application.getAccountId())) {
+      yaml.setManualTriggerAuthorized(application.isManualTriggerAuthorized());
+    }
     updateYamlWithAdditionalInfo(application, appId, yaml);
     return yaml;
   }
@@ -58,6 +66,10 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
     String appName = yamlHelper.getAppName(yamlFilePath);
     Application current = anApplication().accountId(accountId).name(appName).description(yaml.getDescription()).build();
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
+      current.setManualTriggerAuthorized(yaml.isManualTriggerAuthorized());
+    }
 
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 

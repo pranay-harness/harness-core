@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -34,6 +35,7 @@ import io.harness.data.validator.EntityNameValidator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
@@ -149,6 +151,7 @@ public class AppServiceImpl implements AppService {
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private UserGroupService userGroupService;
   @Inject private AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
@@ -366,6 +369,10 @@ public class AppServiceImpl implements AppService {
 
     UpdateOperations<Application> operations =
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName()).set("keywords", keywords);
+
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, savedApp.getAccountId())) {
+      operations.set(ApplicationKeys.isManualTriggerAuthorized, app.isManualTriggerAuthorized());
+    }
 
     setUnset(operations, "description", app.getDescription());
 
