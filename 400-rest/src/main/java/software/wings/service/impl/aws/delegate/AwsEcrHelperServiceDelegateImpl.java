@@ -31,7 +31,7 @@ public class AwsEcrHelperServiceDelegateImpl
 
   @VisibleForTesting
   AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
-    awsEcrApiHelperServiceDelegateImpl.getAmazonEcrClient(
+    return awsEcrApiHelperServiceDelegateImpl.getAmazonEcrClient(
         AwsConfigToInternalMapper.toAwsInternalConfig(awsConfig), region);
   }
 
