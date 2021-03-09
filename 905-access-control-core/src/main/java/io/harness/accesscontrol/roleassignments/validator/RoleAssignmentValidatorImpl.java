@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.roleassignments.validator;
 
+import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
+
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
@@ -53,7 +55,7 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
   }
 
   private void validateRole(String roleIdentifier, Scope scope) {
-    Optional<Role> role = roleService.get(roleIdentifier, scope.toString(), true);
+    Optional<Role> role = roleService.get(roleIdentifier, scope.toString(), NO_FILTER);
     if (!role.isPresent()) {
       throw new InvalidRequestException(String.format("Did not find role in %s", scope.toString()));
     }

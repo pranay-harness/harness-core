@@ -54,8 +54,10 @@ public class RoleAssignmentDTOMapper {
         .build();
   }
 
-  public static RoleAssignmentFilter fromDTO(RoleAssignmentFilterDTO object) {
+  public static RoleAssignmentFilter fromDTO(String scopeIdentifier, RoleAssignmentFilterDTO object) {
     return RoleAssignmentFilter.builder()
+        .scopeFilter(scopeIdentifier)
+        .includeChildScopes(false)
         .roleFilter(object.getRoleFilter() == null ? new HashSet<>() : object.getRoleFilter())
         .resourceGroupFilter(
             object.getResourceGroupFilter() == null ? new HashSet<>() : object.getResourceGroupFilter())

@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.roles;
 
+import io.harness.accesscontrol.roles.filter.ManagedFilter;
+import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 
@@ -36,8 +38,9 @@ public class RolesManagementJob {
       throw new InvalidRequestException("Roles file path or format is invalid");
     }
     PageRequest pageRequest = PageRequest.builder().pageIndex(0).pageSize(100).build();
+    RoleFilter roleFilter = RoleFilter.builder().managedFilter(ManagedFilter.ONLY_MANAGED).build();
     this.currentRoles =
-        Roles.builder().roles(new HashSet<>(roleService.list(pageRequest, null, true).getContent())).build();
+        Roles.builder().roles(new HashSet<>(roleService.list(pageRequest, roleFilter).getContent())).build();
     this.roleService = roleService;
   }
 
@@ -62,6 +65,6 @@ public class RolesManagementJob {
 
     addedRoles.forEach(roleService::create);
     updatedRoles.forEach(roleService::update);
-    removedIdentifiers.forEach(identifier -> roleService.delete(identifier, null, true));
+    removedIdentifiers.forEach(identifier -> roleService.delete(identifier, null));
   }
 }
