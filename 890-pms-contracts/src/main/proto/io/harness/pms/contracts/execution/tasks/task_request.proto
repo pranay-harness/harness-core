@@ -5,10 +5,12 @@ package io.harness.pms.contracts.execution.tasks;
 option java_multiple_files = true;
 
 import "io/harness/pms/contracts/execution/tasks/delegate_task_request.proto";
+import "io/harness/pms/contracts/execution/tasks/skip_task_request.proto";
 
 message TaskRequest {
   oneof request {
     DelegateTaskRequest delegateTaskRequest = 1;
+    SkipTaskRequest skipTaskRequest = 3;
   }
   TaskCategory taskCategory = 2;
 }
