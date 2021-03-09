@@ -11,6 +11,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/addon/resolver"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -38,6 +39,7 @@ type runTask struct {
 	timeoutSecs       int64
 	numRetries        int32
 	tmpFilePath       string
+	prevStepOutputs   map[string]*pb.StepOutput
 	reports           []*pb.Report
 	logMetrics        bool
 	log               *zap.SugaredLogger
@@ -48,8 +50,8 @@ type runTask struct {
 }
 
 // NewRunTask creates a run step executor
-func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer,
-	logMetrics bool, addonLogger *zap.SugaredLogger) RunTask {
+func NewRunTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput, tmpFilePath string,
+	log *zap.SugaredLogger, w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) RunTask {
 	r := step.GetRun()
 	fs := filesystem.NewOSFileSystem(log)
 
@@ -148,12 +150,21 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	defer cancel()
 
 	outputFile := fmt.Sprintf("%s/%s%s", r.tmpFilePath, r.id, outputEnvSuffix)
-	cmdToExecute := r.getScript(outputFile)
+	cmdToExecute, err := r.getScript(ctx, outputFile)
+	if err != nil {
+		return nil, err
+	}
+
+	envVars, err := r.resolveExprInEnv(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	cmdArgs := []string{"-c", cmdToExecute}
 
 	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
-		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
-	err := runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.log, r.addonLogger)
+		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
+	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.log, r.addonLogger)
 	if err != nil {
 		return nil, err
 	}
@@ -179,19 +190,55 @@ func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	return stepOutput, nil
 }
 
-func (r *runTask) getScript(outputVarFile string) string {
+func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, error) {
 	outputVarCmd := ""
 	for _, o := range r.envVarOutputs {
 		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
 
-	command := fmt.Sprintf("set -e\n %s %s", r.command, outputVarCmd)
+	resolvedCmd, err := r.resolveExprInCmd(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	command := fmt.Sprintf("set -e\n %s %s", resolvedCmd, outputVarCmd)
 	logCmd, err := utils.GetLoggableCmd(command)
 	if err != nil {
 		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
-		return fmt.Sprintf("echo '---%s'\n%s", command, command)
+		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
 	}
-	return logCmd
+	return logCmd, nil
+}
+
+// resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
+func (r *runTask) resolveExprInEnv(ctx context.Context) (map[string]string, error) {
+	envVarMap := getEnvVars()
+	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, r.id, r.prevStepOutputs, r.log)
+	if err != nil {
+		return nil, err
+	}
+
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(m)
+	if err != nil {
+		return nil, err
+	}
+
+	return resolver.ResolveEnvInMapValues(resolvedSecretMap), nil
+}
+
+// resolveExprInCmd resolves JEXL expressions & secret present in command
+func (r *runTask) resolveExprInCmd(ctx context.Context) (string, error) {
+	c, err := resolver.ResolveJEXLInString(ctx, r.command, r.id, r.prevStepOutputs, r.log)
+	if err != nil {
+		return "", err
+	}
+
+	resolvedCmd, err := resolver.ResolveSecretInString(c)
+	if err != nil {
+		return "", err
+	}
+
+	return resolvedCmd, nil
 }
 
 func logCommandExecErr(log *zap.SugaredLogger, errMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {
