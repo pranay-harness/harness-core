@@ -611,6 +611,27 @@ public class UserResource {
         authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId));
   }
 
+  @POST
+  @Path("nglogin")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> nglogin(LoginRequest loginBody, @QueryParam("accountId") String accountId,
+                                  @QueryParam("captcha") @Nullable String captchaToken) {
+    return new RestResponse<>(User.Builder.anUser()
+                                          .accountName(accountId)
+                                          .defaultAccountId("testDefaultAccount")
+                                          .email("testemail@harness.io")
+                                          .uuid("testuuid")
+                                          .name("testname")
+                                          .token("testtoken")
+                                          .emailVerified(true)
+                                          .twoFactorAuthenticationEnabled(false)
+                                          .twoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP)
+                                          .oauthProvider("testoauthproviderr")
+                                          .build());
+  }
+
   /**
    * Harness local login.
    * To be used in case of lockout scenarios, if the default login mechanism is 3rd party provider.
