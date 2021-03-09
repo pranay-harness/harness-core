@@ -6,11 +6,11 @@ load("//tools/bazel/pmd:dependencies.bzl", "rules_pmd_dependencies")
 
 rules_pmd_dependencies()
 
-# http_archive(
-#     name = "com_github_bazelbuild_buildtools",
-#     strip_prefix = "buildtools-master",
-#     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
-# )
+http_archive(
+    name = "com_github_bazelbuild_buildtools",
+    strip_prefix = "buildtools-master",
+    url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
+)
 
 # Download the Go rules
 http_archive(
