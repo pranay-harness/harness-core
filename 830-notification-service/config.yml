@@ -4,26 +4,10 @@ xxxxxxxx
       port: 9005
       maxRequestHeaderSize: 100KiB
   rootPath: /api
-#    - type: https
-#      port: 7090
-#      keyStorePath: keystore.jks
-#      keyStorePassword: password
-#      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-#      certAlias: localhost
-#      validateCerts: false
-#      maxRequestHeaderSize: 100KiB
-
-#  adminConnectors:
-#    - type: https
-#      port: 7091
-#      keyStorePath: keystore.jks
-#      keyStorePassword: password
-#      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
-#      certAlias: localhost
-#      validateCerts: false
-#  requestLog:
-#    appenders: []
-#  maxThreads: 1024
+  adminConnectors:
+    - type: http
+      port: 9095
+  maxThreads: 1024
 
 allowedOrigins:
   - https://localhost:8181
@@ -87,6 +71,6 @@ smtp:
 seedDataConfiguration:
   shouldOverrideAllPredefinedTemplates: true
 
-grpcClient:
+delegateServiceGrpcConfig:
   target: localhost:9880
   authority: localhost

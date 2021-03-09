@@ -2,7 +2,7 @@
 
 CONFIG_FILE=/opt/harness/config.yml
 
-#yq delete -i $CONFIG_FILE server.applicationConnectors[0]
+yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -22,7 +22,6 @@ if [[ "" != "$SERVER_PORT" ]]; then
 else
   yq write -i $CONFIG_FILE server.applicationConnectors[0].port "9005"
 fi
-
 
 if [[ "" != "$SERVER_MAX_THREADS" ]]; then
   yq write -i $CONFIG_FILE server.maxThreads "$SERVER_MAX_THREADS"
