@@ -1,4 +1,4 @@
-package io.harness.pms.notification.channelDetails;
+package io.harness.notification.channelDetails;
 
 import io.harness.Team;
 import io.harness.notification.channeldetails.MSTeamChannel;

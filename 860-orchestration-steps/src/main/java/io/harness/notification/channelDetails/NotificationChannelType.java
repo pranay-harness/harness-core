@@ -1,4 +1,4 @@
-package io.harness.pms.notification.channelDetails;
+package io.harness.notification.channelDetails;
 
 import lombok.experimental.UtilityClass;
 

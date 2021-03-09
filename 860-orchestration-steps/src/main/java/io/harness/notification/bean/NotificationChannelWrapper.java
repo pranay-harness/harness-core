@@ -1,6 +1,6 @@
-package io.harness.pms.notification.bean;
+package io.harness.notification.bean;
 
-import io.harness.pms.notification.channelDetails.PmsNotificationChannel;
+import io.harness.notification.channelDetails.PmsNotificationChannel;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
