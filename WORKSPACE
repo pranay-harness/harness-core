@@ -4996,8 +4996,8 @@ go_repository(
 go_repository(
     name = "com_github_nats_io_nuid",
     importpath = "github.com/nats-io/nuid",
-    sum = "h1:5iA8DT8V7q8WK2EScv2padNa/rTESc1KdnPw4TC2paw=",
-    version = "v1.0.1",
+    sum = "h1:woRePGFeVFfLKN/pOkfl+p/TAqKOfFu+7KPlMVpok/w=",
+    version = "v0.0.0-20180518054509-2e65f85255db",
 )
 
 go_repository(

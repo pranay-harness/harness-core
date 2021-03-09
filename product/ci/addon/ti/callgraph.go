@@ -1,5 +1,7 @@
 package ti
 
+import "errors"
+
 // Callgraph object is used to upload data to TI server
 type Callgraph struct {
 	Nodes     []Node
@@ -10,35 +12,35 @@ type Callgraph struct {
 func (cg *Callgraph) ToStringMap() map[string]interface{} {
 	var nodes, relations []interface{}
 	for _, v := range (*cg).Nodes {
-		datumIn := map[string]interface{}{
+		data := map[string]interface{}{
 			"package": v.Pkg,
 			"method":  v.Method,
 			"id":      v.ID,
-			"paramas": v.Params,
+			"params":  v.Params,
 			"class":   v.Class,
 			"type":    v.Type,
 		}
-		nodes = append(nodes, datumIn)
+		nodes = append(nodes, data)
 	}
 	for _, v := range (*cg).Relations {
-		datumIn := map[string]interface{}{
-			"source": int(v.Source),
+		data := map[string]interface{}{
+			"source": v.Source,
 			"tests":  v.Tests,
 		}
-		relations = append(relations, datumIn)
+		relations = append(relations, data)
 	}
 
-	datum := map[string]interface{}{
+	data := map[string]interface{}{
 		"nodes":     nodes,
 		"relations": relations,
 	}
-	return datum
+	return data
 }
 
 //FromStringMap Creates Callgraph object of from map[string]interface{}
 func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 	var fNodes []Node
-	var fRelations []Relation
+	var fRel []Relation
 	for k, v := range data {
 		switch k {
 		case "nodes":
@@ -56,6 +58,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 					}
 					fNodes = append(fNodes, node)
 				}
+			} else {
+				return nil, errors.New("failed to parse ")
 			}
 		case "relations":
 			if relations, ok := v.([]interface{}); ok {
@@ -74,13 +78,13 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 							relation.Tests = testsN
 						}
 					}
-					fRelations = append(fRelations, relation)
+					fRel = append(fRel, relation)
 				}
 			}
 		}
 	}
 	return &Callgraph{
-		Relations: fRelations,
+		Relations: fRel,
 		Nodes:     fNodes,
 	}, nil
 }
