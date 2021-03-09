@@ -699,6 +699,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//120-ng-manager/src/test/resources:resource",

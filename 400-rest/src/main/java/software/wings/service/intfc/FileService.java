@@ -3,8 +3,8 @@ package software.wings.service.intfc;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FileMetadata;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.DelegateAgentFileService;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.BaseFile;

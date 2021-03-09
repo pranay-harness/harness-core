@@ -60,6 +60,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
 
 redisLockConfig:
   sentinel: false
@@ -121,6 +122,16 @@ pmsSdkGrpcServerConfig:
 pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
+
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
+
+shouldDeployWithGitSync: false
 
 shouldConfigureWithPMS: false
 

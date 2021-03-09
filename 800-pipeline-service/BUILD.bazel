@@ -82,6 +82,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//800-pipeline-service/src/test/resources:resource"],
     visibility = ["//visibility:public"],

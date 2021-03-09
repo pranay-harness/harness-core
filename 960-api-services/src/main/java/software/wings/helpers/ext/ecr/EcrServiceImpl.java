@@ -1,46 +1,35 @@
 package software.wings.helpers.ext.ecr;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
-
-import static java.util.stream.Collectors.toList;
-
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.artifacts.beans.BuildDetailsInternal;
-import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetadataKeys;
-import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
-import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
-import io.harness.artifacts.ecr.beans.AwsInternalConfig;
-import io.harness.artifacts.ecr.beans.EcrInternalConfig;
-import io.harness.artifacts.gcr.GcrRestClient;
-import io.harness.artifacts.gcr.beans.GcrInternalConfig;
-import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.ArtifactServerException;
-import io.harness.exception.ExceptionUtils;
-import io.harness.exception.GeneralException;
-import io.harness.exception.InvalidArtifactServerException;
-import io.harness.exception.WingsException;
-import io.harness.expression.RegexFunctor;
-
-import software.wings.service.impl.AwsApiHelperService;
-
-import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
 import com.amazonaws.services.ecr.model.ListImagesResult;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.io.IOException;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.artifacts.beans.BuildDetailsInternal;
+import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetadataKeys;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
+import io.harness.artifacts.ecr.beans.AwsInternalConfig;
+import io.harness.exception.ArtifactServerException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.expression.RegexFunctor;
+import software.wings.service.impl.AwsApiHelperService;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import retrofit2.Response;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by brett on 7/15/17
@@ -132,15 +121,9 @@ public class EcrServiceImpl implements EcrService {
     return builds.get(0);
   }
 
-  // Todo
-  @Override
-  public boolean validateCredentials(AwsInternalConfig awsConfig, String imageName) {
-    return true;
-  }
-
   // Todo: to be implemented
   @Override
-  public boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region) {
+  public boolean validateCredentials(AwsInternalConfig awsConfig, String imageName) {
     return true;
   }
 

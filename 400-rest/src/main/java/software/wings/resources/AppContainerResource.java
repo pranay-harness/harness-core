@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.PLATFORMS;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATION_STACKS;

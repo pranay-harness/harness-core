@@ -96,6 +96,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
+  @JsonProperty(value = "userChangeStreamEnabled") private boolean isUserChangeStreamEnabled;
   @JsonProperty private PortalConfig portal = new PortalConfig();
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;

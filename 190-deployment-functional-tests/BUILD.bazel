@@ -37,6 +37,7 @@ run_tests()
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//190-deployment-functional-tests/src/test/resources:resource",

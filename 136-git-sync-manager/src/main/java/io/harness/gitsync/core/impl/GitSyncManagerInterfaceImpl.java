@@ -85,13 +85,11 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
 
   private GitFileLocation buildGitFileLocation(
       String accountId, String orgId, String projectId, String entityType, String entityIdentifier, String entityName) {
-    Optional<YamlGitConfigDTO.RootFolder> defaultRootFolder =
-        yamlGitConfigService.getDefault(projectId, orgId, accountId);
+    Optional<YamlGitConfigDTO.RootFolder> defaultRootFolder = Optional.empty();
 
     return defaultRootFolder
         .map(rootFolder -> {
-          YamlGitConfigDTO yamlGitConfig =
-              yamlGitConfigService.getByFolderIdentifier(projectId, orgId, accountId, rootFolder.getIdentifier());
+          YamlGitConfigDTO yamlGitConfig = YamlGitConfigDTO.builder().build();
           return gitFileLocationRepository.save(GitFileLocation.builder()
                                                     .accountId(accountId)
                                                     .entityIdentifier(entityIdentifier)

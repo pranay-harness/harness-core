@@ -104,6 +104,16 @@ grpcServer:
       certFilePath: cert.pem
     - port: 9979
 
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
+
+shouldDeployWithGitSync: false
+
 smtp:
   type: SMTP
   host: host_placeholder
@@ -126,6 +136,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
 
 redisLockConfig:
   sentinel: false
@@ -139,6 +150,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  password: ""
 
 pmsSdkGrpcServerConfig:
   connectors:

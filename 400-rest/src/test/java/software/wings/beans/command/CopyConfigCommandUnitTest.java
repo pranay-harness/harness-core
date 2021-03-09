@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 

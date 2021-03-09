@@ -4,9 +4,11 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "//970-ng-commons:module",
@@ -25,36 +27,19 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_reflections_reflections",
-    ],
-)
-
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
     ],
 )
 

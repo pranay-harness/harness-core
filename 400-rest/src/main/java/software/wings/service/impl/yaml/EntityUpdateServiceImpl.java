@@ -11,7 +11,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static com.google.common.base.Charsets.UTF_8;
 
 import io.harness.beans.FeatureName;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
