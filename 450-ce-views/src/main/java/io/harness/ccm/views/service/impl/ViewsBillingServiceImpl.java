@@ -342,7 +342,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort, cloudProviderTableName);
   }
 
-  private ViewRule convertQLCEViewRuleToViewRule(QLCEViewRule rule) {
+  protected ViewRule convertQLCEViewRuleToViewRule(QLCEViewRule rule) {
     List<ViewCondition> conditionsList = new ArrayList<>();
     for (QLCEViewFilter filter : rule.getConditions()) {
       conditionsList.add(ViewIdCondition.builder()
@@ -376,22 +376,22 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         .build();
   }
 
-  private static Optional<QLCEViewFilterWrapper> getViewMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+  protected static Optional<QLCEViewFilterWrapper> getViewMetadataFilter(List<QLCEViewFilterWrapper> filters) {
     return filters.stream().filter(f -> f.getViewMetadataFilter() != null).findFirst();
   }
 
-  private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
+  protected static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
         .filter(f -> f.getTimeFilter() != null)
         .map(f -> f.getTimeFilter())
         .collect(Collectors.toList());
   }
 
-  private static List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
+  protected static List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream().filter(f -> f.getIdFilter() != null).map(f -> f.getIdFilter()).collect(Collectors.toList());
   }
 
-  private static List<QLCEViewRule> getRuleFilters(List<QLCEViewFilterWrapper> filters) {
+  protected static List<QLCEViewRule> getRuleFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
         .filter(f -> f.getRuleFilter() != null)
         .map(f -> f.getRuleFilter())
