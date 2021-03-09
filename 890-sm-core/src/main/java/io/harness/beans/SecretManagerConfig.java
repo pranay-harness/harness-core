@@ -1,13 +1,17 @@
 package io.harness.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
+import static io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.iterator.PersistentRegularIterable;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.NGAccess;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -29,6 +33,7 @@ import software.wings.security.UsageRestrictions;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -57,20 +62,30 @@ import org.mongodb.morphia.annotations.Transient;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false, exclude = {"createdBy", "createdAt", "lastUpdatedBy", "lastUpdatedAt"})
 @Entity(value = "secretManagers")
-@NgUniqueIndex(name = "uniqueIdx",
-    fields =
-    {
-      @Field("name")
-      , @Field("accountId"), @Field("encryptionType"), @Field("ngMetadata.accountIdentifier"),
-          @Field("ngMetadata.orgIdentifier"), @Field("ngMetadata.projectIdentifier"), @Field("ngMetadata.identifier")
-    })
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
+@OwnedBy(PL)
 public abstract class SecretManagerConfig
     implements AccountAccess, EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter,
                ExecutionCapabilityDemander, ScopedEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .unique(true)
+                 .name("uniqueIdx")
+                 .field(SecretManagerConfigKeys.name)
+                 .field(SecretManagerConfigKeys.accountId)
+                 .field(SecretManagerConfigKeys.encryptionType)
+                 .field(SecretManagerConfigKeys.accountIdentifier)
+                 .field(SecretManagerConfigKeys.orgIdentifier)
+                 .field(SecretManagerConfigKeys.projectIdentifier)
+                 .field(SecretManagerConfigKeys.identifier)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
 
   private EncryptionType encryptionType;
@@ -169,5 +184,9 @@ public abstract class SecretManagerConfig
   public static final class SecretManagerConfigKeys {
     public static final String ID_KEY = "_id";
     public static final String name = "name";
+    public static final String accountIdentifier = "ngMetadata." + NGSecretManagerMetadataKeys.accountIdentifier;
+    public static final String orgIdentifier = "ngMetadata." + NGSecretManagerMetadataKeys.orgIdentifier;
+    public static final String projectIdentifier = "ngMetadata." + NGSecretManagerMetadataKeys.projectIdentifier;
+    public static final String identifier = "ngMetadata." + NGMetadataKeys.identifier;
   }
 }
