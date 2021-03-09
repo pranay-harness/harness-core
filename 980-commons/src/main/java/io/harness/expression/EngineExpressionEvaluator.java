@@ -367,18 +367,8 @@ public class EngineExpressionEvaluator {
     }
 
     @Override
-    public String renderExpression(String expression) {
+    public String processString(String expression) {
       return expressionEvaluator.renderExpression(expression);
-    }
-
-    @Override
-    public Object evaluateExpression(String expression) {
-      return expressionEvaluator.renderExpression(expression);
-    }
-
-    @Override
-    public boolean hasVariables(String expression) {
-      return EngineExpressionEvaluator.hasVariables(expression);
     }
   }
 }

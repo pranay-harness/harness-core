@@ -12,7 +12,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.LogCallback;

@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.command.CommandExecutionResult;
@@ -24,6 +25,7 @@ import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -34,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
+@BreakDependencyOn("import software.wings.service.intfc.security.EncryptionService")
 public class ShellScriptTaskHandler {
   @Inject private SshExecutorFactory sshExecutorFactory;
   @Inject private WinRmExecutorFactory winrmExecutorFactory;
@@ -41,6 +44,7 @@ public class ShellScriptTaskHandler {
   @Inject private EncryptionService encryptionService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   public CommandExecutionResult handle(ShellScriptParameters parameters) {
     // Define output variables and secret output variables together
@@ -67,7 +71,8 @@ public class ShellScriptTaskHandler {
     switch (parameters.getConnectionType()) {
       case SSH: {
         try {
-          SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+          SshSessionConfig expectedSshConfig =
+              parameters.sshSessionConfig(encryptionService, secretManagementDelegateService);
           BaseScriptExecutor executor =
               sshExecutorFactory.getExecutor(expectedSshConfig, parameters.isSaveExecutionLogs());
           return CommandExecutionResultMapper.from(

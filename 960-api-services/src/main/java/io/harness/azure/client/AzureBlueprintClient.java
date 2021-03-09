@@ -5,6 +5,7 @@ import io.harness.azure.model.blueprint.Blueprint;
 import io.harness.azure.model.blueprint.PublishedBlueprint;
 import io.harness.azure.model.blueprint.artifact.Artifact;
 import io.harness.azure.model.blueprint.assignment.Assignment;
+import io.harness.azure.model.blueprint.assignment.WhoIsBlueprintContract;
 import io.harness.azure.model.blueprint.assignment.operation.AssignmentOperation;
 
 import com.microsoft.azure.PagedList;
@@ -112,4 +113,14 @@ public interface AzureBlueprintClient {
    */
   PagedList<AssignmentOperation> listAssignmentOperations(
       AzureConfig azureConfig, String resourceScope, String assignmentName);
+
+  /**
+   * Get Blueprints service SPN objectId.
+   *
+   * @param azureConfig
+   * @param resourceScope
+   * @param assignmentName
+   * @return
+   */
+  WhoIsBlueprintContract whoIsBlueprint(AzureConfig azureConfig, String resourceScope, String assignmentName);
 }

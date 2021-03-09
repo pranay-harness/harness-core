@@ -1,16 +1,11 @@
 package io.harness.expression.field.dummy;
 
 import io.harness.expression.ExpressionEvaluatorUtils;
-import io.harness.pms.expression.OrchestrationField;
-import io.harness.pms.expression.OrchestrationFieldType;
 
 import lombok.Getter;
 
 @Getter
-public class DummyOrchestrationField<T> implements OrchestrationField {
-  public static final OrchestrationFieldType ORCHESTRATION_FIELD_TYPE =
-      OrchestrationFieldType.builder().type("DUMMY").build();
-
+public class DummyOrchestrationField<T> {
   private boolean isExpression;
   private String expressionValue;
   private boolean isString;
@@ -44,17 +39,6 @@ public class DummyOrchestrationField<T> implements OrchestrationField {
     value = (T) newValue;
   }
 
-  @Override
-  public Class<? extends OrchestrationField> getDeserializationClass() {
-    return DummyOrchestrationField.class;
-  }
-
-  @Override
-  public OrchestrationFieldType getType() {
-    return ORCHESTRATION_FIELD_TYPE;
-  }
-
-  @Override
   public Object fetchFinalValue() {
     return isExpression ? expressionValue : value;
   }

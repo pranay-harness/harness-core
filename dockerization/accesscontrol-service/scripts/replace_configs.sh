@@ -64,3 +64,72 @@ fi
 if [[ "" != "$MONGO_TRANSACTIONS_ENABLED" ]]; then
   yq write -i $CONFIG_FILE mongo.transactionsEnabled $MONGO_TRANSACTIONS_ENABLED
 fi
+
+if [[ "" != "$MONGO_ALIAS_DB_NAME" ]]; then
+  yq write -i $CONFIG_FILE mongo.aliasDBName "$MONGO_ALIAS_DB_NAME"
+fi
+
+if [[ "" != "$EVENTS_CONFIG_REDIS_URL" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.redisUrl "$EVENTS_CONFIG_REDIS_URL"
+fi
+
+if [[ "" != "$EVENTS_CONFIG_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.envNamespace "$EVENTS_CONFIG_ENV_NAMESPACE"
+fi
+
+if [[ "" != "$EVENTS_CONFIG_USE_SENTINEL" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.sentinel "$EVENTS_CONFIG_USE_SENTINEL"
+fi
+
+if [[ "" != "$EVENTS_CONFIG_SENTINEL_MASTER_NAME" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.masterName "$EVENTS_CONFIG_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$EVENTS_CONFIG_REDIS_SENTINELS" ]]; then
+  IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_CONFIG_REDIS_SENTINELS"
+  INDEX=0
+  for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
+    yq write -i $CONFIG_FILE eventsConfig.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
+    INDEX=$(expr $INDEX + 1)
+  done
+fi
+
+if [[ "" != "$EVENTS_CONFIG_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.password "$EVENTS_CONFIG_REDIS_PASSWORD"
+fi
+
+if [[ "" != "$RESOURCE_GROUP_ITERATOR_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE iteratorsConfig.resourceGroupIteratorConfig.enabled $RESOURCE_GROUP_ITERATOR_ENABLED
+fi
+
+if [[ "" != "$RESOURCE_GROUP_ITERATOR_INTERVAL" ]]; then
+  yq write -i $CONFIG_FILE iteratorsConfig.resourceGroupIteratorConfig.targetIntervalInSeconds $RESOURCE_GROUP_ITERATOR_INTERVAL
+fi
+
+if [[ "" != "$AGGREGATOR_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE aggregatorModuleConfig.enabled $AGGREGATOR_ENABLED
+fi
+
+if [[ "" != "$ACCESS_CONTROL_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_CLIENT_BASE_URL"
+fi
+
+if [[ "" != "$ACCESS_CONTROL_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE accessControlClient.accessControlServiceSecret "$ACCESS_CONTROL_CLIENT_SERVICE_SECRET"
+fi
+
+if [[ "" != "$USER_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE userClient.userServiceConfig.baseUrl "$USER_CLIENT_BASE_URL"
+fi
+
+if [[ "" != "$USER_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE userClient.userServiceSecret "$USER_CLIENT_SERVICE_SECRET"
+fi
+
+if [[ "" != "$RESOURCE_GROUP_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceConfig.baseUrl "$RESOURCE_GROUP_CLIENT_BASE_URL"
+fi
+
+if [[ "" != "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceSecret "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET"
+fi

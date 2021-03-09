@@ -3,8 +3,8 @@ package software.wings.beans.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.ChecksumType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.delegate.beans.ChecksumType;
 
 import software.wings.beans.BaseFile;
 

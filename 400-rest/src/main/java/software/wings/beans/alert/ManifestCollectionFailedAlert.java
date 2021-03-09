@@ -27,7 +27,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Data
 @Builder
-@TargetModule(Module._970_API_SERVICES_BEANS)
+@TargetModule(Module._470_ALERT)
 public class ManifestCollectionFailedAlert implements AlertData {
   @Inject @Transient @SchemaIgnore ApplicationManifestService applicationManifestService;
   @Inject @Transient @SchemaIgnore ServiceResourceService serviceResourceService;

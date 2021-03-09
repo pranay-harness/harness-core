@@ -19,7 +19,6 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.dtos.YamlFilterResult;
 import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
@@ -42,7 +41,6 @@ public class GitChangeSetProcessorTest extends CategoryTest {
   @Mock private GitSyncService gitSyncService;
   @Mock private GitCommitService gitCommitService;
   @Mock private YamlGitConfigService yamlGitConfigService;
-  @Mock private ChangeSetRequestTimeFilter changeSetRequestTimeFilter;
   @Mock private YamlService yamlService;
 
   @InjectMocks @Inject private GitChangeSetProcessor gitChangeSetProcessor;
@@ -149,7 +147,6 @@ public class GitChangeSetProcessorTest extends CategoryTest {
     doReturn(Collections.singletonList(yamlGitConfigDTO))
         .when(yamlGitConfigService)
         .getByConnectorRepoAndBranch("id", repo, branch, accountId);
-    doReturn(YamlFilterResult.builder().build()).when(changeSetRequestTimeFilter).filterFiles(any(), any(), any());
 
     ArgumentCaptor<List> validFilesBasedOnYamlGitConfigFilterCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<List> gitDiffResultChangeSetCaptor = ArgumentCaptor.forClass(List.class);

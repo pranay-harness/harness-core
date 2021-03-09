@@ -20,7 +20,7 @@ import org.springframework.core.convert.converter.Converter;
 public class PipelineServiceModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
           .add(OrchestrationVisualizationKryoRegistrar.class)
           .addAll(NGTriggerRegistrars.kryoRegistrars)
           .addAll(NotificationClientRegistrars.kryoRegistrars)

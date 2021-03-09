@@ -71,7 +71,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -755,13 +754,17 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
-    return settingsService.isSettingValueGcp(settingAttribute)
-        && ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+    if (settingsService.isSettingValueGcp(settingAttribute)) {
+      return ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+    }
+    return settingsService.hasDelegateSelectorProperty(settingAttribute);
   }
 
   private SyncTaskContext appendDelegateSelector(
       SettingAttribute settingAttribute, SyncTaskContextBuilder syncTaskContextBuilder) {
-    return syncTaskContextBuilder.tags(Arrays.asList(((GcpConfig) settingAttribute.getValue()).getDelegateSelector()))
-        .build();
+    List<String> tags = settingsService.getDelegateSelectors(settingAttribute);
+    log.info("[Delegate Selection] Appending delegate selectors to - {} with selectors {}", settingAttribute.getName(),
+        tags);
+    return syncTaskContextBuilder.tags(tags).build();
   }
 }

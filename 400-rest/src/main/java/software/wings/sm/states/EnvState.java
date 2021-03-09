@@ -60,7 +60,6 @@ import software.wings.common.NotificationMessageResolver;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.deployment.checks.DeploymentFreezeUtils;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -75,7 +74,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -113,15 +111,11 @@ public class EnvState extends State implements WorkflowState {
   // NOTE: This field should no longer be used. It contains incorrect/stale values.
   @Deprecated
   @Expand(dataProvider = EnvironmentServiceImpl.class)
-  @EnumData(enumDataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   @Setter
   private String envId;
 
-  @EnumData(enumDataProvider = WorkflowServiceImpl.class)
-  @Attributes(required = true, title = "Workflow")
-  @Setter
-  private String workflowId;
+  @Attributes(required = true, title = "Workflow") @Setter private String workflowId;
 
   @Setter @SchemaIgnore private String pipelineId;
   @Setter @SchemaIgnore private String pipelineStageElementId;

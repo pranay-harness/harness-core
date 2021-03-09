@@ -66,6 +66,7 @@ public class OwnerRule implements TestRule {
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
   public static final String ADWAIT = "adwait.bhandare";
+  public static final String ADARSH = "adarsh.agarwal";
   public static final String AKRITI = "akriti.garg";
   public static final String ALEKSANDAR = "aleksandar.radisavljevic";
   public static final String AGORODETKI = "alexandr.gorodetki";
@@ -105,6 +106,7 @@ public class OwnerRule implements TestRule {
   public static final String NIKOLA = "nikola.obucina";
   public static final String NIKUNJ = "nikunj.badjatya";
   public static final String PARNIAN = "parnian";
+  public static final String PARDHA = "sripardha.chidella";
   public static final String PIYUSH = "piyush.patel";
   public static final String POOJA = "pooja";
   public static final String PRANJAL = "pranjal";
@@ -182,6 +184,7 @@ public class OwnerRule implements TestRule {
       ImmutableMap.<String, UserInfo>builder()
           .put(AADITI, defaultUserInfo(AADITI).slack("UCFPUNRAQ").team(CDC).build())
           .put(ABHINAV, defaultUserInfo(ABHINAV).slack("UQQPR8M6Y").team(DX).build())
+          .put(ADARSH, defaultUserInfo(ADARSH).slack("U01Q02K5LUR").team(CE).build())
           .put(ALEKSANDAR, defaultUserInfo(ALEKSANDAR).slack("U012MKR5FUZ").team(CI).build())
           .put(AGORODETKI, defaultUserInfo(AGORODETKI).slack("U013KM8H2NL").team(CDC).build())
           .put(AKRITI, defaultUserInfo(AKRITI).slack("U01JCQAS84S").team(PL).build())
@@ -203,6 +206,7 @@ public class OwnerRule implements TestRule {
           .put(GUNA, defaultUserInfo(GUNA).slack("UD45NV41W").team(DEL).build())
           .put(HANTANG, defaultUserInfo(HANTANG).slack("UK8AQJSCS").team(CE).build())
           .put(HARI, defaultUserInfo(HARI).slack("U01KKD4NSUQ").team(DX).build())
+          .put(PARDHA, defaultUserInfo(PARDHA).slack("U01JVHQ61TL").team(CDP).build())
           .put(HARSH, defaultUserInfo(HARSH).slack("UJ1CDM3FY").team(CDC).build())
           .put(HITESH, defaultUserInfo(HITESH).slack("UK41C9QJH").team(CE).build())
           .put(IGOR, defaultUserInfo(IGOR).slack("U0104P0SC03").team(DX).build())

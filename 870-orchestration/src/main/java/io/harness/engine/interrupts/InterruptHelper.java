@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 
 import java.util.HashMap;
 
@@ -13,7 +14,8 @@ public class InterruptHelper {
         .setPlanExecutionId(planExecution.getUuid())
         .putAllSetupAbstractions(
             isEmpty(planExecution.getSetupAbstractions()) ? new HashMap<>() : planExecution.getSetupAbstractions())
-        .setMetadata(planExecution.getMetadata())
+        .setMetadata(
+            planExecution.getMetadata() == null ? ExecutionMetadata.newBuilder().build() : planExecution.getMetadata())
         .build();
   }
 }

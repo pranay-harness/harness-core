@@ -133,4 +133,8 @@ public interface YamlConstants {
 
   // ECS PARAMS
   String ECS_NOT_USED = "ECS_NOT_USED";
+
+  // Governance Folder
+  String GOVERNANCE_FOLDER = "Governance";
+  String DEPLOYMENT_GOVERNANCE_FOLDER = "Deployment Governance";
 }

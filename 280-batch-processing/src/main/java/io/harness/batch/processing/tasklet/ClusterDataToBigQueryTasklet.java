@@ -19,6 +19,7 @@ import io.harness.ccm.commons.beans.InstanceType;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
@@ -106,7 +107,9 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
   private void refreshLabelCache(String accountId, List<InstanceBillingData> instanceBillingDataList) {
     Map<String, Set<String>> clusterWorkload =
         instanceBillingDataList.stream()
-            .filter(instanceBillingData -> instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name()))
+            .filter(instanceBillingData
+                -> ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
+                       .contains(instanceBillingData.getInstanceType()))
             .filter(instanceBillingData
                 -> null
                     == k8SWorkloadService.getK8sWorkloadLabel(
@@ -226,7 +229,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
     }
 
     List<Label> labels = new ArrayList<>();
-    if (instanceBillingData.getInstanceType().equals(InstanceType.K8S_POD.name())) {
+    if (ImmutableSet.of(InstanceType.K8S_POD.name(), InstanceType.K8S_POD_FARGATE.name())
+            .contains(instanceBillingData.getInstanceType())) {
       Map<String, String> k8sWorkloadLabel = k8SWorkloadService.getK8sWorkloadLabel(
           accountId, instanceBillingData.getClusterId(), instanceBillingData.getWorkloadName());
 

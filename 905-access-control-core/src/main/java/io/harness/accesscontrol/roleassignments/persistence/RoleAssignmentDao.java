@@ -15,12 +15,14 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface RoleAssignmentDao {
   RoleAssignment create(@Valid RoleAssignment roleAssignment);
 
-  PageResponse<RoleAssignment> list(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
-      @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
+  PageResponse<RoleAssignment> list(
+      @NotNull PageRequest pageRequest, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 
   Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
   List<RoleAssignment> get(@NotEmpty String principal, @NotNull PrincipalType principalType);
 
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+
+  long deleteMany(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 }

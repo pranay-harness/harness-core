@@ -16,6 +16,7 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
@@ -45,11 +46,49 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   }
 
   @Override
-  public PageResponse<RoleAssignment> list(
-      PageRequest pageRequest, String scopeIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
+  public PageResponse<RoleAssignment> list(PageRequest pageRequest, RoleAssignmentFilter roleAssignmentFilter) {
     Pageable pageable = PageUtils.getPageRequest(pageRequest);
+    Criteria criteria = createCriteriaFromFilter(roleAssignmentFilter);
+    Page<RoleAssignmentDBO> assignmentPage = roleAssignmentRepository.findAll(criteria, pageable);
+    return PageUtils.getNGPageResponse(assignmentPage.map(RoleAssignmentDBOMapper::fromDBO));
+  }
+
+  @Override
+  public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
+    Optional<RoleAssignmentDBO> roleAssignment =
+        roleAssignmentRepository.findByIdentifierAndScopeIdentifier(identifier, parentIdentifier);
+    return roleAssignment.flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
+  }
+
+  @Override
+  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
+    return roleAssignmentRepository.findByPrincipalIdentifierAndPrincipalType(principal, principalType)
+        .stream()
+        .map(RoleAssignmentDBOMapper::fromDBO)
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
+    return roleAssignmentRepository.deleteByIdentifierAndScopeIdentifier(identifier, parentIdentifier)
+        .stream()
+        .findFirst()
+        .flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
+  }
+
+  @Override
+  public long deleteMany(RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentRepository.deleteMulti(createCriteriaFromFilter(roleAssignmentFilter));
+  }
+
+  private Criteria createCriteriaFromFilter(RoleAssignmentFilter roleAssignmentFilter) {
     Criteria criteria = new Criteria();
-    criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).is(scopeIdentifier);
+    if (!roleAssignmentFilter.isIncludeChildScopes()) {
+      criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).is(roleAssignmentFilter.getScopeFilter());
+    } else {
+      Pattern startsWithScope = Pattern.compile("^".concat(roleAssignmentFilter.getScopeFilter()));
+      criteria.and(RoleAssignmentDBOKeys.scopeIdentifier).regex(startsWithScope);
+    }
 
     if (!roleAssignmentFilter.getRoleFilter().isEmpty()) {
       criteria.and(RoleAssignmentDBOKeys.roleIdentifier).in(roleAssignmentFilter.getRoleFilter());
@@ -81,31 +120,6 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
                                          .is(principal.getPrincipalType()))
                               .toArray(Criteria[] ::new));
     }
-
-    Page<RoleAssignmentDBO> assignmentPage = roleAssignmentRepository.findAll(criteria, pageable);
-    return PageUtils.getNGPageResponse(assignmentPage.map(RoleAssignmentDBOMapper::fromDBO));
-  }
-
-  @Override
-  public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
-    Optional<RoleAssignmentDBO> roleAssignment =
-        roleAssignmentRepository.findByIdentifierAndScopeIdentifier(identifier, parentIdentifier);
-    return roleAssignment.flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
-  }
-
-  @Override
-  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
-    return roleAssignmentRepository.findByPrincipalIdentifierAndPrincipalType(principal, principalType)
-        .stream()
-        .map(RoleAssignmentDBOMapper::fromDBO)
-        .collect(Collectors.toList());
-  }
-
-  @Override
-  public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
-    return roleAssignmentRepository.deleteByIdentifierAndScopeIdentifier(identifier, parentIdentifier)
-        .stream()
-        .findFirst()
-        .flatMap(r -> Optional.of(RoleAssignmentDBOMapper.fromDBO(r)));
+    return criteria;
   }
 }

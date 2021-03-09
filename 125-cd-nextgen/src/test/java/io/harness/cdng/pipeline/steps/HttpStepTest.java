@@ -11,14 +11,11 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.http.HttpStepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.yaml.core.variables.NGVariable;
-import io.harness.yaml.core.variables.StringNGVariable;
 
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.junit.Test;
@@ -35,27 +32,18 @@ public class HttpStepTest extends CategoryTest {
         + "    \"correlationId\": \"333333344444444\"\n"
         + "}";
     HttpStepResponse response = HttpStepResponse.builder().httpResponseBody(body).build();
-    NGVariable var1 =
-        StringNGVariable.builder()
-            .name("name1")
-            .value(ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).metaData>", null, true))
-            .build();
-    NGVariable var2 = StringNGVariable.builder()
-                          .name("name2")
-                          .value(ParameterField.createExpressionField(
-                              true, "<+json.object(httpResponseBody).notPresent>", null, true))
-                          .build();
-    NGVariable var3 = StringNGVariable.builder()
-                          .name("name3")
-                          .value(ParameterField.createExpressionField(true, "<+json.not.a.valid.expr>", null, true))
-                          .build();
-    NGVariable var4 =
-        StringNGVariable.builder().name("name4").value(ParameterField.createValueField("directValue")).build();
-    List<NGVariable> variables = new ArrayList<>();
-    variables.add(var1);
-    variables.add(var2);
-    variables.add(var3);
-    variables.add(var4);
+    ParameterField<Object> var1 =
+        ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).metaData>", null, true);
+    ParameterField<Object> var2 =
+        ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).notPresent>", null, true);
+    ParameterField<Object> var3 = ParameterField.createExpressionField(true, "<+json.not.a.valid.expr>", null, true);
+    ParameterField<Object> var4 = ParameterField.createValueField("directValue");
+    Map<String, Object> variables = new LinkedHashMap<>();
+    variables.put("name1", var1);
+    variables.put("name2", var2);
+    variables.put("name3", var3);
+    variables.put("name4", var4);
+
     Map<String, String> evaluatedVariables = HttpStep.evaluateOutputVariables(variables, response);
     assertThat(evaluatedVariables).isNotEmpty();
     assertThat(evaluatedVariables.get("name1")).isEqualTo("metadataValue");

@@ -2,8 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
@@ -53,9 +52,8 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
   }
 
   @Override
-  public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+  public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    final StoreConfig storeConfig = k8sManifestOutcome.getStore();
     final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepParameters;
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
@@ -74,7 +72,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
+            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
             .build();
     return k8sStepHelper.queueK8sTask(stepParameters, k8sCanaryDeployRequest, ambiance, infrastructure);

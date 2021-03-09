@@ -4,6 +4,7 @@ import static io.harness.ng.DbAliases.ACCESS_CONTROL;
 
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 
@@ -42,7 +43,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("resourcegroups")
 @TypeAlias("resourcegroups")
 @StoreIn(ACCESS_CONTROL)
-public class ResourceGroupDBO {
+public class ResourceGroupDBO implements PersistentRegularIterable {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty final String scopeIdentifier;
   @NotEmpty final String identifier;
@@ -56,6 +57,8 @@ public class ResourceGroupDBO {
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
 
+  @Setter Long nextReconciliationIterationAt;
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -65,5 +68,22 @@ public class ResourceGroupDBO {
                  .unique(true)
                  .build())
         .build();
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (ResourceGroupDBOKeys.nextReconciliationIterationAt.equals(fieldName)) {
+      nextReconciliationIterationAt = nextIteration;
+    }
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextReconciliationIterationAt;
+  }
+
+  @Override
+  public String getUuid() {
+    return id;
   }
 }

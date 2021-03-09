@@ -37,6 +37,8 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.core.userchangestream.UserMembershipChangeStreamModule;
+import io.harness.core.userchangestream.UserMembershipChangeStreamService;
 import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.state.CVNGVerificationTaskHandler;
@@ -118,8 +120,8 @@ import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
+import io.harness.serializer.CurrentGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
@@ -388,13 +390,15 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CurrentGenRegistrars.kryoRegistrars)
+            .build();
       }
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .addAll(CurrentGenRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -402,7 +406,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(CurrentGenRegistrars.morphiaConverters)
             .build();
       }
 
@@ -410,7 +414,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       List<Class<? extends Converter<?, ?>>> springConverters() {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
-            .addAll(ManagerRegistrars.springConverters)
+            .addAll(CurrentGenRegistrars.springConverters)
             .build();
       }
     });
@@ -497,7 +501,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
     modules.add(new GrpcServiceConfigurationModule(
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
-
+    modules.add(UserMembershipChangeStreamModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -786,6 +790,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
+    if (configuration.isUserChangeStreamEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(UserMembershipChangeStreamService.class));
+    }
     if (configuration.isSearchEnabled()) {
       environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
     }
@@ -831,9 +838,6 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
     log.info("Initializing scheduled jobs...");
-    ScheduledExecutorService taskPollExecutor =
-        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
-
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
@@ -842,25 +846,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
         .scheduleWithFixedDelay(
             injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
-    taskPollExecutor.scheduleWithFixedDelay(
-        injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
-    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
-      taskPollExecutor.scheduleWithFixedDelay(
-          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
-    }
+
     injector.getInstance(DeploymentReconExecutorService.class)
         .scheduleWithFixedDelay(
             injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(
-        () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate(), 0L, 10L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
-                                                injector.getInstance(DelegateDisconnectedDetector.class)),
-        0L, 60L, TimeUnit.SECONDS);
-
-    taskPollExecutor.scheduleWithFixedDelay(
-        injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
 
     ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
         ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()
@@ -869,6 +858,14 @@ public class WingsApplication extends Application<MainConfiguration> {
             .add(Activity.class)
             .add(Log.class)
             .build();
+
+    ScheduledExecutorService taskPollExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
+
+    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
+      taskPollExecutor.scheduleWithFixedDelay(
+          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
+    }
 
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed ensure data retention",
@@ -885,6 +882,26 @@ public class WingsApplication extends Application<MainConfiguration> {
     taskPollExecutor.scheduleWithFixedDelay(
         new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
         0L, 5L, TimeUnit.MINUTES);
+
+    ScheduledExecutorService delegateExecutor =
+        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegatePool")));
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
+                                                injector.getInstance(ProgressUpdateService.class)),
+        0L, 5L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
+                                                injector.getInstance(DelegateDisconnectedDetector.class)),
+        0L, 60L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(
+        new Schedulable("Failed while broadcasting perpetual tasks",
+            () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate()),
+        0L, 10L, TimeUnit.SECONDS);
+
+    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
+                                                injector.getInstance(DelegateSyncServiceImpl.class)),
+        0L, 2L, TimeUnit.SECONDS);
   }
 
   public static void registerObservers(Injector injector) {

@@ -19,6 +19,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.data.StepOutcomeRef;
@@ -38,8 +39,6 @@ import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-
-import software.wings.beans.LogHelper;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
@@ -94,7 +93,11 @@ public class StepUtils {
         for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
           Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
           if (outcome instanceof RollbackOutcome) {
-            return (RollbackOutcome) outcome;
+            RollbackOutcome rollbackOutcome = (RollbackOutcome) outcome;
+            if (rollbackOutcome.getRollbackInfo() == null) {
+              return null;
+            }
+            return rollbackOutcome;
           }
         }
       }
@@ -143,7 +146,7 @@ public class StepUtils {
   }
 
   @Nonnull
-  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+  public static LinkedHashMap<String, String> generateStageLogAbstractions(Ambiance ambiance) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
     logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().getOrDefault("accountId", ""));
     logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().getOrDefault("orgIdentifier", ""));
@@ -151,9 +154,15 @@ public class StepUtils {
     logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
     ambiance.getLevelsList()
         .stream()
-        .filter(level -> level.getGroup().equals("stage"))
+        .filter(level -> level.getGroup().equals("STAGE"))
         .findFirst()
         .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    return logAbstractions;
+  }
+
+  @Nonnull
+  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+    LinkedHashMap<String, String> logAbstractions = generateStageLogAbstractions(ambiance);
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (currentLevel != null) {
       logAbstractions.put("stepRuntimeId", currentLevel.getRuntimeId());
@@ -229,11 +238,16 @@ public class StepUtils {
         .build();
   }
 
+  public static List<String> generateLogKeys(Ambiance ambiance, List<String> units) {
+    LinkedHashMap<String, String> logAbstractionMap = generateLogAbstractions(ambiance);
+    return generateLogKeys(logAbstractionMap, units);
+  }
+
   private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
     if (isEmpty(logAbstractionMap)) {
       return Collections.emptyList();
     }
-    String baseLogKey = LogHelper.generateLogBaseKey(logAbstractionMap);
+    String baseLogKey = LogStreamingHelper.generateLogBaseKey(logAbstractionMap);
     if (isEmpty(units)) {
       return Collections.singletonList(baseLogKey);
     }

@@ -499,6 +499,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public List<Account> getAccounts(List<String> identifiers) {
+    return wingsPersistence.createQuery(Account.class).field("uuid").in(identifiers).asList();
+  }
+
+  @Override
   public Account getFromCache(String accountId) {
     return dbCache.get(Account.class, accountId);
   }

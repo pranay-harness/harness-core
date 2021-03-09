@@ -1,5 +1,6 @@
 package io.harness.cdng.infra.beans;
 
+import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.yaml.InfrastructureKind;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -15,6 +16,7 @@ public class K8sDirectInfrastructureOutcome implements InfrastructureOutcome {
   String connectorRef;
   String namespace;
   String releaseName;
+  EnvironmentOutcome environment;
 
   @Override
   public String getKind() {

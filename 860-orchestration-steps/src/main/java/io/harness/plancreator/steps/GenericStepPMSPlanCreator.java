@@ -56,8 +56,9 @@ import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
+import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -112,19 +113,28 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
         throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
       }
+
+      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
+      // type is involved
+      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
+        throw new InvalidRequestException(
+            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+      }
+
       String timeout = DEFAULT_TIMEOUT;
       if (stepElement.getTimeout() != null && stepElement.getTimeout().getValue() != null) {
         timeout = stepElement.getTimeout().getValue().getTimeoutString();
       }
-
-      BaseStepParameterInfo baseStepParameterInfo = BaseStepParameterInfo.builder()
-                                                        .timeout(ParameterField.createValueField(timeout))
-                                                        .rollbackInfo(rollbackInfoBuilder.build())
-                                                        .description(stepElement.getDescription())
-                                                        .skipCondition(stepElement.getSkipCondition())
-                                                        .name(stepElement.getName())
-                                                        .description(stepElement.getDescription())
-                                                        .build();
+      RollbackInfo rollbackInfo = rollbackInfoBuilder.build();
+      BaseStepParameterInfo baseStepParameterInfo =
+          BaseStepParameterInfo.builder()
+              .timeout(ParameterField.createValueField(timeout))
+              .rollbackInfo(rollbackInfo.getStrategy() != null ? rollbackInfo : null)
+              .description(stepElement.getDescription())
+              .skipCondition(stepElement.getSkipCondition())
+              .name(stepElement.getName())
+              .description(stepElement.getDescription())
+              .build();
       stepParameters =
           ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
     }
@@ -151,6 +161,19 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                     .build())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
+  }
+
+  public boolean containsOnlyAnyOtherError(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAnyOther = false;
+    for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
+      if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
+          && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
+                 NGFailureTypeConstants.ANY_OTHER_ERRORS)
+              == true) {
+        containsOnlyAnyOther = true;
+      }
+    }
+    return containsOnlyAnyOther;
   }
 
   protected String getName(StepElementConfig stepElement) {
@@ -180,9 +203,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     if (onSuccessAdviserObtainment != null) {
       adviserObtainmentList.add(onSuccessAdviserObtainment);
     }
-    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
-      return adviserObtainmentList;
-    }
+
     List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(currentField, STAGE);
     List<FailureStrategyConfig> stepGroupFailureStrategies = getFieldFailureStrategies(currentField, STEP_GROUP);
     List<FailureStrategyConfig> stepFailureStrategies = getFailureStrategies(currentField.getNode());
@@ -205,6 +226,15 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       }
 
       AdviserObtainment.Builder adviserObtainmentBuilder = AdviserObtainment.newBuilder();
+      if (rollbackInfoBuilder != null) {
+        getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
+      }
+      if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+        if (actionType == NGFailureActionType.STAGE_ROLLBACK || actionType == NGFailureActionType.STEP_GROUP_ROLLBACK) {
+          throw new InvalidRequestException("Step inside rollback section cannot have Rollback as failure strategy.");
+        }
+      }
+
       switch (actionType) {
         case IGNORE:
           adviserObtainmentList.add(
@@ -217,21 +247,28 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           break;
         case RETRY:
           RetryFailureActionConfig retryAction = (RetryFailureActionConfig) action;
+          ParameterField<Integer> retryCount = retryAction.getSpecConfig().getRetryCount();
+          if (retryCount.isExpression()) {
+            throw new InvalidRequestException("RetryCount fixed value is not given.");
+          }
+          if (retryAction.getSpecConfig().getRetryIntervals().isExpression()) {
+            throw new InvalidRequestException("RetryIntervals cannot be expression/runtime input. Please give values.");
+          }
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                       RetryAdviserParameters.builder()
                           .applicableFailureTypes(failureTypes)
                           .nextNodeId(nextNodeUuid)
-                          .repairActionCodeAfterRetry(
-                              toRepairAction(retryAction.getSpecConfig().getOnRetryFailure().getAction()))
-                          .retryCount(retryAction.getSpecConfig().getRetryCount())
-                          .waitIntervalList(
-                              retryAction.getSpecConfig()
-                                  .getRetryInterval()
-                                  .stream()
-                                  .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(Timeout.fromString(s), 0))
-                                  .collect(Collectors.toList()))
+                          .repairActionCodeAfterRetry(toRepairAction(
+                              retryAction.getSpecConfig().getOnRetryFailure().getAction(), rollbackInfoBuilder))
+                          .retryCount(retryCount.getValue())
+                          .waitIntervalList(retryAction.getSpecConfig()
+                                                .getRetryIntervals()
+                                                .getValue()
+                                                .stream()
+                                                .map(s -> (int) TimeoutUtils.getTimeoutInSeconds(s, 0))
+                                                .collect(Collectors.toList()))
                           .build())))
                   .build());
 
@@ -256,20 +293,24 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
         case STAGE_ROLLBACK:
           if (rollbackInfoBuilder != null) {
             rollbackInfoBuilder.strategy(RollbackStrategy.STAGE_ROLLBACK);
-            getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
           }
           break;
         case STEP_GROUP_ROLLBACK:
           if (rollbackInfoBuilder != null) {
             rollbackInfoBuilder.strategy(RollbackStrategy.STEP_GROUP_ROLLBACK);
-            getBasicRollbackInfo(currentField, failureTypes, rollbackInfoBuilder);
           }
           break;
         case MANUAL_INTERVENTION:
+          ManualInterventionFailureActionConfig actionConfig = (ManualInterventionFailureActionConfig) action;
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(ManualInterventionAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                      ManualInterventionAdviserParameters.builder().applicableFailureTypes(failureTypes).build())))
+                      ManualInterventionAdviserParameters.builder()
+                          .applicableFailureTypes(failureTypes)
+                          .timeoutAction(toRepairAction(
+                              actionConfig.getSpecConfig().getOnTimeout().getAction(), rollbackInfoBuilder))
+                          .timeout((int) TimeoutUtils.getTimeoutInSeconds(actionConfig.getSpecConfig().getTimeout(), 0))
+                          .build())))
                   .build());
           break;
         default:
@@ -354,7 +395,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return uuid;
   }
 
-  private RepairActionCode toRepairAction(FailureStrategyActionConfig action) {
+  private RepairActionCode toRepairAction(FailureStrategyActionConfig action, RollbackInfoBuilder rollbackInfoBuilder) {
     switch (action.getType()) {
       case IGNORE:
         return RepairActionCode.IGNORE;
@@ -363,12 +404,21 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       case ABORT:
         return RepairActionCode.END_EXECUTION;
       case STAGE_ROLLBACK:
+        if (rollbackInfoBuilder != null) {
+          rollbackInfoBuilder.strategy(RollbackStrategy.STAGE_ROLLBACK);
+        }
+        return RepairActionCode.ON_FAIL;
       case STEP_GROUP_ROLLBACK:
+        if (rollbackInfoBuilder != null) {
+          rollbackInfoBuilder.strategy(RollbackStrategy.STEP_GROUP_ROLLBACK);
+        }
         return RepairActionCode.ON_FAIL;
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
       default:
-        throw new InvalidRequestException("Invalid yaml");
+        throw new InvalidRequestException(
+
+            action.toString() + " Failure action doesn't have corresponding RepairAction Code.");
     }
   }
 

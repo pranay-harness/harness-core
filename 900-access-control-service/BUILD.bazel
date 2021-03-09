@@ -1,22 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
-
-java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//903-decision-module:module",
-        "//905-access-control-core:module",
-        "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
-        "@maven//:ru_vyarus_guice_validator",
-    ],
-)
 
 java_binary(
     name = "module",
@@ -32,46 +17,34 @@ java_binary(
     ],
     deps = [
         "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resoulution
         "@maven//:io_netty_netty_all",
-        # keeping guava on top of maven_deps for right version resoulution
-        "maven_deps",
+    ] + [
+        "//902-aggregator-module:module",
+        "//903-decision-module:module",
+        "//905-access-control-core:module",
+        "//950-events-api:module",
+        "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
+        "@maven//:ru_vyarus_guice_validator",
         "//:lombok",
     ],
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

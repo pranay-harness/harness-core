@@ -61,6 +61,7 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  transactionsEnabled: false
   aliasDBName: ng-harness
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
@@ -104,6 +105,16 @@ grpcServer:
       certFilePath: cert.pem
     - port: 9979
 
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
+
+shouldDeployWithGitSync: false
+
 smtp:
   type: SMTP
   host: host_placeholder
@@ -126,6 +137,21 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  password: ""
 
 pmsSdkGrpcServerConfig:
   connectors:
@@ -164,9 +190,11 @@ ResoureGroupConfig:
     baseUrl: http://localhost:3457/api/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+
+
 accessControlClient:
-  accessControlServiceConfig:
-    baseUrl: http://localhost:9006
-    connectTimeOutSeconds: 15
-    readTimeOutSeconds: 15
-  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  enableAccessControl: false

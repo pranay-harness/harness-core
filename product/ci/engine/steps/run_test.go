@@ -141,6 +141,8 @@ func TestRunExecuteSuccess(t *testing.T) {
 	defer ctrl.Finish()
 	tmpPath := "/tmp/"
 	port := uint32(8000)
+	so := make(map[string]*output.StepOutput)
+	so["step1"] = &output.StepOutput{}
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	step := &pb.UnitStep{
 		Id: "test",
@@ -172,64 +174,9 @@ func TestRunExecuteSuccess(t *testing.T) {
 		return mClient, nil
 	}
 
-	executor := NewRunStep(step, tmpPath, nil, log.Sugar())
+	executor := NewRunStep(step, tmpPath, so, log.Sugar())
 	o, n, err := executor.Run(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, o.Output.Variables[outputKey], outputVal)
 	assert.Equal(t, n, numRetries)
-}
-
-func TestRunStepResolveJEXL(t *testing.T) {
-	ctrl, ctx := gomock.WithContext(context.Background(), t)
-	defer ctrl.Finish()
-
-	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	jCmd1 := "${step1.output.foo}"
-	cmd1Val := "bar"
-
-	tests := []struct {
-		name        string
-		command     string
-		resolvedCmd string
-		jexlEvalRet map[string]string
-		jexlEvalErr error
-		expectedErr bool
-	}{
-		{
-			name:        "jexl evaluate error",
-			command:     jCmd1,
-			jexlEvalRet: nil,
-			jexlEvalErr: errors.New("evaluation failed"),
-			expectedErr: true,
-		},
-		{
-			name:        "jexl successfully evaluated",
-			command:     jCmd1,
-			jexlEvalRet: map[string]string{jCmd1: cmd1Val},
-			jexlEvalErr: nil,
-			resolvedCmd: cmd1Val,
-			expectedErr: false,
-		},
-	}
-	oldJEXLEval := evaluateJEXL
-	defer func() { evaluateJEXL = oldJEXLEval }()
-	for _, tc := range tests {
-		s := &runStep{
-			command: tc.command,
-			log:     log.Sugar(),
-		}
-		// Initialize a mock CI addon
-		evaluateJEXL = func(ctx context.Context, stepID string, expressions []string, o output.StageOutput,
-			force bool, log *zap.SugaredLogger) (map[string]string, error) {
-			return tc.jexlEvalRet, tc.jexlEvalErr
-		}
-		got := s.resolveJEXL(ctx)
-		if tc.expectedErr == (got == nil) {
-			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
-		}
-
-		if got == nil {
-			assert.Equal(t, s.command, tc.resolvedCmd)
-		}
-	}
 }

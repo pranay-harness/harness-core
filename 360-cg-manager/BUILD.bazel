@@ -1,14 +1,11 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
-sources()
-
 shared_dependencies = [
+    "//370-users-syncbridge:module",
     "//400-rest:module",
     "//:lombok",
 ]

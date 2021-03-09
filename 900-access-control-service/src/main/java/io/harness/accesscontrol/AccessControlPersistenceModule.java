@@ -6,6 +6,7 @@ import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGro
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
+import io.harness.aggregator.AggregatorPersistenceConfig;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -13,10 +14,12 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.PersistenceModule;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
@@ -64,6 +67,22 @@ public class AccessControlPersistenceModule extends PersistenceModule {
         return new NoopUserProvider();
       }
     });
+    install(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(QueueController.class).toInstance(new QueueController() {
+          @Override
+          public boolean isPrimary() {
+            return true;
+          }
+
+          @Override
+          public boolean isNotPrimary() {
+            return false;
+          }
+        });
+      }
+    });
     Multibinder<Class<? extends KryoRegistrar>> kryoRegistrar =
         Multibinder.newSetBinder(binder(), new TypeLiteral<Class<? extends KryoRegistrar>>() {});
     Multibinder<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -80,7 +99,7 @@ public class AccessControlPersistenceModule extends PersistenceModule {
   protected Class<?>[] getConfigClasses() {
     return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
         PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class,
-        ACLPersistenceConfig.class};
+        ACLPersistenceConfig.class, AggregatorPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {

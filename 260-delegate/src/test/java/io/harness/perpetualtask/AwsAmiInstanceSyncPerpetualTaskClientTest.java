@@ -5,7 +5,6 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACC
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 
-import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -100,7 +99,6 @@ public class AwsAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
                           .build())
                 .build(),
             DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
-    assertThat(validationTask.getExpiry() - System.currentTimeMillis()).isGreaterThan(ofSeconds(5).toMillis());
   }
 
   private void prepareTaskData(AwsConfig awsConfig) {

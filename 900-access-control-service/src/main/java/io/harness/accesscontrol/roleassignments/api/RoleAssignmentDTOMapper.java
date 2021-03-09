@@ -1,9 +1,12 @@
 package io.harness.accesscontrol.roleassignments.api;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
+import io.harness.data.structure.UUIDGenerator;
 
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -11,7 +14,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RoleAssignmentDTOMapper {
-  public static RoleAssignmentResponseDTO toDTO(RoleAssignment object) {
+  public static RoleAssignmentResponseDTO toResponseDTO(RoleAssignment object) {
     return RoleAssignmentResponseDTO.builder()
         .roleAssignment(RoleAssignmentDTO.builder()
                             .identifier(object.getIdentifier())
@@ -21,30 +24,43 @@ public class RoleAssignmentDTOMapper {
                                            .build())
                             .resourceGroupIdentifier(object.getResourceGroupIdentifier())
                             .roleIdentifier(object.getRoleIdentifier())
-                            .harnessManaged(object.isManaged())
                             .disabled(object.isDisabled())
                             .build())
         .scope(object.getScopeIdentifier())
+        .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
         .build();
   }
 
+  public static RoleAssignmentDTO toDTO(RoleAssignment object) {
+    return RoleAssignmentDTO.builder()
+        .identifier(object.getIdentifier())
+        .principal(
+            PrincipalDTO.builder().identifier(object.getPrincipalIdentifier()).type(object.getPrincipalType()).build())
+        .resourceGroupIdentifier(object.getResourceGroupIdentifier())
+        .roleIdentifier(object.getRoleIdentifier())
+        .disabled(object.isDisabled())
+        .build();
+  }
+
   public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
     return RoleAssignment.builder()
-        .identifier(object.getIdentifier())
+        .identifier(isEmpty(object.getIdentifier()) ? UUIDGenerator.generateUuid() : object.getIdentifier())
         .scopeIdentifier(scopeIdentifier)
         .principalIdentifier(object.getPrincipal().getIdentifier())
         .principalType(object.getPrincipal().getType())
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())
         .roleIdentifier(object.getRoleIdentifier())
-        .managed(object.isHarnessManaged())
+        .managed(false)
         .disabled(object.isDisabled())
         .build();
   }
 
-  public static RoleAssignmentFilter fromDTO(RoleAssignmentFilterDTO object) {
+  public static RoleAssignmentFilter fromDTO(String scopeIdentifier, RoleAssignmentFilterDTO object) {
     return RoleAssignmentFilter.builder()
+        .scopeFilter(scopeIdentifier)
+        .includeChildScopes(false)
         .roleFilter(object.getRoleFilter() == null ? new HashSet<>() : object.getRoleFilter())
         .resourceGroupFilter(
             object.getResourceGroupFilter() == null ? new HashSet<>() : object.getResourceGroupFilter())

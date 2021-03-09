@@ -16,12 +16,14 @@ import lombok.EqualsAndHashCode;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class DeploymentResourceGroupContext extends DeploymentContext {
   private AzureClientContext azureClientContext;
+  private boolean isRollback;
 
   @Builder
   public DeploymentResourceGroupContext(@NotNull String deploymentName, @NotNull AzureClientContext azureClientContext,
       @NotNull String templateJson, String parametersJson, AzureDeploymentMode mode,
-      ILogStreamingTaskClient logStreamingTaskClient, int steadyStateTimeoutInMin) {
+      ILogStreamingTaskClient logStreamingTaskClient, int steadyStateTimeoutInMin, boolean isRollback) {
     super(deploymentName, mode, templateJson, parametersJson, logStreamingTaskClient, steadyStateTimeoutInMin);
     this.azureClientContext = azureClientContext;
+    this.isRollback = isRollback;
   }
 }

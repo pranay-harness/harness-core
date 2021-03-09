@@ -1,7 +1,7 @@
 package io.harness.secrets;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.security.SimpleEncryption.CHARSET;
 
 import io.harness.annotations.dev.OwnedBy;

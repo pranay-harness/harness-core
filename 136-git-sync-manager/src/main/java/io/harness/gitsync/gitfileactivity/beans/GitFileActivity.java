@@ -21,9 +21,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitFileActivityKeys")
-@Entity(value = "gitFileActivity")
+@Entity(value = "gitFileActivityNG")
 @HarnessEntity(exportable = false)
-@Document("gitFileActivity")
+@Document("gitFileActivityNG")
 @TypeAlias("io.harness.gitsync.gitfileactivity.beans.gitFileActivity")
 public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
                                         OrganizationAccess, ProjectAccess {

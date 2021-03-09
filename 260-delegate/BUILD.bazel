@@ -1,13 +1,9 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:build-properties.bzl", "build_fullVersion")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -174,6 +170,7 @@ shared_dependencies = [
     "@maven//:com_google_cloud_google_cloud_logging",
     "@maven//:com_google_cloud_google_cloud_pubsub",
     "@maven//:com_google_cloud_google_cloud_resourcemanager",
+    "@maven//:com_amazonaws_aws_java_sdk_codecommit",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:com_google_code_findbugs_jsr305",
@@ -205,7 +202,7 @@ shared_dependencies = [
     "@maven//:com_j256_two_factor_auth_two_factor_auth",
     "@maven//:com_jakewharton_retrofit_retrofit1_okhttp3_client",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_mashape_unirest_unirest_java",
     "@maven//:com_mchange_c3p0",
@@ -703,6 +700,7 @@ test_dependencies = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(
         ["src/test/**/*.java"],
     ),

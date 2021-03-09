@@ -133,6 +133,13 @@ public interface AzureConstants {
   String PROPERTIES_BLUEPRINT_ID_VALIDATION_MSG = "Assignment properties.blueprintId cannot be null or empty";
   String PROPERTIES_SCOPE_BLANK_VALIDATION_MSG =
       "Assignment properties.scope cannot be null or empty for management group resource scope";
+  String OBJECT_ID_NAME_BLANK_VALIDATION_MSG = "Parameter objectId cannot be empty or null";
+  String ROLE_ASSIGNMENT_NAME_BLANK_VALIDATION_MSG = "Parameter roleAssignmentName cannot be empty or null";
+  String BLUEPRINT_ID_IS_NOT_VALIDATION_MSG = "Parameter blueprintId is not valid, blueprintId: %s";
+  String ASSIGNMENT_SUBSCRIPTION_ID_BLANK_VALIDATION_MSG = "Parameter assignmentSubscriptionId cannot be empty or null";
+  String ASSIGNMENT_BLANK_VALIDATION_MSG = "Parameter assignment cannot be empty or null";
+  String BLUEPRINT_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints blueprint json file cannot be empty or null";
+  String ASSIGN_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints assign json file cannot be empty or null";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
@@ -236,4 +243,5 @@ public interface AzureConstants {
   String ASSIGNMENT_NAME_PATTERN = "Assignment-%s-%s";
   Pattern BLUEPRINT_ID_REGEX = Pattern.compile(
       "^(?<resourceScope>\\S+)(?<providerName>/providers/Microsoft.Blueprint/blueprints/)(?<blueprintName>\\S+)(?<versionsPath>/versions/)(?<versionId>\\S+)$");
+  String DEPLOYMENT_NAME_PATTERN = "harness_%s_%s";
 }

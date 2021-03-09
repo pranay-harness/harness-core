@@ -60,6 +60,20 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
 
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:
@@ -109,6 +123,16 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
+
+shouldDeployWithGitSync: false
+
 shouldConfigureWithPMS: false
 
 ngManagerPublicBaseUrl: http://localhost:7457/
@@ -137,8 +161,8 @@ ResoureGroupConfig:
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 accessControlClient:
-  accessControlServiceConfig:
-    baseUrl: http://localhost:9006
-    connectTimeOutSeconds: 15
-    readTimeOutSeconds: 15
-  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  enableAccessControl: false
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token

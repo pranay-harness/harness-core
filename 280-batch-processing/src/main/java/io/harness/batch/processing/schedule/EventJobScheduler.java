@@ -252,7 +252,7 @@ public class EventJobScheduler {
     k8sLabelServiceInfoFetcher.logCacheStats();
   }
 
-  @Scheduled(cron = "0 * * ? * *")
+  @Scheduled(cron = "0 0 6 * * ?")
   public void runCfSampleJob() {
     if (cfClient == null) {
       return;

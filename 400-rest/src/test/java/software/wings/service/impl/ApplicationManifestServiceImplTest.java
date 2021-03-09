@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.INDER;
@@ -15,6 +16,7 @@ import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.PULL;
 import static software.wings.beans.HelmCommandFlagConstants.HelmSubCommand.TEMPLATE;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -31,6 +33,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -52,6 +55,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
@@ -62,7 +66,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmChartConfig.HelmChartConfigBuilder;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -212,7 +216,8 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault("a1", "s1");
 
-    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
+    HelmCommandFlagConfig helmCommandFlag =
+        HelmCommandFlagConfig.builder().valueMap(ImmutableMap.of(TEMPLATE, "")).build();
     applicationManifest.setHelmCommandFlag(helmCommandFlag);
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest))
@@ -279,9 +284,14 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifest.setGitFileConfig(GitFileConfig.builder().build());
     // No GitConfig
     verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
+    applicationManifest.setGitFileConfig(null);
+
+    // CustomManifest Config
+    applicationManifest.setCustomSourceConfig(CustomSourceConfig.builder().build());
+    verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
+    applicationManifest.setCustomSourceConfig(null);
 
     HelmChartConfig helmChartConfig = HelmChartConfig.builder().build();
-    applicationManifest.setGitFileConfig(null);
     applicationManifest.setHelmChartConfig(helmChartConfig);
     // Empty connectorId and chartName
     verifyExceptionForValidateHelmChartRepoAppManifest(applicationManifest);
@@ -524,6 +534,36 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     gitFileConfig.setRepoName("repo-name");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testValidateCustomAppManifest() {
+    CustomSourceConfig manifestConfig = CustomSourceConfig.builder().build();
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().serviceId("service").envId("env").kind(K8S_MANIFEST).storeType(CUSTOM).build();
+    applicationManifest.setAppId("application");
+    doReturn("account").when(appService).getAccountIdByAppId("application");
+    doReturn(false).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, "account");
+
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Manifest feature is not enabled");
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, "account");
+
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Source Config is mandatory");
+
+    applicationManifest.setCustomSourceConfig(manifestConfig);
+    assertThatThrownBy(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Path can't be empty");
+
+    manifestConfig.setPath("/local");
+    assertThatCode(() -> applicationManifestServiceImpl.validateCustomAppManifest(applicationManifest))
+        .doesNotThrowAnyException();
   }
 
   @Test

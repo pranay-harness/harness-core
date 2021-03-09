@@ -1,12 +1,9 @@
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -17,7 +14,6 @@ java_library(
     deps = [
         "//:lombok",
         "//400-rest:supporter-test",
-        "//960-persistence:supporter-test",
         "//970-rbac-core:module",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
@@ -43,6 +39,7 @@ java_library(
 
 java_binary(
     name = "app",
+    testonly = True,
     main_class = "io.harness.testframework.framework.ManagerExecutor",
     runtime_deps = [
         ":module",
@@ -50,14 +47,5 @@ java_binary(
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

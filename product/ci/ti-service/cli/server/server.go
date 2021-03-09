@@ -50,7 +50,8 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		// Create timescaledb connection
 		log.Infow("configuring TI service to use Timescale DB",
 			"endpoint", config.TimeScaleDb.Host,
-			"db_name", config.TimeScaleDb.DbName)
+			"db_name", config.TimeScaleDb.DbName,
+			"test_table_name", config.TimeScaleDb.HyperTableName)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
 			config.TimeScaleDb.Password,

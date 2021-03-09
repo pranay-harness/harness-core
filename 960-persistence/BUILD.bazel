@@ -1,11 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "//:lombok",
@@ -79,10 +75,11 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
@@ -99,11 +96,12 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
-        "supporter-test",
+        ":module",
+        ":supporter-test",
         "//:lombok",
     ],
 )
@@ -111,13 +109,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

@@ -42,7 +42,7 @@ public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
 
   @Override
   public void handleAbort(
-      Ambiance ambiance, TestStepParameters stateParameters, AsyncExecutableResponse executableResponse) {
+      Ambiance ambiance, TestStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
     // Do Nothing
   }
 }

@@ -72,6 +72,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
+import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
 import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.aws.AwsValidationHandler;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
@@ -93,11 +94,14 @@ import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
 import io.harness.delegate.task.gitapi.GitApiTask;
+import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
+import io.harness.delegate.task.helm.HttpHelmValidationHandler;
 import io.harness.delegate.task.jira.JiraTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskNG;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.k8s.KubernetesValidationHandler;
+import io.harness.delegate.task.manifests.CustomManifestValuesFetchTask;
 import io.harness.delegate.task.nexus.NexusDelegateTask;
 import io.harness.delegate.task.nexus.NexusValidationHandler;
 import io.harness.delegate.task.shell.ShellScriptTaskNG;
@@ -126,6 +130,7 @@ import io.harness.gcp.client.GcpClient;
 import io.harness.gcp.impl.GcpClientImpl;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
+import io.harness.helpers.EncryptDecryptHelperImpl;
 import io.harness.http.HttpService;
 import io.harness.http.HttpServiceImpl;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -133,11 +138,14 @@ import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
 import io.harness.kustomize.KustomizeClient;
 import io.harness.kustomize.KustomizeClientImpl;
+import io.harness.manifest.CustomManifestService;
+import io.harness.manifest.CustomManifestServiceImpl;
 import io.harness.openshift.OpenShiftClient;
 import io.harness.openshift.OpenShiftClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
 import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
@@ -797,6 +805,7 @@ public class DelegateModule extends AbstractModule {
     bind(SpotInstHelperServiceDelegate.class).to(SpotInstHelperServiceDelegateImpl.class);
     bind(AwsS3HelperServiceDelegate.class).to(AwsS3HelperServiceDelegateImpl.class);
     bind(GcbService.class).to(GcbServiceImpl.class);
+    bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
 
     bind(SlackMessageSender.class).to(SlackMessageSenderImpl.class);
 
@@ -904,6 +913,7 @@ public class DelegateModule extends AbstractModule {
     bind(CVNGDataCollectionDelegateService.class).to(CVNGDataCollectionDelegateServiceImpl.class);
     bind(AzureManagementClient.class).to(AzureManagementClientImpl.class);
     bind(AzureBlueprintClient.class).to(AzureBlueprintClientImpl.class);
+    bind(AzureAuthorizationClient.class).to(AzureAuthorizationClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -1147,6 +1157,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.VAULT_RENEW_TOKEN).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.VAULT_LIST_ENGINES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.VAULT_APPROLE_LOGIN).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.SSH_SECRET_ENGINE_AUTH).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.SECRET_DECRYPT).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.BATCH_SECRET_DECRYPT).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.SECRET_DECRYPT_REF).toInstance(ServiceImplDelegateTask.class);
@@ -1241,6 +1252,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.EXECUTE_COMMAND).toInstance(ExecuteCommandTask.class);
     mapBinder.addBinding(TaskType.CI_CLEANUP).toInstance(CICleanupTask.class);
     mapBinder.addBinding(TaskType.AWS_S3_TASK).toInstance(AwsS3Task.class);
+    mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK).toInstance(CustomManifestValuesFetchTask.class);
 
     // Add all NG tasks below this.
     mapBinder.addBinding(TaskType.GCP_TASK).toInstance(GcpTask.class);
@@ -1254,6 +1266,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.GIT_API_TASK).toInstance(GitApiTask.class);
     mapBinder.addBinding(TaskType.CE_VALIDATE_KUBERNETES_CONFIG)
         .toInstance(CEKubernetesTestConnectionDelegateTask.class);
+    mapBinder.addBinding(TaskType.HTTP_HELM_CONNECTIVITY_TASK).toInstance(HttpHelmConnectivityDelegateTask.class);
 
     mapBinder.addBinding(TaskType.K8_FETCH_NAMESPACES).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.K8_FETCH_WORKLOADS).toInstance(ServiceImplDelegateTask.class);
@@ -1266,6 +1279,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.SHELL_SCRIPT_TASK_NG).toInstance(ShellScriptTaskNG.class);
     mapBinder.addBinding(TaskType.NG_NEXUS_TASK).toInstance(NexusDelegateTask.class);
     mapBinder.addBinding(TaskType.NG_ARTIFACTORY_TASK).toInstance(ArtifactoryDelegateTask.class);
+    mapBinder.addBinding(TaskType.NG_AWS_CODE_COMMIT_TASK).toInstance(AwsCodeCommitDelegateTask.class);
   }
 
   private void registerSecretManagementBindings() {
@@ -1273,6 +1287,7 @@ public class DelegateModule extends AbstractModule {
     bind(EncryptionService.class).to(EncryptionServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
     bind(DelegateDecryptionService.class).to(DelegateDecryptionServiceImpl.class);
+    bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
 
     binder()
         .bind(VaultEncryptor.class)
@@ -1347,6 +1362,8 @@ public class DelegateModule extends AbstractModule {
         .to(GitValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DOCKER.getDisplayName())
         .to(DockerValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.HTTP_HELM_REPO.getDisplayName())
+        .to(HttpHelmValidationHandler.class);
 
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.VAULT.getDisplayName())
         .to(UpsertSecretTaskValidationHandler.class);

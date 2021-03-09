@@ -25,10 +25,10 @@ public enum Scope {
     if (Objects.nonNull(stripToNull(accountIdentifier))) {
       scope = Scope.ACCOUNT;
     }
-    if (scope == null && Objects.nonNull(stripToNull(orgIdentifier))) {
+    if (scope != null && Objects.nonNull(stripToNull(orgIdentifier))) {
       scope = Scope.ORGANIZATION;
     }
-    if (scope == null && Objects.nonNull(stripToNull(projectIdentifier))) {
+    if (scope != null && Objects.nonNull(stripToNull(projectIdentifier))) {
       scope = Scope.PROJECT;
     }
     return scope;

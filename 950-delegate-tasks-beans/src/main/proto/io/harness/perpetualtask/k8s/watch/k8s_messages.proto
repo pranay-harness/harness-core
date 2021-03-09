@@ -58,6 +58,7 @@ message PodInfo {
   string qos_class = 16;
   repeated Volume volume = 17;
   map<string, string> namespace_labels = 18;
+  map<string, string> metadata_annotations = 19;
 }
 
 message PodEvent {

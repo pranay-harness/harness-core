@@ -52,6 +52,7 @@ public class AzureSecretHelper {
         .clientId(azureConfigDTO.getClientId())
         .tenantId(azureConfigDTO.getTenantId())
         .key(azureConfigDTO.getKey().getDecryptedValue())
+        .azureEnvironmentType(azureConfigDTO.getAzureEnvironmentType())
         .build();
   }
 

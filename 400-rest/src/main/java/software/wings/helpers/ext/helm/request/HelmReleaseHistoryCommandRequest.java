@@ -2,13 +2,13 @@ package software.wings.helpers.ext.helm.request;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.List;

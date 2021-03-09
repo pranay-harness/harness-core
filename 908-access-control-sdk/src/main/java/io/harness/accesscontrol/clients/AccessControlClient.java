@@ -3,7 +3,8 @@ package io.harness.accesscontrol.clients;
 import io.harness.accesscontrol.principals.PrincipalType;
 
 import java.util.List;
-import org.hibernate.validator.constraints.NotEmpty;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 public interface AccessControlClient {
   /**
@@ -26,8 +27,7 @@ public interface AccessControlClient {
 
   boolean hasAccess(String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO);
 
-  boolean hasAccess(PermissionCheckDTO permissionCheckDTO);
+  boolean hasAccess(@Valid @NotNull PermissionCheckDTO permissionCheckDTO);
 
-  void checkAccessOrThrow(@NotEmpty String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      @NotEmpty String resourceType, @NotEmpty String resourceIdentifier, @NotEmpty String permissionIdentifier);
+  void checkForAccessOrThrow(@Valid @NotNull PermissionCheckDTO permissionCheckDTO);
 }

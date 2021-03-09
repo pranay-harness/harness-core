@@ -595,7 +595,7 @@
       "required": [
         "onRetryFailure",
         "retryCount",
-        "retryInterval"
+        "retryIntervals"
       ],
       "properties": {
         "onRetryFailure": {
@@ -605,7 +605,7 @@
           "type": "integer",
           "format": "int32"
         },
-        "retryInterval": {
+        "retryIntervals": {
           "type": "array",
           "items": {
             "type": "string"

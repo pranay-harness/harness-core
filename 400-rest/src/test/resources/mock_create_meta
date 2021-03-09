@@ -64,6 +64,18 @@
           ],
           "custom" : "true"
         },
+        "customfield_option_3" : {
+          "key" : "customfield_option_3",
+          "name" : "Option Name",
+          "required" : "false",
+          "schema" :
+          {"type" : "option", "custom" : "customSchema", "customId" : 1},
+          "allowedValues" : [
+            {"value" : "OptionValue1", "id" : "option_id_1"},
+            {"value" : "OptionValue1", "id" : "option_id_2"}
+          ],
+          "custom" : "true"
+        },
         "timetracking" : {
           "key" : "timetracking",
           "name" : "Timetracking",

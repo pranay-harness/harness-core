@@ -6,7 +6,10 @@ import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 
@@ -21,19 +24,24 @@ public class HResource {
     return isEmpty(resourceIdentifier) ? IDENTIFIER_FOR_ALL_RESOURCES : resourceIdentifier;
   }
 
-  public static Optional<HResource> fromResourceSelector(ResourceSelector resourceSelector) {
+  public static List<Optional<HResource>> fromResourceSelector(ResourceSelector resourceSelector) {
     if (resourceSelector instanceof StaticResourceSelector) {
       StaticResourceSelector staticResourceSelector = (StaticResourceSelector) resourceSelector;
-      return Optional.ofNullable(HResource.builder()
-                                     .resourceIdentifier(staticResourceSelector.getIdentifier())
-                                     .resourceType(staticResourceSelector.getResourceType())
-                                     .build());
+      return staticResourceSelector.getIdentifiers()
+          .stream()
+          .map(identifier
+              -> Optional.ofNullable(HResource.builder()
+                                         .resourceIdentifier(identifier)
+                                         .resourceType(staticResourceSelector.getResourceType())
+                                         .build()))
+          .collect(Collectors.toList());
     } else if (resourceSelector instanceof DynamicResourceSelector) {
-      return Optional.ofNullable(HResource.builder()
-                                     .resourceIdentifier(IDENTIFIER_FOR_ALL_RESOURCES)
-                                     .resourceType(((DynamicResourceSelector) resourceSelector).getResourceType())
-                                     .build());
+      return Collections.singletonList(
+          Optional.ofNullable(HResource.builder()
+                                  .resourceIdentifier(IDENTIFIER_FOR_ALL_RESOURCES)
+                                  .resourceType(((DynamicResourceSelector) resourceSelector).getResourceType())
+                                  .build()));
     }
-    return Optional.empty();
+    return Collections.singletonList(Optional.empty());
   }
 }

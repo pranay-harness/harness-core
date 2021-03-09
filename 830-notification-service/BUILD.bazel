@@ -1,11 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -108,7 +104,7 @@ shared_dependencies = [
     "@maven//:com_hazelcast_hazelcast",
     "@maven//:com_hubspot_jackson_jackson_datatype_protobuf",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_mashape_unirest_unirest_java",
     "@maven//:com_mchange_c3p0",
@@ -375,6 +371,7 @@ test_deps = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//830-notification-service/src/test/resources:resource",
@@ -398,13 +395,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = shared_dependencies + [
-        ":module",
-    ],
-)
 
 pmd()

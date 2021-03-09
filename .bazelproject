@@ -22,7 +22,9 @@ directories:
   340-ce-nextgen
   350-event-server
   360-cg-manager
+  370-users-syncbridge
   380-cg-graphql
+  390-db-migration
   400-rest
   420-delegate-agent
   420-delegate-service
@@ -41,6 +43,7 @@ directories:
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization
+  870-cg-yaml-beans
   870-orchestration
   870-yaml-beans
   876-orchestration-beans
@@ -51,6 +54,7 @@ directories:
   890-pms-contracts
   890-sm-core
   900-access-control-service
+  902-aggregator-module
   903-decision-module
   905-access-control-core
   908-access-control-admin-client
@@ -82,6 +86,7 @@ directories:
   950-walktree-visitor
   954-connector-beans
   955-filters-sdk
+  955-outbox-sdk
   955-setup-usage-sdk
   960-api-services
   960-continuous-features
@@ -91,6 +96,7 @@ directories:
   960-persistence
   960-recaster
   960-yaml-sdk
+  965-git-sync-commons
   970-api-services-beans
   970-grpc
   970-ng-commons
@@ -118,3 +124,4 @@ import_run_configurations:
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
   run-configurations/VerificationServiceApp.xml
+  run-configurations/BatchProcessinngApp.xml

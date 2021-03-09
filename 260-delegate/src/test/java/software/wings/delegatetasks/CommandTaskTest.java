@@ -34,6 +34,7 @@ import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.ServiceCommandExecutorService;
+import software.wings.service.intfc.security.SSHVaultService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -45,6 +46,7 @@ import org.mockito.Mock;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class CommandTaskTest extends WingsBaseTest {
   @Mock ServiceCommandExecutorService serviceCommandExecutorService;
+  @Mock private SSHVaultService sshVaultService;
 
   DelegateTaskPackage delegateTaskPackage =
       DelegateTaskPackage.builder()

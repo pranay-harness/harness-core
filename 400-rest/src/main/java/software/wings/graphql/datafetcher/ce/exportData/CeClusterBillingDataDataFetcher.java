@@ -183,6 +183,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       String region = "";
       String namespace = "";
       String workload = "";
+      String workloadType = "";
       String node = "";
       String pod = "";
       String task = "";
@@ -241,6 +242,9 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             workload = resultSet.getString(field.getFieldName());
             workloads.add(workload);
             break;
+          case WORKLOADTYPE:
+            workloadType = resultSet.getString(field.getFieldName());
+            break;
           case NAMESPACE:
             namespace
             = resultSet.getString(field.getFieldName());
@@ -289,6 +293,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
         node = instanceName;
       } else if (instanceType.equals("K8S_POD")) {
         pod = instanceName;
+      } else if (instanceType.equals("K8S_POD_FARGATE")) {
+        pod = instanceName;
       }
 
       final QLCEDataEntryBuilder dataEntryBuilder = QLCEDataEntry.builder();
@@ -305,7 +311,13 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
           .region(region)
           .harness(
               QLCEHarnessEntity.builder().application(application).service(service).environment(environment).build())
-          .k8s(QLCEK8sEntity.builder().namespace(namespace).node(node).pod(pod).workload(workload).build())
+          .k8s(QLCEK8sEntity.builder()
+                   .namespace(namespace)
+                   .node(node)
+                   .pod(pod)
+                   .workload(workload)
+                   .workloadType(workloadType)
+                   .build())
           .ecs(QLCEEcsEntity.builder().launchType(launchType).service(ecsService).taskId(task).build())
           .cluster(cluster)
           .clusterId(clusterId)

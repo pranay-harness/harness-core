@@ -2,11 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -19,12 +15,14 @@ shared_dependencies = [
     "//400-rest:module",
     "//910-delegate-service-driver:module",
     "//950-delegate-tasks-beans:module",
+    "//955-delegate-beans:module",
     "//970-grpc:module",
     "@jira_client//jar",
 ]
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -69,6 +67,7 @@ run_tests()
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//200-functional-test/src/test/resources:resource",
@@ -81,17 +80,12 @@ java_library(
         "manual",
     ],
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//360-cg-manager:module",
+    ],
     deps = test_dependencies,
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

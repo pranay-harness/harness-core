@@ -3,6 +3,8 @@ package io.harness.accesscontrol.roleassignments;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDaoImpl;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentMorphiaRegistrar;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidatorImpl;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.morphia.MorphiaRegistrar;
 
@@ -28,6 +30,7 @@ public class RoleAssignmentModule extends AbstractModule {
     morphiaRegistrars.addBinding().toInstance(RoleAssignmentMorphiaRegistrar.class);
 
     bind(RoleAssignmentService.class).to(RoleAssignmentServiceImpl.class);
+    bind(RoleAssignmentValidator.class).to(RoleAssignmentValidatorImpl.class);
     bind(RoleAssignmentDao.class).to(RoleAssignmentDaoImpl.class);
     registerRequiredBindings();
   }

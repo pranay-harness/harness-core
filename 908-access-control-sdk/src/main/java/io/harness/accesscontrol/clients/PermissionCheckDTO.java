@@ -18,6 +18,6 @@ public class PermissionCheckDTO {
   String orgIdentifier;
   String projectIdentifier;
   @NotEmpty String resourceType;
-  @NotEmpty String resourceIdentifier;
+  String resourceIdentifier;
   @NotEmpty String permission;
 }

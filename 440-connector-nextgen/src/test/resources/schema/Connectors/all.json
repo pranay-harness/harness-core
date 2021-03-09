@@ -141,6 +141,157 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsCodeCommitAuthenticationDTO": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "HTTPS"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HTTPS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitHttpsCredentialsDTO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsCodeCommitConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "authentication",
+            "type",
+            "url"
+          ],
+          "properties": {
+            "authentication": {
+              "$ref": "#/definitions/AwsCodeCommitAuthenticationDTO"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Repo",
+                "Region"
+              ]
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitHttpsCredentialsDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsCodeCommitCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "AWSCredentials"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AWSCredentials"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitSecretKeyAccessKeyDTO"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitHttpsCredentialsSpecDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitSecretKeyAccessKeyDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsCodeCommitHttpsCredentialsSpecDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "secretKeyRef"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "accessKeyRef": {
+              "type": "string"
+            },
+            "secretKeyRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "accessKey"
+              ]
+            },
+            {
+              "required": [
+                "accessKeyRef"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AwsConnector": {
       "allOf": [
         {
@@ -735,9 +886,11 @@
             "Github",
             "Gitlab",
             "Bitbucket",
+            "Codecommit",
             "CEAws",
             "CEAzure",
-            "CEK8sCluster"
+            "CEK8sCluster",
+            "HttpHelmRepo"
           ]
         }
       },
@@ -859,6 +1012,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "Codecommit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "DockerRegistry"
               }
             }
@@ -947,6 +1116,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GitlabConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HttpHelmRepo"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpHelmConnectorDTO"
               }
             }
           }
@@ -2141,6 +2326,105 @@
               "type": "string"
             }
           }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmAuthCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmAuthenticationDTO": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UsernamePassword",
+            "Anonymous"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpHelmUsernamePasswordDTO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "HttpHelmConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "helmRepoUrl"
+          ],
+          "properties": {
+            "auth": {
+              "$ref": "#/definitions/HttpHelmAuthenticationDTO"
+            },
+            "helmRepoUrl": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmUsernamePasswordDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/HttpHelmAuthCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "passwordRef"
+          ],
+          "properties": {
+            "passwordRef": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"

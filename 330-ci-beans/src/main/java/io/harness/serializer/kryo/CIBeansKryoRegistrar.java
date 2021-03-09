@@ -55,6 +55,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.NexusConnecto
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.S3Connector;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
@@ -163,5 +164,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UploadToGCSStepInfo.class, 100084);
     kryo.register(K8BuildJobEnvInfo.ConnectorConversionInfo.class, 100085);
     kryo.register(UploadToArtifactoryStepInfo.class, 100086);
+    kryo.register(PodCleanupDetails.class, 100087);
   }
 }

@@ -10,6 +10,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
+import software.wings.beans.Workflow;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -203,6 +205,31 @@ public class OwnerManager {
           .findFirst()
           .map(obj -> (InfrastructureProvisioner) obj)
           .orElse(null);
+    }
+
+    public InfrastructureDefinition obtainInfrastructureDefinition() {
+      return (InfrastructureDefinition) objects.stream()
+          .filter(obj -> obj instanceof InfrastructureDefinition)
+          .findFirst()
+          .orElse(null);
+    }
+
+    public InfrastructureDefinition obtainInfrastructureDefinition(Generator<InfrastructureDefinition> generator) {
+      InfrastructureDefinition infraDefinition = obtainInfrastructureDefinition();
+      if (infraDefinition != null) {
+        return infraDefinition;
+      }
+
+      infraDefinition = generator.generate();
+      if (infraDefinition != null) {
+        add(infraDefinition);
+      }
+
+      return infraDefinition;
+    }
+
+    public Workflow obtainWorkflow() {
+      return (Workflow) objects.stream().filter(obj -> obj instanceof Workflow).findFirst().orElse(null);
     }
   }
 }

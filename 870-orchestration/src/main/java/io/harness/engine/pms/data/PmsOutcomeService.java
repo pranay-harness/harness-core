@@ -48,4 +48,6 @@ public interface PmsOutcomeService {
   List<String> fetchOutcomes(List<String> outcomeInstanceIds);
 
   String fetchOutcome(@NonNull String outcomeInstanceId);
+
+  OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject);
 }

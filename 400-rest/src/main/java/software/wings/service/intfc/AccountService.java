@@ -46,6 +46,8 @@ public interface AccountService {
 
   Account get(String accountId);
 
+  List<Account> getAccounts(List<String> identifiers);
+
   Account getFromCache(String accountId);
 
   String getAccountStatus(String accountId);

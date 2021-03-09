@@ -13,6 +13,8 @@ import javax.validation.Valid;
 public interface InterruptService {
   List<Interrupt> fetchActiveInterrupts(String planExecutionId);
 
+  List<Interrupt> fetchActiveInterruptsForNodeExecution(String planExecutionId, String nodeExecutionId);
+
   List<Interrupt> fetchAllInterrupts(String planExecutionId);
 
   Interrupt markProcessed(String interruptId, State interruptState);

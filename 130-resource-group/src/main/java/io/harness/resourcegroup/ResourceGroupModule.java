@@ -11,6 +11,8 @@ import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.ng.core.account.remote.AccountClient;
+import io.harness.ng.core.account.remote.AccountClientModule;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
@@ -107,6 +109,7 @@ public class ResourceGroupModule extends AbstractModule {
     requireBinding(ProjectManagerClient.class);
     requireBinding(OrganizationManagerClient.class);
     requireBinding(ConnectorResourceClient.class);
+    requireBinding(AccountClient.class);
   }
 
   private void installResourceValidators() {
@@ -122,5 +125,8 @@ public class ResourceGroupModule extends AbstractModule {
     install(new ConnectorResourceClientModule(
         ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getNgManager().getBaseUrl()).build(),
         resourceGroupConfig.getNgManager().getSecret(), RESOURCE_GROUP_CLIENT));
+    install(new AccountClientModule(
+        ServiceHttpClientConfig.builder().baseUrl(resourceGroupConfig.getManager().getBaseUrl()).build(),
+        resourceGroupConfig.getManager().getSecret(), RESOURCE_GROUP_CLIENT));
   }
 }

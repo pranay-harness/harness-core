@@ -83,11 +83,13 @@ public class NodeExecutionsCache {
   }
 
   public Map<String, Object> extractFinalStepParameters(NodeExecution nodeExecution) {
-    Map<String, Object> stepParameters = NodeExecutionUtils.extractStepParameters(
-        nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters().toJson());
-    if (stepParameters != null) {
-      return stepParameters;
+    if (nodeExecution.getResolvedStepParameters() != null) {
+      Map<String, Object> stepParameters =
+          NodeExecutionUtils.extractAndProcessStepParameters(nodeExecution.getResolvedStepParameters().toJson());
+      if (stepParameters != null) {
+        return stepParameters;
+      }
     }
-    return NodeExecutionUtils.extractStepParameters(nodeExecution.getNode().getStepParameters());
+    return NodeExecutionUtils.extractAndProcessStepParameters(nodeExecution.getNode().getStepParameters());
   }
 }

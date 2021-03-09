@@ -1,6 +1,7 @@
 package io.harness.states;
 
 import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.CALLBACK_IDS;
+import static io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo.LOG_KEYS;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.SHUBHAM;
 
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.steps.CiStepOutcome;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.sweepingoutputs.StepLogKeyDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
@@ -31,8 +33,10 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.After;
@@ -55,8 +59,8 @@ public class RunStepTest extends CIExecutionTestBase {
   private Ambiance ambiance;
   private RunStepInfo stepInfo;
   private StepInputPackage stepInputPackage;
-  private RefObject refObject;
   private StepTaskDetails stepTaskDetails;
+  private StepLogKeyDetails stepLogKeyDetails;
   private final String callbackId = UUID.randomUUID().toString();
   private Map<String, ResponseData> responseDataMap;
 
@@ -65,7 +69,6 @@ public class RunStepTest extends CIExecutionTestBase {
     ambiance = Ambiance.newBuilder().addLevels(Level.newBuilder().setIdentifier("runStepId").build()).build();
     stepInfo = RunStepInfo.builder().identifier(STEP_ID).build();
     stepInputPackage = StepInputPackage.builder().build();
-    refObject = RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS);
     Map<String, String> callbackIds = new HashMap<>();
     callbackIds.put(STEP_ID, callbackId);
     stepTaskDetails = StepTaskDetails.builder().taskIds(callbackIds).build();
@@ -81,10 +84,19 @@ public class RunStepTest extends CIExecutionTestBase {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldExecuteAsync() {
-    when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject))).thenReturn(stepTaskDetails);
+    Map<String, List<String>> logKeys = new HashMap<>();
+    String key = "foo:bar";
+    logKeys.put(STEP_ID, Collections.singletonList(key));
+    StepLogKeyDetails stepLogKeyDetails = StepLogKeyDetails.builder().logKeys(logKeys).build();
+
+    RefObject refObject1 = RefObjectUtils.getSweepingOutputRefObject(CALLBACK_IDS);
+    RefObject refObject2 = RefObjectUtils.getSweepingOutputRefObject(LOG_KEYS);
+    when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject1))).thenReturn(stepTaskDetails);
+    when(executionSweepingOutputResolver.resolve(eq(ambiance), eq(refObject2))).thenReturn(stepLogKeyDetails);
+
     AsyncExecutableResponse asyncExecutableResponse = runStep.executeAsync(ambiance, stepInfo, stepInputPackage);
     assertThat(asyncExecutableResponse)
-        .isEqualTo(AsyncExecutableResponse.newBuilder().addCallbackIds(callbackId).build());
+        .isEqualTo(AsyncExecutableResponse.newBuilder().addCallbackIds(callbackId).addLogKeys(key).build());
   }
 
   @Test

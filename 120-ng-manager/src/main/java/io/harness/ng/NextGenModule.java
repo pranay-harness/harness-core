@@ -7,6 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
@@ -33,6 +34,10 @@ import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.lock.DistributedLockImplementation;
+import io.harness.lock.PersistentLockModule;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
+import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
@@ -67,12 +72,15 @@ import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
 import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
@@ -84,6 +92,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.yaml.YamlSdkModule;
@@ -142,9 +151,28 @@ public class NextGenModule extends AbstractModule {
 
   @Provides
   @Singleton
+  LogStreamingServiceConfiguration getLogStreamingServiceConfiguration() {
+    return appConfig.getLogStreamingServiceConfig();
+  }
+
+  @Provides
+  @Singleton
   Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
       DelegateServiceGrpcClient delegateServiceGrpcClient) {
     return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, appConfig));
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return MONGO;
+  }
+
+  @Provides
+  @Named("lock")
+  @Singleton
+  RedisConfig redisLockConfig() {
+    return appConfig.getRedisLockConfig();
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(
@@ -165,6 +193,7 @@ public class NextGenModule extends AbstractModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(DelegateServiceDriverModule.getInstance());
+    install(TimeModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
 
     install(new ProviderModule() {
@@ -187,9 +216,7 @@ public class NextGenModule extends AbstractModule {
        }
      });*/
     bind(CustomExecutionService.class).to(CustomExecutionServiceImpl.class);
-    bind(RedisConfig.class)
-        .annotatedWith(Names.named("lock"))
-        .toInstance(appConfig.getEventsFrameworkConfiguration().getRedisConfig());
+    bind(LogStreamingServiceRestClient.class).toProvider(NGLogStreamingClientFactory.class);
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
@@ -278,6 +305,9 @@ public class NextGenModule extends AbstractModule {
 
     install(new ResourceGroupModule(
         appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
+    install(PersistentLockModule.getInstance());
+    install(new TransactionOutboxModule());
+    bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);

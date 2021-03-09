@@ -12,6 +12,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -87,7 +88,7 @@ import software.wings.service.intfc.ownership.OwnedByApplicationManifest;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ApplicationManifestUtils;
-import software.wings.utils.CommandFlagUtils;
+import software.wings.utils.CommandFlagConfigUtils;
 import software.wings.yaml.directory.DirectoryNode;
 import software.wings.yaml.directory.DirectoryPath;
 
@@ -801,9 +802,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       if (HELM_CHART_OVERRIDE == appManifest.getKind()) {
         validateStoreTypeForHelmChartOverride(appManifest.getStoreType(), getAppManifestType(appManifest));
       } else {
-        if (StoreType.Local != appManifest.getStoreType() && Remote != appManifest.getStoreType()) {
+        if (StoreType.Local != appManifest.getStoreType() && Remote != appManifest.getStoreType()
+            && CUSTOM != appManifest.getStoreType()) {
           throw new InvalidRequestException(
-              "Only local and remote store types are allowed for values.yaml in environment");
+              "Only local, remote and custom store types are allowed for values.yaml in environment");
         }
       }
     }
@@ -826,6 +828,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     if (applicationManifest.getGitFileConfig() != null) {
       throw new InvalidRequestException(
           "gitFileConfig cannot be used with HelmChartRepo. Use helmChartConfig instead.", USER);
+    }
+
+    if (applicationManifest.getCustomSourceConfig() != null) {
+      throw new InvalidRequestException(
+          "customSourceConfig cannot be used with HelmChartRepo. Use helmChartConfig instead", USER);
     }
 
     if (isEnvOverrideForAllServices(applicationManifest)) {
@@ -920,6 +927,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
       throw new InvalidRequestException("helmChartConfig cannot be used for Local storeType.", USER);
     }
 
+    if (applicationManifest.getCustomSourceConfig() != null) {
+      throw new InvalidRequestException("customSourceConfig cannot be used for Local storeType.", USER);
+    }
+
     if (applicationManifest.getKind() != null && applicationManifest.getKind() == AppManifestKind.K8S_MANIFEST
         && applicationManifest.getServiceId() != null) {
       Service service =
@@ -934,6 +945,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   private void validateRemoteAppManifest(ApplicationManifest applicationManifest) {
     if (applicationManifest.getHelmChartConfig() != null) {
       throw new InvalidRequestException("helmChartConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
+    }
+
+    if (applicationManifest.getCustomSourceConfig() != null) {
+      throw new InvalidRequestException(
+          "customSourcceConfig cannot be used with Remote. Use gitFileConfig instead.", USER);
     }
 
     gitFileConfigHelperService.validate(applicationManifest.getGitFileConfig());
@@ -984,6 +1000,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         validateOpenShiftSourceRepoAppManifest(applicationManifest);
         break;
 
+      case CUSTOM:
+      case CUSTOM_OPENSHIFT_TEMPLATE:
+        validateCustomAppManifest(applicationManifest);
+        break;
+
       default:
         unhandled(applicationManifest.getStoreType());
     }
@@ -996,7 +1017,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     HelmVersion helmVersion = serviceResourceService.getHelmVersionWithDefault(
         applicationManifest.getAppId(), applicationManifest.getServiceId());
     if (null != helmVersion) {
-      CommandFlagUtils.validateHelmCommandFlags(applicationManifest.getHelmCommandFlag(), helmVersion);
+      CommandFlagConfigUtils.validateHelmCommandFlags(applicationManifest.getHelmCommandFlag(), helmVersion);
     }
   }
 
@@ -1008,6 +1029,21 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (isEmpty(applicationManifest.getGitFileConfig().getFilePath())) {
       throw new InvalidRequestException("Template File Path can't be empty", USER);
+    }
+  }
+
+  @VisibleForTesting
+  void validateCustomAppManifest(@Nonnull ApplicationManifest applicationManifest) {
+    String accountId = appService.getAccountIdByAppId(applicationManifest.getAppId());
+    if (!featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, accountId)) {
+      throw new InvalidRequestException("Custom Manifest feature is not enabled. Please contact Harness support", USER);
+    }
+    if (applicationManifest.getCustomSourceConfig() == null) {
+      throw new InvalidRequestException("Custom Source Config is mandatory for Custom type", USER);
+    }
+
+    if (isEmpty(applicationManifest.getCustomSourceConfig().getPath())) {
+      throw new InvalidRequestException("Path can't be empty", USER);
     }
   }
 
@@ -1049,6 +1085,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
           helmChartConfig.setChartUrl(helmChartConfig.getChartUrl().trim());
         }
 
+        break;
+      case CUSTOM:
+      case CUSTOM_OPENSHIFT_TEMPLATE:
+        applicationManifest.getCustomSourceConfig().setPath(
+            applicationManifest.getCustomSourceConfig().getPath().trim());
         break;
 
       default:

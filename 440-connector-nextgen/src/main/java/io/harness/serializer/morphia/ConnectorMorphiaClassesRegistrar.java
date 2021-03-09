@@ -5,6 +5,9 @@ import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.connector.entities.embedded.appdynamicsconnector.AppDynamicsConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector;
 import io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryUserNamePasswordAuthentication;
+import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication;
+import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitConfig;
+import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey;
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
@@ -41,6 +44,8 @@ import io.harness.connector.entities.embedded.gitlabconnector.GitlabSshAuthentic
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabTokenApiAccess;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernamePassword;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabUsernameToken;
+import io.harness.connector.entities.embedded.helm.HttpHelmConnector;
+import io.harness.connector.entities.embedded.helm.HttpHelmUsernamePasswordAuthentication;
 import io.harness.connector.entities.embedded.jira.JiraConnector;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
@@ -82,6 +87,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(BitbucketConnector.class);
     set.add(CEAzureConfig.class);
     set.add(CEK8sDetails.class);
+    set.add(AwsCodeCommitConfig.class);
+    set.add(HttpHelmConnector.class);
   }
 
   @Override
@@ -127,5 +134,11 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     h.put("connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication",
         BitbucketHttpAuthentication.class);
     h.put("connector.entities.embedded.bitbucketconnector.BitbucketUsernamePassword", BitbucketUsernamePassword.class);
+    h.put("connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication",
+        AwsCodeCommitAuthentication.class);
+    h.put("connector.entities.embedded.awscodecommitconnector.AwsCodeCommitSecretKeyAccessKey",
+        AwsCodeCommitSecretKeyAccessKey.class);
+    h.put("connector.entities.embedded.helm.HttpHelmUsernamePasswordAuthentication",
+        HttpHelmUsernamePasswordAuthentication.class);
   }
 }

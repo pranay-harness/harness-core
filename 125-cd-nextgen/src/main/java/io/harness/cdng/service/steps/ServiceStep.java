@@ -37,6 +37,11 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
+import io.harness.logStreaming.LogStreamingStepClientFactory;
+import io.harness.logging.CommandExecutionStatus;
+import io.harness.logging.LogLevel;
+import io.harness.logging.UnitProgress;
+import io.harness.logging.UnitStatus;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -46,6 +51,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -55,6 +61,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.utils.NGVariablesUtils;
@@ -80,9 +87,12 @@ import lombok.extern.slf4j.Slf4j;
 public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.SERVICE.getName()).build();
 
+  public static final String SERVICE_STEP_COMMAND_UNIT = "Execute";
+
   @Inject private ServiceEntityService serviceEntityService;
   @Inject private ArtifactStep artifactStep;
   @Inject private ManifestStep manifestStep;
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   @Override
   public Class<ServiceStepParameters> getStepParametersClass() {
@@ -92,8 +102,15 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @Override
   public TaskChainResponse startChainLink(
       Ambiance ambiance, ServiceStepParameters stepParameters, StepInputPackage inputPackage) {
-    StepOutcome manifestOutcome = manifestStep.processManifests(stepParameters.getService());
+    NGManagerLogCallback ngManagerLogCallback =
+        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, true);
+    ngManagerLogCallback.saveExecutionLog("Starting Service Step");
 
+    ngManagerLogCallback.saveExecutionLog("Processing Manifests");
+    StepOutcome manifestOutcome = manifestStep.processManifests(stepParameters.getService(), ngManagerLogCallback);
+
+    ngManagerLogCallback.saveExecutionLog("Manifests Processed");
+    ngManagerLogCallback.saveExecutionLog("Fetching Artifacts");
     List<ArtifactStepParameters> artifactsWithCorrespondingOverrides =
         artifactStep.getArtifactsWithCorrespondingOverrides(stepParameters.getService());
     ServiceStepPassThroughData passThroughData =
@@ -104,7 +121,12 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
             .build();
 
     if (isEmpty(artifactsWithCorrespondingOverrides)) {
-      return TaskChainResponse.builder().chainEnd(true).passThroughData(passThroughData).build();
+      return TaskChainResponse.builder()
+          .chainEnd(true)
+          .passThroughData(passThroughData)
+          .logKeys(StepUtils.generateLogKeys(ambiance, Collections.singletonList(SERVICE_STEP_COMMAND_UNIT)))
+          .units(Collections.singletonList(SERVICE_STEP_COMMAND_UNIT))
+          .build();
     }
 
     TaskRequest taskRequest = artifactStep.getTaskRequest(ambiance, artifactsWithCorrespondingOverrides.get(0));
@@ -144,8 +166,10 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, ServiceStepParameters serviceStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+    long startTime = System.currentTimeMillis();
     ServiceStepPassThroughData serviceStepPassThroughData = (ServiceStepPassThroughData) passThroughData;
-
+    NGManagerLogCallback managerLogCallback =
+        new NGManagerLogCallback(logStreamingStepClientFactory, ambiance, SERVICE_STEP_COMMAND_UNIT, false);
     if (!isEmpty(responseDataMap)) {
       // Artifact task executed
       DelegateResponseData notifyResponseData = (DelegateResponseData) responseDataMap.values().iterator().next();
@@ -169,13 +193,14 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
 
     ServiceOutcome serviceOutcome = createServiceOutcome(
         ambiance, serviceConfig, serviceStepPassThroughData.getStepOutcomes(), ambiance.getExpressionFunctorToken());
+    managerLogCallback.saveExecutionLog("Service Step Succeeded", LogLevel.INFO, CommandExecutionStatus.SUCCESS);
     return StepResponse.builder()
-        .stepOutcome(StepResponse.StepOutcome.builder()
+        .stepOutcome(StepOutcome.builder()
                          .name(OutcomeExpressionConstants.SERVICE)
                          .outcome(serviceOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
-        .stepOutcome(StepResponse.StepOutcome.builder()
+        .stepOutcome(StepOutcome.builder()
                          .name(YamlTypes.SERVICE_CONFIG)
                          .outcome(ServiceConfigOutcome.builder()
                                       .service(serviceOutcome)
@@ -192,6 +217,12 @@ public class ServiceStep implements TaskChainExecutable<ServiceStepParameters> {
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .status(Status.SUCCEEDED)
+        .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
+                                                        .setEndTime(System.currentTimeMillis())
+                                                        .setStartTime(startTime)
+                                                        .setStatus(UnitStatus.SUCCESS)
+                                                        .setUnitName(SERVICE_STEP_COMMAND_UNIT)
+                                                        .build()))
         .build();
   }
 

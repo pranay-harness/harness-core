@@ -2,10 +2,10 @@ use clap::Clap;
 use glob::glob;
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::fs::{copy, File, metadata, remove_file};
+use std::fs::{copy, metadata, remove_file, File};
 use std::io::{Result, Write};
 
-use crate::execute::{MODULE_IMPORT, read_lines, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
+use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
 
 /// An action to be executed
 #[derive(Clap)]

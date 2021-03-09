@@ -1,12 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
@@ -34,6 +30,7 @@ shared_dependencies = [
     "//920-delegate-service-beans:module",
     "//930-delegate-tasks:module",
     "//930-ng-core-clients:module",
+    "//950-log-client:module",
     "//955-delegate-beans:module",
     "//940-feature-flag:module",
     "//940-notification-client:module",
@@ -53,6 +50,7 @@ shared_dependencies = [
     "//960-api-services:module",
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
+    "//955-outbox-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
@@ -216,7 +214,7 @@ shared_dependencies = [
     "@maven//:com_j256_two_factor_auth_two_factor_auth",
     "@maven//:com_jakewharton_retrofit_retrofit1_okhttp3_client",
     "@maven//:com_jayway_jsonpath_json_path",
-    "@maven//:com_jcraft_jsch",
+    "@maven//:com_jcraft_harness_jsch_0_1_54_harness_patch",
     "@maven//:com_jcraft_jzlib",
     "@maven//:com_lmax_disruptor",
     "@maven//:com_mashape_unirest_unirest_java",
@@ -702,6 +700,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//120-ng-manager/src/test/resources:resource",
@@ -727,13 +726,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

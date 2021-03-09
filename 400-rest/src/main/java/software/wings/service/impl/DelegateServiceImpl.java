@@ -75,7 +75,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
-import io.harness.beans.FileMetadata;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -95,11 +94,13 @@ import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroup.DelegateGroupKeys;
+import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
@@ -123,6 +124,7 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -135,7 +137,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
@@ -622,6 +623,22 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public Double getConnectedRatioWithPrimary(String targetVersion) {
+    long primary =
+        delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(configurationController.getPrimaryVersion());
+
+    // If we do not have any delegates in the primary version, lets unblock the deployment,
+    // that will be very rare and we are in trouble anyways, let report 1 to let the new deployment go.
+    if (primary == 0) {
+      return 1.0;
+    }
+
+    long target = delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(targetVersion);
+
+    return (double) target / (double) primary;
+  }
+
+  @Override
   public DelegateSetupDetails validateKubernetesYaml(String accountId, DelegateSetupDetails delegateSetupDetails) {
     validateSetupDetails(delegateSetupDetails);
     delegateSetupDetails.setSessionIdentifier(generateUuid());
@@ -754,9 +771,12 @@ public class DelegateServiceImpl implements DelegateService {
 
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
+    List<DelegateGroupDetails> delegateGroupDetails = getDelegateGroupDetails(accountId, activeDelegateConnections);
+
     return DelegateStatus.builder()
         .publishedVersions(delegateConfiguration.getDelegateVersions())
         .scalingGroups(scalingGroups)
+        .delegateGroupDetails(delegateGroupDetails)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
   }
@@ -785,12 +805,54 @@ public class DelegateServiceImpl implements DelegateService {
         .collect(toList());
   }
 
+  @NotNull
+  private List<DelegateGroupDetails> getDelegateGroupDetails(String accountId,
+      Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> activeDelegateConnections) {
+    List<Delegate> activeDelegates =
+        persistence.createQuery(Delegate.class)
+            .filter(DelegateKeys.accountId, accountId)
+            .field(DelegateKeys.delegateGroupId)
+            .exists()
+            .field(DelegateKeys.status)
+            .hasAnyOf(Arrays.asList(DelegateInstanceStatus.ENABLED, DelegateInstanceStatus.WAITING_FOR_APPROVAL))
+            .asList();
+
+    return activeDelegates.stream()
+        .collect(groupingBy(Delegate::getDelegateGroupId))
+        .entrySet()
+        .stream()
+        .map(entry -> {
+          List<Delegate> groupDelegates = entry.getValue();
+
+          String delegateType = groupDelegates.get(0).getDelegateType();
+          String groupName = groupDelegates.get(0).getDelegateName();
+          String groupHostName = ""; // TODO - use method added in DEL-1638
+
+          Map<String, SelectorType> groupSelectors = new HashMap<>();
+          groupDelegates.forEach(delegate -> groupSelectors.putAll(retrieveDelegateImplicitSelectors(delegate)));
+
+          long lastHeartBeat = groupDelegates.stream().mapToLong(Delegate::getLastHeartBeat).max().orElse(0);
+
+          return DelegateGroupDetails.builder()
+              .delegateType(delegateType)
+              .groupName(groupName)
+              .groupHostName(groupHostName)
+              .groupSelectors(groupSelectors)
+              .lastHeartBeat(lastHeartBeat)
+              .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections, true))
+              .build();
+        })
+        .collect(toList());
+  }
+
   private List<Delegate> getDelegatesWithoutScalingGroup(String accountId) {
     return persistence.createQuery(Delegate.class)
         .filter(DelegateKeys.accountId, accountId)
         .field(DelegateKeys.status)
         .notEqual(DelegateInstanceStatus.DELETED)
         .field(DelegateKeys.delegateGroupName)
+        .doesNotExist()
+        .field(DelegateKeys.delegateGroupId)
         .doesNotExist()
         .asList();
   }
@@ -2348,7 +2410,7 @@ public class DelegateServiceImpl implements DelegateService {
         }
       }
 
-      log.info("Processing sync task");
+      log.info("Processing sync task {}", task.getUuid());
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
@@ -2584,7 +2646,6 @@ public class DelegateServiceImpl implements DelegateService {
       }
 
       // No in scope delegates, capable of doing the task
-      log.warn("No capable delegates found.");
       return null;
     } catch (Exception ex) {
       log.error("Unexpected error occurred while obtaining capable delegate Ids", ex);

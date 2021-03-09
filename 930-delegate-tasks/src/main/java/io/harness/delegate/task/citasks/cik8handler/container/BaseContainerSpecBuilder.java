@@ -9,7 +9,11 @@ package io.harness.delegate.task.citasks.cik8handler.container;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DIND_TAG_REGEX;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.DOCKER_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_ACR_IMAGE_NAME;
 import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_DOCKER_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_ECR_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_GCR_IMAGE_NAME;
+import static io.harness.delegate.task.citasks.cik8handler.params.CIConstants.PLUGIN_HEROKU_IMAGE_NAME;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
@@ -130,7 +134,9 @@ public abstract class BaseContainerSpecBuilder {
   private boolean isPrivilegedImage(ImageDetails imageDetails) {
     String imageName = imageDetails.getName();
     String tag = imageDetails.getTag();
-    if (imageName.equals(PLUGIN_DOCKER_IMAGE_NAME)) {
+    if (imageName.equals(PLUGIN_DOCKER_IMAGE_NAME) || imageName.equals(PLUGIN_ECR_IMAGE_NAME)
+        || imageName.equals(PLUGIN_ACR_IMAGE_NAME) || imageName.equals(PLUGIN_GCR_IMAGE_NAME)
+        || imageName.equals(PLUGIN_HEROKU_IMAGE_NAME)) {
       return true;
     }
 

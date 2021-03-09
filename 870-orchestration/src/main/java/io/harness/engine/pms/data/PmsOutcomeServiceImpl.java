@@ -164,4 +164,51 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     }
     return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
   }
+
+  @Override
+  public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
+    if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
+      return resolveOptionalUsingProducerSetupId(ambiance, refObject);
+    }
+    if (!refObject.getName().contains(".")) {
+      // It is not an expression-like ref-object.
+      return resolveOptionalUsingRuntimeId(ambiance, refObject);
+    }
+
+    EngineExpressionEvaluator evaluator =
+        expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
+    injector.injectMembers(evaluator);
+    try {
+      Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+      return OptionalOutcome.builder().found(true).outcome(value == null ? null : ((Document) value).toJson()).build();
+    } catch (OutcomeException ignore) {
+      return OptionalOutcome.builder().found(false).build();
+    }
+  }
+
+  private OptionalOutcome resolveOptionalUsingProducerSetupId(Ambiance ambiance, RefObject refObject) {
+    String outcome;
+    boolean isResolvable;
+    try {
+      outcome = resolveUsingProducerSetupId(ambiance, refObject);
+      isResolvable = true;
+    } catch (OutcomeException ignore) {
+      outcome = null;
+      isResolvable = false;
+    }
+    return OptionalOutcome.builder().found(isResolvable).outcome(outcome).build();
+  }
+
+  private OptionalOutcome resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
+    String outcome;
+    boolean isResolvable;
+    try {
+      outcome = resolveUsingRuntimeId(ambiance, refObject);
+      isResolvable = true;
+    } catch (OutcomeException ignore) {
+      outcome = null;
+      isResolvable = false;
+    }
+    return OptionalOutcome.builder().found(isResolvable).outcome(outcome).build();
+  }
 }

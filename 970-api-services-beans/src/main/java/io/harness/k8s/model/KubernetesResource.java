@@ -22,6 +22,7 @@ import io.harness.k8s.model.harnesscrds.ExecNewPodHook;
 import io.harness.k8s.model.harnesscrds.LifecycleHook;
 import io.harness.k8s.model.harnesscrds.RecreateDeploymentStrategyParams;
 import io.harness.k8s.model.harnesscrds.RollingDeploymentStrategyParams;
+import io.harness.yaml.BooleanPatchedRepresenter;
 
 import com.google.common.annotations.VisibleForTesting;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
@@ -122,7 +123,9 @@ public class KubernetesResource {
     }
 
     try {
-      this.spec = Yaml.dump(k8sResource);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -149,7 +152,9 @@ public class KubernetesResource {
     }
 
     try {
-      this.spec = Yaml.dump(k8sResource);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -219,7 +224,9 @@ public class KubernetesResource {
     v1Service.getSpec().setSelector(selectors);
 
     try {
-      this.spec = Yaml.dump(k8sResource);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -233,7 +240,9 @@ public class KubernetesResource {
     Object k8sResource = getK8sResource();
     updateName(k8sResource, transformer);
     try {
-      this.spec = Yaml.dump(k8sResource);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -320,7 +329,9 @@ public class KubernetesResource {
     v1PodTemplateSpec.getMetadata().setLabels(podLabels);
 
     try {
-      this.spec = Yaml.dump(k8sResource);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -337,7 +348,9 @@ public class KubernetesResource {
     updateSecretRef(k8sResource, secretRefTransformer);
 
     try {
-      this.spec = Yaml.dump(k8sResource);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
       // do nothing
@@ -364,8 +377,9 @@ public class KubernetesResource {
           e.setValue(redacted);
         }
       }
-
-      result = Yaml.dump(v1Secret);
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      result = yaml.dump(v1Secret);
     } catch (Exception e) {
       // do nothing
       noop();
@@ -721,7 +735,9 @@ public class KubernetesResource {
     }
 
     try {
-      return ResourceUtils.removeEmptyOrNullFields(Yaml.dump(Yaml.loadAs(this.spec, V1StatefulSet.class)));
+      org.yaml.snakeyaml.Yaml yaml =
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+      return ResourceUtils.removeEmptyOrNullFields(yaml.dump(Yaml.loadAs(this.spec, V1StatefulSet.class)));
     } catch (IOException e) {
       // Return original spec
       return spec;

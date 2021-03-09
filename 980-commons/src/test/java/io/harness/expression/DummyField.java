@@ -36,7 +36,7 @@ public class DummyField<T> {
     value = (T) newValue;
   }
 
-  public boolean process(ExpressionResolveFunctor functor) {
+  public boolean process(DummyFunctor functor) {
     Object newValue;
     boolean updated = true;
     if (isExpression) {

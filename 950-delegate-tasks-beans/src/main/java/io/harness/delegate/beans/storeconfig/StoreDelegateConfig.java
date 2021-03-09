@@ -1,3 +1,5 @@
 package io.harness.delegate.beans.storeconfig;
 
-public interface StoreDelegateConfig {}
+public interface StoreDelegateConfig {
+  StoreDelegateConfigType getType();
+}

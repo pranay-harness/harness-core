@@ -10,6 +10,7 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -19,10 +20,6 @@ import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
@@ -30,6 +27,8 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.user.services.api.NgUserService;
+import io.harness.outbox.OutboxEvent;
+import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
 import io.harness.rule.Owner;
 
@@ -43,19 +42,23 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.transaction.support.TransactionTemplate;
 
 public class OrganizationServiceImplTest extends CategoryTest {
   private OrganizationRepository organizationRepository;
   private OrganizationServiceImpl organizationService;
-  private Producer eventProducer;
+  private OutboxService outboxService;
+  private TransactionTemplate transactionTemplate;
   private NgUserService ngUserService;
 
   @Before
   public void setup() {
     organizationRepository = mock(OrganizationRepository.class);
-    eventProducer = mock(NoOpProducer.class);
+    outboxService = mock(OutboxService.class);
     ngUserService = mock(NgUserService.class);
-    organizationService = spy(new OrganizationServiceImpl(organizationRepository, eventProducer, ngUserService));
+    transactionTemplate = mock(TransactionTemplate.class);
+    organizationService =
+        spy(new OrganizationServiceImpl(organizationRepository, outboxService, ngUserService, transactionTemplate));
   }
 
   private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
@@ -77,15 +80,12 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     when(organizationRepository.save(organization)).thenReturn(organization);
     when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
+    when(outboxService.save(any())).thenReturn(OutboxEvent.builder().build());
+    when(transactionTemplate.execute(any())).thenReturn(organization);
 
     Organization createdOrganization = organizationService.create(accountIdentifier, organizationDTO);
 
-    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
-    try {
-      verify(eventProducer, times(1)).send(producerMessage.capture());
-    } catch (ProducerShutdownException e) {
-      e.printStackTrace();
-    }
+    verify(transactionTemplate, times(1)).execute(any());
 
     assertEquals(organization, createdOrganization);
   }
@@ -119,12 +119,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
 
     Organization updatedOrganization = organizationService.update(accountIdentifier, identifier, organizationDTO);
 
-    ArgumentCaptor<Message> producerMessage = ArgumentCaptor.forClass(Message.class);
-    try {
-      verify(eventProducer, times(1)).send(producerMessage.capture());
-    } catch (ProducerShutdownException e) {
-      e.printStackTrace();
-    }
+    verify(outboxService, times(1)).save(any());
 
     assertEquals(organization, updatedOrganization);
   }
@@ -172,12 +167,14 @@ public class OrganizationServiceImplTest extends CategoryTest {
     String searchTerm = randomAlphabetic(5);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
 
-    when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
+    when(organizationRepository.findAll(any(Criteria.class), any(Pageable.class), anyBoolean()))
+        .thenReturn(getPage(emptyList(), 0));
 
     Page<Organization> organizationPage = organizationService.list(
         accountIdentifier, unpaged(), OrganizationFilterDTO.builder().searchTerm(searchTerm).build());
 
-    verify(organizationRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
+    verify(organizationRepository, times(1))
+        .findAll(criteriaArgumentCaptor.capture(), any(Pageable.class), anyBoolean());
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();

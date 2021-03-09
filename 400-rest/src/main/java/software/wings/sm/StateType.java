@@ -730,7 +730,7 @@ public enum StateType implements StateTypeDescriptor {
 
   TERRAFORM_APPLY(ApplyTerraformState.class, OTHERS, 5, "Terraform Apply", asList(), ORCHESTRATION_STENCILS, COMMON),
 
-  ARM_CREATE_RESOURCE(ARMProvisionState.class, PROVISIONERS, 0, "ARM Create Resource",
+  ARM_CREATE_RESOURCE(ARMProvisionState.class, PROVISIONERS, 0, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
       asList(InfrastructureMappingType.AZURE_INFRA, InfrastructureMappingType.AZURE_VMSS,
           InfrastructureMappingType.AZURE_WEBAPP),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE), ORCHESTRATION_STENCILS),

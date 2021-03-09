@@ -104,7 +104,7 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
       organizationEntityChangeDTO = OrganizationEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
       throw new InvalidRequestException(
-          String.format("Exception in unpacking OrganizationEntityChangeDTO for key %s", message.getId()), e);
+          String.format("Exception in unpacking EntityChangeDTO for key %s", message.getId()), e);
     }
     String action = message.getMessage().getMetadataMap().get(ACTION);
     if (action != null) {

@@ -2,11 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/JavaPackageRules.bzl", "java_package")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "//890-sm-core:module",
@@ -48,23 +44,16 @@ java_package(
 
 java_library(
     name = "module",
-    srcs = ["src/main/java/io/harness/Dummy.java"],
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = shared_dependencies + [
-        ":1-io_harness_managerclient",
-        ":2-io_harness_delegate",
-        ":3-io_harness_perpetualtask",
-    ],
+    deps = shared_dependencies,
+    #    + [
+    #        ":1-io_harness_managerclient",
+    #        ":2-io_harness_delegate",
+    #        ":3-io_harness_perpetualtask",
+    #    ],
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = shared_dependencies + [
-        ":module",
-    ],
-)
 
 pmd()

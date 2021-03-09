@@ -83,6 +83,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
     final Map<String, List<APMMetricInfo>> metricEndpoints =
         prometheusAnalysisService.apmMetricEndPointsFetchInfo(timeSeriesToAnalyze);
     final long dataCollectionStartTimeStamp = dataCollectionStartTimestampMillis();
+    String accountId = appService.getAccountIdByAppId(context.getAppId());
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(prometheusConfig.getUrl())
@@ -99,17 +100,18 @@ public class PrometheusState extends AbstractMetricAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .dataCollectionMinute(0)
             .metricEndpoints(metricEndpoints)
-            .accountId(appService.getAccountIdByAppId(context.getAppId()))
+            .accountId(accountId)
             .strategy(getComparisonStrategy())
             .dataCollectionTotalTime(Integer.parseInt(getTimeDuration()))
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
+            .validateCert(accountService.isCertValidationRequired(accountId))
             .build();
 
     String waitId = generateUuid();
     String infrastructureMappingId = context.fetchInfraMappingId();
     DelegateTask delegateTask =
         DelegateTask.builder()
-            .accountId(appService.getAccountIdByAppId(context.getAppId()))
+            .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .waitId(waitId)
             .data(TaskData.builder()

@@ -20,9 +20,9 @@ public class GcpCapabilityHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
       GcpConnectorDTO gcpConnectorDTO, ExpressionEvaluator maskingEvaluator) {
     GcpConnectorCredentialDTO credential = gcpConnectorDTO.getCredential();
-    GcpDelegateDetailsDTO config = (GcpDelegateDetailsDTO) credential.getConfig();
 
     if (credential.getGcpCredentialType() == GcpCredentialType.INHERIT_FROM_DELEGATE) {
+      GcpDelegateDetailsDTO config = (GcpDelegateDetailsDTO) credential.getConfig();
       return Collections.singletonList(SelectorCapability.builder().selectors(config.getDelegateSelectors()).build());
     } else if (credential.getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
       return Collections.singletonList(

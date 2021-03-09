@@ -27,7 +27,7 @@ public class OnAbortAdviser implements Adviser {
   @Override
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
     return AdviserResponse.newBuilder()
-        .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
+        .setEndPlanAdvise(EndPlanAdvise.newBuilder().setIsAbort(true).build())
         .setType(AdviseType.END_PLAN)
         .build();
   }

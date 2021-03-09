@@ -1,8 +1,13 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
+
+import static java.util.stream.Collectors.groupingBy;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.utils.DateTimeUtils;
@@ -31,6 +36,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -97,12 +103,13 @@ public final class VerificationJobInstance
   // TODO: Refactor and Split into separate job instances
 
   // this stuff is only required for deployment verification
-  private Duration dataCollectionDelay;
+  @Setter(AccessLevel.NONE) private Duration dataCollectionDelay;
   private List<String> perpetualTaskIds;
   private Map<String, String> connectorsToPerpetualTaskIdsMap;
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
+  private ActivityVerificationStatus verificationStatus;
 
   // this stuff is only required for health verification
   private Instant preActivityVerificationStartTime;
@@ -137,6 +144,9 @@ public final class VerificationJobInstance
       //   "Deployment start time should be before verification start time.");
       if (deploymentStartTime.equals(startTime)) {
         unsafeVerificationJobInstance.setStartTime(startTime.plus(Duration.ofMinutes(1)));
+      }
+      if (unsafeVerificationJobInstance.getDataCollectionDelay() == null) {
+        unsafeVerificationJobInstance.dataCollectionDelay = DATA_COLLECTION_DELAY;
       }
       return unsafeVerificationJobInstance;
     }
@@ -193,6 +203,10 @@ public final class VerificationJobInstance
 
   public Instant getEndTime() {
     return getStartTime().plus(getExecutionDuration());
+  }
+
+  public int getVerificationTasksCount() {
+    return cvConfigMap.size();
   }
 
   public List<ProgressLog> getProgressLogs() {
@@ -287,7 +301,21 @@ public final class VerificationJobInstance
     if (finalStateLogs.isEmpty()) {
       return 0;
     }
-    ProgressLog lastProgressLog = finalStateLogs.get(finalStateLogs.size() - 1);
+    Map<String, List<ProgressLog>> groupByVerificationTaskId =
+        finalStateLogs.stream().collect(groupingBy(ProgressLog::getVerificationTaskId));
+    int progressPercentageSum = groupByVerificationTaskId.values()
+                                    .stream()
+                                    .map(progressLogsGroup -> getProgressLogPercentage(progressLogsGroup))
+                                    .mapToInt(Integer::intValue)
+                                    .sum();
+    return progressPercentageSum / getVerificationTasksCount();
+  }
+
+  private int getProgressLogPercentage(List<ProgressLog> group) {
+    if (group.isEmpty()) {
+      return 0;
+    }
+    ProgressLog lastProgressLog = Collections.max(group, Comparator.comparing(ProgressLog::getEndTime));
     Instant endTime = lastProgressLog.getEndTime();
     Duration total = getExecutionDuration();
     Duration completedTillNow = Duration.between(getStartTime(), endTime);
@@ -307,7 +335,7 @@ public final class VerificationJobInstance
     return !VerificationJobType.getDeploymentJobTypes().contains(getResolvedJob().getType());
   }
 
-  public Duration getTimeRemainingMs(Instant currentTime) {
+  public Duration getRemainingTime(Instant currentTime) {
     if (isFinalStatus()) {
       return Duration.ZERO;
     } else if (executionStatus == ExecutionStatus.QUEUED) {
@@ -319,7 +347,8 @@ public final class VerificationJobInstance
       }
       Instant startTimeForDuration = getStartTime();
       if (!isHealthJob()) {
-        startTimeForDuration = Collections.max(Arrays.asList(getStartTime(), Instant.ofEpochMilli(createdAt)));
+        startTimeForDuration =
+            Collections.max(Arrays.asList(getStartTime().plus(dataCollectionDelay), Instant.ofEpochMilli(createdAt)));
       }
       Duration durationTillNow = Duration.between(startTimeForDuration, currentTime);
 

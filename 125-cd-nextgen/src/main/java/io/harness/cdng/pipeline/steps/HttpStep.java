@@ -35,21 +35,19 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
-import io.harness.yaml.core.variables.NGVariable;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
 public class HttpStep implements TaskExecutable<HttpStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getYamlType()).build();
-  private static final int socketTimeoutMillis = 10000;
 
   @Inject private KryoSerializer kryoSerializer;
 
@@ -60,14 +58,21 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
 
   @Override
   public TaskRequest obtainTask(Ambiance ambiance, HttpStepParameters stepParameters, StepInputPackage inputPackage) {
+    int socketTimeoutMillis = (int) NGTimeConversionHelper.convertTimeStringToMilliseconds("10m");
+    if (stepParameters.getTimeout() != null && stepParameters.getTimeout().getValue() != null) {
+      socketTimeoutMillis =
+          (int) NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue());
+    }
     HttpTaskParametersNgBuilder httpTaskParametersNgBuilder = HttpTaskParametersNg.builder()
                                                                   .url(stepParameters.getUrl().getValue())
                                                                   .method(stepParameters.getMethod().getValue())
                                                                   .socketTimeoutMillis(socketTimeoutMillis);
 
     if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
-      httpTaskParametersNgBuilder.requestHeader(stepParameters.getHeaders().stream().collect(
-          Collectors.toMap(HttpHeaderConfig::getKey, HttpHeaderConfig::getValue)));
+      List<HttpHeaderConfig> headers = new ArrayList<>();
+      stepParameters.getHeaders().keySet().forEach(
+          key -> headers.add(HttpHeaderConfig.builder().key(key).value(stepParameters.getHeaders().get(key)).build()));
+      httpTaskParametersNgBuilder.requestHeader(headers);
     }
 
     if (stepParameters.getRequestBody() != null) {
@@ -107,7 +112,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
     } else {
       HttpStepResponse httpStepResponse = (HttpStepResponse) notifyResponseData;
 
-      List<NGVariable> outputVariables = stepParameters.getOutputVariables();
+      Map<String, Object> outputVariables = stepParameters.getOutputVariables();
       Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
       boolean assertionSuccessful = validateAssertions(httpStepResponse, stepParameters);
@@ -165,19 +170,22 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
   }
 
   public static Map<String, String> evaluateOutputVariables(
-      List<NGVariable> outputVariables, HttpStepResponse httpStepResponse) {
+      Map<String, Object> outputVariables, HttpStepResponse httpStepResponse) {
     Map<String, String> outputVariablesEvaluated = new LinkedHashMap<>();
     if (outputVariables != null) {
       Map<String, Object> context = ImmutableMap.<String, Object>builder()
                                         .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
                                         .build();
       EngineExpressionEvaluator expressionEvaluator = new EngineExpressionEvaluator(null);
-      outputVariables.forEach(outputVariable -> {
-        String expression = outputVariable.getValue().getExpressionValue();
-        if (expression != null) {
-          Object evaluatedValue = expressionEvaluator.evaluateExpression(expression, context);
-          if (evaluatedValue != null) {
-            outputVariablesEvaluated.put(outputVariable.getName(), evaluatedValue.toString());
+      outputVariables.keySet().forEach(name -> {
+        Object expression = outputVariables.get(name);
+        if (expression instanceof ParameterField) {
+          ParameterField<?> expr = (ParameterField<?>) expression;
+          if (expr.isExpression()) {
+            Object evaluatedValue = expressionEvaluator.evaluateExpression(expr.getExpressionValue(), context);
+            if (evaluatedValue != null) {
+              outputVariablesEvaluated.put(name, evaluatedValue.toString());
+            }
           }
         }
       });

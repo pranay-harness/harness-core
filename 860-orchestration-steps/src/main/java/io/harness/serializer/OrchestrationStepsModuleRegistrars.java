@@ -3,11 +3,13 @@ package io.harness.serializer;
 import io.harness.EntityType;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.YamlKryoRegistrar;
+import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -28,12 +30,16 @@ public class OrchestrationStepsModuleRegistrars {
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
+          .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
+          .addAll(NotificationClientRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(OrchestrationStepsMorphiaRegistrar.class)
+          .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
+          .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
@@ -54,6 +60,13 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(PipelineConfig.class)
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.PIPELINE_STEPS)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(PMSStepInfo.class)
                    .build())
           .build();
 }

@@ -15,6 +15,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @OwnedBy(CE)
@@ -24,8 +25,10 @@ public class CeAccountExpirationCheckerImpl implements CeAccountExpirationChecke
   @Inject private HPersistence persistence;
   private static final long CACHE_SIZE = 1000;
 
-  private LoadingCache<String, Boolean> accountIdToIsCeEnabled =
-      Caffeine.newBuilder().maximumSize(CACHE_SIZE).build(this::isCeEnabledForAccount);
+  private final LoadingCache<String, Boolean> accountIdToIsCeEnabled = Caffeine.newBuilder()
+                                                                           .expireAfterWrite(1, TimeUnit.DAYS)
+                                                                           .maximumSize(CACHE_SIZE)
+                                                                           .build(this::isCeEnabledForAccount);
 
   @Override
   public void checkIsCeEnabled(String accountId) {

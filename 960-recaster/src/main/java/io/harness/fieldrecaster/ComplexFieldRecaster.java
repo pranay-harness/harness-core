@@ -70,6 +70,6 @@ public class ComplexFieldRecaster implements FieldRecaster {
   private Document obtainEncodedValue(Recaster recaster, CastedField cf, Object fieldValue) {
     return new Document()
         .append(Recaster.RECAST_CLASS_KEY, cf.getType().getName())
-        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue));
+        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue, cf));
   }
 }

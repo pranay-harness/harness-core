@@ -158,7 +158,6 @@ import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
@@ -194,7 +193,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphGroup;
 import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
@@ -1477,7 +1476,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EntityVersion.class, 71109);
     kryo.register(EntityVersion.ChangeType.class, 71110);
     kryo.register(ArtifactStreamSummary.class, 7202);
-    kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
     kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
     kryo.register(Deployment.class, 7208);
@@ -1729,7 +1727,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpResponseCodeSwitchAdviserParameters.class, 8096);
     kryo.register(TfVarGitSource.class, 8097);
     kryo.register(HelmSubCommand.class, 8076);
-    kryo.register(HelmCommandFlag.class, 8077);
+    kryo.register(HelmCommandFlagConfig.class, 8077);
 
     kryo.register(AzureAppServiceSlotSetupContextElement.class, 8098);
     kryo.register(AzureAppServiceSlotSetupExecutionData.class, 8099);

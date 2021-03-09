@@ -3,6 +3,7 @@ package io.harness.plancreator.pipeline;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.notification.bean.NotificationRules;
 import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.pms.yaml.ParameterField;
@@ -41,4 +42,5 @@ public class PipelineInfoConfig {
   NGProperties properties;
 
   @Singular List<StageElementWrapperConfig> stages;
+  List<NotificationRules> notificationRules;
 }

@@ -1,18 +1,21 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.manifest.CustomSourceConfig;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
-import software.wings.beans.HelmCommandFlag;
+import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
 import software.wings.yaml.BaseEntityYaml;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
@@ -23,9 +26,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@NgUniqueIndex(
-    name = "appManifestIdx", fields = { @Field("appId")
-                                        , @Field("envId"), @Field("serviceId"), @Field("kind") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -33,6 +33,19 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 public class ApplicationManifest extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("appManifestIdx")
+                 .unique(true)
+                 .field(BaseKeys.appId)
+                 .field(ApplicationManifestKeys.envId)
+                 .field(ApplicationManifestKeys.serviceId)
+                 .field(ApplicationManifestKeys.kind)
+                 .build())
+        .build();
+  }
+
   public static final String ID = "_id";
 
   @FdIndex private String accountId;
@@ -43,7 +56,8 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private GitFileConfig gitFileConfig;
   private HelmChartConfig helmChartConfig;
   private KustomizeConfig kustomizeConfig;
-  @Nullable private HelmCommandFlag helmCommandFlag;
+  private CustomSourceConfig customSourceConfig;
+  @Nullable private HelmCommandFlagConfig helmCommandFlag;
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
@@ -63,6 +77,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .kind(this.kind)
                                        .helmChartConfig(helmChartConfig)
                                        .kustomizeConfig(KustomizeConfig.cloneFrom(this.kustomizeConfig))
+                                       .customSourceConfig(CustomSourceConfig.cloneFrom(this.customSourceConfig))
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .build();
@@ -80,19 +95,21 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private GitFileConfig gitFileConfig;
     private HelmChartConfig helmChartConfig;
     private KustomizeConfig kustomizeConfig;
+    private CustomSourceConfig customSourceConfig;
     private Boolean pollForChanges;
     private Boolean skipVersioningForAllK8sObjects;
-    private HelmCommandFlag helmCommandFlag;
+    private HelmCommandFlagConfig helmCommandFlag;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
-        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, Boolean pollForChanges,
-        HelmCommandFlag helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
+        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
+        Boolean pollForChanges, HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
       this.helmChartConfig = helmChartConfig;
       this.kustomizeConfig = kustomizeConfig;
+      this.customSourceConfig = customSourceConfig;
       this.pollForChanges = pollForChanges;
       this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;

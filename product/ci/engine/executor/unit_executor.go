@@ -177,17 +177,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 		}
 	case *pb.UnitStep_RunTests:
 		e.log.Infow("Test intelligence step info", "step", x.RunTests.String(), "step_id", step.GetId())
-		cgph := ti.NewCallGraphParser(e.log)
-		dto, _ := cgph.Parse("/Users/amansingh/Desktop/f2.txt")
-
-		cl, _ := avro.NewCallgrSer("product/ci/common/avro/schema.avsc")
-		str := dto.ToStringMap()
-		str1, _ := cl.Serialize(str)
-		fmt.Println(string(str1))
-		inter, _ := cl.Deserialize(str1)
-		fin, _ := ti.FromStringMap(inter.(map[string]interface{}))
-		fmt.Println(*fin)
-		// stepOutput, numRetries, err = runTests(step, e.tmpFilePath, so, e.log).Run(ctx)
+		stepOutput, numRetries, err = runTests(step, e.tmpFilePath, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -198,7 +188,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_SaveCache:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -209,7 +199,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_RestoreCache:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -219,7 +209,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_PublishArtifacts:
-		rl, err = newRemoteLogger(step.GetId())
+		rl, err = newRemoteLogger(step.GetLogKey())
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -241,6 +231,9 @@ func (e *unitExecutor) Cleanup(ctx context.Context, step *pb.UnitStep) error {
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
 		port := x.Run.GetContainerPort()
+		return e.stopAddonServer(ctx, step.GetId(), uint(port))
+	case *pb.UnitStep_RunTests:
+		port := x.RunTests.GetContainerPort()
 		return e.stopAddonServer(ctx, step.GetId(), uint(port))
 	case *pb.UnitStep_Plugin:
 		port := x.Plugin.GetContainerPort()
