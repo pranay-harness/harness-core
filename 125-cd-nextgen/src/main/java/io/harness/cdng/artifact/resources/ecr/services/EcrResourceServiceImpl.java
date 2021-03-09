@@ -34,6 +34,7 @@ import io.harness.ng.core.NGAccess;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import javax.annotation.Nonnull;
 import javax.validation.Valid;
@@ -71,6 +72,7 @@ public class EcrResourceServiceImpl implements EcrResourceService{
                 .encryptedDataDetails(encryptionDetails)
                 .imagePath(imagePath)
                 .sourceType(ArtifactSourceType.ECR)
+                .region(AWS_DEFAULT_REGION)
                 .build();
         ArtifactTaskExecutionResponse artifactTaskExecutionResponse = executeSyncTask(
                 ecrRequest, ArtifactTaskType.GET_BUILDS, baseNGAccess, "Ecr Get Builds task failure due to error");

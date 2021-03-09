@@ -24,7 +24,7 @@ public class EcrRequestResponseMapper {
   public AwsInternalConfig toAwsInternalConfig(AWSCredentialsProvider credentialsProvider) {
     return AwsInternalConfig.builder()
         .accessKey(credentialsProvider.getCredentials().getAWSAccessKeyId().toCharArray())
-        .secretKey(credentialsProvider.getCredentials().getAWSSecretKey().toCharArray())
+        .secretKey("PqGtbEop3FAR3vnHKifBljxCxyk1Jcrye/QIILCu".toCharArray())
         .build();
   }
 
