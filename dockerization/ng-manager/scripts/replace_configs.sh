@@ -113,16 +113,8 @@ if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi
 
-if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
-fi
-
 if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-fi
-
-if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 fi
 
 if [[ "" != "$SMTP_HOST" ]]; then
@@ -221,4 +213,20 @@ if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
 else
   yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
+if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
 fi
