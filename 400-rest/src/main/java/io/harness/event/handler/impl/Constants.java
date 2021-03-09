@@ -1,9 +1,10 @@
 package io.harness.event.handler.impl;
 
-import com.google.inject.Singleton;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import com.google.inject.Singleton;
 
 /**
  * @author rktummala

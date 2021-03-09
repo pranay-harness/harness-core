@@ -1,14 +1,14 @@
 package io.harness.delegate.beans;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Builder;
-import lombok.Value;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.SelectorType;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

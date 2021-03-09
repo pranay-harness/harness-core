@@ -1,8 +1,10 @@
 package io.harness.event.handler.impl;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import io.fabric8.utils.Strings;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.marketo.MarketoRestClient;
 import io.harness.event.model.marketo.Error;
@@ -13,8 +15,7 @@ import io.harness.event.model.marketo.LeadRequestWithEmail;
 import io.harness.event.model.marketo.LeadRequestWithId;
 import io.harness.event.model.marketo.LoginResponse;
 import io.harness.event.model.marketo.Response;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Retrofit;
+
 import software.wings.beans.Account;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.UserInvite;
@@ -22,15 +23,15 @@ import software.wings.beans.utm.UtmInfo;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Strings;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
-
-import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.validation.Validator.notNullCheck;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Retrofit;
 
 /**
  * @author rktummala on 11/20/18

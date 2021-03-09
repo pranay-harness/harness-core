@@ -1,6 +1,11 @@
 package io.harness.cvng.state;
 
-import com.google.inject.Inject;
+import static io.harness.cvng.state.CVNGVerificationTask.Status.DONE;
+import static io.harness.cvng.state.CVNGVerificationTask.Status.TIMED_OUT;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
+import static java.time.Duration.ofMinutes;
+
 import io.harness.beans.ExecutionStatus;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
@@ -11,17 +16,14 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.waiter.WaitNotifyEngine;
+
 import software.wings.sm.states.CVNGState.CVNGStateResponseData;
 import software.wings.sm.states.CVNGState.CVNGStateResponseData.CVNGStateResponseDataBuilder;
 
+import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-
-import static io.harness.cvng.state.CVNGVerificationTask.Status.DONE;
-import static io.harness.cvng.state.CVNGVerificationTask.Status.TIMED_OUT;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static java.time.Duration.ofMinutes;
 
 public class CVNGVerificationTaskHandler implements MongoPersistenceIterator.Handler<CVNGVerificationTask> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;

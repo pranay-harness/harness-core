@@ -4,15 +4,15 @@ import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.utility.AnomalyUtility;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.http.client.utils.URIBuilder;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.URIBuilder;
 
 @UtilityClass
 @Slf4j

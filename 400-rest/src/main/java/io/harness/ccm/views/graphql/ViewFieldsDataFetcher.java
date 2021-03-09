@@ -1,6 +1,7 @@
 package io.harness.ccm.views.graphql;
 
-import com.google.inject.Inject;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewField;
@@ -8,20 +9,20 @@ import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ccm.views.service.ViewCustomFieldService;
 import io.harness.ccm.views.utils.ViewFieldUtils;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.graphql.datafetcher.AbstractFieldsDataFetcher;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFieldsData, QLCEViewFilterWrapper> {

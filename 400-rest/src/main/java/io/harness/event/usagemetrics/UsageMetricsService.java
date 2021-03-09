@@ -1,18 +1,23 @@
 package io.harness.event.usagemetrics;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.hazelcast.util.Preconditions;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.event.model.EventConstants.ACCOUNT_ID;
+import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
+import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
+
+import static java.util.function.Function.identity;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.metrics.HarnessMetricRegistry;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
@@ -31,20 +36,17 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.hazelcast.util.Preconditions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.event.model.EventConstants.ACCOUNT_ID;
-import static io.harness.event.model.EventConstants.IS_24X7_ENABLED;
-import static io.harness.event.model.EventConstants.VERIFICATION_STATE_TYPE;
-import static java.util.function.Function.identity;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

@@ -1,7 +1,8 @@
 package io.harness.cvng.client;
 
-import com.google.inject.AbstractModule;
 import io.harness.security.ServiceTokenGenerator;
+
+import com.google.inject.AbstractModule;
 
 public class CVNGClientModule extends AbstractModule {
   String cvngBaseUrl;

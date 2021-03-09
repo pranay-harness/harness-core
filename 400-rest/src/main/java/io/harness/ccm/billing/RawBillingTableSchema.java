@@ -1,13 +1,13 @@
 package io.harness.ccm.billing;
 
+import static io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema.defaultTableName;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
-
-import static io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema.defaultTableName;
 
 @Value
 @UtilityClass

@@ -1,12 +1,12 @@
 package io.harness.event.timeseries.processor.instanceeventprocessor.instanceaggregator;
 
-import lombok.Getter;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Map;
+import lombok.Getter;
 
 @Getter
 public abstract class InstanceAggregator {

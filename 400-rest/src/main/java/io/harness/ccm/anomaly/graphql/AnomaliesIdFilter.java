@@ -1,5 +1,10 @@
 package io.harness.ccm.anomaly.graphql;
 
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
+
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.ComboCondition;
@@ -7,15 +12,11 @@ import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.InCondition;
 import com.healthmarketscience.sqlbuilder.UnaryCondition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
-import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
+import java.util.Arrays;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Data
 @Builder

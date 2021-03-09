@@ -2,6 +2,7 @@ package io.harness.ccm.billing.graphql;
 
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
+
 import lombok.Data;
 
 @Data

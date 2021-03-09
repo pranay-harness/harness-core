@@ -1,9 +1,8 @@
 package io.harness.ccm.setup.util;
 
+import java.math.BigDecimal;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-
-import java.math.BigDecimal;
 
 @UtilityClass
 @Slf4j

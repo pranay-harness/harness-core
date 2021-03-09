@@ -1,6 +1,5 @@
 package io.harness.ccm.cluster.entities;
 
-import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -8,6 +7,8 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
+
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

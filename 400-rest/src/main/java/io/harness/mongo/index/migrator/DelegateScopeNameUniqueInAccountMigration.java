@@ -1,8 +1,13 @@
 package io.harness.mongo.index.migrator;
 
+import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Group.id;
+
 import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.persistence.HIterator;
+
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -10,10 +15,6 @@ import org.mongodb.morphia.aggregation.AggregationPipeline;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
-import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
-import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Group.id;
 
 @Slf4j
 public class DelegateScopeNameUniqueInAccountMigration implements Migrator {

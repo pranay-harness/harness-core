@@ -1,8 +1,12 @@
 package io.harness.artifact;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
@@ -10,7 +14,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskService;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.artifact.Artifact;
@@ -27,15 +31,13 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
 
-import javax.validation.constraints.NotNull;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Set;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

@@ -1,9 +1,11 @@
 package io.harness.ccm.anomaly.mappers;
 
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
-import lombok.experimental.UtilityClass;
+
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class QlAnomalyMapper {

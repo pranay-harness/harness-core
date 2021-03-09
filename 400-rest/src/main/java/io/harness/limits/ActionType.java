@@ -1,10 +1,10 @@
 package io.harness.limits;
 
 import io.harness.limits.lib.LimitType;
-import lombok.Getter;
 
 import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
 
 public enum ActionType {
   CREATE_APPLICATION(Collections.singletonList(LimitType.STATIC)),

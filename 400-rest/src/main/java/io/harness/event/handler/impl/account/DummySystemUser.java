@@ -1,9 +1,10 @@
 package io.harness.event.handler.impl.account;
 
-import io.harness.annotations.dev.OwnedBy;
-import lombok.Value;
-
 import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+import lombok.Value;
 
 @OwnedBy(PL)
 @Value

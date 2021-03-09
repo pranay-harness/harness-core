@@ -1,21 +1,22 @@
 package io.harness.ccm.anomaly.graphql;
 
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
+import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
+
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+
 import com.google.cloud.Timestamp;
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
-import io.harness.ccm.billing.graphql.CloudBillingFilter;
-import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
+import java.util.Calendar;
+import java.util.Date;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateUtils;
-import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
-
-import java.util.Calendar;
-import java.util.Date;
 
 @Data
 @Builder

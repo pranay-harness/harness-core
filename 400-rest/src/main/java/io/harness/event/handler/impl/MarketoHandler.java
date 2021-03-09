@@ -1,42 +1,5 @@
 package io.harness.event.handler.impl;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.event.handler.EventHandler;
-import io.harness.event.handler.marketo.MarketoConfig;
-import io.harness.event.handler.marketo.MarketoRestClient;
-import io.harness.event.listener.EventListener;
-import io.harness.event.model.Event;
-import io.harness.event.model.EventData;
-import io.harness.event.model.EventType;
-import io.harness.event.model.marketo.Campaign;
-import io.harness.event.model.marketo.Id;
-import io.harness.event.model.marketo.LoginResponse;
-import io.harness.event.model.marketo.Response;
-import io.harness.exception.WingsException;
-import io.harness.lock.AcquiredLock;
-import io.harness.lock.PersistentLocker;
-import io.harness.network.Http;
-import lombok.extern.slf4j.Slf4j;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.beans.Account;
-import software.wings.beans.User;
-import software.wings.beans.utm.UtmInfo;
-import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.UserService;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
@@ -70,6 +33,44 @@ import static io.harness.event.model.EventType.TRIAL_TO_PAID;
 import static io.harness.event.model.EventType.USER_INVITED_FROM_EXISTING_ACCOUNT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.event.handler.EventHandler;
+import io.harness.event.handler.marketo.MarketoConfig;
+import io.harness.event.handler.marketo.MarketoRestClient;
+import io.harness.event.listener.EventListener;
+import io.harness.event.model.Event;
+import io.harness.event.model.EventData;
+import io.harness.event.model.EventType;
+import io.harness.event.model.marketo.Campaign;
+import io.harness.event.model.marketo.Id;
+import io.harness.event.model.marketo.LoginResponse;
+import io.harness.event.model.marketo.Response;
+import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
+import io.harness.network.Http;
+
+import software.wings.beans.Account;
+import software.wings.beans.User;
+import software.wings.beans.utm.UtmInfo;
+import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.UserService;
+
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
 /**
  * @author rktummala on 11/20/18

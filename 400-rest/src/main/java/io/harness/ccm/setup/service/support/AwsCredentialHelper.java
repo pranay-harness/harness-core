@@ -1,15 +1,17 @@
 package io.harness.ccm.setup.service.support;
 
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+
+import io.harness.ccm.setup.config.CESetUpConfig;
+
+import software.wings.app.MainConfiguration;
+
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.google.inject.Inject;
-import io.harness.ccm.setup.config.CESetUpConfig;
-import software.wings.app.MainConfiguration;
-
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 public class AwsCredentialHelper {
   @Inject private MainConfiguration configuration;

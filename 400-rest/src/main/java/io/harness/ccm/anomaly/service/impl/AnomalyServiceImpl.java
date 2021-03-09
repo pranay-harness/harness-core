@@ -1,24 +1,25 @@
 package io.harness.ccm.anomaly.service.impl;
 
-import com.google.inject.Inject;
-import com.healthmarketscience.sqlbuilder.BinaryCondition;
-import com.healthmarketscience.sqlbuilder.SelectQuery;
 import io.harness.ccm.anomaly.dao.AnomalyEntityDao;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.service.AnomalyDataQueryBuilder;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+
 import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilter;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 
+import com.google.inject.Inject;
+import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j

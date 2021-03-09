@@ -123,12 +123,6 @@ public class EcrServiceImpl implements EcrService {
 
   // Todo: to be implemented
   @Override
-  public boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region) {
-    return true;
-  }
-
-  // Todo: to be implemented
-  @Override
   public boolean validateCredentials(AwsInternalConfig awsConfig, String imageName) {
     return true;
   }

@@ -1,7 +1,8 @@
 package io.harness.ccm.billing.graphql;
 
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.bigquery.TruncExpression;
+
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import lombok.Builder;
 import lombok.Data;
 

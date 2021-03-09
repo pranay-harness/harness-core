@@ -1,20 +1,21 @@
 package io.harness.artifact;
 
-import com.google.inject.Inject;
-import com.google.protobuf.ByteString;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskServiceClient;
 import io.harness.perpetualtask.artifact.ArtifactCollectionTaskParams;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 
+import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.util.Map;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j

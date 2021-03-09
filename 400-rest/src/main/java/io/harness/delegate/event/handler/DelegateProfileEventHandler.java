@@ -1,8 +1,15 @@
 package io.harness.delegate.event.handler;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.beans.FeatureName.TRIGGER_PROFILE_SCRIPT_EXECUTION_WF;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
+import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.compare;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
@@ -14,26 +21,21 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateProfileObserver;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
+
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.WorkflowExecutionService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Map;
 import java.util.Set;
-
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.beans.FeatureName.TRIGGER_PROFILE_SCRIPT_EXECUTION_WF;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.compare;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
 @Slf4j
 @Singleton

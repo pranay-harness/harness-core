@@ -1,17 +1,18 @@
 package io.harness.ccm.config;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static java.lang.String.format;
+
 import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.exception.InvalidRequestException;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.ValidationResult;
 
+import com.google.cloud.bigquery.BigQuery;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
-
-import static java.lang.String.format;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

@@ -1,15 +1,16 @@
 package io.harness.ccm.cluster;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.persistence.HQuery.excludeValidate;
+
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.InfrastructureDefinition.InfrastructureDefinitionKeys;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.List;
-
-import static io.harness.persistence.HQuery.excludeValidate;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

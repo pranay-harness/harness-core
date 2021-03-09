@@ -2,10 +2,10 @@ package io.harness.delegate.task.executioncapability;
 
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
-import lombok.Builder;
-import lombok.Data;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

@@ -5,10 +5,9 @@ import com.healthmarketscience.sqlbuilder.Converter;
 import com.healthmarketscience.sqlbuilder.Expression;
 import com.healthmarketscience.sqlbuilder.SqlObject;
 import com.healthmarketscience.sqlbuilder.ValidationContext;
+import java.io.IOException;
 import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-
-import java.io.IOException;
 
 public class TruncExpression extends Expression {
   public enum DatePart { MONTH, DAY, HOUR, WEEK }

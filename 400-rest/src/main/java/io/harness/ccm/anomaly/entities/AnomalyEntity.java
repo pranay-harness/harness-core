@@ -1,17 +1,17 @@
 package io.harness.ccm.anomaly.entities;
 
+import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbTable;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
-import lombok.experimental.SuperBuilder;
-import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 
 @Data
 @SuperBuilder

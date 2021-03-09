@@ -1,14 +1,16 @@
 package io.harness.ccm.setup;
 
-import com.google.inject.Inject;
+import static io.harness.persistence.HQuery.excludeValidate;
+
 import io.harness.persistence.HPersistence;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.ce.CEMetadataRecord.CEMetadataRecordKeys;
 
-import static io.harness.persistence.HQuery.excludeValidate;
+import com.google.inject.Inject;
+import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class CEMetadataRecordDao {
   private final HPersistence persistence;

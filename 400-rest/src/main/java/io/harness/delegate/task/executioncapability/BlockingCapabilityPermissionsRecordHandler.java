@@ -1,7 +1,11 @@
 package io.harness.delegate.task.executioncapability;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionKeys;
+import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
+
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.CapabilitySubjectPermissionCrudObserver;
@@ -18,23 +22,20 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
+
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionKeys;
-import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j

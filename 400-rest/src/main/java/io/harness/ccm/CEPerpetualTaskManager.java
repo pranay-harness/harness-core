@@ -1,8 +1,14 @@
 package io.harness.ccm;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.protobuf.util.Durations;
+import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
+import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.util.Objects.isNull;
+
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -17,24 +23,20 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8WatchPerpetualTaskClientParams;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.util.Durations;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
-import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
-import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
-import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.util.Objects.isNull;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

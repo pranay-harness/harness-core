@@ -2,10 +2,9 @@ package io.harness.cvng.state;
 
 import com.google.inject.Singleton;
 import groovy.util.logging.Slf4j;
+import java.io.IOException;
 import retrofit2.Call;
 import retrofit2.Response;
-
-import java.io.IOException;
 @Singleton
 @Slf4j
 public class CVNGRequestExecutor {

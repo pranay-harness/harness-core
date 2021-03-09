@@ -1,8 +1,9 @@
 package io.harness.ccm.billing.graphql;
 
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
+
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 
 public enum CloudEntityGroupBy {
   projectId(PreAggregatedTableSchema.gcpProjectId, RawBillingTableSchema.gcpProjectId, null),

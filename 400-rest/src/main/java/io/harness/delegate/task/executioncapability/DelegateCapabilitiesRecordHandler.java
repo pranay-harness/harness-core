@@ -1,7 +1,13 @@
 package io.harness.delegate.task.executioncapability;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
+import static io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionKeys;
+import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.capability.service.CapabilityService;
@@ -17,24 +23,19 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Sort;
+
 import software.wings.service.intfc.DelegateService;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
-import static io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionKeys;
-import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Sort;
 
 @Singleton
 @Slf4j

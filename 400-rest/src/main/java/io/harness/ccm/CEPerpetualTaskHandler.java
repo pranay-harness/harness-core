@@ -1,8 +1,10 @@
 package io.harness.ccm;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
+import static io.harness.beans.FeatureName.SIDE_NAVIGATION;
+import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.ccm.cluster.ClusterRecordObserver;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -11,18 +13,17 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.Account;
 import software.wings.features.CeClusterFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
-
-import static io.harness.beans.FeatureName.SIDE_NAVIGATION;
-import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton

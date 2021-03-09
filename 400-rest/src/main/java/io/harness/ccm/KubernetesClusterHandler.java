@@ -1,14 +1,13 @@
 package io.harness.ccm;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.segment.analytics.messages.TrackMessage;
+import static software.wings.security.EnvFilter.FilterType.NON_PROD;
+import static software.wings.security.EnvFilter.FilterType.PROD;
+import static software.wings.security.GenericEntityFilter.FilterType.ALL;
+
 import io.harness.ccm.config.CCMConfig;
 import io.harness.delegate.beans.Delegate;
 import io.harness.event.handler.impl.segment.SegmentHelper;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.EnvFilter;
@@ -17,12 +16,14 @@ import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.intfc.SettingsService;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.segment.analytics.messages.TrackMessage;
 import java.util.Collections;
 import java.util.HashSet;
-
-import static software.wings.security.EnvFilter.FilterType.NON_PROD;
-import static software.wings.security.EnvFilter.FilterType.PROD;
-import static software.wings.security.GenericEntityFilter.FilterType.ALL;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class KubernetesClusterHandler implements DelegateObserver {

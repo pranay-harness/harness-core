@@ -3,10 +3,10 @@ package io.harness.delegate.task;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.persistence.PersistentEntity;
-import lombok.Data;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.Data;
 
 @Data
 public class ListNotifyResponseData implements DelegateTaskNotifyResponseData {

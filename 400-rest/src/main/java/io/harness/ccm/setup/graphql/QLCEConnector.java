@@ -1,9 +1,11 @@
 package io.harness.ccm.setup.graphql;
 
 import io.harness.ccm.health.CEHealthStatus;
+
+import software.wings.graphql.schema.type.QLObject;
+
 import lombok.Builder;
 import lombok.Value;
-import software.wings.graphql.schema.type.QLObject;
 
 @Value
 @Builder
