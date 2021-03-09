@@ -637,28 +637,7 @@ public class K8BuildSetupUtils {
   }
 
   private String getGitURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
-    String gitUrl;
-    if (connectionType == GitConnectionType.REPO) {
-      gitUrl = url;
-    } else if (connectionType == GitConnectionType.ACCOUNT) {
-      if (ciCodebase == null) {
-        throw new IllegalArgumentException("CI codebase spec is not set");
-      }
-
-      if (isEmpty(ciCodebase.getRepoName())) {
-        throw new IllegalArgumentException("Repo name is not set in CI codebase spec");
-      }
-
-      String repoName = ciCodebase.getRepoName();
-      if (url.endsWith(PATH_SEPARATOR)) {
-        gitUrl = url + repoName;
-      } else {
-        gitUrl = url + PATH_SEPARATOR + repoName;
-      }
-    } else {
-      throw new InvalidArgumentsException(
-          format("Invalid connection type for git connector: %s", connectionType.toString()), WingsException.USER);
-    }
+    String gitUrl = retrieveGenericGitConnectorURL(ciCodebase, connectionType, url);
 
     if (!url.endsWith(GIT_URL_SUFFIX)) {
       gitUrl += GIT_URL_SUFFIX;
