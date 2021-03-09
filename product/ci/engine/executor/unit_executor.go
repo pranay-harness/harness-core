@@ -13,7 +13,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	"github.com/wings-software/portal/product/ci/addon/testintelligence"
+	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/engine/jexl"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
@@ -177,15 +177,15 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 		}
 	case *pb.UnitStep_RunTests:
 		e.log.Infow("Test intelligence step info", "step", x.RunTests.String(), "step_id", step.GetId())
-		cgph := testintelligence.NewCallGraph(e.log)
+		cgph := ti.NewCallGraphParser(e.log)
 		dto, _ := cgph.Parse("/Users/amansingh/Desktop/f2.txt")
 
 		cl, _ := avro.NewCallgrSer("product/ci/common/avro/schema.avsc")
-		str, _ := dto.ToStringMap()
+		str := dto.ToStringMap()
 		str1, _ := cl.Serialize(str)
 		fmt.Println(string(str1))
 		inter, _ := cl.Deserialize(str1)
-		fin, _ := dto.FromStringMap(inter.(map[string]interface{}))
+		fin, _ := ti.FromStringMap(inter.(map[string]interface{}))
 		fmt.Println(*fin)
 		// stepOutput, numRetries, err = runTests(step, e.tmpFilePath, so, e.log).Run(ctx)
 		if err != nil {
