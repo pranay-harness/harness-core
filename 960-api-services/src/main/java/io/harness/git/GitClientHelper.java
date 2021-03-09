@@ -54,6 +54,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.diff.DiffEntry;
@@ -63,8 +64,7 @@ import org.eclipse.jgit.errors.TransportException;
 @Singleton
 @Slf4j
 public class GitClientHelper {
-  private static final String GIT_URL_REGEX =
-      "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/([\\w,\\-,\\_]+)(.git)?";
+  private static final String GIT_URL_REGEX = "(https|git)(:\\/\\/|@)([^\\/:]+)[\\/:]([^\\/:]+)\\/(.+)(.git)?";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
   private static final Integer OWNER_GROUP = 4;
   private static final Integer REPO_GROUP = 5;
@@ -84,7 +84,8 @@ public class GitClientHelper {
     Matcher m = GIT_URL.matcher(url);
     try {
       if (m.find()) {
-        return m.toMatchResult().group(REPO_GROUP);
+        String repoName = m.toMatchResult().group(REPO_GROUP);
+        return StringUtils.removeEnd(repoName, ".git");
       } else {
         throw new GitClientException(format("Invalid git repo url  %s", url), SRE);
       }
