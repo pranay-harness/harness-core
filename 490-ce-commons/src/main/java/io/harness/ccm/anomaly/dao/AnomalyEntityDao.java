@@ -64,7 +64,7 @@ public class AnomalyEntityDao {
     UpdateQuery query = new UpdateQuery(AnomaliesDataTableSchema.table);
 
     if (EmptyPredicate.isNotEmpty(anomaly.getId())) {
-      query.addCondition(BinaryCondition.equalTo(AnomalyEntity.AnomaliesDataTableSchema.id, anomaly.getId()));
+      query.addCondition(BinaryCondition.equalTo(AnomaliesDataTableSchema.id, anomaly.getId()));
     } else {
       throw new InvalidArgumentsException("Update cannot be done since given anomaly doesn't contain id");
     }
