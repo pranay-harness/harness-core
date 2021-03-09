@@ -222,15 +222,19 @@ public class SecretSpecBuilder {
               .type(TEXT)
               .build());
     } else if (gitAuthType == GitAuthType.SSH) {
-      GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
+      SSHKeyDetails sshKeyDetails = gitConnector.getSshKeyDetails();
+      log.info(
+          "Decrypting Git connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
 
-      String key = "SSH_KEY";
-      secretData.put(key,
-          SecretParams.builder()
-              .secretKey(key)
-              .value(encodeBase64(gitSSHAuthenticationDTO.getEncryptedSshKey().getDecryptedValue()))
-              .type(TEXT)
-              .build());
+      secretDecryptionService.decrypt(sshKeyDetails.getSshKeyReference(), sshKeyDetails.getEncryptedDataDetails());
+      log.info("Decrypted connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
+      SecretRefData key = sshKeyDetails.getSshKeyReference().getKey();
+      if (key == null || isEmpty(key.getDecryptedValue())) {
+        throw new CIStageExecutionException("Github connector should have not empty sshKey");
+      }
+      char[] sshKey = key.getDecryptedValue();
+      secretData.put(DRONE_SSH_KEY,
+          SecretParams.builder().secretKey(DRONE_SSH_KEY).value(encodeBase64(sshKey)).type(TEXT).build());
     }
     return secretData;
   }

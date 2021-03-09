@@ -13,6 +13,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorResourceClient;
+import io.harness.connector.entities.embedded.gitconnector.GitSSHAuthentication;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails.ConnectorDetailsBuilder;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
@@ -44,6 +45,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
@@ -359,10 +362,17 @@ public class ConnectorUtils {
 
   private ConnectorDetails buildGitConnectorDetails(
       NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
-    List<EncryptedDataDetail> encryptedDataDetails;
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
-    GitAuthenticationDTO gitAuth = gitConfigDTO.getGitAuth();
-    encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
+    if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
+      GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+      encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitHTTPAuthenticationDTO);
+    } else if (gitConfigDTO.getGitAuthType() == GitAuthType.SSH) {
+      GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitSSHAuthenticationDTO.getEncryptedSshKey());
+      connectorDetailsBuilder.sshKeyDetails(sshKey);
+      encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitSSHAuthenticationDTO);
+    }
     return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
   }
 
