@@ -1,8 +1,6 @@
 package io.harness.delegate.task.artifacts.ecr;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
+import io.harness.artifacts.ecr.beans.AwsInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
@@ -15,12 +13,15 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
-
-import java.util.Arrays;
-import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 @Value
 @Builder
@@ -54,9 +55,8 @@ public class EcrArtifactDelegateRequest implements ArtifactSourceDelegateRequest
         }
         return emptyList();
       } else if (awsConnectorDTO.getCredential().getAwsCredentialType() == AwsCredentialType.MANUAL_CREDENTIALS) {
-        final String GCS_URL = "https://storage.cloud.google.com/";
         return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-            GCS_URL, maskingEvaluator));
+            AwsInternalConfig.AWS_URL, maskingEvaluator));
       } else {
         throw new UnknownEnumTypeException(
             "Ecr Credential Type", String.valueOf(awsConnectorDTO.getCredential().getAwsCredentialType()));

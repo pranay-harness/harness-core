@@ -1,23 +1,5 @@
 package software.wings.service.impl.delegate;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
-import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
-import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
-import static io.harness.exception.WingsException.USER;
-
-import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
-import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
-
-import static org.apache.commons.lang3.StringUtils.defaultString;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
-import io.harness.artifacts.ecr.beans.AwsInternalConfig;
-import io.harness.aws.AwsCallTracker;
-import io.harness.exception.InvalidRequestException;
-
-import software.wings.beans.AwsCrossAccountAttributes;
-
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
@@ -41,10 +23,24 @@ import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import java.util.UUID;
+import io.harness.artifacts.ecr.beans.AwsInternalConfig;
+import io.harness.aws.AwsCallTracker;
+import io.harness.exception.InvalidRequestException;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.AwsCrossAccountAttributes;
+
+import java.util.UUID;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
+import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
+import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
+import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_BACKOFF_MAX_ERROR_RETRIES;
 
 @Slf4j
 public class AwsEcrApiHelperServiceDelegateBase {
