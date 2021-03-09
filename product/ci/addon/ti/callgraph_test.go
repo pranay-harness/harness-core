@@ -27,7 +27,7 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 				Type:   "test",
 			},
 		},
-		Relations: []Relation{
+		Relns: []Relation{
 			Relation{
 				Source: 0,
 				Tests:  []int{1, 2, 3, 4, 5},
@@ -42,8 +42,8 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 
 	fNodes, fRelations := getCgObject(mp)
 	finalCg := Callgraph{
-		Nodes:     fNodes,
-		Relations: fRelations,
+		Nodes: fNodes,
+		Relns: fRelations,
 	}
 	assert.Equal(t, reflect.DeepEqual(finalCg, cg), true)
 }

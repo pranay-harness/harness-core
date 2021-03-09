@@ -4,8 +4,8 @@ import "errors"
 
 // Callgraph object is used to upload data to TI server
 type Callgraph struct {
-	Nodes     []Node
-	Relations []Relation
+	Nodes []Node
+	Relns []Relation
 }
 
 //ToStringMap converts CallgraphDto to map[string]interface{} for encoding
@@ -22,7 +22,7 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 		}
 		nodes = append(nodes, data)
 	}
-	for _, v := range (*cg).Relations {
+	for _, v := range (*cg).Relns {
 		data := map[string]interface{}{
 			"source": v.Source,
 			"tests":  v.Tests,
@@ -84,8 +84,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 		}
 	}
 	return &Callgraph{
-		Relations: fRel,
-		Nodes:     fNodes,
+		Relns: fRel,
+		Nodes: fNodes,
 	}, nil
 }
 

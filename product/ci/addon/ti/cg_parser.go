@@ -59,8 +59,8 @@ func parseInt(cgStr []string) (Callgraph, error) {
 	}
 	rels, dets := process(inp)
 	callgraph := Callgraph{
-		Nodes:     dets,
-		Relations: rels,
+		Nodes: dets,
+		Relns: rels,
 	}
 	return callgraph, nil
 }
@@ -70,7 +70,7 @@ func process(inps []Input) ([]Relation, []Node) {
 	var node []Node
 
 	relMap, nodeMap := convCallgph(inps)
-	// Updating the Relations map
+	// Updating the Relns map
 	for k, v := range relMap {
 		tRel := Relation{
 			Source: k,
