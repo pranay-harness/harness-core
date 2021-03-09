@@ -8,7 +8,7 @@ go_library(
         "publish_artifacts.go",
         "restore_cache.go",
         "run.go",
-        "run_tests.go",
+        "runtests.go",
         "save_cache.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/engine/steps",

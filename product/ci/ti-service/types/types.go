@@ -75,8 +75,10 @@ type TestSuite struct {
 
 // Test Intelligence specific structs
 
-// Test contains information about a unit test
-type Test struct {
+// RunnableTest contains information about a test to run it.
+// This is different from TestCase struct which contains information
+// about a test case run. RunnableTest is used to run a test.
+type RunnableTest struct {
 	Pkg    string `json:"pkg"`
 	Class  string `json:"class"`
 	Method string `json:"method"`

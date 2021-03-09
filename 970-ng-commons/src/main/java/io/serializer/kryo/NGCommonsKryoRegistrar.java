@@ -3,6 +3,7 @@ package io.serializer.kryo;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
+import io.harness.http.HttpHeaderConfig;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.OrgScope;
@@ -36,5 +37,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(OrgScope.class, 22007);
     kryo.register(ProjectScope.class, 22008);
     kryo.register(Resource.class, 22009);
+
+    kryo.register(HttpHeaderConfig.class, 19462);
   }
 }

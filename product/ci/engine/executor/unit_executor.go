@@ -175,7 +175,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 		}
 	case *pb.UnitStep_RunTests:
 		e.log.Infow("Test intelligence step info", "step", x.RunTests.String(), "step_id", step.GetId())
-		stepOutput, numRetries, err = runTests(step, e.tmpFilePath, so, e.log).Run(ctx)
+		stepOutput, numRetries, err = runTests(step, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err
 		}
@@ -229,6 +229,9 @@ func (e *unitExecutor) Cleanup(ctx context.Context, step *pb.UnitStep) error {
 	switch x := step.GetStep().(type) {
 	case *pb.UnitStep_Run:
 		port := x.Run.GetContainerPort()
+		return e.stopAddonServer(ctx, step.GetId(), uint(port))
+	case *pb.UnitStep_RunTests:
+		port := x.RunTests.GetContainerPort()
 		return e.stopAddonServer(ctx, step.GetId(), uint(port))
 	case *pb.UnitStep_Plugin:
 		port := x.Plugin.GetContainerPort()

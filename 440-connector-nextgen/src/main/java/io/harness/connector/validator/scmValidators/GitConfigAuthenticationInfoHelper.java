@@ -8,6 +8,7 @@ import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.NGAccess;
@@ -57,7 +58,7 @@ public class GitConfigAuthenticationInfoHelper {
     GitSSHAuthenticationDTO gitAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfig.getGitAuth();
     SecretRefData sshKeyRef = gitAuthenticationDTO.getEncryptedSshKey();
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-        sshKeyRef.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier);
+        SecretRefHelper.getSecretConfigString(sshKeyRef), accountIdentifier, orgIdentifier, projectIdentifier);
     Optional<SecretResponseWrapper> secretResponseWrapper = secretCrudService.get(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     if (!secretResponseWrapper.isPresent()) {

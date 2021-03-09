@@ -16,6 +16,7 @@ import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBu
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.http.HttpHeaderConfig;
 import io.harness.http.HttpOutcome;
 import io.harness.http.HttpStepParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -37,7 +38,9 @@ import io.harness.tasks.ResponseData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +69,10 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
                                                                   .socketTimeoutMillis(socketTimeoutMillis);
 
     if (EmptyPredicate.isNotEmpty(stepParameters.getHeaders())) {
-      httpTaskParametersNgBuilder.requestHeader(stepParameters.getHeaders());
+      List<HttpHeaderConfig> headers = new ArrayList<>();
+      stepParameters.getHeaders().keySet().forEach(
+          key -> headers.add(HttpHeaderConfig.builder().key(key).value(stepParameters.getHeaders().get(key)).build()));
+      httpTaskParametersNgBuilder.requestHeader(headers);
     }
 
     if (stepParameters.getRequestBody() != null) {
