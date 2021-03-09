@@ -99,7 +99,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
               .awsConfig(params.getAwsConfig())
               .timeOut(timeoutInterval)
               .build();
-      ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
+      ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(updateCountRequestData);
 
       // Now poll for events API to notify of steady state
       executionLogCallback.saveExecutionLog(

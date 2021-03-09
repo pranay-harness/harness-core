@@ -609,15 +609,15 @@ public class EcsSetupCommandTaskHelper {
 
     // For DAEMON scheduling Strategy, no desired count is required.
     // Its automatically calculated by ECS based on number of instances in cluster
-    if (!setupParams.isDaemonSchedulingStrategy()) {
+    if (setupParams.isDaemonSchedulingStrategy()) {
+      createServiceRequest.setSchedulingStrategy(SchedulingStrategy.DAEMON.name());
+      createServiceRequest.withDeploymentConfiguration(
+          new DeploymentConfiguration().withMaximumPercent(100).withMinimumHealthyPercent(50));
+    } else {
       createServiceRequest.setDesiredCount(0);
       createServiceRequest.withDeploymentConfiguration(
           new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100));
       createServiceRequest.setSchedulingStrategy(SchedulingStrategy.REPLICA.name());
-    } else {
-      createServiceRequest.setSchedulingStrategy(SchedulingStrategy.DAEMON.name());
-      createServiceRequest.withDeploymentConfiguration(
-          new DeploymentConfiguration().withMaximumPercent(100).withMinimumHealthyPercent(50));
     }
 
     // Set load balancer config
@@ -1247,7 +1247,7 @@ public class EcsSetupCommandTaskHelper {
                                                                .awsConfig(awsConfig)
                                                                .build();
 
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(updateCountRequestData);
     ecsContainerService.waitForServiceToReachSteadyState(serviceSteadyStateTimeout, updateCountRequestData);
 
     return ecsContainerService.getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName,

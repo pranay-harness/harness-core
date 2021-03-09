@@ -6,6 +6,7 @@ import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -26,6 +27,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.exception.FailureType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -89,6 +91,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -438,7 +441,13 @@ public class EcsServiceSetup extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
+
+    ExecutionResponse.ExecutionResponseBuilder builder =
+        ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus);
+    if (ecsServiceSetupResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+    return builder.build();
   }
 
   public void setUpRemoteContainerTaskAndServiceSpecIfRequired(

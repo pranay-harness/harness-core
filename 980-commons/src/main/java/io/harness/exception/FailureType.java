@@ -3,6 +3,9 @@ package io.harness.exception;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 @TargetModule(Module._955_DELEGATE_BEANS)
 public enum FailureType {
   EXPIRED(""),
@@ -15,6 +18,8 @@ public enum FailureType {
   TIMEOUT_ERROR("");
 
   String errorMessage;
+
+  public static final EnumSet<FailureType> TIMEOUT = EnumSet.of(TIMEOUT_ERROR);
 
   FailureType(String errorMessage) {
     this.errorMessage = errorMessage;

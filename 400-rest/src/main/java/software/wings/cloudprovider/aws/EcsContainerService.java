@@ -50,7 +50,7 @@ public interface EcsContainerService {
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
       int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
-  void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData);
+  void waitForTasksToBeInRunningStateWithHandledExceptions(UpdateServiceCountRequestData requestData);
 
   void waitForServiceToReachSteadyState(int serviceSteadyStateTimeout, UpdateServiceCountRequestData requestData);
 

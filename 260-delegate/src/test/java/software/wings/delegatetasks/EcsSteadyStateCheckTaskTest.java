@@ -66,7 +66,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
                  new Service().withServiceName("Name").withClusterArn("Cluster").withDesiredCount(1)))
         .when(mockAwsHelperService)
         .describeServices(anyString(), any(), any(), any());
-    doNothing().when(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    doNothing().when(mockEcsContainerService).waitForTasksToBeInRunningStateWithHandledExceptions(any());
     doNothing().when(mockEcsContainerService).waitForServiceToReachSteadyState(eq(0), any());
     doReturn(singletonList(ContainerInfo.builder().containerId("cid").hostName("host").newContainer(true).build()))
         .when(mockEcsContainerService)

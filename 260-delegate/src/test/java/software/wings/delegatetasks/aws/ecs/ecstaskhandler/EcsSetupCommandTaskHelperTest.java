@@ -1107,7 +1107,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(data.getEcsServiceArn()).isEqualTo("svcArn");
     assertThat(data.getContainerServiceName()).isEqualTo("foo__1");
     verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
-    verify(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    verify(mockEcsContainerService).waitForTasksToBeInRunningStateWithHandledExceptions(any());
     verify(mockEcsContainerService).waitForServiceToReachSteadyState(anyInt(), any());
   }
 
