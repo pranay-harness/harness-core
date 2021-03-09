@@ -1,6 +1,7 @@
 package io.harness.serializer.recaster;
 
 import io.harness.beans.CastedField;
+import io.harness.core.Recaster;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
@@ -9,11 +10,14 @@ import io.harness.transformers.RecastTransformer;
 import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 
 @Slf4j
 public class ParameterFieldRecastTransformer extends RecastTransformer implements CustomValueTransformer {
+  private final ObjectMapper objectMapper = new ObjectMapper();
+
   @Override
   public Object decode(Class<?> targetClass, Object fromObject, CastedField castedField) {
     try {
@@ -21,7 +25,14 @@ public class ParameterFieldRecastTransformer extends RecastTransformer implement
         return null;
       }
 
-      ParameterDocumentField documentField = ParameterDocumentFieldMapper.fromDocument((Document) fromObject);
+      Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+
+      if (decodedObject == null) {
+        ((Document) fromObject).remove(Recaster.RECAST_CLASS_KEY);
+        return objectMapper.convertValue(fromObject, ParameterField.class);
+      }
+
+      ParameterDocumentField documentField = ParameterDocumentFieldMapper.fromDocument((Document) decodedObject);
       return ParameterDocumentFieldMapper.toParameterField(documentField);
     } catch (Exception e) {
       log.error("Exception while decoding ParameterField {}", fromObject, e);
