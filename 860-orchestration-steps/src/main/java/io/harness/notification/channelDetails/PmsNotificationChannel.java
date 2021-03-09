@@ -1,4 +1,4 @@
-package io.harness.pms.notification.channelDetails;
+package io.harness.notification.channelDetails;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
