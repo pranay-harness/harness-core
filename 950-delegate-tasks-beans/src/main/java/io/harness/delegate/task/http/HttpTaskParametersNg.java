@@ -9,10 +9,10 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.http.HttpHeaderConfig;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 
@@ -21,7 +21,7 @@ import lombok.Value;
 public class HttpTaskParametersNg implements TaskParameters, ExecutionCapabilityDemander {
   String method;
   @Expression(ALLOW_SECRETS) String url;
-  @Expression(ALLOW_SECRETS) Map<String, String> requestHeader;
+  @Expression(ALLOW_SECRETS) List<HttpHeaderConfig> requestHeader;
   @Expression(ALLOW_SECRETS) String body;
   int socketTimeoutMillis;
   boolean useProxy;

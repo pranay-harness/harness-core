@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class RoleDTOMapper {
-  public static RoleResponseDTO toDTO(Role object) {
+  public static RoleResponseDTO toResponseDTO(Role object) {
     return RoleResponseDTO.builder()
         .role(RoleDTO.builder()
                   .identifier(object.getIdentifier())

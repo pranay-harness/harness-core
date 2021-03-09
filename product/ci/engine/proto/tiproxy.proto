@@ -13,7 +13,28 @@ message WriteTestsRequest {
 
 message WriteTestsResponse {}
 
+message SelectTestsRequest {
+  string step_id = 1;
+  string repo = 2;
+  string sha = 3;
+  string branch = 4;
+  repeated string diff_files = 5;  // List of files which have been modified in the PR.
+}
+
+// (TODO): `tests` should ideally be a protobuf defined in a single place.
+// Needs to be changed in other places as well. Right now proxy interaction
+// is done using JSON.
+message SelectTestsResponse {
+  repeated string tests = 1;
+}
+
 service TiProxy {
   // RPC to stream test cases from the addon
   rpc WriteTests(stream WriteTestsRequest) returns (WriteTestsResponse);
+
+  // RPC to stream the tests to run to the addon from the TI server
+  // List of changed files will (should) not be larger than 5MB.
+  // However the list of tests received may be quite large and might need streaming.
+  // TODO: Convert the response to a streaming response.
+  rpc SelectTests(SelectTestsRequest) returns (SelectTestsResponse);
 }

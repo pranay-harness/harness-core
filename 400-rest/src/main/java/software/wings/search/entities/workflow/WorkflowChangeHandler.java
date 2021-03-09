@@ -5,6 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeType;
 
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -31,8 +33,6 @@ import software.wings.search.framework.ChangeHandler;
 import software.wings.search.framework.EntityInfo;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntityUtils;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeType;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;

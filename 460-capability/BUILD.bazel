@@ -18,6 +18,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
         "//950-ng-core/src/test/resources:resource",

@@ -13,8 +13,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface RoleAssignmentService {
   RoleAssignment create(@Valid @NotNull RoleAssignment roleAssignment);
 
-  PageResponse<RoleAssignment> list(@NotNull PageRequest pageRequest, @NotEmpty String parentIdentifier,
-      @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
+  PageResponse<RoleAssignment> list(
+      @NotNull PageRequest pageRequest, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 
   Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
@@ -22,5 +22,5 @@ public interface RoleAssignmentService {
 
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
-  long deleteMany(@NotEmpty String scopeIdentifier, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
+  long deleteMany(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 }

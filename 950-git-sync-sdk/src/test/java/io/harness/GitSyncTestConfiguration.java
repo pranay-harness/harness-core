@@ -2,6 +2,7 @@ package io.harness;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -19,6 +20,7 @@ import lombok.EqualsAndHashCode;
 @Singleton
 public class GitSyncTestConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
+  @JsonProperty("gitSyncClientConfig") private GrpcClientConfig grpcClientConfig;
 
   public GitSyncTestConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

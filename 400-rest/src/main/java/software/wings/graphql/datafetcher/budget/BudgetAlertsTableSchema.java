@@ -33,6 +33,7 @@ public class BudgetAlertsTableSchema {
   DbColumn budgetId;
   DbColumn accountId;
   DbColumn alertThreshold;
+  DbColumn alertBasedOn;
   DbColumn actualCost;
   DbColumn budgetedCost;
 
@@ -46,6 +47,7 @@ public class BudgetAlertsTableSchema {
     budgetId = budgetAlertsTable.addColumn("budgetid", "text", null);
     accountId = budgetAlertsTable.addColumn("accountid", "text", null);
     alertThreshold = budgetAlertsTable.addColumn("alertthreshold", doubleType, null);
+    alertBasedOn = budgetAlertsTable.addColumn("alertbasedon", doubleType, null);
     actualCost = budgetAlertsTable.addColumn("actualcost", doubleType, null);
     budgetedCost = budgetAlertsTable.addColumn("budgetedcost", doubleType, null);
   }

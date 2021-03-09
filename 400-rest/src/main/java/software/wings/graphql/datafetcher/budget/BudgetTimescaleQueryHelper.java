@@ -95,6 +95,7 @@ public class BudgetTimescaleQueryHelper {
     insertQuery.addColumn(schema.getBudgetId(), data.getBudgetId());
     insertQuery.addColumn(schema.getAccountId(), data.getAccountId());
     insertQuery.addColumn(schema.getAlertThreshold(), data.getAlertThreshold());
+    insertQuery.addColumn(schema.getAlertBasedOn(), data.getAlertBasedOn());
     insertQuery.addColumn(schema.getActualCost(), data.getActualCost());
     insertQuery.addColumn(schema.getBudgetedCost(), data.getBudgetedCost());
     queryMetaDataBuilder.query(insertQuery.toString());
@@ -151,6 +152,7 @@ public class BudgetTimescaleQueryHelper {
     selectQuery.addColumns(schema.getAlertTime());
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getBudgetId(), data.getBudgetId()));
     selectQuery.addCondition(BinaryCondition.equalTo(schema.getAlertThreshold(), data.getAlertThreshold()));
+    selectQuery.addCondition(BinaryCondition.equalTo(schema.getAlertBasedOn(), data.getAlertBasedOn()));
     selectQuery.addCustomOrdering(schema.getAlertTime(), OrderObject.Dir.DESCENDING);
 
     addAccountFilter(selectQuery, data.getAccountId());

@@ -37,6 +37,8 @@ import io.harness.config.DatadogConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.core.userchangestream.UserMembershipChangeStreamModule;
+import io.harness.core.userchangestream.UserMembershipChangeStreamService;
 import io.harness.cvng.client.CVNGClientModule;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.state.CVNGVerificationTaskHandler;
@@ -118,8 +120,8 @@ import io.harness.registrars.WingsStepRegistrar;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
+import io.harness.serializer.CurrentGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.springdata.SpringPersistenceModule;
@@ -388,13 +390,15 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(ManagerRegistrars.kryoRegistrars).build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+            .addAll(CurrentGenRegistrars.kryoRegistrars)
+            .build();
       }
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(ManagerRegistrars.morphiaRegistrars)
+            .addAll(CurrentGenRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -402,7 +406,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(ManagerRegistrars.morphiaConverters)
+            .addAll(CurrentGenRegistrars.morphiaConverters)
             .build();
       }
 
@@ -410,7 +414,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       @Singleton
       List<Class<? extends Converter<?, ?>>> springConverters() {
         return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
-            .addAll(ManagerRegistrars.springConverters)
+            .addAll(CurrentGenRegistrars.springConverters)
             .build();
       }
     });
@@ -497,7 +501,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     });
     modules.add(new GrpcServiceConfigurationModule(
         configuration.getGrpcServerConfig(), configuration.getPortal().getJwtNextGenManagerSecret()));
-
+    modules.add(UserMembershipChangeStreamModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -786,6 +790,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.lifecycle().manage((Managed) injector.getInstance(ExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ArtifactStreamPTaskMigrationJob.class));
     environment.lifecycle().manage(injector.getInstance(InstanceSyncPerpetualTaskMigrationJob.class));
+    if (configuration.isUserChangeStreamEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(UserMembershipChangeStreamService.class));
+    }
     if (configuration.isSearchEnabled()) {
       environment.lifecycle().manage(injector.getInstance(ElasticsearchSyncService.class));
     }

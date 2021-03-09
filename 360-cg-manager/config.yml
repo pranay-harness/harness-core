@@ -272,6 +272,8 @@ events-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+userChangeStreamEnabled: false
+
 searchEnabled: false
 
 elasticsearch:
@@ -552,6 +554,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
 
 mockServerConfig:
   baseUrl: http://localhost

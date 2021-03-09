@@ -33,5 +33,6 @@ public enum SnippetTag implements YamlSnippetTags {
   ceaws,
   ceazure,
   cek8s,
+  codecommit,
   httphelmrepo
 }

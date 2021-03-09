@@ -3,6 +3,7 @@ package io.harness.gitsync.common.beans;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.Trimmed;
+import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.ProjectAccess;
 import io.harness.persistence.AccountAccess;
@@ -14,6 +15,7 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,6 +27,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document("yamlGitConfigs")
@@ -44,10 +47,14 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
   @NotEmpty String gitConnectorId;
   @NotEmpty String repo;
   @NotEmpty String branch;
+  @NotEmpty String webhookToken;
   Scope scope;
+  List<YamlGitConfigDTO.RootFolder> rootFolders;
+  YamlGitConfigDTO.RootFolder defaultRootFolder;
 
   @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
+  @Version Long version;
 }

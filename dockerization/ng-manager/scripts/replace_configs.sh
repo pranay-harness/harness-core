@@ -109,8 +109,16 @@ if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
+fi
+
 if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 fi
 
 if [[ "" != "$SMTP_HOST" ]]; then
@@ -143,6 +151,10 @@ fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then

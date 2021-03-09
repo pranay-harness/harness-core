@@ -6,7 +6,7 @@ import static io.harness.eraro.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FileMetadata;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.BaseFile;

@@ -8,6 +8,7 @@ import io.harness.beans.PageResponse;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateGroup;
@@ -24,7 +25,6 @@ import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;

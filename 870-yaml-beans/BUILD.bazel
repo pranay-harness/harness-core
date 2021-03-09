@@ -4,9 +4,12 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = ["//870-yaml-beans/src/main/schema:resource"],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//870-orchestration:module",
         "//882-pms-sdk-core:module",
         "//950-walktree-visitor:module",
@@ -28,35 +31,23 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = ["//870-yaml-beans/src/main/schema:resource"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
-java_library(
     name = "test_deps",
     exports = [
-        "//990-commons-test:module",
-        "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
     ],
 )
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//870-yaml-beans/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
+        ":module",
         "//:lombok",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
     ],
 )
 

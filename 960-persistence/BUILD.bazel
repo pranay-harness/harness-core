@@ -75,10 +75,11 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
@@ -95,11 +96,12 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
-        "supporter-test",
+        ":module",
+        ":supporter-test",
         "//:lombok",
     ],
 )

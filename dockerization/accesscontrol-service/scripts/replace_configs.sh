@@ -94,6 +94,10 @@ if [[ "" != "$EVENTS_CONFIG_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$EVENTS_CONFIG_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.password "$EVENTS_CONFIG_REDIS_PASSWORD"
+fi
+
 if [[ "" != "$RESOURCE_GROUP_ITERATOR_ENABLED" ]]; then
   yq write -i $CONFIG_FILE iteratorsConfig.resourceGroupIteratorConfig.enabled $RESOURCE_GROUP_ITERATOR_ENABLED
 fi
