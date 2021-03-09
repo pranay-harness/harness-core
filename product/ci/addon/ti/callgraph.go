@@ -1,6 +1,9 @@
 package ti
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // Callgraph object is used to upload data to TI server
 type Callgraph struct {
@@ -8,9 +11,9 @@ type Callgraph struct {
 	Relns []Relation
 }
 
-//ToStringMap converts CallgraphDto to map[string]interface{} for encoding
+//ToStringMap converts Callgraph to map[string]interface{} for encoding
 func (cg *Callgraph) ToStringMap() map[string]interface{} {
-	var nodes, relations []interface{}
+	var nodes, relns []interface{}
 	for _, v := range (*cg).Nodes {
 		data := map[string]interface{}{
 			"package": v.Pkg,
@@ -27,17 +30,16 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 			"source": v.Source,
 			"tests":  v.Tests,
 		}
-		relations = append(relations, data)
+		relns = append(relns, data)
 	}
-
 	data := map[string]interface{}{
 		"nodes":     nodes,
-		"relations": relations,
+		"relns": relns,
 	}
 	return data
 }
 
-//FromStringMap Creates Callgraph object of from map[string]interface{}
+//FromStringMap creates Callgraph object from map[string]interface{}
 func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 	var fNodes []Node
 	var fRel []Relation
@@ -54,6 +56,16 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 							node.Method = v.(string)
 						case "package":
 							node.Pkg = v.(string)
+						case "id":
+							node.ID = v.(int)
+						case "paramas":
+							node.Params = v.(string)
+						case "class":
+							node.Class = v.(string)
+						case "type":
+							node.Type = v.(string)
+						default:
+							return nil, errors.New(fmt.Sprintf("unknown field received: %s", f))
 						}
 					}
 					fNodes = append(fNodes, node)
@@ -61,9 +73,9 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 			} else {
 				return nil, errors.New("failed to parse ")
 			}
-		case "relations":
-			if relations, ok := v.([]interface{}); ok {
-				for _, reln := range relations {
+		case "relns":
+			if relns, ok := v.([]interface{}); ok {
+				for _, reln := range relns {
 					var relation Relation
 					fields := reln.(map[string]interface{})
 					for k, v := range fields {
@@ -76,6 +88,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 								testsN = append(testsN, int(v.(int32)))
 							}
 							relation.Tests = testsN
+						default:
+							return nil, errors.New(fmt.Sprintf("unknown field received: %s", k))
 						}
 					}
 					fRel = append(fRel, relation)
@@ -89,7 +103,7 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 	}, nil
 }
 
-//Node type represent details of callgraph
+//Node type represent details of node in callgraph
 type Node struct {
 	Pkg    string `json:"package"`
 	Method string

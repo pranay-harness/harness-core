@@ -13,8 +13,6 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	caddon "github.com/wings-software/portal/product/ci/addon/grpc/client"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
-	"github.com/wings-software/portal/product/ci/addon/ti"
-	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/engine/jexl"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"github.com/wings-software/portal/product/ci/engine/output"
@@ -176,6 +174,7 @@ func (e *unitExecutor) execute(ctx context.Context, step *pb.UnitStep,
 			return nil, numRetries, err
 		}
 	case *pb.UnitStep_RunTests:
+		e.log.Infow("Test intelligence step info", "step", x.RunTests.String(), "step_id", step.GetId())
 		stepOutput, numRetries, err = runTests(step, so, e.log).Run(ctx)
 		if err != nil {
 			return nil, numRetries, err

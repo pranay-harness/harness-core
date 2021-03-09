@@ -12,18 +12,18 @@ import (
 )
 
 //Parser reads callgraph file, processes it to extract
-//extracted from callgraph
+// nodes and relations
 type Parser interface {
 	// Parse and read the file from
-	Parse(file string) ([]Relation, []Node, error)
+	Parse(file string) (*Callgraph, error)
 }
 
-// CallGraphParser object
+// CallGraphParser struct definition
 type CallGraphParser struct {
 	log *zap.SugaredLogger // logger
 }
 
-// NewCallGraphParser returns a new CallGraph client
+// NewCallGraphParser returns a new CallGraphParser client
 func NewCallGraphParser(log *zap.SugaredLogger) *CallGraphParser {
 	return &CallGraphParser{
 		log: log,
@@ -31,20 +31,20 @@ func NewCallGraphParser(log *zap.SugaredLogger) *CallGraphParser {
 }
 
 // Parse callgraph and return nodes and relations
-func (cg *CallGraphParser) Parse(file string) (Callgraph, error) {
+func (cg *CallGraphParser) Parse(file string) (*Callgraph, error) {
 	f, err := os.Open(file)
 	if err != nil {
-		return Callgraph{}, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
 	}
 	r := bufio.NewReader(f)
 	cgStr, err := rFile(r)
 	if err != nil {
-		return Callgraph{}, errors.Wrap(err, fmt.Sprintf("failed to read file %s", file))
+		return nil, errors.Wrap(err, fmt.Sprintf("failed to read file %s", file))
 	}
 	return parseInt(cgStr)
 }
 
-func parseInt(cgStr []string) (Callgraph, error) {
+func parseInt(cgStr []string) (*Callgraph, error) {
 	var (
 		err error
 		inp []Input
@@ -53,40 +53,38 @@ func parseInt(cgStr []string) (Callgraph, error) {
 		tinp := &Input{}
 		err = json.Unmarshal([]byte(line), tinp)
 		if err != nil {
-			return Callgraph{}, errors.Wrap(err, fmt.Sprintf("data unmarshalling to json failed for line [%s]", line))
+			return nil, errors.Wrap(err, fmt.Sprintf("data unmarshalling to json failed for line [%s]", line))
 		}
 		inp = append(inp, *tinp)
 	}
-	rels, dets := process(inp)
-	callgraph := Callgraph{
-		Nodes: dets,
-		Relns: rels,
-	}
-	return callgraph, nil
+	return process(inp), nil
 }
 
-func process(inps []Input) ([]Relation, []Node) {
-	var rel []Relation
-	var node []Node
+func process(inps []Input) (*Callgraph) {
+	var relns []Relation
+	var nodes []Node
 
-	relMap, nodeMap := convCallgph(inps)
+	relMap, nodeMap := convCgph(inps)
 	// Updating the Relns map
 	for k, v := range relMap {
 		tRel := Relation{
 			Source: k,
 			Tests:  v,
 		}
-		rel = append(rel, tRel)
+		relns = append(relns, tRel)
 	}
 
 	// Updating the nodes map
 	for _, v := range nodeMap {
-		node = append(node, v)
+		nodes = append(nodes, v)
 	}
-	return rel, node
+	return &Callgraph{
+		Nodes: nodes,
+		Relns: relns,
+	}
 }
 
-func convCallgph(inps []Input) (map[int][]int, map[int]Node) {
+func convCgph(inps []Input) (map[int][]int, map[int]Node) {
 	relMap := make(map[int][]int)
 	nodeMap := make(map[int]Node)
 
