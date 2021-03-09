@@ -23,6 +23,7 @@ type handler struct {
 var (
 	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
 	newRunTask          = tasks.NewRunTask
+	newRunTestsTask     = tasks.NewRunTestsTask
 	newPluginTask       = tasks.NewPluginTask
 )
 
@@ -58,6 +59,12 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 		stepOutput, numRetries, err := newRunTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
 			Output:     stepOutput,
+			NumRetries: numRetries,
+		}
+		return response, err
+	case *enginepb.UnitStep_RunTests:
+		numRetries, err := newRunTestsTask(in.GetStep(), rl.BaseLogger, rl.Writer, h.logMetrics, h.log).Run(ctx)
+		response := &pb.ExecuteStepResponse{
 			NumRetries: numRetries,
 		}
 		return response, err

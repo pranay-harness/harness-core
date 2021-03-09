@@ -6,6 +6,7 @@ go_library(
         "common.go",
         "plugin.go",
         "run.go",
+        "runtests.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/addon/tasks",
     visibility = ["//visibility:public"],
@@ -23,9 +24,8 @@ go_library(
         "//product/ci/engine/consts:go_default_library",
         "//product/ci/engine/grpc/client:go_default_library",
         "//product/ci/engine/proto:go_default_library",
-        "@cc_mvdan_sh_v3//syntax:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
         "@com_github_grpc_ecosystem_go_grpc_middleware//retry:go_default_library",
-        "@com_github_pkg_errors//:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],
 )
