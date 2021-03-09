@@ -199,11 +199,10 @@ public class OrchestrationEngine {
       String stepParameters = node.getStepParameters();
       Object resolvedStepParameters = stepParameters == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(stepParameters));
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
-          : pmsEngineExpressionService.resolve(
-              ambiance, NodeExecutionUtils.extractStepParameters(node.getStepInputs()));
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()));
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
