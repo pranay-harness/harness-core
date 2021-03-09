@@ -2,7 +2,7 @@ package io.harness.ngtriggers.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.ngtriggers.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.BRANCH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
@@ -87,8 +87,9 @@ public class WebhookTriggerFilterUtils {
                                  .map(headerConfig -> headerConfig.getKey())
                                  .collect(toSet());
 
-    if (headerKeys.contains(BITBUCKET_SERVER_HEADER_KEY)
-        || headerKeys.contains(BITBUCKET_SERVER_HEADER_KEY.toLowerCase())) {
+    if (!headerKeys.contains(BITBUCKET_CLOUD_HEADER_KEY)
+        && !headerKeys.contains(BITBUCKET_CLOUD_HEADER_KEY.toLowerCase())
+        && !headerKeys.stream().anyMatch(BITBUCKET_CLOUD_HEADER_KEY::equalsIgnoreCase)) {
       parsedActionValueSet.add(BT_PULL_REQUEST_CREATED.getParsedValue());
     }
   }
