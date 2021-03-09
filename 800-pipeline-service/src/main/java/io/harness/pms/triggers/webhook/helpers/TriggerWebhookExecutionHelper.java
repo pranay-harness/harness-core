@@ -51,9 +51,6 @@ public class TriggerWebhookExecutionHelper {
   private final WebhookEventMapperHelper webhookEventMapperHelper;
   private final PMSPipelineService pmsPipelineService;
 
-  public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE = "webhookEventRepoType";
-  public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE = "webhookEventType";
-
   public WebhookEventProcessingResult handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
     WebhookEventMappingResponse webhookEventMappingResponse =
         webhookEventMapperHelper.mapWebhookEventToTriggers(triggerWebhookEvent);

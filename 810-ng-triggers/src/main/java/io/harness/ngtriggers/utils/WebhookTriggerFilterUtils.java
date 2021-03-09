@@ -76,7 +76,7 @@ public class WebhookTriggerFilterUtils {
     return parsedActionValueSet.contains(eventActionReceived);
   }
 
-  // SCM returns "sync" for pr:open for BitbucketCloud and "open" for BitbucketServer.
+  // for 'Pull Request' Event with 'Open' action, SCM returns "sync" for BitbucketCloud and "open" for BitbucketServer.
   // So, For BT_PULL_REQUEST_UPDATED, we have associated "sync" as parsedValue,
   // So, here are adding "open" in case, it was bitbucker server payload
   private static void specialHandlingForBBSPullReqUpdate(
