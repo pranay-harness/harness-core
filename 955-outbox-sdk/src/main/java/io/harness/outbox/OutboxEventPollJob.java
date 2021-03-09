@@ -32,6 +32,14 @@ public class OutboxEventPollJob implements Runnable {
 
   @Override
   public void run() {
+    try {
+      pollAndHandleOutboxEvents();
+    } catch (Exception exception) {
+      log.error("Unexpected error occurred during the execution of OutboxPollJob", exception);
+    }
+  }
+
+  private void pollAndHandleOutboxEvents() {
     try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(OUTBOX_POLL_JOB_LOCK, Duration.ofMinutes(1))) {
       if (lock == null) {
         log.error("Could not acquire lock for outbox poll job");
