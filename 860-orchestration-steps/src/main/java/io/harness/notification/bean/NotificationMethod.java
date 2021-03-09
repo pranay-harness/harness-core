@@ -1,4 +1,4 @@
-package io.harness.pms.notification.bean;
+package io.harness.notification.bean;
 
 public class NotificationMethod {
   String type;

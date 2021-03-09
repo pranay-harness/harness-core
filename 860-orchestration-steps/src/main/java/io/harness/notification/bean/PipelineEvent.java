@@ -1,6 +1,6 @@
-package io.harness.pms.notification.bean;
+package io.harness.notification.bean;
 
-import io.harness.pms.notification.PipelineEventType;
+import io.harness.notification.PipelineEventType;
 
 import java.util.List;
 import lombok.Builder;

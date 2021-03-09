@@ -1,4 +1,4 @@
-package io.harness.pms.notification;
+package io.harness.notification;
 
 public interface PipelineEventTypeConstants {
   String ALL_EVENTS = "AllEvents";

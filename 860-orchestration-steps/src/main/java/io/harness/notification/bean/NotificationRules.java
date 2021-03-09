@@ -1,4 +1,4 @@
-package io.harness.pms.notification.bean;
+package io.harness.notification.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
