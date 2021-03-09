@@ -4,13 +4,12 @@ import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityBuilder;
+import io.harness.ccm.anomaly.entities.AnomalyFeedback;
 import io.harness.ccm.anomaly.entities.TimeGranularity;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-
-import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -128,9 +127,9 @@ public class AnomalyEntityDao {
             break;
           case FEED_BACK:
             if (resultSet.getString(field.getFieldName()) != null) {
-              anomalyBuilder.feedback(QLAnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
+              anomalyBuilder.feedback(AnomalyFeedback.valueOf(resultSet.getString(field.getFieldName())));
             } else {
-              anomalyBuilder.feedback(QLAnomalyFeedback.NOT_RESPONDED);
+              anomalyBuilder.feedback(AnomalyFeedback.NOT_RESPONDED);
             }
             break;
           case ID:

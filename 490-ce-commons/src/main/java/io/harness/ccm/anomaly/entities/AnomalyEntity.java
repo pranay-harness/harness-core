@@ -1,7 +1,5 @@
 package io.harness.ccm.anomaly.entities;
 
-import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
-
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
@@ -26,7 +24,7 @@ public class AnomalyEntity {
   Double expectedCost;
   Double anomalyScore;
 
-  QLAnomalyFeedback feedback;
+  AnomalyFeedback feedback;
 
   AnomalyDetectionModel reportedBy;
 
