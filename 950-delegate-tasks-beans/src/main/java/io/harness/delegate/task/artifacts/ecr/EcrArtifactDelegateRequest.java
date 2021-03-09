@@ -1,5 +1,8 @@
 package io.harness.delegate.task.artifacts.ecr;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import io.harness.artifacts.ecr.beans.AwsInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -13,15 +16,12 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Value;
 
 import java.util.Arrays;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 
 @Value
 @Builder

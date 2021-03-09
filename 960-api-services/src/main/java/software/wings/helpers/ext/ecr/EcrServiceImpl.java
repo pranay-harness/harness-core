@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.ecr;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.USER;
-
-import static java.util.stream.Collectors.toList;
-
+import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
+import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
+import com.amazonaws.services.ecr.model.ListImagesRequest;
+import com.amazonaws.services.ecr.model.ListImagesResult;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetadataKeys;
@@ -17,21 +17,19 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.expression.RegexFunctor;
-
 import software.wings.service.impl.AwsApiHelperService;
 
-import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
-import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
-import com.amazonaws.services.ecr.model.ListImagesRequest;
-import com.amazonaws.services.ecr.model.ListImagesResult;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Created by brett on 7/15/17
@@ -122,14 +120,24 @@ public class EcrServiceImpl implements EcrService {
     }
     return builds.get(0);
   }
-  // Todo: to be implemented
+
   @Override
-  public boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region) {
+  public boolean verifyImageName(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName) {
+    try {
+      getBuilds(awsConfig, imageUrl, region, imageName, 1);
+    } catch (Exception e) {
+      return false;
+    }
     return true;
   }
-  // Todo: to be implemented
+
   @Override
-  public boolean validateCredentials(AwsInternalConfig awsConfig, String imageName) {
+  public boolean validateCredentials(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName) {
+    try {
+      getBuilds(awsConfig, imageUrl, region, imageName, 1);
+    } catch (Exception e) {
+      return false;
+    }
     return true;
   }
 
@@ -146,68 +154,6 @@ public class EcrServiceImpl implements EcrService {
       return builds.get(0);
     } catch (Exception e) {
       throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
-    }
-  }
-
-  /**
-   * The type ECR image tag response.
-   */
-  public static class EcrImageTagResponse {
-    private List<String> child;
-    private String name;
-    private List<String> tags;
-    private Map manifest;
-
-    public Map getManifest() {
-      return manifest;
-    }
-
-    public void setManifest(Map manifest) {
-      this.manifest = manifest;
-    }
-
-    public List<String> getChild() {
-      return child;
-    }
-
-    public void setChild(List<String> child) {
-      this.child = child;
-    }
-
-    /**
-     * Gets name.
-     *
-     * @return the name
-     */
-    public String getName() {
-      return name;
-    }
-
-    /**
-     * Sets name.
-     *
-     * @param name the name
-     */
-    public void setName(String name) {
-      this.name = name;
-    }
-
-    /**
-     * Gets tags.
-     *
-     * @return the tags
-     */
-    public List<String> getTags() {
-      return tags;
-    }
-
-    /**
-     * Sets tags.
-     *
-     * @param tags the tags
-     */
-    public void setTags(List<String> tags) {
-      this.tags = tags;
     }
   }
 }

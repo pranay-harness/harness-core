@@ -1,8 +1,9 @@
 package io.harness.delegate.task.artifacts.ecr;
 
-import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.exception.WingsException.USER;
+
+import static software.wings.helpers.ext.ecr.EcrService.MAX_NO_OF_TAGS_PER_IMAGE;
+
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.ecr.beans.AwsInternalConfig;
@@ -15,20 +16,21 @@ import io.harness.delegate.task.artifacts.mappers.EcrRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsApiHelperService;
 import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateImpl;
 
+import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static io.harness.exception.WingsException.USER;
-import static software.wings.helpers.ext.ecr.EcrService.MAX_NO_OF_TAGS_PER_IMAGE;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))

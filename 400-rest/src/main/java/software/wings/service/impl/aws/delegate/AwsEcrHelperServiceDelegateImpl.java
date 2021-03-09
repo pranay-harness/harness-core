@@ -15,7 +15,6 @@ import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
 import software.wings.service.mappers.artifact.AwsConfigToInternalMapper;
 
 import com.amazonaws.services.ecr.AmazonECRClient;
-import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.GetAuthorizationTokenRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

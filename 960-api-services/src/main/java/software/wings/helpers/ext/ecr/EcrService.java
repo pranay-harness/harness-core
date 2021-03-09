@@ -66,11 +66,11 @@ public interface EcrService {
    *
    * @param awsConfig
    */
-  boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region);
+  boolean verifyImageName(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName);
 
   List<Map<String, String>> getLabels(AwsInternalConfig awsConfig, String imageName, String region, List<String> tags);
 
-  boolean validateCredentials(AwsInternalConfig awsConfig, String imageName);
+  boolean validateCredentials(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName);
 
   BuildDetailsInternal verifyBuildNumber(
       AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
