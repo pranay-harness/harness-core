@@ -164,7 +164,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: false
+shouldConfigureWithPMS: true
 
 baseUrls:
   ngManager: http://localhost:7457/

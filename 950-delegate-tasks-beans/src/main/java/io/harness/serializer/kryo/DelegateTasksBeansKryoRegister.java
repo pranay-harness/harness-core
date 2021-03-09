@@ -148,6 +148,8 @@ import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
@@ -606,6 +608,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SSHAuthDTO.class, 543234);
     kryo.register(GcrArtifactDelegateRequest.class, 543235);
     kryo.register(GcrArtifactDelegateResponse.class, 543236);
+    kryo.register(EcrArtifactDelegateRequest.class, 543999);
+    kryo.register(EcrArtifactDelegateResponse.class, 543998);
     kryo.register(K8sRollingRollbackDeployRequest.class, 543239);
     kryo.register(K8sScaleRequest.class, 543240);
     kryo.register(K8sScaleResponse.class, 543241);

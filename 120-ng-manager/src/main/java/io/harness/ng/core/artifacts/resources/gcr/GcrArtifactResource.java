@@ -66,7 +66,7 @@ public class GcrArtifactResource {
 
   @GET
   @Path("getBuildDetails1")
-  @ApiOperation(value = "Gets gcr build details", nickname = "getBuildDetailsForGcr")
+  @ApiOperation(value = "Gets gcr build details", nickname = "getBuildDetailsForEcr")
   public ResponseDTO<EcrResponseDTO> getBuildDetailsEcr(@NotNull @QueryParam("imagePath") String imagePath,
      @NotNull @QueryParam("registryHostname") String registryHostname,
      @NotNull @QueryParam("connectorRef") String ecrConnectorIdentifier,

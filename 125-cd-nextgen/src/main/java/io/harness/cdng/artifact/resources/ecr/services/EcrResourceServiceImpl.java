@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.resources.ecr.services;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
+@Singleton
 public class EcrResourceServiceImpl implements EcrResourceService{
     private final ConnectorService connectorService;
     private final SecretManagerClientService secretManagerClientService;

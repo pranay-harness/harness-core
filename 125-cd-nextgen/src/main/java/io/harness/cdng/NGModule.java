@@ -5,6 +5,8 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.WalkTreeModule;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceService;
 import io.harness.cdng.artifact.resources.docker.service.DockerResourceServiceImpl;
+import io.harness.cdng.artifact.resources.ecr.services.EcrResourceService;
+import io.harness.cdng.artifact.resources.ecr.services.EcrResourceServiceImpl;
 import io.harness.cdng.artifact.resources.gcr.service.GcrResourceService;
 import io.harness.cdng.artifact.resources.gcr.service.GcrResourceServiceImpl;
 import io.harness.cdng.artifact.service.ArtifactSourceService;
@@ -52,6 +54,7 @@ public class NGModule extends AbstractModule {
     bind(NgPipelineExecutionService.class).to(NgPipelineExecutionServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
     bind(GcrResourceService.class).to(GcrResourceServiceImpl.class);
+    bind(EcrResourceService.class).to(EcrResourceServiceImpl.class);
     bind(JiraResourceService.class).to(JiraResourceServiceImpl.class);
     bind(CdYamlSchemaService.class).to(CdYamlSchemaServiceImpl.class);
 
