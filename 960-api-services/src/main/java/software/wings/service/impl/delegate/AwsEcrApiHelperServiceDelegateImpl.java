@@ -17,7 +17,7 @@ import java.util.List;
 
 @Singleton
 public class AwsEcrApiHelperServiceDelegateImpl extends AwsEcrApiHelperServiceDelegateBase {
-  private AmazonECRClient getAmazonEcrClient(AwsInternalConfig awsConfig, String region) {
+  public AmazonECRClient getAmazonEcrClient(AwsInternalConfig awsConfig, String region) {
     AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
     attachCredentialsAndBackoffPolicy(builder, awsConfig);
     return (AmazonECRClient) builder.build();

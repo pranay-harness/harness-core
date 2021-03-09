@@ -1,13 +1,13 @@
 package software.wings.helpers.ext.ecr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.ecr.beans.AwsInternalConfig;
 
 import java.util.List;
 import java.util.Map;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 /**
  * Created by brett on 7/15/17
@@ -61,12 +61,20 @@ public interface EcrService {
    * @return the list
    */
   List<String> listEcrRegistry(AwsInternalConfig awsConfig, String region);
+  /**
+   * Validates the Image
+   *
+   * @param awsConfig
+   */
+  boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region);
 
   List<Map<String, String>> getLabels(AwsInternalConfig awsConfig, String imageName, String region, List<String> tags);
 
   boolean validateCredentials(AwsInternalConfig awsConfig, String imageName);
 
-  BuildDetailsInternal verifyBuildNumber(AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
+  BuildDetailsInternal verifyBuildNumber(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
 
-  BuildDetailsInternal getLastSuccessfulBuildFromRegex(AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex);
+  BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex);
 }
