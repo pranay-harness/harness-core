@@ -36,7 +36,7 @@ public class NotificationConfiguration extends Configuration {
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
   @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
-  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("delegateServiceGrpcConfig") private GrpcClientConfig delegateServiceGrpcConfig;
 
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(RESOURCE_PACKAGE);

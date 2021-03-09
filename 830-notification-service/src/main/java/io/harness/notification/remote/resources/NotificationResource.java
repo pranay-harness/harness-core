@@ -33,8 +33,8 @@ import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
 
-@Api("notifications")
-@Path("notifications")
+@Api("notification")
+@Path("notification")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

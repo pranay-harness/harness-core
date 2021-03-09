@@ -124,9 +124,10 @@ public class MailServiceImpl implements ChannelService {
 
   private NotificationProcessingResponse send(
       List<String> emailIds, String subject, String body, String notificationId, String accountId) {
-    NotificationProcessingResponse notificationProcessingResponse = null;
+    NotificationProcessingResponse notificationProcessingResponse;
     SmtpConfigResponse smtpConfigResponse = notificationSettingsService.getSmtpConfigResponse(accountId);
-    if (notificationSettingsService.getSendNotificationViaDelegate(accountId) || Objects.nonNull(smtpConfigResponse)) {
+    if ((notificationSettingsService.getSendNotificationViaDelegate(accountId)
+            && Objects.nonNull(smtpConfigResponse))) {
       DelegateTaskRequest delegateTaskRequest =
           DelegateTaskRequest.builder()
               .accountId(accountId)
@@ -179,7 +180,7 @@ public class MailServiceImpl implements ChannelService {
         template.process(dataMap, strWriter);
       } catch (InvalidReferenceException e) {
         exceptionCaught = true;
-        dataMap.put(e.getBlamedExpressionString(), String.format("${%s}", e.getBlamedExpressionString()));
+        dataMap.put(e.getBlamedExpressionString(), "");
       } catch (IOException | TemplateException e) {
         log.error("Failed to process template. Check template {}", templateName);
       }
