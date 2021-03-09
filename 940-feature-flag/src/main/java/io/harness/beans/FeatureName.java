@@ -149,7 +149,7 @@ public enum FeatureName {
   CUSTOM_DASHBOARD_ENABLE_CRON_DEPLOYMENT_DATA_MIGRATION,
   WHITELIST_PUBLIC_API,
   WHITELIST_GRAPHQL,
-  LOG_APP_DEFAULTS;
+  SETTING_API_BATCH_RBAC; /*Flag to use batch RBAC api exposed by SecretManager*/
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
