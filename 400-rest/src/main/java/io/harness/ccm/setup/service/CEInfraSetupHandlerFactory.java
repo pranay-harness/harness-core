@@ -1,13 +1,11 @@
 package io.harness.ccm.setup.service;
 
-import io.harness.ccm.setup.service.impl.AwsCEInfraSetupHandler;
-import io.harness.exception.InvalidRequestException;
-
-import software.wings.beans.ce.CEAwsConfig;
-import software.wings.settings.SettingValue;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.harness.ccm.setup.service.impl.AwsCEInfraSetupHandler;
+import io.harness.exception.InvalidRequestException;
+import software.wings.beans.ce.CEAwsConfig;
+import software.wings.settings.SettingValue;
 
 @Singleton
 public class CEInfraSetupHandlerFactory {

@@ -1,19 +1,19 @@
 package io.harness.cvng.client;
 
-import static io.harness.cvng.core.services.CVNextGenConstants.INTERNAL_ACTIVITY_RESOURCE;
-
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.rest.RestResponse;
-
-import javax.validation.Valid;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
+
+import javax.validation.Valid;
+
+import static io.harness.cvng.core.services.CVNextGenConstants.INTERNAL_ACTIVITY_RESOURCE;
 
 public interface CVNGServiceClient {
   @POST(INTERNAL_ACTIVITY_RESOURCE)

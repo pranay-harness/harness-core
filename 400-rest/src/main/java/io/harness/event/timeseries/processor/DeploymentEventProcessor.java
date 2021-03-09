@@ -1,19 +1,19 @@
 package io.harness.event.timeseries.processor;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.fabric8.utils.Lists;
 import io.harness.beans.FeatureName;
 import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.DeploymentMigrationException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import software.wings.utils.FFUtils;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import io.fabric8.utils.Lists;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

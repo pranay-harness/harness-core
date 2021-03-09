@@ -1,5 +1,13 @@
 package io.harness.ccm.anomaly.service;
 
+import com.healthmarketscience.sqlbuilder.BinaryCondition;
+import com.healthmarketscience.sqlbuilder.CustomSql;
+import com.healthmarketscience.sqlbuilder.InCondition;
+import com.healthmarketscience.sqlbuilder.OrderObject;
+import com.healthmarketscience.sqlbuilder.SelectQuery;
+import com.healthmarketscience.sqlbuilder.UnaryCondition;
+import com.healthmarketscience.sqlbuilder.UpdateQuery;
+import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
@@ -11,7 +19,8 @@ import io.harness.ccm.billing.graphql.CloudEntityGroupBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -24,14 +33,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingDataFilte
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMGroupBy;
 
-import com.healthmarketscience.sqlbuilder.BinaryCondition;
-import com.healthmarketscience.sqlbuilder.CustomSql;
-import com.healthmarketscience.sqlbuilder.InCondition;
-import com.healthmarketscience.sqlbuilder.OrderObject;
-import com.healthmarketscience.sqlbuilder.SelectQuery;
-import com.healthmarketscience.sqlbuilder.UnaryCondition;
-import com.healthmarketscience.sqlbuilder.UpdateQuery;
-import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -40,8 +41,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j

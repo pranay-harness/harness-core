@@ -1,15 +1,15 @@
 package io.harness.event.usagemetrics;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import java.util.Map;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 @Singleton

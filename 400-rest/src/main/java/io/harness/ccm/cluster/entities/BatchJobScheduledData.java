@@ -1,5 +1,8 @@
 package io.harness.ccm.cluster.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
@@ -11,14 +14,6 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.reinert.jjschema.SchemaIgnore;
-import com.google.common.collect.ImmutableList;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +22,11 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
 
 @Data
 @Entity(value = "batchJobScheduledData", noClassnameStored = true)

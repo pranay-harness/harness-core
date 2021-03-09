@@ -3,13 +3,13 @@ package io.harness.ccm.anomaly.utility;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityKeys;
 import io.harness.ccm.anomaly.url.HarnessUrl;
+import lombok.experimental.UtilityClass;
 
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class AnomalyUtility {

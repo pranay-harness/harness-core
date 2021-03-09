@@ -1,13 +1,5 @@
 package io.harness.ccm.billing.bigquery;
 
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonatedCredentials;
-
-import static java.lang.String.format;
-
-import software.wings.beans.ValidationResult;
-
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
@@ -16,6 +8,12 @@ import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.Dataset;
 import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.beans.ValidationResult;
+
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonatedCredentials;
+import static java.lang.String.format;
 
 @Slf4j
 @Singleton

@@ -1,12 +1,7 @@
 package io.harness.workers.background.critical.iterator;
 
-import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-
-import static software.wings.beans.ResourceConstraintInstance.NOT_FINISHED_STATES;
-
-import static java.time.Duration.ofSeconds;
-
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -17,15 +12,16 @@ import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.workers.background.AccountStatusBasedEntityProcessController;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.ResourceConstraintInstance;
 import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceKeys;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ResourceConstraintService;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+import static java.time.Duration.ofSeconds;
+import static software.wings.beans.ResourceConstraintInstance.NOT_FINISHED_STATES;
 
 @Slf4j
 public class ResourceConstraintBackupHandler implements Handler<ResourceConstraintInstance> {

@@ -1,18 +1,17 @@
 package io.harness.event.timeseries.processor;
 
-import io.harness.timescaledb.TimeScaleDBService;
-
-import software.wings.common.VerificationConstants;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
+import io.harness.timescaledb.TimeScaleDBService;
+import lombok.extern.slf4j.Slf4j;
+import software.wings.common.VerificationConstants;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

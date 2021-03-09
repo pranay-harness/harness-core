@@ -1,9 +1,5 @@
 package io.harness.ccm.billing;
 
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
-import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.toGoogleCredential;
-
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -13,9 +9,14 @@ import com.google.api.services.cloudresourcemanager.model.Policy;
 import com.google.api.services.cloudresourcemanager.model.SetIamPolicyRequest;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import lombok.extern.slf4j.Slf4j;
+
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENTIALS_PATH;
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
+import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.toGoogleCredential;
 
 @Slf4j
 @Singleton

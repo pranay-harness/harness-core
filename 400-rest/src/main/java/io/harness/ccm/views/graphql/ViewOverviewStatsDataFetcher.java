@@ -1,12 +1,17 @@
 package io.harness.ccm.views.graphql;
 
-import static io.harness.persistence.HQuery.excludeValidate;
-
+import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.Table;
+import com.google.cloud.bigquery.TableId;
+import com.google.cloud.bigquery.TableResult;
+import com.google.inject.Inject;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.views.graphql.QLViewOverviewStatsData.QLViewOverviewStatsDataBuilder;
 import io.harness.persistence.HPersistence;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -15,14 +20,7 @@ import software.wings.graphql.schema.query.QLNoOpQueryParameters;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.cloud.bigquery.FieldValueList;
-import com.google.cloud.bigquery.QueryJobConfiguration;
-import com.google.cloud.bigquery.Table;
-import com.google.cloud.bigquery.TableId;
-import com.google.cloud.bigquery.TableResult;
-import com.google.inject.Inject;
-import lombok.extern.slf4j.Slf4j;
+import static io.harness.persistence.HQuery.excludeValidate;
 
 @Slf4j
 public class ViewOverviewStatsDataFetcher

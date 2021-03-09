@@ -1,10 +1,7 @@
 package io.harness.event.reconciliation.service;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
-
-import static java.time.Duration.ofMinutes;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.beans.ExecutionStatus;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord.DeploymentReconRecordKeys;
@@ -19,14 +16,19 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
-
+import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.CriteriaContainer;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.api.DeploymentTimeSeriesEvent;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.management.openmbean.InvalidKeyException;
+import javax.validation.constraints.NotNull;
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -38,14 +40,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.management.openmbean.InvalidKeyException;
-import javax.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.query.Criteria;
-import org.mongodb.morphia.query.CriteriaContainer;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.time.Duration.ofMinutes;
 
 @Singleton
 @Slf4j

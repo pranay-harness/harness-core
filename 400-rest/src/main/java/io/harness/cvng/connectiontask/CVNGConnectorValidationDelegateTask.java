@@ -1,5 +1,6 @@
 package io.harness.cvng.connectiontask;
 
+import com.google.inject.Inject;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
@@ -16,13 +17,12 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.SecretDecryptionService;
+import lombok.extern.slf4j.Slf4j;
 
-import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnableTask {

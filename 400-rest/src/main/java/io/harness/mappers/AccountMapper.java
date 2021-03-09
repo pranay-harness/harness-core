@@ -1,10 +1,8 @@
 package io.harness.mappers;
 
 import io.harness.ng.core.dto.AccountDTO;
-
-import software.wings.beans.Account;
-
 import lombok.experimental.UtilityClass;
+import software.wings.beans.Account;
 
 @UtilityClass
 public class AccountMapper {

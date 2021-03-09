@@ -1,22 +1,20 @@
 package io.harness.ccm.config;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
-
-import static com.google.common.base.Preconditions.checkArgument;
-import static java.lang.String.format;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.exception.InvalidRequestException;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.service.intfc.SettingsService;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 @Slf4j
 @Singleton

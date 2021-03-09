@@ -1,10 +1,10 @@
 package io.harness.event.timeseries.processor.instanceeventprocessor;
 
 import io.harness.event.timeseries.processor.EventProcessor;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
-import lombok.Getter;
 
 @Getter
 public class InstanceDataGenRequest {

@@ -1,17 +1,15 @@
 package io.harness.ccm.anomaly.graphql;
 
+import com.healthmarketscience.sqlbuilder.Condition;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesIdFilter.AnomaliesIdFilterBuilder;
 import io.harness.ccm.anomaly.graphql.AnomaliesTimeFilter.AnomaliesTimeFilterBuilder;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
-
-import software.wings.graphql.schema.type.aggregation.Filter;
-
-import com.healthmarketscience.sqlbuilder.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.graphql.schema.type.aggregation.Filter;
 
 public interface AnomaliesFilter extends Filter {
   Logger log = LoggerFactory.getLogger(AnomaliesFilter.class);

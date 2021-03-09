@@ -62,11 +62,20 @@ public interface EcrService {
    */
   List<String> listEcrRegistry(AwsInternalConfig awsConfig, String region);
 
+  /**
+   * Validates the Image
+   *
+   * @param awsConfig
+   */
+  boolean verifyImageName(AwsInternalConfig awsConfig, String imageName, String region);
+
   List<Map<String, String>> getLabels(AwsInternalConfig awsConfig, String imageName, String region, List<String> tags);
 
   boolean validateCredentials(AwsInternalConfig awsConfig, String imageName);
 
-  BuildDetailsInternal verifyBuildNumber(AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
+  BuildDetailsInternal verifyBuildNumber(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
 
-  BuildDetailsInternal getLastSuccessfulBuildFromRegex(AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex);
+  BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex);
 }

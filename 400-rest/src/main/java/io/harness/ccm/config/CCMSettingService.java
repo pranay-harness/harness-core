@@ -1,7 +1,6 @@
 package io.harness.ccm.config;
 
 import io.harness.ccm.cluster.entities.ClusterRecord;
-
 import software.wings.beans.SettingAttribute;
 
 import java.util.List;

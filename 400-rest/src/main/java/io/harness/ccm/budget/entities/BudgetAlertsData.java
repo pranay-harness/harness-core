@@ -1,7 +1,6 @@
 package io.harness.ccm.budget.entities;
 
 import io.harness.ccm.budget.AlertThresholdBase;
-
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;

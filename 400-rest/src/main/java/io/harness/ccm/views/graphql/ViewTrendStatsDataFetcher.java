@@ -1,10 +1,9 @@
 package io.harness.ccm.views.graphql;
 
-import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
-
+import com.google.cloud.bigquery.BigQuery;
+import com.google.inject.Inject;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
-
 import software.wings.graphql.datafetcher.AbstractStatsDataFetcherWithAggregationList;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -12,9 +11,9 @@ import software.wings.graphql.schema.type.aggregation.billing.QLBillingStatsInfo
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
-import com.google.cloud.bigquery.BigQuery;
-import com.google.inject.Inject;
 import java.util.List;
+
+import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
 public class ViewTrendStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCEViewAggregation,
     QLCEViewFilterWrapper, QLCEViewGroupBy, QLCEViewSortCriteria> {

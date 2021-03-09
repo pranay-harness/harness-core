@@ -3,7 +3,6 @@ package io.harness.event.timeseries.processor.instanceeventprocessor.instanceagg
 import io.harness.event.timeseries.processor.EventProcessor;
 import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventAggregator;
 import io.harness.event.timeseries.processor.utils.DateUtils;
-
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 
 import java.sql.PreparedStatement;

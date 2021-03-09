@@ -1,5 +1,6 @@
 package io.harness.ccm.communication.entities;
 
+import com.google.common.collect.ImmutableList;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -7,9 +8,6 @@ import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
-
-import com.google.common.collect.ImmutableList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +16,8 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+
+import java.util.List;
 
 @Data
 @Builder

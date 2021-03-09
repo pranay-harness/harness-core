@@ -1,26 +1,15 @@
 package io.harness.cvng.client;
 
-import io.harness.exception.InvalidRequestException;
-import io.harness.network.Http;
-import io.harness.security.ServiceTokenGenerator;
-import io.harness.serializer.JsonSubtypeResolver;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Provider;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.validation.constraints.NotNull;
+import io.harness.exception.InvalidRequestException;
+import io.harness.network.Http;
+import io.harness.security.ServiceTokenGenerator;
+import io.harness.serializer.JsonSubtypeResolver;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.ConnectionPool;
 import okhttp3.Interceptor;
@@ -29,6 +18,17 @@ import okhttp3.Request;
 import org.apache.commons.lang3.StringUtils;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.validation.constraints.NotNull;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 @Slf4j
 public class CVNGServiceClientFactory implements Provider<CVNGServiceClient> {

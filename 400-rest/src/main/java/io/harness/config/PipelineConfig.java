@@ -1,10 +1,9 @@
 package io.harness.config;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
 import io.harness.annotations.dev.OwnedBy;
-
 import lombok.Value;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 @OwnedBy(CDC)
 @Value

@@ -1,16 +1,17 @@
 package io.harness.ccm.budget.entities;
 
-import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.Arrays;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static io.harness.ccm.budget.BudgetScopeType.APPLICATION;
 
 @Data
 @Builder

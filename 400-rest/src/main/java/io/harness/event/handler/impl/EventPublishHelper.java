@@ -1,35 +1,7 @@
 package io.harness.event.handler.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.event.handler.impl.Constants.ACCOUNT_EVENT;
-import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
-import static io.harness.event.handler.impl.Constants.CATEGORY;
-import static io.harness.event.handler.impl.Constants.COMPANY_NAME;
-import static io.harness.event.handler.impl.Constants.COUNTRY;
-import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
-import static io.harness.event.handler.impl.Constants.EMAIL_ID;
-import static io.harness.event.handler.impl.Constants.FREEMIUM_ASSISTED_OPTION;
-import static io.harness.event.handler.impl.Constants.FREEMIUM_PRODUCTS;
-import static io.harness.event.handler.impl.Constants.PHONE;
-import static io.harness.event.handler.impl.Constants.STATE;
-import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
-import static io.harness.event.handler.impl.Constants.TECH_NAME;
-import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
-import static io.harness.event.handler.impl.Constants.USER_NAME;
-import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CAMPAIGN;
-import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CONTENT;
-import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_MEDIUM;
-import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_SOURCE;
-import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_TERM;
-
-import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
-import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
-import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
-import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -46,7 +18,8 @@ import io.harness.event.model.EventData;
 import io.harness.event.model.EventType;
 import io.harness.event.publisher.EventPublisher;
 import io.harness.service.intfc.DelegateCache;
-
+import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.AccountEvent;
 import software.wings.beans.AccountEventType;
@@ -83,17 +56,42 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import javax.annotation.Nullable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import javax.annotation.Nullable;
-import lombok.NonNull;
-import lombok.extern.slf4j.Slf4j;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.event.handler.impl.Constants.ACCOUNT_EVENT;
+import static io.harness.event.handler.impl.Constants.ACCOUNT_ID;
+import static io.harness.event.handler.impl.Constants.CATEGORY;
+import static io.harness.event.handler.impl.Constants.COMPANY_NAME;
+import static io.harness.event.handler.impl.Constants.COUNTRY;
+import static io.harness.event.handler.impl.Constants.CUSTOM_EVENT_NAME;
+import static io.harness.event.handler.impl.Constants.EMAIL_ID;
+import static io.harness.event.handler.impl.Constants.FREEMIUM_ASSISTED_OPTION;
+import static io.harness.event.handler.impl.Constants.FREEMIUM_PRODUCTS;
+import static io.harness.event.handler.impl.Constants.PHONE;
+import static io.harness.event.handler.impl.Constants.STATE;
+import static io.harness.event.handler.impl.Constants.TECH_CATEGORY_NAME;
+import static io.harness.event.handler.impl.Constants.TECH_NAME;
+import static io.harness.event.handler.impl.Constants.USER_INVITE_ID;
+import static io.harness.event.handler.impl.Constants.USER_NAME;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CAMPAIGN;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_CONTENT;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_MEDIUM;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_SOURCE;
+import static io.harness.event.handler.impl.MarketoHandler.Constants.UTM_TERM;
+import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
+import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GROUP_NAME;
 
 /**
  * Publishes event if all the criteria is met. MarketoHandler handles the event and converts it into a marketo campaign.

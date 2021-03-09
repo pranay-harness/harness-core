@@ -1,10 +1,9 @@
 package io.harness.cvng.state;
 
+import com.google.inject.Inject;
 import io.harness.cvng.state.CVNGVerificationTask.CVNGVerificationTaskKeys;
 import io.harness.cvng.state.CVNGVerificationTask.Status;
 import io.harness.persistence.HPersistence;
-
-import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 

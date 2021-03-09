@@ -2,10 +2,11 @@ package io.harness.ccm.billing;
 
 import com.google.api.services.cloudresourcemanager.model.Binding;
 import com.google.api.services.cloudresourcemanager.model.Policy;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @UtilityClass
 @Slf4j

@@ -1,26 +1,25 @@
 package io.harness.ccm.billing.graphql;
 
-import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_STARTTIME;
-import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_ENDTIME;
-import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_STARTTIME;
-
-import io.harness.ccm.billing.RawBillingTableSchema;
-import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
-import io.harness.exception.InvalidRequestException;
-
-import software.wings.graphql.schema.type.aggregation.Filter;
-import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
-
 import com.google.cloud.Timestamp;
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
-import java.util.Calendar;
-import java.util.Date;
+import io.harness.ccm.billing.RawBillingTableSchema;
+import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.lang3.time.DateUtils;
+import software.wings.graphql.schema.type.aggregation.Filter;
+import software.wings.graphql.schema.type.aggregation.QLTimeOperator;
+
+import java.util.Calendar;
+import java.util.Date;
+
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_STARTTIME;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_ENDTIME;
+import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_STARTTIME;
 
 @Data
 @Builder

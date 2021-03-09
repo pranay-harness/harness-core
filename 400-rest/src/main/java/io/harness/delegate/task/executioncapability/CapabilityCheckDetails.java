@@ -1,12 +1,11 @@
 package io.harness.delegate.task.executioncapability;
 
-import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
-
 import io.harness.capability.CapabilityParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
-
 import lombok.Builder;
 import lombok.Value;
+
+import static io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 
 @Value
 @Builder(toBuilder = true)

@@ -1,18 +1,18 @@
 package io.harness.ccm.setup.graphql;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.List;
-import org.mongodb.morphia.query.FieldEnd;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 @Singleton
 public class CESetupQueryHelper {

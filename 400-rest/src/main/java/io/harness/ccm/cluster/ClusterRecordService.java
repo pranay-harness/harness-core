@@ -1,7 +1,6 @@
 package io.harness.ccm.cluster;
 
 import io.harness.ccm.cluster.entities.ClusterRecord;
-
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;

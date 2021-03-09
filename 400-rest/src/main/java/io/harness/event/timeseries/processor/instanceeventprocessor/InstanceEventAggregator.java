@@ -1,15 +1,15 @@
 package io.harness.event.timeseries.processor.instanceeventprocessor;
 
+import com.google.inject.Inject;
 import io.harness.event.timeseries.processor.EventProcessor;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instanceaggregator.HourlyAggregator;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instanceaggregator.InstanceAggregator;
 import io.harness.exception.InstanceAggregationException;
 import io.harness.timescaledb.TimeScaleDBService;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 
-import com.google.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,7 +18,6 @@ import java.sql.Timestamp;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class InstanceEventAggregator {

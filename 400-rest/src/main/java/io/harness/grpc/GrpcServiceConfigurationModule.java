@@ -1,20 +1,5 @@
 package io.harness.grpc;
 
-import io.harness.delegate.DelegateServiceGrpc;
-import io.harness.delegateprofile.DelegateProfileServiceGrpc;
-import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.grpc.auth.ServiceInfo;
-import io.harness.grpc.exception.GrpcExceptionMapper;
-import io.harness.grpc.exception.WingsExceptionGrpcMapper;
-import io.harness.grpc.pingpong.PingPongService;
-import io.harness.grpc.server.GrpcServerConfig;
-import io.harness.grpc.server.GrpcServerExceptionHandler;
-import io.harness.grpc.server.GrpcServerModule;
-import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
-import io.harness.security.KeySource;
-
-import software.wings.security.AccountKeySource;
-
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
@@ -27,6 +12,20 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
+import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegateprofile.DelegateProfileServiceGrpc;
+import io.harness.grpc.auth.DelegateAuthServerInterceptor;
+import io.harness.grpc.auth.ServiceInfo;
+import io.harness.grpc.exception.GrpcExceptionMapper;
+import io.harness.grpc.exception.WingsExceptionGrpcMapper;
+import io.harness.grpc.pingpong.PingPongService;
+import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.grpc.server.GrpcServerExceptionHandler;
+import io.harness.grpc.server.GrpcServerModule;
+import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpc;
+import io.harness.security.KeySource;
+import software.wings.security.AccountKeySource;
+
 import java.util.Set;
 
 public class GrpcServiceConfigurationModule extends AbstractModule {

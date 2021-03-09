@@ -1,12 +1,10 @@
 package io.harness.ccm.config;
 
-import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
-
-import static java.util.Objects.isNull;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.persistence.HIterator;
-
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
@@ -16,11 +14,11 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+
+import static java.util.Objects.isNull;
+import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 
 @Slf4j
 @Singleton

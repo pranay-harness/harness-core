@@ -1,12 +1,12 @@
 package io.harness.event.harnessmetrics;
 
+import com.google.common.collect.ImmutableList;
 import io.harness.event.model.Event;
 import io.harness.event.model.EventConstants;
 import io.harness.event.model.EventType;
 import io.harness.metrics.HarnessMetricRegistry;
-
-import com.google.common.collect.ImmutableList;
 import io.prometheus.client.Collector.Type;
+
 import java.util.List;
 
 /*

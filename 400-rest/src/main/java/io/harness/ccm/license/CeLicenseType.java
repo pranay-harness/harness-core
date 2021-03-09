@@ -1,8 +1,9 @@
 package io.harness.ccm.license;
 
+import lombok.Getter;
+
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
-import lombok.Getter;
 
 @Getter
 public enum CeLicenseType {
