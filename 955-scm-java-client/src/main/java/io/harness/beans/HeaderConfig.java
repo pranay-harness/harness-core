@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.beans.config;
+package io.harness.beans;
 
 import java.util.List;
 import lombok.Builder;
