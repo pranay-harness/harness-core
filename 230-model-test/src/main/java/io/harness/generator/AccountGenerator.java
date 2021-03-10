@@ -22,14 +22,8 @@ import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.TestUtils;
 
-import software.wings.beans.Account;
+import software.wings.beans.*;
 import software.wings.beans.Account.AccountKeys;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
-import software.wings.beans.LicenseInfo;
-import software.wings.beans.Role;
-import software.wings.beans.RoleType;
-import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
@@ -193,6 +187,7 @@ public class AccountGenerator {
                     .withUuid(accountId)
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
+                    .withDashboardPreference(DashboardPreference.CG)
                     .withLicenseInfo(LicenseInfo.builder()
                                          .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)

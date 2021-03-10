@@ -37,11 +37,8 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import lombok.Builder;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
@@ -68,6 +65,8 @@ public class Account extends Base implements PersistentRegularIterable {
   @NotNull private String companyName;
 
   @FdUniqueIndex @NotNull private String accountName;
+
+  @Getter @Setter DashboardPreference dashboardPreference;
 
   private Set<String> whitelistedDomains = new HashSet<>();
 
@@ -511,6 +510,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
+    private DashboardPreference dashboardPreference = DashboardPreference.CG;
 
     private Builder() {}
 
@@ -520,6 +520,11 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withCompanyName(String companyName) {
       this.companyName = companyName;
+      return this;
+    }
+
+    public Builder withDashboardPreference(DashboardPreference dashboardPreference) {
+      this.dashboardPreference = dashboardPreference;
       return this;
     }
 
@@ -672,6 +677,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
+          .withDashboardPreference(dashboardPreference)
           .withAccountPreferences(accountPreferences);
     }
 
@@ -703,6 +709,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setAccountPreferences(accountPreferences);
+      account.setDashboardPreference(dashboardPreference);
       return account;
     }
   }
