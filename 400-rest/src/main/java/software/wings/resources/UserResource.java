@@ -605,19 +605,22 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> nglogin(NGLoginRequest loginBody, @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(User.Builder.anUser()
-                                          .accountName(accountId)
-                                          .defaultAccountId("testDefaultAccount")
-                                          .email("testemail@harness.io")
-                                          .uuid("testuuid")
-                                          .name("testname")
-                                          .token("testtoken")
-                                          .emailVerified(true)
-                                          .twoFactorAuthenticationEnabled(false)
-                                          .twoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP)
-                                          .oauthProvider("testoauthproviderr")
-                                          .build());
+  public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginBody, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(NGLoginResponse.builder()
+                                  .user(User.Builder.anUser()
+                                            .accountName(accountId)
+                                            .defaultAccountId("testDefaultAccount")
+                                            .email("testemail@harness.io")
+                                            .uuid("testuuid")
+                                            .name("testname")
+                                            .token("testtoken")
+                                            .emailVerified(true)
+                                            .twoFactorAuthenticationEnabled(false)
+                                            .twoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP)
+                                            .oauthProvider("testoauthproviderr")
+                                            .build())
+                                  .showCaptcha(false)
+                                  .build());
   }
 
   /**
