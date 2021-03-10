@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.STARTING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.LOG_APP_DEFAULTS;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -28,6 +29,7 @@ import static java.util.Collections.disjoint;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -81,6 +83,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   private static final String ROLLING_PHASE_PREFIX = "Rolling Phase ";
   public static final ExecutionInterruptType DEFAULT_ACTION_AFTER_TIMEOUT = ExecutionInterruptType.END_EXECUTION;
   public static final long DEFAULT_TIMEOUT = 1209600000L; // 14days
+  private static final String DEBUG_APP_DEFAULTS = "DEBUG_APP_DEFAULTS";
 
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
 
@@ -236,7 +239,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
       } else if (executionEvent.getExecutionStatus() == STARTING) {
         PhaseStep phaseStep = findPhaseStep(orchestrationWorkflow, phaseElement, state);
-        return shouldSkipStep(context, phaseStep, state);
+        return shouldSkipStep(context, phaseStep, state, featureFlagService);
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
         return null;
       }
@@ -391,7 +394,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   }
 
   @VisibleForTesting
-  public static ExecutionEventAdvice shouldSkipStep(ExecutionContextImpl context, PhaseStep phaseStep, State state) {
+  public static ExecutionEventAdvice shouldSkipStep(
+      ExecutionContextImpl context, PhaseStep phaseStep, State state, FeatureFlagService featureFlagService) {
     if (phaseStep == null || isEmpty(phaseStep.getStepSkipStrategies())) {
       return null;
     }
@@ -404,6 +408,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       try {
+        logAppDefaults(context, featureFlagService);
         context.renderExpression(assertionExpression);
         Object resultObj = context.evaluateExpression(assertionExpression);
         if (!(resultObj instanceof Boolean)) {
@@ -429,6 +434,20 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     }
 
     return null;
+  }
+
+  private static void logAppDefaults(ExecutionContextImpl context, FeatureFlagService featureFlagService) {
+    if (featureFlagService.isEnabled(LOG_APP_DEFAULTS, context.getAccountId())) {
+      Application app = context.getApp();
+      if (app != null) {
+        Map<String, String> appDefaults = app.getDefaults();
+        if (isEmpty(appDefaults)) {
+          log.info(DEBUG_APP_DEFAULTS + " - There no defaults found");
+        } else {
+          log.info(DEBUG_APP_DEFAULTS + " : " + appDefaults);
+        }
+      }
+    }
   }
 
   private static String processErrorMessage(String assertionExpression, Exception ex) {
