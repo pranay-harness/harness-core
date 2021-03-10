@@ -1,12 +1,16 @@
 package io.harness.remote.client;
 
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+import static io.harness.request.RequestContextData.REQUEST_CONTEXT;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
+import io.harness.request.RequestContextData;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.dto.ServicePrincipal;
@@ -96,6 +100,7 @@ public abstract class AbstractHttpClientFactory {
           .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
           .addInterceptor(getCorrelationIdInterceptor())
+          .addInterceptor(getRequestContextInterceptor())
           .addInterceptor(chain -> {
             Request original = chain.request();
 
@@ -125,6 +130,22 @@ public abstract class AbstractHttpClientFactory {
       }
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
+    };
+  }
+
+  @NotNull
+  protected Interceptor getRequestContextInterceptor() {
+    return chain -> {
+      Request request = chain.request();
+      RequestContextData requestContextData = GlobalContextManager.get(REQUEST_CONTEXT);
+      if (requestContextData != null && requestContextData.getRequestContext() != null
+          && isNotBlank(requestContextData.getRequestContext().getClientIP())) {
+        return chain.proceed(request.newBuilder()
+                                 .header("X-Forwarded-For", requestContextData.getRequestContext().getClientIP())
+                                 .build());
+      } else {
+        return chain.proceed(request);
+      }
     };
   }
 

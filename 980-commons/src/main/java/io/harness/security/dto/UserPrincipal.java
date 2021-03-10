@@ -9,6 +9,7 @@ import static io.harness.security.dto.PrincipalType.USER;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.auth0.jwt.interfaces.Claim;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +23,9 @@ import lombok.Getter;
 public class UserPrincipal extends Principal {
   String accountId;
 
-  public UserPrincipal(String principal, String accountId) {
-    super(USER, principal);
+  public UserPrincipal(String name, String accountId) {
+    this.type = USER;
+    this.name = name;
     this.accountId = accountId;
   }
 

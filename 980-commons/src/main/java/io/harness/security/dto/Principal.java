@@ -13,13 +13,8 @@ import lombok.Getter;
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 public abstract class Principal {
-  private final PrincipalType type;
-  private final String name;
-
-  public Principal(PrincipalType type, String name) {
-    this.type = type;
-    this.name = name;
-  }
+  protected PrincipalType type;
+  protected String name;
 
   public abstract Map<String, String> getJWTClaims();
 }
