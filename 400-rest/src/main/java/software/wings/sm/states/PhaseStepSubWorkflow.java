@@ -244,6 +244,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case START_SERVICE:
       case ENABLE_SERVICE:
       case VERIFY_SERVICE:
+      case CUSTOM_DEPLOYMENT_PHASE_STEP:
         // Needs service instance id param
         List<String> serviceInstanceIds = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                               .stream()
