@@ -15,7 +15,7 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
-import io.harness.cvng.core.services.api.MonitoringTaskPerpetualTaskService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
@@ -37,7 +37,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   @Inject private CVConfigService cvConfigService;
   @Inject private NextGenService nextGenService;
   @Inject private Injector injector;
-  @Inject private MonitoringTaskPerpetualTaskService monitoringTaskPerpetualTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   @Override
   public List<DSConfig> list(String accountId, String connectorIdentifier, String productName) {
@@ -66,7 +66,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     cvConfigService.update(cvConfigUpdateResult.getUpdated());
 
     cvConfigService.save(cvConfigUpdateResult.getAdded());
-    monitoringTaskPerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+    monitoringSourcePerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
         dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
   }
 
@@ -84,7 +84,7 @@ public class DSConfigServiceImpl implements DSConfigService {
     }
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
     cvConfigService.save(cvConfigUpdateResult.getAdded());
-    monitoringTaskPerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+    monitoringSourcePerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
         dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
   }
 
@@ -104,7 +104,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   @Override
   public void delete(
       String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier) {
-    monitoringTaskPerpetualTaskService.deleteTask(
+    monitoringSourcePerpetualTaskService.deleteTask(
         accountId, orgIdentifier, projectIdentifier, monitoringSourceIdentifier);
     cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, monitoringSourceIdentifier);
   }

@@ -12,7 +12,6 @@ import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.event.grpc.PublishedMessage;
 import io.harness.event.payloads.ContainerStateProto;
 import io.harness.grpc.utils.HTimestamps;
@@ -21,6 +20,7 @@ import io.harness.rule.Owner;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils;
 
 import com.google.common.collect.ImmutableMap;
 import java.time.Duration;

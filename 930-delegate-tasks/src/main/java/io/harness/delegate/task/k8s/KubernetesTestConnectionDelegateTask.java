@@ -9,7 +9,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskR
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.k8s.KubernetesContainerService;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;
@@ -19,9 +18,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
-  @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private KubernetesValidationHandler kubernetesValidationHandler;
-  private static final String EMPTY_STR = "";
 
   public KubernetesTestConnectionDelegateTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,

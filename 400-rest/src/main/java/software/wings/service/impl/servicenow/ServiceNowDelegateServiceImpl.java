@@ -339,6 +339,7 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   }
 
   @Override
+  @SuppressWarnings("PMD")
   public ServiceNowExecutionData getIssueUrl(
       ServiceNowTaskParameters taskParameters, ServiceNowApprovalParams approvalParams) {
     JsonNode issueObj = getIssue(taskParameters);

@@ -4,13 +4,15 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 
 import software.wings.beans.Base;
 import software.wings.beans.entityinterface.KeywordsAware;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -20,8 +22,6 @@ import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
-@CdIndex(name = "account_gallery_key_idx", fields = { @Field("accountId")
-                                                      , @Field("galleryKey") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
@@ -29,6 +29,16 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "TemplateGalleryKeys")
 public class TemplateGallery extends Base implements KeywordsAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("account_gallery_key_idx")
+                 .field(TemplateGalleryKeys.accountId)
+                 .field(TemplateGalleryKeys.galleryKey)
+                 .build())
+        .build();
+  }
+
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String NAME_KEY = "name";
   public static final String GALLERY_KEY = "galleryKey";

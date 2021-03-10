@@ -4,13 +4,13 @@ import static io.harness.rule.OwnerRule.DHRUV;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.RAMA;
 
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_INVALID_YAML_CONTENT;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_INVALID_YAML_CONTENT_RESOURCE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_INVALID_YAML_FILE_PATH;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_CONTENT;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_CONTENT_INFRA_DEF;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_CONTENT_INFRA_DEF_RESOURCE_PATH;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_CONTENT_RESOURCE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_FILE_PATH;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_USER_GROUP;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_USER_GROUP_RESOURCE_PATH;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2_RESOURCE_PATH;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -59,10 +59,11 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
+    String yamlContentFromFile = readYamlStringInFile(BUILD_VALID_YAML_CONTENT_RESOURCE_PATH);
     ChangeContext<BuildWorkflowYaml> changeContext =
-        getChangeContext(BUILD_VALID_YAML_CONTENT, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlContentFromFile, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
 
-    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_CONTENT, BuildWorkflowYaml.class);
+    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(yamlContentFromFile, BuildWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -76,7 +77,7 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertThat(yamlContent).isEqualTo(BUILD_VALID_YAML_CONTENT);
+    assertThat(yamlContent).isEqualTo(yamlContent);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     // TODO find out why this couldn't be called
@@ -97,11 +98,11 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
+    String yamlStringInFile = readYamlStringInFile(BUILD_VALID_YAML_CONTENT_INFRA_DEF_RESOURCE_PATH);
     ChangeContext<BuildWorkflowYaml> changeContext =
-        getChangeContext(BUILD_VALID_YAML_CONTENT_INFRA_DEF, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlStringInFile, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
 
-    BuildWorkflowYaml yamlObject =
-        (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_CONTENT_INFRA_DEF, BuildWorkflowYaml.class);
+    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(yamlStringInFile, BuildWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -115,7 +116,7 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertThat(yamlContent).isEqualTo(BUILD_VALID_YAML_CONTENT_INFRA_DEF);
+    assertThat(yamlContent).isEqualTo(yamlStringInFile);
 
     yamlHandler.delete(changeContext);
 
@@ -127,8 +128,8 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    testFailures(BUILD_VALID_YAML_CONTENT, BUILD_VALID_YAML_FILE_PATH, BUILD_INVALID_YAML_CONTENT,
-        BUILD_INVALID_YAML_FILE_PATH, yamlHandler, BuildWorkflowYaml.class);
+    testFailures(readYamlStringInFile(BUILD_VALID_YAML_CONTENT_RESOURCE_PATH), BUILD_VALID_YAML_FILE_PATH,
+        BUILD_INVALID_YAML_CONTENT_RESOURCE_PATH, BUILD_INVALID_YAML_FILE_PATH, yamlHandler, BuildWorkflowYaml.class);
   }
 
   @Test
@@ -138,11 +139,11 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
+    String yamlFileContent = readYamlStringInFile(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2_RESOURCE_PATH);
     ChangeContext<BuildWorkflowYaml> changeContext =
-        getChangeContext(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlFileContent, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
 
-    BuildWorkflowYaml yamlObject =
-        (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2, BuildWorkflowYaml.class);
+    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(yamlFileContent, BuildWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -156,7 +157,7 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertThat(yamlContent).isEqualTo(BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2);
+    assertThat(yamlContent).isEqualTo(yamlFileContent);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     assertThat(savedWorkflow).isNotNull();
@@ -175,10 +176,11 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
+    String yamlStringInFile = readYamlStringInFile(BUILD_VALID_YAML_USER_GROUP_RESOURCE_PATH);
     ChangeContext<BuildWorkflowYaml> changeContext =
-        getChangeContext(BUILD_VALID_YAML_USER_GROUP, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlStringInFile, BUILD_VALID_YAML_FILE_PATH, yamlHandler);
 
-    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(BUILD_VALID_YAML_USER_GROUP, BuildWorkflowYaml.class);
+    BuildWorkflowYaml yamlObject = (BuildWorkflowYaml) getYaml(yamlStringInFile, BuildWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -192,7 +194,7 @@ public class BuildWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertThat(yamlContent).isEqualTo(BUILD_VALID_YAML_USER_GROUP);
+    assertThat(yamlContent).isEqualTo(yamlStringInFile);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     assertThat(savedWorkflow).isNotNull();

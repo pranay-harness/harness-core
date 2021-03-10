@@ -3,7 +3,8 @@ import json
 import os
 from google.cloud import bigquery
 import datetime
-from util import create_dataset, if_tbl_exists, createTable
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_
 
 """
 This is for BQ Transfer
@@ -98,30 +99,33 @@ def main(event, context):
         jsonData["query_type"] = "BigQueryCopy"
 
     jsonData["accountId"] = jsonData["destinationDatasetId"].split("BillingReport_")[-1]
+    util.ACCOUNTID_LOG = jsonData["accountId"]
     if jsonData["accountId"] in os.environ.get("disable_for_accounts", "").split(","):
-        print("Execution disabled for this account :%s" % jsonData["accountId"])
+        print_("Execution disabled for this account :%s" % jsonData["accountId"])
         return
     state = jsonData["state"] # SUCCEEDED
     jsonData["datasetName"] = jsonData["destinationDatasetId"] # for compatibility
-    print(jsonData)
+    print_(jsonData)
     client = bigquery.Client(jsonData["projectName"])
     dataset = client.dataset(jsonData["destinationDatasetId"])
     preAggragatedTableRef = dataset.table("preAggregated")
     preAggragatedTableTableName = "%s.BillingReport_%s.%s" % (jsonData["projectName"], jsonData["accountId"], "preAggregated")
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.BillingReport_%s.%s" % (jsonData["projectName"], jsonData["accountId"], "unifiedTable")
-    create_dataset(client, jsonData)
+    #create_dataset(client, jsonData)
+
+    create_dataset(client, jsonData["datasetName"])
     if not if_tbl_exists(client, preAggragatedTableRef):
-        print("%s table does not exists, creating table..." % preAggragatedTableRef)
+        print_("%s table does not exists, creating table..." % preAggragatedTableRef)
         createTable(client, preAggragatedTableTableName)
     else:
-        print("%s table exists" % preAggragatedTableTableName)
+        print_("%s table exists" % preAggragatedTableTableName)
 
     if not if_tbl_exists(client, unifiedTableRef):
-        print("%s table does not exists, creating table..." % unifiedTableRef)
+        print_("%s table does not exists, creating table..." % unifiedTableRef)
         createTable(client, unifiedTableTableName)
     else:
-        print("%s table exists" % unifiedTableTableName)
+        print_("%s table exists" % unifiedTableTableName)
 
     if state == "SUCCEEDED":
         loadIntoPreaggregated(client, jsonData)
@@ -156,7 +160,7 @@ def loadIntoUnified(client, jsonData):
     query_job = client.query(query, job_config=job_config)
     #print(query)
     results = query_job.result()
-    print("Loaded into unifiedTable table...")
+    print_("Loaded into unifiedTable table...")
 
 
 def loadIntoPreaggregated(client, jsonData):
@@ -188,4 +192,4 @@ def loadIntoPreaggregated(client, jsonData):
     query_job = client.query(query, job_config=job_config)
     #print(query)
     results = query_job.result()
-    print("Loaded into preAggregated table...")
+    print_("Loaded into preAggregated table...")

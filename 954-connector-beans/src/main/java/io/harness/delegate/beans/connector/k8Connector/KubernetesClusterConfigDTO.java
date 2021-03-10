@@ -4,6 +4,8 @@ import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -18,10 +20,10 @@ public class KubernetesClusterConfigDTO extends ConnectorConfigDTO {
   @Valid @NotNull KubernetesCredentialDTO credential;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     if (credential.getKubernetesCredentialType() == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO k8sManualCreds = (KubernetesClusterDetailsDTO) credential.getConfig();
-      return k8sManualCreds.getAuth().getCredentials();
+      return Collections.singletonList(k8sManualCreds.getAuth().getCredentials());
     }
     return null;
   }

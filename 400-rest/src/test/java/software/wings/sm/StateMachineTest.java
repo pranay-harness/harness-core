@@ -1,6 +1,5 @@
 package software.wings.sm;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.VIKAS_S;
@@ -11,16 +10,11 @@ import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 
-import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
-import io.harness.tasks.ResponseData;
-import io.harness.threading.ThreadPool;
-import io.harness.waiter.StringNotifyResponseData;
-import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.GeneralNotifyEventListener;
@@ -35,20 +29,13 @@ import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.rules.Listeners;
-import software.wings.service.StaticMap;
-import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.StateMachineTestBase.StateSync;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

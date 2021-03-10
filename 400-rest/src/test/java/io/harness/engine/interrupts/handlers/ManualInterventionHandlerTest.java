@@ -20,8 +20,8 @@ import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.engine.interrupts.steps.SimpleStepAsyncParams;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
@@ -93,7 +93,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
 
     Interrupt interrupt =
         orchestrationService.registerInterrupt(InterruptPackage.builder()
-                                                   .interruptType(ExecutionInterruptType.RETRY)
+                                                   .interruptType(InterruptType.RETRY)
                                                    .planExecutionId(execution.getUuid())
                                                    .nodeExecutionId(nodeExecution.getUuid())
                                                    .parameters(SimpleStepAsyncParams.builder().build())
@@ -123,7 +123,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
     assertThat(nodeExecution.getStatus()).isEqualTo(INTERVENTION_WAITING);
 
     Interrupt interrupt = orchestrationService.registerInterrupt(InterruptPackage.builder()
-                                                                     .interruptType(ExecutionInterruptType.MARK_SUCCESS)
+                                                                     .interruptType(InterruptType.MARK_SUCCESS)
                                                                      .planExecutionId(execution.getUuid())
                                                                      .nodeExecutionId(nodeExecution.getUuid())
                                                                      .build());
@@ -152,7 +152,7 @@ public class ManualInterventionHandlerTest extends WingsBaseTest {
     assertThat(nodeExecution.getStatus()).isEqualTo(INTERVENTION_WAITING);
 
     Interrupt interrupt = orchestrationService.registerInterrupt(InterruptPackage.builder()
-                                                                     .interruptType(ExecutionInterruptType.MARK_FAILED)
+                                                                     .interruptType(InterruptType.MARK_FAILED)
                                                                      .planExecutionId(execution.getUuid())
                                                                      .nodeExecutionId(nodeExecution.getUuid())
                                                                      .build());

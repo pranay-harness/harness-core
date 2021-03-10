@@ -11,9 +11,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+@Slf4j
 public class GitRestUtils {
   static final int MAX_RETRIES = 60;
   static final int DELAY_IN_MS = 6000;
@@ -32,11 +34,7 @@ public class GitRestUtils {
 
   public static List<GitData> getGitEnvForApp(String envName, String appName) {
     String var = appName + "/Environments/" + envName;
-
-    List<GitData> response =
-        (List<GitData>) retry.executeWithRetry(() -> retriveGitResponse(var), new GitResponseMatcher(), null);
-
-    return response;
+    return (List<GitData>) retry.executeWithRetry(() -> retriveGitResponse(var), new GitResponseMatcher(), null);
   }
 
   private static List<GitData> retriveGitResponse(String var) {
@@ -54,7 +52,7 @@ public class GitRestUtils {
       try {
         gitData = mapper.readValue(jsonObj.toString(), GitData.class);
       } catch (IOException e) {
-        e.printStackTrace();
+        log.error("", e);
       }
       gitDataList.add(gitData);
     }

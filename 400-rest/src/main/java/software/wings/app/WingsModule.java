@@ -51,7 +51,6 @@ import io.harness.cf.ApiException;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.client.api.CfClient;
 import io.harness.cf.client.api.CfClientException;
-import io.harness.cf.client.api.exception.CFException;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -71,6 +70,8 @@ import io.harness.datahandler.services.AdminUserService;
 import io.harness.datahandler.services.AdminUserServiceImpl;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
+import io.harness.delegate.DelegateConfigurationServiceProvider;
+import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.encryptors.CustomEncryptor;
@@ -147,6 +148,8 @@ import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secretmanagers.SecretsManagerRBACServiceImpl;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsAuditServiceImpl;
+import io.harness.secrets.SecretsDelegateCacheHelperService;
+import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.secrets.SecretsFileService;
@@ -277,6 +280,8 @@ import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
+import software.wings.provider.NoopDelegateConfigurationServiceProviderImpl;
+import software.wings.provider.NoopDelegatePropertiesServiceProviderImpl;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.resources.graphql.GraphQLUtils;
@@ -1462,6 +1467,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
     bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
+    bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
+    bind(DelegatePropertiesServiceProvider.class).to(NoopDelegatePropertiesServiceProviderImpl.class);
+    bind(DelegateConfigurationServiceProvider.class).to(NoopDelegateConfigurationServiceProviderImpl.class);
     bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
     bind(SecretManagerConfigService.class).to(SecretManagerConfigServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
@@ -1570,7 +1578,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     try {
       return new CfClient(apiKey);
-    } catch (CfClientException | ApiException | CFException e) {
+    } catch (CfClientException | ApiException e) {
       log.error("Failed to initialize the CF client, {}", e.getMessage());
     }
     return null;

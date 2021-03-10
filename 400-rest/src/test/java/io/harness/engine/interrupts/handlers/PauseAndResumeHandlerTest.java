@@ -1,8 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
@@ -22,6 +20,7 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
@@ -77,7 +76,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
 
     // Issue Pause Interrupt
     Interrupt handledPauseInterrupt = orchestrationService.registerInterrupt(
-        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(PAUSE_ALL).build());
+        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(InterruptType.PAUSE_ALL).build());
     assertThat(handledPauseInterrupt).isNotNull();
     assertThat(handledPauseInterrupt.getState()).isEqualTo(PROCESSING);
 
@@ -89,8 +88,11 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
     assertThat(pausedPlanExecution.getStatus()).isEqualTo(PAUSED);
 
     // Issue Resume Interrupt
-    Interrupt handledResumeInterrupt = orchestrationService.registerInterrupt(
-        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(RESUME_ALL).build());
+    Interrupt handledResumeInterrupt =
+        orchestrationService.registerInterrupt(InterruptPackage.builder()
+                                                   .planExecutionId(execution.getUuid())
+                                                   .interruptType(InterruptType.RESUME_ALL)
+                                                   .build());
     assertThat(handledResumeInterrupt).isNotNull();
 
     // Wait for Plan To be complete

@@ -128,6 +128,9 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
           case "GCP":
             ceMetadataRecordBuilder.gcpDataPresent(row.get(countConst).getDoubleValue() > 0);
             break;
+          case "AZURE":
+            ceMetadataRecordBuilder.azureDataPresent(row.get(countConst).getDoubleValue() > 0);
+            break;
           default:
             break;
         }

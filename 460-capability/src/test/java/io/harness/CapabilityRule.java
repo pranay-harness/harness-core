@@ -1,6 +1,5 @@
 package io.harness;
 
-import io.harness.beans.EmbeddedUser;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
@@ -8,7 +7,6 @@ import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
-import io.harness.persistence.UserProvider;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.DelegateTasksBeansRegistrars;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -84,13 +82,6 @@ public class CapabilityRule implements MethodRule, InjectorRuleMixin, MongoRuleM
         }
       }
     }
-    HPersistence persistence = injector.getInstance(HPersistence.class);
-    persistence.registerUserProvider(new UserProvider() {
-      @Override
-      public EmbeddedUser activeUser() {
-        return EmbeddedUser.builder().email("test@test.com").name("test").uuid("dummy").build();
-      }
-    });
   }
 
   @Override

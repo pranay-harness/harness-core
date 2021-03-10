@@ -80,6 +80,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
@@ -120,6 +121,7 @@ public class MultiArtifactCommandStateTest extends CategoryTest {
   @Mock private ActivityHelperService activityHelperService;
   @Mock private AwsCommandHelper mockAwsCommandHelper;
   @Mock private DelegateService delegateService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private CommandState commandState = new CommandState(COMMAND_NAME, COMMAND_NAME);
 

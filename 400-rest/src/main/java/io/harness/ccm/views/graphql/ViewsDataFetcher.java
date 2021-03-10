@@ -15,6 +15,6 @@ public class ViewsDataFetcher extends AbstractObjectDataFetcher<QLCEViewsData, Q
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLCEViewsData fetch(QLNoOpQueryParameters parameters, String accountId) {
-    return QLCEViewsData.builder().customerViews(viewService.getAllViews(accountId)).build();
+    return QLCEViewsData.builder().customerViews(viewService.getAllViews(accountId, false)).build();
   }
 }

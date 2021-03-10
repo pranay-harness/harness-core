@@ -294,10 +294,14 @@ public class ArtifactCollectionUtils {
 
   public DelegateTaskBuilder fetchCustomDelegateTask(String waitId, ArtifactStream artifactStream,
       ArtifactStreamAttributes artifactStreamAttributes, boolean isCollection) {
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
-                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                                                  .waitId(waitId)
-                                                  .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder().waitId(waitId).expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_DELEGATE_SCOPING, artifactStream.getAccountId())) {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactStream.getAppId());
+    } else {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID);
+    }
+
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
 
     BuildSourceRequestType requestType = BuildSourceRequestType.GET_BUILDS;
@@ -749,18 +753,21 @@ public class ArtifactCollectionUtils {
                               .buildSourceRequestType(requestType);
     }
 
-    return DelegateTask.builder()
-        .accountId(accountId)
-        .rank(DelegateTaskRank.OPTIONAL)
-        .data(TaskData.builder()
-                  .async(false)
-                  .taskType(TaskType.BUILD_SOURCE_TASK.name())
-                  .parameters(new Object[] {parametersBuilder.build()})
-                  .timeout(TimeUnit.MINUTES.toMillis(1))
-                  .build())
-        .tags(tags)
-        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
-        .build();
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId(accountId)
+                                                  .rank(DelegateTaskRank.OPTIONAL)
+                                                  .data(TaskData.builder()
+                                                            .async(false)
+                                                            .taskType(TaskType.BUILD_SOURCE_TASK.name())
+                                                            .parameters(new Object[] {parametersBuilder.build()})
+                                                            .timeout(TimeUnit.MINUTES.toMillis(1))
+                                                            .build())
+                                                  .tags(tags)
+                                                  .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_DELEGATE_SCOPING, artifactStream.getAccountId())) {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactStream.getAppId());
+    }
+    return delegateTaskBuilder.build();
   }
 
   /**

@@ -15,6 +15,7 @@ shared_dependencies = [
     "//420-delegate-service:module",
     "//430-cv-nextgen-commons:module",
     "//450-ce-views:module",
+    "//460-capability:module",
     "//470-alert:module",
     "//480-alert-beans:module",
     "//490-ce-commons:module",
@@ -92,6 +93,9 @@ shared_dependencies = [
     "@maven//:com_amazonaws_aws_java_sdk_sts",
     "@maven//:com_amazonaws_jmespath_java",
     "@maven//:com_auth0_java_jwt",
+    "@maven//:com_azure_azure_identity",
+    "@maven//:com_azure_azure_storage_blob",
+    "@maven//:com_azure_azure_storage_common",
     "@maven//:com_bettercloud_vault_java_driver",
     "@maven//:com_bugsnag_bugsnag",
     "@maven//:com_carrotsearch_hppc",
@@ -193,6 +197,7 @@ shared_dependencies = [
     "@maven//:com_google_inject_guice",
     "@maven//:com_google_j2objc_j2objc_annotations",
     "@maven//:com_google_oauth_client_google_oauth_client",
+    "@maven//:com_googlecode_owasp_java_html_sanitizer_owasp_java_html_sanitizer",
     "@maven//:com_google_protobuf_protobuf_java",
     "@maven//:com_google_protobuf_protobuf_java_util",
     "@maven//:com_googlecode_javaewah_JavaEWAH",
@@ -216,6 +221,7 @@ shared_dependencies = [
     "@maven//:com_mchange_c3p0",
     "@maven//:com_mchange_mchange_commons_java",
     "@maven//:com_microsoft_azure_adal4j",
+    "@maven//:com_microsoft_azure_msal4j",
     "@maven//:com_microsoft_azure_azure",
     "@maven//:com_microsoft_azure_azure_annotations",
     "@maven//:com_microsoft_azure_azure_client_authentication",
@@ -760,7 +766,7 @@ java_library(
     deps = test_dependencies,
 )
 
-#checkstyle()
+checkstyle()
 
 sonarqube_test(
     name = "sq_mycomponent",

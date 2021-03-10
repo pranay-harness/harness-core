@@ -1,7 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.interrupts.ExecutionInterruptType.MARK_FAILED;
 import static io.harness.interrupts.ExecutionInterruptType.PAUSE_FOR_INPUTS;
 
 import static software.wings.api.EnvStateExecutionData.Builder.anEnvStateExecutionData;
@@ -59,7 +61,10 @@ public class PipelineStageExecutionAdvisor implements ExecutionEventAdvisor {
     }
     ExecutionResponse executionResponse = workflowState.checkDisableAssertion(context, workflowService, log);
     if (executionResponse != null) {
-      return anExecutionEventAdvice().withExecutionResponse(executionResponse).build();
+      return anExecutionEventAdvice()
+          .withExecutionInterruptType(executionResponse.getExecutionStatus() == FAILED ? MARK_FAILED : null)
+          .withExecutionResponse(executionResponse)
+          .build();
     }
 
     List<String> runtimeInputsVariables = workflowState.getRuntimeInputVariables();

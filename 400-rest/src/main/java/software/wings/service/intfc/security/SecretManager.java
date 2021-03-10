@@ -126,6 +126,9 @@ public interface SecretManager extends OwnedByAccount {
   boolean canUseSecretsInAppAndEnv(
       Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest);
 
+  List<String> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest);
+
   boolean hasUpdateAccessToSecrets(Set<String> secretIds, String accountId);
 
   void clearDefaultFlagOfSecretManagers(String accountId);

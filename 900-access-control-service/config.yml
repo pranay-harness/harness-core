@@ -32,6 +32,10 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
 
 mongo:
   uri: mongodb://localhost:27017/accesscontrol
@@ -41,10 +45,18 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
   transactionsEnabled: true
+  aliasDBName: accesscontrol
 
-decisionModuleConfig:
-  resourceGroupServiceConfig:
-    baseUrl: https://localhost:7090
+accessControlClient:
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
-  resourceGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+resourceGroupServiceConfig:
+  baseUrl: https://localhost:7090
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+resourceGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

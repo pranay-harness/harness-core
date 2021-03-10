@@ -1,43 +1,24 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
-import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static io.grpc.Status.UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
-import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
-import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
-import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
-import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
-import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
-import io.harness.ngtriggers.beans.source.NGTriggerSource;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
-import io.harness.ngtriggers.beans.source.webhook.*;
 import io.harness.ngtriggers.helpers.TriggerFilterStore;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
-import io.harness.product.ci.scm.proto.ParseWebhookResponse;
-import io.harness.product.ci.scm.proto.PullRequest;
-import io.harness.product.ci.scm.proto.PullRequestHook;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
-import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

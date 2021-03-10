@@ -16,4 +16,8 @@ public interface K8InfoDataService {
   @DelegateTaskType(TaskType.K8_FETCH_WORKLOADS)
   List<String> getWorkloads(String namespace, DataCollectionConnectorBundle bundle,
       List<EncryptedDataDetail> encryptedDataDetails, String filter);
+
+  @DelegateTaskType(TaskType.K8_FETCH_EVENTS)
+  List<String> checkCapabilityToGetEvents(
+      DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails);
 }

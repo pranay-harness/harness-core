@@ -37,6 +37,15 @@ awsS3SyncConfig:
   awsSecretKey: awsS3SyncSecretKeyPlaceHolder
   region: awsS3SyncRegionPlaceHolder
 
+azureStorageSyncConfig:
+  azureStorageAccountName: PlaceHolder
+  azureStorageContainerName: PlaceHolder
+  azureAppClientId: PlaceHolder
+  azureAppClientSecret: PlaceHolder
+  azureTenantId: PlaceHolder
+  azureSasToken: PlaceHolder
+  syncJobDisabled: true
+
 billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
@@ -62,6 +71,10 @@ segmentConfig:
 
 baseUrl: https://localhost:8000
 
+cfConfig:
+  apiKey: ""
+  baseUrl: ""
+
 reportScheduleConfig:
   enabled: true
   templateName: "ce_scheduled_report"
@@ -70,3 +83,7 @@ scheduler-jobs-config:
   budgetAlertsJobCron: "0 30 14 * * ?"
   weeklyReportsJobCron: "0 0 14 * * MON"
   budgetCostUpdateJobCron: "0 0 14 * * ?"
+
+cePythonService:
+  pythonServiceUrl: "http://0.0.0.0:8081"
+  useProphet: false

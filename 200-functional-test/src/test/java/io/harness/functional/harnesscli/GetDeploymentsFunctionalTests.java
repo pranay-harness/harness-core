@@ -29,6 +29,7 @@ import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -56,6 +57,7 @@ public class GetDeploymentsFunctionalTests extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getDeploymentsTest() {
     // Running harness get deployments before deploying a workflow
     String appId = application.getAppId();

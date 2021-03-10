@@ -258,5 +258,45 @@ unifiedTableTableSchema = [
         "mode": "REPEATED",
         "name": "labels",
         "type": "RECORD"
-      }
+      },
+        {
+            "name": "azureMeterCategory",
+            "type": "STRING"
+        },
+        {
+            "name": "azureMeterSubcategory",
+            "type": "STRING"
+        },
+        {
+            "name": "azureMeterId",
+            "type": "STRING"
+        },
+        {
+            "name": "azureMeterName",
+            "type": "STRING"
+        },
+        {
+            "name": "azureResourceType",
+            "type": "STRING"
+        },
+        {
+            "name": "azureServiceTier",
+            "type": "STRING"
+        },
+        {
+            "name": "azureInstanceId",
+            "type": "STRING"
+        },
+        {
+            "name": "azureResourceGroup",
+            "type": "STRING"
+        },
+        {
+            "name": "azureSubscriptionGuid",
+            "type": "STRING"
+        },
+        {
+            "name": "azureServiceName",
+            "type": "STRING"
+        }
     ]

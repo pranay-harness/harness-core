@@ -1,5 +1,10 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.azure.model.AzureConstants.ARTIFACTS_FOLDER_NAME;
+import static io.harness.azure.model.AzureConstants.ASSIGN_JSON_FILE_NAME;
+import static io.harness.azure.model.AzureConstants.BLUEPRINT_JSON_FILE_NAME;
+import static io.harness.azure.model.AzureConstants.UNIX_SEPARATOR;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
@@ -9,6 +14,7 @@ import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 
+import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
 import io.harness.azure.model.ARMScopeType;
@@ -20,7 +26,9 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
+import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
+import io.harness.delegate.task.azure.arm.request.AzureBlueprintDeploymentParameters;
 import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -48,7 +56,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.sm.states.azure.AzureSweepingOutputServiceHelper;
 import software.wings.sm.states.azure.AzureVMSSStateHelper;
 
 import com.google.inject.Inject;
@@ -59,11 +66,15 @@ import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 
+@Slf4j
 @FieldNameConstants(innerTypeName = "ARMProvisionStateKeys")
 public class ARMProvisionState extends State {
   private static final String TEMPLATE_KEY = "TEMPLATE";
   private static final String VARIABLES_KEY = "VARIABLES";
+  private static final String BLUEPRINT_FOLDER_KEY = "BLUEPRINT";
 
   @Getter @Setter protected String provisionerId;
   @Getter @Setter protected String cloudProviderId;
@@ -82,7 +93,6 @@ public class ARMProvisionState extends State {
   @Inject protected DelegateService delegateService;
   @Inject private ActivityService activityService;
   @Inject protected AzureVMSSStateHelper azureVMSSStateHelper;
-  @Inject protected AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
 
   public ARMProvisionState(String name) {
     super(name, StateType.ARM_CREATE_RESOURCE.name());
@@ -101,20 +111,36 @@ public class ARMProvisionState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
+    return provisioner.isBlueprint() ? executeBlueprintTaskInternal(context, provisioner)
+                                     : executeARMTaskInternal(context, provisioner);
+  }
+
+  private ExecutionResponse executeBlueprintTaskInternal(
+      ExecutionContext context, ARMInfrastructureProvisioner provisioner) {
+    Activity activity = helper.createBlueprintActivity(context, getStateType());
+    return executeBlueprintGitTask(context, provisioner, activity);
+  }
+
+  private ExecutionResponse executeARMTaskInternal(ExecutionContext context, ARMInfrastructureProvisioner provisioner) {
     boolean executeGitTask = helper.executeGitTask(provisioner, parametersGitFileConfig);
-    Activity activity = helper.createActivity(context, executeGitTask, getStateType());
+    Activity activity = helper.createARMActivity(context, executeGitTask, getStateType());
 
     if (executeGitTask) {
-      return executeGitTask(context, provisioner, activity);
+      return executeARMGitTask(context, provisioner, activity);
     } else {
-      return executeARMTask(context, null, activity.getUuid());
+      return executeARMTask(context, null, provisioner, activity.getUuid());
     }
   }
 
-  private ExecutionResponse executeGitTask(
+  private ExecutionResponse executeBlueprintGitTask(
       ExecutionContext context, ARMInfrastructureProvisioner provisioner, Activity activity) {
-    ARMStateExecutionDataBuilder builder = ARMStateExecutionData.builder();
-    builder.taskType(GIT_FETCH_FILES_TASK);
+    Map<String, GitFetchFilesConfig> filesConfigMap = new HashMap<>();
+    filesConfigMap.put(BLUEPRINT_FOLDER_KEY, helper.createGitFetchFilesConfig(provisioner.getGitFileConfig(), context));
+    return executeGitTask(context, activity, filesConfigMap);
+  }
+
+  private ExecutionResponse executeARMGitTask(
+      ExecutionContext context, ARMInfrastructureProvisioner provisioner, Activity activity) {
     Map<String, GitFetchFilesConfig> filesConfigMap = new HashMap<>();
     if (GIT == provisioner.getSourceType()) {
       filesConfigMap.put(TEMPLATE_KEY, helper.createGitFetchFilesConfig(provisioner.getGitFileConfig(), context));
@@ -122,6 +148,14 @@ public class ARMProvisionState extends State {
     if (parametersGitFileConfig != null) {
       filesConfigMap.put(VARIABLES_KEY, helper.createGitFetchFilesConfig(parametersGitFileConfig, context));
     }
+
+    return executeGitTask(context, activity, filesConfigMap);
+  }
+
+  private ExecutionResponse executeGitTask(
+      ExecutionContext context, Activity activity, Map<String, GitFetchFilesConfig> filesConfigMap) {
+    ARMStateExecutionDataBuilder builder = ARMStateExecutionData.builder();
+    builder.taskType(GIT_FETCH_FILES_TASK);
     GitFetchFilesTaskParams taskParams = GitFetchFilesTaskParams.builder()
                                              .activityId(activity.getUuid())
                                              .accountId(context.getAccountId())
@@ -156,15 +190,8 @@ public class ARMProvisionState extends State {
         .build();
   }
 
-  private ExecutionResponse executeARMTask(
-      ExecutionContext context, ARMStateExecutionData stateExecutionData, String activityId) {
-    ARMStateExecutionDataBuilder builder = ARMStateExecutionData.builder();
-    builder.taskType(TaskType.AZURE_ARM_TASK);
-    builder.activityId(activityId);
-    ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
-    if (stateExecutionData != null) {
-      builder.fetchFilesResult(stateExecutionData.getFetchFilesResult());
-    }
+  private ExecutionResponse executeARMTask(ExecutionContext context, ARMStateExecutionData stateExecutionData,
+      ARMInfrastructureProvisioner provisioner, String activityId) {
     String templateBody;
     if (GIT == provisioner.getSourceType()) {
       templateBody = helper.extractJsonFromGitResponse(stateExecutionData, TEMPLATE_KEY);
@@ -196,6 +223,66 @@ public class ARMProvisionState extends State {
             .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
             .build();
 
+    return executeTask(context, taskParams, stateExecutionData, activityId);
+  }
+
+  private ExecutionResponse executeBlueprintTask(ExecutionContext context, ARMStateExecutionData stateExecutionData,
+      ARMInfrastructureProvisioner provisioner, String activityId) {
+    String filePath = provisioner.getGitFileConfig().getFilePath();
+    String assignJsonFilePath = FilenameUtils.concat(filePath, ASSIGN_JSON_FILE_NAME);
+    String blueprintJsonFilePath = FilenameUtils.concat(filePath, BLUEPRINT_JSON_FILE_NAME);
+    String artifactsFolderPath = FilenameUtils.concat(filePath, ARTIFACTS_FOLDER_NAME + UNIX_SEPARATOR);
+
+    String assignmentJson =
+        helper.extractJsonFromGitResponse(stateExecutionData, BLUEPRINT_FOLDER_KEY, assignJsonFilePath)
+            .orElseThrow(()
+                             -> new InvalidRequestException(format(
+                                 "Not found assign.json file on path, assignJsonFilePath: %s", assignJsonFilePath)));
+
+    String blueprintJson =
+        helper.extractJsonFromGitResponse(stateExecutionData, BLUEPRINT_FOLDER_KEY, blueprintJsonFilePath)
+            .orElseThrow(
+                ()
+                    -> new InvalidRequestException(format(
+                        "Not found blueprint.json file on path, blueprintJsonFilePath: %s", blueprintJsonFilePath)));
+
+    Map<String, String> artifacts =
+        helper.extractJSONsFromGitResponse(stateExecutionData, BLUEPRINT_FOLDER_KEY, artifactsFolderPath);
+
+    if (isEmpty(artifacts)) {
+      log.warn("Not found artifacts on path, artifactsFolderPath: {}", artifactsFolderPath);
+    }
+
+    log.info(
+        "Blueprint repo info, filePath: {}, assignJsonFilePath: {}, blueprintJsonFilePath: {}, artifactsFolderPath: {} ",
+        filePath, assignJsonFilePath, blueprintJsonFilePath, artifactsFolderPath);
+    artifacts.replaceAll((key, value) -> context.renderExpression(value));
+
+    AzureBlueprintDeploymentParameters taskParams =
+        AzureBlueprintDeploymentParameters.builder()
+            .appId(context.getAppId())
+            .accountId(context.getAccountId())
+            .activityId(activityId)
+            .assignmentJson(context.renderExpression(assignmentJson))
+            .blueprintJson(context.renderExpression(blueprintJson))
+            .artifacts(artifacts)
+            .commandName(ARMStateHelper.AZURE_BLUEPRINT_COMMAND_UNIT_TYPE)
+            .timeoutIntervalInMin(helper.renderTimeout(timeoutExpression, context))
+            .build();
+
+    return executeTask(context, taskParams, stateExecutionData, activityId);
+  }
+
+  private ExecutionResponse executeTask(ExecutionContext context, AzureARMTaskParameters taskParams,
+      ARMStateExecutionData stateExecutionData, String activityId) {
+    ARMStateExecutionDataBuilder builder = ARMStateExecutionData.builder();
+    builder.taskType(TaskType.AZURE_ARM_TASK);
+    builder.activityId(activityId);
+
+    if (stateExecutionData != null) {
+      builder.fetchFilesResult(stateExecutionData.getFetchFilesResult());
+    }
+
     AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> azureEncryptionDetails =
         azureVMSSStateHelper.getEncryptedDataDetails(context, cloudProviderId);
@@ -226,6 +313,7 @@ public class ARMProvisionState extends State {
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
         .stateExecutionData(builder.build())
+        .executionStatus(ExecutionStatus.SUCCESS)
         .build();
   }
 
@@ -274,7 +362,11 @@ public class ARMProvisionState extends State {
     }
     stateExecutionData.setFetchFilesResult(
         (GitFetchFilesFromMultipleRepoResult) executionResponse.getGitCommandResult());
-    return executeARMTask(context, stateExecutionData, stateExecutionData.getActivityId());
+
+    ARMInfrastructureProvisioner provisioner = helper.getProvisioner(context.getAppId(), provisionerId);
+    return provisioner.isBlueprint()
+        ? executeBlueprintTask(context, stateExecutionData, provisioner, stateExecutionData.getActivityId())
+        : executeARMTask(context, stateExecutionData, provisioner, stateExecutionData.getActivityId());
   }
 
   private ExecutionResponse handleAsyncInternalARMTask(
@@ -294,22 +386,32 @@ public class ARMProvisionState extends State {
           .executionStatus(executionStatus)
           .build();
     }
-    saveARMOutputs(context, executionResponse);
+    if (!isRollback()) {
+      saveARMOutputs(context, executionResponse);
+    }
     return ExecutionResponse.builder().stateExecutionData(stateExecutionData).executionStatus(executionStatus).build();
   }
 
   private void savePreDeploymentData(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {
+    if (preDeploymentDataDoesNotExist(executionResponse)) {
+      return;
+    }
     AzureARMDeploymentResponse azureTaskResponse =
         (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
     AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
     ARMPreExistingTemplate armPreExistingTemplate =
         ARMPreExistingTemplate.builder().preDeploymentData(preDeploymentData).build();
 
-    String prefix = String.format(
-        "%s-%s-%s", provisionerId, preDeploymentData.getSubscriptionId(), preDeploymentData.getResourceGroup());
-    if (!azureSweepingOutputServiceHelper.dataExist(context, prefix)) {
-      azureSweepingOutputServiceHelper.saveToSweepingOutPut(armPreExistingTemplate, prefix, context);
-    }
+    String key =
+        format("%s-%s-%s", provisionerId, preDeploymentData.getSubscriptionId(), preDeploymentData.getResourceGroup());
+    helper.savePreExistingTemplate(armPreExistingTemplate, key, context);
+  }
+
+  private boolean preDeploymentDataDoesNotExist(AzureTaskExecutionResponse executionResponse) {
+    AzureARMDeploymentResponse azureTaskResponse =
+        (AzureARMDeploymentResponse) executionResponse.getAzureTaskResponse();
+    AzureARMPreDeploymentData preDeploymentData = azureTaskResponse.getPreDeploymentData();
+    return preDeploymentData == null || isEmpty(preDeploymentData.getResourceGroupTemplateJson());
   }
 
   private void saveARMOutputs(ExecutionContext context, AzureTaskExecutionResponse executionResponse) {

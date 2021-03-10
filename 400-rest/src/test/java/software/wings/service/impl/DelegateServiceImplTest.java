@@ -15,10 +15,6 @@ import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VUK;
 
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_NAME;
-
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
@@ -42,6 +38,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
@@ -109,6 +106,10 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 public class DelegateServiceImplTest extends WingsBaseTest {
+  private static final String ACCOUNT_ID = "ACCOUNT_ID";
+  private static final String APP_ID = "APP_ID";
+  private static final String DELEGATE_NAME = "delegateName";
+
   private static final String HTTP_VAUTL_URL = "http://vautl.com";
   private static final String GOOGLE_COM = "http://google.com";
   private static final String US_EAST_2 = "us-east-2";
@@ -119,6 +120,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String TEST_SESSION_IDENTIFIER = generateUuid();
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
   private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();
+
+  private static final String TEST_DELEGATE_GROUP_NAME = "testDelegateGroupName";
 
   @Mock private UsageLimitedFeature delegatesFeature;
   @Mock private Broadcaster broadcaster;
@@ -421,7 +424,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateCEDelegate() {
-    long lastHeartBeart = DateTime.now().getMillis();
+    long lastHeartBeat = DateTime.now().getMillis();
     Delegate delegate =
         createDelegateBuilder().accountId(ACCOUNT_ID).delegateName(DELEGATE_NAME).uuid(generateUuid()).build();
     persistence.save(delegate);
@@ -429,7 +432,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     DelegateConnection delegateConnection = DelegateConnection.builder()
                                                 .accountId(ACCOUNT_ID)
                                                 .delegateId(delegate.getUuid())
-                                                .lastHeartbeat(lastHeartBeart)
+                                                .lastHeartbeat(lastHeartBeat)
                                                 .disconnected(false)
                                                 .build();
     persistence.save(delegateConnection);
@@ -439,18 +442,18 @@ public class DelegateServiceImplTest extends WingsBaseTest {
 
     CEDelegateStatus ceDelegateStatus = delegateService.validateCEDelegate(ACCOUNT_ID, DELEGATE_NAME);
 
-    verify(settingsService, times(1)).validateCEDelegateSetting(eq(ACCOUNT_ID), eq(DELEGATE_NAME));
+    verify(settingsService, times(1)).validateCEDelegateSetting(ACCOUNT_ID, DELEGATE_NAME);
 
     assertThat(ceDelegateStatus).isNotNull();
     assertThat(ceDelegateStatus.getFound()).isTrue();
     assertThat(ceDelegateStatus.getUuid()).isEqualTo(delegate.getUuid());
     assertThat(ceDelegateStatus.getMetricsServerCheck()).isNull();
     assertThat(ceDelegateStatus.getPermissionRuleList()).isNull();
-    assertThat(ceDelegateStatus.getLastHeartBeat()).isGreaterThanOrEqualTo(lastHeartBeart);
+    assertThat(ceDelegateStatus.getLastHeartBeat()).isGreaterThanOrEqualTo(lastHeartBeat);
     assertThat(ceDelegateStatus.getDelegateName()).isEqualTo(DELEGATE_NAME);
 
     assertThat(ceDelegateStatus.getConnections()).hasSizeGreaterThan(0);
-    assertThat(ceDelegateStatus.getConnections().get(0).getLastHeartbeat()).isEqualTo(lastHeartBeart);
+    assertThat(ceDelegateStatus.getConnections().get(0).getLastHeartbeat()).isEqualTo(lastHeartBeat);
   }
 
   @Test
@@ -936,11 +939,38 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     assertThat(delegateInitializationDetails.get(2).getDelegateId()).isEqualTo(delegateIds.get(2));
     assertThat(delegateInitializationDetails.get(2).isInitialized()).isTrue();
     assertThat(delegateInitializationDetails.get(2).isProfileError()).isFalse();
-    assertThat(delegateInitializationDetails.get(2).getProfileExecutedAt()).isEqualTo(0L);
+    assertThat(delegateInitializationDetails.get(2).getProfileExecutedAt()).isZero();
 
     assertThat(delegateInitializationDetails.get(3).getDelegateId()).isEqualTo(delegateIds.get(3));
     assertThat(delegateInitializationDetails.get(3).isInitialized()).isFalse();
     assertThat(delegateInitializationDetails.get(3).isProfileError()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testUpsertDelegateGroup_noExistingGroup() {
+    DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID);
+
+    assertThat(returnedDelegateGroup).isNotNull();
+    assertThat(returnedDelegateGroup.getUuid()).isNotEmpty();
+    assertThat(returnedDelegateGroup.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(returnedDelegateGroup.getName()).isEqualTo(TEST_DELEGATE_GROUP_NAME);
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void testAddDelegateToGroup_existingGroup() {
+    DelegateGroup delegateGroup = setUpDefaultDelegateGroupForTests();
+
+    DelegateGroup returnedDelegateGroup = delegateService.upsertDelegateGroup(TEST_DELEGATE_GROUP_NAME, ACCOUNT_ID);
+
+    assertThat(returnedDelegateGroup).isNotNull();
+    assertThat(returnedDelegateGroup.getUuid()).isNotEmpty();
+    assertThat(returnedDelegateGroup.getUuid()).isEqualTo(delegateGroup.getUuid());
+    assertThat(returnedDelegateGroup.getAccountId()).isEqualTo(delegateGroup.getAccountId());
+    assertThat(returnedDelegateGroup.getName()).isEqualTo(delegateGroup.getName());
   }
 
   private List<String> setUpDelegatesForInitializationTest() {
@@ -1011,5 +1041,14 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     delegateIds.add(delegateId_4);
 
     return delegateIds;
+  }
+
+  private DelegateGroup setUpDefaultDelegateGroupForTests() {
+    DelegateGroup delegateGroup = DelegateGroup.builder().name(TEST_DELEGATE_GROUP_NAME).accountId(ACCOUNT_ID).build();
+
+    String delegateGroupId = persistence.save(delegateGroup);
+    delegateGroup.setUuid(delegateGroupId);
+
+    return delegateGroup;
   }
 }

@@ -16,7 +16,7 @@ option go_package = "240_capability";
 // - consistent (they are either allowed, or not)
 // - self proving (validation through use)
 
-// Next ID: 18
+// Next ID: 17
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -32,7 +32,6 @@ message CapabilityParameters {
     SmbConnectionParameters smb_connection_parameters = 2;
     SmtpParameters smtp_parameters = 12;
     SocketConnectivityParameters socket_connectivity_parameters = 8;
-    SshHostValidationParameters ssh_host_validation_parameters = 17;
     SystemEnvParameters system_env_parameters = 9;
     TestingCapability testing_capability = 1;
     WinrmHostValidationParameters winrm_host_validation_parameters = 16;
@@ -99,12 +98,6 @@ message SocketConnectivityParameters {
   string host_name = 1;
   int32 port = 2;
   string url = 3;
-}
-
-// Testing whether a connection can be established to a given URL
-message SshHostValidationParameters {
-  string host_name = 1;
-  int32 port = 2;
 }
 
 // Checks whether the comparate is equal to the property or not

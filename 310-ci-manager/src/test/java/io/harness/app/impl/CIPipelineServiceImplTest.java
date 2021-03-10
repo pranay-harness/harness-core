@@ -111,7 +111,7 @@ public class CIPipelineServiceImplTest extends CIManagerTestBase {
     assertThat(stepElement.getType()).isEqualTo("RunTests");
     assertThat(stepElement.getIdentifier()).isEqualTo("runUnitTestsIntelligently");
     RunTestsStepInfo runTestsStepInfo = (RunTestsStepInfo) stepElement.getStepSpecType();
-    assertThat(runTestsStepInfo.getGoals()).isEqualTo("echo \"Running test\"");
+    assertThat(runTestsStepInfo.getArgs()).isEqualTo("echo \"Running test\"");
     assertThat(runTestsStepInfo.getBuildTool()).isEqualTo("maven");
     assertThat(runTestsStepInfo.getLanguage()).isEqualTo("java");
 

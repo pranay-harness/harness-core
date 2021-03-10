@@ -168,7 +168,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
-  private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
   public static final String PIPELINE_STEP_NAME = "PIPELINE_STEP_NAME";
   public static final String PIPELINE_STEP = "PIPELINE_STEP";
@@ -720,6 +720,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param executionResponse the execution response
    * @return the state execution instance
    */
+  @SuppressWarnings("PMD")
   StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
@@ -2299,6 +2300,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         log.info(DEBUG_LINE + "inside run of SmExecutionDispatcher");
@@ -2336,6 +2338,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         stateMachineExecutor.handleExecuteResponse(

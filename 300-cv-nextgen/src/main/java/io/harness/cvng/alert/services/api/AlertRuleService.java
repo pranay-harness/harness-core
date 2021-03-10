@@ -1,9 +1,9 @@
 package io.harness.cvng.alert.services.api;
 
 import io.harness.cvng.alert.beans.AlertRuleDTO;
-import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
@@ -22,10 +22,13 @@ public interface AlertRuleService {
   void deleteAlertRule(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 
   void processDeploymentVerification(String accountId, String orgIdentifier, String projectIdentifier,
-      String serviceIdentifier, String envIdentifier, ActivityType activityType, VerificationStatus verificationStatus);
+      String serviceIdentifier, String envIdentifier, ActivityType activityType, VerificationStatus verificationStatus,
+      Long startTime, Long duration, String deploymentTag);
 
   List<ActivityType> getActivityTypes(String accountId, String orgIdentifier, String projectIdentifier);
 
   void processRiskScore(String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier,
       String envIdentifier, CVMonitoringCategory category, Instant timeStamp, double riskScore);
+
+  void processDeploymentVerificationJobInstanceId(String verificationJobInstanceId);
 }

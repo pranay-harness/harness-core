@@ -23,7 +23,6 @@ import static software.wings.sm.StateType.CUSTOM_DEPLOYMENT_FETCH_INSTANCES;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -73,7 +72,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -106,7 +104,7 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
   final String POST_DEPLOYMENT_CONSTANT = "Post-Deployment";
   final String DUMMY_CLOUD_PROVIDER = "DUMMY_CLOUD_PROVIDER";
 
-  final String resourcePath = "./customDeployment";
+  final String resourcePath = "190-deployment-functional-tests/src/test/resources/customDeployment";
   final String fetchInstanceScript = "FetchInstanceScript";
   final String checkVarsScript = "CheckVariablesScript";
 
@@ -395,13 +393,8 @@ public class CustomDeploymentFunctionalTest extends AbstractFunctionalTest {
 
   public static String readFileContent(String filePath, String resourcePath) throws IOException {
     File scriptFile = null;
-    try {
-      scriptFile = new File(CustomDeploymentFunctionalTest.class.getClassLoader()
-                                .getResource(resourcePath + PATH_DELIMITER + filePath)
-                                .toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find script file " + filePath);
-    }
+    scriptFile = new File(resourcePath + PATH_DELIMITER + filePath);
+
     return FileUtils.readFileToString(scriptFile, "UTF-8");
   }
 }

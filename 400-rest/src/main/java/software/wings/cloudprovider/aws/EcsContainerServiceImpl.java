@@ -91,12 +91,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -115,6 +117,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private static final Integer ECS_LIST_SERVICES_MAX_RESULTS = 100;
   private static final Integer ECS_DESCRIBE_SERVICES_MAX_RESULTS = 10;
+  private static final Integer ECS_DESCRIBE_CONTAINER_INSTANCES_MAX_INPUT = 100;
 
   private ObjectMapper mapper = new ObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
@@ -1215,6 +1218,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
         }
       }
 
+      Set<String> originalTaskArnsSet = new HashSet<>(originalTaskArns);
+
       for (Task task : tasks) {
         if (task == null) {
           continue;
@@ -1257,7 +1262,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                .ecsContainerDetails(ecsContainerDetailsBuilder.build())
                                .ec2Instance(ec2Instance)
                                .status(Status.SUCCESS)
-                               .newContainer(!originalTaskArns.contains(task.getTaskArn()))
+                               .newContainer(!originalTaskArnsSet.contains(task.getTaskArn()))
                                .containerTasksReachable(mainContainer != null)
                                .build());
       }
@@ -1355,13 +1360,22 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
   private List<ContainerInstance> fetchContainerInstancesForTasks(List<Task> tasks, String clusterName, String region,
       List<EncryptedDataDetail> encryptedDataDetails, AwsConfig awsConfig) {
-    List<String> containerInstances =
-        tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(toList());
-    log.info("Container Instances = " + containerInstances);
-    return awsHelperService
-        .describeContainerInstances(region, awsConfig, encryptedDataDetails,
-            new DescribeContainerInstancesRequest().withCluster(clusterName).withContainerInstances(containerInstances))
-        .getContainerInstances();
+    Set<String> containerInstancesSet =
+        tasks.stream().map(Task::getContainerInstanceArn).filter(Objects::nonNull).collect(Collectors.toSet());
+    List<String> containerInstancesSetList = new ArrayList<>(containerInstancesSet);
+    log.info("Container Instances = " + containerInstancesSetList);
+    List<List<String>> containerInstancesSetListChunks =
+        Lists.partition(containerInstancesSetList, ECS_DESCRIBE_CONTAINER_INSTANCES_MAX_INPUT);
+    List<ContainerInstance> containerInstanceObjectList = new ArrayList<>();
+
+    containerInstancesSetListChunks.forEach(containerInstancesSetListChunk
+        -> containerInstanceObjectList.addAll(awsHelperService
+                                                  .describeContainerInstances(region, awsConfig, encryptedDataDetails,
+                                                      new DescribeContainerInstancesRequest()
+                                                          .withCluster(clusterName)
+                                                          .withContainerInstances(containerInstancesSetListChunk))
+                                                  .getContainerInstances()));
+    return containerInstanceObjectList;
   }
 
   EcsContainerDetailsBuilder getEcsContainerDetailsBuilder(Task ecsTask, Container container) {

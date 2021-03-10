@@ -1,0 +1,37 @@
+harnessApiVersion: '1.0'
+type: BUILD
+envName: ENV_NAME
+notificationRules:
+- conditions:
+  - FAILED
+  executionScope: WORKFLOW
+  notificationGroupAsExpression: false
+  notificationGroups:
+  - Account Administrator
+  userGroupAsExpression: false
+phases:
+- type: KUBERNETES
+  daemonSet: false
+  infraDefinitionName: INFRA_NAME
+  name: Phase 1
+  phaseSteps:
+  - type: PREPARE_STEPS
+    name: Prepare Steps
+    stepsInParallel: false
+  - type: COLLECT_ARTIFACT
+    name: Collect Artifact
+    steps:
+    - type: ARTIFACT_COLLECTION
+      name: Artifact Collection
+      properties:
+        artifactStreamName: gcr.io_exploration-161417_todolist
+        buildNo: latest
+        serviceName: SERVICE_NAME
+    stepsInParallel: false
+  - type: WRAP_UP
+    name: Wrap Up
+    stepsInParallel: false
+  provisionNodes: false
+  serviceName: SERVICE_NAME
+  statefulSet: false
+templatized: false

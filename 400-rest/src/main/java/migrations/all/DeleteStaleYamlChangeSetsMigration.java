@@ -19,7 +19,7 @@ import migrations.Migration;
 
 @Slf4j
 public class DeleteStaleYamlChangeSetsMigration implements Migration {
-  public static final String BATCH_SIZE = "2000";
+  public static final String BATCH_SIZE = "500";
   public static final int RETENTION_PERIOD_IN_DAYS = 30;
 
   @Inject WingsPersistence wingsPersistence;

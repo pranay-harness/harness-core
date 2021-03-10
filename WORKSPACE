@@ -1051,6 +1051,14 @@ maven_install(
         ),
         maven.artifact(
             group = "com.amazonaws",
+            artifact = "aws-java-sdk-codecommit",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
             artifact = "aws-java-sdk-codedeploy",
             version = "1.11.834",
             exclusions = [
@@ -1218,6 +1226,9 @@ maven_install(
             ],
         ),
         "com.auth0:java-jwt:3.1.0",
+        "com.azure:azure-identity:1.1.2",
+        "com.azure:azure-storage-blob:12.9.0",
+        "com.azure:azure-storage-common:12.9.0",
         "com.bertramlabs.plugins:hcl4j:0.1.7",
         "com.bettercloud:vault-java-driver:4.0.0",
         "com.bugsnag:bugsnag:3.6.1",
@@ -1244,6 +1255,7 @@ maven_install(
         "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.9",
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.10",
         "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.10",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-yaml-provider:2.11.0",
         "com.fasterxml.jackson.module:jackson-module-afterburner:2.7.9",
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.10",
         "com.fasterxml.jackson.module:jackson-module-jsonSchema:2.9.10",
@@ -1372,6 +1384,7 @@ maven_install(
         "com.google.protobuf:protobuf-java-util:3.11.4",
         "com.google.protobuf:protobuf-java:3.11.4",
         "com.googlecode.javaewah:JavaEWAH:1.1.6",
+        "com.googlecode.owasp-java-html-sanitizer:owasp-java-html-sanitizer:20200713.1",
         "com.graphql-java:graphql-java:12.0",
         "com.graphql-java:java-dataloader:2.1.1",
         "com.hazelcast:hazelcast-aws:2.4",
@@ -1392,6 +1405,7 @@ maven_install(
         "com.mchange:c3p0:0.9.5.4",
         "com.mchange:mchange-commons-java:0.2.15",
         "com.microsoft.azure:adal4j:1.6.4",
+        "com.microsoft.azure:msal4j:1.8.1",
         "com.microsoft.azure:azure-annotations:1.10.0",
         "com.microsoft.azure:azure-client-authentication:1.7.0",
         "com.microsoft.azure:azure-client-runtime:1.7.0",
@@ -1616,8 +1630,6 @@ maven_install(
         "jaxen:jaxen:1.1.6",
         "joda-time:joda-time:2.10.1",
         "junit:junit:4.12",
-        "org.junit.jupiter:junit-jupiter-engine:5.3.1",
-        "org.testng:testng:7.3.0",
         "me.snowdrop:istio-client-uberjar:1.0.1",
         "me.snowdrop:istio-client:1.0.1",
         "me.snowdrop:istio-common:1.0.1",
@@ -1981,7 +1993,9 @@ maven_install(
         "org.jsoup:jsoup:1.8.3",
         "com.github.tomakehurst:wiremock-jre8-standalone:2.27.0",
         "com.github.heremaps:oksse:0.9.0",
+        "io.prometheus:simpleclient_servlet:0.3.0",
         "com.slack.api:slack-api-client:1.5.3",
+        "com.slack.api:slack-api-model:1.5.3",
         "org.springframework.batch:spring-batch-core:4.2.2.RELEASE",
         "org.springframework.boot:spring-boot-starter-batch:2.1.6.RELEASE",
         "software.amazon.awssdk:athena:2.10.18",
@@ -2028,13 +2042,59 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cf:cf-client-sdk-java:1.0.0-20210126.200034-12",
+        "io.harness.cf:cf-client-sdk-java:0.0.2",
         "io.harness.cv:data-collection-dsl:0.18-RELEASE",
     ],
     repositories = [
         "https://repo1.maven.org/maven2",
         "https://%s:%s@harness.jfrog.io/artifactory/harness-internal" % (JFROG_USERNAME, JFROG_PASSWORD),
     ],
+)
+
+maven_install(
+    name = "delegate",
+    artifacts = [
+        "com.squareup.okhttp3:logging-interceptor:3.14.3",
+        "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
+        "com.squareup.okhttp3:okhttp:3.6.0",
+        "org.apache.httpcomponents:httpmime:4.5.1",
+        "com.github.tomakehurst:wiremock-jre8-standalone:2.27.2",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
+)
+
+maven_install(
+    name = "batch",
+    artifacts = [
+        "com.squareup.okhttp3:okhttp:4.9.0",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://dl.bintray.com/michaelklishin/maven",
+        "https://repo.spring.io/plugins-release",
+        "https://palantir.bintray.com/releases",
+        "https://oss.sonatype.org/content/repositories/releases",
+        "https://jitpack.io",
+        "https://jcenter.bintray.com",
+        "https://github.com/bkper/mvn-repo/raw/master/releases",
+        "https://harness.jfrog.io/harness/datacollection-dsl",
+        "http://packages.confluent.io/maven",
+    ],
+    version_conflict_policy = "pinned",
 )
 
 maven_install(
@@ -2088,7 +2148,7 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
 )
 
 http_archive(
-    name = "openjdk8u242_darwin_archive_linux",
+    name = "openjdk8u242_linux_archive",
     build_file_content = """
 java_runtime(name = 'runtime', srcs =  glob(['**']), java='//:bin/java', visibility = ['//visibility:public'])
 exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
@@ -2096,6 +2156,21 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
     sha256 = "f39b523c724d0e0047d238eb2bb17a9565a60574cf651206c867ee5fc000ab43",
     strip_prefix = "jdk8u242-b08",
     urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
+)
+
+http_archive(
+    name = "openjdk8u242_macos_archive",
+    build_file_content = """
+package(default_visibility = ["//visibility:public"])
+java_runtime(
+    name = 'runtime',
+    srcs =  glob(['**']),
+    java='//:Contents/Home/bin/java'
+)
+""",
+    sha256 = "06675b7d65bce0313ee1f2e888dd44267e8afeced75e0b39b5ad1f5fdff54e0b",
+    strip_prefix = "jdk8u242-b08",
+    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
 )
 
 load("//tools/bazel/pmd:toolchains.bzl", "rules_pmd_toolchains")

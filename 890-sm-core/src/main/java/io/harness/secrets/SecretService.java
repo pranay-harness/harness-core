@@ -10,6 +10,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.security.UsageRestrictions;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -51,4 +52,7 @@ public interface SecretService {
       @NotEmpty String accountId, @NotNull PageRequest<EncryptedData> pageRequest, String appId, String envId);
   PageResponse<EncryptedData> listSecretsScopedToAccount(
       @NotEmpty String accountId, @NotNull PageRequest<EncryptedData> pageRequest);
+
+  List<String> filterSecretIdsByReadPermission(
+      Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest);
 }

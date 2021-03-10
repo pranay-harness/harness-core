@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -21,6 +22,7 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateProfileObserver;
@@ -59,6 +61,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
@@ -152,6 +155,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
         persistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
     delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
     log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(
+          DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileId);
+    }
+
     return delegateProfileSelectorsUpdated;
   }
 
@@ -167,6 +176,11 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     DelegateProfile updatedDelegateProfile = persistence.findAndModify(query, updateOperations, returnNewOptions);
     delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
     log.info("Updated profile scoping rules for accountId={}", accountId);
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(DelegateProfileObxxxxxxxx:onProfileScopesUpdated, accountId, delegateProfileId);
+    }
+
     return updatedDelegateProfile;
   }
 
@@ -246,6 +260,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public void onAccountUpdated(Account account) {
     // Do nothing
+  }
+
+  @Override
+  public List<String> getDelegatesForProfile(String accountId, String profileId) {
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .filter(DelegateKeys.delegateProfileId, profileId)
+        .asKeyList()
+        .stream()
+        .map(key -> key.getId().toString())
+        .collect(toList());
   }
 
   private DelegateProfile buildPrimaryDelegateProfile(String accountId) {

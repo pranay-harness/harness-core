@@ -7,6 +7,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -31,7 +32,8 @@ public class WorkloadCostService {
    *  11 - startInclusive
    */
   @VisibleForTesting
-  static final String LAST_AVAILABLE_DAY_COST = "SELECT SUM(CPUBILLINGAMOUNT), SUM(MEMORYBILLINGAMOUNT)"
+  static final String LAST_AVAILABLE_DAY_COST =
+      "SELECT SUM(CPUBILLINGAMOUNT) AS CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) AS MEMORYBILLINGAMOUNT, SUM(CPUREQUEST) AS CPUREQUEST, SUM(MEMORYREQUEST) as MEMORYREQUEST, SUM(USAGEDURATIONSECONDS) as USAGEDURATIONSECONDS  "
       + "FROM BILLING_DATA WHERE INSTANCETYPE = 'K8S_POD' AND ACCOUNTID = ? AND CLUSTERID = ? AND NAMESPACE = ? "
       + "AND WORKLOADTYPE = ? AND WORKLOADNAME = ? AND STARTTIME = "
       + "(SELECT MAX(STARTTIME) FROM BILLING_DATA WHERE INSTANCETYPE = 'K8S_POD' AND ACCOUNTID = ? AND CLUSTERID = ? "
@@ -48,6 +50,9 @@ public class WorkloadCostService {
   static class Cost {
     BigDecimal cpu;
     BigDecimal memory;
+    // unit cost per seconds
+    BigDecimal cpuUnitCost;
+    BigDecimal memoryUnitCost;
   }
 
   private boolean isTruncatedToDay(Instant instant) {
@@ -76,12 +81,35 @@ public class WorkloadCostService {
         statement.setTimestamp(11, new Timestamp(startInclusive.toEpochMilli()));
         try (val resultSet = statement.executeQuery()) {
           if (resultSet.next()) {
-            BigDecimal cpuCost = resultSet.getBigDecimal(1);
-            BigDecimal memoryCost = resultSet.getBigDecimal(2);
+            BigDecimal cpuCost = resultSet.getBigDecimal("CPUBILLINGAMOUNT");
+            BigDecimal memoryCost = resultSet.getBigDecimal("MEMORYBILLINGAMOUNT");
+            BigDecimal cpuRequest = resultSet.getBigDecimal("CPUREQUEST");
+            BigDecimal memoryRequest = resultSet.getBigDecimal("MEMORYREQUEST");
+            BigDecimal usageDurationSeconds = resultSet.getBigDecimal("USAGEDURATIONSECONDS");
+
             if (cpuCost == null && memoryCost == null) {
               return null;
             }
-            return Cost.builder().cpu(cpuCost).memory(memoryCost).build();
+            BigDecimal memoryUnitPrice = null;
+            BigDecimal cpuUnitPrice = null;
+
+            if (usageDurationSeconds != null && usageDurationSeconds.compareTo(BigDecimal.ZERO) > 0) {
+              if (memoryCost != null && memoryRequest != null && memoryRequest.compareTo(BigDecimal.ZERO) > 0) {
+                memoryUnitPrice = memoryCost.divide(memoryRequest, MathContext.DECIMAL128)
+                                      .divide(usageDurationSeconds, MathContext.DECIMAL128);
+              }
+              if (cpuCost != null && cpuRequest != null && cpuRequest.compareTo(BigDecimal.ZERO) > 0) {
+                cpuUnitPrice = cpuCost.divide(cpuRequest, MathContext.DECIMAL128)
+                                   .divide(usageDurationSeconds, MathContext.DECIMAL128);
+              }
+            }
+
+            return Cost.builder()
+                .cpu(cpuCost)
+                .memory(memoryCost)
+                .cpuUnitCost(cpuUnitPrice)
+                .memoryUnitCost(memoryUnitPrice)
+                .build();
           }
         }
       } catch (SQLException e) {

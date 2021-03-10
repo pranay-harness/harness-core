@@ -10,7 +10,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 
-import software.wings.beans.Permission;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;

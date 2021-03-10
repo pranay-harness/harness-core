@@ -23,6 +23,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(NGCoreClientRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
+          .addAll(DelegateAgentBeansRegistrars.kryoRegistrars)
           .add(ConnectorNextGenKryoRegistrar.class)
           .build();
 
@@ -35,6 +36,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(FiltersRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

@@ -63,8 +63,7 @@ public class StackdriverUtils {
     byte[] encoded = Base64.decodeBase64(privateKeyPEM);
     KeyFactory kf = KeyFactory.getInstance("RSA");
     PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(encoded);
-    RSAPrivateKey privKey = (RSAPrivateKey) kf.generatePrivate(keySpec);
-    return privKey;
+    return (RSAPrivateKey) kf.generatePrivate(keySpec);
   }
 
   public static <T> T checkForNullAndReturnValue(T value, T defaultValue) {

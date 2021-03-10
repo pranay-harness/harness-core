@@ -57,10 +57,11 @@ public class HealthVerificationHeatMapServiceImpl implements HealthVerificationH
       HealthVerificationPeriod healthVerificationPeriod) {
     // Update the risk score for that specific verificationTaskId and for the activity level as well.
     Preconditions.checkNotNull(verificationTaskId, "verificationTaskId should not be null");
-
-    CVConfig cvConfig = cvConfigService.get(verificationTaskService.getCVConfigId(verificationTaskId));
-
     VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
+    Preconditions.checkNotNull(
+        verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+    CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
+        verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
     Activity activity = activityService.getByVerificationJobInstanceId(verificationTask.getVerificationJobInstanceId());
 
     updateRiskScoreInDB(verificationTaskId, AggregationLevel.VERIFICATION_TASK, healthVerificationPeriod, cvConfig,

@@ -10,9 +10,8 @@ import static java.util.Arrays.asList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.NameAccess;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -23,6 +22,7 @@ import software.wings.beans.entityinterface.KeywordsAware;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -39,15 +39,29 @@ import org.mongodb.morphia.annotations.Entity;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
-@NgUniqueIndex(
-    name = "duplicateKey", fields = { @Field("accountId")
-                                      , @Field("name"), @Field("pathId"), @Field("appId") })
-@CdIndex(name = "account_gallery_app_idx", fields = { @Field("accountId")
-                                                      , @Field("galleryId"), @Field("appId") })
 @FieldNameConstants(innerTypeName = "TemplateFolderKeys")
 @Entity(value = "templateFolders", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class TemplateFolder extends Base implements KeywordsAware, NameAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .unique(true)
+                 .name("duplicateKey")
+                 .field(TemplateFolderKeys.accountId)
+                 .field(TemplateFolderKeys.name)
+                 .field(TemplateFolderKeys.pathId)
+                 .field(TemplateFolderKeys.appId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_gallery_app_idx")
+                 .field(TemplateFolderKeys.accountId)
+                 .field(TemplateFolderKeys.galleryId)
+                 .field(TemplateFolderKeys.appId)
+                 .build())
+        .build();
+  }
+
   public static final String GALLERY_ID_KEY = "galleryId";
   public static final String KEYWORDS_KEY = "keywords";
   public static final String NAME_KEY = "name";

@@ -1,0 +1,68 @@
+permissions:
+  - identifier: core.account.edit
+    name: Edit Account Settings
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.account.delete
+    name: Delete Account
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.project.create
+    name: Create Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core.project.view
+    name: View Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.project.edit
+    name: Edit Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.project.delete
+    name: Delete Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.organization.create
+    name: Create Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.organization.view
+    name: View Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core.organization.edit
+    name: Edit Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core.organization.delete
+    name: Delete Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+  - identifier: core.secret.create
+    name: create secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

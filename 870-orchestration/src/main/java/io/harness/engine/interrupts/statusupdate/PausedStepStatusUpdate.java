@@ -11,8 +11,8 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -48,7 +48,7 @@ public class PausedStepStatusUpdate implements StepStatusUpdate {
               InterruptEffect.builder()
                   .interruptId(interruptId)
                   .tookEffectAt(System.currentTimeMillis())
-                  .interruptType(ExecutionInterruptType.PAUSE_ALL)
+                  .interruptType(InterruptType.PAUSE_ALL)
                   .build()));
       return pauseParents(nodeExecution.getParentId(), interruptId);
     } else {

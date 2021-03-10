@@ -180,6 +180,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       String secretName = format("%s-image-%s", podParams.getName(), containerParams.getName());
       Secret imgSecret = kubeCtlHandler.createRegistrySecret(
           kubernetesClient, namespace, secretName, containerParams.getImageDetailsWithConnector());
+      log.info("Registry secret creation for pod name {} is complete", podParams.getName());
       if (imgSecret != null) {
         containerParams.setImageSecret(secretName);
         switch (containerParams.getContainerType()) {
@@ -243,7 +244,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     secretData.putAll(gitSecretData);
 
     if (isNotEmpty(secretData)) {
+      log.info("Creating k8 secret for pod name: {}", podParams.getName());
       kubeCtlHandler.createSecret(kubernetesClient, secretName, namespace, secretData);
+      log.info("k8 secret creation is complete for pod name: {}", podParams.getName());
     }
   }
 

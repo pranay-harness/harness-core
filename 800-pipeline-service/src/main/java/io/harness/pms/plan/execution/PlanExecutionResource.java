@@ -420,7 +420,7 @@ public class PlanExecutionResource {
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) throws IOException {
     PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
-        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml, null,
+        projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
         ExecutionTriggerInfo.newBuilder()
             .setTriggerType(MANUAL)
             .setTriggeredBy(triggeredByHelper.getFromSecurityContext())

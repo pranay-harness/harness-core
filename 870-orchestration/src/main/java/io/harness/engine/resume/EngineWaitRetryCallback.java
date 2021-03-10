@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.NotifyCallback;
 
@@ -34,7 +34,7 @@ public class EngineWaitRetryCallback implements NotifyCallback {
     interruptManager.register(InterruptPackage.builder()
                                   .planExecutionId(planExecutionId)
                                   .nodeExecutionId(nodeExecutionId)
-                                  .interruptType(ExecutionInterruptType.RETRY)
+                                  .interruptType(InterruptType.RETRY)
                                   .build());
   }
 

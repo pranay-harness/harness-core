@@ -538,7 +538,7 @@ public class AzureManagementClientImpl extends AzureClient implements AzureManag
         throw new IllegalStateException("Unexpected value: " + context.getScopeType());
     }
     Object outputs = extendedInner.properties().outputs();
-    return outputs != null ? outputs.toString() : "";
+    return outputs != null ? JsonUtils.asJson(outputs) : "";
   }
 
   @NotNull

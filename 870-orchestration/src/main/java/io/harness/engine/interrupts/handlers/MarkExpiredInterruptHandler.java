@@ -58,7 +58,7 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
   public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     try {
       NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
-      abortHelper.discontinueMarkedInstance(nodeExecution, EXPIRED);
+      abortHelper.discontinueMarkedInstance(nodeExecution, EXPIRED, interrupt);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw ex;

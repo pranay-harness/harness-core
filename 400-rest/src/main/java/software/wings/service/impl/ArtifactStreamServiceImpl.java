@@ -970,7 +970,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           message = message + ex.getCause().getMessage();
         }
         log.warn(message, ex);
-        throw new ShellExecutionException("Error occurred during script execution. Please verify the script.");
+        throw new ShellExecutionException("Custom Artifact script execution failed with following error: "
+            + ExceptionUtils.getMessage(ex) + ", Please verify the script.");
       }
     }
   }

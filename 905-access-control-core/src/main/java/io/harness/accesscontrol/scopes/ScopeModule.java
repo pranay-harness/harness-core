@@ -1,17 +1,14 @@
 package io.harness.accesscontrol.scopes;
 
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
-import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
-
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.core.ScopeServiceImpl;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.MapBinder;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
+import java.util.Map;
 
 public class ScopeModule extends AbstractModule {
   private static ScopeModule instance;
@@ -26,12 +23,11 @@ public class ScopeModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(ScopeService.class).to(ScopeServiceImpl.class);
+    registerRequiredBindings();
+  }
 
-    MapBinder<String, ScopeLevel> scopesByKey = MapBinder.newMapBinder(binder(), String.class, ScopeLevel.class);
-    scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
-    scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
-    scopesByKey.addBinding(PROJECT.toString()).toInstance(PROJECT);
-
-    bind(ScopeParamsFactory.class).to(HarnessScopeParamsFactory.class);
+  private void registerRequiredBindings() {
+    requireBinding(ScopeParamsFactory.class);
+    requireBinding(Key.get(new TypeLiteral<Map<String, ScopeLevel>>() {}));
   }
 }

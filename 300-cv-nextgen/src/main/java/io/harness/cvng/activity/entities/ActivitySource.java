@@ -59,7 +59,7 @@ public abstract class ActivitySource
   long createdAt;
   long lastUpdatedAt;
 
-  @NotNull @FdIndex String accountId;
+  @NotNull String accountId;
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
   @NotNull @FdUniqueIndex String identifier;

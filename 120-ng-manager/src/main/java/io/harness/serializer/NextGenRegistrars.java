@@ -25,6 +25,7 @@ public class NextGenRegistrars {
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(UserGroupMorphiaRegistrar.class)
           .addAll(ResourceGroupSerializer.morphiaRegistrars)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

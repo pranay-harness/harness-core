@@ -184,8 +184,17 @@ replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
 
 replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
+replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
+
 replace_key_value baseUrls.ngManager $NG_MANAGER_API_URL
 
 replace_key_value baseUrls.ui $MANAGER_UI_URL
 
 replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
+
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi

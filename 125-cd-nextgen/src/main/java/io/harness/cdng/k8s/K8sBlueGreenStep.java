@@ -1,9 +1,11 @@
 package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -13,12 +15,10 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
@@ -81,23 +81,25 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, K8sBlueGreenStepParameters k8sBlueGreenStepParameters,
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
+    if (passThroughData instanceof GitFetchResponsePassThroughData) {
+      return k8sStepHelper.handleGitTaskFailure((GitFetchResponsePassThroughData) passThroughData);
+    }
+
+    ResponseData responseData = responseDataMap.values().iterator().next();
+    if (responseData instanceof ErrorNotifyResponseData) {
+      return K8sStepHelper
+          .getDelegateErrorFailureResponseBuilder(k8sBlueGreenStepParameters, (ErrorNotifyResponseData) responseData)
+          .build();
+    }
+
+    K8sDeployResponse k8sTaskExecutionResponse = (K8sDeployResponse) responseData;
+    StepResponseBuilder responseBuilder =
+        StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
-      StepResponseBuilder responseBuilder =
-          StepResponse.builder()
-              .status(Status.FAILED)
-              .failureInfo(FailureInfo.newBuilder()
-                               .setErrorMessage(K8sStepHelper.getErrorMessage(k8sTaskExecutionResponse))
-                               .build());
-      if (k8sBlueGreenStepParameters.getRollbackInfo() != null) {
-        responseBuilder.stepOutcome(
-            StepResponse.StepOutcome.builder()
-                .name("RollbackOutcome")
-                .outcome(RollbackOutcome.builder().rollbackInfo(k8sBlueGreenStepParameters.getRollbackInfo()).build())
-                .build());
-      }
-      return responseBuilder.build();
+      return K8sStepHelper
+          .getFailureResponseBuilder(k8sBlueGreenStepParameters, k8sTaskExecutionResponse, responseBuilder)
+          .build();
     }
 
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
@@ -112,8 +114,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
                                                   .primaryColor(k8sBGDeployResponse.getPrimaryColor())
                                                   .build();
 
-    return StepResponse.builder()
-        .status(Status.SUCCEEDED)
+    return responseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME)
                          .outcome(k8sBlueGreenOutcome)

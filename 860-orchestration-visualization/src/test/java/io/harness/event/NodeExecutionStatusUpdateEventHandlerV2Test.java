@@ -208,6 +208,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
             .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
+            .isGraphOutcome(true)
             .createdAt(System.currentTimeMillis())
             .outcome(doc)
             .build();

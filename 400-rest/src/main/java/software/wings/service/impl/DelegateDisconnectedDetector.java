@@ -52,6 +52,11 @@ public class DelegateDisconnectedDetector implements Runnable {
         Delegate delegate =
             delegateCache.get(delegateConnection.getAccountId(), delegateConnection.getDelegateId(), false);
 
+        if (delegate == null) {
+          persistence.delete(delegateConnection);
+          continue;
+        }
+
         if (versionInfoManager.getVersionInfo().getVersion().equals(delegateConnection.getVersion())) {
           disconnectedDetected(delegate.isPolllingModeEnabled(), delegateConnection);
           continue;

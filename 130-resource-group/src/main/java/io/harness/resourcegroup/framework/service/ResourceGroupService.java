@@ -1,6 +1,7 @@
 package io.harness.resourcegroup.framework.service;
 
 import io.harness.ng.beans.PageRequest;
+import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 
@@ -19,4 +20,12 @@ public interface ResourceGroupService {
       String identifier, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   Optional<ResourceGroupResponse> update(ResourceGroupDTO resourceGroupDTO);
+
+  boolean handleResourceDeleteEvent(ResourcePrimaryKey resourcePrimaryKey);
+
+  boolean deleteStaleResources(ResourceGroup resourceGroup);
+
+  boolean createDefaultResourceGroup(ResourcePrimaryKey resourcePrimaryKey);
+
+  boolean restoreResourceGroupsUnderHierarchy(ResourcePrimaryKey resourcePrimaryKey);
 }

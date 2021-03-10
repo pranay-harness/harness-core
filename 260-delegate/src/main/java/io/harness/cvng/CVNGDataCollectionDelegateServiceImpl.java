@@ -1,7 +1,10 @@
 package io.harness.cvng;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
@@ -30,9 +33,10 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
   @Override
   public String getDataCollectionResult(
       String accountId, DataCollectionRequest dataCollectionRequest, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity() != null) {
-      secretDecryptionService.decrypt(
-          dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntity(), encryptedDataDetails);
+    if (isNotEmpty(dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities())) {
+      DecryptableEntity decryptableEntity =
+          dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities().get(0);
+      secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetails);
     }
     String dsl = dataCollectionRequest.getDSL();
     Instant now = clock.instant();

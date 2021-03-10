@@ -22,6 +22,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
+import static io.harness.rule.OwnerRule.VIKAS_S;
 import static io.harness.threading.Poller.pollFor;
 
 import static software.wings.api.DeploymentType.SSH;
@@ -79,7 +80,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -210,7 +210,6 @@ import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.sm.states.EnvState;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.HoldingScope;
 import software.wings.utils.ArtifactType;
@@ -2473,6 +2472,43 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     verify(pipelineResumeUtils).updatePipelineExecutionsAfterResume(any(), eq(workflowExecution));
   }
 
+  /**
+   * This test checks triggerPipelineResumeExecution methods integration with dependencies.
+   */
+  @Test
+  @Owner(developers = VIKAS_S)
+  @Category(UnitTests.class)
+  public void testTriggerPipelineResumeExecutionWithStageName() {
+    WorkflowExecution workflowExecution =
+        WorkflowExecution.builder().accountId(account.getUuid()).executionArgs(new ExecutionArgs()).build();
+    String stageName = "stageName";
+    int parallelIndex = 1;
+    Pipeline pipeline =
+        Pipeline.builder()
+            .uuid(PIPELINE_ID)
+            .appId(app.getUuid())
+            .name(PIPELINE_NAME)
+            .pipelineStages(singletonList(PipelineStage.builder()
+                                              .pipelineStageElements(singletonList(PipelineStageElement.builder()
+                                                                                       .type(APPROVAL.name())
+                                                                                       .parallelIndex(parallelIndex)
+                                                                                       .name(stageName)
+                                                                                       .properties(new HashMap<>())
+                                                                                       .build()))
+                                              .build()))
+            .build();
+    when(pipelineResumeUtils.getParallelIndexFromPipelineStageName(eq(stageName), eq(pipeline)))
+        .thenReturn(parallelIndex);
+    when(pipelineResumeUtils.getPipelineFromWorkflowExecution(eq(workflowExecution), eq(app.getUuid())))
+        .thenReturn(pipeline);
+    when(pipelineResumeUtils.getPipelineForResume(eq(app.getUuid()), eq(parallelIndex), eq(workflowExecution), any()))
+        .thenReturn(pipeline);
+    workflowExecutionService.triggerPipelineResumeExecution(app.getUuid(), stageName, workflowExecution);
+    verify(pipelineResumeUtils)
+        .getPipelineForResume(eq(app.getUuid()), eq(parallelIndex), eq(workflowExecution), any());
+    verify(pipelineResumeUtils).updatePipelineExecutionsAfterResume(any(), eq(workflowExecution));
+  }
+
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
@@ -2861,5 +2897,23 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .isInstanceOf(DeploymentFreezeException.class)
         .hasMessage(
             "Deployment Freeze Window [freeze1] is active for the environment. No deployments are allowed to proceed.");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyListIfNoArtifactInPreviousSuccessfulExecution() {
+    List<String> infraMappingList = Collections.singletonList(INFRA_MAPPING_ID);
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .accountId(ACCOUNT_ID)
+                                              .appId(APP_ID)
+                                              .status(SUCCESS)
+                                              .uuid(WORKFLOW_EXECUTION_ID)
+                                              .infraMappingIds(infraMappingList)
+                                              .build();
+    WorkflowStandardParams stdParams = aWorkflowStandardParams().build();
+    workflowExecutionService.populateRollbackArtifacts(workflowExecution, infraMappingList, stdParams);
+    assertThat(stdParams.getRollbackArtifactIds()).isNotNull().isEmpty();
+    assertThat(workflowExecution.getRollbackArtifacts()).isNotNull().isEmpty();
   }
 }

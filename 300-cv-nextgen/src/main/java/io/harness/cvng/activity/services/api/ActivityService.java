@@ -4,7 +4,7 @@ import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
+import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.beans.activity.ActivityDTO;
@@ -36,13 +36,13 @@ public interface ActivityService {
   String createActivity(Activity activity);
 
   List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, Instant startTime, Instant endTime);
+      String environmentIdentifier, String serviceIdentifier, Instant startTime, Instant endTime);
 
   List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
       String accountId, String orgIdentifier, String projectIdentifier, int size);
   ActivityVerificationResultDTO getActivityVerificationResult(String accountId, String activityId);
 
-  DeploymentVerificationJobInstanceSummary getDeploymentSummary(String activityId);
+  DeploymentActivitySummaryDTO getDeploymentSummary(String activityId);
 
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);

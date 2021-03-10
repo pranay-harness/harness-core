@@ -4,7 +4,9 @@ FROM base_jdk
 
 USER root
 
-RUN yum install -y git-core hostname unzip wget
+COPY mongodb-org-4.4.repo /etc/yum.repos.d/
+
+RUN yum install -y git-core hostname unzip wget mongodb-org-shell
 RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
 RUN tar -xzf gsutil.tar.gz -C /opt
 

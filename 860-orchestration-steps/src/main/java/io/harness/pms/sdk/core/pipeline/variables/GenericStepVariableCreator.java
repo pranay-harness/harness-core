@@ -84,15 +84,6 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     });
   }
 
-  protected void addVariablesForStepSpec(YamlField specField, Map<String, YamlProperties> yamlPropertiesMap) {
-    List<YamlField> fields = specField.getNode().fields();
-    fields.forEach(field -> {
-      if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
-      }
-    });
-  }
-
   @Override
   public LinkedHashMap<String, VariableCreationResponse> createVariablesForChildrenNodes(
       VariableCreationContext ctx, YamlField config) {
@@ -101,7 +92,13 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
 
   protected void addFieldToPropertiesMapUnderStep(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
     String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.STEPS);
+    String localName;
+    if (YamlUtils.findParentNode(fieldNode.getNode(), YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
+      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.ROLLBACK_STEPS);
+    } else {
+      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.STEPS);
+    }
+
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
   }

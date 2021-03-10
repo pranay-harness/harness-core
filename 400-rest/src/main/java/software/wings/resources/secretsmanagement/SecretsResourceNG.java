@@ -76,8 +76,7 @@ public class SecretsResourceNG {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) final String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") final String page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") final String size,
-      @QueryParam("searchTerm") final String searchTerm, @QueryParam("type") final SettingVariableTypes type,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) final List<String> identifiers) {
+      @QueryParam("searchTerm") final String searchTerm, @QueryParam("type") final SettingVariableTypes type) {
     PageResponse<EncryptedData> encryptedDataPageResponse;
     if (!StringUtils.isEmpty(searchTerm)) {
       List<EncryptedData> encryptedDataList =
@@ -87,7 +86,7 @@ public class SecretsResourceNG {
       return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
     }
     encryptedDataPageResponse =
-        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, identifiers, type, page, size);
+        ngSecretService.listSecrets(accountIdentifier, orgIdentifier, projectIdentifier, type, page, size);
     return new RestResponse<>(getPageResponse(encryptedDataPageResponse));
   }
 

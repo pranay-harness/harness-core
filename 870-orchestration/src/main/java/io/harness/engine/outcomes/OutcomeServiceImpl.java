@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
@@ -17,12 +18,14 @@ import lombok.NonNull;
 
 @OwnedBy(CDC)
 @Singleton
+@Deprecated
 public class OutcomeServiceImpl implements OutcomeService {
   @Inject private PmsOutcomeService pmsOutcomeService;
 
   @Override
   public String consume(Ambiance ambiance, String name, Outcome value, String groupName) {
-    return pmsOutcomeService.consume(ambiance, name, PmsOutcomeMapper.convertOutcomeValueToJson(value), groupName);
+    return pmsOutcomeService.consume(
+        ambiance, name, PmsOutcomeMapper.convertOutcomeValueToJson(value), groupName, false);
   }
 
   @Override
@@ -47,5 +50,14 @@ public class OutcomeServiceImpl implements OutcomeService {
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
     List<String> allByRuntimeIdJsonList = pmsOutcomeService.findAllByRuntimeId(planExecutionId, runtimeId);
     return PmsOutcomeMapper.convertJsonToOutcome(allByRuntimeIdJsonList);
+  }
+
+  @Override
+  public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
+    io.harness.engine.pms.data.OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(ambiance, refObject);
+    return OptionalOutcome.builder()
+        .outcome(PmsOutcomeMapper.convertJsonToOutcome(optionalOutcome.getOutcome()))
+        .found(optionalOutcome.isFound())
+        .build();
   }
 }

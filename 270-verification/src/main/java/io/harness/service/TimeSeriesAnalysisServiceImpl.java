@@ -11,6 +11,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
+import static software.wings.metrics.TimeSeriesDataRecord.TOP_HATTER_ACCOUNT_ID;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import static java.lang.Integer.max;
@@ -129,6 +130,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @SuppressWarnings("PMD")
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
       String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
+    // TODO: remove this once CV-5770 is root caused and fixed
+    if (TOP_HATTER_ACCOUNT_ID.equals(accountId)) {
+      log.info("for {} received metric data {}", stateExecutionId, metricData);
+    }
     if (isEmpty(metricData)) {
       log.info("For state {} received empty collection", stateExecutionId);
       return false;
@@ -158,6 +163,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     final List<TimeSeriesDataRecord> dataRecords =
         TimeSeriesDataRecord.getTimeSeriesDataRecordsFromNewRelicDataRecords(metricData);
+    // TODO: remove this once CV-5770 is root caused and fixed
+    if (TOP_HATTER_ACCOUNT_ID.equals(accountId)) {
+      log.info("for {} the data records are {}", stateExecutionId, dataRecords);
+    }
     dataRecords.forEach(TimeSeriesDataRecord::compress);
     dataStoreService.save(TimeSeriesDataRecord.class, dataRecords, true);
     return true;

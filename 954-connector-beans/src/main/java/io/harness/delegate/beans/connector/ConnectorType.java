@@ -28,8 +28,10 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("Github") GITHUB("Github"),
   @JsonProperty("Gitlab") GITLAB("Gitlab"),
   @JsonProperty("Bitbucket") BITBUCKET("Bitbucket"),
+  @JsonProperty("Codecommit") CODECOMMIT("Codecommit"),
   @JsonProperty("CEAws") CE_AWS("CEAws"),
-  @JsonProperty("CEAzure") CE_AZURE("CEAzure");
+  @JsonProperty("CEAzure") CE_AZURE("CEAzure"),
+  @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster");
 
   private final String displayName;
 

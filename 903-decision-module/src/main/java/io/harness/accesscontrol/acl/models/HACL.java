@@ -2,7 +2,7 @@ package io.harness.accesscontrol.acl.models;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.accesscontrol.HPrincipal;
+import io.harness.accesscontrol.HUserPrincipal;
 import io.harness.persistence.PersistentEntity;
 
 import lombok.AccessLevel;
@@ -16,7 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@FieldNameConstants(innerTypeName = "HAccessControlKeys")
+@FieldNameConstants(innerTypeName = "HACLKeys")
 public class HACL extends ACL implements PersistentEntity {
   private static final String DELIMITER = "$";
   private static final String ACCOUNT_PREFIX = "account/%s";
@@ -26,13 +26,13 @@ public class HACL extends ACL implements PersistentEntity {
   String permission;
   String resourceGroupIdentifier;
   HResource resource;
-  HPrincipal principal;
+  HUserPrincipal principal;
   SourceMetadata sourceMetadata;
   ParentMetadata parentMetadata;
   String aclQueryString;
 
   public static String getAclQueryString(
-      ParentMetadata parentMetadata, HResource resource, HPrincipal principal, String permission) {
+      ParentMetadata parentMetadata, HResource resource, HUserPrincipal principal, String permission) {
     return String.format(ACCOUNT_PREFIX, parentMetadata.getAccountIdentifier())
         + (!isEmpty(parentMetadata.getOrgIdentifier()) ? String.format(ORG_PREFIX, parentMetadata.getOrgIdentifier())
                                                        : "")

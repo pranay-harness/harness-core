@@ -28,7 +28,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "AlertRuleAnomalyKeys")
 @Entity(value = "alertRuleAnomalies", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class AlertRuleAnomaly implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class AlertRuleAnomaly implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;

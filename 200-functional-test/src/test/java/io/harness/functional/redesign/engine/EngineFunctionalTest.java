@@ -19,8 +19,8 @@ import io.harness.generator.ApplicationGenerator.Applications;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.redesign.states.http.BasicHttpStep;
 import io.harness.redesign.states.shell.ShellScriptStepParameters;
@@ -153,7 +153,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     List<Interrupt> interrupts = testSetupHelper.getPlanInterrupts(httpRetryResponse.getUuid());
     assertThat(interrupts).hasSize(2);
     assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
-        .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
+        .containsExactly(InterruptType.RETRY, InterruptType.RETRY);
   }
 
   @Test
@@ -181,7 +181,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
     List<Interrupt> interrupts = testSetupHelper.getPlanInterrupts(httpRetryResponse.getUuid());
     assertThat(interrupts).hasSize(2);
     assertThat(interrupts.stream().map(Interrupt::getType).collect(Collectors.toList()))
-        .containsExactly(ExecutionInterruptType.RETRY, ExecutionInterruptType.RETRY);
+        .containsExactly(InterruptType.RETRY, InterruptType.RETRY);
   }
 
   @Test

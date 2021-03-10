@@ -12,7 +12,7 @@ import java.lang.reflect.Method;
 
 @SuppressWarnings("unchecked")
 public class ProtobufKryoSerializer<P extends Message> extends Serializer<P> {
-  private Method parseFromMethod = null;
+  private Method parseFromMethod;
 
   @Override
   public void write(Kryo kryo, Output output, P protobufMessage) {

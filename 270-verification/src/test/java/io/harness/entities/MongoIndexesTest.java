@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.category.element.UnitTests;
 import io.harness.mongo.IndexCreator;
 import io.harness.mongo.IndexManagerSession;
@@ -27,7 +27,7 @@ import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.ObjectFactory;
 
 @Slf4j
-public class MongoIndexesTest extends VerificationBaseTest {
+public class MongoIndexesTest extends VerificationBase {
   @Inject HPersistence persistence;
   @Inject ObjectFactory objectFactory;
 

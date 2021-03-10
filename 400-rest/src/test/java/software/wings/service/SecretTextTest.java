@@ -1291,7 +1291,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(("400-rest/src/test/resources/encryption/file_to_encrypt.txt"));
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)

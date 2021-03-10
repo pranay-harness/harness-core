@@ -153,10 +153,12 @@ import software.wings.infra.PhysicalInfraWinrm;
 import software.wings.infra.ProvisionerAware;
 import software.wings.infra.SshBasedInfrastructure;
 import software.wings.infra.WinRmBasedInfrastructure;
+import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.PcfHelperService;
+import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
@@ -183,6 +185,7 @@ import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureDefinition;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
@@ -798,7 +801,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     ensureSafeToDelete(appId, infrastructureDefinition);
 
-    wingsPersistence.delete(InfrastructureDefinition.class, appId, infraDefinitionId);
+    prune(appId, infraDefinitionId);
     yamlPushService.pushYamlChangeSet(accountId, infrastructureDefinition, null, Type.DELETE, false, false);
   }
 
@@ -1520,7 +1523,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String infraDefinitionId) {
-    // no descending entity for infra definition
+    List<OwnedByInfrastructureDefinition> services = ServiceClassLocator.descendingServices(
+        this, InfrastructureDefinitionServiceImpl.class, OwnedByInfrastructureDefinition.class);
+    PruneEntityListener.pruneDescendingEntities(
+        services, descending -> descending.pruneByInfrastructureDefinition(appId, infraDefinitionId));
   }
 
   @Override

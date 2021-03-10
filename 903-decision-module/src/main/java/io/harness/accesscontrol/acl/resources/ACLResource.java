@@ -1,8 +1,8 @@
 package io.harness.accesscontrol.acl.resources;
 
-import io.harness.accesscontrol.acl.dtos.AccessCheckRequestDTO;
-import io.harness.accesscontrol.acl.dtos.AccessCheckResponseDTO;
 import io.harness.accesscontrol.acl.services.ACLService;
+import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -13,7 +13,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,9 +34,8 @@ public class ACLResource {
   private final ACLService aclService;
 
   @POST
-  @Consumes({"application/json"})
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
-  public ResponseDTO<AccessCheckResponseDTO> get(@Valid AccessCheckRequestDTO dto) {
+  public ResponseDTO<AccessCheckResponseDTO> get(AccessCheckRequestDTO dto) {
     return ResponseDTO.newResponse(aclService.get(dto));
   }
 }

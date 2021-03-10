@@ -15,7 +15,9 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
@@ -60,6 +62,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public K8sDeployResponse run(TaskParameters parameters) {
     K8sDeployRequest k8sDeployRequest = (K8sDeployRequest) parameters;
+    CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 
     log.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
     decryptRequestDTOs(k8sDeployRequest);
@@ -67,7 +70,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     if (k8sDeployRequest.getTaskType() == K8sTaskType.INSTANCE_SYNC) {
       try {
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-            .executeTask(k8sDeployRequest, null, getLogStreamingTaskClient());
+            .executeTask(k8sDeployRequest, null, getLogStreamingTaskClient(), commandUnitsProgress);
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         return K8sDeployResponse.builder()
@@ -103,15 +106,20 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
                 .kustomizeBinaryPath(k8sGlobalConfigService.getKustomizePath())
                 .build();
         // TODO: @anshul/vaibhav , fix this
-        // logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams);
+        //        logK8sVersion(k8sDeployRequest, k8SDelegateTaskParams, commandUnitsProgress);
 
-        return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
-            .executeTask(k8sDeployRequest, k8SDelegateTaskParams, getLogStreamingTaskClient());
+        K8sDeployResponse k8sDeployResponse = k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
+                                                  .executeTask(k8sDeployRequest, k8SDelegateTaskParams,
+                                                      getLogStreamingTaskClient(), commandUnitsProgress);
+
+        k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+        return k8sDeployResponse;
       } catch (Exception ex) {
         log.error("Exception in processing k8s task [{}]", k8sDeployRequest.toString(), ex);
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .errorMessage(ExceptionUtils.getMessage(ex))
+            .commandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
             .build();
       } finally {
         cleanup(workingDirectory);
@@ -119,10 +127,11 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     }
   }
 
-  private void logK8sVersion(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams) {
+  private void logK8sVersion(K8sDeployRequest k8sDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
+      CommandUnitsProgress commandUnitsProgress) {
     try {
       k8sTaskTypeToRequestHandler.get(K8sTaskType.VERSION.name())
-          .executeTask(k8sDeployRequest, k8sDelegateTaskParams, getLogStreamingTaskClient());
+          .executeTask(k8sDeployRequest, k8sDelegateTaskParams, getLogStreamingTaskClient(), commandUnitsProgress);
     } catch (Exception ex) {
       log.error("Error fetching K8s Server Version: ", ex);
     }

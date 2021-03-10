@@ -141,6 +141,157 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsCodeCommitAuthenticationDTO": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "HTTPS"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HTTPS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitHttpsCredentialsDTO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsCodeCommitConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "authentication",
+            "type",
+            "url"
+          ],
+          "properties": {
+            "authentication": {
+              "$ref": "#/definitions/AwsCodeCommitAuthenticationDTO"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Repo",
+                "Region"
+              ]
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitHttpsCredentialsDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsCodeCommitCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "AWSCredentials"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AWSCredentials"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitSecretKeyAccessKeyDTO"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitHttpsCredentialsSpecDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsCodeCommitSecretKeyAccessKeyDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsCodeCommitHttpsCredentialsSpecDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "secretKeyRef"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "accessKeyRef": {
+              "type": "string"
+            },
+            "secretKeyRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "accessKey"
+              ]
+            },
+            {
+              "required": [
+                "accessKeyRef"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AwsConnector": {
       "allOf": [
         {
@@ -654,6 +805,25 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "CEKubernetesClusterConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "Connector": {
       "type": "object",
       "properties": {
@@ -716,8 +886,10 @@
             "Github",
             "Gitlab",
             "Bitbucket",
+            "Codecommit",
             "CEAws",
-            "CEAzure"
+            "CEAzure",
+            "CEK8sCluster"
           ]
         }
       },
@@ -815,6 +987,38 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/CEAzureConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CEK8sCluster"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/CEKubernetesClusterConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Codecommit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsCodeCommitConnectorDTO"
               }
             }
           }

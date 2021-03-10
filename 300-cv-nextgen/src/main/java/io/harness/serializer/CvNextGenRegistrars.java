@@ -24,6 +24,7 @@ public class CvNextGenRegistrars {
           .addAll(CvNextGenCommonsRegistrars.morphiaRegistrars)
           .add(CVNextGenMorphiaRegister.class)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
+          .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

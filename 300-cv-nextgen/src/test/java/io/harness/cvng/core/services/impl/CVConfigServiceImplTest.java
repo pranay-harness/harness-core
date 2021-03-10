@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
@@ -23,6 +24,7 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -196,16 +198,50 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_SplunkCVConfig() {
+    CVConfig cvConfig = createCVConfig();
+    String perpetualTaskId = "perpetual-task-id";
+    cvConfig.setPerpetualTaskId(perpetualTaskId);
+    save(cvConfig);
+    CVConfig updated = cvConfigService.get(cvConfig.getUuid());
+    updated.setPerpetualTaskId(null);
+    updated.setEnvIdentifier("new-env-id");
+    cvConfigService.update(updated);
+    CVConfig updateStored = cvConfigService.get(updated.getUuid());
+    assertCommons(updateStored, updated);
+    assertThat(updateStored.getEnvIdentifier()).isEqualTo("new-env-id");
+    assertThat(updateStored.getPerpetualTaskId()).isEqualTo(perpetualTaskId);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_AppDCVConfig() {
+    AppDynamicsCVConfig appDynamicsCVConfig = createAppDCVConfig();
+    save(appDynamicsCVConfig);
+    AppDynamicsCVConfig updated = (AppDynamicsCVConfig) cvConfigService.get(appDynamicsCVConfig.getUuid());
+    updated.setTierName("updated-tier-name");
+    updated.setApplicationName("updated-application-name");
+    cvConfigService.update(updated);
+    AppDynamicsCVConfig updateStored = (AppDynamicsCVConfig) cvConfigService.get(updated.getUuid());
+    assertCommons(updated, updateStored);
+    assertThat(updateStored.getApplicationName()).isEqualTo("updated-application-name");
+    assertThat(updateStored.getTierName()).isEqualTo("updated-tier-name");
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testUpdate_withMultipleCVConfig() {
     CVConfig cvConfig = createCVConfig();
     save(cvConfig);
     CVConfig updated = cvConfigService.get(cvConfig.getUuid());
-    updated.setProjectIdentifier("ProjectIdentifier");
+    updated.setEnvIdentifier("envIdentifier");
     cvConfigService.update(Lists.newArrayList(updated));
     assertCommons(cvConfigService.get(updated.getUuid()), updated);
-    assertThat(updated.getProjectIdentifier()).isEqualTo("ProjectIdentifier");
+    assertThat(updated.getEnvIdentifier()).isEqualTo("envIdentifier");
   }
 
   @Test
@@ -497,21 +533,24 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     appDynamicsDSConfig.setAccountId(accountId);
     appDynamicsDSConfig.setProjectIdentifier(projectIdentifier);
     appDynamicsDSConfig.setOrgIdentifier(orgIdentifier);
-    appDynamicsDSConfig.setAppConfigs(Lists.newArrayList(
-        AppdynamicsAppConfig.builder()
-            .applicationName(identifier)
-            .envIdentifier(envIdentifier)
-            .metricPacks(Sets.newHashSet(
-                MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()))
-            .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
-                                                 .serviceIdentifier("harness-manager")
-                                                 .tierName("manager")
-                                                 .build(),
-                AppDynamicsDSConfig.ServiceMapping.builder()
-                    .serviceIdentifier("harness-qa")
-                    .tierName("manager-qa")
-                    .build()))
-            .build()));
+    appDynamicsDSConfig.setAppConfigs(
+        Lists.newArrayList(AppdynamicsAppConfig.builder()
+                               .applicationName(identifier)
+                               .envIdentifier(envIdentifier)
+                               .metricPacks(Sets.newHashSet(MetricPack.builder()
+                                                                .accountId(accountId)
+                                                                .category(CVMonitoringCategory.INFRASTRUCTURE)
+                                                                .identifier("appd performance metric pack")
+                                                                .build()))
+                               .serviceMappings(Sets.newHashSet(AppDynamicsDSConfig.ServiceMapping.builder()
+                                                                    .serviceIdentifier("harness-manager")
+                                                                    .tierName("manager")
+                                                                    .build(),
+                                   AppDynamicsDSConfig.ServiceMapping.builder()
+                                       .serviceIdentifier("harness-qa")
+                                       .tierName("manager-qa")
+                                       .build()))
+                               .build()));
     return appDynamicsDSConfig;
   }
 
@@ -540,6 +579,15 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     cvConfig.setQuery("exception");
     cvConfig.setServiceInstanceIdentifier(serviceInstanceIdentifier);
     return cvConfig;
+  }
+
+  private AppDynamicsCVConfig createAppDCVConfig() {
+    AppDynamicsCVConfig appDynamicsCVConfig = new AppDynamicsCVConfig();
+    fillCommon(appDynamicsCVConfig);
+    appDynamicsCVConfig.setApplicationName("application-name");
+    appDynamicsCVConfig.setTierName("tier-name");
+    appDynamicsCVConfig.setMetricPack(MetricPack.builder().build());
+    return appDynamicsCVConfig;
   }
 
   private void fillCommon(CVConfig cvConfig) {

@@ -557,7 +557,7 @@ public class AuditServiceImpl implements AuditService {
   public PageResponse<AuditHeader> listUsingFilter(String accountId, String filterJson, String limit, String offset) {
     AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
     auditPreference.setAccountId(accountId);
-    changeAuditPreferenceForHomePage(auditPreference);
+    changeAuditPreferenceForHomePage(auditPreference, accountId);
 
     if (!auditPreference.isIncludeAppLevelResources() && !auditPreference.isIncludeAccountLevelResources()) {
       return new PageResponse<>();
@@ -568,12 +568,24 @@ public class AuditServiceImpl implements AuditService {
     return wingsPersistence.query(AuditHeader.class, pageRequest);
   }
 
-  private void changeAuditPreferenceForHomePage(AuditPreference auditPreference) {
-    if (Objects.isNull(auditPreference.getApplicationAuditFilter())
-        && Objects.isNull(auditPreference.getAccountAuditFilter())
-        && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
-      auditPreference.setOperationTypes(
-          Arrays.stream(Type.values()).filter(type -> type != Type.LOGIN).map(Type::name).collect(Collectors.toList()));
+  @VisibleForTesting
+  void changeAuditPreferenceForHomePage(AuditPreference auditPreference, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, accountId)) {
+      if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+          && Objects.isNull(auditPreference.getAccountAuditFilter())
+          && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+        auditPreference.setOperationTypes(Arrays.stream(Type.values()).map(Type::name).collect(Collectors.toList()));
+      }
+
+    } else {
+      if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+          && Objects.isNull(auditPreference.getAccountAuditFilter())
+          && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+        auditPreference.setOperationTypes(Arrays.stream(Type.values())
+                                              .filter(type -> type != Type.LOGIN)
+                                              .map(Type::name)
+                                              .collect(Collectors.toList()));
+      }
     }
   }
 

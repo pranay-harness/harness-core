@@ -1,5 +1,7 @@
 package io.harness.gitsync.interceptor;
 
+import static io.harness.gitsync.interceptor.GitSyncConstants.DEFAULT_BRANCH;
+
 import static javax.ws.rs.Priorities.HEADER_DECORATOR;
 
 import io.harness.gitsync.interceptor.GitBranchInfo.GitBranchInfoKeys;
@@ -28,6 +30,6 @@ public class GitSyncThreadDecorator implements ContainerRequestFilter {
 
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {
-    return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : pathParameters.getFirst(key);
+    return queryParameters.getFirst(key) != null ? queryParameters.getFirst(key) : DEFAULT_BRANCH;
   }
 }

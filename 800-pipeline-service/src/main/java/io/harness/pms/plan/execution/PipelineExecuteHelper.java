@@ -38,7 +38,7 @@ public class PipelineExecuteHelper {
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
-      String eventPayload, ExecutionTriggerInfo triggerInfo) throws IOException {
+      ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -96,11 +96,6 @@ public class PipelineExecuteHelper {
             .put(SetupAbstractionKeys.accountId, accountId)
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
             .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
-
-    if (executionMetadata.hasTriggerPayload()) {
-      abstractionsBuilder.put(
-          SetupAbstractionKeys.eventPayload, executionMetadata.getTriggerPayload().getJsonPayload());
-    }
 
     return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadata);
   }

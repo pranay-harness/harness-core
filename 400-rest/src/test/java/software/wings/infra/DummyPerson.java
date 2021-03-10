@@ -2,7 +2,6 @@ package software.wings.infra;
 
 import software.wings.annotation.CustomFieldMapKey;
 import software.wings.annotation.IncludeFieldMap;
-import software.wings.infra.FieldKeyValMapProvider;
 
 import lombok.AllArgsConstructor;
 

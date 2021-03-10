@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -284,12 +285,34 @@ public class InstanceServiceImpl implements InstanceService {
              new HIterator<>(wingsPersistence.createQuery(Account.class).project(Account.ID_KEY2, true).fetch())) {
       while (accounts.hasNext()) {
         final Account account = accounts.next();
-        Query<Instance> query = wingsPersistence.createQuery(Instance.class)
-                                    .filter(InstanceKeys.accountId, account.getUuid())
-                                    .filter(InstanceKeys.isDeleted, true)
-                                    .field(InstanceKeys.deletedAt)
-                                    .lessThan(timestamp.toEpochMilli());
-        wingsPersistence.delete(query);
+        Query<Instance> query;
+        do {
+          try {
+            query = wingsPersistence.createQuery(Instance.class)
+                        .filter(InstanceKeys.accountId, account.getUuid())
+                        .filter(InstanceKeys.isDeleted, true)
+                        .field(InstanceKeys.deletedAt)
+                        .lessThan(timestamp.toEpochMilli())
+                        .project(InstanceKeys.uuid, true)
+                        .project(InstanceKeys.deletedAt, true)
+                        .order(InstanceKeys.deletedAt);
+            final List<Instance> instances = query.asList(new FindOptions().limit(500));
+            if (isEmpty(instances)) {
+              break;
+            }
+            final Instance instance = instances.get(instances.size() - 1);
+
+            final Query<Instance> deleteQuery = wingsPersistence.createQuery(Instance.class)
+                                                    .filter(InstanceKeys.accountId, account.getUuid())
+                                                    .filter(InstanceKeys.isDeleted, true)
+                                                    .field(InstanceKeys.deletedAt)
+                                                    .lessThanOrEq(instance.getDeletedAt());
+            wingsPersistence.delete(deleteQuery);
+          } catch (Exception e) {
+            log.error("Failed to delete some instances for account {}", account.getUuid(), e);
+            break;
+          }
+        } while (query.count() > 0);
       }
     }
     return true;

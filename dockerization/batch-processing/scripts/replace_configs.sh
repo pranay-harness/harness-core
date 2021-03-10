@@ -124,6 +124,14 @@ if [[ "" != "$SEGMENT_APIKEY" ]]; then
   yq write -i $CONFIG_FILE segmentConfig.apiKey "$SEGMENT_APIKEY"
 fi
 
+if [[ "" != "$CF_API_KEY" ]]; then
+  yq write -i $CONFIG_FILE cfConfig.apiKey "$CF_API_KEY"
+fi
+
+if [[ "" != "$CF_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE cfConfig.baseUrl "$CF_BASE_URL"
+fi
+
 if [[ "" != "$POD_NAME" ]]; then
   yq write -i $CONFIG_FILE podInfo.name "$POD_NAME"
 fi
@@ -143,3 +151,40 @@ fi
 if [[ "" != "$WEEKLY_REPORT_JOB_CRON" ]]; then
   yq write -i $CONFIG_FILE scheduler-jobs-config.weeklyReportsJobCron "$WEEKLY_REPORT_JOB_CRON"
 fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CLIENTID" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientId "$HARNESS_CE_AZURE_CLIENTID"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CLIENTSECRET" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureAppClientSecret "$HARNESS_CE_AZURE_CLIENTSECRET"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_TENANTID" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureTenantId "$HARNESS_CE_AZURE_TENANTID"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_CONTAINER_NAME" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureStorageContainerName "$HARNESS_CE_AZURE_CONTAINER_NAME"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_STORAGE_NAME" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureStorageAccountName "$HARNESS_CE_AZURE_STORAGE_NAME"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_SAS" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.azureSasToken "$HARNESS_CE_AZURE_SAS"
+fi
+
+if [[ "" != "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED" ]]; then
+  yq write -i $CONFIG_FILE azureStorageSyncConfig.syncJobDisabled "$HARNESS_CE_AZURE_IS_SYNC_JOB_DISABLED"
+fi
+
+if [[ "" != "$ANOMALY_DETECTION_PYTHON_SERVICE_URL" ]]; then
+  yq write -i $CONFIG_FILE cePythonService.pythonServiceUrl "$ANOMALY_DETECTION_PYTHON_SERVICE_URL"
+fi
+
+if [[ "" != "$ANOMALY_DETECTION_USE_PROPHET" ]]; then
+  yq write -i $CONFIG_FILE cePythonService.useProphet "$ANOMALY_DETECTION_USE_PROPHET"
+fi
+

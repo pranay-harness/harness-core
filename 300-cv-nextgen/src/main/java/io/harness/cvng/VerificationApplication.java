@@ -30,6 +30,7 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
+import io.harness.cvng.core.jobs.DataCollectionTaskRecoverNextTaskHandler;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
@@ -40,8 +41,10 @@ import io.harness.cvng.migration.CVNGSchemaHandler;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.migration.beans.CVNGSchema.CVNGSchemaKeys;
 import io.harness.cvng.migration.service.CVNGMigrationService;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
 import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
-import io.harness.cvng.statemachine.jobs.DeploymentVerificationJobInstanceOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
@@ -57,19 +60,22 @@ import io.harness.iterator.PersistenceIterator;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.morphia.MorphiaModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.notification.module.NotificationClientPersistenceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -100,7 +106,6 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -124,6 +129,7 @@ import org.reflections.Reflections;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+
 public class VerificationApplication extends Application<VerificationConfiguration> {
   private static String APPLICATION_NAME = "Verification NextGen Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -217,7 +223,12 @@ public class VerificationApplication extends Application<VerificationConfigurati
         return configuration.getMongoConnectionFactory();
       }
     });
-    modules.add(MongoModule.getInstance());
+    modules.add(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -246,13 +257,14 @@ public class VerificationApplication extends Application<VerificationConfigurati
     initializeServiceSecretKeys();
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     autoCreateCollectionsAndIndexes(injector);
+    registerCorrelationFilter(environment, injector);
     registerAuthFilters(environment, injector, configuration);
     registerManagedBeans(environment, injector);
     registerResources(environment, injector);
-    registerOrchestrationIterator(injector);
     registerVerificationTaskOrchestrationIterator(injector);
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
+    registerRecoverNextTaskHandlerIterator(injector);
     registerDeleteDataCollectionWorkersIterator(injector);
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
@@ -271,30 +283,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
 
   private void autoCreateCollectionsAndIndexes(Injector injector) {
     hPersistence = injector.getInstance(HPersistence.class);
-  }
-
-  private void registerOrchestrationIterator(Injector injector) {
-    ScheduledThreadPoolExecutor workflowVerificationExecutor =
-        new ScheduledThreadPoolExecutor(15, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
-    Handler<CVConfig> handler = injector.getInstance(AnalysisOrchestrationJob.class);
-    PersistenceIterator analysisOrchestrationIterator =
-        MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
-            .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(CVConfig.class)
-            .fieldName(CVConfigKeys.analysisOrchestrationIteration)
-            .targetInterval(ofSeconds(5))
-            .acceptableNoAlertDelay(ofSeconds(15))
-            .executorService(workflowVerificationExecutor)
-            .semaphore(new Semaphore(7))
-            .handler(handler)
-            .schedulingType(REGULAR)
-            .filterExpander(query -> query.field(CVConfigKeys.createdAt).lessThanOrEq(Instant.now().toEpochMilli()))
-            .redistribute(true)
-            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
-            .build();
-    injector.injectMembers(analysisOrchestrationIterator);
-    workflowVerificationExecutor.scheduleWithFixedDelay(
-        () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
   }
 
   private void registerActivityIterator(Injector injector) {
@@ -326,15 +314,16 @@ public class VerificationApplication extends Application<VerificationConfigurati
   }
 
   private void registerVerificationTaskOrchestrationIterator(Injector injector) {
+    // TODO: Reevaluate the thread count here. 20 might be enough now but as we scale, we need to reconsider.
     ScheduledThreadPoolExecutor workflowVerificationExecutor =
-        new ScheduledThreadPoolExecutor(5, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
-    Handler<VerificationJobInstance> handler =
-        injector.getInstance(DeploymentVerificationJobInstanceOrchestrationJob.class);
+        new ScheduledThreadPoolExecutor(20, new ThreadFactoryBuilder().setNameFormat("Iterator-Analysis").build());
+    Handler<AnalysisOrchestrator> handler = injector.getInstance(AnalysisOrchestrationJob.class);
+
     PersistenceIterator analysisOrchestrationIterator =
-        MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()
+        MongoPersistenceIterator.<AnalysisOrchestrator, MorphiaFilterExpander<AnalysisOrchestrator>>builder()
             .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(VerificationJobInstance.class)
-            .fieldName(VerificationJobInstanceKeys.analysisOrchestrationIteration)
+            .clazz(AnalysisOrchestrator.class)
+            .fieldName(AnalysisOrchestratorKeys.analysisOrchestrationIteration)
             .targetInterval(ofSeconds(30))
             .acceptableNoAlertDelay(ofSeconds(30))
             .executorService(workflowVerificationExecutor)
@@ -342,14 +331,14 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .handler(handler)
             .schedulingType(REGULAR)
             .filterExpander(query
-                -> query.field(VerificationJobInstanceKeys.executionStatus)
-                       .in(Lists.newArrayList(ExecutionStatus.QUEUED, ExecutionStatus.RUNNING)))
+                -> query.field(AnalysisOrchestratorKeys.status)
+                       .in(Lists.newArrayList(AnalysisStatus.CREATED, AnalysisStatus.RUNNING)))
             .redistribute(true)
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
             .build();
     injector.injectMembers(analysisOrchestrationIterator);
     workflowVerificationExecutor.scheduleWithFixedDelay(
-        () -> analysisOrchestrationIterator.process(), 0, 20, TimeUnit.SECONDS);
+        () -> analysisOrchestrationIterator.process(), 0, 5, TimeUnit.SECONDS);
   }
 
   private void registerVerificationJobInstanceTimeoutIterator(Injector injector) {
@@ -445,7 +434,33 @@ public class VerificationApplication extends Application<VerificationConfigurati
     dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
+  private void registerRecoverNextTaskHandlerIterator(Injector injector) {
+    ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
+        3, new ThreadFactoryBuilder().setNameFormat("recover-next-task-iterator").build());
+    DataCollectionTaskRecoverNextTaskHandler dataCollectionTaskRecoverNextTaskHandler =
+        injector.getInstance(DataCollectionTaskRecoverNextTaskHandler.class);
+    PersistenceIterator dataCollectionTaskRecoverHandlerIterator =
+        MongoPersistenceIterator.<CVConfig, MorphiaFilterExpander<CVConfig>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(CVConfig.class)
+            .fieldName(CVConfigKeys.createNextTaskIteration)
+            .targetInterval(ofMinutes(5))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(3))
+            .handler(dataCollectionTaskRecoverNextTaskHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query -> query.criteria(CVConfigKeys.firstTaskQueued).equal(true))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(dataCollectionTaskRecoverHandlerIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(
+        () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 2, TimeUnit.MINUTES);
+  }
+
   private void registerDeleteDataCollectionWorkersIterator(Injector injector) {
+    // TODO: remove this once moving to MonitoringSourcePerpetualTask is done.
     ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
         5, new ThreadFactoryBuilder().setNameFormat("delete-data-collection-workers-iterator").build());
     DeletePerpetualTasksHandler handler = injector.getInstance(DeletePerpetualTasksHandler.class);
@@ -597,6 +612,10 @@ public class VerificationApplication extends Application<VerificationConfigurati
     jersey.register(BadRequestExceptionMapper.class);
     jersey.register(WingsExceptionMapperV2.class);
     jersey.register(GenericExceptionMapperV2.class);
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void runMigrations(Injector injector) {

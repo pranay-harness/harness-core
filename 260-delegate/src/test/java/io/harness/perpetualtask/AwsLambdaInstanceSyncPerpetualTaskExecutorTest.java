@@ -13,7 +13,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -51,7 +51,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTest {
+public class AwsLambdaInstanceSyncPerpetualTaskExecutorTest extends DelegateTestBase {
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private AwsLambdaHelperServiceDelegate awsLambdaHelperServiceDelegate;
   @Mock private AwsCloudWatchHelperServiceDelegate awsCloudWatchHelperServiceDelegate;

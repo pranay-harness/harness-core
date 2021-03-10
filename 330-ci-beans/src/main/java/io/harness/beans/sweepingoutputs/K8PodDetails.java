@@ -25,9 +25,9 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8PodDetails")
 @JsonTypeName("k8PodDetails")
 public class K8PodDetails implements PersistentEntity, UuidAware, ContextElement, AccountAccess {
-  private String namespace;
+  private String namespace; // Don't use it, it will be removed soon
   private String stageID;
-  private String clusterName;
+  private String clusterName; // Don't use it, it will be removed soon
   private long lastUpdatedAt;
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex private String accountId;

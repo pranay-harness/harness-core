@@ -3303,8 +3303,12 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
                                                                          .build()))
                                               .build();
 
-    when(buildSourceService.validateArtifactSource(customArtifactStream)).thenThrow(ShellExecutionException.class);
-    assertThatThrownBy(() -> createArtifactStream(customArtifactStream)).isInstanceOf(ShellExecutionException.class);
+    when(buildSourceService.validateArtifactSource(customArtifactStream))
+        .thenThrow(new ShellExecutionException("script error"));
+    assertThatThrownBy(() -> createArtifactStream(customArtifactStream))
+        .isInstanceOf(ShellExecutionException.class)
+        .hasMessage(
+            "Custom Artifact script execution failed with following error: script error, Please verify the script.");
   }
 
   @Test

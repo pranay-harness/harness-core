@@ -1,3 +1,3 @@
 package io.harness.ccm.setup.graphql;
 
-public enum QLInfraTypesEnum { AWS, GCP }
+public enum QLInfraTypesEnum { AWS, GCP, AZURE }

@@ -7,7 +7,7 @@ load("//:macros.bzl", "sources")
 
 sources()
 
-shared_dependencies = [
+shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "//350-event-xxxxxxxxmodule",
     "//400-rest:module",
     "//450-ce-views:module",
@@ -19,10 +19,15 @@ shared_dependencies = [
     "//960-persistence:module",
     "//970-grpc:module",
     "//970-rbac-core:module",
+    "@maven//:com_azure_azure_identity",
+    "@maven//:com_azure_azure_storage_blob",
+    "@maven//:com_azure_azure_storage_common",
+    "@maven//:com_microsoft_azure_msal4j",
     "@maven//:com_google_cloud_google_cloud_bigquerydatatransfer",
     "@maven//:com_google_cloud_google_cloud_storage",
     "@maven//:com_openpojo_openpojo",
     "@maven//:com_slack_api_slack_api_client",
+    "@maven//:com_slack_api_slack_api_model",
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
     "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
@@ -96,7 +101,7 @@ java_library(
     resources = [
         "//280-batch-processing/src/main/resources:resource",
     ],
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = test_dependencies,
 )
 

@@ -293,6 +293,7 @@ public class ViewsQueryBuilder {
       switch (viewFieldInput.getIdentifier()) {
         case AWS:
         case GCP:
+        case AZURE:
         case CLUSTER:
         case COMMON:
           query.addAliasedColumn(
@@ -757,6 +758,7 @@ public class ViewsQueryBuilder {
     switch (field.getIdentifier()) {
       case AWS:
       case GCP:
+      case AZURE:
       case CLUSTER:
       case COMMON:
       case LABEL:
@@ -772,6 +774,7 @@ public class ViewsQueryBuilder {
     switch (field.getIdentifier()) {
       case AWS:
       case GCP:
+      case AZURE:
       case CLUSTER:
       case COMMON:
         return field.getFieldId();

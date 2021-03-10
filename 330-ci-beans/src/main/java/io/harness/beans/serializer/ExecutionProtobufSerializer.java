@@ -145,7 +145,7 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case RESTORE_CACHE_S3:
           return pluginCompatibleStepSerializer.serializeStep(
               step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
-        case TEST_INTELLIGENCE:
+        case RUN_TESTS:
           return runTestsStepProtobufSerializer.serializeStep(
               step, getPort(liteEngineTaskStepInfo, step.getIdentifier()), taskIds.get(step.getIdentifier()));
         case CLEANUP:

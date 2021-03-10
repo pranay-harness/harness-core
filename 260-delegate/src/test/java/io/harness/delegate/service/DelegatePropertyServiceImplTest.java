@@ -3,6 +3,7 @@ package io.harness.delegate.service;
 import static io.harness.rule.OwnerRule.MATT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -46,7 +47,7 @@ public class DelegatePropertyServiceImplTest extends CategoryTest {
 
   @Before
   public void setUp() throws IOException {
-    when(delegateAgentManagerClient.getDelegateProperties(anyString())).thenReturn(propertyResponse);
+    when(delegateAgentManagerClient.getDelegateProperties(anyString(), any())).thenReturn(propertyResponse);
   }
 
   @Test
@@ -66,7 +67,7 @@ public class DelegatePropertyServiceImplTest extends CategoryTest {
     GetDelegatePropertiesResponse response = propertyService.getDelegateProperties(request);
     propertyService.getDelegateProperties(request);
 
-    verify(delegateAgentManagerClient, times(1)).getDelegateProperties(anyString());
+    verify(delegateAgentManagerClient, times(1)).getDelegateProperties(anyString(), any());
 
     assertThat(response.getResponseEntry(0).unpack(HttpsCertRequirement.class).getCertRequirement())
         .isEqualTo(CertRequirement.CERTIFICATE_REQUIRED);

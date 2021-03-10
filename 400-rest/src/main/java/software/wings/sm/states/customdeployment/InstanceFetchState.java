@@ -390,7 +390,7 @@ public class InstanceFetchState extends State {
     } else if (t instanceof WingsException) {
       errorMessage.append(ExceptionUtils.getMessage(t));
     } else {
-      errorMessage.append(defaultErrorMessage).append("\n").append(t.getMessage());
+      errorMessage.append(defaultErrorMessage).append('\n').append(t.getMessage());
     }
     log.error(errorMessage.toString(), t);
     return responseBuilder.errorMessage(errorMessage.toString()).build();

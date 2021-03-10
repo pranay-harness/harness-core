@@ -13,6 +13,7 @@ service OutcomeProtoService {
   rpc findAllByRuntimeId(OutcomeFindAllBlobRequest) returns (OutcomeFindAllBlobResponse);
   rpc fetchOutcomes(OutcomeFetchOutcomesBlobRequest) returns (OutcomeFetchOutcomesBlobResponse);
   rpc fetchOutcome(OutcomeFetchOutcomeBlobRequest) returns (OutcomeFetchOutcomeBlobResponse);
+  rpc resolveOptional(OutcomeResolveOptionalBlobRequest) returns (OutcomeResolveOptionalBlobResponse);
 }
 
 message OutcomeFetchOutcomeBlobRequest {
@@ -58,4 +59,14 @@ message OutcomeConsumeBlobRequest {
 
 message OutcomeConsumeBlobResponse {
   string response = 1;
+}
+
+message OutcomeResolveOptionalBlobRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  io.harness.pms.contracts.refobjects.RefObject refObject = 2;
+}
+
+message OutcomeResolveOptionalBlobResponse {
+  string outcome = 1;
+  bool found = 2;
 }

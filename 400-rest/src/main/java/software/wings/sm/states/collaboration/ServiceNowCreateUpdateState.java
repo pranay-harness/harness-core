@@ -156,6 +156,9 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
             .accountId(accountId)
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.fetchRequiredApp().getAppId())
+            .description(serviceNowTaskParameters.getAction() != null
+                    ? serviceNowCreateUpdateParams.getAction().getDisplayName() + " ServiceNow ticket"
+                    : "ServiceNow task")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(SERVICENOW_ASYNC.name())
@@ -163,8 +166,10 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
                       .timeout(ASYNC_TASK_TIMEOUT_MILLIS)
                       .build())
             .workflowExecutionId(context.getWorkflowExecutionId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -207,5 +212,10 @@ public class ServiceNowCreateUpdateState extends State implements SweepingOutput
   @Override
   public KryoSerializer getKryoSerializer() {
     return kryoSerializer;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

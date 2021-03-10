@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.GenericType;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
 
 @Singleton
 @Slf4j
@@ -46,7 +47,8 @@ public class DelegateExecutor {
 
   public void ensureDelegate(Account account, String bearerToken, Class clazz) throws IOException {
     if (!isHealthy(account.getUuid(), bearerToken)) {
-      executeLocalDelegate(account, bearerToken, clazz);
+      return;
+      //      executeLocalDelegate(account, bearerToken, clazz);
     }
   }
 
@@ -71,7 +73,14 @@ public class DelegateExecutor {
           return;
         }
 
-        final Path jar = Paths.get(directory.getPath(), "260-delegate", "target", "delegate-capsule.jar");
+        String home = System.getProperty("user.home");
+        if (home.contains("root")) {
+          home = "/home/jenkins";
+        }
+
+        final Path jar = Paths.get(home + "/.bazel-dirs/bin/260-delegate/module_deploy.jar");
+        log.info("The delegate path is: {}", jar.toString());
+
         final Path config = Paths.get(directory.getPath(), "260-delegate", "config-delegate.yml");
 
         List<String> command = new ArrayList<>();
@@ -95,14 +104,19 @@ public class DelegateExecutor {
         //        processExecutor.redirectError(null);
 
         log.info("Starting the delegate from {}", directory);
-        processExecutor.start();
+        StartedProcess startedProcess = processExecutor.start();
 
         boolean flagUpdatedSuccessfuly = startedAlready.compareAndSet(false, true);
         if (!flagUpdatedSuccessfuly) {
           log.warn("Process startup control flag was not set to false as expected.");
         }
 
-        Poller.pollFor(waiting, ofSeconds(2), () -> isHealthy(account.getUuid(), bearerToken));
+        Poller.pollFor(waiting, ofSeconds(2),
+            () -> startedProcess.getFuture().isDone() || isHealthy(account.getUuid(), bearerToken));
+
+        if (!isHealthy(account.getUuid(), bearerToken)) {
+          throw new RuntimeException("Delegate process finished without becoming healthy");
+        }
 
       } catch (IOException ex) {
         startedAlready.set(false);

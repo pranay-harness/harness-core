@@ -1,5 +1,7 @@
 package io.harness.repositories;
 
+import io.harness.beans.SampleBean;
+
 public interface TestCustomRepository {
-  void findByIdd(String id);
+  SampleBean save(SampleBean sampleBean);
 }

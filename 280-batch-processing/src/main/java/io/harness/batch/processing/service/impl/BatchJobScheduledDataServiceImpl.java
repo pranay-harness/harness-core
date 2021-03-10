@@ -67,7 +67,12 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
-    if (null != instant && BatchJobType.ANOMALY_DETECTION == batchJobType) {
+    if (null != instant && BatchJobType.ANOMALY_DETECTION_K8S == batchJobType) {
+      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+    }
+
+    if (null != instant && BatchJobType.ANOMALY_DETECTION_CLOUD == batchJobType) {
       Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }

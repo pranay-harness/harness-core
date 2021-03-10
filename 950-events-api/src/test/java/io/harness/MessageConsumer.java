@@ -29,11 +29,12 @@ public class MessageConsumer implements Runnable {
       String readVia, RedisConfig redisConfig, String channel, String groupName, Integer processingTime, String color) {
     this.readVia = readVia;
     this.color = color;
-    if (readVia.equals("serialConsumerGroups"))
+    if (readVia.equals("serialConsumerGroups")) {
       this.client =
           RedisSerialConsumer.of(channel, groupName, "hardcodedconsumer", redisConfig, Duration.ofSeconds(10));
-    else
+    } else {
       this.client = RedisConsumer.of(channel, groupName, redisConfig, Duration.ofSeconds(10), 5);
+    }
     this.groupName = groupName;
     this.processingTime = processingTime;
   }
@@ -92,10 +93,8 @@ public class MessageConsumer implements Runnable {
           try {
             processMessage(message);
           } catch (Exception e) {
-            //        throw e;
-            e.printStackTrace();
             log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
-                ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
+                ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET, e);
           }
         }
         Thread.sleep(1000);
@@ -116,8 +115,9 @@ public class MessageConsumer implements Runnable {
   private void processMessage(Message message)
       throws InterruptedException, InvalidProtocolBufferException, ConsumerShutdownException {
     ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
-    if (p.getIdentifier().isEmpty())
+    if (p.getIdentifier().isEmpty()) {
       throw new IllegalStateException("Bad data sent - " + message.getId());
+    }
     log.info("{}Reading messageId: {} for Consumer - {} - pid: {}{}", color, message.getId(), this.client.getName(),
         p.getIdentifier(), ColorConstants.TEXT_RESET);
     Thread.sleep(processingTime);

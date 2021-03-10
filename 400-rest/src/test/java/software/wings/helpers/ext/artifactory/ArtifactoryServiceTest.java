@@ -26,11 +26,14 @@ import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl.ArtifactoryErrorResponse;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.utils.ArtifactType;
+import software.wings.utils.JsonUtils;
 import software.wings.utils.RepositoryType;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -46,8 +49,8 @@ import org.apache.http.message.BasicStatusLine;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClientBuilder;
 import org.jfrog.artifactory.client.ArtifactoryResponse;
+import org.jfrog.artifactory.client.impl.ArtifactoryResponseImpl;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -56,7 +59,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class ArtifactoryServiceTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
@@ -65,17 +67,21 @@ public class ArtifactoryServiceTest extends CategoryTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(9881);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
   String url = "http://localhost:9881/artifactory/";
 
-  private ArtifactoryConfig artifactoryConfig =
-      ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
-
-  private ArtifactoryConfig artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
+  private ArtifactoryConfig artifactoryConfig;
+  private ArtifactoryConfig artifactoryConfigAnonymous;
 
   @Before
   public void setUp() throws IllegalAccessException {
+    url = String.format("http://localhost:%d/artifactory/", wireMockRule.port());
+    artifactoryConfig =
+        ArtifactoryConfig.builder().artifactoryUrl(url).username("admin").password("dummy123!".toCharArray()).build();
+    artifactoryConfigAnonymous = ArtifactoryConfig.builder().artifactoryUrl(url).build();
     FieldUtils.writeField(
         artifactoryService, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
   }
@@ -320,6 +326,63 @@ public class ArtifactoryServiceTest extends CategoryTest {
     assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("407 Related Exception Phrase");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCode() throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.isRunning(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionOnArtifactoryResponseWith500StatusCodeForGetRespositories()
+      throws IOException, IllegalAccessException {
+    ArtifactoryServiceImpl service = Mockito.spy(ArtifactoryServiceImpl.class);
+    Artifactory client = Mockito.mock(Artifactory.class);
+    ArtifactoryResponse artifactoryResponse = Mockito.mock(ArtifactoryResponseImpl.class);
+    FieldUtils.writeField(service, "encryptionService", new EncryptionServiceImpl(null, null, null, null, null), true);
+
+    when(artifactoryResponse.getStatusLine())
+        .thenReturn(new BasicStatusLine(new ProtocolVersion("", 1, 1), 500, "Internal Server Error"));
+    when(artifactoryResponse.parseBody(ArtifactoryErrorResponse.class))
+        .thenReturn(JsonUtils.convertStringToObj("{\n"
+                + "  \"errors\" : [ {\n"
+                + "    \"status\" : 500,\n"
+                + "    \"message\" : \"Artifactory failed to initialize: check Artifactory logs for errors.\"\n"
+                + "  } ]\n"
+                + "}",
+            ArtifactoryErrorResponse.class));
+    when(service.getArtifactoryClient(artifactoryConfig, null)).thenReturn(client);
+    when(client.restCall(any())).thenReturn(artifactoryResponse);
+
+    assertThatThrownBy(() -> service.getRepositories(artifactoryConfig, null))
+        .isInstanceOf(ArtifactoryServerException.class)
+        .hasMessageContaining(
+            "Request to server failed with status code: 500 with message - Artifactory failed to initialize: check Artifactory logs for errors.");
   }
 
   @Test

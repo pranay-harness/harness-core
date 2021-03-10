@@ -259,6 +259,7 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
             .accountId(executionContext.getApp().getAccountId())
             .waitId(activityId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, ((ExecutionContextImpl) context).getApp().getAppId())
+            .description(jiraAction != null ? jiraAction.getDisplayName() : "Jira Task")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(JIRA.name())
@@ -266,8 +267,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                       .timeout(JIRA_TASK_TIMEOUT_MILLIS)
                       .build())
             .workflowExecutionId(context.getWorkflowExecutionId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -844,5 +847,10 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
   @Override
   public KryoSerializer getKryoSerializer() {
     return kryoSerializer;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

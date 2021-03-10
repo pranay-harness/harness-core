@@ -2,6 +2,7 @@ package io.harness.ng.core.invites.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
@@ -9,6 +10,7 @@ import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.Field;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.persistence.PersistentEntity;
@@ -45,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
     })
 @Document("invites")
 @TypeAlias("invites")
+@StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(PL)
 public class Invite implements PersistentEntity, NGAccountAccess {
   @Trimmed @NotEmpty String accountIdentifier;

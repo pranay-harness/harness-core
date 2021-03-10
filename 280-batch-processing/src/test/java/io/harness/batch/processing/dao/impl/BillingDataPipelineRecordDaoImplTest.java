@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BillingDataPipelineRecordDaoImplTest extends BatchProcessingBaseTest {
+public class BillingDataPipelineRecordDaoImplTest extends BatchProcessingTestBase {
   @Inject private BillingDataPipelineRecordDaoImpl billingDataPipelineRecordDao;
   @Inject private HPersistence hPersistence;
 

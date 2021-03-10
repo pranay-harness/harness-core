@@ -32,7 +32,7 @@ public class NexusAuthDTODeserializer extends StdDeserializer<NexusAuthenticatio
     if (type == NexusAuthType.USER_PASSWORD) {
       nexusAuthenticationDTO = mapper.readValue(authSpec.toString(), NexusUsernamePasswordAuthDTO.class);
     } else if (type == NexusAuthType.ANONYMOUS) {
-      if (authSpec != null) {
+      if (authSpec != null && !authSpec.isNull()) {
         throw new InvalidRequestException("No spec should be provided with the anonymous type");
       }
     }

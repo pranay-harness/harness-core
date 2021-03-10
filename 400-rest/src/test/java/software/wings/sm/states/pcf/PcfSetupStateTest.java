@@ -755,6 +755,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
                                                                 .resizeStrategy(RESIZE_NEW_FIRST)
                                                                 .tempRoutesOnSetupState(tempRoutes)
                                                                 .finalRoutesOnSetupState(finalRoutes)
+                                                                .useArtifactProcessingScript(true)
+                                                                .artifactProcessingScript("test script")
                                                                 .timeout(6)
                                                                 .build();
 
@@ -768,6 +770,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getPcfAppName()).isNull();
     assertThat(state.getTempRouteMap()).isNull();
     assertThat(state.getFinalRouteMap()).isNull();
+    assertThat(state.isUseArtifactProcessingScript()).isFalse();
+    assertThat(state.getArtifactProcessingScript()).isNull();
 
     state.restoreStateDataAfterGitFetchIfNeeded(pcfSetupStateExecutionData);
 
@@ -781,6 +785,8 @@ public class PcfSetupStateTest extends WingsBaseTest {
     assertThat(state.getPcfAppName()).isEqualTo(APP_NAME);
     assertThat(state.getTempRouteMap()).isEqualTo(tempRoutes);
     assertThat(state.getFinalRouteMap()).isEqualTo(finalRoutes);
+    assertThat(state.isUseArtifactProcessingScript()).isTrue();
+    assertThat(state.getArtifactProcessingScript().equalsIgnoreCase("test script")).isTrue();
 
     // test for NPE
     state.restoreStateDataAfterGitFetchIfNeeded(null);

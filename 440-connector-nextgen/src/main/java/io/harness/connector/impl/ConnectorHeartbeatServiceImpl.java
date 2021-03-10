@@ -10,7 +10,6 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.services.ConnectorHeartbeatService;
@@ -18,8 +17,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
-import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
@@ -54,7 +51,8 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
     this.connectorValidationParamsProviderMap = connectorValidationParamsProviderMap;
   }
 
-  private PerpetualTaskId createPerpetualTask(ConnectorInfoDTO connector, String accountIdentifier) {
+  private PerpetualTaskId createPerpetualTask(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier) {
     try {
       AccountId accountId = AccountId.newBuilder().setId(accountIdentifier).build();
       PerpetualTaskSchedule perpetualTaskSchedule = PerpetualTaskSchedule.newBuilder()
@@ -63,13 +61,13 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
                                                         .build();
       Map<String, String> clientParamsMap = new HashMap<>();
       clientParamsMap.put(ACCOUNT_KEY, accountIdentifier);
-      if (isNotBlank(connector.getOrgIdentifier())) {
-        clientParamsMap.put(ORG_KEY, connector.getOrgIdentifier());
+      if (isNotBlank(connectorOrgIdentifier)) {
+        clientParamsMap.put(ORG_KEY, connectorOrgIdentifier);
       }
-      if (isNotBlank(connector.getProjectIdentifier())) {
-        clientParamsMap.put(PROJECT_KEY, connector.getProjectIdentifier());
+      if (isNotBlank(connectorProjectIdentifier)) {
+        clientParamsMap.put(PROJECT_KEY, connectorProjectIdentifier);
       }
-      clientParamsMap.put(CONNECTOR_IDENTIFIER_KEY, connector.getIdentifier());
+      clientParamsMap.put(CONNECTOR_IDENTIFIER_KEY, connectorIdentifier);
       TaskClientParams clientParams = TaskClientParams.newBuilder().putAllParams(clientParamsMap).build();
       PerpetualTaskClientContextDetails taskContext =
           PerpetualTaskClientContextDetails.newBuilder().setTaskClientParams(clientParams).build();
@@ -77,54 +75,38 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
           perpetualTaskSchedule, taskContext, false, "Connector Test Connection Task");
     } catch (Exception ex) {
       log.info("{} Error Creating Perpetual task for the connector {} in account {}, org {} with taskId {}",
-          CONNECTOR_HEARTBEAT_LOG_PREFIX, connector.getIdentifier(), connector.getOrgIdentifier(),
-          connector.getProjectIdentifier(), ex);
+          CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, ex);
       return null;
     }
   }
 
-  @Override
-  public PerpetualTaskId createConnectorHeatbeatTask(String accountIdentifier, ConnectorInfoDTO connector) {
-    if (isHarnessManagedSecretManager(connector)) {
-      return null;
-    }
-    PerpetualTaskId perpetualTaskId = createPerpetualTask(connector, accountIdentifier);
+  public PerpetualTaskId createConnectorHeatbeatTask(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier) {
+    PerpetualTaskId perpetualTaskId =
+        createPerpetualTask(accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier);
     if (perpetualTaskId == null || perpetualTaskId.getId() == null) {
-      log.info("{} Error in creating Perpetual task for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
-          String.format(CONNECTOR_STRING, connector.getIdentifier(), accountIdentifier, connector.getOrgIdentifier(),
-              connector.getProjectIdentifier()));
+      log.error("{} Error in creating Perpetual task for the {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
+          String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, connectorOrgIdentifier,
+              connectorProjectIdentifier));
       return null;
     }
-    connectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId.getId());
     log.info("{} Created perpetual task for the {} with the id {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
-        String.format(CONNECTOR_STRING, connector.getIdentifier(), accountIdentifier, connector.getOrgIdentifier(),
-            connector.getProjectIdentifier()),
+        String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, connectorOrgIdentifier,
+            connectorProjectIdentifier),
         perpetualTaskId.getId());
     return perpetualTaskId;
   }
 
-  private boolean isHarnessManagedSecretManager(ConnectorInfoDTO connector) {
-    if (connector == null) {
-      return false;
-    }
-    switch (connector.getConnectorType()) {
-      case GCP_KMS:
-        return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
-      case LOCAL:
-        return ((LocalConnectorDTO) connector.getConnectorConfig()).isHarnessManaged();
-      default:
-        return false;
-    }
-  }
-
   @Override
-  public void deletePerpetualTask(String accountIdentifier, String perpetualTaskId, String connectorFQN) {
+  public boolean deletePerpetualTask(String accountIdentifier, String perpetualTaskId, String connectorFQN) {
     try {
       delegateServiceGrpcClient.deletePerpetualTask(AccountId.newBuilder().setId(accountIdentifier).build(),
           PerpetualTaskId.newBuilder().setId(perpetualTaskId).build());
+      return true;
     } catch (Exception ex) {
-      log.info("{} Exception while deleting the heartbeat task for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
+      log.error("{} Exception while deleting the heartbeat task for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX,
           connectorFQN);
+      return false;
     }
   }
 

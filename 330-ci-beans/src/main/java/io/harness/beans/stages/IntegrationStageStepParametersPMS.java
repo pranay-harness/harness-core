@@ -44,16 +44,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
     }
     IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
 
-    Infrastructure infrastructure = integrationStageConfig.getInfrastructure();
-    if (integrationStageConfig.getInfrastructure().getType() == Type.USE_FROM_STAGE) {
-      UseFromStageInfraYaml useFromStageInfraYaml = (UseFromStageInfraYaml) integrationStageConfig.getInfrastructure();
-      if (useFromStageInfraYaml.getUseFromStage() != null) {
-        YamlField yamlField = ctx.getCurrentField();
-        String identifier = useFromStageInfraYaml.getUseFromStage();
-        IntegrationStageConfig integrationStage = getIntegrationStageConfig(yamlField, identifier);
-        infrastructure = integrationStage.getInfrastructure();
-      }
-    }
+    Infrastructure infrastructure = getInfrastructure(stageElementConfig, ctx);
 
     return IntegrationStageStepParametersPMS.builder()
         .identifier(stageElementConfig.getIdentifier())
@@ -69,6 +60,23 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
         .sharedPaths(integrationStageConfig.getSharedPaths())
         .enableCloneRepo(integrationStageConfig.getCloneCodebase())
         .build();
+  }
+
+  public static Infrastructure getInfrastructure(StageElementConfig stageElementConfig, PlanCreationContext ctx) {
+    IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
+
+    Infrastructure infrastructure = integrationStageConfig.getInfrastructure();
+    if (integrationStageConfig.getInfrastructure().getType() == Type.USE_FROM_STAGE) {
+      UseFromStageInfraYaml useFromStageInfraYaml = (UseFromStageInfraYaml) integrationStageConfig.getInfrastructure();
+      if (useFromStageInfraYaml.getUseFromStage() != null) {
+        YamlField yamlField = ctx.getCurrentField();
+        String identifier = useFromStageInfraYaml.getUseFromStage();
+        IntegrationStageConfig integrationStage = getIntegrationStageConfig(yamlField, identifier);
+        infrastructure = integrationStage.getInfrastructure();
+      }
+    }
+
+    return infrastructure;
   }
 
   private static IntegrationStageConfig getIntegrationStageConfig(YamlField yamlField, String identifier) {

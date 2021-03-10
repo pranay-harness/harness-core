@@ -48,7 +48,6 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Optional;
 import javax.ws.rs.core.HttpHeaders;
@@ -114,7 +113,7 @@ public class YamlGitServiceImplTest extends CategoryTest {
         .when(yamlGitConfigService)
         .getGitConnector(any(), any(), any(), any());
     yamlGitService.handleHarnessChangeSet(yamlChangeSet, ACCOUNTID);
-    verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), any());
+    verify(waitNotifyEngine, times(1)).waitForAllOn(any(), any(), anyString());
   }
 
   @Test

@@ -13,6 +13,7 @@ import io.harness.eraro.ResponseMessage;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
 import javax.xml.ws.soap.SOAPFaultException;
+import org.apache.cxf.transport.http.HTTPException;
 
 public class WinRmHelperUtils {
   public static ResponseMessage buildErrorDetailsFromWinRmClientException(Throwable e) {
@@ -49,6 +50,12 @@ public class WinRmHelperUtils {
           builder.message(e1.getMessage());
         }
         break;
+      } else if (e1 instanceof HTTPException) {
+        HTTPException httpException = (HTTPException) e1;
+        if (httpException.getResponseCode() == 401 || httpException.getResponseCode() == 403) {
+          builder.code(INVALID_CREDENTIAL);
+        }
+        builder.message(e1.getMessage());
       }
       e1 = e1.getCause();
     }

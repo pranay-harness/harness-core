@@ -63,4 +63,32 @@ public class PipelineSetupUsageHelper {
               .build());
     }
   }
+
+  public void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) throws ProducerShutdownException {
+    EntityDetailProtoDTO pipelineDetails =
+        EntityDetailProtoDTO.newBuilder()
+            .setIdentifierRef(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(pipelineEntity.getAccountId(),
+                pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
+                pipelineEntity.getIdentifier()))
+            .setType(EntityTypeProtoEnum.PIPELINES)
+            .setName(pipelineEntity.getName())
+            .build();
+
+    EntitySetupUsageCreateV2DTO entityReferenceDTO = EntitySetupUsageCreateV2DTO.newBuilder()
+                                                         .setAccountIdentifier(pipelineEntity.getAccountId())
+                                                         .setReferredByEntity(pipelineDetails)
+                                                         .addAllReferredEntities(new ArrayList<>())
+                                                         .setDeleteOldReferredByRecords(true)
+                                                         .build();
+    // Send Events for all refferredEntitiesType so as to delete them
+    for (EntityTypeProtoEnum protoEnum : EntityTypeProtoEnum.values()) {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", pipelineEntity.getAccountId(),
+                  EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, protoEnum.name(),
+                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
+              .setData(entityReferenceDTO.toByteString())
+              .build());
+    }
+  }
 }

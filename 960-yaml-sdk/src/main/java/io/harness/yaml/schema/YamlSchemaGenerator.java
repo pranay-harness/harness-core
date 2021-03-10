@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ARRAY_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
+import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.NUMBER_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.OBJECT_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
@@ -16,6 +17,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
+import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SchemaConstants;
@@ -228,6 +230,10 @@ public class YamlSchemaGenerator {
       if (!isEmpty(swaggerDefinitionsMetaInfo.getFieldPossibleTypes())) {
         addPossibleValuesInFields(mapper, value, swaggerDefinitionsMetaInfo);
       }
+      // enum property
+      if (isNotEmpty(swaggerDefinitionsMetaInfo.getFieldEnumData())) {
+        addEnumProperty(value, swaggerDefinitionsMetaInfo.getFieldEnumData());
+      }
 
       if (isNotEmpty(allOfNodeContents)) {
         if (value.has(SchemaConstants.ALL_OF_NODE)) {
@@ -240,6 +246,18 @@ public class YamlSchemaGenerator {
     }
 
     removeUnwantedNodes(value, "originalRef");
+  }
+
+  private void addEnumProperty(ObjectNode value, Set<FieldEnumData> fieldEnumData) {
+    ObjectNode properties = (ObjectNode) value.get(PROPERTIES_NODE);
+    for (FieldEnumData enumData : fieldEnumData) {
+      ObjectNode type = (ObjectNode) properties.get(enumData.getFieldName());
+      if (type.get(ENUM_NODE) == null) {
+        type.putArray(ENUM_NODE);
+      }
+      ArrayNode enumNode = (ArrayNode) type.get(ENUM_NODE);
+      enumData.getEnumValues().forEach(enumNode::add);
+    }
   }
 
   private void addPossibleValuesInFields(
@@ -330,9 +348,7 @@ public class YamlSchemaGenerator {
                       })
                       .collect(Collectors.toList());
 
-              if (mapping.isNullable()) {
-                // not handled.
-              }
+              //  mapping isNullable not handled.
               return requiredNodes;
             })
             .map(oneOfMapContent -> {

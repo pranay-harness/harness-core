@@ -3,6 +3,7 @@ package io.harness.accesscontrol.permissions;
 import io.harness.accesscontrol.permissions.persistence.PermissionDao;
 import io.harness.accesscontrol.permissions.persistence.PermissionDaoImpl;
 import io.harness.accesscontrol.permissions.persistence.PermissionMorphiaRegistrar;
+import io.harness.accesscontrol.resources.resourcetypes.ResourceTypeService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.morphia.MorphiaRegistrar;
@@ -10,6 +11,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class PermissionsModule extends AbstractModule {
@@ -35,7 +37,9 @@ public class PermissionsModule extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(ScopeService.class);
+    requireBinding(ResourceTypeService.class);
     requireBinding(RoleService.class);
     requireBinding(TransactionTemplate.class);
+    requireBinding(MongoTemplate.class);
   }
 }

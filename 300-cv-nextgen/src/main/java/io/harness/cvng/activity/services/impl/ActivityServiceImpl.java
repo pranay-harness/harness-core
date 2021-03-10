@@ -9,10 +9,12 @@ import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
+import io.harness.cvng.activity.beans.Cd10ValidateMappingParams;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
+import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
@@ -22,6 +24,8 @@ import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKe
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
+import io.harness.cvng.alert.services.api.AlertRuleService;
+import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
@@ -39,6 +43,7 @@ import io.harness.cvng.verificationjob.CVVerificationJobConstants;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
@@ -79,6 +84,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CD10ActivitySourceService cd10ActivitySourceService;
+  @Inject private AlertRuleService alertRuleService;
 
   @Override
   public Activity get(String activityId) {
@@ -116,32 +122,53 @@ public class ActivityServiceImpl implements ActivityService {
     Preconditions.checkNotNull(activityDTO);
     Preconditions.checkState(
         activityDTO.getVerificationJobRuntimeDetails().size() == 1, "RuntimeDetails should be of size 1");
-    if (activityDTO.getServiceIdentifier() == null || activityDTO.getEnvironmentIdentifier() == null) {
-      Map<String, String> runtimeValues = activityDTO.getVerificationJobRuntimeDetails().get(0).getRuntimeValues();
-      String harness10CdAppId = runtimeValues.get("harnessCdAppId");
-      String harness10CdServiceId = runtimeValues.get("harnessCdServiceId");
-      String harness10CdEnvId = runtimeValues.get("harnessCdEnvId");
-      Preconditions.checkNotNull(harness10CdAppId, "harnessCdAppId is not present in runtimeValues");
-      Preconditions.checkNotNull(harness10CdServiceId, "harnessCdServiceId is not present in runtimeValues");
-      Preconditions.checkNotNull(harness10CdEnvId, "harnessCdEnvId is not present in runtimeValues");
-      if (activityDTO.getEnvironmentIdentifier() == null) {
-        activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
-            activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
-        runtimeValues.put(CVVerificationJobConstants.ENV_IDENTIFIER_KEY, activityDTO.getEnvironmentIdentifier());
-      }
-      if (activityDTO.getServiceIdentifier() == null) {
-        activityDTO.setServiceIdentifier(
-            cd10ActivitySourceService.getNextGenServiceIdentifier(accountId, activityDTO.getOrgIdentifier(),
-                activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
-        runtimeValues.put(CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY, activityDTO.getServiceIdentifier());
-      }
-    }
+    Preconditions.checkState(
+        activityDTO.getServiceIdentifier() == null && activityDTO.getEnvironmentIdentifier() == null,
+        "service and env identifiers should be null");
+    Map<String, String> runtimeValues = activityDTO.getVerificationJobRuntimeDetails().get(0).getRuntimeValues();
+    String harness10CdAppId = runtimeValues.get("harnessCdAppId");
+    String harness10CdServiceId = runtimeValues.get("harnessCdServiceId");
+    String harness10CdEnvId = runtimeValues.get("harnessCdEnvId");
+    Preconditions.checkNotNull(harness10CdAppId, "harnessCdAppId is not present in runtimeValues");
+    Preconditions.checkNotNull(harness10CdServiceId, "harnessCdServiceId is not present in runtimeValues");
+    Preconditions.checkNotNull(harness10CdEnvId, "harnessCdEnvId is not present in runtimeValues");
+    activityDTO.setEnvironmentIdentifier(cd10ActivitySourceService.getNextGenEnvIdentifier(accountId,
+        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdEnvId));
+    runtimeValues.put(CVVerificationJobConstants.ENV_IDENTIFIER_KEY, activityDTO.getEnvironmentIdentifier());
+    activityDTO.setServiceIdentifier(cd10ActivitySourceService.getNextGenServiceIdentifier(accountId,
+        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), harness10CdAppId, harness10CdServiceId));
+    runtimeValues.put(CVVerificationJobConstants.SERVICE_IDENTIFIER_KEY, activityDTO.getServiceIdentifier());
+    validateCD10Mappings(activityDTO, harness10CdAppId, harness10CdServiceId, harness10CdEnvId);
     String activityId = register(accountId, activityDTO);
     return CD10RegisterActivityDTO.builder()
         .activityId(activityId)
         .serviceIdentifier(activityDTO.getServiceIdentifier())
         .envIdentifier(activityDTO.getEnvironmentIdentifier())
         .build();
+  }
+
+  private void validateCD10Mappings(ActivityDTO activityDTO, String cd10AppId, String cd10ServiceId, String cd10EnvId) {
+    Preconditions.checkState(activityDTO.getVerificationJobRuntimeDetails().size() == 1,
+        "VerificationJobRuntimeDetails should be of size 1");
+    String verificationJobIdentifier =
+        activityDTO.getVerificationJobRuntimeDetails().get(0).getVerificationJobIdentifier();
+    Preconditions.checkNotNull(verificationJobIdentifier, "verificationJobIdentifier can not be null");
+    VerificationJob verificationJob = verificationJobService.getVerificationJob(activityDTO.getAccountIdentifier(),
+        activityDTO.getOrgIdentifier(), activityDTO.getProjectIdentifier(), verificationJobIdentifier);
+    Preconditions.checkNotNull(
+        verificationJob, "VerificationJob with identifier %s does not exists", verificationJobIdentifier);
+    cd10ActivitySourceService.validateMapping(
+        Cd10ValidateMappingParams.builder()
+            .accountId(activityDTO.getAccountIdentifier())
+            .orgIdentifier(activityDTO.getOrgIdentifier())
+            .projectIdentifier(activityDTO.getProjectIdentifier())
+            .activitySourceIdentifier(verificationJob.getActivitySourceIdentifier())
+            .cd10AppId(cd10AppId)
+            .cd10ServiceId(cd10ServiceId)
+            .cd10EnvId(cd10EnvId)
+            .serviceIdentifier(verificationJob.getServiceIdentifierRuntimeParam())
+            .environmentIdentifier(verificationJob.getEnvIdentifierRuntimeParam())
+            .build());
   }
 
   @Override
@@ -159,6 +186,14 @@ public class ActivityServiceImpl implements ActivityService {
       hPersistence.update(activityQuery, activityUpdateOperations);
 
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
+    }
+
+    if (ActivityVerificationStatus.getFinalStates().contains(summary.getAggregatedStatus())) {
+      DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
+      alertRuleService.processDeploymentVerification(activity.getAccountId(), activity.getOrgIdentifier(),
+          activity.getProjectIdentifier(), activity.getServiceIdentifier(), activity.getEnvironmentIdentifier(),
+          activity.getType(), VerificationStatus.getVerificationStatus(summary.getAggregatedStatus()),
+          summary.getStartTime(), summary.getDurationMs(), deploymentActivity.getDeploymentTag());
     }
   }
 
@@ -246,8 +281,21 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public DeploymentVerificationJobInstanceSummary getDeploymentSummary(String activityId) {
-    Activity activity = get(activityId);
+  public DeploymentActivitySummaryDTO getDeploymentSummary(String activityId) {
+    DeploymentActivity activity = (DeploymentActivity) get(activityId);
+    DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
+        getDeploymentVerificationJobInstanceSummary(activity);
+    return DeploymentActivitySummaryDTO.builder()
+        .deploymentVerificationJobInstanceSummary(deploymentVerificationJobInstanceSummary)
+        .serviceIdentifier(activity.getServiceIdentifier())
+        .serviceName(getServiceNameFromActivity(activity))
+        .envIdentifier(activity.getEnvironmentIdentifier())
+        .envName(deploymentVerificationJobInstanceSummary.getEnvironmentName())
+        .deploymentTag(activity.getDeploymentTag())
+        .build();
+  }
+
+  private DeploymentVerificationJobInstanceSummary getDeploymentVerificationJobInstanceSummary(Activity activity) {
     List<String> verificationJobInstanceIds = activity.getVerificationJobInstanceIds();
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
         verificationJobInstanceService.getDeploymentVerificationJobInstanceSummary(verificationJobInstanceIds);
@@ -255,19 +303,16 @@ public class ActivityServiceImpl implements ActivityService {
     deploymentVerificationJobInstanceSummary.setActivityStartTime(activity.getActivityStartTime().toEpochMilli());
     return deploymentVerificationJobInstanceSummary;
   }
-
   @Override
   public ActivityStatusDTO getActivityStatus(String accountId, String activityId) {
     DeploymentVerificationJobInstanceSummary deploymentVerificationJobInstanceSummary =
-        getDeploymentSummary(activityId);
-    ActivityStatusDTO activityStatusDTO =
-        ActivityStatusDTO.builder()
-            .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
-            .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
-            .activityId(activityId)
-            .status(deploymentVerificationJobInstanceSummary.getStatus())
-            .build();
-    return activityStatusDTO;
+        getDeploymentVerificationJobInstanceSummary(get(activityId));
+    return ActivityStatusDTO.builder()
+        .durationMs(deploymentVerificationJobInstanceSummary.getDurationMs())
+        .progressPercentage(deploymentVerificationJobInstanceSummary.getProgressPercentage())
+        .activityId(activityId)
+        .status(deploymentVerificationJobInstanceSummary.getStatus())
+        .build();
   }
 
   @Override
@@ -339,24 +384,23 @@ public class ActivityServiceImpl implements ActivityService {
             // assumption is that the latest 5 tags will be part of last 1000 deployments
             .asList(new FindOptions().limit(1000));
 
-    Map<BuildTagServiceIdentifierPair, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
+    Map<BuildTagServiceIdentifier, DeploymentGroupByTag> groupByTagMap = new HashMap<>();
     List<DeploymentGroupByTag> result = new ArrayList<>();
     for (DeploymentActivity activity : activities) {
       DeploymentGroupByTag deploymentGroupByTag;
-      BuildTagServiceIdentifierPair buildTagServiceIdentifierPair =
-          BuildTagServiceIdentifierPair.builder()
-              .deploymentTag(activity.getDeploymentTag())
-              .serviceIdentifier(activity.getServiceIdentifier())
-              .build();
-      if (groupByTagMap.containsKey(buildTagServiceIdentifierPair)) {
-        deploymentGroupByTag = groupByTagMap.get(buildTagServiceIdentifierPair);
+      BuildTagServiceIdentifier buildTagServiceIdentifier = BuildTagServiceIdentifier.builder()
+                                                                .deploymentTag(activity.getDeploymentTag())
+                                                                .serviceIdentifier(activity.getServiceIdentifier())
+                                                                .build();
+      if (groupByTagMap.containsKey(buildTagServiceIdentifier)) {
+        deploymentGroupByTag = groupByTagMap.get(buildTagServiceIdentifier);
       } else {
         if (groupByTagMap.size() < RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE) {
           deploymentGroupByTag = DeploymentGroupByTag.builder()
                                      .deploymentTag(activity.getDeploymentTag())
                                      .serviceIdentifier(activity.getServiceIdentifier())
                                      .build();
-          groupByTagMap.put(buildTagServiceIdentifierPair, deploymentGroupByTag);
+          groupByTagMap.put(buildTagServiceIdentifier, deploymentGroupByTag);
           result.add(deploymentGroupByTag);
         } else {
           // ignore the tag that is not in the latest 5 tags.
@@ -386,7 +430,8 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier,
-      String projectIdentifier, String environmentIdentifier, Instant startTime, Instant endTime) {
+      String projectIdentifier, String environmentIdentifier, String serviceIdentifier, Instant startTime,
+      Instant endTime) {
     Query<Activity> activityQuery = hPersistence.createQuery(Activity.class, excludeAuthority)
                                         .filter(ActivityKeys.accountId, accountId)
                                         .filter(ActivityKeys.orgIdentifier, orgIdentifier)
@@ -398,6 +443,9 @@ public class ActivityServiceImpl implements ActivityService {
 
     if (isNotEmpty(environmentIdentifier)) {
       activityQuery = activityQuery.filter(ActivityKeys.environmentIdentifier, environmentIdentifier);
+    }
+    if (isNotEmpty(serviceIdentifier)) {
+      activityQuery = activityQuery.filter(ActivityKeys.serviceIdentifier, serviceIdentifier);
     }
     List<Activity> activities = activityQuery.asList();
 
@@ -567,12 +615,12 @@ public class ActivityServiceImpl implements ActivityService {
       if (runtimeDetailsMap.containsKey(verificationJob.getIdentifier())) {
         verificationJob.resolveVerificationJob(runtimeDetailsMap.get(verificationJob.getIdentifier()));
       }
-      VerificationJobInstance verificationJobInstance = fillOutCommonJobInstanceProperties(
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
           activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
       validateJob(verificationJob);
-      activity.fillInVerificationJobInstanceDetails(verificationJobInstance);
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstanceBuilder);
 
-      jobInstancesToCreate.add(verificationJobInstance);
+      jobInstancesToCreate.add(verificationJobInstanceBuilder.build());
     });
     Preconditions.checkState(!jobInstancesToCreate.isEmpty(), "Should have at least one VerificationJobInstance");
     if (activity.deduplicateEvents()) {
@@ -590,15 +638,14 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJob.getServiceIdentifier());
   }
 
-  private VerificationJobInstance fillOutCommonJobInstanceProperties(
+  private VerificationJobInstanceBuilder fillOutCommonJobInstanceProperties(
       Activity activity, VerificationJob verificationJob) {
     return VerificationJobInstance.builder()
         .verificationJobIdentifier(verificationJob.getIdentifier())
         .accountId(activity.getAccountId())
         .executionStatus(ExecutionStatus.QUEUED)
         .deploymentStartTime(activity.getActivityStartTime())
-        .resolvedJob(verificationJob)
-        .build();
+        .resolvedJob(verificationJob);
   }
 
   public Activity getActivityFromDTO(ActivityDTO activityDTO) {
@@ -625,7 +672,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Value
   @Builder
-  private static class BuildTagServiceIdentifierPair {
+  private static class BuildTagServiceIdentifier {
     String deploymentTag;
     String serviceIdentifier;
   }

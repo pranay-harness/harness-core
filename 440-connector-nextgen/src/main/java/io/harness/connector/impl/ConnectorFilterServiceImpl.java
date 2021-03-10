@@ -179,8 +179,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
             .map(
                 name -> where(ConnectorKeys.name).regex(name, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS))
             .collect(Collectors.toList());
-    Criteria searchCriteriaForNames = new Criteria().orOperator(criteriaForNames.toArray(new Criteria[0]));
-    return searchCriteriaForNames;
+    return new Criteria().orOperator(criteriaForNames.toArray(new Criteria[0]));
   }
 
   private void populateTagsFilter(Criteria criteria, Map<String, String> tags) {
@@ -203,9 +202,8 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   }
 
   private Criteria addCriteriaForNotInheritingFromDelegate(Criteria criteria) {
-    Criteria criteriaForInheritingFromDelegate = new Criteria().orOperator(
+    return new Criteria().orOperator(
         where(CREDENTIAL_TYPE_KEY).exists(false), where(CREDENTIAL_TYPE_KEY).ne(INHERIT_FROM_DELEGATE_STRING));
-    return criteriaForInheritingFromDelegate;
   }
 
   private Criteria addCriteriaForInheritingFromDelegate(Criteria criteria) {
@@ -231,12 +229,11 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
   private Criteria getSearchTermFilter(Criteria criteria, String searchTerm) {
     if (isNotBlank(searchTerm)) {
       Criteria tagCriteria = createCriteriaForSearchingTag(searchTerm);
-      Criteria searchCriteria = new Criteria().orOperator(
+      return new Criteria().orOperator(
           where(ConnectorKeys.name).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.identifier).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           where(ConnectorKeys.description).regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           tagCriteria);
-      return searchCriteria;
     }
     return null;
   }

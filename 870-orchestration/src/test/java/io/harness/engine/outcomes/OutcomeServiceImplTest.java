@@ -31,8 +31,8 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test...")
   public void shouldTestSaveAndFind() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
@@ -55,8 +55,8 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
@@ -69,8 +69,8 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = ALEXEI)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldFetchAllOutcomesByRuntimeId() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcome";
@@ -88,8 +88,8 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldFetchOutcomes() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcome";
@@ -110,8 +110,8 @@ public class OutcomeServiceImplTest extends OrchestrationTestBase {
   @Test
   @RealMongo
   @Owner(developers = PRASHANT)
-  @Ignore("Move to PmsServiceImpl Test")
   @Category(UnitTests.class)
+  @Ignore("Move to PmsServiceImpl Test")
   public void shouldFetchOutcome() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcome";

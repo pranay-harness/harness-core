@@ -772,6 +772,8 @@ public class PcfSetupState extends State {
                                 .useCurrentRunningInstanceCount(useCurrentRunningCount)
                                 .tempRoutesOnSetupState(tempRouteMap)
                                 .finalRoutesOnSetupState(finalRouteMap)
+                                .useArtifactProcessingScript(useArtifactProcessingScript)
+                                .artifactProcessingScript(artifactProcessingScript)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

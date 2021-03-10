@@ -1,9 +1,10 @@
 package io.harness;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
+import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.persistence.HPersistence;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -14,8 +15,12 @@ import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
 import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import java.util.Set;
+import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.model.Resource;
+import org.reflections.Reflections;
 
 @Slf4j
 public class GitSyncTestApplication extends Application<GitSyncTestConfiguration> {
@@ -49,18 +54,25 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     MaintenanceController.forceMaintenance(true);
     Injector injector = Guice.createInjector(new GitSyncTestModule(config));
 
-    final HPersistence instance = injector.getInstance(HPersistence.class);
     registerJerseyProviders(environment, injector);
-
+    registerResources(environment, injector);
     MaintenanceController.forceMaintenance(false);
-    final Tester instance1 = injector.getInstance(Tester.class);
-    instance1.test();
+  }
+
+  private void registerResources(Environment environment, Injector injector) {
+    Reflections reflections = new Reflections(IO_HARNESS);
+    final Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(Path.class);
+    for (Class<?> resource : typesAnnotatedWith) {
+      if (Resource.isAcceptable(resource)) {
+        environment.jersey().register(injector.getInstance(resource));
+      }
+    }
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
-
+    environment.jersey().register(GitSyncThreadDecorator.class);
     environment.jersey().register(MultiPartFeature.class);
   }
 }

@@ -85,5 +85,5 @@ public abstract class AbstractStepExecutable implements AsyncExecutable<CIStepIn
   }
 
   @Override
-  public void handleAbort(Ambiance ambiance, CIStepInfo stateParameters, AsyncExecutableResponse executableResponse) {}
+  public void handleAbort(Ambiance ambiance, CIStepInfo stepParameters, AsyncExecutableResponse executableResponse) {}
 }

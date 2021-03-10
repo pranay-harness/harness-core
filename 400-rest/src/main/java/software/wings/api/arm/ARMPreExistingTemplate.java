@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
 
-@Builder
 @Data
+@Builder
 @JsonTypeName("armPreExistingTemplate")
 public class ARMPreExistingTemplate implements SweepingOutput {
   private final AzureARMPreDeploymentData preDeploymentData;

@@ -14,7 +14,6 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.rules.Integration;
 
-import com.google.api.services.container.model.NodePoolAutoscaling;
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
@@ -53,15 +52,6 @@ public abstract class KubernetesIntegrationTestBase extends CategoryTest {
 
     KubernetesConfig config =
         gkeClusterService.getCluster(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, NAMESPACE, false);
-
-    //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, true, 4, 8);
-    //    gkeClusterService.setNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER, null, false, 4, 8);
-
-    NodePoolAutoscaling autoscaling =
-        gkeClusterService.getNodePoolAutoscaling(COMPUTE_PROVIDER_SETTING, Collections.emptyList(), ZONE_CLUSTER, null);
-    log.info("Autoscale setting: {}", autoscaling);
-
-    //    kubernetesService.cleanup(config);
 
     kubernetesService.createOrReplaceController(config,
         new ReplicationControllerBuilder()
@@ -191,7 +181,5 @@ public abstract class KubernetesIntegrationTestBase extends CategoryTest {
 
     kubernetesService.checkStatus(config, "backend-ctrl", "backend-service");
     kubernetesService.checkStatus(config, "frontend-ctrl", "frontend-service");
-
-    //    gkeClusterService.deleteCluster(COMPUTE_PROVIDER_SETTING, ZONE_CLUSTER);
   }
 }

@@ -22,8 +22,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class MergeHelper {
   public String createTemplateFromPipeline(String pipelineYaml) throws IOException {
     return createTemplateFromPipeline(pipelineYaml, true);
@@ -174,7 +176,7 @@ public class MergeHelper {
       return ParameterField.createExpressionField(true, ((JsonNode) inputSetValue).asText(),
           parameterField.getInputSetValidator(), ((JsonNode) inputSetValue).getNodeType() != JsonNodeType.STRING);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("", e);
       return inputSetValue;
     }
   }

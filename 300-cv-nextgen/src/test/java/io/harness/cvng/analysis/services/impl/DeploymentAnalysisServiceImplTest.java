@@ -620,7 +620,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTestBase {
         verificationJobInstanceService.getVerificationJobInstance(baselineVerificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
     Instant baselineStartTIme = Instant.now().minus(10, ChronoUnit.MINUTES);
-    verificationJobInstance.setStartTime(baselineStartTIme);
+    verificationJobInstance.setStartTimeFromTest(baselineStartTIme);
     hPersistence.save(verificationJobInstance);
 
     DeploymentActivity deploymentActivity = DeploymentActivity.builder()
@@ -643,7 +643,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTestBase {
         verificationJobService.getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
     currentVerificationJobInstance.setResolvedJob(modifiedVerificationJob);
     Instant currentTime = Instant.now();
-    currentVerificationJobInstance.setStartTime(currentTime);
+    currentVerificationJobInstance.setStartTimeFromTest(currentTime);
     hPersistence.save(currentVerificationJobInstance);
 
     DeploymentActivity currentDeploymentActivity =
@@ -677,7 +677,7 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTestBase {
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
     Instant currentTime = Instant.now();
-    verificationJobInstance.setStartTime(currentTime);
+    verificationJobInstance.setStartTimeFromTest(currentTime);
     hPersistence.save(verificationJobInstance);
 
     DeploymentActivity deploymentActivity =
@@ -711,11 +711,14 @@ public class DeploymentAnalysisServiceImplTest extends CvNextGenTestBase {
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     verificationJobInstance.setResolvedJob(verificationJob);
     Instant currentTime = Instant.now();
-    verificationJobInstance.setStartTime(currentTime);
+    verificationJobInstance.setStartTimeFromTest(currentTime);
     hPersistence.save(verificationJobInstance);
 
     DeploymentActivity deploymentActivity =
-        DeploymentActivity.builder().verificationStartTime(currentTime.toEpochMilli()).deploymentTag("Build1").build();
+        DeploymentActivity.builder()
+            .verificationStartTime(verificationJobInstance.getStartTime().toEpochMilli())
+            .deploymentTag("Build1")
+            .build();
     Activity activity = deploymentActivity;
     activity.setActivityName("randomActivity");
     activity.setAccountId(accountId);

@@ -1,5 +1,6 @@
 package io.harness.cvng.activity.source.services.impl;
 
+import io.harness.cvng.activity.beans.Cd10ValidateMappingParams;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
@@ -20,6 +21,10 @@ public class CD10ActivitySourceServiceImpl implements CD10ActivitySourceService 
     CD10ActivitySource cd10ActivitySource = getCd10ActivitySource(accountId, orgIdentifier, projectIdentifier);
     Preconditions.checkNotNull(
         cd10ActivitySource, "No CD 1.0 mapping defined for projectIdentifier: %s", projectIdentifier);
+    return getNextGenEnvIdentifier(appId, envId, cd10ActivitySource);
+  }
+
+  private String getNextGenEnvIdentifier(String appId, String envId, CD10ActivitySource cd10ActivitySource) {
     return cd10ActivitySource.getEnvMappings()
         .stream()
         .filter(cd10EnvMappingDTO
@@ -39,6 +44,10 @@ public class CD10ActivitySourceServiceImpl implements CD10ActivitySourceService 
     CD10ActivitySource cd10ActivitySource = getCd10ActivitySource(accountId, orgIdentifier, projectIdentifier);
     Preconditions.checkNotNull(
         cd10ActivitySource, "No CD 1.0 mapping defined for projectIdentifier: %s", projectIdentifier);
+    return getNextGenServiceIdentifier(appId, serviceId, cd10ActivitySource);
+  }
+
+  private String getNextGenServiceIdentifier(String appId, String serviceId, CD10ActivitySource cd10ActivitySource) {
     return cd10ActivitySource.getServiceMappings()
         .stream()
         .filter(cd10ServiceMappingDTO
@@ -52,11 +61,41 @@ public class CD10ActivitySourceServiceImpl implements CD10ActivitySourceService 
         .getServiceIdentifier();
   }
 
+  @Override
+  public void validateMapping(Cd10ValidateMappingParams cd10ValidateMappingParams) {
+    CD10ActivitySource cd10ActivitySource =
+        getCd10ActivitySource(cd10ValidateMappingParams.getAccountId(), cd10ValidateMappingParams.getOrgIdentifier(),
+            cd10ValidateMappingParams.getProjectIdentifier(), cd10ValidateMappingParams.getActivitySourceIdentifier());
+    String nextgenServiceIdentifier = getNextGenServiceIdentifier(
+        cd10ValidateMappingParams.getCd10AppId(), cd10ValidateMappingParams.getCd10ServiceId(), cd10ActivitySource);
+    String nextgenEnvIdentifier = getNextGenEnvIdentifier(
+        cd10ValidateMappingParams.getCd10AppId(), cd10ValidateMappingParams.getCd10EnvId(), cd10ActivitySource);
+    if (!cd10ValidateMappingParams.getServiceIdentifier().isRuntimeParam()
+        && !nextgenServiceIdentifier.equals(cd10ValidateMappingParams.getServiceIdentifier().getValue())) {
+      throw new IllegalStateException("Next gen Service identifier does not match CD 1.0 service mapping");
+    }
+    if (!cd10ValidateMappingParams.getEnvironmentIdentifier().isRuntimeParam()
+        && !nextgenEnvIdentifier.equals(cd10ValidateMappingParams.getEnvironmentIdentifier().getValue())) {
+      throw new IllegalStateException("Next gen env identifier does not match CD 1.0 env mappings");
+    }
+  }
+
   private CD10ActivitySource getCd10ActivitySource(String accountId, String orgIdentifier, String projectIdentifier) {
     return hPersistence.createQuery(CD10ActivitySource.class)
         .filter(ActivitySourceKeys.accountId, accountId)
         .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
         .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+        .filter(ActivitySourceKeys.type, ActivitySourceType.HARNESS_CD10)
+        .get();
+  }
+
+  private CD10ActivitySource getCd10ActivitySource(
+      String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
+    return hPersistence.createQuery(CD10ActivitySource.class)
+        .filter(ActivitySourceKeys.accountId, accountId)
+        .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
+        .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
+        .filter(ActivitySourceKeys.identifier, identifier)
         .filter(ActivitySourceKeys.type, ActivitySourceType.HARNESS_CD10)
         .get();
   }

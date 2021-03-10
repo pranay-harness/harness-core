@@ -4,6 +4,7 @@ public enum ViewFieldIdentifier {
   CLUSTER("Cluster"),
   AWS("AWS"),
   GCP("GCP"),
+  AZURE("Azure"),
   COMMON("Common"),
   CUSTOM("Custom"),
   LABEL("Label");

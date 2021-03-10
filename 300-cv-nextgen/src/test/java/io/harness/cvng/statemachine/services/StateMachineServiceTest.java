@@ -40,6 +40,7 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
@@ -123,6 +124,8 @@ public class StateMachineServiceTest extends CvNextGenTestBase {
                         .build());
     when(verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId))
         .thenReturn(VerificationJobInstance.builder()
+                        .deploymentStartTime(Instant.now())
+                        .startTime(Instant.now().plus(Duration.ofMinutes(2)))
                         .resolvedJob(verificationJobService.fromDto(newCanaryVerificationJobDTO()))
                         .build());
 

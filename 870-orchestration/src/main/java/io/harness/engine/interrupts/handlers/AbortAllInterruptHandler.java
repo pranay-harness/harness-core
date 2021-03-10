@@ -5,7 +5,6 @@ import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
@@ -13,6 +12,7 @@ import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
@@ -21,9 +21,13 @@ import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.Valid;
 import lombok.NonNull;
@@ -35,6 +39,8 @@ public class AbortAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private AbortHelper abortHelper;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -44,7 +50,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
 
   private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
-    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == ABORT_ALL)) {
+    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.ABORT_ALL)) {
       throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
     }
     if (isEmpty(interrupts)) {
@@ -77,9 +83,11 @@ public class AbortAllInterruptHandler implements InterruptHandler {
           updatedInterrupt.getUuid());
       return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
     }
+    List<String> notifyIds = new ArrayList<>();
     try {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED);
+        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED, updatedInterrupt);
+        notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + interrupt.getUuid());
       }
 
     } catch (Exception ex) {
@@ -87,6 +95,8 @@ public class AbortAllInterruptHandler implements InterruptHandler {
       throw ex;
     }
 
-    return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+    waitNotifyEngine.waitForAllOnInList(
+        publisherName, AbortAllInterruptCallback.builder().interrupt(updatedInterrupt).build(), notifyIds);
+    return updatedInterrupt;
   }
 }

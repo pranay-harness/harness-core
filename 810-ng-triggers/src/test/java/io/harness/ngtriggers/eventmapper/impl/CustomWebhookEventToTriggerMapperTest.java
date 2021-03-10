@@ -3,7 +3,7 @@ package io.harness.ngtriggers.eventmapper.impl;
 import static io.harness.ngtriggers.Constants.X_HARNESS_WEBHOOK_TOKEN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
@@ -18,7 +18,6 @@ import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
-import io.harness.ngtriggers.eventmapper.impl.CustomWebhookEventToTriggerMapper;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.rule.Owner;
@@ -82,7 +81,7 @@ public class CustomWebhookEventToTriggerMapperTest extends CategoryTest {
                 HeaderConfig.builder().key(X_HARNESS_WEBHOOK_TOKEN).values(Arrays.asList("somesecrettoken")).build()))
             .build();
     NGTriggerEntity ngTriggerEntity = NGTriggerEntity.builder().yaml(ngTriggerCustomYaml).build();
-    List<NGTriggerEntity> ngTriggerEntityList = new ArrayList<NGTriggerEntity>();
+    List<NGTriggerEntity> ngTriggerEntityList = new ArrayList<>();
     ngTriggerEntityList.add(ngTriggerEntity);
 
     NGTriggerConfig ngTriggerConfig =

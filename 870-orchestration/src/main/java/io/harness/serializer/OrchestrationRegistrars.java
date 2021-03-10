@@ -67,8 +67,8 @@ import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefRead
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoWriteConverter;
-import io.harness.serializer.spring.converters.steps.StepTypeReadConverter;
-import io.harness.serializer.spring.converters.steps.StepTypeWriteConverter;
+import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
+import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputReadMongoConverter;
 import io.harness.serializer.spring.converters.sweepingoutput.SweepingOutputWriteMongoConverter;
 import io.harness.serializer.spring.converters.timeout.obtainment.TimeoutObtainmentReadConverter;

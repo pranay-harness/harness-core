@@ -13,11 +13,7 @@ java_library(
     exports = [
         "//903-decision-module:module",
         "//905-access-control-core:module",
-        "//909-access-control-sdk:module",
-        "//960-ng-core-beans:module",
-        "//960-persistence:module",
-        "@maven//:com_google_inject_guice",
-        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
         "@maven//:ru_vyarus_guice_validator",
     ],
 )
@@ -27,7 +23,9 @@ java_binary(
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.accesscontrol.AccessControlApplication",
-    resources = [],
+    resources = [
+        "//900-access-control-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",

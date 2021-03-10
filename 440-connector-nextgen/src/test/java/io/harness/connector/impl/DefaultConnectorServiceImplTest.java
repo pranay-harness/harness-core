@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -38,7 +39,6 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
-import io.harness.testlib.RealMongo;
 
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -66,6 +66,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
+  @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
@@ -89,6 +90,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     MockitoAnnotations.initMocks(this);
     secretRefDataCACert = SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     passwordSecretRef = SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
+    doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());
   }
 
   private ConnectorDTO createKubernetesConnectorRequestDTO(String connectorIdentifier, String name) {

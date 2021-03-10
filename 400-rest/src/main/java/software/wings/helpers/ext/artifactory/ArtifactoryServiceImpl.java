@@ -2,6 +2,7 @@ package software.wings.helpers.ext.artifactory;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
@@ -57,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -144,6 +146,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     String errorOccurredWhileRetrievingRepositories = "Error occurred while retrieving repositories";
     try {
       ArtifactoryResponse response = artifactory.restCall(repositoryRequest);
+      handleErrorResponse(response);
       List<Map<Object, Object>> responseList = response.parseBody(List.class);
       for (Map<Object, Object> repository : responseList) {
         String repoKey = repository.get(KEY).toString();
@@ -186,13 +189,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     String errorOnListingDockerimages = "Error occurred while listing docker images from artifactory %s for Repo %s";
     try {
       log.info("Retrieving docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
-      Map response = artifactory
-                         .restCall(new ArtifactoryRequestImpl()
-                                       .apiUrl("api/docker/" + repoKey + "/v2"
-                                           + "/_catalog")
-                                       .method(GET)
-                                       .responseType(JSON))
-                         .parseBody(Map.class);
+      ArtifactoryResponse artifactoryResponse = artifactory.restCall(new ArtifactoryRequestImpl()
+                                                                         .apiUrl("api/docker/" + repoKey + "/v2"
+                                                                             + "/_catalog")
+                                                                         .method(GET)
+                                                                         .responseType(JSON));
+      handleErrorResponse(artifactoryResponse);
+      Map response = artifactoryResponse.parseBody(Map.class);
       if (response != null) {
         images = (List<String>) response.get("repositories");
         if (isEmpty(images)) {
@@ -225,7 +228,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                                  .apiUrl("api/docker/" + repoKey + "/v2/" + imageName + "/tags/list")
                                                  .method(GET)
                                                  .responseType(JSON);
-      Map response = artifactory.restCall(repositoryRequest).parseBody(Map.class);
+      ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
+      handleErrorResponse(artifactoryResponse);
+      Map response = artifactoryResponse.parseBody(Map.class);
       if (response != null) {
         List<String> tags = (List<String>) response.get("tags");
         if (isEmpty(tags)) {
@@ -455,7 +460,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       apiStorageQuery = apiStorageQuery + repoKey + repoPath;
       ArtifactoryRequest repositoryRequest =
           new ArtifactoryRequestImpl().apiUrl(apiStorageQuery).method(GET).responseType(JSON);
-      LinkedHashMap<String, Object> response = artifactory.restCall(repositoryRequest).parseBody(LinkedHashMap.class);
+      ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
+      handleErrorResponse(artifactoryResponse);
+      LinkedHashMap<String, Object> response = artifactoryResponse.parseBody(LinkedHashMap.class);
       if (response == null) {
         return folderPaths;
       }
@@ -641,7 +648,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
       ArtifactoryRequest repositoryRequest =
           new ArtifactoryRequestImpl().apiUrl(apiStorageQuery).method(GET).requestType(TEXT).responseType(JSON);
-      LinkedHashMap<String, String> response = artifactory.restCall(repositoryRequest).parseBody(LinkedHashMap.class);
+      ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
+      handleErrorResponse(artifactoryResponse);
+      LinkedHashMap<String, String> response = artifactoryResponse.parseBody(LinkedHashMap.class);
       if (response != null) {
         return Long.valueOf(response.get("size"));
       } else {
@@ -663,9 +672,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
     try {
       ArtifactoryResponse artifactoryResponse = artifactory.restCall(repositoryRequest);
-      if (artifactoryResponse.getStatusLine().getStatusCode() == 407) {
-        throw new InvalidRequestException(artifactoryResponse.getStatusLine().getReasonPhrase());
-      }
+      handleErrorResponse(artifactoryResponse);
       log.info("Validating artifactory server success");
     } catch (RuntimeException e) {
       log.error("Runtime exception occurred while validating artifactory", e);
@@ -678,6 +685,22 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       handleAndRethrow(e, USER);
     }
     return true;
+  }
+
+  private void handleErrorResponse(ArtifactoryResponse artifactoryResponse) throws java.io.IOException {
+    if (!artifactoryResponse.isSuccessResponse()) {
+      if (artifactoryResponse.getStatusLine().getStatusCode() == 407) {
+        throw new InvalidRequestException(artifactoryResponse.getStatusLine().getReasonPhrase());
+      }
+      ArtifactoryErrorResponse errorResponse = artifactoryResponse.parseBody(ArtifactoryErrorResponse.class);
+      String errorMessage =
+          "Request to server failed with status code: " + artifactoryResponse.getStatusLine().getStatusCode();
+      if (isNotEmpty(errorResponse.getErrors())) {
+        errorMessage +=
+            " with message - " + errorResponse.getErrors().stream().map(ArtifactoryError::getMessage).findFirst().get();
+      }
+      throw new ArtifactoryServerException(errorMessage, ErrorCode.INVALID_ARTIFACT_SERVER, USER);
+    }
   }
 
   private List<BuildDetails> getBuildDetails(ArtifactoryConfig artifactoryConfig, Artifactory artifactory,
@@ -693,5 +716,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        "Build# " + constructBuildNumber(artifactPath, path.substring(path.indexOf('/') + 1)))
                    .build())
         .collect(toList());
+  }
+
+  @Data
+  public static class ArtifactoryErrorResponse {
+    List<ArtifactoryError> errors;
+  }
+
+  @Data
+  public static class ArtifactoryError {
+    String message;
+    int status;
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.Delegate.DelegateBuilder;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.category.element.UnitTests;
@@ -28,6 +30,7 @@ import io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -63,6 +66,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
 
   @Mock private Subject<DelegateProfileObserver> delegateProfileSubject;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private FeatureFlagService featureFlagService;
   @InjectMocks @Inject private DelegateProfileServiceImpl delegateProfileService;
   @Inject private HPersistence persistence;
 
@@ -348,6 +352,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     List<String> profileSelectors =
         Arrays.asList("testProfileSelector1", "testProfileSelector2", "testProfileSelector3");
 
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)).thenReturn(true);
+
     DelegateProfile delegateProfile = DelegateProfile.builder()
                                           .uuid(uuid)
                                           .accountId(accountId)
@@ -371,6 +377,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     assertThat(retrievedDelegateProfile.getSelectors()).hasSize(3);
     assertThat(retrievedDelegateProfile.getSelectors())
         .containsExactly("updatedProfileSelector1", "updatedProfileSelector2", "testProfileSelector3");
+
+    verify(delegateProfileSubject).fireInform(any(), eq(accountId), eq(delegateProfile.getUuid()));
   }
 
   @Test
@@ -380,6 +388,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     DelegateProfile delegateProfile =
         createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
 
+    when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegateProfile.getAccountId())).thenReturn(true);
+
     persistence.save(delegateProfile);
 
     DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
@@ -387,6 +397,8 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
         delegateProfile.getAccountId(), delegateProfile.getUuid(), Collections.singletonList(rule));
 
     assertThat(updatedDelegateProfile.getScopingRules()).containsExactly(rule);
+
+    verify(delegateProfileSubject).fireInform(any(), eq(delegateProfile.getAccountId()), eq(delegateProfile.getUuid()));
   }
 
   @Test
@@ -518,5 +530,25 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     persistence.save(delegateProfile);
 
     assertThat(delegateProfileService.isValidIdentifier(ACCOUNT_ID, TEST_IDENTIFIER)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void getDelegatesForProfile() {
+    String accountId = generateUuid();
+    String uuid = generateUuid();
+    DelegateProfile delegateProfile = createDelegateProfileBuilder().accountId(accountId).uuid(uuid).build();
+    persistence.save(delegateProfile);
+
+    DelegateBuilder delegateBuilder = createDelegateBuilder();
+    Delegate delegate = delegateBuilder.delegateProfileId(delegateProfile.getUuid()).accountId(accountId).build();
+    persistence.save(delegate);
+
+    List<String> delegatesForProfile =
+        delegateProfileService.getDelegatesForProfile(delegateProfile.getAccountId(), delegateProfile.getUuid());
+
+    assertThat(delegatesForProfile).isNotNull();
+    assertThat(delegatesForProfile.size()).isEqualTo(1);
   }
 }

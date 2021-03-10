@@ -17,8 +17,7 @@ public class DuplicateKeyExceptionParser {
         String matchedUniqueKey = matcher.group(0);
         String[] removingDupKeyFromString = matchedUniqueKey.split("dup key: ");
         String jsonString = removingDupKeyFromString[1];
-        JSONObject jsonObject = new JSONObject(jsonString);
-        return jsonObject;
+        return new JSONObject(jsonString);
       }
     } catch (Exception ex) {
       log.info("Encountered exception while reading the duplicate key", ex);

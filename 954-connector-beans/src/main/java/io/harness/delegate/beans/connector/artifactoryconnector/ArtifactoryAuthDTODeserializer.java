@@ -33,7 +33,7 @@ public class ArtifactoryAuthDTODeserializer extends StdDeserializer<ArtifactoryA
     if (type == ArtifactoryAuthType.USER_PASSWORD) {
       artifactoryAuthCredentialsDTO = mapper.readValue(authSpec.toString(), ArtifactoryUsernamePasswordAuthDTO.class);
     } else if (type == ArtifactoryAuthType.ANONYMOUS) {
-      if (authSpec != null) {
+      if (authSpec != null && !authSpec.isNull()) {
         throw new InvalidRequestException("No spec should be provided with the anonymous type");
       }
     }

@@ -1,5 +1,8 @@
 package io.harness.connector.heartbeat;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -20,8 +23,13 @@ public class K8sConnectorValidationParamsProvider implements ConnectorValidation
   public ConnectorValidationParams getConnectorValidationParams(ConnectorInfoDTO connectorInfoDTO, String connectorName,
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     ConnectorConfigDTO connectorConfigDTO = connectorInfoDTO.getConnectorConfig();
-    final List<EncryptedDataDetail> encryptionDetail = encryptionHelper.getEncryptionDetail(
-        connectorConfigDTO.getDecryptableEntity(), accountIdentifier, orgIdentifier, projectIdentifier);
+    List<DecryptableEntity> decryptableEntities = connectorConfigDTO.getDecryptableEntities();
+    DecryptableEntity decryptableEntity = null;
+    if (isNotEmpty(decryptableEntities)) {
+      decryptableEntity = decryptableEntities.get(0);
+    }
+    final List<EncryptedDataDetail> encryptionDetail =
+        encryptionHelper.getEncryptionDetail(decryptableEntity, accountIdentifier, orgIdentifier, projectIdentifier);
     return K8sValidationParams.builder()
         .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorConfigDTO)
         .connectorName(connectorName)

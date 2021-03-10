@@ -52,4 +52,15 @@ public class KubernetesResource {
     return new RestResponse<>(
         dataCollectionTaskService.getWorkloads(accountId, orgIdentifier, projectIdentifier, namespace, filter, bundle));
   }
+
+  @POST
+  @Path("events")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> checkCapabilityToGetEvents(@QueryParam("accountId") String accountId,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @Body DataCollectionConnectorBundle bundle) throws ApiException {
+    return new RestResponse<>(
+        dataCollectionTaskService.checkCapabilityToGetEvents(accountId, orgIdentifier, projectIdentifier, bundle));
+  }
 }

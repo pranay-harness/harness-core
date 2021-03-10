@@ -76,6 +76,8 @@ ceSetUpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   awsRoleName: harnessContinuousEfficiencyRole
   sampleAccountId: ""
+  azureAppClientId: placeholder
+  azureAppClientSecret: placeholder
 
 mktPlaceConfig:
   awsAccessKey: awsMktPlaceAccessKeyPlaceHolder

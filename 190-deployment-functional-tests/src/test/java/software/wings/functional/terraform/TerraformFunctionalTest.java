@@ -14,7 +14,6 @@ import static software.wings.sm.StepType.TERRAFORM_PROVISION;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -49,7 +48,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -65,7 +63,7 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   private static final String TF_PLAN_STEP_NAME = "Terraform Provision Plan";
   private static final String TF_APPLY_STEP_NAME = "Terraform Apply";
   private static final String SHELL_SCRIPT_STEP_NAME = "Shell Script";
-  private static final String RESOURCE_PATH = "./terraform";
+  private static final String RESOURCE_PATH = "190-deployment-functional-tests/src/test/resources/terraform";
   private static final String SCRIPT_NAME_APPLY = "CheckTerraformApplyPlanJsonScript";
   private static final String SCRIPT_NAME_DESTROY = "CheckTerraformDestroyPlanJsonScript";
   private static final String TF_PLAN_DESTROY_STEP_NAME = "Terraform Destroy Plan";
@@ -372,12 +370,8 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
 
   public static String readFileContent(String filePath, String resourcePath) throws IOException {
     File scriptFile = null;
-    try {
-      scriptFile = new File(
-          TerraformFunctionalTest.class.getClassLoader().getResource(resourcePath + PATH_DELIMITER + filePath).toURI());
-    } catch (URISyntaxException e) {
-      fail("Unable to find script file " + filePath);
-    }
+    scriptFile = new File(resourcePath + PATH_DELIMITER + filePath);
+
     return FileUtils.readFileToString(scriptFile, "UTF-8");
   }
 

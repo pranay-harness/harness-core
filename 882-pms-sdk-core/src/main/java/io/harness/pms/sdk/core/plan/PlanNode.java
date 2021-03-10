@@ -26,6 +26,7 @@ public class PlanNode {
 
   // Input/Outputs
   StepParameters stepParameters;
+  String stepInputs;
   @Singular List<RefObject> refObjects;
 
   // Hooks

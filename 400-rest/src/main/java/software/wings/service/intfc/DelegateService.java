@@ -5,10 +5,12 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -17,6 +19,7 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
@@ -72,6 +75,9 @@ public interface DelegateService extends OwnedByAccount {
   Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action);
 
   Delegate updateScopes(@Valid Delegate delegate);
+
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
+      DelegateSize delegateSize) throws IOException;
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
       throws IOException;
@@ -178,4 +184,13 @@ public interface DelegateService extends OwnedByAccount {
   List<String> getConnectedDelegates(String accountId, List<String> delegateIds);
 
   List<DelegateInitializationDetails> obtainDelegateInitializationDetails(String accountID, List<String> delegateIds);
+
+  void executeBatchCapabilityCheckTask(String accountId, String delegateId,
+      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
+
+  void regenerateCapabilityPermissions(String accountId, String delegateId);
+
+  String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
+
+  DelegateGroup upsertDelegateGroup(String name, String accountId);
 }

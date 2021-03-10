@@ -8,7 +8,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Value
 @Builder
 public class Scope {
-  public static final String SCOPE_IDENTIFIER_DELIMITER = "/";
+  public static final String PATH_DELIMITER = "/";
 
   @NotNull ScopeLevel level;
   @NotEmpty String instanceId;
@@ -16,7 +16,7 @@ public class Scope {
 
   @Override
   public String toString() {
-    String identifier = SCOPE_IDENTIFIER_DELIMITER + level.toString() + SCOPE_IDENTIFIER_DELIMITER + instanceId;
+    String identifier = PATH_DELIMITER + level.getResourceType() + PATH_DELIMITER + instanceId;
     if (parentScope != null) {
       return parentScope.toString().concat(identifier);
     }

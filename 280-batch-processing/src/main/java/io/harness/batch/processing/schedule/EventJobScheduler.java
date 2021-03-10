@@ -2,6 +2,8 @@ package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static java.lang.String.format;
+
 import io.harness.batch.processing.YamlPropertyLoaderFactory;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
@@ -25,6 +27,8 @@ import io.harness.batch.processing.tasklet.support.HarnessServiceInfoFetcher;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
 import io.harness.batch.processing.view.CEMetaDataRecordUpdateService;
 import io.harness.batch.processing.view.ViewCostUpdateService;
+import io.harness.cf.client.api.CfClient;
+import io.harness.cf.client.dto.Target;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -70,6 +74,8 @@ public class EventJobScheduler {
   @Autowired private ViewCostUpdateService viewCostUpdateService;
   @Autowired private BatchMainConfig batchMainConfig;
   @Autowired private CEMetaDataRecordUpdateService ceMetaDataRecordUpdateService;
+  @Autowired private CfClient cfClient;
+
   @PostConstruct
   public void orderJobs() {
     jobs.sort(Comparator.comparingInt(job -> BatchJobType.valueOf(job.getName()).getOrder()));
@@ -152,11 +158,12 @@ public class EventJobScheduler {
     }
   }
 
-  @Scheduled(cron = "0 0 */4 ? * *")
+  @Scheduled(cron = "0 0 */1 ? * *") //  0 */10 * * * ? for testing
   public void runConnectorsHealthStatusJob() {
     boolean masterPod = accountShardService.isMasterPod();
     if (masterPod) {
       try {
+        log.info("running billing data pipeline health status service job");
         billingDataPipelineHealthStatusService.processAndUpdateHealthStatus();
       } catch (Exception ex) {
         log.error("Exception while running runConnectorsHealthStatusJob {}", ex);
@@ -243,6 +250,19 @@ public class EventJobScheduler {
     harnessServiceInfoFetcher.logCacheStats();
     instanceDataService.logCacheStats();
     k8sLabelServiceInfoFetcher.logCacheStats();
+  }
+
+  @Scheduled(cron = "0 0 6 * * ?")
+  public void runCfSampleJob() {
+    if (cfClient == null) {
+      return;
+    }
+    accountShardService.getCeEnabledAccounts().forEach(account -> {
+      Target target = Target.builder().name(account.getAccountName()).identifier(account.getUuid()).build();
+      boolean result = cfClient.boolVariation("cf_sample_flag", target, false);
+      log.info(format(
+          "The feature flag cf_sample_flag resolves to %s for account %s", Boolean.toString(result), target.getName()));
+    });
   }
 
   @SuppressWarnings("squid:S1166") // not required to rethrow exceptions.

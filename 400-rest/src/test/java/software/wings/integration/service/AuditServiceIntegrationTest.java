@@ -25,7 +25,7 @@ import org.junit.experimental.categories.Category;
 
 // this test fails intermittently
 public class AuditServiceIntegrationTest extends WingsBaseTest {
-  private @Inject AuditServiceTestHelper auditServiceTestHelper;
+  @Inject private AuditServiceTestHelper auditServiceTestHelper;
   @Inject protected AuditService auditService;
   @Inject protected FileService fileService;
 

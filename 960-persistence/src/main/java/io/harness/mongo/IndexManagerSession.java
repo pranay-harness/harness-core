@@ -167,14 +167,13 @@ public class IndexManagerSession {
         return;
       }
 
-      if (store != null) {
-        StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
-        if (storeIn == null || !store.getName().equals(storeIn.value())) {
-          return;
-        }
+      DBCollection collection = datastore.getCollection(mc.getClazz());
+
+      StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
+      if (storeIn != null && (store == null || !store.getName().equals(storeIn.value()))) {
+        return;
       }
 
-      DBCollection collection = datastore.getCollection(mc.getClazz());
       try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
         if (processedCollections.contains(collection.getName())) {
           return;
@@ -192,6 +191,7 @@ public class IndexManagerSession {
         processor.process(mc, collection);
       }
     });
+
     return processedCollections;
   }
 

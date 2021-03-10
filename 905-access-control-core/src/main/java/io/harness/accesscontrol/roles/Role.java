@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.roles;
 
+import io.harness.accesscontrol.roles.validator.ValidRole;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 
@@ -22,6 +23,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
+@ValidRole
 public class Role {
   @EntityIdentifier final String identifier;
   final String scopeIdentifier;
@@ -31,7 +33,7 @@ public class Role {
   final boolean managed;
   final String description;
   final Map<String, String> tags;
-  @Setter Long createdAt;
-  @Setter Long lastModifiedAt;
-  @Setter Long version;
+  @EqualsAndHashCode.Exclude @Setter Long createdAt;
+  @EqualsAndHashCode.Exclude @Setter Long lastModifiedAt;
+  @EqualsAndHashCode.Exclude @Setter Long version;
 }

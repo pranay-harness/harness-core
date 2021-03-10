@@ -29,23 +29,24 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "monitoringSourcePerpetualTasks", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class MonitoringSourcePerpetualTask
+public final class MonitoringSourcePerpetualTask
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("insert_index")
+                 .name("unique_insert_index")
                  .unique(true)
                  .field(MonitoringSourcePerpetualTaskKeys.accountId)
                  .field(MonitoringSourcePerpetualTaskKeys.orgIdentifier)
                  .field(MonitoringSourcePerpetualTaskKeys.projectIdentifier)
                  .field(MonitoringSourcePerpetualTaskKeys.monitoringSourceIdentifier)
+                 .field(MonitoringSourcePerpetualTaskKeys.verificationType)
                  .build())
         .build();
   }
 
   @Id private String uuid;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   @FdIndex private long createdAt;
   private long lastUpdatedAt;
 
@@ -53,6 +54,7 @@ public class MonitoringSourcePerpetualTask
   @NotNull private String projectIdentifier;
   @NotNull private String monitoringSourceIdentifier;
   @NotNull private String connectorIdentifier;
+  @NotNull private VerificationType verificationType;
 
   @FdIndex private Long dataCollectionTaskIteration;
   private String perpetualTaskId;
@@ -74,4 +76,6 @@ public class MonitoringSourcePerpetualTask
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
+
+  public enum VerificationType { LIVE_MONITORING, DEPLOYMENT }
 }

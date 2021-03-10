@@ -50,7 +50,7 @@ public class ARMRollbackState extends ARMProvisionState {
 
     ARMPreExistingTemplate preExistingTemplate = validationData.getPreExistingTemplate();
     AzureARMPreDeploymentData preDeploymentData = preExistingTemplate.getPreDeploymentData();
-    Activity activity = helper.createActivity(context, false, getStateType());
+    Activity activity = helper.createARMActivity(context, false, getStateType());
 
     AzureARMDeploymentParameters taskParams =
         AzureARMDeploymentParameters.builder()
@@ -120,9 +120,9 @@ public class ARMRollbackState extends ARMProvisionState {
       return validationDataBuilder.build();
     }
 
-    String prefix = String.format("%s-%s-%s", provisionerId, subscriptionExpression, resourceGroupExpression);
-    ARMPreExistingTemplate preExistingTemplate =
-        (ARMPreExistingTemplate) azureSweepingOutputServiceHelper.getInfoFromSweepingOutput(context, prefix);
+    String key = String.format("%s-%s-%s", provisionerId, subscriptionExpression, resourceGroupExpression);
+
+    ARMPreExistingTemplate preExistingTemplate = helper.getPreExistingTemplate(key, context);
 
     if (preExistingTemplate == null || preExistingTemplate.getPreDeploymentData() == null) {
       validationDataBuilder.isValidData(false);

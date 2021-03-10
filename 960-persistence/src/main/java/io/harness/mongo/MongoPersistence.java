@@ -93,7 +93,7 @@ public class MongoPersistence implements HPersistence {
   private Map<String, Info> storeInfo = new HashMap<>();
   private Map<Class, Store> classStores = new HashMap<>();
   private Map<String, AdvancedDatastore> datastoreMap;
-  UserProvider userProvider;
+  @Inject UserProvider userProvider;
 
   @Inject
   public MongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore) {
@@ -122,11 +122,6 @@ public class MongoPersistence implements HPersistence {
   @Override
   public void register(Store store, String uri) {
     storeInfo.put(store.getName(), Info.builder().uri(uri).build());
-  }
-
-  @Override
-  public void registerUserProvider(UserProvider userProvider) {
-    this.userProvider = userProvider;
   }
 
   @Override

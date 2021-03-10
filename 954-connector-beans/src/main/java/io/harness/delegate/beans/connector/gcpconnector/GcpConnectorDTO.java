@@ -5,6 +5,8 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -26,9 +28,9 @@ public class GcpConnectorDTO extends ConnectorConfigDTO {
   @Valid GcpConnectorCredentialDTO credential;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     if (credential.getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {
-      return credential.getConfig();
+      return Collections.singletonList(credential.getConfig());
     }
     return null;
   }

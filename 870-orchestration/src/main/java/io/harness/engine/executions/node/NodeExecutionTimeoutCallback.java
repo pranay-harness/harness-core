@@ -7,7 +7,7 @@ import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutDetails;
@@ -43,7 +43,7 @@ public class NodeExecutionTimeoutCallback implements TimeoutCallback {
     interruptManager.register(InterruptPackage.builder()
                                   .planExecutionId(planExecutionId)
                                   .nodeExecutionId(nodeExecutionId)
-                                  .interruptType(ExecutionInterruptType.MARK_EXPIRED)
+                                  .interruptType(InterruptType.MARK_EXPIRED)
                                   .build());
   }
 }

@@ -12,6 +12,7 @@ import static java.lang.String.format;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GitStore;
@@ -27,14 +28,14 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -47,35 +48,30 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.TaskFailureException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
-import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import io.harness.shell.AuthenticationScheme;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
-
-import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.GitConfig;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig.K8sClusterConfigBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -89,7 +85,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
-import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
@@ -122,71 +117,6 @@ public class K8sStepHelper {
           format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
     }
     return connectorDTO.get().getConnector();
-  }
-
-  List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting encryptableSetting) {
-    return secretManagerClientService.getEncryptionDetails(encryptableSetting);
-  }
-
-  K8sClusterConfig getK8sClusterConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
-    K8sClusterConfigBuilder k8sClusterConfigBuilder = K8sClusterConfig.builder();
-
-    switch (infrastructure.getKind()) {
-      case KUBERNETES_DIRECT:
-        K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        SettingAttribute cloudProvider = getSettingAttribute(k8SDirectInfrastructure.getConnectorRef(), ambiance);
-        List<EncryptedDataDetail> encryptionDetails =
-            getEncryptedDataDetails((KubernetesClusterConfig) cloudProvider.getValue());
-        k8sClusterConfigBuilder.cloudProvider(cloudProvider.getValue())
-            .namespace(k8SDirectInfrastructure.getNamespace())
-            .cloudProviderEncryptionDetails(encryptionDetails)
-            .cloudProviderName(cloudProvider.getName());
-        return k8sClusterConfigBuilder.build();
-      default:
-        throw new UnsupportedOperationException(format("Unknown infrastructure type: [%s]", infrastructure.getKind()));
-    }
-  }
-
-  private SettingAttribute getSettingAttribute(@NotNull ConnectorInfoDTO connectorDTO) {
-    SettingAttribute.Builder builder = SettingAttribute.Builder.aSettingAttribute().withName(connectorDTO.getName());
-    switch (connectorDTO.getConnectorType()) {
-      case KUBERNETES_CLUSTER:
-        KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
-        KubernetesClusterDetailsDTO config = (KubernetesClusterDetailsDTO) connectorConfig.getCredential().getConfig();
-        KubernetesUserNamePasswordDTO auth = (KubernetesUserNamePasswordDTO) config.getAuth().getCredentials();
-        // todo @Vaibhav/@Deepak: Now the k8 uses the new secret and this secret requires identifier and previous
-        // required uuid, this has to be changed according to the framework
-        KubernetesClusterConfig kubernetesClusterConfig =
-            KubernetesClusterConfig.builder()
-                .authType(KubernetesClusterAuthType.USER_PASSWORD)
-                .masterUrl(config.getMasterUrl())
-                .username(auth.getUsername() != null ? auth.getUsername().toCharArray() : null)
-                .build();
-        builder.withValue(kubernetesClusterConfig);
-        break;
-      case GIT:
-        GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorConfig();
-        GitHTTPAuthenticationDTO gitAuth = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
-        GitConfig gitConfig =
-            GitConfig.builder()
-                .repoUrl(gitConfigDTO.getUrl())
-                .username(gitAuth.getUsername())
-                // todo @Vaibhav/@Deepak: Now the git uses the new secret and this secret requires identifier and
-                // previous required uuid, this has to be changed according to the framework
-                /* .encryptedPassword(SecretRefHelper.getSecretConfigString())*/
-                .branch(gitConfigDTO.getBranchName())
-                .authenticationScheme(AuthenticationScheme.HTTP_PASSWORD)
-                .build();
-        builder.withValue(gitConfig);
-        break;
-      default:
-    }
-    return builder.build();
-  }
-
-  SettingAttribute getSettingAttribute(String connectorId, Ambiance ambiance) {
-    ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
-    return getSettingAttribute(connectorDTO);
   }
 
   public ManifestDelegateConfig getManifestDelegateConfig(StoreConfig storeConfig, Ambiance ambiance) {
@@ -431,7 +361,12 @@ public class K8sStepHelper {
     GitFetchResponse gitFetchResponse = (GitFetchResponse) responseDataMap.values().iterator().next();
 
     if (gitFetchResponse.getTaskStatus() != TaskStatus.SUCCESS) {
-      throw new TaskFailureException(gitFetchResponse.getErrorMessage());
+      GitFetchResponsePassThroughData gitFetchResponsePassThroughData =
+          GitFetchResponsePassThroughData.builder()
+              .errorMsg(gitFetchResponse.getErrorMessage())
+              .unitProgressData(gitFetchResponse.getUnitProgressData())
+              .build();
+      return TaskChainResponse.builder().chainEnd(true).passThroughData(gitFetchResponsePassThroughData).build();
     }
     Map<String, FetchFilesResult> gitFetchFilesResultMap = gitFetchResponse.getFilesFromMultipleRepo();
 
@@ -471,5 +406,49 @@ public class K8sStepHelper {
 
   public static String getErrorMessage(K8sDeployResponse k8sDeployResponse) {
     return k8sDeployResponse.getErrorMessage() == null ? "" : k8sDeployResponse.getErrorMessage();
+  }
+
+  StepResponse handleGitTaskFailure(GitFetchResponsePassThroughData gitFetchResponse) {
+    UnitProgressData unitProgressData = gitFetchResponse.getUnitProgressData();
+    return StepResponse.builder()
+        .unitProgressList(unitProgressData.getUnitProgresses())
+        .status(Status.FAILED)
+        .failureInfo(FailureInfo.newBuilder().setErrorMessage(gitFetchResponse.getErrorMsg()).build())
+        .build();
+  }
+
+  public static StepResponseBuilder getFailureResponseBuilder(K8sStepParameters k8sStepParameters,
+      K8sDeployResponse k8sDeployResponse, StepResponseBuilder stepResponseBuilder) {
+    stepResponseBuilder.status(Status.FAILED)
+        .failureInfo(
+            FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(k8sDeployResponse)).build());
+
+    if (k8sStepParameters.getRollbackInfo() != null) {
+      stepResponseBuilder.stepOutcome(
+          StepResponse.StepOutcome.builder()
+              .name("RollbackOutcome")
+              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
+              .build());
+    }
+
+    return stepResponseBuilder;
+  }
+
+  public static StepResponseBuilder getDelegateErrorFailureResponseBuilder(
+      K8sStepParameters k8sStepParameters, ErrorNotifyResponseData responseData) {
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder()
+            .status(Status.FAILED)
+            .failureInfo(FailureInfo.newBuilder().setErrorMessage(responseData.getErrorMessage()).build());
+
+    if (k8sStepParameters.getRollbackInfo() != null) {
+      stepResponseBuilder.stepOutcome(
+          StepResponse.StepOutcome.builder()
+              .name("RollbackOutcome")
+              .outcome(RollbackOutcome.builder().rollbackInfo(k8sStepParameters.getRollbackInfo()).build())
+              .build());
+    }
+
+    return stepResponseBuilder;
   }
 }

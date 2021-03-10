@@ -61,7 +61,8 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep) {
+  public String consumeInternal(
+      Ambiance ambiance, String name, String value, int levelsToKeep, boolean isGraphOutcome) {
     Level producedBy = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
@@ -75,6 +76,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
                                    .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
+                                   .isGraphOutcome(isGraphOutcome)
                                    .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
@@ -86,8 +88,14 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId) {
+    return findAllByRuntimeId(planExecutionId, runtimeId, false);
+  }
+
+  @Override
+  public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId, boolean isGraphOutcome) {
     Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
+                      .addCriteria(where(OutcomeInstanceKeys.isGraphOutcome).is(isGraphOutcome))
                       .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
@@ -155,5 +163,52 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
     return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
+  }
+
+  @Override
+  public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
+    if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
+      return resolveOptionalUsingProducerSetupId(ambiance, refObject);
+    }
+    if (!refObject.getName().contains(".")) {
+      // It is not an expression-like ref-object.
+      return resolveOptionalUsingRuntimeId(ambiance, refObject);
+    }
+
+    EngineExpressionEvaluator evaluator =
+        expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
+    injector.injectMembers(evaluator);
+    try {
+      Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+      return OptionalOutcome.builder().found(true).outcome(value == null ? null : ((Document) value).toJson()).build();
+    } catch (OutcomeException ignore) {
+      return OptionalOutcome.builder().found(false).build();
+    }
+  }
+
+  private OptionalOutcome resolveOptionalUsingProducerSetupId(Ambiance ambiance, RefObject refObject) {
+    String outcome;
+    boolean isResolvable;
+    try {
+      outcome = resolveUsingProducerSetupId(ambiance, refObject);
+      isResolvable = true;
+    } catch (OutcomeException ignore) {
+      outcome = null;
+      isResolvable = false;
+    }
+    return OptionalOutcome.builder().found(isResolvable).outcome(outcome).build();
+  }
+
+  private OptionalOutcome resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
+    String outcome;
+    boolean isResolvable;
+    try {
+      outcome = resolveUsingRuntimeId(ambiance, refObject);
+      isResolvable = true;
+    } catch (OutcomeException ignore) {
+      outcome = null;
+      isResolvable = false;
+    }
+    return OptionalOutcome.builder().found(isResolvable).outcome(outcome).build();
   }
 }

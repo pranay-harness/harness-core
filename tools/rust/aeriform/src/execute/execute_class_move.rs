@@ -1,10 +1,9 @@
 use clap::Clap;
-use std::fs::{create_dir_all, remove_file, File};
+use std::fs::{create_dir_all, File, remove_file};
 use std::io::{Result, Write};
 use std::path::Path;
 
-use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT};
-
+use crate::execute::{MODULE_IMPORT, read_lines, TARGET_MODULE_IMPORT};
 use crate::java_class::TARGET_MODULE_PATTERN;
 use crate::repo::GIT_REPO_ROOT_DIR;
 

@@ -108,6 +108,8 @@ spec:
           value: ${deployMode}
         - name: DELEGATE_NAME
           value: ${delegateName}
+        - name: DELEGATE_GROUP_ID
+          value: ${delegateGroupId}
         - name: DELEGATE_DESCRIPTION
           value: "${delegateDescription}"
         - name: DELEGATE_PROFILE
@@ -119,7 +121,7 @@ spec:
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "${delegateSessionIdentifier}"
         - name: DELEGATE_TASK_LIMIT
-          value: ${delegateTaskLimit}
+          value: "${delegateTaskLimit}"
         - name: PROXY_HOST
           value: ""
         - name: PROXY_PORT

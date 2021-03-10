@@ -29,7 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "logAnalysisResults", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -43,7 +43,7 @@ public class LogAnalysisResult implements PersistentEntity, UuidAware, CreatedAt
   @Id private String uuid;
   @FdIndex private long createdAt;
   @FdIndex private long lastUpdatedAt;
-  @FdIndex private String verificationTaskId;
+  private String verificationTaskId;
   private Instant analysisStartTime;
   private Instant analysisEndTime;
   @FdIndex private String accountId;

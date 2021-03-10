@@ -6,11 +6,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>190-deployment-functional-tests</module>
-        <module>200-functional-test</module>
-        <module>250-watcher</module>
-        <module>260-delegate</module>
-        <module>270-verification</module>
+        <module>980-java-agent</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/wings-software/portal.git</connection>
@@ -667,6 +663,11 @@
                 <version>3.11.4</version>
             </dependency>
             <dependency>
+                <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+                <artifactId>owasp-java-html-sanitizer</artifactId>
+                <version>20200713.1</version>
+            </dependency>
+            <dependency>
                 <groupId>com.graphql-java</groupId>
                 <artifactId>graphql-java</artifactId>
                 <version>12.0</version>
@@ -941,7 +942,7 @@
             <dependency>
                 <groupId>io.harness.cf</groupId>
                 <artifactId>cf-client-sdk-java</artifactId>
-                <version>1.0.0-20210126.200034-12</version>
+                <version>0.0.2</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.slf4j</groupId>

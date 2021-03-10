@@ -1,6 +1,8 @@
 package io.harness.accesscontrol.permissions;
 
 import io.harness.accesscontrol.permissions.persistence.PermissionDao;
+import io.harness.accesscontrol.resources.resourcetypes.ResourceType;
+import io.harness.accesscontrol.resources.resourcetypes.ResourceTypeService;
 import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.exception.InvalidRequestException;
@@ -13,6 +15,7 @@ import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -27,6 +30,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @ValidateOnExecution
 public class PermissionServiceImpl implements PermissionService {
   private final PermissionDao permissionDao;
+  private final ResourceTypeService resourceTypeService;
   private final ScopeService scopeService;
   private final RoleService roleService;
   private final TransactionTemplate transactionTemplate;
@@ -37,9 +41,10 @@ public class PermissionServiceImpl implements PermissionService {
       ImmutableList.of(TransactionException.class), Duration.ofSeconds(2), 3, log);
 
   @Inject
-  public PermissionServiceImpl(PermissionDao permissionDao, ScopeService scopeService, RoleService roleService,
-      TransactionTemplate transactionTemplate) {
+  public PermissionServiceImpl(PermissionDao permissionDao, ResourceTypeService resourceTypeService,
+      ScopeService scopeService, RoleService roleService, TransactionTemplate transactionTemplate) {
     this.permissionDao = permissionDao;
+    this.resourceTypeService = resourceTypeService;
     this.scopeService = scopeService;
     this.roleService = roleService;
     this.transactionTemplate = transactionTemplate;
@@ -51,6 +56,13 @@ public class PermissionServiceImpl implements PermissionService {
       throw new InvalidRequestException(
           String.format("The scopes provided in the permission %s are invalid. Please select scopes from [ %s ]",
               permission.getIdentifier(), String.join(",", scopeService.getAllScopeLevels())));
+    }
+    if (!getResourceTypeFromPermission(permission).isPresent()) {
+      throw new InvalidRequestException(String.format(
+          "The resource type provided in the permission %s are invalid. Please select resource types from [ %s ]",
+          permission.getIdentifier(),
+          String.join(",",
+              resourceTypeService.list().stream().map(ResourceType::getPermissionKey).collect(Collectors.toSet()))));
     }
     return permissionDao.create(permission);
   }
@@ -90,5 +102,9 @@ public class PermissionServiceImpl implements PermissionService {
       }
       return permissionDao.delete(identifier);
     }));
+  }
+
+  public Optional<ResourceType> getResourceTypeFromPermission(@Valid @NotNull Permission permission) {
+    return resourceTypeService.getByPermissionKey(permission.getPermissionMetadata(1));
   }
 }

@@ -28,11 +28,18 @@ message Report {
 }
 
 message RunTestsStep {
-  string goals = 1;
+  string args = 1;
   string language = 2;   // repo language for running tests. Java | Python | Go etc.
   string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
-  StepContext context = 4;
-  uint32 container_port = 5;  // Port of the container on which run step needs to be executed.
+  string testAnnotations = 4;
+  string packages = 5;
+  bool runOnlySelectedTests = 6;
+  StepContext context = 7;
+  uint32 container_port = 8;           // Port of the container on which run step needs to be executed.
+  repeated Report reports = 9;         // Spec for publishing junit reports
+  string preTestCommand = 10;          // Pre-commands to setup environment before running tests
+  string postTestCommand = 11;         // Post commands after running tests
+  repeated string envVarOutputs = 12;  // produced output variables
 }
 
 message RunStep {

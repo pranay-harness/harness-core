@@ -3,6 +3,7 @@ package io.harness.steps.common.script;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.variables.NGVariable;
 
@@ -41,5 +42,23 @@ public class ShellScriptStepParameters extends ShellScriptBaseStepInfo implement
     this.rollbackInfo = rollbackInfo;
     this.description = description;
     this.skipCondition = skipCondition;
+  }
+
+  @Override
+  public String toViewJson() {
+    return RecastOrchestrationUtils.toDocumentJson(ShellScriptStepParameters.infoBuilder()
+                                                       .environmentVariables(getEnvironmentVariables())
+                                                       .executionTarget(getExecutionTarget())
+                                                       .onDelegate(getOnDelegate())
+                                                       .outputVariables(getOutputVariables())
+                                                       .environmentVariables(getEnvironmentVariables())
+                                                       .shellType(getShell())
+                                                       .source(getSource())
+                                                       .timeout(getTimeout())
+                                                       .name(getName())
+                                                       .identifier(getIdentifier())
+                                                       .description(getDescription())
+                                                       .skipCondition(getSkipCondition())
+                                                       .build());
   }
 }

@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -91,9 +92,13 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
 
     when(verificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
     when(cvConfigService.get(cvConfigId)).thenReturn(getAppDCVConfig());
+    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId), any())).thenReturn(getAppDCVConfig());
     when(activityService.get(activityId)).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId))
-        .thenReturn(VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId).build());
+        .thenReturn(VerificationTask.builder()
+                        .cvConfigId(cvConfigId)
+                        .verificationJobInstanceId(verificationJobInstanceId)
+                        .build());
     when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId)).thenReturn(getActivity());
   }
 
@@ -200,11 +205,14 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
     CVConfig cvConfig = getAppDCVConfig();
     cvConfig.setCategory(CVMonitoringCategory.ERRORS);
     when(verificationTaskService.getCVConfigId(verificationTaskId + "-2")).thenReturn(cvConfigId);
-    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
+    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId + "-2"), any())).thenReturn(cvConfig);
     when(activityService.get(activityId)).thenReturn(getActivity());
     when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId + "-2")).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId + "-2"))
-        .thenReturn(VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId + "-2").build());
+        .thenReturn(VerificationTask.builder()
+                        .cvConfigId(cvConfigId + "-2")
+                        .verificationJobInstanceId(verificationJobInstanceId + "-2")
+                        .build());
     heatMapService.updateRisk(verificationTaskId + "-2", 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
 
     List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();
@@ -236,11 +244,14 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
 
     CVConfig cvConfig = getSplunkConfig();
     when(verificationTaskService.getCVConfigId(verificationTaskId + "-2")).thenReturn(cvConfigId + "-2");
-    when(cvConfigService.get(cvConfigId + "-2")).thenReturn(cvConfig);
+    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId + "-2"), any())).thenReturn(cvConfig);
     when(activityService.get(activityId)).thenReturn(getActivity());
     when(activityService.getByVerificationJobInstanceId(verificationJobInstanceId + "-2")).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId + "-2"))
-        .thenReturn(VerificationTask.builder().verificationJobInstanceId(verificationJobInstanceId + "-2").build());
+        .thenReturn(VerificationTask.builder()
+                        .cvConfigId(cvConfigId + "-2")
+                        .verificationJobInstanceId(verificationJobInstanceId + "-2")
+                        .build());
     heatMapService.updateRisk(verificationTaskId + "-2", 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
 
     List<HealthVerificationHeatMap> heatMaps = hPersistence.createQuery(HealthVerificationHeatMap.class).asList();

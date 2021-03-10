@@ -8,15 +8,18 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//970-api-services-beans:module",
         "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_services_beans_java_proto",
         "//970-grpc:module",
         "//980-commons:module",
         "@maven//:com_amazonaws_aws_java_sdk_autoscaling",
         "@maven//:com_amazonaws_aws_java_sdk_cloudformation",
+        "@maven//:com_amazonaws_aws_java_sdk_codecommit",
         "@maven//:com_amazonaws_aws_java_sdk_codedeploy",
         "@maven//:com_amazonaws_aws_java_sdk_core",
         "@maven//:com_amazonaws_aws_java_sdk_costandusagereport",
@@ -58,6 +61,7 @@ java_library(
         "@maven//:com_squareup_okhttp3_logging_interceptor",
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_okio_okio",
+        "@maven//:com_squareup_retrofit2_adapter_rxjava",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_converter_simplexml",
         "@maven//:com_squareup_retrofit2_retrofit",
@@ -106,16 +110,6 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
-java_library(
     name = "tests",
     srcs = glob(["src/test/**/*.java"]),
     data = [
@@ -123,8 +117,7 @@ java_library(
     ],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:com_github_tomakehurst_wiremock",
@@ -139,7 +132,6 @@ sonarqube_test(
     name = "sq_mycomponent",
     srcs = ["sources"],
     targets = [
-        ":maven_deps",
         ":module",
     ],
 )

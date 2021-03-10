@@ -36,6 +36,18 @@ public class AnomalyServiceImpl implements AnomalyService {
     return anomalyEntityDao.list(query.validate().toString());
   }
 
+  @Override
+  public List<AnomalyEntity> list(String account, Instant from, Instant to) {
+    SelectQuery query = new SelectQuery();
+    query.addAllTableColumns(AnomalyEntity.AnomaliesDataTableSchema.table);
+    addAccountIdFilter(account, query);
+    query.addCondition(BinaryCondition.lessThanOrEq(
+        AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, to.truncatedTo(ChronoUnit.DAYS)));
+    query.addCondition(BinaryCondition.greaterThanOrEq(
+        AnomalyEntity.AnomaliesDataTableSchema.anomalyTime, from.truncatedTo(ChronoUnit.DAYS)));
+    return anomalyEntityDao.list(query.validate().toString());
+  }
+
   public List<AnomalyEntity> listK8s(String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy) {
     try {
       String queryStatement = AnomalyDataQueryBuilder.formK8SQuery(accountId, filters, groupBy);

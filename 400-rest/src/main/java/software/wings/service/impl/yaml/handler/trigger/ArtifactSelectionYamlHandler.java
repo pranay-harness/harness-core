@@ -75,7 +75,7 @@ public class ArtifactSelectionYamlHandler extends BaseYamlHandler<Yaml, Artifact
     if (EmptyPredicate.isNotEmpty(serviceName)) {
       Service service = serviceResourceService.getServiceByName(appId, serviceName);
       notNullCheck(serviceName + " doesnot exist", service);
-      serviceId = serviceResourceService.getServiceByName(appId, serviceName).getUuid();
+      serviceId = service.getUuid();
     } else {
       throw new GeneralException("Service name cannot be empty.");
     }

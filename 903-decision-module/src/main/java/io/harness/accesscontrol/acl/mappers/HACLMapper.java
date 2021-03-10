@@ -1,9 +1,9 @@
 package io.harness.accesscontrol.acl.mappers;
 
-import io.harness.accesscontrol.acl.dtos.AccessControlDTO;
-import io.harness.accesscontrol.acl.dtos.HAccessControlDTO;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.HACL;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.HAccessControlDTO;
 
 import lombok.experimental.UtilityClass;
 

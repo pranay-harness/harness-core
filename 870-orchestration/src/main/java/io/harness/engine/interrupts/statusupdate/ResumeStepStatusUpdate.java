@@ -11,8 +11,8 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import com.google.inject.Inject;
 
@@ -49,7 +49,7 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
             InterruptEffect.builder()
                 .interruptId(interruptId)
                 .tookEffectAt(System.currentTimeMillis())
-                .interruptType(ExecutionInterruptType.RESUME_ALL)
+                .interruptType(InterruptType.RESUME_ALL)
                 .build()));
     return resumeParents(nodeExecution.getParentId(), interruptId);
   }

@@ -1,12 +1,11 @@
 package software.wings.graphql.datafetcher.ce.recommendation;
 
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.CPU_HISTOGRAM_FIRST_BUCKET_SIZE;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.HISTOGRAM_BUCKET_SIZE_GROWTH;
-import static io.harness.ccm.recommender.k8sworkload.RecommenderUtils.MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.CPU_HISTOGRAM_FIRST_BUCKET_SIZE;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.HISTOGRAM_BUCKET_SIZE_GROWTH;
+import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.MEMORY_HISTOGRAM_FIRST_BUCKET_SIZE;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.recommender.k8sworkload.RecommenderUtils;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.persistence.HIterator;
@@ -17,9 +16,10 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLContainerHisto
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLHistogramExp;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadHistogramData;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadParameters;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialHistogramAggragator;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram.PartialRecommendationHistogramKeys;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 
@@ -60,37 +60,14 @@ public class K8sWorkloadHistogramDataFetcher
                                                       .greaterThanOrEq(Instant.ofEpochMilli(parameters.getStartDate()))
                                                       .field(PartialRecommendationHistogramKeys.date)
                                                       .lessThanOrEq(Instant.ofEpochMilli(parameters.getEndDate()));
+
     // find all partial histograms that match this query and merge them
     Map<String, Histogram> cpuHistograms = new HashMap<>();
     Map<String, Histogram> memoryHistograms = new HashMap<>();
     try (HIterator<PartialRecommendationHistogram> partialRecommendationHistograms = new HIterator<>(query.fetch())) {
-      for (PartialRecommendationHistogram partialRecommendationHistogram : partialRecommendationHistograms) {
-        Map<String, ContainerCheckpoint> containerCheckpoints =
-            partialRecommendationHistogram.getContainerCheckpoints();
-        for (Map.Entry<String, ContainerCheckpoint> stringContainerCheckpointEntry : containerCheckpoints.entrySet()) {
-          String containerName = stringContainerCheckpointEntry.getKey();
-          ContainerCheckpoint containerCheckpoint = stringContainerCheckpointEntry.getValue();
-
-          // merge the day's cpu histogram into the aggregate cpu histogram
-          HistogramCheckpoint cpuHistogramPartialCheckpoint = containerCheckpoint.getCpuHistogram();
-          if (cpuHistogramPartialCheckpoint.getBucketWeights() != null) {
-            Histogram cpuHistogramPartial = RecommenderUtils.loadFromCheckpointV2(cpuHistogramPartialCheckpoint);
-            Histogram cpuHistogram = cpuHistograms.getOrDefault(containerName, RecommenderUtils.newCpuHistogramV2());
-            cpuHistogram.merge(cpuHistogramPartial);
-            cpuHistograms.put(containerName, cpuHistogram);
-          }
-
-          // add the day's memory peak into the aggregate memory histogram
-          long memoryPeak = containerCheckpoint.getMemoryPeak();
-          if (memoryPeak != 0) {
-            Histogram memoryHistogram =
-                memoryHistograms.getOrDefault(containerName, RecommenderUtils.newMemoryHistogramV2());
-            memoryHistogram.addSample(memoryPeak, 1.0, Instant.EPOCH); // timestamp is irrelevant since no decay.
-            memoryHistograms.put(containerName, memoryHistogram);
-          }
-        }
-      }
+      PartialHistogramAggragator.aggregateInto(partialRecommendationHistograms, cpuHistograms, memoryHistograms);
     }
+
     // Convert to the output format
     List<QLContainerHistogramData> containerHistogramDataList =
         cpuHistograms.keySet()

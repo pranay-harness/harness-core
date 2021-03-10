@@ -3,6 +3,7 @@ package software.wings.resources.cvng;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
@@ -15,6 +16,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -61,6 +63,15 @@ public class CVDataCollectionTaskResource {
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("taskId") String taskId) {
     dataCollectionTaskService.delete(accountId, taskId);
   }
+
+  @GET
+  @Path("task-status")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<CVNGPerpetualTaskDTO> getTaskStatus(@NotNull @QueryParam("taskId") String taskId) {
+    return new RestResponse<>(dataCollectionTaskService.getCVNGPerpetualTaskDTO(taskId));
+  }
+
   @POST
   @Path("get-data-collection-result")
   @Timed

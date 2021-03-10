@@ -89,6 +89,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
+import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -1926,5 +1927,46 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assertThat(retryDelegate).isNotNull();
     assertThat(retryDelegate.isRetryPossible()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testGetAccountDelegates() throws ExecutionException {
+    String accountId = generateUuid();
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .uuid(generateUuid())
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .build();
+    when(accountDelegatesCache.get(accountId)).thenReturn(Collections.singletonList(delegate));
+
+    List<Delegate> accountDelegates = assignDelegateService.getAccountDelegates(accountId);
+
+    assertThat(accountDelegates).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testGetAccountDelegatesWithExecutionException() throws ExecutionException {
+    String accountId = generateUuid();
+
+    when(accountDelegatesCache.get(accountId)).thenThrow(ExecutionException.class);
+
+    assertThat(assignDelegateService.getAccountDelegates(accountId)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testGetAccountDelegatesWithInvalidCacheLoadException() throws ExecutionException {
+    String accountId = generateUuid();
+
+    when(accountDelegatesCache.get(accountId)).thenThrow(InvalidCacheLoadException.class);
+
+    assertThat(assignDelegateService.getAccountDelegates(accountId)).isEmpty();
   }
 }

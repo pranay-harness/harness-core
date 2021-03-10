@@ -73,12 +73,7 @@ public class GitChangeSetRunnable implements Runnable {
 
       final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
 
-      if (yamlChangeSets.isEmpty()) {
-        //        log.info("No changesets found for processing in this run");
-      } else {
-        //        log.info("changesets to process =[{}]",
-        //        yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
-
+      if (!yamlChangeSets.isEmpty()) {
         yamlChangeSets.forEach(this::processChangeSet);
       }
 

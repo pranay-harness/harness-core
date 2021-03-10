@@ -19,7 +19,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Abort"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -169,7 +180,24 @@
     },
     "FailureStrategyActionConfig": {
       "type": "object",
+      "required": [
+        "type"
+      ],
       "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Ignore",
+            "Retry",
+            "MarkAsSuccess",
+            "Abort",
+            "StageRollback",
+            "StepGroupRollback",
+            "ManualIntervention"
+          ]
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "FailureStrategyConfig": {
@@ -182,6 +210,28 @@
           "$ref": "#/definitions/OnFailureConfig"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "IgnoreFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Ignore"
+              ]
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "InfraOverrides": {
@@ -302,10 +352,20 @@
         },
         {
           "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
           "properties": {
             "spec": {
               "readOnly": true,
               "$ref": "#/definitions/ManualFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "ManualIntervention"
+              ]
             }
           }
         }
@@ -318,7 +378,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "MarkAsSuccess"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -392,6 +463,9 @@
               "$ref": "#/definitions/AbortFailureActionConfig"
             },
             {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
             },
             {
@@ -426,6 +500,9 @@
               "$ref": "#/definitions/AbortFailureActionConfig"
             },
             {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
             },
             {
@@ -452,6 +529,9 @@
           "oneOf": [
             {
               "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
             },
             {
               "$ref": "#/definitions/ManualInterventionFailureActionConfig"
@@ -529,10 +609,20 @@
         },
         {
           "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
           "properties": {
             "spec": {
               "readOnly": true,
               "$ref": "#/definitions/RetryFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Retry"
+              ]
             }
           }
         }
@@ -788,7 +878,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StageRollback"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -869,7 +970,18 @@
           "$ref": "#/definitions/FailureStrategyActionConfig"
         },
         {
-          "type": "object"
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StepGroupRollback"
+              ]
+            }
+          }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"

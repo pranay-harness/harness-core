@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -53,6 +54,7 @@ public class GetWorkflowsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getWorkflowsTest() {
     // Running harness get workflows before creating a new workflow
     String appId = application.getAppId();
@@ -105,6 +107,7 @@ public class GetWorkflowsFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getWorkflowsWithInvalidArgumentsTest() {
     // Running harness get workflows with invalid appId
     String command = String.format("harness get workflows -a %s", "INVALID_ID");

@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -25,6 +26,19 @@ public class K8sBGSwapServicesStepParameters implements K8sStepParameters {
   String identifier;
   String description;
   ParameterField<String> skipCondition;
+
+  @Override
+  public String toViewJson() {
+    return RecastOrchestrationUtils.toDocumentJson(K8sBGSwapServicesStepParameters.infoBuilder()
+                                                       .timeout(timeout)
+                                                       .name(name)
+                                                       .identifier(identifier)
+                                                       .description(description)
+                                                       .skipCondition(skipCondition)
+                                                       .skipDryRun(skipDryRun)
+                                                       .build());
+  }
+
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;

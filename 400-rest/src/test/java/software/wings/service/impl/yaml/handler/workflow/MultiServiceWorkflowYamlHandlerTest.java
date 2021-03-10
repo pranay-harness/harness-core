@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_INVALID_YAML_CONTENT;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_INVALID_YAML_FILE_PATH;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_VALID_YAML_CONTENT;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_VALID_YAML_CONTENT_RESOURCE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_VALID_YAML_FILE_PATH;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -54,11 +54,12 @@ public class MultiServiceWorkflowYamlHandlerTest extends WorkflowYamlHandlerTest
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
+    String yamlContentFromFile = readYamlStringInFile(MULTI_SERVICE_VALID_YAML_CONTENT_RESOURCE_PATH);
     ChangeContext<MultiServiceWorkflowYaml> changeContext =
-        getChangeContext(MULTI_SERVICE_VALID_YAML_CONTENT, MULTI_SERVICE_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlContentFromFile, MULTI_SERVICE_VALID_YAML_FILE_PATH, yamlHandler);
 
     MultiServiceWorkflowYaml yamlObject =
-        (MultiServiceWorkflowYaml) getYaml(MULTI_SERVICE_VALID_YAML_CONTENT, MultiServiceWorkflowYaml.class);
+        (MultiServiceWorkflowYaml) getYaml(yamlContentFromFile, MultiServiceWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -75,7 +76,7 @@ public class MultiServiceWorkflowYamlHandlerTest extends WorkflowYamlHandlerTest
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertThat(yamlContent).isEqualTo(MULTI_SERVICE_VALID_YAML_CONTENT);
+    assertThat(yamlContent).isEqualTo(yamlContentFromFile);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     // TODO find out why this couldn't be called
@@ -93,8 +94,8 @@ public class MultiServiceWorkflowYamlHandlerTest extends WorkflowYamlHandlerTest
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    testFailures(MULTI_SERVICE_VALID_YAML_CONTENT, MULTI_SERVICE_VALID_YAML_FILE_PATH,
-        MULTI_SERVICE_INVALID_YAML_CONTENT, MULTI_SERVICE_INVALID_YAML_FILE_PATH, yamlHandler,
-        MultiServiceWorkflowYaml.class);
+    testFailures(readYamlStringInFile(MULTI_SERVICE_VALID_YAML_CONTENT_RESOURCE_PATH),
+        MULTI_SERVICE_VALID_YAML_FILE_PATH, MULTI_SERVICE_INVALID_YAML_CONTENT, MULTI_SERVICE_INVALID_YAML_FILE_PATH,
+        yamlHandler, MultiServiceWorkflowYaml.class);
   }
 }

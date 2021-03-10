@@ -16,5 +16,21 @@ public enum SnippetTag implements YamlSnippetTags {
   infra,
   steps,
   pipeline,
-  http
+  http,
+  splunk,
+  appdynamics,
+  vault,
+  local,
+  gcpkms,
+  gcp,
+  aws,
+  artifactory,
+  jira,
+  nexus,
+  github,
+  gitlab,
+  bitbucket,
+  ceaws,
+  ceazure,
+  cek8s
 }

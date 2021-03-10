@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 
@@ -12,6 +13,7 @@ import javax.annotation.Nonnull;
 public interface K8sStepParameters extends StepParameters {
   ParameterField<String> getTimeout();
   ParameterField<Boolean> getSkipDryRun();
+  RollbackInfo getRollbackInfo();
 
   @Nonnull
   @JsonIgnore

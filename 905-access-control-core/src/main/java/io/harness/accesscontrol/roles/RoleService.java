@@ -9,15 +9,15 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface RoleService {
-  Role create(@Valid Role role);
+  Role create(@NotNull @Valid Role role);
 
-  PageResponse<Role> getAll(@NotNull PageRequest pageRequest, String parentIdentifier, boolean includeManaged);
+  PageResponse<Role> list(@NotNull PageRequest pageRequest, String scopeIdentifier, boolean includeManaged);
 
-  Optional<Role> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<Role> get(@NotEmpty String identifier, String scopeIdentifier, boolean isManaged);
 
-  Role update(@Valid Role role);
+  Role update(@NotNull @Valid Role role);
 
   boolean removePermissionFromRoles(@NotEmpty String permissionIdentifier);
 
-  Optional<Role> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier, boolean removeManagedRole);
+  Role delete(@NotEmpty String identifier, String scopeIdentifier, boolean isManaged);
 }

@@ -8,7 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.category.element.UnitTests;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -40,7 +40,7 @@ import retrofit2.Response;
 /**
  * Created by Pranjal on 09/24/2018
  */
-public class ExperimentalLogAnalysisResourceImplTest extends VerificationBaseTest {
+public class ExperimentalLogAnalysisResourceImplTest extends VerificationBase {
   private ExperimentalLogAnalysisResourceImpl logAnalysisResource;
 
   private LogAnalysisService logAnalysisService;

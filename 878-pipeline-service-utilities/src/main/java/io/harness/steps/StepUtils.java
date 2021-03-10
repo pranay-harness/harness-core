@@ -87,6 +87,10 @@ public class StepUtils {
       Status executionStatus = responseNotifyData.getStatus();
       if (!StatusUtils.positiveStatuses().contains(executionStatus)
           || StatusUtils.brokeStatuses().contains(executionStatus)) {
+        if (responseNotifyData.getStepOutcomeRefs() == null) {
+          return null;
+        }
+
         for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
           Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
           if (outcome instanceof RollbackOutcome) {

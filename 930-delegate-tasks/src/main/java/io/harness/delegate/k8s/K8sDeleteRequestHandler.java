@@ -7,14 +7,12 @@ import static io.harness.k8s.K8sCommandUnitConstants.Delete;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
-import static io.harness.k8s.model.KubernetesResourceId.createKubernetesResourceIdsFromKindName;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
 import static software.wings.beans.LogColor.Gray;
-import static software.wings.beans.LogColor.GrayDark;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
@@ -22,8 +20,10 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -67,7 +67,8 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sDeleteRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sDeleteRequest"));
     }
@@ -75,33 +76,45 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     K8sDeleteRequest k8sDeleteRequest = (K8sDeleteRequest) k8sDeployRequest;
     releaseName = k8sDeleteRequest.getReleaseName();
     manifestFilesDirectory = Paths.get(k8SDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
-    LogCallback executionLogCallback = k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Delete, true);
+    LogCallback executionLogCallback =
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Delete, true, commandUnitsProgress);
 
-    if (isEmpty(k8sDeleteRequest.getResources())) {
-      return executeDeleteUsingFiles(
-          k8sDeleteRequest, k8SDelegateTaskParams, executionLogCallback, logStreamingTaskClient);
-    } else if (!isEmpty(k8sDeleteRequest.getFilePaths())) {
-      executionLogCallback.saveExecutionLog("Both resources and files are present, giving priority to resources.");
+    return executeDelete(
+        k8sDeleteRequest, k8SDelegateTaskParams, executionLogCallback, logStreamingTaskClient, commandUnitsProgress);
+  }
+
+  private K8sDeployResponse executeDelete(K8sDeleteRequest k8sDeleteRequest,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+    DeleteResourcesType deleteResourcesType = k8sDeleteRequest.getDeleteResourcesType();
+    switch (deleteResourcesType) {
+      case ResourceName:
+      case ReleaseName:
+        return executeDeleteUsingResources(k8sDeleteRequest, k8sDelegateTaskParams, executionLogCallback,
+            logStreamingTaskClient, commandUnitsProgress);
+      case ManifestPath:
+        return executeDeleteUsingFiles(k8sDeleteRequest, k8sDelegateTaskParams, executionLogCallback,
+            logStreamingTaskClient, commandUnitsProgress);
+      default:
+        throw new UnsupportedOperationException(
+            String.format("Delete resource type: [%s]", deleteResourcesType.name()));
     }
-
-    return executeDeleteUsingResources(
-        k8sDeleteRequest, k8SDelegateTaskParams, executionLogCallback, logStreamingTaskClient);
   }
 
   private K8sDeployResponse executeDeleteUsingFiles(K8sDeleteRequest k8sDeleteRequest,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
-      ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeleteRequest.getTimeoutIntervalInMin());
 
-    boolean success =
-        k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sDeleteRequest.getManifestDelegateConfig(),
-            manifestFilesDirectory, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true),
-            steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
+    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
+        k8sDeleteRequest.getManifestDelegateConfig(), manifestFilesDirectory,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true, commandUnitsProgress),
+        steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);
     }
-    success = initUsingFilePaths(
-        k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
+    success = initUsingFilePaths(k8sDeleteRequest, k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getGenericFailureResponse(null);
     }
@@ -116,6 +129,8 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
+      kubernetesConfig =
+          containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sDeleteRequest.getK8sInfraDelegateConfig());
 
       if (isEmpty(k8sDeleteRequest.getFilePaths())) {
         executionLogCallback.saveExecutionLog(color("\nNo file specified in the state", Yellow, Bold));
@@ -146,6 +161,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
       executionLogCallback.saveExecutionLog(color("\nManifests [Post template rendering] :\n", White, Bold));
       executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources));
+      executionLogCallback.saveExecutionLog("Done.", INFO, SUCCESS);
       return true;
     } catch (Exception e) {
       log.error("Exception:", e);
@@ -157,9 +173,9 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse executeDeleteUsingResources(K8sDeleteRequest k8sDeleteRequest,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
-      ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
-    boolean success = init(
-        k8sDeleteRequest, k8sDelegateTaskParams, k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true));
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+    boolean success = init(k8sDeleteRequest, k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getGenericFailureResponse(null);
     }
@@ -177,29 +193,16 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sDeleteRequest.getK8sInfraDelegateConfig());
     try {
-      if (StringUtils.isEmpty(k8sDeleteRequest.getResources())) {
-        executionLogCallback.saveExecutionLog("\nNo resources found to delete.");
+      resourceIdsToDelete =
+          k8sDeleteBaseHandler.getResourceIdsToDelete(k8sDeleteRequest, kubernetesConfig, executionLogCallback);
+      if (resourceIdsToDelete.isEmpty()) {
+        executionLogCallback.saveExecutionLog("\nNo resources found to delete.", INFO, SUCCESS);
         return true;
-      }
-
-      if ("*".equals(k8sDeleteRequest.getResources().trim())) {
-        executionLogCallback.saveExecutionLog("All Resources are selected for deletion");
-        executionLogCallback.saveExecutionLog(color("Delete Namespace is set to: "
-                + k8sDeleteRequest.isDeleteNamespacesForRelease() + ", Skipping deleting Namespace resources",
-            GrayDark, Bold));
-        executionLogCallback.saveExecutionLog(
-            "Delete Namespace is set to: " + k8sDeleteRequest.isDeleteNamespacesForRelease());
-        resourceIdsToDelete =
-            k8sDeleteBaseHandler.getResourceIdsForDeletion(k8sDeleteRequest, kubernetesConfig, executionLogCallback);
-      } else {
-        resourceIdsToDelete = createKubernetesResourceIdsFromKindName(k8sDeleteRequest.getResources());
       }
 
       executionLogCallback.saveExecutionLog(color("\nResources to delete are: ", White, Bold)
           + color(getResourcesInStringFormat(resourceIdsToDelete), Gray));
-
       executionLogCallback.saveExecutionLog("Done.", INFO, SUCCESS);
-
       return true;
     } catch (Exception e) {
       log.error("Exception:", e);

@@ -602,7 +602,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     PageResponse<Environment> envPageResponse =
         environmentService.list(PageRequestBuilder.aPageRequest()
                                     .addFilter("appId", Operator.IN, appMap.keySet().toArray(new String[0]))
-                                    .addFieldsIncluded("_id", "name")
+                                    .addFieldsIncluded("_id", "name", "environmentType")
                                     .build(),
             false, null);
 

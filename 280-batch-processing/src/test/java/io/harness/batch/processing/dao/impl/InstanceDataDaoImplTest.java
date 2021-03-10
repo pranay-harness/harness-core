@@ -9,7 +9,7 @@ import static io.harness.rule.OwnerRule.UTSAV;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.ccm.InstanceEvent;
 import io.harness.batch.processing.ccm.InstanceEvent.EventType;
 import io.harness.batch.processing.ccm.InstanceInfo;
@@ -42,7 +42,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class InstanceDataDaoImplTest extends BatchProcessingBaseTest {
+public class InstanceDataDaoImplTest extends BatchProcessingTestBase {
   @Inject @InjectMocks private InstanceDataDaoImpl instanceDataDao;
   @Mock private CostEventService costEventService;
   @Captor private ArgumentCaptor<CostEventData> costEventDataArgumentCaptor;

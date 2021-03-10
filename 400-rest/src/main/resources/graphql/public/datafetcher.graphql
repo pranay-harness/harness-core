@@ -47,6 +47,7 @@ enum DataFetcherEnum {
   eventsStats
   execution
   executionConnection
+  resumeExecution
   gcpBillingAccount
   gcpBillingEntityStats
   gcpBillingTimeSeriesStats

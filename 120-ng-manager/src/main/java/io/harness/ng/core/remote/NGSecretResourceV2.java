@@ -108,6 +108,7 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam("type") SecretType secretType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("types") List<SecretType> secretTypes,
@@ -118,7 +119,7 @@ public class NGSecretResourceV2 {
       secretTypes.add(secretType);
     }
     return ResponseDTO.newResponse(ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier,
-        secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size));
+        identifiers, secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size));
   }
 
   @GET

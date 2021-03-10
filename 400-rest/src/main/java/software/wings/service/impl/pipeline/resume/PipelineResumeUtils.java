@@ -4,13 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.isActiveStatus;
 import static io.harness.beans.ExecutionStatus.isNegativeStatus;
-import static io.harness.beans.ExecutionStatus.negativeStatuses;
+import static io.harness.beans.ExecutionStatus.resumableStatuses;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notEmptyCheck;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.sm.StateType.APPROVAL;
@@ -74,9 +75,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 @TargetModule(Module._800_PIPELINE_SERVICE)
 public class PipelineResumeUtils {
   private static final String PIPELINE_RESUME_PIPELINE_CHANGED = "You cannot resume a pipeline which has been modified";
-  private static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";
+  public static final String PIPELINE_INVALID = "You cannot resume pipeline, seems to be invalid";
   public static final String PIPELINE_RESUME_ERROR_INVALID_STATUS = "Pipeline resume is not available for [%s]. "
       + "Resumable states are : [%s]";
+  public static final String ERROR_MSG_PIPELINE_STAGE_DOES_NOT_EXISTS = "Pipeline Stage does not exist or has not "
+      + "yet started: [%s]";
+  public static final String ERR_MSG_PIPELINE_STAGE_MUST_CONTAIN_PIPELINE_STAGE_ELEMENT_ELEMENT =
+      "PipelineStage must contain PipelineStageElement element";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PipelineService pipelineService;
@@ -244,6 +249,40 @@ public class PipelineResumeUtils {
       stageExecutions = Collections.singletonList(stageExecution);
     }
     return stageExecutions;
+  }
+
+  /**
+   * Maps stageName to parallelIndex starting from 1.
+   * @param stageName
+   * @param pipeline
+   * @return
+   */
+  public int getParallelIndexFromPipelineStageName(String stageName, Pipeline pipeline) {
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      if (pipelineStage.getName().matches(stageName)) {
+        notEmptyCheck(ERR_MSG_PIPELINE_STAGE_MUST_CONTAIN_PIPELINE_STAGE_ELEMENT_ELEMENT,
+            pipelineStage.getPipelineStageElements());
+        int groupIndex = pipelineStage.getPipelineStageElements().get(0).getParallelIndex();
+        log.info("Translated stage name: {}, to parallel Index: {} for Pipeline Execution: {}", stageName, groupIndex);
+        return groupIndex;
+      }
+    }
+    throw new InvalidRequestException(String.format(ERROR_MSG_PIPELINE_STAGE_DOES_NOT_EXISTS, stageName));
+  }
+
+  public Pipeline getPipelineFromWorkflowExecution(WorkflowExecution workflowExecution, String appId) {
+    if (workflowExecution.getPipelineExecution() != null
+        && workflowExecution.getPipelineExecution().getPipeline() != null) {
+      return workflowExecution.getPipelineExecution().getPipeline();
+    } else {
+      if (workflowExecution.getPipelineSummary() != null
+          && !isEmpty(workflowExecution.getPipelineSummary().getPipelineId())) {
+        String pipelineId = workflowExecution.getPipelineSummary().getPipelineId();
+        return pipelineService.getPipeline(appId, pipelineId);
+      } else {
+        throw new InvalidRequestException(String.format(PIPELINE_INVALID));
+      }
+    }
   }
 
   public void updatePipelineExecutionsAfterResume(
@@ -435,15 +474,20 @@ public class PipelineResumeUtils {
       throw new InvalidRequestException(PIPELINE_RESUME_PIPELINE_CHANGED);
     }
 
+    if (stageExecutions.stream().anyMatch(stageExecution -> resumableStatuses.contains(stageExecution.getStatus()))) {
+      // PipelineExecutionStage being in one of the resumableStatuses (FAILED/ABORTED/REJECTED/EXPIRED/ERROR) means
+      // that this PipelineStage belongs to the last parallel Group (Because Pipelines are executed sequentially, only
+      // when a group of parallel PipelineStages are successful execution moves to next).
+
+      // Since this PipelineStage is both in final parallel group and failed. Allowing it to resume doesn't have any
+      // danger.
+      return;
+    }
+
     notNullCheck("Pipeline stage " + stage.getName() + "seems to be invalid", stage.getPipelineStageElements());
 
     boolean anySkipped = stageExecutions.stream().anyMatch(t -> t.getStatus() == SKIPPED);
-    // Sometimes the workflow could get aborted, rejected or in error state before the workflow starts. They don't have
-    // any workflow executions attached to them
-    boolean anyEndedBeforeWorkflowStarted = stageExecutions.stream().anyMatch(t
-        -> ENV_STATE.name().equals(t.getStateType()) && negativeStatuses().contains(t.getStatus())
-            && isEmpty(t.getWorkflowExecutions()));
-    if (anySkipped || anyEndedBeforeWorkflowStarted) {
+    if (anySkipped) {
       // Don't check for skipped stage executions as they have no workflow executions attached to them. In case of
       // looped, either all should be skipped or none.
       return;

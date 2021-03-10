@@ -17,6 +17,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
@@ -102,8 +103,11 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   public void testHandleTaskResult() {
     K8sBGSwapServicesStepParameters stepParameters =
         K8sBGSwapServicesStepParameters.infoBuilder().timeout(ParameterField.createValueField("10m")).build();
-    Map<String, ResponseData> responseDataMap =
-        ImmutableMap.of("activity", K8sDeployResponse.builder().commandExecutionStatus(SUCCESS).build());
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
+        K8sDeployResponse.builder()
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .commandExecutionStatus(SUCCESS)
+            .build());
 
     StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(SUCCEEDED);
@@ -115,8 +119,11 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
   public void testHandleTaskResultFailed() {
     K8sBGSwapServicesStepParameters stepParameters =
         K8sBGSwapServicesStepParameters.infoBuilder().timeout(ParameterField.createValueField("10m")).build();
-    Map<String, ResponseData> responseDataMap =
-        ImmutableMap.of("activity", K8sDeployResponse.builder().commandExecutionStatus(FAILURE).build());
+    Map<String, ResponseData> responseDataMap = ImmutableMap.of("activity",
+        K8sDeployResponse.builder()
+            .commandExecutionStatus(FAILURE)
+            .commandUnitsProgress(UnitProgressData.builder().build())
+            .build());
 
     StepResponse response = k8sBGSwapServicesStep.handleTaskResult(ambiance, stepParameters, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(FAILED);

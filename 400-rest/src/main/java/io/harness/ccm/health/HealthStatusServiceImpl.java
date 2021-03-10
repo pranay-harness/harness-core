@@ -5,12 +5,14 @@ import static io.harness.ccm.cluster.entities.ClusterType.AZURE_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 import static io.harness.ccm.cluster.entities.ClusterType.GCP_KUBERNETES;
 import static io.harness.ccm.health.CEConnectorHealthMessages.AWS_S3_SYNC_MESSAGE;
+import static io.harness.ccm.health.CEConnectorHealthMessages.AZURE_STORAGE_SYNC_MESSAGE;
 import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_DATA_PIPELINE_ERROR;
 import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_DATA_PIPELINE_SUCCESS;
 import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_PIPELINE_CREATION_FAILED;
 import static io.harness.ccm.health.CEConnectorHealthMessages.BILLING_PIPELINE_CREATION_SUCCESSFUL;
 import static io.harness.ccm.health.CEConnectorHealthMessages.SETTING_ATTRIBUTE_CREATED;
 import static io.harness.ccm.health.CEConnectorHealthMessages.WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE;
+import static io.harness.ccm.health.CEConnectorHealthMessages.WAITING_FOR_SUCCESSFUL_AZURE_STORAGE_SYNC_MESSAGE;
 import static io.harness.ccm.health.CEError.AWS_ECS_CLUSTER_NOT_FOUND;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_AVAILABLE;
 import static io.harness.ccm.health.CEError.DELEGATE_NOT_INSTALLED;
@@ -41,6 +43,7 @@ import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue;
@@ -118,12 +121,19 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     boolean preAggregatedJobStatus;
     boolean awsFallbackTableJob = true;
     String s3SyncHealthStatus = WAITING_FOR_SUCCESSFUL_AWS_S3_SYNC_MESSAGE.getMessage();
+    String storageSyncHealthStatus = WAITING_FOR_SUCCESSFUL_AZURE_STORAGE_SYNC_MESSAGE.getMessage();
     long lastS3SyncTimestamp = 0L;
+    long lastStorageSyncTimestamp = 0L;
     boolean isAWSConnector = false;
+    boolean isAzureConnector = false;
     String billingPipelineRecordSettingId = cloudProvider.getUuid();
 
     if (cloudProvider.getValue() instanceof CEAwsConfig) {
       isAWSConnector = true;
+    }
+
+    if (cloudProvider.getValue() instanceof CEAzureConfig) {
+      isAzureConnector = true;
     }
 
     if (cloudProvider.getValue() instanceof CEGcpConfig) {
@@ -142,6 +152,7 @@ public class HealthStatusServiceImpl implements HealthStatusService {
         cloudProvider.getAccountId(), billingPipelineRecordSettingId);
 
     if (billingDataPipelineRecord == null) {
+      // Case just after creating the connector.
       return serialiseHealthStatusToPOJO(
           true, Collections.singletonList(SETTING_ATTRIBUTE_CREATED.getMessage()), lastS3SyncTimestamp);
     }
@@ -151,6 +162,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       lastS3SyncTimestamp = billingDataPipelineRecord.getLastSuccessfulS3Sync().toEpochMilli();
     }
 
+    if (isAzureConnector && billingDataPipelineRecord.getLastSuccessfulStorageSync() != null) {
+      storageSyncHealthStatus = getStorageSyncHealthStatus(billingDataPipelineRecord);
+      lastStorageSyncTimestamp = billingDataPipelineRecord.getLastSuccessfulStorageSync().toEpochMilli();
+    }
+
     if (timeDifference == ChronoUnit.DAYS.getDuration().toMillis()) {
       boolean isBillingDataPipelineCreationSuccessful = billingDataPipelineRecord.getDataSetId() != null;
       List<String> messages = new ArrayList<>();
@@ -158,6 +174,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
                                                            : BILLING_PIPELINE_CREATION_FAILED.getMessage());
       if (isAWSConnector) {
         messages.add(s3SyncHealthStatus);
+        return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages, lastS3SyncTimestamp);
+      }
+      if (isAzureConnector) {
+        messages.add(storageSyncHealthStatus);
+        return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages, lastStorageSyncTimestamp);
       }
       return serialiseHealthStatusToPOJO(isBillingDataPipelineCreationSuccessful, messages, lastS3SyncTimestamp);
     }
@@ -167,8 +188,12 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       messages.add(BILLING_PIPELINE_CREATION_FAILED.getMessage());
       if (isAWSConnector) {
         messages.add(s3SyncHealthStatus);
+        return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
       }
-      return serialiseHealthStatusToPOJO(true, messages, lastS3SyncTimestamp);
+      if (isAzureConnector) {
+        messages.add(storageSyncHealthStatus);
+        return serialiseHealthStatusToPOJO(true, messages, lastStorageSyncTimestamp);
+      }
     }
 
     dataTransferJobStatus = billingDataPipelineRecord.getDataTransferJobStatus().equals(SUCCEEDED);
@@ -182,6 +207,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     messages.add(healthStatus ? BILLING_DATA_PIPELINE_SUCCESS.getMessage() : BILLING_DATA_PIPELINE_ERROR.getMessage());
     if (isAWSConnector) {
       messages.add(s3SyncHealthStatus);
+      return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
+    }
+    if (isAzureConnector) {
+      messages.add(storageSyncHealthStatus);
+      return serialiseHealthStatusToPOJO(healthStatus, messages, lastStorageSyncTimestamp);
     }
     return serialiseHealthStatusToPOJO(healthStatus, messages, lastS3SyncTimestamp);
   }
@@ -207,6 +237,16 @@ public class HealthStatusServiceImpl implements HealthStatusService {
       s3SyncHealthStatus = AWS_S3_SYNC_MESSAGE.getMessage();
     }
     return s3SyncHealthStatus;
+  }
+
+  private String getStorageSyncHealthStatus(BillingDataPipelineRecord billingDataPipelineRecord) {
+    String storageSyncHealthStatus = WAITING_FOR_SUCCESSFUL_AZURE_STORAGE_SYNC_MESSAGE.getMessage();
+
+    Instant lastSuccessfulStorageSyncInstant = billingDataPipelineRecord.getLastSuccessfulStorageSync();
+    if (!lastSuccessfulStorageSyncInstant.equals(Instant.MIN)) {
+      storageSyncHealthStatus = AZURE_STORAGE_SYNC_MESSAGE.getMessage();
+    }
+    return storageSyncHealthStatus;
   }
 
   private CEClusterHealth getClusterHealth(ClusterRecord clusterRecord) {

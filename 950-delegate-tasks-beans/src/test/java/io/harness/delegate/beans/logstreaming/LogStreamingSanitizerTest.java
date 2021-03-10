@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.logstreaming.LogLine;
 import io.harness.rule.Owner;
 
 import java.util.HashSet;
@@ -19,7 +20,7 @@ public class LogStreamingSanitizerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldNotSanitizeWhenNoSecretsAvailable() {
     String message = "test message without secrets";
-    LogLine logLine = LogLine.builder().message(message).build();
+    io.harness.logstreaming.LogLine logLine = io.harness.logstreaming.LogLine.builder().message(message).build();
 
     LogStreamingSanitizer logStreamingSanitizer = LogStreamingSanitizer.builder().secrets(null).build();
 
@@ -34,7 +35,7 @@ public class LogStreamingSanitizerTest extends CategoryTest {
     String message = "test message with secret1 and secret2";
     String sanitizedMessage = "test message with " + SECRET_MASK + " and " + SECRET_MASK;
 
-    LogLine logLine = LogLine.builder().message(message).build();
+    io.harness.logstreaming.LogLine logLine = LogLine.builder().message(message).build();
 
     Set<String> secrets = new HashSet<>();
     secrets.add("secret1");

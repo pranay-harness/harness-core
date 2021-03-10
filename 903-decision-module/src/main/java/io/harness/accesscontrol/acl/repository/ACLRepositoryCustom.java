@@ -1,3 +1,7 @@
 package io.harness.accesscontrol.acl.repository;
 
-public interface ACLRepositoryCustom {}
+import io.harness.accesscontrol.Principal;
+
+public interface ACLRepositoryCustom {
+  void deleteByPrincipal(Principal principal);
+}

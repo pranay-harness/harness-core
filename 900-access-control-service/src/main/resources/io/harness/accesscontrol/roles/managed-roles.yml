@@ -1,0 +1,68 @@
+roles:
+    - identifier: _project_admin
+      name: Project Admin
+      description: Administrate an existing project.
+      permissions:
+        - core.project.view
+        - core.project.edit
+        - core.project.delete
+      allowedScopeLevels:
+        - project
+      managed: true
+    - identifier: _project_viewer
+      name: Project Viewer
+      description: View a project
+      permissions:
+        - core.project.view
+      allowedScopeLevels:
+        - project
+      managed: true
+    - identifier: _organization_admin
+      name: Organization Admin
+      description: Administer an existing organizationn
+      permissions:
+        - core.organization.view
+        - core.organization.edit
+        - core.organization.delete
+        - core.project.create
+        - core.project.view
+        - core.project.edit
+        - core.project.delete
+      allowedScopeLevels:
+        - organization
+      managed: true
+    - identifier: _organization_viewer
+      name: Organization Viewer
+      description: View an organization
+      permissions:
+        - core.organization.view
+        - core.project.view
+      allowedScopeLevels:
+        - organization
+      managed: true
+    - identifier: _account_admin
+      name: Account Admin
+      description: Administer an account
+      permissions:
+        - core.account.edit
+        - core.account.delete
+        - core.organization.create
+        - core.organization.view
+        - core.organization.edit
+        - core.organization.delete
+        - core.project.create
+        - core.project.view
+        - core.project.edit
+        - core.project.delete
+      allowedScopeLevels:
+        - account
+      managed: true
+    - identifier: _account_viewer
+      name: Account Viewer
+      description: View an account
+      permissions:
+        - core.organization.view
+        - core.project.view
+      allowedScopeLevels:
+        - account
+      managed: true

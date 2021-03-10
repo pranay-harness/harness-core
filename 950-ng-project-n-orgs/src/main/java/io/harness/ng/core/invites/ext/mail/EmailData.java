@@ -1,6 +1,11 @@
 package io.harness.ng.core.invites.ext.mail;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import java.util.ArrayList;
@@ -19,6 +24,8 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "emailQueue2", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.NG_MANAGER)
+@OwnedBy(PL)
 public class EmailData extends Queuable {
   private String accountId;
   @Builder.Default private List<String> to = new ArrayList<>();

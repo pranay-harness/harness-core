@@ -6,15 +6,17 @@ import static io.harness.interrupts.ExecutionInterruptType.ABORT_ALL;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
+import io.harness.engine.interrupts.InterruptCallback;
+import io.harness.engine.interrupts.InterruptEventQueuePublisher;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.execution.NodeExecutionMapper;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -22,10 +24,12 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
-import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.registries.StepRegistry;
+import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.interrupts.InterruptEvent;
+import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -35,15 +39,15 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class AbortHelper {
-  @Inject private StepRegistry stepRegistry;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private Map<TaskCategory, TaskExecutor> taskExecutorMap;
-  @Inject private OrchestrationEngine engine;
+  @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
+  @Inject private InterruptEventQueuePublisher interruptEventQueuePublisher;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  public void discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus) {
+  public String discontinueMarkedInstance(NodeExecution nodeExecution, Status finalStatus, Interrupt interrupt) {
     try {
       Ambiance ambiance = nodeExecution.getAmbiance();
-      PlanNodeProto node = nodeExecution.getNode();
       // Step currentState = Preconditions.checkNotNull(stepRegistry.obtain(node.getStepType()));
       ExecutableResponse executableResponse = nodeExecution.obtainLatestExecutableResponse();
       if (executableResponse != null && nodeExecution.isTaskSpawningMode()) {
@@ -70,21 +74,22 @@ public class AbortHelper {
               "Delegate Task Cannot be aborted : TaskId: {}, NodeExecutionId: {}", taskId, nodeExecution.getUuid());
         }
       }
-      //      if (currentState instanceof Abortable && executableResponse != null) {
-      //        if (executableResponse.getResponseCase() == ResponseCase.ASYNC) {
-      //          ((Abortable) currentState)
-      //              .handleAbort(ambiance, nodeExecutionService.extractResolvedStepParameters(nodeExecution),
-      //                  executableResponse.getAsync());
-      //        } else {
-      //          log.error("Executable Response of type {} is not supported for abort",
-      //          executableResponse.getResponseCase()); throw new InvalidRequestException("Abort for nodeExecution [" +
-      //          nodeExecution.getUuid() + "] failed");
-      //        }
-      //      }
 
-      NodeExecution updatedNodeExecution = nodeExecutionService.updateStatusWithOps(
-          nodeExecution.getUuid(), finalStatus, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
-      engine.endTransition(updatedNodeExecution, null);
+      InterruptEvent interruptEvent = InterruptEvent.builder()
+                                          .interruptUuid(interrupt.getUuid())
+                                          .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
+                                          .interruptType(InterruptType.ABORT)
+                                          .build();
+      interruptEventQueuePublisher.send(nodeExecution.getNode().getServiceName(), interruptEvent);
+
+      waitNotifyEngine.waitForAllOn(publisherName,
+          InterruptCallback.builder()
+              .finalStatus(finalStatus)
+              .nodeExecutionId(nodeExecution.getUuid())
+              .interruptId(interrupt.getUuid())
+              .build(),
+          interruptEvent.getNotifyId());
+      return interruptEvent.getNotifyId();
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
@@ -92,6 +97,7 @@ public class AbortHelper {
           ex);
     } catch (Exception e) {
       log.error("Error in discontinuing", e);
+      throw new InvalidRequestException("Error in discontinuing, " + e.getMessage());
     }
   }
 

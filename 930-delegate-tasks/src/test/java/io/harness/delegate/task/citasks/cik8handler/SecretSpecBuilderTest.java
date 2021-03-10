@@ -13,6 +13,7 @@ import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +33,13 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
@@ -320,5 +328,52 @@ public class SecretSpecBuilderTest extends CategoryTest {
     assertThat(secret.getData()).isEqualTo(map);
     assertThat(secret.getMetadata().getName()).isEqualTo("name");
     assertThat(secret.getMetadata().getNamespace()).isEqualTo("namespace");
+  }
+
+  @Test()
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void shouldDecryptGitSecretVariablesForAwsCodeCommitConnector() {
+    AwsCodeCommitSecretKeyAccessKeyDTO awsCodeCommitSecretKeyAccessKeyDTO =
+        AwsCodeCommitSecretKeyAccessKeyDTO.builder()
+            .accessKey("AKIAIOSFODNN7EXAMPLE")
+            .secretKeyRef(SecretRefData.builder()
+                              .identifier("secretKeyRefIdentifier")
+                              .scope(Scope.ACCOUNT)
+                              .decryptedValue("S3CR3TKEYEXAMPLE".toCharArray())
+                              .build())
+            .build();
+    AwsCodeCommitConnectorDTO awsCodeCommitConnectorDTO =
+        AwsCodeCommitConnectorDTO.builder()
+            .url("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test")
+            .urlType(AwsCodeCommitUrlType.REPO)
+            .authentication(AwsCodeCommitAuthenticationDTO.builder()
+                                .authType(AwsCodeCommitAuthType.HTTPS)
+                                .credentials(AwsCodeCommitHttpsCredentialsDTO.builder()
+                                                 .type(AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY)
+                                                 .httpCredentialsSpec(awsCodeCommitSecretKeyAccessKeyDTO)
+                                                 .build())
+
+                                .build())
+            .build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder()
+                                            .connectorType(ConnectorType.CODECOMMIT)
+                                            .connectorConfig(awsCodeCommitConnectorDTO)
+                                            .build();
+    when(secretDecryptionService.decrypt(eq(awsCodeCommitConnectorDTO), any())).thenReturn(awsCodeCommitConnectorDTO);
+    Map<String, SecretParams> gitSecretVariables = secretSpecBuilder.decryptGitSecretVariables(connectorDetails);
+    assertThat(gitSecretVariables).containsOnlyKeys("DRONE_AWS_ACCESS_KEY", "DRONE_AWS_SECRET_KEY");
+    assertThat(gitSecretVariables.get("DRONE_AWS_ACCESS_KEY"))
+        .isEqualTo(SecretParams.builder()
+                       .secretKey("DRONE_AWS_ACCESS_KEY")
+                       .value(encodeBase64("AKIAIOSFODNN7EXAMPLE"))
+                       .type(TEXT)
+                       .build());
+    assertThat(gitSecretVariables.get("DRONE_AWS_SECRET_KEY"))
+        .isEqualTo(SecretParams.builder()
+                       .secretKey("DRONE_AWS_SECRET_KEY")
+                       .value(encodeBase64("S3CR3TKEYEXAMPLE"))
+                       .type(TEXT)
+                       .build());
   }
 }

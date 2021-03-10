@@ -35,7 +35,7 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
     Outcome outcome = DummyOrchestrationOutcome.builder().test("test").build();
-    pmsOutcomeService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toDocumentJson(outcome), "PHASE");
+    pmsOutcomeService.consume(ambiance, outcomeName, RecastOrchestrationUtils.toDocumentJson(outcome), "PHASE", false);
 
     // Resolve with producer id
     DummyOrchestrationOutcome savedOutcome = RecastOrchestrationUtils.fromDocumentJson(
@@ -60,7 +60,7 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   public void shouldTestSaveAndFindForNull() {
     Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
     String outcomeName = "outcomeName";
-    pmsOutcomeService.consume(ambiance, outcomeName, null, null);
+    pmsOutcomeService.consume(ambiance, outcomeName, null, null, false);
 
     Outcome outcome = RecastOrchestrationUtils.fromDocumentJson(
         pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName)), Outcome.class);
@@ -78,9 +78,10 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName1 = "outcome1";
 
     pmsOutcomeService.consume(ambiance, outcomeName,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null, false);
     pmsOutcomeService.consume(ambiance1, outcomeName1,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null,
+        false);
 
     List<String> outcomes = pmsOutcomeService.findAllByRuntimeId(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
@@ -98,9 +99,11 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName1 = "outcome1";
 
     String instanceId1 = pmsOutcomeService.consume(ambiance, outcomeName,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test1").build()), null,
+        false);
     String instanceId2 = pmsOutcomeService.consume(ambiance1, outcomeName1,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test2").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test2").build()), null,
+        false);
 
     List<String> outcomes = pmsOutcomeService.fetchOutcomes(Arrays.asList(instanceId1, instanceId2));
     assertThat(outcomes.size()).isEqualTo(2);
@@ -120,11 +123,52 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
     String outcomeName = "outcome";
 
     String instanceId = pmsOutcomeService.consume(ambiance, outcomeName,
-        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null);
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build()), null, false);
 
     String outcomeJson = pmsOutcomeService.fetchOutcome(instanceId);
     Outcome outcome = RecastOrchestrationUtils.fromDocumentJson(outcomeJson, Outcome.class);
     assertThat(outcome).isInstanceOf(DummyOrchestrationOutcome.class);
     assertThat(((DummyOrchestrationOutcome) outcome).getTest()).isEqualTo("test");
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldResolveOptional() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+
+    String outcomeJson =
+        RecastOrchestrationUtils.toDocumentJson(DummyOrchestrationOutcome.builder().test("test").build());
+    pmsOutcomeService.consume(ambiance, outcomeName, outcomeJson, null, false);
+
+    // Resolve with producer id
+    OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isEqualTo(outcomeJson);
+    assertThat(optionalOutcome.isFound()).isTrue();
+
+    // Resolve with scope
+    optionalOutcome = pmsOutcomeService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isEqualTo(outcomeJson);
+    assertThat(optionalOutcome.isFound()).isTrue();
+  }
+
+  @Test
+  @RealMongo
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldResolveInternalWhenOutcomeIsNotFound() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome";
+
+    OptionalOutcome optionalOutcome = pmsOutcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(outcomeName, AmbianceUtils.obtainCurrentSetupId(ambiance), null));
+    assertThat(optionalOutcome).isNotNull();
+    assertThat(optionalOutcome.getOutcome()).isNull();
+    assertThat(optionalOutcome.isFound()).isEqualTo(false);
   }
 }

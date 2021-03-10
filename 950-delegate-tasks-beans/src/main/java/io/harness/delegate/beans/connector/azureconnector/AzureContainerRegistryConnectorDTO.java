@@ -40,7 +40,7 @@ public class AzureContainerRegistryConnectorDTO extends ConnectorConfigDTO imple
   }
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     return null;
   }
 }

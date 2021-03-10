@@ -101,6 +101,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
   @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Override
+  @SuppressWarnings("PMD")
   public ExecutionEventAdvice onExecutionEvent(ExecutionEvent executionEvent) {
     State state = executionEvent.getState();
     ExecutionContextImpl context = executionEvent.getContext();
@@ -319,7 +320,7 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       log.error("Error Occurred while calculating advise. This is really bad");
       return null;
     } catch (Throwable t) {
-      log.error("Encountered a throwable while calculating execution advice: {} ", t.getStackTrace());
+      log.error("Encountered a throwable while calculating execution advice: {}", t.getStackTrace());
       return null;
     } finally {
       try {

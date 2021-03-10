@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -22,8 +23,7 @@ public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
   @Override
   public String getResourceNames() {
     List<String> resourceNamesList = resourceNames != null ? resourceNames.getValue() : Collections.emptyList();
-    String resourceNames = resourceNamesList.stream().collect(Collectors.joining(","));
-    return resourceNames;
+    return resourceNamesList.stream().collect(Collectors.joining(","));
   }
 
   @Override

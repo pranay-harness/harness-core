@@ -102,5 +102,17 @@ preAggreagtedTableSchema = [
     {
         "name": "discount",
         "type": "FLOAT"
+    },
+    {
+        "name": "azureServiceName",
+        "type": "STRING"
+    },
+    {
+        "name": "azureResourceRate",
+        "type": "FLOAT"
+    },
+    {
+        "name": "azureSubscriptionGuid",
+        "type": "STRING"
     }
 ]

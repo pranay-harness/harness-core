@@ -3,7 +3,7 @@ package io.harness.cvng.activity.entities;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.core.utils.DateTimeUtils;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.time.Instant;
@@ -23,13 +23,13 @@ public class InfrastructureActivity extends Activity {
   }
 
   @Override
-  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstanceBuilder verificationJobInstance) {
     Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
     Instant preactivityStart = roundedDownTime.minus(verificationJobInstance.getResolvedJob().getDuration());
 
-    verificationJobInstance.setPreActivityVerificationStartTime(preactivityStart);
-    verificationJobInstance.setPostActivityVerificationStartTime(roundedDownTime);
-    verificationJobInstance.setStartTime(preactivityStart);
+    verificationJobInstance.preActivityVerificationStartTime(preactivityStart);
+    verificationJobInstance.postActivityVerificationStartTime(roundedDownTime);
+    verificationJobInstance.startTime(preactivityStart);
   }
 
   @Override

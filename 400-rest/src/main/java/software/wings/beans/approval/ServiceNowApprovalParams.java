@@ -67,6 +67,7 @@ public class ServiceNowApprovalParams {
     return true;
   }
 
+  @SuppressWarnings("PMD")
   public static boolean validateTimeWindow(
       String endTimeField, String startTimeField, Map<String, String> currentStatus) {
     Instant nowInstant = Instant.now();

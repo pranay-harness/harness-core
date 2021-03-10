@@ -4,6 +4,10 @@ import static io.harness.cvng.alert.entities.AlertRule.convertFromDTO;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.Team;
+import io.harness.cvng.activity.beans.ActivityVerificationSummary;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.beans.AlertRuleDTO.NotificationMethod;
 import io.harness.cvng.alert.entities.AlertRule;
@@ -11,9 +15,10 @@ import io.harness.cvng.alert.entities.AlertRule.AlertRuleKeys;
 import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
-import io.harness.cvng.alert.util.ActivityType;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.notification.channeldetails.PagerDutyChannel;
 import io.harness.notification.channeldetails.SlackChannel;
@@ -27,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -37,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 public class AlertRuleServiceImpl implements AlertRuleService {
@@ -48,6 +55,8 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   @Inject @Named("portalUrl") String portalUrl;
   @Inject private AlertRuleAnomalyService alertRuleAnomalyService;
   @Inject private Clock clock;
+  @Inject private ActivityService activityService;
+  @Inject private VerificationJobInstanceService verificationJobInstanceService;
 
   @Override
   public PageResponse<AlertRuleDTO> listAlertRules(String accountId, String orgIdentifier, String projectIdentifier,
@@ -130,27 +139,27 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                   && (alertRule.getAlertCondition().isAllEnvironments()
                       || alertRule.getAlertCondition().getEnvironments().contains(envIdentifier)))
           .forEach(rule -> {
-            StringBuilder alertMessage = new StringBuilder("Harness CV detected risk.");
-            alertMessage.append("\nOrganization: ")
-                .append(orgIdentifier)
-                .append("\nProject: ")
-                .append(projectIdentifier)
-                .append("\nService: ")
-                .append(serviceIdentifier)
-                .append("\nEnvironment: ")
-                .append(envIdentifier)
-                .append("\nCategory: ")
-                .append(category.getDisplayName())
-                .append("\nIncident time: ")
-                .append(DATE_TIME_FORMATTER.format(timeStamp))
-                .append("\nNotification rule:")
-                .append(rule.getName())
-                .append("\nAlert threshold: ")
-                .append(rule.getAlertCondition().getNotify().getThreshold())
-                .append("\nCurrent risk: ")
-                .append(riskValue)
-                .append("\nCheck at: ")
-                .append(uiUrl);
+            StringBuilder alertMessage = new StringBuilder(256)
+                                             .append("Harness CV detected risk.\nOrganization: ")
+                                             .append(orgIdentifier)
+                                             .append("\nProject: ")
+                                             .append(projectIdentifier)
+                                             .append("\nService: ")
+                                             .append(serviceIdentifier)
+                                             .append("\nEnvironment: ")
+                                             .append(envIdentifier)
+                                             .append("\nCategory: ")
+                                             .append(category.getDisplayName())
+                                             .append("\nIncident time: ")
+                                             .append(DATE_TIME_FORMATTER.format(timeStamp))
+                                             .append("\nNotification rule:")
+                                             .append(rule.getName())
+                                             .append("\nAlert threshold: ")
+                                             .append(rule.getAlertCondition().getNotify().getThreshold())
+                                             .append("\nCurrent risk: ")
+                                             .append(riskValue)
+                                             .append("\nCheck at: ")
+                                             .append(uiUrl);
 
             AlertRuleAnomaly alertRuleAnomaly = alertRuleAnomalyService.openAnomaly(
                 accountId, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier, category);
@@ -179,9 +188,32 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   }
 
   @Override
+  public void processDeploymentVerificationJobInstanceId(String verificationJobInstanceId) {
+    Activity activity = activityService.getByVerificationJobInstanceId(verificationJobInstanceId);
+
+    if (activity.getType() == ActivityType.DEPLOYMENT) {
+      DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
+      ActivityVerificationSummary summary = verificationJobInstanceService.getActivityVerificationSummary(
+          verificationJobInstanceService.get(deploymentActivity.getVerificationJobInstanceIds()));
+
+      processDeploymentVerification(deploymentActivity.getAccountId(), deploymentActivity.getOrgIdentifier(),
+          deploymentActivity.getProjectIdentifier(), deploymentActivity.getServiceIdentifier(),
+          deploymentActivity.getEnvironmentIdentifier(), deploymentActivity.getType(),
+          VerificationStatus.getVerificationStatus(summary.getAggregatedStatus()), summary.getStartTime(),
+          summary.getDurationMs(), deploymentActivity.getDeploymentTag());
+    }
+  }
+
+  @Override
   public void processDeploymentVerification(String accountId, String orgIdentifier, String projectIdentifier,
-      String serviceIdentifier, String envIdentifier, ActivityType activityType,
-      VerificationStatus verificationStatus) {
+      String serviceIdentifier, String envIdentifier, ActivityType activityType, VerificationStatus verificationStatus,
+      Long startTime, Long duration, String deploymentTag) {
+    Preconditions.checkNotNull(accountId, "accountId can not be null");
+    Preconditions.checkNotNull(orgIdentifier, "orgIdentifier can not be null");
+    Preconditions.checkNotNull(projectIdentifier, "projectIdentifier can not be null");
+    Preconditions.checkNotNull(serviceIdentifier, "serviceIdentifier can not be null");
+    Preconditions.checkNotNull(envIdentifier, "envIdentifier can not be null");
+
     List<AlertRule> alertRules = hPersistence.createQuery(AlertRule.class)
                                      .filter(AlertRuleKeys.accountId, accountId)
                                      .filter(AlertRuleKeys.orgIdentifier, orgIdentifier)
@@ -190,7 +222,10 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                                      .filter(AlertRuleKeys.enabledVerifications, true)
                                      .asList();
 
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d/MM/hh:mm aaa z");
     if (isNotEmpty(alertRules)) {
+      String uiUrl = getUrlFromActivityType(
+          accountId, orgIdentifier, projectIdentifier, serviceIdentifier, activityType, deploymentTag);
       alertRules.stream()
           .filter(alertRule
               -> (alertRule.getAlertCondition().isAllServices()
@@ -204,11 +239,42 @@ public class AlertRuleServiceImpl implements AlertRuleService {
                       || alertRule.getAlertCondition().getVerificationsNotify().getActivityTypes().contains(
                           activityType)))
           .forEach(rule -> {
-            String alertMessage = "Verification finished in project " + projectIdentifier + " for service "
-                + serviceIdentifier + " and environment " + envIdentifier;
-            notifyChannel(rule.getAccountId(), rule.getNotificationMethod(), alertMessage);
+            StringBuilder alertMessage = new StringBuilder(256)
+                                             .append("Harness CV finished verification\nOrganization: ")
+                                             .append(orgIdentifier)
+                                             .append("\nProject: ")
+                                             .append(projectIdentifier)
+                                             .append("\nService: ")
+                                             .append(serviceIdentifier)
+                                             .append("\nEnvironment: ")
+                                             .append(envIdentifier)
+                                             .append("\nVerification start time: ")
+                                             .append(simpleDateFormat.format(startTime))
+                                             .append("\nVerification duration: ")
+                                             .append(simpleDateFormat.format(duration))
+                                             .append("\nNotification rule:")
+                                             .append(rule.getName())
+                                             .append("\nVerification Status: ")
+                                             .append(verificationStatus)
+                                             .append("\nActivity Type: ")
+                                             .append(activityType)
+                                             .append("\nCheck at: ")
+                                             .append(uiUrl);
+            notifyChannel(rule.getAccountId(), rule.getNotificationMethod(), alertMessage.toString());
           });
     }
+  }
+
+  @NotNull
+  private String getUrlFromActivityType(String accountId, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, ActivityType activityType, String scope) {
+    String uiUrl = null;
+    if (activityType == ActivityType.DEPLOYMENT) {
+      uiUrl = getDeploymentUrl(accountId, orgIdentifier, projectIdentifier, scope, serviceIdentifier);
+    } else {
+      uiUrl = getActivityChangeUrl(accountId, orgIdentifier, projectIdentifier, scope, serviceIdentifier);
+    }
+    return uiUrl;
   }
 
   @VisibleForTesting
@@ -282,5 +348,17 @@ public class AlertRuleServiceImpl implements AlertRuleService {
   private String getRiskUrl(String accountId, String orgIdentifier, String projectIdentifier, Instant timeStamp) {
     return portalUrl + "ng/#/account/" + accountId + "/cv/orgs/" + orgIdentifier + "/projects/" + projectIdentifier
         + "/services?timeStamp=" + timeStamp.toEpochMilli();
+  }
+
+  private String getDeploymentUrl(String accountId, String orgIdentifier, String projectIdentifier,
+      String deploymentTag, String serviceIdentifier) {
+    return portalUrl + "ng/#/account/" + accountId + "/cv/orgs/" + orgIdentifier + "/projects/" + projectIdentifier
+        + "/dashboard/deployment/" + deploymentTag + "/service/" + serviceIdentifier;
+  }
+
+  private String getActivityChangeUrl(
+      String accountId, String orgIdentifier, String projectIdentifier, String activityId, String serviceIdentifier) {
+    return portalUrl + "ng/#/account/" + accountId + "/cv/orgs/" + orgIdentifier + "/projects/" + projectIdentifier
+        + "/dashboard/activity-changes/" + activityId + "/service/" + serviceIdentifier;
   }
 }

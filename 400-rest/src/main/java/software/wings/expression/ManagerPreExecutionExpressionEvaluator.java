@@ -48,6 +48,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
             .serviceTemplateId(serviceTemplateId)
             .configService(configService)
             .serviceTemplateService(serviceTemplateService)
+            .expressionFunctorToken(expressionFunctorToken)
             .build());
 
     addFunctor("dockerconfig",

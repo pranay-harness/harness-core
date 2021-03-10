@@ -14,7 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
@@ -44,7 +44,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class K8sWatchServiceDelegateTest extends DelegateTest {
+public class K8sWatchServiceDelegateTest extends DelegateTestBase {
   private static final String CLUSTER_ID = "cluster-id";
   private K8sWatchServiceDelegate k8sWatchServiceDelegate;
   private WatcherFactory watcherFactory;

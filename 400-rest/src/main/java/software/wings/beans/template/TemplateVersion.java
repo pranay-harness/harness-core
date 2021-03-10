@@ -1,15 +1,15 @@
 package software.wings.beans.template;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.template.TemplateVersion.TemplateVersionKeys;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,21 +20,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 
 @FieldNameConstants(innerTypeName = "TemplateVersionKeys")
-@NgUniqueIndex(name = "yaml", fields = { @Field("templateUuid")
-                                         , @Field("version") })
-@CdIndex(name = "account_template_version",
-    fields =
-    {
-      @Field(value = TemplateVersionKeys.accountId)
-      , @Field(value = TemplateVersionKeys.templateUuid),
-          @Field(value = TemplateVersionKeys.version, type = IndexType.DESC)
-    })
-@CdIndex(name = "account_imported_template_version",
-    fields =
-    {
-      @Field(value = TemplateVersionKeys.accountId)
-      , @Field(value = TemplateVersionKeys.templateUuid), @Field(value = TemplateVersionKeys.importedTemplateVersion)
-    })
 // TODO(abhinav): May have to look at ordering for importedTemplateVersion later.
 @Data
 @Builder
@@ -44,6 +29,29 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "templateVersions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class TemplateVersion extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("yaml")
+                 .unique(true)
+                 .field(TemplateVersionKeys.templateUuid)
+                 .field(TemplateVersionKeys.version)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("account_template_version")
+                 .field(TemplateVersionKeys.accountId)
+                 .field(TemplateVersionKeys.templateUuid)
+                 .descSortField(TemplateVersionKeys.version)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_imported_template_version")
+                 .field(TemplateVersionKeys.accountId)
+                 .field(TemplateVersionKeys.templateUuid)
+                 .field(TemplateVersionKeys.importedTemplateVersion)
+                 .build())
+        .build();
+  }
+
   public static final long INITIAL_VERSION = 1;
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
   private String changeType;

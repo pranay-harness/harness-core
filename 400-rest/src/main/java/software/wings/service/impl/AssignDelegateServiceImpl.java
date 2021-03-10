@@ -8,6 +8,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -703,6 +704,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     } catch (ExecutionException ex) {
       log.error("Unexpected error occurred while fetching delegates from cache.", ex);
       return true;
+    }
+  }
+
+  @Override
+  public List<Delegate> getAccountDelegates(String accountId) {
+    try {
+      return accountDelegatesCache.get(accountId);
+    } catch (ExecutionException | InvalidCacheLoadException ex) {
+      log.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      return emptyList();
     }
   }
 

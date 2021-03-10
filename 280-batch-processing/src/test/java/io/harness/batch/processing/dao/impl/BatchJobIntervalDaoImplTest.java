@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.entities.BatchJobInterval;
@@ -15,7 +15,7 @@ import java.time.temporal.ChronoUnit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BatchJobIntervalDaoImplTest extends BatchProcessingBaseTest {
+public class BatchJobIntervalDaoImplTest extends BatchProcessingTestBase {
   @Inject private BatchJobIntervalDaoImpl batchJobIntervalDao;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();

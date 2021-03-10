@@ -43,13 +43,13 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 @Slf4j
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Inject @Named("morphiaInterfaceImplementersClasses") Map<String, Class> morphiaInterfaceImplementers;
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testManagerImplementationClasses() {
     Map<String, Class> classes = new HashedMap(morphiaInterfaceImplementers);
 
@@ -84,6 +84,7 @@ public class ManagerMorphiaRegistrarTest extends WingsBaseTest {
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
+  @Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
   public void testManagerKnownMovements() {
     ImmutableMap<Object, Object> known = ImmutableMap.builder().build();
 

@@ -1,5 +1,7 @@
 package io.harness.gitsync.persistance;
 
 public interface GitSyncableEntity {
-  Class getClassName();
+  String getBranch();
+
+  void setBranch(String branch);
 }

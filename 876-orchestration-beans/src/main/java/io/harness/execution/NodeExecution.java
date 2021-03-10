@@ -64,6 +64,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   // Resolved StepParameters stored just before invoking step.
   org.bson.Document resolvedStepParameters;
+  org.bson.Document resolvedStepInputs;
 
   // For Wait Notify
   String notifyId;
@@ -133,6 +134,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
     public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
       this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      return this;
+    }
+
+    public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
+      this.resolvedStepInputs = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
       return this;
     }
   }

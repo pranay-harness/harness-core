@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,6 +87,7 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
     when(verificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
     when(verificationTaskService.getServiceGuardVerificationTaskId(accountId, cvConfigId)).thenReturn(cvConfigId);
     when(cvConfigService.get(cvConfigId)).thenReturn(getAppDCVConfig());
+    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId), any())).thenReturn(getAppDCVConfig());
     when(verificationTaskService.get(verificationTaskId))
         .thenReturn(VerificationTask.builder()
                         .cvConfigId(cvConfigId)
@@ -112,7 +114,7 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
   public void testAggregateActivityAnalysis_noAnalysisDoneLogs() {
     CVConfig cvConfig = getSplunkConfig();
     cvConfig.setUuid(cvConfigId);
-    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
+    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId), any())).thenReturn(cvConfig);
 
     Instant start = Instant.ofEpochMilli(startTime);
     Instant end = Instant.ofEpochMilli(startTime).plus(Duration.ofMinutes(15));
@@ -151,7 +153,7 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
   public void testAggregateActivityAnalysis_withAnalysisLogs() {
     CVConfig cvConfig = getSplunkConfig();
     cvConfig.setUuid(cvConfigId);
-    when(cvConfigService.get(cvConfigId)).thenReturn(cvConfig);
+    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId), any())).thenReturn(cvConfig);
 
     Instant start = Instant.ofEpochMilli(startTime);
     Instant end = Instant.ofEpochMilli(startTime).plus(Duration.ofMinutes(15));
@@ -181,6 +183,7 @@ public class HealthVerificationServiceImplTest extends CvNextGenTestBase {
         .thenReturn(VerificationJobInstance.builder()
                         .accountId(accountId)
                         .preActivityVerificationStartTime(start)
+                        .deploymentStartTime(start.plus(Duration.ofMinutes(3)))
                         .startTime(start.plus(Duration.ofMinutes(5)))
                         .postActivityVerificationStartTime(start.plus(Duration.ofMinutes(10)))
                         .uuid(verificationJobInstanceId)

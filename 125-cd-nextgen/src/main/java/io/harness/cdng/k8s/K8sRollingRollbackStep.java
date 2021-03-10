@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -18,6 +19,7 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.tasks.ResponseData;
 
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
@@ -64,16 +66,24 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   @Override
   public StepResponse handleTaskResult(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
-    K8sDeployResponse executionResponse = (K8sDeployResponse) responseDataMap.values().iterator().next();
+    ResponseData responseData = responseDataMap.values().iterator().next();
+    if (responseData instanceof ErrorNotifyResponseData) {
+      return K8sStepHelper
+          .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
+          .build();
+    }
 
-    if (executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS) {
-      return StepResponse.builder().status(Status.SUCCEEDED).build();
-    } else {
-      return StepResponse.builder()
-          .status(Status.FAILED)
+    K8sDeployResponse executionResponse = (K8sDeployResponse) responseData;
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(executionResponse.getCommandUnitsProgress().getUnitProgresses());
+
+    if (executionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+      return stepResponseBuilder.status(Status.FAILED)
           .failureInfo(
               FailureInfo.newBuilder().setErrorMessage(K8sStepHelper.getErrorMessage(executionResponse)).build())
           .build();
     }
+
+    return stepResponseBuilder.status(Status.SUCCEEDED).build();
   }
 }

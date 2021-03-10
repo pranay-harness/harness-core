@@ -545,11 +545,11 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
     if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
-      return getBuildService(settingAttribute, artifactStream.getArtifactStreamType())
+      return getBuildService(settingAttribute, artifactStream.getAppId(), artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(
               artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {
-      return getBuildService(settingAttribute)
+      return getBuildService(settingAttribute, artifactStream.getAppId())
           .getLastSuccessfulBuild(
               artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     }

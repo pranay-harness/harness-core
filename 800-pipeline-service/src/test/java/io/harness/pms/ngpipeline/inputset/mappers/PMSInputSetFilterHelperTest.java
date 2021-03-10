@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
+import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
 import io.harness.rule.Owner;
@@ -36,10 +37,10 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
     assertThat(criteriaFromFilter).isNotNull();
 
     Document criteriaObject = criteriaFromFilter.getCriteriaObject();
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.accountId)).isEqualTo(accountId);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.pipelineIdentifier)).isEqualTo(pipelineIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.accountId)).isEqualTo(accountId);
+    assertThat(criteriaObject.get(InputSetEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.pipelineIdentifier)).isEqualTo(pipelineIdentifier);
   }
 
   @Test
@@ -56,10 +57,10 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
     assertThat(criteriaFromFilter).isNotNull();
 
     Document criteriaObject = criteriaFromFilter.getCriteriaObject();
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.accountId)).isEqualTo(accountId);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.pipelineIdentifier)).isEqualTo(pipelineIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.accountId)).isEqualTo(accountId);
+    assertThat(criteriaObject.get(InputSetEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.pipelineIdentifier)).isEqualTo(pipelineIdentifier);
     assertThat(criteriaObject.get("$and")).isNotNull();
   }
 
@@ -76,19 +77,18 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
     assertThat(criteriaFromFilter).isNotNull();
 
     Document criteriaObject = criteriaFromFilter.getCriteriaObject();
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.accountId)).isEqualTo(accountId);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.pipelineIdentifier)).isEqualTo(pipelineIdentifier);
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.inputSetEntityType))
-        .isEqualTo(InputSetEntityType.INPUT_SET);
+    assertThat(criteriaObject.get(InputSetEntityKeys.accountId)).isEqualTo(accountId);
+    assertThat(criteriaObject.get(InputSetEntityKeys.orgIdentifier)).isEqualTo(orgIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.projectIdentifier)).isEqualTo(projectIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.pipelineIdentifier)).isEqualTo(pipelineIdentifier);
+    assertThat(criteriaObject.get(InputSetEntityKeys.inputSetEntityType)).isEqualTo(InputSetEntityType.INPUT_SET);
 
     criteriaFromFilter = PMSInputSetFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier,
         pipelineIdentifier, InputSetListTypePMS.OVERLAY_INPUT_SET, "", false);
     assertThat(criteriaFromFilter).isNotNull();
 
     criteriaObject = criteriaFromFilter.getCriteriaObject();
-    assertThat(criteriaObject.get(InputSetEntity.InputSetEntityKeys.inputSetEntityType))
+    assertThat(criteriaObject.get(InputSetEntityKeys.inputSetEntityType))
         .isEqualTo(InputSetEntityType.OVERLAY_INPUT_SET);
   }
 
@@ -101,10 +101,9 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
     Update updateOperations = PMSInputSetFilterHelper.getUpdateOperations(inputSetEntity);
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(InputSetEntity.class);
-    Set<String> excludedFields = new HashSet<>(Arrays.asList(InputSetEntity.InputSetEntityKeys.uuid,
-        InputSetEntity.InputSetEntityKeys.createdAt, InputSetEntity.InputSetEntityKeys.lastUpdatedAt,
-        InputSetEntity.InputSetEntityKeys.version, InputSetEntity.InputSetEntityKeys.inputSetReferences,
-        InputSetEntity.InputSetEntityKeys.inputSetEntityType, InputSetEntity.InputSetEntityKeys.deleted, "class"));
+    Set<String> excludedFields = new HashSet<>(Arrays.asList(InputSetEntityKeys.uuid, InputSetEntityKeys.createdAt,
+        InputSetEntityKeys.lastUpdatedAt, InputSetEntityKeys.version, InputSetEntityKeys.inputSetReferences,
+        InputSetEntityKeys.inputSetEntityType, InputSetEntityKeys.deleted, "class"));
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       boolean shouldExist =
@@ -120,10 +119,9 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
     updateOperations = PMSInputSetFilterHelper.getUpdateOperations(inputSetEntity);
     stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     propertyDescriptors = BeanUtils.getPropertyDescriptors(InputSetEntity.class);
-    excludedFields =
-        new HashSet<>(Arrays.asList(InputSetEntity.InputSetEntityKeys.uuid, InputSetEntity.InputSetEntityKeys.createdAt,
-            InputSetEntity.InputSetEntityKeys.lastUpdatedAt, InputSetEntity.InputSetEntityKeys.version,
-            InputSetEntity.InputSetEntityKeys.inputSetEntityType, InputSetEntity.InputSetEntityKeys.deleted, "class"));
+    excludedFields = new HashSet<>(
+        Arrays.asList(InputSetEntityKeys.uuid, InputSetEntityKeys.createdAt, InputSetEntityKeys.lastUpdatedAt,
+            InputSetEntityKeys.version, InputSetEntityKeys.inputSetEntityType, InputSetEntityKeys.deleted, "class"));
 
     for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
       boolean shouldExist =

@@ -14,7 +14,7 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
-import com.google.common.collect.TreeBasedTable;
+import com.google.common.collect.HashBasedTable;
 import io.fabric8.utils.Lists;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -55,7 +55,7 @@ public class TimeSeriesDataRecordTest extends CategoryTest {
 
   private TimeSeriesDataRecord getTimeSeriesInputForTest(long timestamp, int dataCollectionMinute, String host,
       ClusterLevel level, Map<String, List<String>> metricNames) {
-    TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
+    HashBasedTable<String, String, Double> values = HashBasedTable.create();
     metricNames.forEach((key, list) -> list.forEach(value -> values.put(key, value, 3.4)));
     return TimeSeriesDataRecord.builder()
         .stateType(stateType)

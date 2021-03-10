@@ -513,9 +513,9 @@ public class WorkflowNotificationHelper {
     WorkflowNotificationDetailsBuilder infraDetails = WorkflowNotificationDetails.builder();
     List<String> infraIds = workflowExecution.getInfraDefinitionIds();
 
-    StringBuilder infraMsg = new StringBuilder();
-    StringBuilder infraDetailsName = new StringBuilder();
-    StringBuilder infraDetailsUrl = new StringBuilder();
+    StringBuilder infraMsg = new StringBuilder(64);
+    StringBuilder infraDetailsName = new StringBuilder(32);
+    StringBuilder infraDetailsUrl = new StringBuilder(32);
 
     if (isNotEmpty(infraIds)) {
       List<String> infras = infraIds.stream()

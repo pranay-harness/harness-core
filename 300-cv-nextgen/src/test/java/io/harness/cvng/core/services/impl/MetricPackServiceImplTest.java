@@ -50,7 +50,6 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 

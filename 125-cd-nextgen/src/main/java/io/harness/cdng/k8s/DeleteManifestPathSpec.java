@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -24,9 +25,7 @@ public class DeleteManifestPathSpec implements DeleteResourcesBaseSpec {
   @Override
   public String getManifestPaths() {
     List<String> filePathsList = manifestPaths != null ? manifestPaths.getValue() : Collections.emptyList();
-    String filePaths = filePathsList.stream().collect(Collectors.joining(","));
-
-    return filePaths;
+    return filePathsList.stream().collect(Collectors.joining(","));
   }
 
   @Override

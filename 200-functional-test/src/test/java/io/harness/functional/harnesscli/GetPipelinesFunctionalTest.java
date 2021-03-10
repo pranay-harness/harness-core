@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -49,6 +50,7 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getPipelinesTest() {
     // Running harness get pipelines before creating a new pipeline
     String appId = application.getUuid();
@@ -101,6 +103,7 @@ public class GetPipelinesFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = SHUBHANSHU)
   @Category(CliFunctionalTests.class)
+  @Ignore("This test is skipping through maven command. Skipping for bazel")
   public void getPipelinesWithInvalidArgumentsTest() {
     // Running harness get pipelines with invalid appId
     String command = String.format("harness get pipelines -a %s", "INVALID_ID");

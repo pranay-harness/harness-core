@@ -7,7 +7,8 @@ import java.util.List;
 public enum DataSourceType {
   APP_DYNAMICS("Appdynamics"),
   SPLUNK("Splunk"),
-  STACKDRIVER("Stackdriver");
+  STACKDRIVER("Stackdriver"),
+  KUBERNETES("Kubernetes");
 
   private String displayName;
 

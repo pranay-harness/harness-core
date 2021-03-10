@@ -7,7 +7,6 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -25,9 +24,8 @@ public class ResourceGroupDTO {
   String projectIdentifier;
   @ApiModelProperty(required = true) @Size(max = 128) @NotEmpty String identifier;
   @ApiModelProperty(required = true) @Size(max = 128) @NotEmpty String name;
-  @ApiModelProperty(required = true) @Size(min = 7, max = 7) @NotEmpty String color;
-  @ApiModelProperty(required = true) @NotNull Boolean harnessManaged;
-  @ApiModelProperty(required = true) @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors;
+  @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors;
   @Size(max = 128) Map<String, String> tags;
   @Size(max = 1024) String description;
+  String color;
 }

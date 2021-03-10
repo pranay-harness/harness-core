@@ -1,17 +1,20 @@
 package io.harness.resourcegroup.framework.service.impl;
 
+import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+
 import static java.util.stream.Collectors.toList;
 
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
+import io.harness.resourcegroup.framework.service.ResourceValidator;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.Scope;
-import io.harness.resourcegroup.resourceclient.api.ResourceValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
@@ -33,8 +36,11 @@ public class DynamicResourceGroupValidatorServiceImpl implements ResourceGroupVa
                                                                  .filter(DynamicResourceSelector.class ::isInstance)
                                                                  .map(DynamicResourceSelector.class ::cast)
                                                                  .collect(toList());
+    Predicate<String> resourceTypeLegalAtScope = e -> resourceValidators.get(e).getScopes().contains(scope);
+    Predicate<String> resourceTypeSupportDynamicValidator =
+        e -> resourceValidators.get(e).getValidatorTypes().contains(DYNAMIC);
     return dynamicResourceSelectors.stream()
         .map(DynamicResourceSelector::getResourceType)
-        .allMatch(e -> resourceValidators.get(e).getScopes().contains(scope));
+        .allMatch(resourceTypeLegalAtScope.and(resourceTypeSupportDynamicValidator));
   }
 }

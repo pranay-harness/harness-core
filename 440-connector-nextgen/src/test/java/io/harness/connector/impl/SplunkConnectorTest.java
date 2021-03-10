@@ -3,8 +3,10 @@ package io.harness.connector.impl;
 import static io.harness.delegate.beans.connector.ConnectorType.SPLUNK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -42,6 +44,7 @@ public class SplunkConnectorTest extends CategoryTest {
   @Mock ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks DefaultConnectorServiceImpl connectorService;
+  @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
 
   String userName = "userName";
   String password = "password";
@@ -89,6 +92,7 @@ public class SplunkConnectorTest extends CategoryTest {
     when(connectorRepository.save(connector)).thenReturn(connector);
     when(connectorMapper.writeDTO(connector)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(connector);
+    doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());
   }
 
   private ConnectorResponseDTO createConnector() {

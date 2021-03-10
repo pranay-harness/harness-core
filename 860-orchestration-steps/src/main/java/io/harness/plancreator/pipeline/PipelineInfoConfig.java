@@ -3,6 +3,7 @@ package io.harness.plancreator.pipeline;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.plancreator.flowcontrol.FlowControlConfig;
 import io.harness.plancreator.stages.StageElementWrapperConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.properties.NGProperties;
@@ -30,6 +31,8 @@ public class PipelineInfoConfig {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String uuid;
   @NotNull @EntityName String name;
   @NotNull @EntityIdentifier String identifier;
+
+  FlowControlConfig flowControl;
 
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
   Map<String, String> tags;

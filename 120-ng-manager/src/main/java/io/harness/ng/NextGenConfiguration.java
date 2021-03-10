@@ -2,6 +2,7 @@ package io.harness.ng;
 
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -57,6 +58,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("ngManagerPublicBaseUrl") private String ngManagerPublicBaseUrl;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
   @JsonProperty("ResoureGroupConfig") private ResourceGroupConfig resoureGroupConfig;
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

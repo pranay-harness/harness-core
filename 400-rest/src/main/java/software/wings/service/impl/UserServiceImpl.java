@@ -69,6 +69,7 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.persistence.UuidAware;
+import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
 import io.harness.version.VersionInfoManager;
@@ -278,6 +279,7 @@ public class UserServiceImpl implements UserService {
   @Inject private HarnessCacheManager harnessCacheManager;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ConfigurationController configurationController;
+  @Inject private HtmlInputSanitizer userNameSanitizer;
 
   private Cache<String, User> getUserCache() {
     if (configurationController.isPrimary()) {
@@ -358,7 +360,6 @@ public class UserServiceImpl implements UserService {
     if (userRequestContext == null) {
       return true;
     }
-
     if (!accountId.equals(userRequestContext.getAccountId())) {
       return false;
     }
@@ -549,9 +550,7 @@ public class UserServiceImpl implements UserService {
           format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
           account.getUuid());
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", loginUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), loginUrl);
       templateModel.put("company", account.getCompanyName());
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -568,6 +567,10 @@ public class UserServiceImpl implements UserService {
     } catch (URISyntaxException use) {
       log.error("Add account email couldn't be sent for accountId={}", account.getUuid(), use);
     }
+  }
+
+  public String sanitizeUserName(String name) {
+    return userNameSanitizer.sanitizeInput(name);
   }
 
   @Override
@@ -674,9 +677,7 @@ public class UserServiceImpl implements UserService {
     String loginUrl =
         buildAbsoluteUrl(format(LOGIN_URL_FORMAT, account.getCompanyName(), account.getAccountName(), user.getEmail()),
             account.getUuid());
-    Map<String, String> model = new HashMap<>();
-    model.put("name", user.getName());
-    model.put("url", loginUrl);
+    Map<String, String> model = getTemplateModel(user.getName(), loginUrl);
     model.put("company", account.getCompanyName());
     model.put(
         "subject", "You have been invited to the " + account.getCompanyName().toUpperCase() + " account at Harness");
@@ -716,6 +717,13 @@ public class UserServiceImpl implements UserService {
     }
   }
 
+  private Map<String, String> getTemplateModel(String userName, String url) {
+    Map<String, String> templateModel = new HashMap<>();
+    templateModel.put("name", sanitizeUserName(userName));
+    templateModel.put("url", url);
+    return templateModel;
+  }
+
   private void sendVerificationEmail(User user) {
     EmailVerificationToken emailVerificationToken =
         wingsPersistence.saveAndGet(EmailVerificationToken.class, new EmailVerificationToken(user.getUuid()));
@@ -724,9 +732,7 @@ public class UserServiceImpl implements UserService {
           buildAbsoluteUrl(configuration.getPortal().getVerificationUrl() + "/" + emailVerificationToken.getToken(),
               user.getDefaultAccountId());
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", verificationUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), verificationUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
@@ -1058,12 +1064,10 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account, User user)
       throws URISyntaxException {
-    Map<String, String> model = new HashMap<>();
     String inviteUrl = getUserInviteUrl(userInvite, account);
+    Map<String, String> model = getTemplateModel(userInvite.getEmail(), inviteUrl);
     model.put("company", account.getCompanyName());
     model.put("accountname", account.getAccountName());
-    model.put("name", userInvite.getEmail());
-    model.put("url", inviteUrl);
     boolean shouldMailContainTwoFactorInfo = user.isTwoFactorAuthenticationEnabled();
     model.put("shouldMailContainTwoFactorInfo", Boolean.toString(shouldMailContainTwoFactorInfo));
     model.put("totpSecret", user.getTotpSecretKey());
@@ -1094,11 +1098,8 @@ public class UserServiceImpl implements UserService {
 
   private Map<String, String> getEmailVerificationTemplateModel(
       String name, String url, Map<String, String> params, String accountId) {
-    Map<String, String> model = new HashMap<>();
-    model.put("name", name);
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
-    model.put("url", authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
-    return model;
+    return getTemplateModel(name, authenticationUtils.buildAbsoluteUrl(baseUrl, url, params).toString());
   }
 
   @Override
@@ -1137,7 +1138,7 @@ public class UserServiceImpl implements UserService {
             account.getUuid());
 
     Map<String, Object> model = new HashMap<>();
-    model.put("name", user.getName());
+    model.put("name", sanitizeUserName(user.getName()));
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
     model.put(
@@ -1683,7 +1684,7 @@ public class UserServiceImpl implements UserService {
 
   private void sendPasswordChangeEmail(User user) {
     Map<String, Object> templateModel = new HashMap<>();
-    templateModel.put("name", user.getName());
+    templateModel.put("name", sanitizeUserName(user.getName()));
     templateModel.put("email", user.getEmail());
     List<String> toList = new ArrayList<>();
     toList.add(user.getEmail());
@@ -1837,9 +1838,7 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", resetPasswordUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
@@ -2754,9 +2753,7 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", resetPasswordUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
       templateModel.put("passExpirationDays", passExpirationDays.toString());
 
       List<String> toList = new ArrayList<>();
@@ -2799,9 +2796,7 @@ public class UserServiceImpl implements UserService {
     try {
       String resetPasswordUrl = getResetPasswordUrl(token, user);
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", resetPasswordUrl);
+      Map<String, String> templateModel = getTemplateModel(user.getName(), resetPasswordUrl);
 
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
@@ -2873,7 +2868,7 @@ public class UserServiceImpl implements UserService {
   @Override
   public void sendAccountLockedNotificationMail(User user, int lockoutExpirationTime) {
     Map<String, String> templateModel = new HashMap<>();
-    templateModel.put("name", user.getName());
+    templateModel.put("name", sanitizeUserName(user.getName()));
     templateModel.put("lockoutExpirationTime", Integer.toString(lockoutExpirationTime));
 
     List<String> toList = new ArrayList<>();

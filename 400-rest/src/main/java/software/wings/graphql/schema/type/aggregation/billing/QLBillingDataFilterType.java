@@ -25,6 +25,7 @@ public enum QLBillingDataFilterType {
   NodeInstanceId(BillingDataMetaDataFields.INSTANCEID),
   PodInstanceId(BillingDataMetaDataFields.INSTANCEID),
   ParentInstanceId(BillingDataMetaDataFields.PARENTINSTANCEID),
+  StorageUtilizationValue(BillingDataMetaDataFields.STORAGEUTILIZATIONVALUE),
   LabelSearch(null),
   TagSearch(null),
   Tag(null),

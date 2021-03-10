@@ -13,6 +13,7 @@ java_library(
     exports = [
         "//920-delegate-service-beans/src/main/proto:920_delegate_service_beans_java_proto",
         "//960-persistence:module",
+        "//970-api-services-beans:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_squareup_retrofit2_retrofit",

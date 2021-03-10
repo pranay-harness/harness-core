@@ -47,6 +47,8 @@ public class MongoConfig {
   private byte[] encryptedUri;
   private byte[] encryptedLocksUri;
 
+  private String aliasDBName;
+
   @JsonProperty(defaultValue = "30000") @Default @NotEmpty private int connectTimeout = 30000;
 
   @JsonProperty(defaultValue = "90000") @Default @NotEmpty private int serverSelectionTimeout = 90000;

@@ -26,7 +26,13 @@ public class AzureARMTaskParameters extends AzureTaskParameters {
     this.commandType = commandType;
   }
 
-  public enum AzureARMTaskType { ARM_DEPLOYMENT, ARM_ROLLBACK, LIST_SUBSCRIPTION_LOCATIONS, LIST_MNG_GROUP }
+  public enum AzureARMTaskType {
+    ARM_DEPLOYMENT,
+    ARM_ROLLBACK,
+    LIST_SUBSCRIPTION_LOCATIONS,
+    LIST_MNG_GROUP,
+    BLUEPRINT_DEPLOYMENT
+  }
 
   public boolean isSyncTask() {
     return SYNC_TASK_TYPES.contains(commandType);

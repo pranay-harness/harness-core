@@ -80,6 +80,7 @@ import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.version.VersionInfoManager;
@@ -88,6 +89,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountEvent;
+import software.wings.beans.AccountPreferences;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
@@ -161,6 +163,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -493,6 +496,11 @@ public class AccountServiceImpl implements AccountService {
     }
     LicenseUtils.decryptLicenseInfo(account, false);
     return account;
+  }
+
+  @Override
+  public List<Account> getAccounts(List<String> identifiers) {
+    return wingsPersistence.createQuery(Account.class).field("uuid").in(identifiers).asList();
   }
 
   @Override
@@ -875,6 +883,40 @@ public class AccountServiceImpl implements AccountService {
                           .get();
 
     return account.getDelegateConfiguration();
+  }
+
+  @Override
+  public boolean updateAccountPreference(String accountId, String preferenceKey, Object value) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, USER);
+
+    AccountPreferences accountPreferences = account.getAccountPreferences();
+    if (accountPreferences == null) {
+      accountPreferences = AccountPreferences.builder().build();
+    }
+
+    try {
+      Field field = ReflectionUtils.getFieldByName(accountPreferences.getClass(), preferenceKey);
+      if (field == null) {
+        log.warn("The provided preferenceKey is not valid");
+        return false;
+      }
+      if (field != null) {
+        field.setAccessible(true);
+        Class clazz = field.getType();
+        if (clazz.getSuperclass().isAssignableFrom(Integer.class)) {
+          field.set(accountPreferences, value);
+          wingsPersistence.update(account,
+              wingsPersistence.createUpdateOperations(Account.class)
+                  .set(AccountKeys.accountPreferences, accountPreferences));
+          return true;
+        }
+      }
+    } catch (IllegalAccessException exception) {
+      log.warn("Exception encountered while updating account preference for accountId: {} ", accountId, exception);
+      return false;
+    }
+    return false;
   }
 
   @Override

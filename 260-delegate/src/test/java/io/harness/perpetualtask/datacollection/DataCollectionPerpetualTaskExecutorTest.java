@@ -13,7 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
@@ -63,7 +63,7 @@ import org.mockito.junit.MockitoRule;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class DataCollectionPerpetualTaskExecutorTest extends DelegateTest {
+public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   private DataCollectionPerpetualTaskExecutor dataCollector = new DataCollectionPerpetualTaskExecutor();
   @Mock private TimeSeriesDataStoreService timeSeriesDataStoreService;

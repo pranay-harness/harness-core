@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
+import io.harness.capability.CapabilityModule;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.event.EventsModule;
@@ -24,7 +25,6 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
@@ -63,7 +63,6 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
-import software.wings.security.ThreadLocalUserProvider;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -117,7 +116,6 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     final QueryLanguageProvider<GraphQL> instance =
         injector.getInstance(Key.get(new TypeLiteral<QueryLanguageProvider<GraphQL>>() {}));
     graphQL = instance.getPrivateGraphQL();
-    injector.getInstance(HPersistence.class).registerUserProvider(new ThreadLocalUserProvider());
     initializeLogging();
   }
 
@@ -234,6 +232,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
 
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
+    modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
     modules.add(new IndexMigratorModule());
     modules.add(new YamlModule());

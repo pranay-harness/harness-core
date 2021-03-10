@@ -6,10 +6,14 @@ directories:
   130-resource-group
   136-git-sync-manager
   160-model-gen-tool
+  190-deployment-functional-tests
+  160-stress-tester
   210-command-library-server
   220-graphql-test
   230-model-test
+  250-watcher
   260-delegate
+  270-verification
   280-batch-processing
   300-cv-nextgen
   310-ci-manager
@@ -49,7 +53,9 @@ directories:
   900-access-control-service
   903-decision-module
   905-access-control-core
-  909-access-control-sdk
+  908-access-control-admin-client
+  908-access-control-sdk
+  909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -63,6 +69,7 @@ directories:
   940-resource-group-beans
   940-secret-manager-client
   950-command-library-common
+  950-log-client
   950-common-entities
   950-delegate-tasks-beans
   950-events-api
@@ -89,22 +96,26 @@ directories:
   970-ng-commons
   970-rbac-core
   980-commons
-  980-java-agent
   990-commons-test
+  run-configurations
+  200-functional-test
   tools
   scripts
 
 import_run_configurations:
-  run-configurations/DelegateApp.xml
-  run-configurations/WingsApp.xml
-  run-configurations/Notification Microservice.xml
-  run-configurations/Notification Client.xml
-  run-configurations/EventsFrameworkTest.xml
   run-configurations/AccessControlMicroservice.xml
-  run-configurations/NextGen_Manager.xml
+  run-configurations/CENextGenApp.xml
+  run-configurations/CIManagerApplication.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml
-  run-configurations/CIManagerApplication.xml
+  run-configurations/DelegateApp.xml
+  run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
-  run-configurations/CENextGenApp.xml
+  run-configurations/NextGen_Manager.xml
+  run-configurations/Notification Client.xml
+  run-configurations/Notification Microservice.xml
+  run-configurations/Watcher.xml
+  run-configurations/WingsApp.xml
+  run-configurations/VerificationServiceApp.xml
+  run-configurations/BatchProcessinngApp.xml

@@ -6,7 +6,6 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
@@ -37,7 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "clusteredLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAtAware {
+public final class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -52,7 +51,7 @@ public class ClusteredLog implements PersistentEntity, CreatedAtAware, UpdatedAt
   @Id private String uuid;
   private long createdAt;
   private long lastUpdatedAt;
-  @FdIndex private String verificationTaskId;
+  private String verificationTaskId;
   private LogClusterLevel clusterLevel;
   private String log;
   private Instant timestamp;

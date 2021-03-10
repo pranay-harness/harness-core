@@ -543,4 +543,6 @@ public interface UserService extends OwnedByAccount {
   boolean isUserPresent(String userId);
 
   List<User> getUsers(List<String> userIds);
+
+  String sanitizeUserName(String name);
 }

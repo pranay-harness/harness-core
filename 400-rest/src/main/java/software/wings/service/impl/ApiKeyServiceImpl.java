@@ -19,6 +19,7 @@ import static software.wings.app.ManagerCacheRegistrar.APIKEY_RESTRICTION_CACHE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.function.Function.identity;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -148,7 +149,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
   }
 
   private void validateApiKeyName(String name) {
-    if (name == null || name.trim().isEmpty() || name.trim().length() < name.length()) {
+    if (name == null || isBlank(name) || name.trim().length() < name.length()) {
       throw new GeneralException("Invalid API Key name", USER);
     }
   }
