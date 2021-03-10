@@ -25,7 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.GIT)
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
 @TypeAlias("gitStore")
-public class GitStore implements StoreConfig, Visitable {
+public class GitStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
 
   @Wither private FetchType gitFetchType;

@@ -31,7 +31,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.DelegateAgentFileService;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;

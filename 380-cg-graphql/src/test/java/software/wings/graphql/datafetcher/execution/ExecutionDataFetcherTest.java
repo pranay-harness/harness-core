@@ -50,7 +50,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Category(UnitTests.class)
   public void testExecutionDataFetcherAlongPipeline() {
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/build_workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/build_workflow_execution.json", WorkflowExecution.class);
     assertThat(workflowExecution).isNotNull();
     when(wingsPersistence.createAuthorizedQuery(WorkflowExecution.class)).thenReturn(query);
     when(query.filter("_id", EXECUTION_ID_1)).thenReturn(query);
@@ -58,7 +58,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
     QLExecution execution = executionDataFetcher.fetch(new QLExecutionQueryParameters(EXECUTION_ID_1), ACCOUNT1_ID);
     JsonNode actual = JsonUtils.toJsonNode(execution);
     assertThat(execution).isNotNull();
-    JsonNode expected = JsonUtils.readResourceFile("./execution/build_workflow_qlExecution.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/build_workflow_qlExecution.json", JsonNode.class);
     assertEquals("QL execution should be equal", expected, actual);
   }
 
@@ -67,7 +67,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Category(UnitTests.class)
   public void testExecutionDataFetcherByTrigger() {
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/build_workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/build_workflow_execution.json", WorkflowExecution.class);
     assertThat(workflowExecution).isNotNull();
     workflowExecution.setDeploymentTriggerId("TRIGGER_ID");
     workflowExecution.setPipelineExecutionId(null);
@@ -78,7 +78,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
     JsonNode actual = JsonUtils.toJsonNode(execution);
     assertThat(execution).isNotNull();
     JsonNode expected =
-        JsonUtils.readResourceFile("./execution/build_workflow_qlExecution_by_trigger.json", JsonNode.class);
+        JsonUtils.readResourceFile("execution/build_workflow_qlExecution_by_trigger.json", JsonNode.class);
     assertEquals("QL execution should be equal", expected, actual);
   }
 
@@ -87,7 +87,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Category(UnitTests.class)
   public void testExecutionDataFetcherByApiKey() {
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/build_workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/build_workflow_execution.json", WorkflowExecution.class);
     assertThat(workflowExecution).isNotNull();
     workflowExecution.setPipelineExecutionId(null);
     workflowExecution.setCreatedByType(CreatedByType.API_KEY);
@@ -99,7 +99,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
     JsonNode actual = JsonUtils.toJsonNode(execution);
     assertThat(execution).isNotNull();
     JsonNode expected =
-        JsonUtils.readResourceFile("./execution/build_workflow_qlExecution_by_apikey.json", JsonNode.class);
+        JsonUtils.readResourceFile("execution/build_workflow_qlExecution_by_apikey.json", JsonNode.class);
     assertEquals("QL execution should be equal", expected, actual);
   }
 
@@ -108,7 +108,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Category(UnitTests.class)
   public void testExecutionDataFetcherByUser() {
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/build_workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/build_workflow_execution.json", WorkflowExecution.class);
     assertThat(workflowExecution).isNotNull();
     workflowExecution.setPipelineExecutionId(null);
     workflowExecution.setCreatedByType(CreatedByType.USER);
@@ -120,8 +120,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
     QLExecution execution = executionDataFetcher.fetch(new QLExecutionQueryParameters(EXECUTION_ID_1), ACCOUNT1_ID);
     JsonNode actual = JsonUtils.toJsonNode(execution);
     assertThat(execution).isNotNull();
-    JsonNode expected =
-        JsonUtils.readResourceFile("./execution/build_workflow_qlExecution_by_user.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/build_workflow_qlExecution_by_user.json", JsonNode.class);
     assertEquals("QL execution should be equal", expected, actual);
   }
 
@@ -130,7 +129,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
   @Category(UnitTests.class)
   public void testExecutionDataFetcherWithFilters() {
     WorkflowExecution workflowExecution =
-        JsonUtils.readResourceFile("./execution/build_workflow_execution.json", WorkflowExecution.class);
+        JsonUtils.readResourceFile("execution/build_workflow_execution.json", WorkflowExecution.class);
     String pipelineExecutionId = "F-SlLs66TU-Bu8qfRJnFhQ";
     String[] idArray = new String[1];
     idArray[0] = pipelineExecutionId;
@@ -159,8 +158,7 @@ public class ExecutionDataFetcherTest extends AbstractDataFetcherTestBase {
     QLExecution execution = executionDataFetcher.fetch(new QLExecutionQueryParameters(EXECUTION_ID_1), ACCOUNT1_ID);
     JsonNode actual = JsonUtils.toJsonNode(execution);
     assertThat(execution).isNotNull();
-    JsonNode expected =
-        JsonUtils.readResourceFile("./execution/build_workflow_qlExecution_by_user.json", JsonNode.class);
+    JsonNode expected = JsonUtils.readResourceFile("execution/build_workflow_qlExecution_by_user.json", JsonNode.class);
     assertEquals("QL execution should be equal", expected, actual);
   }
 

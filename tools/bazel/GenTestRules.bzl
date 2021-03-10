@@ -59,7 +59,7 @@ public class AllTests%s {
 
 """
 
-MAX_TESTS = 8
+MAX_TESTS = 16
 
 def calculate_index(length, i):
     if length < MAX_TESTS:
@@ -109,7 +109,7 @@ EOF""" % code,
             name = package + ".tests" + index,
             test_class = package + "." + test_class,
             deps = [":shared_package_tests"] + deps,
-            size = "large",
+            size = "enormous",
 
             # inputs
             srcs = code_filepath + [x[0] for x in tests],

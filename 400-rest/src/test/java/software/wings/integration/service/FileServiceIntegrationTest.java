@@ -9,10 +9,10 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
-import io.harness.beans.FileMetadata;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

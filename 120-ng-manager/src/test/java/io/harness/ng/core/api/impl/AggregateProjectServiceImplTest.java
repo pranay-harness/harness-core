@@ -129,13 +129,11 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
 
     // project
-    assertEquals(accountIdentifier, projectAggregateDTO.getProjectResponse().getProject().getAccountIdentifier());
     assertEquals(orgIdentifier, projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier());
     assertEquals(projectIdentifier, projectAggregateDTO.getProjectResponse().getProject().getIdentifier());
     assertEquals(project.getName(), projectAggregateDTO.getProjectResponse().getProject().getName());
 
     // organization
-    assertEquals(accountIdentifier, projectAggregateDTO.getOrganization().getAccountIdentifier());
     assertEquals(orgIdentifier, projectAggregateDTO.getOrganization().getIdentifier());
     assertEquals(organization.getName(), projectAggregateDTO.getOrganization().getName());
 
@@ -165,7 +163,6 @@ public class AggregateProjectServiceImplTest extends CategoryTest {
         aggregateProjectService.getProjectAggregateDTO(accountIdentifier, orgIdentifier, projectIdentifier);
 
     // project
-    assertEquals(accountIdentifier, projectAggregateDTO.getProjectResponse().getProject().getAccountIdentifier());
     assertEquals(orgIdentifier, projectAggregateDTO.getProjectResponse().getProject().getOrgIdentifier());
     assertEquals(projectIdentifier, projectAggregateDTO.getProjectResponse().getProject().getIdentifier());
     assertEquals(project.getName(), projectAggregateDTO.getProjectResponse().getProject().getName());

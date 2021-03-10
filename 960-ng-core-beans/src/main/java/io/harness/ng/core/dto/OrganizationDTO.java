@@ -25,7 +25,6 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Organization")
 public class OrganizationDTO {
-  String accountIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
   @Size(max = 1024) String description;
@@ -34,9 +33,7 @@ public class OrganizationDTO {
   @JsonIgnore boolean harnessManaged;
 
   @Builder
-  public OrganizationDTO(
-      String accountIdentifier, String identifier, String name, String description, Map<String, String> tags) {
-    this.accountIdentifier = accountIdentifier;
+  public OrganizationDTO(String identifier, String name, String description, Map<String, String> tags) {
     this.identifier = identifier;
     this.name = name;
     this.description = description;

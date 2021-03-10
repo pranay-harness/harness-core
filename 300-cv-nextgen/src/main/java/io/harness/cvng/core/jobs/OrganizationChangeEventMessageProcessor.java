@@ -27,7 +27,7 @@ public class OrganizationChangeEventMessageProcessor extends EntityChangeEventMe
     try {
       organizationEntityChangeDTO = OrganizationEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking OrganizationEntityChangeDTO for key {}", message.getId(), e);
+      log.error("Exception in unpacking EntityChangeDTO for key {}", message.getId(), e);
       throw new IllegalStateException(e);
     }
 

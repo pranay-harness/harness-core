@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode
 @ApiModel(value = "RoleAssignment")
 public class RoleAssignmentDTO {
-  @ApiModelProperty(required = true) final String identifier;
+  final String identifier;
   @ApiModelProperty(required = true) final String resourceGroupIdentifier;
   @ApiModelProperty(required = true) final String roleIdentifier;
   @ApiModelProperty(required = true) final PrincipalDTO principal;

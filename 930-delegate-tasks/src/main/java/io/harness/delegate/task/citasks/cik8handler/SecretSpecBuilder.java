@@ -7,6 +7,7 @@ import static io.harness.delegate.beans.ci.pod.SecretParams.Type.FILE;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
+import static io.harness.delegate.beans.connector.ConnectorType.GIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.KubernetesConvention.getKubernetesGitSecretName;
@@ -32,6 +33,8 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthentica
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
@@ -189,9 +192,47 @@ public class SecretSpecBuilder {
     } else if (gitConnector.getConnectorType() == CODECOMMIT) {
       AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
       return retrieveAwsCodeCommitSecretParams(gitConfigDTO, gitConnector);
+    } else if (gitConnector.getConnectorType() == GIT) {
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+      return retrieveGitSecretParams(gitConfigDTO, gitConnector);
     } else {
       throw new CIStageExecutionException("Unsupported git connector type" + gitConnector.getConnectorType());
     }
+  }
+
+  private Map<String, SecretParams> retrieveGitSecretParams(GitConfigDTO gitConfigDTO, ConnectorDetails gitConnector) {
+    Map<String, SecretParams> secretData = new HashMap<>();
+    if (gitConnector == null) {
+      return secretData;
+    }
+
+    log.info(
+        "Decrypting git connector id:[{}], type:[{}]", gitConnector.getIdentifier(), gitConnector.getConnectorType());
+    secretDecryptionService.decrypt(gitConfigDTO.getGitAuth(), gitConnector.getEncryptedDataDetails());
+
+    GitAuthType gitAuthType = gitConfigDTO.getGitAuthType();
+    if (gitAuthType == GitAuthType.HTTP) {
+      GitHTTPAuthenticationDTO gitHTTPAuthenticationDTO = (GitHTTPAuthenticationDTO) gitConfigDTO.getGitAuth();
+
+      String key = DRONE_NETRC_PASSWORD;
+      secretData.put(key,
+          SecretParams.builder()
+              .secretKey(key)
+              .value(encodeBase64(new String(gitHTTPAuthenticationDTO.getPasswordRef().getDecryptedValue())))
+              .type(TEXT)
+              .build());
+    } else if (gitAuthType == GitAuthType.SSH) {
+      GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfigDTO.getGitAuth();
+
+      String key = "SSH_KEY";
+      secretData.put(key,
+          SecretParams.builder()
+              .secretKey(key)
+              .value(encodeBase64(gitSSHAuthenticationDTO.getEncryptedSshKey().getDecryptedValue()))
+              .type(TEXT)
+              .build());
+    }
+    return secretData;
   }
 
   private Map<String, SecretParams> retrieveAwsCodeCommitSecretParams(
