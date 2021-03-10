@@ -7,6 +7,8 @@ import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
+
 import static java.util.Collections.singletonList;
 
 import io.harness.beans.ExecutionStatus;
@@ -181,11 +183,11 @@ public class EcsSetupRollback extends State {
     ecsStateHelper.populateFromDelegateResponse(setupExecutionData, executionData, containerServiceElement);
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    ExecutionResponse.ExecutionResponseBuilder builder = ExecutionResponse.builder()
-                                                             .stateExecutionData(executionData)
-                                                             .executionStatus(executionStatus)
-                                                             .contextElement(containerServiceElement)
-                                                             .notifyElement(containerServiceElement);
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(executionData)
+                                           .executionStatus(executionStatus)
+                                           .contextElement(containerServiceElement)
+                                           .notifyElement(containerServiceElement);
     if (ecsServiceSetupResponse.isTimeoutFailure()) {
       builder.failureTypes(TIMEOUT);
     }

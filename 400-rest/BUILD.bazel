@@ -695,6 +695,7 @@ java_library(
 
 java_library(
     name = "supporter-test",
+    testonly = True,
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),
@@ -710,6 +711,7 @@ java_library(
     ] + shared_dependencies + [
         ":module",
         "//990-commons-test:module",
+        "//960-persistence:supporter-test",
         "@maven//:com_bertramlabs_plugins_hcl4j",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
@@ -754,6 +756,7 @@ run_package_tests(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     tags = [
         "aeriform",

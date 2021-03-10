@@ -371,6 +371,7 @@ test_deps = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//830-notification-service/src/test/resources:resource",

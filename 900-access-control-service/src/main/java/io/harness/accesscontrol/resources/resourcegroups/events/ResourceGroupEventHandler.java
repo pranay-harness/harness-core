@@ -33,21 +33,21 @@ public class ResourceGroupEventHandler implements EventHandler {
     try {
       resourceGroupEntityChangeDTO = ResourceGroupEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking OrganizationEntityChangeDTO for key {}", message.getId(), e);
+      log.error("Exception in unpacking ResourceGroupEntityChangeDTO for key {}", message.getId(), e);
     }
     if (Objects.isNull(resourceGroupEntityChangeDTO)) {
       return true;
     }
-    ScopeParams scopeParams = HarnessScopeParams.builder()
-                                  .accountIdentifier(resourceGroupEntityChangeDTO.getAccountIdentifier())
-                                  .orgIdentifier(resourceGroupEntityChangeDTO.getOrgIdentifier())
-                                  .projectIdentifier(resourceGroupEntityChangeDTO.getProjectIdentifier())
-                                  .build();
-    Scope scope = scopeService.buildScopeFromParams(scopeParams);
     try {
+      ScopeParams scopeParams = HarnessScopeParams.builder()
+                                    .accountIdentifier(resourceGroupEntityChangeDTO.getAccountIdentifier())
+                                    .orgIdentifier(resourceGroupEntityChangeDTO.getOrgIdentifier())
+                                    .projectIdentifier(resourceGroupEntityChangeDTO.getProjectIdentifier())
+                                    .build();
+      Scope scope = scopeService.buildScopeFromParams(scopeParams);
       harnessResourceGroupService.sync(resourceGroupEntityChangeDTO.getIdentifier(), scope);
     } catch (Exception e) {
-      log.error("Could not process the resource group change event {}", resourceGroupEntityChangeDTO);
+      log.error("Could not process the resource group change event {} due to error", resourceGroupEntityChangeDTO, e);
       return false;
     }
     return true;

@@ -7,6 +7,7 @@ shared_dependencies = [
     "//950-delegate-tasks-beans/src/main/proto:950_delegate_tasks_beans_java_proto",
     "//954-connector-beans:module",
     "//955-delegate-beans:module",
+    "//960-api-services:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
     "//970-api-services-beans:module",
@@ -52,6 +53,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [

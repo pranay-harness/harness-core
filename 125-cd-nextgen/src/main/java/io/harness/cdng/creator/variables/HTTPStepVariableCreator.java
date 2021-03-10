@@ -1,6 +1,7 @@
 package io.harness.cdng.creator.variables;
 
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
@@ -37,7 +38,7 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
     YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
       VariableCreatorHelper.addVariablesForVariables(
-          outputVariablesField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
+          outputVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
     }
     YamlField headersField = yamlNode.getField(YamlTypes.HEADERS);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(headersField)) {
@@ -49,9 +50,11 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
     List<YamlNode> headerNodes = headersField.getNode().asArray();
     headerNodes.forEach(headerNode -> {
       YamlField keyField = headerNode.getField(YAMLFieldNameConstants.KEY);
-      VariableCreatorHelper.addFieldToPropertiesMap(keyField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
-      YamlField valueField = headerNode.getField(YAMLFieldNameConstants.VALUE);
-      VariableCreatorHelper.addFieldToPropertiesMap(valueField, yamlPropertiesMap, YAMLFieldNameConstants.STEP);
+      if (keyField != null) {
+        addFieldToPropertiesMapUnderStep(keyField, headerNode, yamlPropertiesMap);
+      } else {
+        throw new InvalidRequestException("Key in header field cannot be null or empty");
+      }
     });
   }
 }

@@ -10,12 +10,11 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 
-import software.wings.beans.User.UserKeys;
 import software.wings.beans.loginSettings.UserLockoutInfo;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.utm.UtmInfo;
@@ -25,6 +24,7 @@ import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.collect.ImmutableList;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,10 +54,14 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "users", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserKeys")
-
-@CdIndex(name = "accountsIdx", fields = { @Field(UserKeys.accounts) })
-@CdIndex(name = "pendingAccountsIdx", fields = { @Field(UserKeys.pendingAccounts) })
 public class User extends Base implements Principal {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder().name("accountsIdx").field(UserKeys.accounts).build(),
+            CompoundMongoIndex.builder().name("pendingAccountsIdx").field(UserKeys.pendingAccounts).build())
+        .build();
+  }
+
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";
 

@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +30,70 @@ type tiProxyHandler struct {
 // NewTiProxyHandler returns a GRPC handler that implements pb.TiProxyServer
 func NewTiProxyHandler(log *zap.SugaredLogger) pb.TiProxyServer {
 	return &tiProxyHandler{log}
+}
+
+// SelectTests gets the list of selected tests to be run.
+// TODO: Stream the response as there is a 4MB limit on message sizes in gRPC
+func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsRequest) (*pb.SelectTestsResponse, error) {
+	var err error
+	tc, err := remoteTiClient()
+	if err != nil {
+		h.log.Errorw("could not create a client to the TI service", zap.Error(err))
+		return nil, err
+	}
+	step := req.GetStepId()
+	if step == "" {
+		return nil, errors.New("step ID not present in request")
+	}
+	sha := req.GetSha()
+	if sha == "" {
+		return nil, errors.New("commit ID not present in request")
+	}
+	repo := req.GetRepo()
+	if repo == "" {
+		return nil, errors.New("repo not present in request")
+	}
+	branch := req.GetBranch()
+	if branch == "" {
+		return nil, errors.New("branch not present in request")
+	}
+	diffFiles := req.GetDiffFiles()
+	org, err := getOrgId()
+	if err != nil {
+		return nil, err
+	}
+	project, err := getProjectId()
+	if err != nil {
+		return nil, err
+	}
+	pipeline, err := getPipelineId()
+	if err != nil {
+		return nil, err
+	}
+	build, err := getBuildId()
+	if err != nil {
+		return nil, err
+	}
+	stage, err := getStageId()
+	if err != nil {
+		return nil, err
+	}
+	tests, err := tc.SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch, diffFiles)
+	if err != nil {
+		return nil, err
+	}
+
+	jsonTests := []string{}
+	for _, t := range tests {
+		jsonBytes, err := json.Marshal(t)
+		if err != nil {
+			return nil, err
+		}
+		jsonTests = append(jsonTests, string(jsonBytes))
+	}
+	return &pb.SelectTestsResponse{
+		Tests: jsonTests,
+	}, nil
 }
 
 // WriteTests writes tests to the TI service.

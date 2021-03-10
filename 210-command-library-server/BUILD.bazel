@@ -39,6 +39,7 @@ test_dependencies = shared_dependencies + [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//210-command-library-server/src/test/resources:resource",

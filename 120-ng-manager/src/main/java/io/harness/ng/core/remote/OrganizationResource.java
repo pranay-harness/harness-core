@@ -105,13 +105,14 @@ public class OrganizationResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
-    if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
-          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
-    }
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.name, SortOrder.OrderType.ASC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+      organizationFilterDTO.setIgnoreCase(true);
+    }
     Page<OrganizationResponse> organizations =
         organizationService.list(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)
             .map(OrganizationMapper::toResponseWrapper);

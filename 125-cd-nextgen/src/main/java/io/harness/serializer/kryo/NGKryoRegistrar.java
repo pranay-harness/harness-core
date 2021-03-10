@@ -33,7 +33,10 @@ import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.manifest.yaml.BitbucketStore;
+import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
@@ -159,5 +162,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmChartManifestOutcome.class, 12524);
     kryo.register(HelmManifestCommandFlag.class, 12525);
     kryo.register(HelmCommandFlagType.class, 12526);
+    kryo.register(GithubStore.class, 12527);
+    kryo.register(GitLabStore.class, 12528);
+    kryo.register(BitbucketStore.class, 12529);
   }
 }

@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"github.com/wings-software/portal/commons/go/lib/exec"
-	"github.com/wings-software/portal/commons/go/lib/expressions"
 	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/remote"
+	"github.com/wings-software/portal/product/ci/addon/resolver"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 )
@@ -90,35 +90,20 @@ func (t *pluginTask) Run(ctx context.Context) (int32, error) {
 	return t.numRetries, err
 }
 
-// resolveEnvJEXL resolves JEXL expressions present in plugin settings environment variables
-func (t *pluginTask) resolveEnvJEXL(ctx context.Context) (map[string]string, error) {
+// resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
+func (t *pluginTask) resolveExprInEnv(ctx context.Context) (map[string]string, error) {
 	envVarMap := getEnvVars()
-
-	var exprsToResolve []string
-	for k, v := range envVarMap {
-		if strings.HasPrefix(k, settingEnvPrefix) && expressions.IsJEXL(v) {
-			exprsToResolve = append(exprsToResolve, v)
-		}
-	}
-
-	if len(exprsToResolve) == 0 {
-		return envVarMap, nil
-	}
-
-	resolvedExprs, err := evaluateJEXL(ctx, t.id, exprsToResolve, t.prevStepOutputs, t.log)
+	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, t.id, t.prevStepOutputs, t.log)
 	if err != nil {
 		return nil, err
 	}
 
-	resolvedEnvVarMap := make(map[string]string)
-	for k, v := range envVarMap {
-		if resolvedVal, ok := resolvedExprs[v]; ok {
-			resolvedEnvVarMap[k] = resolvedVal
-		} else {
-			resolvedEnvVarMap[k] = v
-		}
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(m)
+	if err != nil {
+		return nil, err
 	}
-	return resolvedEnvVarMap, nil
+
+	return resolver.ResolveEnvInMapValues(resolvedSecretMap), nil
 }
 
 func (t *pluginTask) execute(ctx context.Context, retryCount int32) error {
@@ -138,7 +123,7 @@ func (t *pluginTask) execute(ctx context.Context, retryCount int32) error {
 		return err
 	}
 
-	envVarsMap, err := t.resolveEnvJEXL(ctx)
+	envVarsMap, err := t.resolveExprInEnv(ctx)
 	if err != nil {
 		logPluginErr(t.log, "failed to evaluate JEXL expression for settings", t.id, commands, retryCount, start, err)
 		return err

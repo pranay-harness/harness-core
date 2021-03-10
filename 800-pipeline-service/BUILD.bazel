@@ -23,6 +23,7 @@ java_binary(
     deps = [
         "@maven//:com_google_guava_guava",
     ] + [
+        "//480-alert-beans:module",
         "//810-ng-triggers:module",
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",
@@ -82,6 +83,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//800-pipeline-service/src/test/resources:resource"],
     visibility = ["//visibility:public"],

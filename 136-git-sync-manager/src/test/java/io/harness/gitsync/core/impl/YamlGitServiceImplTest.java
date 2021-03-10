@@ -14,7 +14,6 @@ import io.harness.gitsync.core.service.GitCommitService;
 import io.harness.gitsync.core.service.YamlChangeSetService;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
-import io.harness.repositories.repositories.yamlGitFolderConfig.YamlGitFolderConfigRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.waiter.WaitNotifyEngine;
@@ -38,7 +37,6 @@ public class YamlGitServiceImplTest extends CategoryTest {
       "136-git-sync-manager/src/test/resources/software/wings/service/impl/webhook/github_push_request.json";
 
   @Inject YamlGitConfigRepository yamlGitConfigRepository;
-  @Inject YamlGitFolderConfigRepository yamlGitFolderConfigRepository;
   @Mock YamlGitConfigService yamlGitConfigService;
   @Mock SecretManagerClientService ngSecretService;
   @Mock GitSyncErrorService gitSyncErrorService;
