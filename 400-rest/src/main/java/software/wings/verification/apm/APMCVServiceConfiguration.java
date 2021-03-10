@@ -65,14 +65,6 @@ public class APMCVServiceConfiguration extends CVConfiguration {
     fillDataCollectionInfoWithCommonFields(customAPMDataCollectionInfo);
     return customAPMDataCollectionInfo;
   }
-  @Data
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class APMCVConfigurationYaml extends CVConfigurationYaml {
-    private List<MetricCollectionInfo> metricCollectionInfos;
-  }
 
   public boolean validate() {
     if (isEmpty(metricCollectionInfos) || isAllThroughput()) {
