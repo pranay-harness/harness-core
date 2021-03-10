@@ -6,6 +6,7 @@ import io.harness.ccm.anomaly.graphql.AnomaliesTimeFilter.AnomaliesTimeFilterBui
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
+import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.graphql.schema.type.aggregation.Filter;
 
@@ -78,7 +79,7 @@ public interface AnomaliesFilter extends Filter {
     if (filter.getPreAggregatedEndTime() != null) {
       return convertFromCloudBillingFilter(filter.getPreAggregatedEndTime());
     }
-    return null;
+    throw new InvalidArgumentsException("a new Filter type encountered which is not supported yet");
   }
 
   static AnomaliesFilter convertFromCloudBillingFilter(CloudBillingIdFilter filter) {
@@ -102,7 +103,8 @@ public interface AnomaliesFilter extends Filter {
         filterBuilder.variable(AnomaliesDataTableSchema.fields.AWS_SERVICE);
         break;
       default:
-        log.error("CloudBillingFilter : {} not supported in AnomaliesIdFilter", filter.getVariable());
+        log.warn("CloudBillingFilter[ID] : {} conversion not supported", filter.getVariable());
+        throw new InvalidArgumentsException("This ID Filter type conversion is not supported yet");
     }
     return filterBuilder.build();
   }
@@ -118,7 +120,8 @@ public interface AnomaliesFilter extends Filter {
         filterBuilder.variable(AnomaliesDataTableSchema.fields.ANOMALY_TIME);
         break;
       default:
-        log.error("CloudBillingFilter : {} not supported in AnomaliesIdFilter", filter.getVariable());
+        log.warn("CloudBillingFilter[Time]: {} conversion not supported", filter.getVariable());
+        throw new InvalidArgumentsException("This Time Filter type conversion is not supported yet");
     }
     return filterBuilder.build();
   }
