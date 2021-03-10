@@ -3,6 +3,7 @@ package io.harness.ccm.anomaly.mappers;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 
 import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyData;
+import software.wings.graphql.schema.type.aggregation.anomaly.QLAnomalyFeedback;
 import software.wings.graphql.schema.type.aggregation.anomaly.QLEntityInfo;
 
 import lombok.experimental.UtilityClass;
@@ -29,7 +30,7 @@ public class QlAnomalyMapper {
     returnDTO.setAnomalyScore(source.getAnomalyScore());
     returnDTO.setId(source.getId());
     returnDTO.setTime(source.getAnomalyTime().toEpochMilli());
-    returnDTO.setUserFeedback(source.getFeedback());
+    returnDTO.setUserFeedback(QLAnomalyFeedback.valueOf(source.getFeedback().toString()));
     return returnDTO;
   }
 }
