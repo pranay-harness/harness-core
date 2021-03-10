@@ -13,6 +13,7 @@ import io.harness.ng.DbAliases;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.ng.core.common.beans.KeyValuePair;
+import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
 import io.harness.security.dto.Principal.PrincipalKeys;
@@ -78,6 +79,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.moduleType)
                  .field(AuditEventKeys.resourceType)
                  .field(AuditEventKeys.resourceIdentifier)
+                 .field(AuditEventKeys.resourceLabelKeys)
+                 .field(AuditEventKeys.resourceLabelValues)
                  .build())
         .build();
   }
@@ -91,5 +94,10 @@ public class AuditEvent {
 
     public static final String resourceType = AuditEventKeys.resource + "." + ResourceKeys.type;
     public static final String resourceIdentifier = AuditEventKeys.resource + "." + ResourceKeys.identifier;
+
+    public static final String resourceLabelKeys =
+        AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;
+    public static final String resourceLabelValues =
+        AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.value;
   }
 }
