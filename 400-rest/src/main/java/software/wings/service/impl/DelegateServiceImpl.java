@@ -2470,7 +2470,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   @Override
-  public void  saveDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
+  public void saveDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
     task.setStatus(taskStatus);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
