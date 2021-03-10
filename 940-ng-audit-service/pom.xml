@@ -20,16 +20,13 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>990-commons-test</artifactId>
+            <artifactId>970-ng-commons</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-persistence</artifactId>
+            <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
