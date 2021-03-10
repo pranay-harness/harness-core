@@ -29,6 +29,8 @@ public class AuditEventDTO {
   HttpRequestInfo httpRequestInfo;
   RequestMetadata requestMetadata;
 
+  Long timestamp;
+
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
   @NotNull ModuleType moduleType;

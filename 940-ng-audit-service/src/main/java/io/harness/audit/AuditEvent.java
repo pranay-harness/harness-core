@@ -26,8 +26,10 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -46,6 +48,8 @@ public class AuditEvent {
   HttpRequestInfo httpRequestInfo;
   RequestMetadata requestMetadata;
 
+  @NotNull Long timestamp;
+
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
   @NotNull ModuleType moduleType;
@@ -57,6 +61,9 @@ public class AuditEvent {
   @Valid AuditEventData auditEventData;
 
   Map<String, String> additionalInfo;
+
+  @CreatedDate Long createdAt;
+  @Version Long version;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
