@@ -36,7 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "auditEvents", noClassnameStored = true)
 @Document("auditEvents")
 @TypeAlias("auditEvents")
-@StoreIn(DbAliases.NG_MANAGER)
+@StoreIn(DbAliases.AUDITS)
 public class AuditEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotBlank String accountIdentifier;
