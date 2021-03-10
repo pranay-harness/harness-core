@@ -86,6 +86,9 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    if (!identifier.equals(roleDTO.getIdentifier())) {
+      throw new InvalidRequestException("Role identifier in the request body and the url do not match");
+    }
     return ResponseDTO.newResponse(toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
   }
 

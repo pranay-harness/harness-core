@@ -6,6 +6,7 @@ import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.RetryUtils;
@@ -64,6 +65,32 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   @Override
   public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
     return roleAssignmentDao.get(identifier, parentIdentifier);
+  }
+
+  @Override
+  public RoleAssignment update(RoleAssignment roleAssignmentUpdate) {
+    Optional<RoleAssignment> currentRoleAssignmentOptional =
+        get(roleAssignmentUpdate.getIdentifier(), roleAssignmentUpdate.getScopeIdentifier());
+    if (currentRoleAssignmentOptional.isPresent()) {
+      RoleAssignment roleAssignment = currentRoleAssignmentOptional.get();
+      if (!roleAssignmentUpdate.getResourceGroupIdentifier().equals(roleAssignment.getResourceGroupIdentifier())) {
+        throw new InvalidRequestException("Cannot change resource group in the role assignment");
+      }
+      if (!roleAssignmentUpdate.getPrincipalIdentifier().equals(roleAssignment.getPrincipalIdentifier())) {
+        throw new InvalidRequestException("Cannot change principal in the role assignment");
+      }
+      if (!roleAssignmentUpdate.getPrincipalType().equals(roleAssignment.getPrincipalType())) {
+        throw new InvalidRequestException("Cannot change principal type in the role assignment");
+      }
+      if (!roleAssignmentUpdate.getRoleIdentifier().equals(roleAssignment.getRoleIdentifier())) {
+        throw new InvalidRequestException("Cannot change role in the role assignment");
+      }
+      roleAssignmentUpdate.setManaged(roleAssignment.isManaged());
+      roleAssignmentUpdate.setVersion(roleAssignment.getVersion());
+      return roleAssignmentDao.update(roleAssignmentUpdate);
+    }
+    throw new InvalidRequestException(
+        String.format("Could not find the role assignment in the scope %s", roleAssignmentUpdate.getScopeIdentifier()));
   }
 
   @Override
