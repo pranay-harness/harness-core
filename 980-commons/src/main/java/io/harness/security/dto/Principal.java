@@ -17,13 +17,8 @@ import org.hibernate.validator.constraints.NotBlank;
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
 @FieldNameConstants(innerTypeName = "PrincipalKeys")
 public abstract class Principal {
-  @NotNull private final PrincipalType type;
-  @NotBlank private final String name;
-
-  public Principal(PrincipalType type, String name) {
-    this.type = type;
-    this.name = name;
-  }
+  @NotNull protected PrincipalType type;
+  @NotBlank protected String name;
 
   public abstract Map<String, String> getJWTClaims();
 }
