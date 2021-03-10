@@ -212,6 +212,11 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
         FailureStrategiesUtils.priorityMergeFailureStrategies(
             stepFailureStrategies, stepGroupFailureStrategies, stageFailureStrategies);
 
+    if (YamlUtils.findParentNode(currentField.getNode(), ROLLBACK_STEPS) != null) {
+      actionMap = FailureStrategiesUtils.priorityMergeFailureStrategies(
+          stepFailureStrategies, stepGroupFailureStrategies, null);
+    }
+
     for (Map.Entry<FailureStrategyActionConfig, Collection<FailureType>> entry : actionMap.entrySet()) {
       FailureStrategyActionConfig action = entry.getKey();
       Set<FailureType> failureTypes = new HashSet<>(entry.getValue());
