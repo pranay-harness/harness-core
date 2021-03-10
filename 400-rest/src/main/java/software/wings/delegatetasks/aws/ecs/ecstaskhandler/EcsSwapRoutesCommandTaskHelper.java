@@ -76,13 +76,12 @@ public class EcsSwapRoutesCommandTaskHelper {
     Service service = describeServicesResult.getServices().get(0);
     if (count == service.getDesiredCount()) {
       executionLogCallback.saveExecutionLog(
-          format("Service: [%s] is already at desired count: [%d]", serviceName, count));
-      return false;
+          format("Service: [%s] is already at desired count: [%d]. Retrying...", serviceName, count));
     } else {
       executionLogCallback.saveExecutionLog(
           format("Need to update service desired count to: [%d] for service: [%s]", count, serviceName));
-      return true;
     }
+    return true;
   }
 
   public void updateServiceTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
