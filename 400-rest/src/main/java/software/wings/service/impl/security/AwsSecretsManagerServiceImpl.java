@@ -15,6 +15,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -23,14 +24,6 @@ import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AwsSecretsManagerConfig.AwsSecretsManagerConfigKeys;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.secretsmanager.AWSSecretsManager;
-import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
-import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
-import com.amazonaws.services.secretsmanager.model.GetSecretValueRequest;
-import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
@@ -45,6 +38,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   private static final String SECRET_KEY_NAME_SUFFIX = "_secretKey";
   private static final String AWS_SECRETS_MANAGER_VALIDATION_URL = "aws_secrets_manager_validation";
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private VaultEncryptorsRegistry vaultEncryptorsRegistry;
 
   @Override
   public AwsSecretsManagerConfig getAwsSecretsManagerConfig(String accountId, String configId) {
@@ -82,7 +76,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     }
 
     // Validate every time when secret manager config change submitted
-    validateSecretsManagerConfig(secretsManagerConfig);
+    validateSecretsManagerConfig(accountId, secretsManagerConfig);
 
     if (!credentialChanged) {
       // update without access/secret key changes
@@ -121,27 +115,9 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   @Override
-  public void validateSecretsManagerConfig(AwsSecretsManagerConfig secretsManagerConfig) {
-    try {
-      AWSSecretsManager client =
-          AWSSecretsManagerClientBuilder.standard()
-              .withCredentials(new AWSStaticCredentialsProvider(
-                  new BasicAWSCredentials(secretsManagerConfig.getAccessKey(), secretsManagerConfig.getSecretKey())))
-              .withRegion(secretsManagerConfig.getRegion() == null ? Regions.US_EAST_1
-                                                                   : Regions.fromName(secretsManagerConfig.getRegion()))
-              .build();
-      GetSecretValueRequest request =
-          new GetSecretValueRequest().withSecretId(AWS_SECRETS_MANAGER_VALIDATION_URL + System.currentTimeMillis());
-      client.getSecretValue(request);
-    } catch (ResourceNotFoundException e) {
-      // this exception is expected. It means the credentials are correct, but can't find the resource
-      // which means the connectivity to AWS Secrets Manger is ok.
-    } catch (AWSSecretsManagerException e) {
-      String message =
-          "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
-      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
-    }
-    log.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
+  public void validateSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig) {
+    vaultEncryptorsRegistry.getVaultEncryptor(EncryptionType.AWS_SECRETS_MANAGER)
+        .validateSecretManagerConfiguration(accountId, secretsManagerConfig);
   }
 
   @Override
