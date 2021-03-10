@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.beans.FeatureName.LOG_APP_DEFAULTS;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -9,6 +10,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import static java.util.Arrays.asList;
@@ -20,12 +22,14 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.FailureType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.interrupts.RepairActionCode;
 import io.harness.rule.Owner;
@@ -51,10 +55,13 @@ import org.junit.experimental.categories.Category;
 public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   private static final long VALID_TIMEOUT = 60000L;
   CanaryWorkflowExecutionAdvisor canaryWorkflowExecutionAdvisor;
+  FeatureFlagService featureFlagService;
 
   @Before
   public void setUp() {
     canaryWorkflowExecutionAdvisor = new CanaryWorkflowExecutionAdvisor();
+    featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isEnabled(LOG_APP_DEFAULTS, ACCOUNT_ID)).thenReturn(false);
   }
 
   @Test
@@ -262,9 +269,9 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testShouldSkipStep() {
     // Args are invalid/null.
-    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(null, null, null)).isNull();
-    assertThat(
-        CanaryWorkflowExecutionAdvisor.shouldSkipStep(null, aPhaseStep(PhaseStepType.ENABLE_SERVICE).build(), null))
+    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(null, null, null, featureFlagService)).isNull();
+    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(
+                   null, aPhaseStep(PhaseStepType.ENABLE_SERVICE).build(), null, featureFlagService))
         .isNull();
 
     String expr = "${expr.name} == \"qa\"";
@@ -278,28 +285,30 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
             .withStepSkipStrategies(Collections.singletonList(new StepSkipStrategy(
                 StepSkipStrategy.Scope.SPECIFIC_STEPS, Collections.singletonList(stateId + "_tmp"), expr)))
             .build();
-    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(null, phaseStep, state)).isNull();
+    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(null, phaseStep, state, featureFlagService)).isNull();
 
     ExecutionContextImpl context = spy(new ExecutionContextImpl(null));
     doReturn("renderedExp").when(context).renderExpression(anyString());
 
     // Assertion expression evaluating to false.
+    doReturn(ACCOUNT_ID).when(context).getAccountId();
     doReturn(false).when(context).evaluateExpression(any());
-    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state)).isNull();
+    assertThat(CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state, featureFlagService)).isNull();
 
     // Assertion expression evaluating to true.
     phaseStep.setStepSkipStrategies(asList(
         new StepSkipStrategy(StepSkipStrategy.Scope.SPECIFIC_STEPS, Collections.singletonList(stateId + "_tmp"), expr),
         new StepSkipStrategy(StepSkipStrategy.Scope.SPECIFIC_STEPS, Collections.singletonList(stateId), expr)));
     doReturn(true).when(context).evaluateExpression(any());
-    ExecutionEventAdvice advice = CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
+    ExecutionEventAdvice advice =
+        CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state, featureFlagService);
     assertThat(advice).isNotNull();
     assertThat(advice.isSkipState()).isTrue();
     assertThat(advice.getSkipExpression()).isEqualTo(expr);
     assertThat(advice.getSkipError()).isNull();
 
     doThrow(new InvalidRequestException("error evaluating expression")).when(context).evaluateExpression(any());
-    advice = CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
+    advice = CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state, featureFlagService);
     assertThat(advice).isNotNull();
     assertThat(advice.isSkipState()).isTrue();
     assertThat(advice.getSkipExpression()).isEqualTo(expr);
@@ -308,7 +317,7 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     // When Secret script output variables are used in Skip Assertion. This exception will be thrown. This block is to
     // test Error Message
     doThrow(new JexlException.Variable(null, "sweepingOutputSecrets", true)).when(context).evaluateExpression(any());
-    advice = CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
+    advice = CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state, featureFlagService);
     assertThat(advice).isNotNull();
     assertThat(advice.isSkipState()).isTrue();
     assertThat(advice.getSkipExpression()).isEqualTo(expr);
@@ -458,7 +467,8 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
                                   StepSkipStrategy.Scope.SPECIFIC_STEPS, Collections.singletonList(stateId), expr)))
                               .build();
     ExecutionContextImpl context = spy(new ExecutionContextImpl(null));
-    CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
+    doReturn(ACCOUNT_ID).when(context).getAccountId();
+    CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state, featureFlagService);
 
     verify(context).renderExpression(expr);
   }
