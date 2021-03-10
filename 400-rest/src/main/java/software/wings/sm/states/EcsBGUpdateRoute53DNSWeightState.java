@@ -12,6 +12,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Activity.Type.Command;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AWS_ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 import static software.wings.sm.StateType.ECS_ROUTE53_DNS_WEIGHT_UPDATE;
 
@@ -114,7 +115,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
       stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
     }
 
-    ExecutionResponse.ExecutionResponseBuilder builder =
+    ExecutionResponseBuilder builder =
         ExecutionResponse.builder().errorMessage(executionResponse.getErrorMessage()).executionStatus(executionStatus);
     if (null != executionResponse.getEcsCommandResponse()
         && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {

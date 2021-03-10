@@ -16,6 +16,7 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.PROD_LISTENER;
 import static software.wings.service.impl.aws.model.AwsConstants.STAGE_LISTENER;
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP;
 
 import static java.util.Collections.singletonList;
@@ -314,9 +315,9 @@ public class EcsBlueGreenServiceSetup extends State {
             .build());
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    ExecutionResponse.ExecutionResponseBuilder builder = ExecutionResponse.builder()
-                                                             .stateExecutionData(context.getStateExecutionData())
-                                                             .executionStatus(executionStatus);
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(context.getStateExecutionData())
+                                           .executionStatus(executionStatus);
 
     if (ecsServiceSetupResponse.isTimeoutFailure()) {
       builder.failureTypes(TIMEOUT);

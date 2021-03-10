@@ -27,6 +27,7 @@ public class EcsSteadyStateCheckParams implements ExecutionCapabilityDemander {
   private String serviceName;
   private AwsConfig awsConfig;
   private List<EncryptedDataDetail> encryptionDetails;
+  private boolean timeoutErrorSupported;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

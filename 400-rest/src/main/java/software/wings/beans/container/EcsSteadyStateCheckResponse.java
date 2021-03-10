@@ -22,4 +22,5 @@ public class EcsSteadyStateCheckResponse implements DelegateTaskNotifyResponseDa
   private String errorMessage;
   private ExecutionStatus executionStatus;
   private List<ContainerInfo> containerInfoList;
+  private boolean timeoutFailure;
 }

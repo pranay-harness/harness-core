@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.exception.FailureType.TIMEOUT;
 
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
 import io.harness.beans.ExecutionStatus;
@@ -154,10 +155,10 @@ public class EcsBGUpdateListnerState extends State {
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
       stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-      ExecutionResponse.ExecutionResponseBuilder builder = ExecutionResponse.builder()
-                                                               .stateExecutionData(stateExecutionData)
-                                                               .errorMessage(executionResponse.getErrorMessage())
-                                                               .executionStatus(executionStatus);
+      ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                             .stateExecutionData(stateExecutionData)
+                                             .errorMessage(executionResponse.getErrorMessage())
+                                             .executionStatus(executionStatus);
       if (null != executionResponse.getEcsCommandResponse()
           && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
         builder.failureTypes(TIMEOUT);
