@@ -1,5 +1,7 @@
 package io.harness.request;
 
+import static io.harness.request.RequestContextData.REQUEST_CONTEXT;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.context.GlobalContext;
@@ -11,6 +13,7 @@ import software.wings.beans.HttpMethod;
 import com.google.inject.Singleton;
 import javax.annotation.Priority;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.ContainerResponseContext;
@@ -20,6 +23,8 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Interceptor;
+import okhttp3.Request;
 
 @Singleton
 @Provider
@@ -64,5 +69,20 @@ public class RequestContextFilter implements ContainerRequestFilter, ContainerRe
   public void filter(
       ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) {
     GlobalContextManager.unset();
+  }
+
+  @NotNull
+  public static Interceptor getRequestContextInterceptor() {
+    return chain -> {
+      Request request = chain.request();
+      RequestContextData requestContextData = GlobalContextManager.get(REQUEST_CONTEXT);
+      if (requestContextData != null && requestContextData.getRequestContext() != null
+          && isNotBlank(requestContextData.getRequestContext().getClientIP())) {
+        return chain.proceed(
+            request.newBuilder().header(X_FORWARDED_FOR, requestContextData.getRequestContext().getClientIP()).build());
+      } else {
+        return chain.proceed(request);
+      }
+    };
   }
 }

@@ -199,7 +199,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector, appConfig);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
-    environment.jersey().register(new RequestContextFilter());
+    registerRequestContextFilter(environment);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
@@ -208,6 +208,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     intializeGitSync(injector, appConfig);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {

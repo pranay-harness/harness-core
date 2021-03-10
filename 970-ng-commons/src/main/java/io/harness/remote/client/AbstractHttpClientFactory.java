@@ -1,16 +1,13 @@
 package io.harness.remote.client;
 
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
-import static io.harness.request.RequestContextData.REQUEST_CONTEXT;
+import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
-import io.harness.request.RequestContextData;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.security.dto.ServicePrincipal;
@@ -42,25 +39,16 @@ public abstract class AbstractHttpClientFactory {
   private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
-  private String clientId = "NextGenManager";
+  private final String clientId;
   private final ObjectMapper objectMapper;
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
+  protected AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
     this.serviceHttpClientConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
     this.clientId = clientId;
-    objectMapper = getObjectMapper();
-  }
-
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    this.serviceHttpClientConfig = secretManagerConfig;
-    this.serviceSecret = serviceSecret;
-    this.tokenGenerator = tokenGenerator;
-    this.kryoConverterFactory = kryoConverterFactory;
     objectMapper = getObjectMapper();
   }
 
@@ -80,15 +68,15 @@ public abstract class AbstractHttpClientFactory {
   }
 
   protected ObjectMapper getObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
-    objectMapper.setConfig(objectMapper.getSerializationConfig().withView(JsonViews.Public.class));
-    objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
-    objectMapper.registerModule(new ProtobufModule());
-    objectMapper.registerModule(new Jdk8Module());
-    objectMapper.registerModule(new GuavaModule());
-    objectMapper.registerModule(new JavaTimeModule());
-    return objectMapper;
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.setSubtypeResolver(new JsonSubtypeResolver(mapper.getSubtypeResolver()));
+    mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
+    mapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
+    mapper.registerModule(new ProtobufModule());
+    mapper.registerModule(new Jdk8Module());
+    mapper.registerModule(new GuavaModule());
+    mapper.registerModule(new JavaTimeModule());
+    return mapper;
   }
 
   protected OkHttpClient getUnsafeOkHttpClient(String baseUrl) {
@@ -112,7 +100,7 @@ public abstract class AbstractHttpClientFactory {
           })
           .build();
     } catch (Exception e) {
-      throw new GeneralException("error while creating okhttp client for Command library service", e);
+      throw new GeneralException(String.format("error while creating okhttp client for %s service", clientId), e);
     }
   }
 
@@ -130,22 +118,6 @@ public abstract class AbstractHttpClientFactory {
       }
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
-    };
-  }
-
-  @NotNull
-  protected Interceptor getRequestContextInterceptor() {
-    return chain -> {
-      Request request = chain.request();
-      RequestContextData requestContextData = GlobalContextManager.get(REQUEST_CONTEXT);
-      if (requestContextData != null && requestContextData.getRequestContext() != null
-          && isNotBlank(requestContextData.getRequestContext().getClientIP())) {
-        return chain.proceed(request.newBuilder()
-                                 .header("X-Forwarded-For", requestContextData.getRequestContext().getClientIP())
-                                 .build());
-      } else {
-        return chain.proceed(request);
-      }
     };
   }
 
