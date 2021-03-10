@@ -15,6 +15,8 @@ import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.request.HttpRequestInfo;
+import io.harness.request.RequestMetadata;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -37,6 +39,8 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(OrgScope.class, 22007);
     kryo.register(ProjectScope.class, 22008);
     kryo.register(Resource.class, 22009);
+    kryo.register(HttpRequestInfo.class, 22010);
+    kryo.register(RequestMetadata.class, 22011);
 
     kryo.register(HttpHeaderConfig.class, 19462);
   }

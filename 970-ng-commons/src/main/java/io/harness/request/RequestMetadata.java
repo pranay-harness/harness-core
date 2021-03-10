@@ -1,4 +1,4 @@
-package io.harness.audit.beans;
+package io.harness.request;
 
 import lombok.Builder;
 import lombok.Data;
