@@ -44,7 +44,6 @@ public class AwsSecretsManagerResource {
   @ExceptionMetered
   public RestResponse<Boolean> deleteAwsSecretsManagerConfig(
       @QueryParam("accountId") final String accountId, @QueryParam("configId") final String secretsManagerConfigId) {
-    System.out.println("");
     return new RestResponse<>(
         awsSecretsManagerService.deleteAwsSecretsManagerConfig(accountId, secretsManagerConfigId));
   }
