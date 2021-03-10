@@ -9,6 +9,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -82,6 +83,20 @@ public class EcsBlueGreenRoute53SetupCommandHandler extends EcsCommandTaskHandle
                                   .setupData(commandExecutionDataBuilder.build())
                                   .commandExecutionStatus(SUCCESS)
                                   .build())
+          .build();
+    } catch (TimeoutException ex) {
+      String errorMessage = getMessage(ex);
+      executionLogCallback.saveExecutionLog(errorMessage, ERROR);
+      EcsBGRoute53ServiceSetupResponse response =
+          EcsBGRoute53ServiceSetupResponse.builder().commandExecutionStatus(FAILURE).build();
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        response.setTimeoutFailure(true);
+      }
+
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(FAILURE)
+          .errorMessage(errorMessage)
+          .ecsCommandResponse(response)
           .build();
     } catch (Exception ex) {
       String errorMessage = getMessage(ex);

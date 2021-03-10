@@ -2,9 +2,11 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -199,6 +201,8 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .activityId(activityId)
             .safeDisplayServiceVariables(variables.getSafeDisplayServiceVariables())
             .serviceVariables(variables.getServiceVariables())
+            .timeoutErrorSupported(
+                featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, ecsSetUpDataBag.getApplication().getAccountId()))
             .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
@@ -408,10 +412,15 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder()
-        .stateExecutionData(context.getStateExecutionData())
-        .executionStatus(executionStatus)
-        .build();
+    ExecutionResponse.ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                                             .stateExecutionData(context.getStateExecutionData())
+                                                             .executionStatus(executionStatus);
+
+    if (ecsServiceSetupResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   @Override
