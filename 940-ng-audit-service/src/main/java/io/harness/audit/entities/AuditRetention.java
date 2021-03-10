@@ -1,4 +1,4 @@
-package io.harness.audit;
+package io.harness.audit.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -35,11 +35,6 @@ public class AuditRetention {
                  .name("ngAuditRetentionUniqueIdx")
                  .field(AuditRetentionKeys.accountId)
                  .unique(true)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("ngAuditRetentionIdx")
-                 .field(AuditRetentionKeys.accountId)
-                 .field(AuditRetentionKeys.retentionPeriodInMonths)
                  .build())
         .build();
   }

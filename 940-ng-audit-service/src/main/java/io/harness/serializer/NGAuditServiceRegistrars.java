@@ -1,14 +1,14 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.morphia.NGAuditCoreMorphiaRegistrar;
+import io.harness.serializer.morphia.NGAuditServiceMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import io.serializer.registrars.NGCommonsRegistrars;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class NGAuditCoreRegistrars {
+public class NGAuditServiceRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(CommonsRegistrars.kryoRegistrars)
@@ -23,6 +23,6 @@ public class NGAuditCoreRegistrars {
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
-          .add(NGAuditCoreMorphiaRegistrar.class)
+          .add(NGAuditServiceMorphiaRegistrar.class)
           .build();
 }

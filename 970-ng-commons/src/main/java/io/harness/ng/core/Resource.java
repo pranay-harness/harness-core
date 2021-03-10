@@ -1,6 +1,8 @@
 package io.harness.ng.core;
 
-import java.util.Map;
+import io.harness.ng.core.common.beans.KeyValuePair;
+
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
@@ -12,5 +14,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class Resource {
   @NotEmpty String type;
   @NotEmpty String identifier;
-  Map<String, String> labels;
+  List<KeyValuePair> labels;
 }

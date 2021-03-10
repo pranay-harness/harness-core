@@ -1,4 +1,4 @@
-package io.harness.audit;
+package io.harness.audit.entities;
 
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
@@ -12,13 +12,13 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.Resource.ResourceKeys;
+import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
 import io.harness.security.dto.Principal.PrincipalKeys;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Map;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -61,7 +61,7 @@ public class AuditEvent {
   YamlDiff yamlDiff;
   @Valid AuditEventData auditEventData;
 
-  Map<String, String> additionalInfo;
+  List<KeyValuePair> additionalInfo;
 
   @CreatedDate Long createdAt;
   @Version Long version;

@@ -1,7 +1,7 @@
 package io.harness.audit.mapper;
 
-import io.harness.audit.AuditEvent;
 import io.harness.audit.beans.AuditEventDTO;
+import io.harness.audit.entities.AuditEvent;
 
 import lombok.experimental.UtilityClass;
 
