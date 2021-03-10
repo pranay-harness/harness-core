@@ -26,17 +26,4 @@ public class AppDynamicsCVServiceConfiguration extends CVConfiguration {
     clonedConfig.setTierId(this.getTierId());
     return clonedConfig;
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class AppDynamicsCVConfigurationYaml extends CVConfigurationYaml {
-    private String appDynamicsApplicationName;
-    private String tierName;
-  }
 }

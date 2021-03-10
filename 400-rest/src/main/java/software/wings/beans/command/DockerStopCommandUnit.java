@@ -49,7 +49,7 @@ public class DockerStopCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOCKER_STOP")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.DOCKER_STOP.name());
     }
