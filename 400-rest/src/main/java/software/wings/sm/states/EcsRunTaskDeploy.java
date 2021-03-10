@@ -3,8 +3,10 @@ package software.wings.sm.states;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -327,6 +329,7 @@ public class EcsRunTaskDeploy extends State {
         .skipSteadyStateCheck(skipSteadyStateCheck)
         .ecsRegisterTaskDefinitionTagsEnabled(
             featureFlagService.isEnabled(ECS_REGISTER_TASK_DEFINITION_TAGS, application.getAccountId()))
+        .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, application.getAccountId()))
         .build();
   }
 
@@ -451,7 +454,16 @@ public class EcsRunTaskDeploy extends State {
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
+
+    ExecutionResponse.ExecutionResponseBuilder builder =
+        ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus);
+
+    if (null != executionResponse.getEcsCommandResponse()
+        && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   public void restoreStateDataAfterGitFetch(EcsRunTaskStateExecutionData ecsRunTaskStateExecutionData) {
