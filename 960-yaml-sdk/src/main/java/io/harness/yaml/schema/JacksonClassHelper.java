@@ -178,15 +178,18 @@ public class JacksonClassHelper {
     if (annotation == null) {
       return null;
     }
-    return Arrays.stream(annotation.value())
-        .filter(Objects::nonNull)
-        .map(jsonSubType
-            -> SubtypeClassMap.builder()
-                   .subtypeEnum(jsonSubType.name())
-                   .subTypeDefinitionKey(YamlSchemaUtils.getSwaggerName(jsonSubType.value()))
-                   .subTypeClass(jsonSubType.value())
-                   .build())
-        .collect(Collectors.toSet());
+    final Set<SubtypeClassMap> subtypeClassMaps =
+        Arrays.stream(annotation.value())
+            .filter(Objects::nonNull)
+            .map(jsonSubType
+                -> SubtypeClassMap.builder()
+                       .subtypeEnum(jsonSubType.name())
+                       .subTypeDefinitionKey(YamlSchemaUtils.getSwaggerName(jsonSubType.value()))
+                       .subTypeClass(jsonSubType.value())
+                       .build())
+            .collect(Collectors.toSet());
+    subtypeClassMaps.addAll(Objects.requireNonNull(YamlSchemaUtils.getMapOfSubtypesUsingReflection(field)));
+    return subtypeClassMaps;
   }
 
   /**
