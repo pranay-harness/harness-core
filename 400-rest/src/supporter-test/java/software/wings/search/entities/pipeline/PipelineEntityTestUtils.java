@@ -1,13 +1,13 @@
 package software.wings.search.entities.pipeline;
 
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeEvent.ChangeEventBuilder;
+import io.harness.mongo.changestreams.ChangeType;
 import io.harness.seeddata.SampleDataProviderConstants;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeEvent.ChangeEventBuilder;
-import software.wings.search.framework.changestreams.ChangeType;
 import software.wings.sm.StateType;
 
 import com.google.common.collect.ImmutableMap;

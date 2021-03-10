@@ -89,7 +89,7 @@ public class Recaster {
   @SuppressWarnings("unchecked")
   public <T> T fromDocument(final Document document, T entity) {
     if (transformer.hasCustomTransformer(entity.getClass())) {
-      entity = (T) transformer.decode(entity.getClass(), document.get(ENCODED_VALUE), null);
+      entity = (T) transformer.decode(entity.getClass(), document, null);
     } else if (entity instanceof Map) {
       populateMap(document, entity);
     } else if (entity instanceof Collection) {

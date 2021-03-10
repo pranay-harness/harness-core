@@ -11,6 +11,7 @@ import io.harness.azure.client.AzureAuthorizationClient;
 import io.harness.azure.client.AzureBlueprintClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureConstants;
+import io.harness.azure.model.blueprint.Blueprint;
 import io.harness.azure.model.blueprint.PublishedBlueprint;
 import io.harness.azure.model.blueprint.artifact.Artifact;
 import io.harness.azure.model.blueprint.assignment.Assignment;
@@ -26,7 +27,6 @@ import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentBluep
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.graphrbac.BuiltInRole;
 import com.microsoft.azure.management.graphrbac.RoleAssignment;
 import com.microsoft.azure.management.network.ResourceIdentityType;
@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @NoArgsConstructor
@@ -48,15 +49,13 @@ public class AzureBlueprintDeploymentService {
 
   public void deployBlueprintAtResourceScope(DeploymentBlueprintContext context) {
     LogCallback blueprintDeploymentLogCallback = getBlueprintDeploymentLogCallback(context);
-    blueprintDeploymentLogCallback.saveExecutionLog(
-        String.format("Starting Blueprint deployment %n- Blueprint Name: [%s] %n- Version ID: [%s]",
-            context.getBlueprintName(), context.getVersionId()));
-
-    if (checkExistingAssignments(context, blueprintDeploymentLogCallback)) {
-      return;
-    }
+    blueprintDeploymentLogCallback.saveExecutionLog(String.format(
+        "Starting Blueprint deployment %n- Blueprint Name: [%s] %n- Assignment Name: [%s] %n- Version ID: [%s]",
+        context.getBlueprintName(), context.getAssignment().getName(), context.getVersionId()));
 
     try {
+      checkExistingBlueprint(context, blueprintDeploymentLogCallback);
+
       if (isBlueprintPublished(context, blueprintDeploymentLogCallback)) {
         createAssignment(context, blueprintDeploymentLogCallback);
       } else {
@@ -66,10 +65,10 @@ public class AzureBlueprintDeploymentService {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       blueprintDeploymentLogCallback.saveExecutionLog(
           format("%nBlueprint deployment failed."), LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      throw new InvalidRequestException(
-          format("Unable to deploy blueprint, scope: %s, Blueprint Name: %s, Assignment Name: %s, Error msg: %s",
-              context.getDefinitionResourceScope(), context.getBlueprintName(), context.getAssignment().getName(),
-              message));
+      throw new InvalidRequestException(format(
+          "Unable to deploy blueprint, Definition Scope: %s, Blueprint Name: %s, Assignment Name: %s, Assignment Scope: %s, Error msg: %s",
+          context.getDefinitionResourceScope(), context.getBlueprintName(), context.getAssignment().getName(),
+          context.getAssignmentResourceScope(), message));
     }
     blueprintDeploymentLogCallback.saveExecutionLog(
         format("%nBlueprint is assigned successfully."), LogLevel.INFO, SUCCESS);
@@ -77,40 +76,21 @@ public class AzureBlueprintDeploymentService {
     performSteadyStateCheck(context);
   }
 
-  private boolean checkExistingAssignments(
-      DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
+  private void checkExistingBlueprint(DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
     AzureConfig azureConfig = context.getAzureConfig();
-    String assignmentResourceScope = context.getAssignmentResourceScope();
-    String blueprintId = context.getAssignment().getProperties().getBlueprintId();
+    String definitionResourceScope = context.getDefinitionResourceScope();
+    String blueprintName = context.getBlueprintName();
 
     blueprintDeploymentLogCallback.saveExecutionLog(
-        String.format("%nStart listing exiting assignments at scope %n- Scope: [%s] %n- Blueprint Id: [%s]",
-            assignmentResourceScope, blueprintId));
+        String.format("%nStart getting exiting blueprint definition at scope %n- Scope: [%s] %n- Blueprint Name: [%s]",
+            definitionResourceScope, blueprintName));
 
-    Optional<Assignment> optionalAssignment =
-        filterAssignmentsByBlueprintId(azureConfig, assignmentResourceScope, blueprintId);
+    Blueprint blueprint = azureBlueprintClient.getBlueprint(azureConfig, definitionResourceScope, blueprintName);
+    context.setBlueprint(blueprint);
 
-    if (optionalAssignment.isPresent()) {
-      blueprintDeploymentLogCallback.saveExecutionLog(
-          String.format(
-              "Found existing assignment with name - [%s], skip deployment", optionalAssignment.get().getName()),
-          LogLevel.INFO, SUCCESS);
-      getBlueprintDeploymentSteadyStateLogCallback(context).saveExecutionLog(
-          "Skip Deployment steady state check", LogLevel.INFO, SUCCESS);
-      return true;
-    } else {
-      blueprintDeploymentLogCallback.saveExecutionLog("Not found existing assignment, continue deployment");
-    }
-    return false;
-  }
-
-  private Optional<Assignment> filterAssignmentsByBlueprintId(
-      final AzureConfig azureConfig, final String resourceScope, final String blueprintId) {
-    PagedList<Assignment> assignments = azureBlueprintClient.listAssignments(azureConfig, resourceScope);
-    List<Assignment> assignmentList = new ArrayList<>(assignments);
-    return assignmentList.stream()
-        .filter(assignment -> blueprintId.equals(assignment.getProperties().getBlueprintId()))
-        .findFirst();
+    blueprintDeploymentLogCallback.saveExecutionLog(blueprint == null
+            ? "Not found blueprint definition at requested scope"
+            : "Found blueprint definition at requested scope");
   }
 
   private boolean isBlueprintPublished(DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
@@ -151,46 +131,51 @@ public class AzureBlueprintDeploymentService {
 
   private void createBlueprintDefinition(
       final DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
-    String resourceScope = context.getDefinitionResourceScope();
+    String definitionResourceScope = context.getDefinitionResourceScope();
     String blueprintName = context.getBlueprintName();
+    String creatingOrUpdating = context.getBlueprint() == null ? "creating" : "updating";
+    String createdOrUpdated = context.getBlueprint() == null ? "created" : "updated";
 
     blueprintDeploymentLogCallback.saveExecutionLog(
-        format("%nStart creating/updating blueprint definition %n- Scope: [%s]", resourceScope));
+        format("%nStart %s blueprint definition %n- Scope: [%s]", creatingOrUpdating, definitionResourceScope));
 
     azureBlueprintClient.createOrUpdateBlueprint(
-        context.getAzureConfig(), resourceScope, blueprintName, context.getBlueprintJSON());
+        context.getAzureConfig(), definitionResourceScope, blueprintName, context.getBlueprintJSON());
 
-    blueprintDeploymentLogCallback.saveExecutionLog("Blueprint definition created/updated successfully");
+    blueprintDeploymentLogCallback.saveExecutionLog(format("Blueprint definition %s successfully", createdOrUpdated));
   }
 
   private void createArtifacts(final DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
     AzureConfig azureConfig = context.getAzureConfig();
-    String resourceScope = context.getDefinitionResourceScope();
+    String definitionResourceScope = context.getDefinitionResourceScope();
     String blueprintName = context.getBlueprintName();
     Map<String, String> artifacts = context.getArtifacts();
+    String creatingOrUpdating = context.getBlueprint() == null ? "creating" : "updating";
+    String createdOrUpdated = context.getBlueprint() == null ? "created" : "updated";
 
-    blueprintDeploymentLogCallback.saveExecutionLog("Start creating/updating blueprint artifacts");
+    blueprintDeploymentLogCallback.saveExecutionLog(format("Start %s blueprint artifacts", creatingOrUpdating));
 
     List<Artifact> result = new ArrayList<>();
     artifacts.forEach((artifactName, artifactJSON) -> {
       blueprintDeploymentLogCallback.saveExecutionLog(
-          format("Creating/updating artifact with name - [%s]", artifactName));
+          StringUtils.capitalize(format("%s artifact with name - [%s]", creatingOrUpdating, artifactName)));
 
       Artifact artifact = azureBlueprintClient.createOrUpdateArtifact(
-          azureConfig, resourceScope, blueprintName, artifactName, artifactJSON);
+          azureConfig, definitionResourceScope, blueprintName, artifactName, artifactJSON);
 
-      blueprintDeploymentLogCallback.saveExecutionLog("Artifact created/updated successfully");
+      blueprintDeploymentLogCallback.saveExecutionLog(format("Artifact %s successfully", createdOrUpdated));
 
       result.add(artifact);
     });
 
-    blueprintDeploymentLogCallback.saveExecutionLog(format(
-        "All artifacts created/updated successfully. Number of created/updated artifacts - [%s]", result.size()));
+    blueprintDeploymentLogCallback.saveExecutionLog(
+        format("All artifacts %s successfully. Number of %s artifacts - [%s]", createdOrUpdated, createdOrUpdated,
+            result.size()));
   }
 
   private void publishBlueprintDefinition(
       final DeploymentBlueprintContext context, LogCallback blueprintDeploymentLogCallback) {
-    String resourceScope = context.getDefinitionResourceScope();
+    String definitionResourceScope = context.getDefinitionResourceScope();
     String blueprintName = context.getBlueprintName();
     String versionId = context.getVersionId();
 
@@ -198,7 +183,8 @@ public class AzureBlueprintDeploymentService {
         format("%nStart publishing blueprint definition %n- Blueprint Definition Name: [%s]%n- New Version Id: [%s]",
             blueprintName, versionId));
 
-    azureBlueprintClient.publishBlueprintDefinition(context.getAzureConfig(), resourceScope, blueprintName, versionId);
+    azureBlueprintClient.publishBlueprintDefinition(
+        context.getAzureConfig(), definitionResourceScope, blueprintName, versionId);
 
     blueprintDeploymentLogCallback.saveExecutionLog("Blueprint published successfully");
   }

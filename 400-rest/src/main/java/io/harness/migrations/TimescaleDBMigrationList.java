@@ -3,6 +3,7 @@ package io.harness.migrations;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
+import io.harness.migrations.timescaledb.AddAlertTypeColumnToBudgetAlerts;
 import io.harness.migrations.timescaledb.AddCostEvents;
 import io.harness.migrations.timescaledb.AddDeploymentTagsToDeployment;
 import io.harness.migrations.timescaledb.AddExplorerV2Indices;
@@ -103,6 +104,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(43, CreateInstanceStatsDayTable.class))
         .add(Pair.of(44, CreateDeploymentParentTable.class))
         .add(Pair.of(45, CreateDeploymentStageTable.class))
+        .add(Pair.of(46, AddAlertTypeColumnToBudgetAlerts.class))
         .build();
   }
 }

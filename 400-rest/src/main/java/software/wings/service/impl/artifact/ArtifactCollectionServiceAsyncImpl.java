@@ -20,7 +20,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-import static software.wings.service.impl.artifact.ArtifactCollectionUtils.DELEGATE_QUEUE_TIMEOUT;
 
 import static java.util.Arrays.asList;
 
@@ -137,8 +136,8 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
     String waitId = generateUuid();
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder().waitId(waitId).expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().waitId(waitId).expiry(
+        artifactCollectionUtils.getDelegateQueueTimeout(artifactStream.getAccountId()));
 
     if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_DELEGATE_SCOPING, artifactStream.getAccountId())) {
       delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactStream.getAppId());

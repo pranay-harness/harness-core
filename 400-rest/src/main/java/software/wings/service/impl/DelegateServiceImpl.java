@@ -75,7 +75,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.FeatureName;
-import io.harness.beans.FileMetadata;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -95,6 +94,7 @@ import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
@@ -124,6 +124,7 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -136,7 +137,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
@@ -424,6 +424,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -3221,16 +3222,16 @@ public class DelegateServiceImpl implements DelegateService {
                                             .doesNotExist();
       persistence.update(updateQuery, updateOperations);
 
-      long requiredDelegateCapabilites = 0;
+      long requiredDelegateCapabilities = 0;
       if (delegateTask.getExecutionCapabilities() != null) {
-        requiredDelegateCapabilites = delegateTask.getExecutionCapabilities()
-                                          .stream()
-                                          .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
-                                          .count();
+        requiredDelegateCapabilities = delegateTask.getExecutionCapabilities()
+                                           .stream()
+                                           .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
+                                           .count();
       }
 
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
-      if (requiredDelegateCapabilites == size(results)
+      if (requiredDelegateCapabilities == size(results)
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       }
@@ -3698,6 +3699,13 @@ public class DelegateServiceImpl implements DelegateService {
       BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
+
+      Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
+
+      if (delegate != null) {
+        delegateTaskStatusObserverSubject.fireInform(DelegateTaskStatusObxxxxxxxx:onTaskAssigned,
+            delegateTask.getAccountId(), taskId, delegate.getUuid(), delegate.getDelegateGroupId());
+      }
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }

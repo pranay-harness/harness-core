@@ -28,6 +28,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -1216,6 +1217,8 @@ public class EcsSetupCommandTaskHelper {
           awsHelperService.deleteService(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
               encryptedDataDetails, deleteServiceRequest);
         }
+      } catch (TimeoutException e) {
+        throw e;
       } catch (Exception e) {
         String errorMsg = "Failed while handling rollback";
         log.error(errorMsg, e);

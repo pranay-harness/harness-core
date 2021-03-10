@@ -111,7 +111,7 @@ public class ARMRollbackState extends ARMProvisionState {
     if (provisioner == null || provisioner.getScopeType() == null) {
       validationDataBuilder.isValidData(false);
       validationDataBuilder.errorMessage(
-          String.format("No ARM Provisioner or scope found for provionser id - [%s]", provisionerId));
+          String.format("No ARM Provisioner or scope found for provisioner id - [%s]", provisionerId));
       return validationDataBuilder.build();
     }
 

@@ -87,7 +87,8 @@ func TestExecuteRunStep(t *testing.T) {
 
 	oldRunTask := newRunTask
 	defer func() { newRunTask = oldRunTask }()
-	newRunTask = func(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) tasks.RunTask {
+	newRunTask = func(step *pb.UnitStep, so map[string]*pb.StepOutput, tmpFilePath string, log *zap.SugaredLogger,
+		w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) tasks.RunTask {
 		return mockStep
 	}
 

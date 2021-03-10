@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.HINGER;

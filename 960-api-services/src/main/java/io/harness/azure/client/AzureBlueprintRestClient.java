@@ -23,6 +23,12 @@ public interface AzureBlueprintRestClient {
       @Body Object blueprintJSON, @Query("api-version") String appVersion);
 
   @Headers({"Content-Type: application/json; charset=utf-8", "accept-language: en-US"})
+  @GET("{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}")
+  Observable<Response<ResponseBody>> getBlueprint(@Header("Authorization") String bearerAuthHeader,
+      @Path("resourceScope") String resourceScope, @Path("blueprintName") String blueprintName,
+      @Query("api-version") String appVersion);
+
+  @Headers({"Content-Type: application/json; charset=utf-8", "accept-language: en-US"})
   @PUT("{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}/artifacts/{artifactName}")
   Observable<Response<ResponseBody>> createOrUpdateArtifact(@Header("Authorization") String bearerAuthHeader,
       @Path("resourceScope") String resourceScope, @Path("blueprintName") String blueprintName,

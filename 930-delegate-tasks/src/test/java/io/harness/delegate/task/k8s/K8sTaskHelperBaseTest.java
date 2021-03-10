@@ -20,6 +20,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyLong;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,7 +41,13 @@ import io.harness.CategoryTest;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.exception.GitOperationException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.Kubectl;
@@ -56,7 +64,10 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -81,6 +92,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServiceBuilder;
 import io.kubernetes.client.openapi.models.V1ServicePortBuilder;
 import io.kubernetes.client.util.Yaml;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -113,6 +125,8 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private KubernetesContainerService mockKubernetesContainerService;
   @Mock private TimeLimiter mockTimeLimiter;
   @Mock private LogCallback executionLogCallback;
+  @Mock private NGGitService ngGitService;
+  @Mock private GitDecryptionHelper gitDecryptionHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
@@ -790,5 +804,123 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
 
     verify(spyHelperBase, times(1)).executeShellCommand(eq("./chart"), anyString(), any(), anyLong());
     assertThat(manifestFiles.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectory() throws IOException {
+    K8sTaskHelperBase spyHelperBase = spy(k8sTaskHelperBase);
+    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
+    SshSessionConfig sshSessionConfig = mock(SshSessionConfig.class);
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitStoreDelegateConfig storeDelegateConfig = GitStoreDelegateConfig.builder()
+                                                     .branch("master")
+                                                     .fetchType(FetchType.BRANCH)
+                                                     .connectorName("conenctor")
+                                                     .gitConfigDTO(gitConfigDTO)
+                                                     .path("manifest")
+                                                     .encryptedDataDetails(encryptionDataDetails)
+                                                     .sshKeySpecDTO(sshKeySpecDTO)
+                                                     .build();
+
+    K8sManifestDelegateConfig manifestDelegateConfig =
+        K8sManifestDelegateConfig.builder().storeDelegateConfig(storeDelegateConfig).build();
+
+    doReturn(sshSessionConfig).when(gitDecryptionHelper).getSSHSessionConfig(sshKeySpecDTO, encryptionDataDetails);
+    doReturn("files").when(spyHelperBase).getManifestFileNamesInLogFormat("manifest");
+
+    boolean result = spyHelperBase.fetchManifestFilesAndWriteToDirectory(
+        manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId");
+    assertThat(result).isTrue();
+
+    verify(gitDecryptionHelper, times(1)).decryptGitConfig(gitConfigDTO, encryptionDataDetails);
+    verify(ngGitService, times(1))
+        .downloadFiles(storeDelegateConfig, "manifest", "accountId", sshSessionConfig, gitConfigDTO);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFetchManifestFilesAndWriteToDirectoryFailed() {
+    GitConfigDTO gitConfigDTO = GitConfigDTO.builder().build();
+    List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
+    GitStoreDelegateConfig storeDelegateConfig =
+        GitStoreDelegateConfig.builder().gitConfigDTO(gitConfigDTO).encryptedDataDetails(encryptionDataDetails).build();
+
+    K8sManifestDelegateConfig manifestDelegateConfig =
+        K8sManifestDelegateConfig.builder().storeDelegateConfig(storeDelegateConfig).build();
+
+    doThrow(new RuntimeException("unable to decrypt"))
+        .when(gitDecryptionHelper)
+        .decryptGitConfig(gitConfigDTO, encryptionDataDetails);
+
+    assertThatThrownBy(()
+                           -> k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
+                               manifestDelegateConfig, "manifest", executionLogCallback, 9000L, "accountId"))
+        .isInstanceOf(GitOperationException.class);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateHelmChart() throws Exception {
+    K8sTaskHelperBase spyHelper = spy(k8sTaskHelperBase);
+    String helmPath = "/usr/bin/helm";
+    List<String> valuesList = new ArrayList<>();
+    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
+    ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
+                                                        .skipResourceVersioning(true)
+                                                        .helmVersion(HelmVersion.V3)
+                                                        .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
+                                                        .helmCommandFlag(helmCommandFlag)
+                                                        .build();
+    List<FileData> renderedFiles = new ArrayList<>();
+
+    doReturn(renderedFiles)
+        .when(spyHelper)
+        .renderTemplateForHelm(helmPath, "manifest", valuesList, "release", "namespace", executionLogCallback,
+            HelmVersion.V3, 600000, helmCommandFlag);
+
+    List<FileData> result = spyHelper.renderTemplate(K8sDelegateTaskParams.builder().helmPath(helmPath).build(),
+        manifestDelegateConfig, "manifest", valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(spyHelper, times(1))
+        .renderTemplateForHelm(helmPath, "manifest", valuesList, "release", "namespace", executionLogCallback,
+            HelmVersion.V3, 600000, helmCommandFlag);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testRenderTemplateForGivenFiles() throws Exception {
+    K8sTaskHelperBase spyHelper = spy(k8sTaskHelperBase);
+    String helmPath = "/usr/bin/helm";
+    List<String> valuesList = new ArrayList<>();
+    List<String> filesToRender = Arrays.asList("file1", "file2");
+    HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
+    ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
+                                                        .skipResourceVersioning(true)
+                                                        .helmVersion(HelmVersion.V3)
+                                                        .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
+                                                        .helmCommandFlag(helmCommandFlag)
+                                                        .build();
+    List<FileData> renderedFiles = new ArrayList<>();
+
+    doReturn(renderedFiles)
+        .when(spyHelper)
+        .renderTemplateForHelmChartFiles(helmPath, "manifest", filesToRender, valuesList, "release", "namespace",
+            executionLogCallback, HelmVersion.V3, 600000, helmCommandFlag);
+
+    List<FileData> result = spyHelper.renderTemplateForGivenFiles(
+        K8sDelegateTaskParams.builder().helmPath(helmPath).build(), manifestDelegateConfig, "manifest", filesToRender,
+        valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(spyHelper, times(1))
+        .renderTemplateForHelmChartFiles(helmPath, "manifest", filesToRender, valuesList, "release", "namespace",
+            executionLogCallback, HelmVersion.V3, 600000, helmCommandFlag);
   }
 }

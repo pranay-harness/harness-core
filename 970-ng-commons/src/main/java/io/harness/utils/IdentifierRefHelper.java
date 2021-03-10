@@ -20,7 +20,7 @@ public class IdentifierRefHelper {
     IdentifierRefBuilder identifierRefBuilder = IdentifierRef.builder().accountIdentifier(accountId);
 
     if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
-      throw new InvalidRequestException("Empty connector cannot be given");
+      throw new InvalidRequestException("Empty secret ref cannot be given");
     }
     String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
 

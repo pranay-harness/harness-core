@@ -118,6 +118,11 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
                          .outcome(k8sBlueGreenOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .outcome(k8sBlueGreenOutcome)
+                         .group(StepOutcomeGroup.STAGE.name())
+                         .build())
         .build();
   }
 }

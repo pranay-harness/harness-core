@@ -1,17 +1,17 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.beans.WebhookEvent.Type.BRANCH;
+import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.ngtriggers.Constants.BITBUCKET_SERVER_HEADER_KEY;
-import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.BRANCH;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_CREATED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.BT_PULL_REQUEST_UPDATED;
 
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.beans.HeaderConfig;
 import io.harness.exception.TriggerException;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
@@ -43,8 +43,8 @@ public class WebhookTriggerFilterUtils {
   }
 
   public boolean checkIfEventTypeMatches(
-      io.harness.ngtriggers.beans.scm.WebhookEvent.Type eventTypeFromPayload, WebhookEvent eventTypeFromTrigger) {
-    if (eventTypeFromPayload.equals(io.harness.ngtriggers.beans.scm.WebhookEvent.Type.PR)) {
+      io.harness.beans.WebhookEvent.Type eventTypeFromPayload, WebhookEvent eventTypeFromTrigger) {
+    if (eventTypeFromPayload.equals(io.harness.beans.WebhookEvent.Type.PR)) {
       return eventTypeFromTrigger.equals(WebhookEvent.PULL_REQUEST)
           || eventTypeFromTrigger.equals(WebhookEvent.MERGE_REQUEST);
     }
@@ -53,7 +53,7 @@ public class WebhookTriggerFilterUtils {
       return eventTypeFromTrigger.equals(WebhookEvent.PUSH);
     }
 
-    if (eventTypeFromPayload.equals(io.harness.ngtriggers.beans.scm.WebhookEvent.Type.ISSUE_COMMENT)) {
+    if (eventTypeFromPayload.equals(io.harness.beans.WebhookEvent.Type.ISSUE_COMMENT)) {
       return eventTypeFromTrigger.equals(WebhookEvent.ISSUE_COMMENT);
     }
     return false;
@@ -87,8 +87,9 @@ public class WebhookTriggerFilterUtils {
                                  .map(headerConfig -> headerConfig.getKey())
                                  .collect(toSet());
 
-    if (headerKeys.contains(BITBUCKET_SERVER_HEADER_KEY)
-        || headerKeys.contains(BITBUCKET_SERVER_HEADER_KEY.toLowerCase())) {
+    if (!headerKeys.contains(BITBUCKET_CLOUD_HEADER_KEY)
+        && !headerKeys.contains(BITBUCKET_CLOUD_HEADER_KEY.toLowerCase())
+        && !headerKeys.stream().anyMatch(BITBUCKET_CLOUD_HEADER_KEY::equalsIgnoreCase)) {
       parsedActionValueSet.add(BT_PULL_REQUEST_CREATED.getParsedValue());
     }
   }

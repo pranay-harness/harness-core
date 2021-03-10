@@ -3,6 +3,7 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -13,6 +14,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluator;
+import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
@@ -130,7 +133,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
                                              .put("i22", 222)
                                              .build());
 
-    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false);
+    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false, false);
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
@@ -140,7 +143,7 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "<+b22>");
+    validateExpression(evaluator, "bVal2.strVal2", "<+b22>", false, true);
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -153,17 +156,30 @@ public class AmbianceExpressionEvaluatorTest extends OrchestrationTestBase {
 
   private void validateExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate);
+    validateExpression(evaluator, expression, expected, skipEvaluate, false);
   }
 
-  private void validateSingleExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+  private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
+      boolean skipEvaluate, boolean evaluateThrows) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate, evaluateThrows);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, evaluateThrows);
+  }
+
+  private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
+      boolean skipEvaluate, boolean evaluateThrows) {
     expression = "<+" + expression + ">";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
-    if (!skipEvaluate) {
-      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
+    if (skipEvaluate) {
+      return;
     }
+
+    if (evaluateThrows) {
+      String finalExpression = expression;
+      assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
+          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
+      return;
+    }
+    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
   }
 
   @Test

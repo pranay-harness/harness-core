@@ -4,6 +4,7 @@ package io.harness.cvng.migration;
 import io.harness.cvng.migration.list.AddDeploymentMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
+import io.harness.cvng.migration.list.RecoverMonitoringSourceWorkerId;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
 import io.harness.cvng.migration.list.UpdateActivitySourceTasksMigration;
 import io.harness.cvng.migration.list.UpdateActivityStatusMigration;
@@ -33,6 +34,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(7, UpdateCvConfigPerpetualTasksMigration.class))
         .add(Pair.of(8, UpdateActivitySourceTasksMigration.class))
         .add(Pair.of(9, AddDeploymentMonitoringSourcePerpetualTask.class))
+        .add(Pair.of(10, RecoverMonitoringSourceWorkerId.class))
         .build();
   }
 }

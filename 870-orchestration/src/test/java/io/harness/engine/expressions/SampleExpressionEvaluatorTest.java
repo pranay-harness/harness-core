@@ -3,6 +3,7 @@ package io.harness.engine.expressions;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -37,9 +38,6 @@ public class SampleExpressionEvaluatorTest extends CategoryTest {
     validateEvaluateExpression(expressionEvaluator, "<+string.toLower(\"Abc\")>", "abc");
     validateEvaluateExpression(expressionEvaluator, "<+toUpper(\"Abc\")>", "ABC");
     validateEvaluateExpression(expressionEvaluator, "<+toLower(\"Abc\")>", "abc");
-
-    validateEvaluateExpression(expressionEvaluator, "<+random.generateRandom()>", null);
-    validateEvaluateExpression(expressionEvaluator, "<+generateRandom()>", null);
   }
 
   @Test
@@ -49,11 +47,7 @@ public class SampleExpressionEvaluatorTest extends CategoryTest {
     ExpressionEvaluatorProvider expressionEvaluatorProvider = new SampleExpressionEvaluatorProvider(false);
     EngineExpressionEvaluator expressionEvaluator = expressionEvaluatorProvider.get(null, ambiance, null, false);
 
-    validateEvaluateExpression(expressionEvaluator, "<+random.generateRandom()>", null);
-    validateEvaluateExpression(expressionEvaluator, "<+generateRandom()>", null);
-
-    validateEvaluateExpression(
-        expressionEvaluator, "<+stringUtils.toUpper(\"Abc\")>", "<+stringUtils.toUpper(\"Abc\")>");
+    assertThatThrownBy(() -> expressionEvaluator.evaluateExpression("<+stringUtils.toUpper(\"Abc\")>")).isNotNull();
   }
 
   private void validateEvaluateExpression(

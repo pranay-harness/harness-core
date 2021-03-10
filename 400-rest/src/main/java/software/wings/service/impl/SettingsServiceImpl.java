@@ -52,6 +52,8 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SecretMetadata;
+import io.harness.beans.SecretState;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -165,6 +167,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -382,6 +385,36 @@ public class SettingsServiceImpl implements SettingsService {
     return newSettingAttributes;
   }
 
+  /**
+   * Extracts all secret Ids and there state referenced by collection of SettingAttribute. This function helps to
+   * optimize RBAC rule evaluations by batching DB accesses.
+   * @param settingAttributes
+   * @return
+   */
+  Map<String, SecretState> extractAllSecretIdsWithState(Collection<SettingAttribute> settingAttributes,
+      String accountId, String appIdFromRequest, String envIdFromRequest) {
+    if (isEmpty(settingAttributes)) {
+      return Collections.emptyMap();
+    }
+    Set<String> allSecrets = new HashSet<>(settingAttributes.size() + 1);
+    // Collect all secrets in a single collection so that they can be filtered in batch fashion.
+    for (SettingAttribute settingAttribute : settingAttributes) {
+      Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttribute);
+      if (!isEmpty(usedSecretIds)) {
+        allSecrets.addAll(usedSecretIds);
+      }
+    }
+
+    List<SecretMetadata> secretMetadataList =
+        secretManager.filterSecretIdsByReadPermission(allSecrets, accountId, appIdFromRequest, envIdFromRequest);
+    if (!isEmpty(secretMetadataList)) {
+      return secretMetadataList.stream().collect(
+          Collectors.toMap(SecretMetadata::getSecretId, SecretMetadata::getSecretState));
+    }
+
+    return Collections.emptyMap();
+  }
+
   @Override
   public List<SettingAttribute> getFilteredSettingAttributes(
       List<SettingAttribute> inputSettingAttributes, String appIdFromRequest, String envIdFromRequest) {
@@ -405,7 +438,8 @@ public class SettingsServiceImpl implements SettingsService {
 
     Set<SettingAttribute> helmRepoSettingAttributes = new HashSet<>();
     boolean isAccountAdmin;
-
+    Map<String, SecretState> secretIdsStateMap =
+        extractAllSecretIdsWithState(inputSettingAttributes, accountId, appIdFromRequest, envIdFromRequest);
     for (SettingAttribute settingAttribute : inputSettingAttributes) {
       PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
       isAccountAdmin = userService.hasPermission(accountId, permissionType);
@@ -414,7 +448,8 @@ public class SettingsServiceImpl implements SettingsService {
         helmRepoSettingAttributes.add(settingAttribute);
       } else {
         if (isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
-                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute, settingAttribute)) {
+                restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute, settingAttribute,
+                secretIdsStateMap)) {
           filteredSettingAttributes.add(settingAttribute);
         }
       }
@@ -467,7 +502,8 @@ public class SettingsServiceImpl implements SettingsService {
         settingAttributes.forEach(
             settingAttribute -> { cloudProvidersMap.put(settingAttribute.getUuid(), settingAttribute); });
       }
-
+      Map<String, SecretState> secretIdsStateMap =
+          extractAllSecretIdsWithState(cloudProvidersMap.values(), accountId, appIdFromRequest, envIdFromRequest);
       helmRepoSettingAttributes.forEach(settingAttribute -> {
         PermissionAttribute.PermissionType permissionType = settingServiceHelper.getPermissionType(settingAttribute);
         boolean isAccountAdmin = userService.hasPermission(accountId, permissionType);
@@ -475,7 +511,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isNotBlank(cloudProviderId) && cloudProvidersMap.containsKey(cloudProviderId)
             && isFilteredSettingAttribute(appIdFromRequest, envIdFromRequest, accountId, appEnvMapFromUserPermissions,
                 restrictionsFromUserPermissions, isAccountAdmin, appIdEnvMap, settingAttribute,
-                cloudProvidersMap.get(cloudProviderId))) {
+                cloudProvidersMap.get(cloudProviderId), secretIdsStateMap)) {
           filteredSettingAttributes.add(settingAttribute);
         }
       });
@@ -486,13 +522,21 @@ public class SettingsServiceImpl implements SettingsService {
   public boolean isFilteredSettingAttribute(String appIdFromRequest, String envIdFromRequest, String accountId,
       Map<String, Set<String>> appEnvMapFromUserPermissions, UsageRestrictions restrictionsFromUserPermissions,
       boolean isAccountAdmin, Map<String, List<Base>> appIdEnvMap, SettingAttribute settingAttribute,
-      SettingAttribute settingAttributeWithUsageRestrictions) {
+      SettingAttribute settingAttributeWithUsageRestrictions, Map<String, SecretState> secretIdsStateMap) {
     if (settingServiceHelper.hasReferencedSecrets(settingAttributeWithUsageRestrictions)) {
       // Try to get any secret references if possible.
       Set<String> usedSecretIds = settingServiceHelper.getUsedSecretIds(settingAttributeWithUsageRestrictions);
       if (isNotEmpty(usedSecretIds)) {
-        // Runtime check using intersection of usage scopes of secretIds.
-        return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
+        if (featureFlagService.isEnabled(FeatureName.SETTING_API_BATCH_RBAC, accountId)) {
+          // Returning false only on SecretState.CANNOT_READ. Which means SecretState.CAN_READ, SecretState.NOT_FOUND
+          // are both allowed. This allows settings with mis matching/deleted secret Ids, this is done to
+          return usedSecretIds.stream()
+              .filter(secretIdsStateMap::containsKey)
+              .noneMatch(secretId -> secretIdsStateMap.get(secretId) == SecretState.CANNOT_READ);
+        } else {
+          // Runtime check using intersection of usage scopes of secretIds.
+          return secretManager.canUseSecretsInAppAndEnv(usedSecretIds, accountId, appIdFromRequest, envIdFromRequest);
+        }
       }
     }
 

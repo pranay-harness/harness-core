@@ -49,7 +49,7 @@ import org.mongodb.morphia.annotations.Version;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity(value = "activities", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 public class Activity implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
                                  CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

@@ -25,8 +25,13 @@ java_library(
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
         "//990-commons-test:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:io_grpc_grpc_core",
@@ -35,17 +40,6 @@ java_library(
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_reflections_reflections",
-    ],
-)
-
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "module",
-        "test_deps",
-        "//:lombok",
     ],
 )
 
