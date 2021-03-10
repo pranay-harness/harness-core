@@ -13,6 +13,7 @@ java_library(
     exports = [
         "//:lombok",
         "//950-ng-audit-commons:module",
+        "//955-filters-sdk:module",
         "//960-persistence:module",
         "//970-ng-commons:module",
         "//980-commons:module",
