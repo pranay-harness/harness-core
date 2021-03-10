@@ -2,8 +2,6 @@ package io.harness.audit.mapper;
 
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.entities.AuditFilterProperties;
-import io.harness.connector.ConnectorFilterPropertiesDTO;
-import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.filter.mapper.FilterPropertiesMapper;
