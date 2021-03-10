@@ -2,6 +2,7 @@ package software.wings.verification.cloudwatch;
 
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
@@ -46,22 +47,5 @@ public class CloudWatchCVServiceConfiguration extends CVConfiguration {
     clonedConfig.setLoadBalancerMetrics(this.getLoadBalancerMetrics());
     clonedConfig.setRegion(this.getRegion());
     return clonedConfig;
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class CloudWatchCVConfigurationYaml extends CVConfigurationYaml {
-    private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
-    private Map<String, List<CloudWatchMetric>> ecsMetrics;
-    private Map<String, List<CloudWatchMetric>> lambdaFunctionsMetrics;
-    private List<String> ec2InstanceNames;
-    private List<CloudWatchMetric> ec2Metrics;
-    private String region;
   }
 }

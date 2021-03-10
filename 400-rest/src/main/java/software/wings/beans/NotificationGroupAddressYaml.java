@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.yaml.BaseYaml;
 
 import java.util.List;
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 /**
  * Yaml representation of addressesByChannelType in NotificationGroup.
  */
+@TargetModule(Module._870_CG_YAML_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

@@ -133,22 +133,4 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         Utils.appendPathToBaseUrl(url, validationUrl), maskingEvaluator));
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class DatadogYaml extends VerificationProviderYaml {
-    private String url;
-    private String apiKey;
-    private String applicationKey;
-
-    @Builder
-    public DatadogYaml(String type, String harnessApiVersion, String url, String apiKey, String applicationKey,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.url = url;
-      this.apiKey = apiKey;
-      this.applicationKey = applicationKey;
-    }
-  }
 }

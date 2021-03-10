@@ -24,11 +24,4 @@ public class DatadogLogCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setHostnameField(this.getHostnameField());
     return clonedConfig;
   }
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class DatadogLogCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String hostnameField;
-  }
 }

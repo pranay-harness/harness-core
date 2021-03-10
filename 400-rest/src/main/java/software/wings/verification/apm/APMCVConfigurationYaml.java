@@ -1,7 +1,7 @@
 package software.wings.verification.apm;
 
 import software.wings.sm.states.APMVerificationState;
-import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;
@@ -15,6 +15,6 @@ import lombok.EqualsAndHashCode;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonPropertyOrder({"type", "harnessApiVersion"})
-public final class APMCVConfigurationYaml extends CVConfiguration.CVConfigurationYaml {
+public final class APMCVConfigurationYaml extends CVConfigurationYaml {
   private List<APMVerificationState.MetricCollectionInfo> metricCollectionInfos;
 }
