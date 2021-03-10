@@ -49,7 +49,7 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
     final GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent("secret".toCharArray()).build();
     gcpHelperServiceManager.validateCredential(gcpConfig, Collections.emptyList());
     verify(gcpHelperService)
-        .getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+        .getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
   }
 
   @Test
@@ -64,7 +64,7 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
         .executeTask(any(DelegateTask.class));
 
     final GcpConfig gcpConfig =
-        GcpConfig.builder().accountId(ACCOUNT_ID).useDelegate(true).delegateSelector("foo").build();
+        GcpConfig.builder().accountId(ACCOUNT_ID).useDelegateSelectors(true).delegateSelector("foo").build();
 
     gcpHelperServiceManager.validateCredential(gcpConfig, Collections.emptyList());
 

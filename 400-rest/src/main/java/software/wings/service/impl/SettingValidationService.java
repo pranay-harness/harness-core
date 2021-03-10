@@ -118,6 +118,7 @@ import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -247,11 +248,11 @@ public class SettingValidationService {
 
     if (settingValue instanceof GcpConfig) {
       GcpConfig gcpConfig = (GcpConfig) settingValue;
-      if (!gcpConfig.isUseDelegate() && gcpConfig.isSkipValidation()) {
+      if (!gcpConfig.isUseDelegateSelectors() && gcpConfig.isSkipValidation()) {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
       }
-      if (gcpConfig.isUseDelegate() && StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+      if (gcpConfig.isUseDelegateSelectors() && gcpConfig.getDelegateSelector().isEmpty()) {
         throw new InvalidArgumentsException(
             "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
       }

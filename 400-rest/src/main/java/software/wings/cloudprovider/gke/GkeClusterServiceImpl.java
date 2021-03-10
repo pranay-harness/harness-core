@@ -62,7 +62,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     Container gkeContainerService =
-        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -187,7 +187,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, isInstanceSync);
     Container gkeContainerService =
-        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);
     String location = locationCluster[0];
@@ -227,7 +227,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
     // Decrypt gcpConfig
     encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
     Container gkeContainerService =
-        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+        gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     try {
       ListClustersResponse response = gkeContainerService.projects()

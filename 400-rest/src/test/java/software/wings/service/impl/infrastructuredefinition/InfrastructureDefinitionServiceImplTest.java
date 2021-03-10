@@ -804,7 +804,7 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
     }
     when(mockSettingsService.getByAccountAndId(anyString(), anyString()))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute()
-                        .withValue(GcpConfig.builder().useDelegate(true).delegateSelector("abc").build())
+                        .withValue(GcpConfig.builder().useDelegateSelectors(true).delegateSelector("abc").build())
                         .build());
     InfrastructureDefinition invalid_gcp_k8s_delegate_selector = valid.cloneForUpdate();
     assertThatExceptionOfType(InvalidRequestException.class)

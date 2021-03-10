@@ -47,11 +47,11 @@ public class GcpHelperServiceManager {
   @Inject private EncryptionService encryptionService;
 
   public void validateCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
           GcpValidationRequest.builder()
-              .delegateSelectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+              .delegateSelectors(gcpConfig.getDelegateSelector())
               .build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
@@ -62,7 +62,7 @@ public class GcpHelperServiceManager {
     } else {
       // Decrypt gcpConfig
       encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
-      gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+      gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     }
   }
 
@@ -74,7 +74,7 @@ public class GcpHelperServiceManager {
   }
 
   private void validateDelegateSelector(GcpConfig gcpConfig) {
-    if (StringUtils.isBlank(gcpConfig.getDelegateSelector())) {
+    if (gcpConfig.getDelegateSelector().isEmpty()) {
       throw new InvalidRequestException("No Delegate Selector Found. Unable to validate", USER);
     }
   }

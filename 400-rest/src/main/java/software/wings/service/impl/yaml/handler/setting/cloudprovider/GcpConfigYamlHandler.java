@@ -22,7 +22,7 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
                     .type(gcpConfig.getType())
                     .serviceAccountKeyFileContent(getEncryptedYamlRef(
                         gcpConfig.getAccountId(), gcpConfig.getEncryptedServiceAccountKeyFileContent()))
-                    .useDelegate(gcpConfig.isUseDelegate())
+                    .useDelegate(gcpConfig.isUseDelegateSelectors())
                     .delegateSelector(gcpConfig.getDelegateSelector())
                     .skipValidation(gcpConfig.isSkipValidation())
                     .build();
@@ -40,7 +40,7 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
     GcpConfig config = GcpConfig.builder()
                            .accountId(accountId)
                            .encryptedServiceAccountKeyFileContent(yaml.getServiceAccountKeyFileContent())
-                           .useDelegate(yaml.isUseDelegate())
+                           .useDelegateSelectors(yaml.isUseDelegateSelectors())
                            .delegateSelector(yaml.getDelegateSelector())
                            .skipValidation(yaml.isSkipValidation())
                            .build();

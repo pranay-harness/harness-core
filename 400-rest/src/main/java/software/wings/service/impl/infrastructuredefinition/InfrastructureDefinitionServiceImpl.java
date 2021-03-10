@@ -569,7 +569,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     if (infraDefinition.getCloudProviderType() == CloudProviderType.GCP) {
       SettingAttribute cloudProvider = settingsService.getByAccountAndId(
           infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId());
-      if (((GcpConfig) cloudProvider.getValue()).isUseDelegate()) {
+      if (((GcpConfig) cloudProvider.getValue()).isUseDelegateSelectors()) {
         throw new InvalidRequestException(
             "Infrastructure Definition Using a GCP Cloud Provider Inheriting from Delegate is not yet supported", USER);
       }

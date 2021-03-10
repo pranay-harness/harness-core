@@ -53,9 +53,9 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities =
         new ArrayList<>(gcpConfig.fetchRequiredExecutionCapabilities(maskingEvaluator));
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       executionCapabilities.add(SelectorCapability.builder()
-                                    .selectors(Collections.singleton(gcpConfig.getDelegateSelector()))
+                                    .selectors(gcpConfig.getDelegateSelector())
                                     .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
                                     .build());
     }

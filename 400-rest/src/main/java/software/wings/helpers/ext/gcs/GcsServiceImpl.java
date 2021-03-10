@@ -76,7 +76,7 @@ public class GcsServiceImpl implements GcsService {
     try {
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       Storage gcsStorageService =
-          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
       Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
       listObjects.setMaxResults(maxResults);
       do {
@@ -146,7 +146,7 @@ public class GcsServiceImpl implements GcsService {
         Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
         encryptionService.decrypt(gcpConfig, encryptionDetails, false);
         Storage gcsStorageService = gcpHelperService.getGcsStorageService(
-            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+            gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
         Storage.Objects.List listObjects = gcsStorageService.objects().list(bucketName);
         listObjects.setMaxResults(maxResults);
 
@@ -218,7 +218,7 @@ public class GcsServiceImpl implements GcsService {
       String versionId;
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       Storage gcsStorageService =
-          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
       Storage.Objects.Get request = gcsStorageService.objects().get(bucketName, objName);
       String lastUpdatedAt = request.execute().getUpdated().toString();
 
@@ -257,7 +257,7 @@ public class GcsServiceImpl implements GcsService {
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
       // Get versioning info for given bucket
       Storage gcsStorageService =
-          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
       Storage.Buckets.Get request = gcsStorageService.buckets().get(bucketName);
 
       if (request.execute().getVersioning() != null) {
@@ -306,7 +306,7 @@ public class GcsServiceImpl implements GcsService {
 
     // List buckets for current project in service account if project is empty
     if (isEmpty(projectId)) {
-      if (gcpConfig.isUseDelegate()) {
+      if (gcpConfig.isUseDelegateSelectors()) {
         projectId = getProjectId(gcpConfig);
       } else {
         projectId =
@@ -316,7 +316,7 @@ public class GcsServiceImpl implements GcsService {
 
     try {
       Storage gcsStorageService =
-          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate());
+          gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
       bucketsObj = gcsStorageService.buckets();
       Storage.Buckets.List request = bucketsObj.list(projectId);
       listOfBuckets = request.execute();

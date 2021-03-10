@@ -26,7 +26,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegate);
+      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegateSelectors);
     }
 
     if (input.getDelegateSelector().isPresent()) {
@@ -58,7 +58,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(config::setUseDelegate);
+      input.getUseDelegate().getValue().ifPresent(config::setUseDelegateSelectors);
     }
 
     if (input.getDelegateSelector().isPresent()) {

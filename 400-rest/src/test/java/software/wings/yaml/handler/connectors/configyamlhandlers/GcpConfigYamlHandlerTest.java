@@ -44,7 +44,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     GcpConfig gcpConfig = GcpConfig.builder()
                               .accountId(accountId)
                               .encryptedServiceAccountKeyFileContent(encryptedServiceAccountKeyFileContent)
-                              .useDelegate(useDelegate)
+                              .useDelegateSelectors(useDelegate)
                               .delegateSelector(delegateSelector)
                               .skipValidation(skipValidation)
                               .build();
@@ -64,7 +64,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
 
     assertThat(yaml.getType()).isEqualTo(gcpConfig.getType());
     assertThat(yaml.getServiceAccountKeyFileContent()).isEqualTo(encryptedYamlRef);
-    assertThat(yaml.isUseDelegate()).isEqualTo(useDelegate);
+    assertThat(yaml.isUseDelegateSelectors()).isEqualTo(useDelegate);
     assertThat(yaml.getDelegateSelector()).isEqualTo(delegateSelector);
     assertThat(yaml.isSkipValidation()).isEqualTo(skipValidation);
     assertThat(yaml.getUsageRestrictions()).isEqualTo(usageRestrictionsYaml);
@@ -104,7 +104,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
 
     assertThat(gcpConfig.getAccountId()).isEqualTo(accountId);
     assertThat(gcpConfig.getEncryptedServiceAccountKeyFileContent()).isEqualTo(serviceAccountKeyFileContent);
-    assertThat(gcpConfig.isUseDelegate()).isEqualTo(useDelegate);
+    assertThat(gcpConfig.isUseDelegateSelectors()).isEqualTo(useDelegate);
     assertThat(gcpConfig.getDelegateSelector()).isEqualTo(delegateSelector);
     assertThat(gcpConfig.isSkipValidation()).isEqualTo(skipValidation);
   }

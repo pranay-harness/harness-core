@@ -130,7 +130,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute, appId, GCS.name()).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -629,7 +629,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    if (gcpConfig.isUseDelegate()) {
+    if (gcpConfig.isUseDelegateSelectors()) {
       return getBuildService(settingAttribute).getProjectId(gcpConfig);
     }
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -755,7 +755,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
     if (settingsService.isSettingValueGcp(settingAttribute)) {
-      return ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+      return ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors();
     }
     return settingsService.hasDelegateSelectorProperty(settingAttribute);
   }

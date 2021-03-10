@@ -44,10 +44,10 @@ public class GcpInfrastructureProviderTest extends CategoryTest {
   @Category(UnitTests.class)
   public void listClusterNames() {
     SettingAttribute settingAttribute =
-        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(false).build()).build();
+        aSettingAttribute().withValue(GcpConfig.builder().useDelegateSelectors(false).build()).build();
 
     SettingAttribute settingAttributeDelegateBased =
-        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(true).delegateSelector("abc").build()).build();
+        aSettingAttribute().withValue(GcpConfig.builder().useDelegateSelectors(true).delegateSelector("abc").build()).build();
 
     gcpInfrastructureProvider.listClusterNames(settingAttribute, null);
     assertThatExceptionOfType(InvalidRequestException.class)

@@ -1284,7 +1284,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(GcpConfig.builder().useDelegate(true).delegateSelector(DELEGATE_SELECTOR).build())
+            .withValue(GcpConfig.builder().useDelegateSelectors(true).delegateSelector(DELEGATE_SELECTOR).build())
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).contains(DELEGATE_SELECTOR);
@@ -1299,7 +1299,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(GcpConfig.builder().useDelegate(false).delegateSelector(DELEGATE_SELECTOR).build())
+            .withValue(GcpConfig.builder().useDelegateSelectors(false).delegateSelector(DELEGATE_SELECTOR).build())
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();

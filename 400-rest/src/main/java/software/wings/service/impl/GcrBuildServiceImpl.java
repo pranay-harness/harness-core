@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +57,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
           gcrApiService
               .getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
                              gcpHelperService.getBasicAuthHeader(
-                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegate())),
+                                 gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors())),
                   artifactStreamAttributes.getImageName(), 50)
               .stream()
               .map(ArtifactConfigMapper::toBuildDetails)
@@ -117,7 +118,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
       encryptionService.decrypt(config, encryptionDetails, false);
       return gcrApiService.verifyImageName(
           GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
-              gcpHelperService.getBasicAuthHeader(config.getServiceAccountKeyFileContent(), config.isUseDelegate())),
+              gcpHelperService.getBasicAuthHeader(config.getServiceAccountKeyFileContent(), config.isUseDelegateSelectors())),
           artifactStreamAttributes.getImageName());
     } catch (IOException e) {
       log.error("Could not verify Artifact source", e);
@@ -145,5 +146,18 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   public List<String> getArtifactPathsByStreamType(
       GcpConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
     throw new InvalidRequestException("Operation not supported by GCR Build Service", WingsException.USER);
+  }
+
+  public String printDelegateSelectors(Set<String> delegateSelectors){
+    String ret="";
+    for (String delegate:delegateSelectors){
+      if (ret==""){
+        ret=ret+delegate;
+      }
+      else{
+        ret=ret+"and"+delegate;
+      }
+    }
+    return ret;
   }
 }
