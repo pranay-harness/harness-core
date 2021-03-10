@@ -3,6 +3,8 @@ package io.harness.delegate.task.artifacts.mappers;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.ecr.beans.AwsInternalConfig;
 import io.harness.artifacts.ecr.beans.EcrInternalConfig;
+import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
+import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateResponse;
@@ -17,14 +19,19 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class EcrRequestResponseMapper {
   public EcrInternalConfig toEcrInternalConfig(
-      EcrArtifactDelegateRequest request, AWSCredentialsProvider credentialsProvider) {
-    return EcrInternalConfig.builder().region(request.getRegion()).credentialsProvider(credentialsProvider).build();
+      EcrArtifactDelegateRequest request, AwsConnectorDTO awsConnectorDTO) {
+    String accessKey = ((AwsManualConfigSpecDTO) awsConnectorDTO.getCredential().getConfig()).getAccessKey();
+    char [] secretKey = ((AwsManualConfigSpecDTO) awsConnectorDTO.getCredential().getConfig()).getSecretKeyRef().getDecryptedValue();
+    return EcrInternalConfig.builder().region(request.getRegion())
+            .accessKey(accessKey)
+            .secretKey(secretKey)
+            .build();
   }
 
-  public AwsInternalConfig toAwsInternalConfig(AWSCredentialsProvider credentialsProvider) {
+  public AwsInternalConfig toAwsInternalConfig(EcrInternalConfig ecrInternalConfig) {
     return AwsInternalConfig.builder()
-        .accessKey(credentialsProvider.getCredentials().getAWSAccessKeyId().toCharArray())
-        .secretKey("PqGtbEop3FAR3vnHKifBljxCxyk1Jcrye/QIILCu".toCharArray())
+        .accessKey(ecrInternalConfig.getAccessKey().toCharArray())
+        .secretKey(ecrInternalConfig.getSecretKey())
         .build();
   }
 

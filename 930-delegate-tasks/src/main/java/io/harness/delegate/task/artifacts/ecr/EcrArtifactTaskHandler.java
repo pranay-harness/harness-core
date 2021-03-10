@@ -17,6 +17,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
 
+import io.harness.security.encryption.SecretDecryptionService;
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsApiHelperService;
 import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateImpl;
@@ -38,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtifactDelegateRequest> {
   private final EcrService ecrService;
   private final AwsApiHelperService awsApiHelperService;
+  @Inject SecretDecryptionService decryptionService;
   @Inject AwsEcrApiHelperServiceDelegateImpl awsEcrApiHelperServiceDelegate;
 
   @Override
@@ -51,7 +53,7 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
       throw new InvalidRequestException("Could not get secret keys - " + e.getMessage(), USER);
     }
     AwsInternalConfig awsInternalConfig =
-        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider());
+        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig);
     String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
         awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     builds = ecrService.getBuilds(awsInternalConfig, ecrimageUrl, attributesRequest.getRegion(),
@@ -74,7 +76,7 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
       throw new InvalidRequestException("Could not get auth tokens - " + e.getMessage(), USER);
     }
     AwsInternalConfig awsInternalConfig =
-        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider());
+        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig);
     String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
         awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     boolean validateCredentials = ecrService.validateCredentials(
@@ -92,7 +94,7 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
       throw new InvalidRequestException("Could not get auth tokens - " + e.getMessage(), USER);
     }
     AwsInternalConfig awsInternalConfig =
-        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider());
+        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig);
     String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
         awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     boolean verifyImageName = ecrService.verifyImageName(
@@ -120,7 +122,7 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
       throw new InvalidRequestException("Could not get auth keys - " + e.getMessage(), USER);
     }
     AwsInternalConfig awsInternalConfig =
-        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig.getCredentialsProvider());
+        EcrRequestResponseMapper.toAwsInternalConfig(ecrInternalConfig);
     String ecrimageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
         awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     if (EmptyPredicate.isNotEmpty(attributesRequest.getTagRegex())) {
@@ -148,6 +150,6 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     AmazonCloudWatchClientBuilder builder =
         AmazonCloudWatchClientBuilder.standard().withRegion(attributesRequest.getRegion());
     awsApiHelperService.attachCredentialsAndBackoffPolicy(builder, awsInternalConfig);
-    return EcrRequestResponseMapper.toEcrInternalConfig(attributesRequest, builder.getCredentials());
+    return EcrRequestResponseMapper.toEcrInternalConfig(attributesRequest, attributesRequest.getAwsConnectorDTO());
   }
 }
