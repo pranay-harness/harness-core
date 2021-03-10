@@ -606,21 +606,16 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginBody, @QueryParam("accountId") String accountId) {
+    // @Todo(Raj): Add support for captcha
+    User user = authenticationManager.defaultLoginAccount(
+        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId);
+
+    Account account = accountService.get(accountId);
+
     return new RestResponse<>(NGLoginResponse.builder()
-                                  .user(User.Builder.anUser()
-                                            .accountName(accountId)
-                                            .defaultAccountId("testDefaultAccount")
-                                            .email("testemail@harness.io")
-                                            .uuid("testuuid")
-                                            .name("testname")
-                                            .token("testtoken")
-                                            .emailVerified(true)
-                                            .twoFactorAuthenticationEnabled(false)
-                                            .twoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP)
-                                            .oauthProvider("testoauthproviderr")
-                                            .build())
+                                  .user(user)
                                   .showCaptcha(false)
-                                  .dashboardPreference(DashboardPreference.CG)
+                                  .dashboardPreference(account.getDashboardPreference())
                                   .build());
   }
 
