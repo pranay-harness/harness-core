@@ -35,18 +35,7 @@ import io.harness.rest.RestResponse.Builder;
 import io.harness.security.annotations.PublicApi;
 
 import software.wings.app.MainConfiguration;
-import software.wings.beans.Account;
-import software.wings.beans.AccountJoinRequest;
-import software.wings.beans.AccountRole;
-import software.wings.beans.ApplicationRole;
-import software.wings.beans.BugsnagTab;
-import software.wings.beans.ErrorData;
-import software.wings.beans.LoginRequest;
-import software.wings.beans.LoginTypeRequest;
-import software.wings.beans.PublicUser;
-import software.wings.beans.User;
-import software.wings.beans.UserInvite;
-import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.*;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
@@ -609,6 +598,29 @@ public class UserResource {
     // accountId field is optional, it could be null.
     return new RestResponse<>(authenticationManager.defaultLoginAccount(
         authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId));
+  }
+
+  @POST
+  @Path("nglogin")
+  @PublicApi
+  @Timed
+  @ExceptionMetered
+  public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginBody, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(NGLoginResponse.builder()
+                                  .user(User.Builder.anUser()
+                                            .accountName(accountId)
+                                            .defaultAccountId("testDefaultAccount")
+                                            .email("testemail@harness.io")
+                                            .uuid("testuuid")
+                                            .name("testname")
+                                            .token("testtoken")
+                                            .emailVerified(true)
+                                            .twoFactorAuthenticationEnabled(false)
+                                            .twoFactorAuthenticationMechanism(TwoFactorAuthenticationMechanism.TOTP)
+                                            .oauthProvider("testoauthproviderr")
+                                            .build())
+                                  .showCaptcha(false)
+                                  .build());
   }
 
   /**

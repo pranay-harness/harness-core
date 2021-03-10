@@ -42,23 +42,6 @@ public class ExpressionEvaluatorUtils {
   private final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
   private static final String REGEX = "[0-9]+";
 
-  public String substitute(EngineExpressionEvaluator expressionEvaluator, String expression, EngineJexlContext ctx) {
-    if (expression == null) {
-      return null;
-    }
-
-    String prefix = IdentifierName.random();
-    String suffix = IdentifierName.random();
-    Pattern pattern = Pattern.compile(prefix + REGEX + suffix);
-    EngineVariableResolver variableResolver = EngineVariableResolver.builder()
-                                                  .expressionEvaluator(expressionEvaluator)
-                                                  .ctx(ctx)
-                                                  .prefix(prefix)
-                                                  .suffix(suffix)
-                                                  .build();
-    return substitute(expression, ctx, variableResolver, pattern, true);
-  }
-
   public String substitute(
       ExpressionEvaluator expressionEvaluator, String expression, JexlContext ctx, VariableResolverTracker tracker) {
     if (expression == null) {

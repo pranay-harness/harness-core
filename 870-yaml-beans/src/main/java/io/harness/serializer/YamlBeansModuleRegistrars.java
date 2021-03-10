@@ -11,13 +11,13 @@ import lombok.experimental.UtilityClass;
 public class YamlBeansModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .addAll(TimeoutEngineRegistrars.kryoRegistrars)
           .add(YamlKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
           .add(YamlMorphiaRegistrar.class)
           .build();
 }

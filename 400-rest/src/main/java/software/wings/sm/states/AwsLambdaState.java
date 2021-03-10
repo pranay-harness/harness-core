@@ -27,6 +27,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -116,6 +117,7 @@ public class AwsLambdaState extends State {
   @Inject private transient ArtifactStreamService artifactStreamService;
   @Inject private transient EncryptionService encryptionService;
   @Inject private transient ServiceTemplateHelper serviceTemplateHelper;
+  @Inject private transient FeatureFlagService featureFlagService;
   @Inject private WorkflowExecutionService workflowExecutionService;
 
   public static final String AWS_LAMBDA_COMMAND_NAME = "Deploy AWS Lambda Function";
@@ -329,7 +331,8 @@ public class AwsLambdaState extends State {
 
     nullCheckForInvalidRequest(specification, "Missing lambda function specification in service", USER);
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     if (!ArtifactStreamType.CUSTOM.name().equalsIgnoreCase(artifactStreamAttributes.getArtifactStreamType())) {
       artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
       artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(

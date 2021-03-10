@@ -734,7 +734,8 @@ public class CommandState extends State {
           WingsException.USER);
     }
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -781,7 +782,8 @@ public class CommandState extends State {
               WingsException.USER);
         }
 
-        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+        ArtifactStreamAttributes artifactStreamAttributes =
+            artifactStream.fetchArtifactStreamAttributes(featureFlagService);
         artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
         if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());

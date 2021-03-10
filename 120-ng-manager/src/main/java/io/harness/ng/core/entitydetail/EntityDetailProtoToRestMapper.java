@@ -56,6 +56,7 @@ public class EntityDetailProtoToRestMapper {
         .projectIdentifier(nullIfEmpty(identifierRef.getProjectIdentifier().getValue()))
         .scope(mapEventToRestScopeEnum(identifierRef.getScope()))
         .identifier(identifierRef.getIdentifier().getValue())
+        .metadata(identifierRef.getMetadataMap())
         .build();
   }
 

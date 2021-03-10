@@ -424,6 +424,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
   @Getter private Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
+  @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -3221,16 +3222,16 @@ public class DelegateServiceImpl implements DelegateService {
                                             .doesNotExist();
       persistence.update(updateQuery, updateOperations);
 
-      long requiredDelegateCapabilites = 0;
+      long requiredDelegateCapabilities = 0;
       if (delegateTask.getExecutionCapabilities() != null) {
-        requiredDelegateCapabilites = delegateTask.getExecutionCapabilities()
-                                          .stream()
-                                          .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
-                                          .count();
+        requiredDelegateCapabilities = delegateTask.getExecutionCapabilities()
+                                           .stream()
+                                           .filter(e -> e.evaluationMode() == ExecutionCapability.EvaluationMode.AGENT)
+                                           .count();
       }
 
       // If all delegate task capabilities were evaluated and they were ok, we can assign the task
-      if (requiredDelegateCapabilites == size(results)
+      if (requiredDelegateCapabilities == size(results)
           && results.stream().allMatch(DelegateConnectionResult::isValidated)) {
         return assignTask(delegateId, taskId, delegateTask);
       }
@@ -3698,6 +3699,13 @@ public class DelegateServiceImpl implements DelegateService {
       BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
       delegateSelectionLogsService.logTaskAssigned(batch, task.getAccountId(), delegateId);
       delegateSelectionLogsService.save(batch);
+
+      Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
+
+      if (delegate != null) {
+        delegateTaskStatusObserverSubject.fireInform(DelegateTaskStatusObxxxxxxxx:onTaskAssigned,
+            delegateTask.getAccountId(), taskId, delegate.getUuid(), delegate.getDelegateGroupId());
+      }
 
       return resolvePreAssignmentExpressions(task, SecretManagerMode.APPLY);
     }
