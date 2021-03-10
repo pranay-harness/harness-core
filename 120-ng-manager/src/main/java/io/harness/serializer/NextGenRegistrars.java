@@ -3,6 +3,7 @@ package io.harness.serializer;
 import io.harness.EntityType;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.dto.secrets.SecretRequestWrapper;
+import io.harness.serializer.morphia.GitSyncMorphiaClassesRegistrar;
 import io.harness.serializer.morphia.ResourceGroupSerializer;
 import io.harness.serializer.morphia.UserGroupMorphiaRegistrar;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
@@ -28,6 +29,7 @@ public class NextGenRegistrars {
           .addAll(ResourceGroupSerializer.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .add(GitSyncMorphiaClassesRegistrar.class)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

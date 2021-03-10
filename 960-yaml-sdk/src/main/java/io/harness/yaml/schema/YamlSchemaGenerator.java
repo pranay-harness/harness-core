@@ -385,12 +385,12 @@ public class YamlSchemaGenerator {
     }
     final List<SubtypeClassMap> subtypesMapping = new ArrayList<>(fieldSubtypeData.getSubtypesMapping());
     subtypesMapping.sort(new SubtypeClassMapComparator());
-    List<ObjectNode> possibleNodes =
+    Set<ObjectNode> possibleNodes =
         subtypesMapping.stream()
             .map(fieldData
                 -> mapper.createObjectNode().put(
                     REF_NODE, SchemaConstants.DEFINITIONS_STRING_PREFIX + fieldData.getSubTypeDefinitionKey()))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
     fieldNode.removeAll();
     fieldNode.putArray(ONE_OF_NODE).addAll(possibleNodes);
   }

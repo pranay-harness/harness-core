@@ -2,6 +2,8 @@ package io.harness.yaml.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.packages.HarnessPackages.IO_HARNESS;
+import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
 import io.harness.packages.HarnessPackages;
@@ -39,13 +41,13 @@ public class YamlSchemaUtils {
     if (classLoader != null) {
       FilterBuilder filter = new FilterBuilder().include(FilterBuilder.prefix("io.harness")).include("software.wings");
       reflections = new Reflections(new ConfigurationBuilder()
-                                        .forPackages(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS)
+                                        .forPackages(IO_HARNESS, HarnessPackages.SOFTWARE_WINGS)
                                         .filterInputsBy(filter)
                                         .setUrls(classLoader.getURLs())
                                         .addClassLoader(classLoader));
 
     } else {
-      reflections = new Reflections(HarnessPackages.IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
+      reflections = new Reflections(IO_HARNESS, HarnessPackages.SOFTWARE_WINGS);
     }
     return reflections.getTypesAnnotatedWith(annotationClass, true);
   }
@@ -130,7 +132,7 @@ public class YamlSchemaUtils {
     if (jsonTypeInfo == null) {
       return null;
     }
-    Reflections reflections = new Reflections("io.harness");
+    Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
     Set<Class<?>> subTypesOf = reflections.getSubTypesOf((Class<Object>) field.getType());
     return subTypesOf.stream()
         .filter(c -> c.getAnnotation(JsonTypeName.class) != null)
