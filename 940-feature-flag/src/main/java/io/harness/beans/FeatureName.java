@@ -161,6 +161,7 @@ public enum FeatureName {
   NG_HARNESS_APPROVAL,
   NG_BARRIERS,
   NG_HELM_SOURCE_REPO,
+  ENHANCED_GCR_CONNECTIVITY_CHECK,
   SETTING_API_BATCH_RBAC; /*Flag to use batch RBAC api exposed by SecretManager*/
 
   FeatureName() {
