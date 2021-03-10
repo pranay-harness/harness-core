@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.roles.persistence.repositories;
 
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.annotation.HarnessRepo;
 
@@ -44,5 +45,11 @@ public class RoleCustomRepositoryImpl implements RoleCustomRepository {
   public UpdateResult updateMulti(Criteria criteria, Update update) {
     Query query = new Query(criteria);
     return mongoTemplate.updateMulti(query, update, RoleDBO.class);
+  }
+
+  @Override
+  public long deleteMulti(Criteria criteria) {
+    Query query = new Query(criteria);
+    return mongoTemplate.remove(query, RoleAssignmentDBO.class).getDeletedCount();
   }
 }

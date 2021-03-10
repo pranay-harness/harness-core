@@ -164,7 +164,7 @@ public class DelegateSetupResource {
   @Path("connected-ratio-with-primary")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
+  @PublicApi
   public RestResponse<Double> getConnectedRatioWithPrimary(
       @QueryParam("targetVersion") @NotEmpty String targetVersion) {
     return new RestResponse<>(delegateService.getConnectedRatioWithPrimary(targetVersion));

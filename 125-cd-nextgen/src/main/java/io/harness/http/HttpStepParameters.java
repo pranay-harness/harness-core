@@ -1,6 +1,6 @@
 package io.harness.http;
 
-import static io.harness.annotations.dev.HarnessTeam.NG;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
@@ -20,7 +20,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
-@OwnedBy(NG)
+@OwnedBy(PL)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

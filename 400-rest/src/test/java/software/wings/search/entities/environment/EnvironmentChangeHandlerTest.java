@@ -15,6 +15,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -38,8 +40,6 @@ import software.wings.search.entities.related.audit.RelatedAuditViewBuilder;
 import software.wings.search.entities.service.ServiceEntityTestUtils;
 import software.wings.search.entities.workflow.WorkflowEntityTestUtils;
 import software.wings.search.framework.SearchDao;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeType;
 
 import com.google.inject.Inject;
 import java.io.IOException;

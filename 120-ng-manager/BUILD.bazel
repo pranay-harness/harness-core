@@ -50,6 +50,7 @@ shared_dependencies = [
     "//960-api-services:module",
     "//440-connector-nextgen:module",
     "//955-filters-sdk:module",
+    "//955-outbox-sdk:module",
     "//960-notification-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
@@ -699,6 +700,7 @@ java_binary(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//120-ng-manager/src/test/resources:resource",

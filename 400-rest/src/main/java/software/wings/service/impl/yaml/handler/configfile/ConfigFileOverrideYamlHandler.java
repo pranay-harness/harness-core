@@ -9,8 +9,8 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
 import static com.google.common.base.Charsets.UTF_8;
 
-import io.harness.beans.ChecksumType;
 import io.harness.beans.EncryptedData;
+import io.harness.delegate.beans.ChecksumType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.stream.BoundedInputStream;
 

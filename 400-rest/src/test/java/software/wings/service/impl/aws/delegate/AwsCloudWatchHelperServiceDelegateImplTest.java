@@ -5,11 +5,13 @@ import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.refEq;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -27,6 +29,7 @@ import software.wings.service.impl.aws.model.request.AwsCloudWatchMetricDataRequ
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchStatisticsResponse;
+import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.amazonaws.AmazonClientException;
@@ -49,6 +52,7 @@ import org.mockito.Spy;
 public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
+  @Mock private AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
 
   @Spy @InjectMocks private AwsCloudWatchHelperServiceDelegateImpl awsCloudWatchHelperServiceDelegate;
 
@@ -106,13 +110,16 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
     final AwsCloudWatchStatisticsRequest awsCloudWatchStatisticsRequest =
         AwsCloudWatchStatisticsRequest.builder().build();
 
+    on(awsCloudWatchHelperServiceDelegate)
+        .set("awsEcrApiHelperServiceDelegateBase", awsEcrApiHelperServiceDelegateBase);
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> awsCloudWatchHelperServiceDelegate.getMetricStatistics(awsCloudWatchStatisticsRequest));
 
     doThrow(new AmazonClientException(""))
         .when(amazonCloudWatchClientMock)
         .getMetricStatistics(any(GetMetricStatisticsRequest.class));
-
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> awsCloudWatchHelperServiceDelegate.getMetricStatistics(awsCloudWatchStatisticsRequest));
   }
@@ -181,7 +188,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
     doThrow(new AmazonServiceException(""))
         .when(amazonCloudWatchClientMock)
         .getMetricData(any(GetMetricDataRequest.class));
-
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> awsCloudWatchHelperServiceDelegate.getMetricData(awsCloudWatchMetricDataRequest));
   }
@@ -201,7 +208,7 @@ public class AwsCloudWatchHelperServiceDelegateImplTest extends CategoryTest {
     doThrow(new AmazonClientException(""))
         .when(amazonCloudWatchClientMock)
         .getMetricData(any(GetMetricDataRequest.class));
-
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> awsCloudWatchHelperServiceDelegate.getMetricData(awsCloudWatchMetricDataRequest));
   }

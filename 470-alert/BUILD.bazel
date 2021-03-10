@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
+    "//480-alert-beans:module",
     "@maven//:com_google_inject_guice",
     "//:lombok",
 ]

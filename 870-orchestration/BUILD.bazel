@@ -37,6 +37,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [

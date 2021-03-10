@@ -4,9 +4,11 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//860-orchestration-steps:module",
         "//860-orchestration-visualization:module",
         "//870-yaml-beans:module",
@@ -46,18 +48,14 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    resources = ["//850-ng-pipeline-commons/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//950-timeout-engine:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
@@ -67,19 +65,6 @@ java_library(
         "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_slf4j_slf4j_api",
-    ],
-)
-
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    resources = ["//850-ng-pipeline-commons/src/test/resources:resource"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
     ],
 )
 

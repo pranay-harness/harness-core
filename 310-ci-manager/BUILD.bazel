@@ -444,6 +444,7 @@ test_deps = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = [
         "//310-ci-manager/src/test/resources:resource",

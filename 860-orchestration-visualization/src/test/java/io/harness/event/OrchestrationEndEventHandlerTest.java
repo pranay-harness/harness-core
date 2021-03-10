@@ -23,8 +23,6 @@ import io.harness.testlib.RealMongo;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import org.awaitility.Awaitility;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -72,14 +70,7 @@ public class OrchestrationEndEventHandlerTest extends OrchestrationVisualization
                                                 .build();
     mongoStore.upsert(orchestrationGraph, Duration.ofDays(10));
 
-    orchestrationEndEventHandler.handleEvent(event);
-
-    Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
-      OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
-      return graphInternal.getStatus() == Status.SUCCEEDED;
-    });
-
-    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
+    OrchestrationGraph updatedGraph = orchestrationEndEventHandler.handleEvent(event, orchestrationGraph);
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

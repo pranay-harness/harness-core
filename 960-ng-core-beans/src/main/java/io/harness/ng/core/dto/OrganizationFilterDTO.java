@@ -12,4 +12,5 @@ import lombok.experimental.FieldDefaults;
 public class OrganizationFilterDTO {
   String searchTerm;
   List<String> identifiers;
+  boolean ignoreCase;
 }

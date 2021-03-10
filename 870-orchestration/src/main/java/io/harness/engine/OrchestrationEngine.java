@@ -187,6 +187,9 @@ public class OrchestrationEngine {
       String skipCondition = nodeExecution.getNode().getSkipCondition();
       if (EmptyPredicate.isNotEmpty(skipCondition)) {
         SkipCheck skipCheck = shouldSkipNodeExecution(ambiance, skipCondition);
+        if (skipCheck.isSuccessful()) {
+          nodeExecution = updateSkipInfoAttribute(nodeExecution.getUuid(), skipCheck);
+        }
         if (!skipCheck.isSuccessful() || skipCheck.getEvaluatedSkipCondition()) {
           skipNodeExecution(nodeExecution.getUuid(), skipCheck);
           return;
@@ -199,11 +202,10 @@ public class OrchestrationEngine {
       String stepParameters = node.getStepParameters();
       Object resolvedStepParameters = stepParameters == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(stepParameters));
       Object resolvedStepInputs = node.getStepInputs() == null
           ? null
-          : pmsEngineExpressionService.resolve(
-              ambiance, NodeExecutionUtils.extractStepParameters(node.getStepInputs()));
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()));
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
@@ -221,6 +223,16 @@ public class OrchestrationEngine {
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }
+  }
+
+  private NodeExecution updateSkipInfoAttribute(String nodeExecutionId, SkipCheck skipCheck) {
+    return nodeExecutionService.update(nodeExecutionId, ops -> {
+      setUnset(ops, NodeExecutionKeys.skipInfo,
+          SkipInfo.newBuilder()
+              .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
+              .setSkipCondition(skipCheck.getSkipCondition())
+              .build());
+    });
   }
 
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
@@ -310,7 +322,6 @@ public class OrchestrationEngine {
         handleOutcomes(ambiance, stepResponse.getStepOutcomesList(), stepResponse.getGraphOutcomesList());
 
     NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.skipInfo, stepResponse.getSkipInfo());
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
@@ -522,8 +533,9 @@ public class OrchestrationEngine {
       return SkipCheck.builder()
           .skipCondition(skipCondition)
           .isSuccessful(false)
-          .errorMessage(String.format("SkipCondition could not be evaluated to boolean for nodeExecutionId: %s",
-              AmbianceUtils.obtainCurrentRuntimeId(ambiance)))
+          .errorMessage(String.format(
+              "The skip condition could not be evaluated because an expression [%s] is formatted incorrectly and the condition cannot be resolved true (skip) or false (do not skip).",
+              skipCondition))
           .build();
     }
   }

@@ -3,9 +3,7 @@ package software.wings.beans.alert;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +12,6 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Data
 @Builder
-@TargetModule(Module._970_API_SERVICES_BEANS)
 public class DeploymentFreezeEventAlert implements AlertData {
   String deploymentFreezeName;
   String deploymentFreezeId;

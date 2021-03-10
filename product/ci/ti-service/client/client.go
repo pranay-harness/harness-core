@@ -21,6 +21,6 @@ type Client interface {
 	// Write test cases to DB
 	Write(ctx context.Context, org, project, pipeline, build, stage, step, report string, tests []*types.TestCase) error
 
-	// GetTests returns list of tests which should be run intelligently
-	GetTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.Test, error)
+	// SelectTests returns list of tests which should be run intelligently
+	SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.RunnableTest, error)
 }
