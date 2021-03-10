@@ -77,13 +77,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       List<ContainerServiceData> newInstanceDataList;
       List<ContainerServiceData> oldInstanceDataList;
 
-      if (!resizeParams.isRollback()) {
-        newInstanceDataList = new ArrayList<>();
-        ContainerServiceData newInstanceData =
-            ecsDeployCommandTaskHelper.getNewInstanceData(contextData, executionLogCallback);
-        newInstanceDataList.add(newInstanceData);
-        oldInstanceDataList = ecsDeployCommandTaskHelper.getOldInstanceData(contextData, newInstanceData);
-      } else {
+      if (resizeParams.isRollback()) {
         // Rollback
         Map<String, Integer> originalServiceCounts =
             ecsDeployCommandTaskHelper.listOfStringArrayToMap(resizeParams.getOriginalServiceCounts());
@@ -105,6 +99,12 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
             ecsDeployCommandTaskHelper.setDesiredToOriginal(oldInstanceDataList, originalServiceCounts);
           }
         }
+      } else {
+        newInstanceDataList = new ArrayList<>();
+        ContainerServiceData newInstanceData =
+            ecsDeployCommandTaskHelper.getNewInstanceData(contextData, executionLogCallback);
+        newInstanceDataList.add(newInstanceData);
+        oldInstanceDataList = ecsDeployCommandTaskHelper.getOldInstanceData(contextData, newInstanceData);
       }
 
       executionDataBuilder.newInstanceData(newInstanceDataList).oldInstanceData(oldInstanceDataList);
@@ -130,6 +130,9 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR);
       ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       ecsServiceDeployResponse.setOutput(ex.getMessage());
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsServiceDeployResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
