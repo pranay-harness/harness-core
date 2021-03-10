@@ -13,6 +13,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.TaskType.ECS_COMMAND_TASK;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.StateType.ECS_RUN_TASK;
 
 import static java.util.Collections.singletonList;
@@ -455,7 +456,7 @@ public class EcsRunTaskDeploy extends State {
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    ExecutionResponse.ExecutionResponseBuilder builder =
+    ExecutionResponseBuilder builder =
         ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus);
 
     if (null != executionResponse.getEcsCommandResponse()
