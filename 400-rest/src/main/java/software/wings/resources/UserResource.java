@@ -620,6 +620,7 @@ public class UserResource {
                                             .oauthProvider("testoauthproviderr")
                                             .build())
                                   .showCaptcha(false)
+                                  .dashboardPreference(DashboardPreference.CG)
                                   .build());
   }
 
