@@ -1,4 +1,4 @@
-package io.harness.ngtriggers;
+package io.harness.constants;
 
 public interface Constants {
   String X_GIT_HUB_EVENT = "X-GitHub-Event";

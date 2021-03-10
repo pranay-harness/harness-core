@@ -1,9 +1,12 @@
 package io.harness.accesscontrol.roleassignments.api;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
+import io.harness.utils.CryptoUtils;
 
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -43,7 +46,9 @@ public class RoleAssignmentDTOMapper {
 
   public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
     return RoleAssignment.builder()
-        .identifier(object.getIdentifier())
+        .identifier(isEmpty(object.getIdentifier())
+                ? "role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20))
+                : object.getIdentifier())
         .scopeIdentifier(scopeIdentifier)
         .principalIdentifier(object.getPrincipal().getIdentifier())
         .principalType(object.getPrincipal().getType())

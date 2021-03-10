@@ -1,11 +1,11 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
+import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
+import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
+import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.ngtriggers.Constants.X_BIT_BUCKET_EVENT;
-import static io.harness.ngtriggers.Constants.X_GIT_HUB_EVENT;
-import static io.harness.ngtriggers.Constants.X_GIT_LAB_EVENT;
-import static io.harness.ngtriggers.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
@@ -14,9 +14,9 @@ import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITLA
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.HeaderConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.mapper.TagMapper;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;

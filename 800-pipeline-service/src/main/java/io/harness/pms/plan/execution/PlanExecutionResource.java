@@ -120,7 +120,7 @@ public class PlanExecutionResource {
   }
 
   @POST
-  @ApiOperation(value = "initiate pre flight check", nickname = "preflightCheck")
+  @ApiOperation(value = "initiate pre flight check", nickname = "startPreflightCheck")
   @Path("/preflightCheck")
   public ResponseDTO<String> startPreFlightCheck(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
@@ -132,7 +132,7 @@ public class PlanExecutionResource {
   }
 
   @GET
-  @ApiOperation(value = "initiate pre flight check", nickname = "preflightCheck")
+  @ApiOperation(value = "initiate pre flight check", nickname = "getPreflightCheckResponse")
   @Path("/getPreflightCheckResponse")
   public ResponseDTO<PreFlightDTO> getPreflightCheckResponse(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,

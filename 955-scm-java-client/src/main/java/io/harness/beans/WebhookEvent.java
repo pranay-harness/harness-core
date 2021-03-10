@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.beans.scm;
+package io.harness.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

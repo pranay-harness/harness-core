@@ -160,7 +160,8 @@ public enum FeatureName {
   GIT_SYNC_NG,
   NG_HARNESS_APPROVAL,
   NG_BARRIERS,
-  NG_HELM_SOURCE_REPO;
+  NG_HELM_SOURCE_REPO,
+  SETTING_API_BATCH_RBAC; /*Flag to use batch RBAC api exposed by SecretManager*/
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

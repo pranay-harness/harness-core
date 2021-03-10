@@ -23,6 +23,7 @@ java_binary(
     deps = [
         "@maven//:com_google_guava_guava",
     ] + [
+        "//480-alert-beans:module",
         "//810-ng-triggers:module",
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",

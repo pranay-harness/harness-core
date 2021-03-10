@@ -1,6 +1,7 @@
 package io.harness.serializer.recaster.proto;
 
 import io.harness.beans.CastedField;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.transformers.RecastTransformer;
 import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.utils.RecastReflectionUtils;
@@ -8,6 +9,7 @@ import io.harness.utils.RecastReflectionUtils;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import lombok.SneakyThrows;
+import org.bson.Document;
 
 public class ProtoRecastTransformer extends RecastTransformer implements CustomValueTransformer {
   @SneakyThrows
@@ -16,8 +18,14 @@ public class ProtoRecastTransformer extends RecastTransformer implements CustomV
     if (fromObject == null) {
       return null;
     }
+
+    Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+
+    if (decodedObject == null) {
+      return null;
+    }
     Message.Builder builder = (Message.Builder) targetClass.getMethod("newBuilder").invoke(null);
-    JsonFormat.parser().ignoringUnknownFields().merge(fromObject.toString(), builder);
+    JsonFormat.parser().ignoringUnknownFields().merge(decodedObject.toString(), builder);
     return builder.build();
   }
 

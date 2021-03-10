@@ -8,5 +8,8 @@
 FROM alpine:3.12
 # Copy go binary
 COPY linux_amd64_pure_stripped/log-service /usr/local/bin/log-service
-RUN chmod +x /usr/local/bin/log-service
+RUN addgroup -S 65534 && adduser -S 65534 -G 65534
+RUN chown -R 65534:65534 /usr/local/bin
+USER 65534
+WORKDIR /usr/local/bin
 CMD ["/usr/local/bin/log-service", "server"]

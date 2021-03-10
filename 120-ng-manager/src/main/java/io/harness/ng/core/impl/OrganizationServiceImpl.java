@@ -73,13 +73,13 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Organization create(String accountIdentifier, OrganizationDTO organizationDTO) {
-    validateCreateOrganizationRequest(accountIdentifier, organizationDTO);
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     try {
       validate(organization);
-
       Organization savedOrganization = saveOrganization(organization);
+      log.info(String.format("Organization with identifier %s was successfully created", organization.getIdentifier()));
+
       createUserProjectMap(organization);
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
@@ -99,6 +99,8 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void publishEvent(Organization organization, String action) {
+    log.info(String.format("Saving organization %s event to outbox for organization with identifier %s ...", action,
+        organization.getIdentifier()));
     outboxService.save(EntityChangeEvent.builder()
                            .resourceScope(new AccountScope(organization.getAccountIdentifier()))
                            .resource(Resource.builder()
@@ -107,6 +109,8 @@ public class OrganizationServiceImpl implements OrganizationService {
                                          .build())
                            .action(action)
                            .build());
+    log.info(String.format("Successfully saved organization %s event to outbox for organization with identifier %s",
+        action, organization.getIdentifier()));
   }
 
   private void createUserProjectMap(Organization organization) {
@@ -136,7 +140,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Organization update(String accountIdentifier, String identifier, OrganizationDTO organizationDTO) {
-    validateUpdateOrganizationRequest(accountIdentifier, identifier, organizationDTO);
+    validateUpdateOrganizationRequest(identifier, organizationDTO);
     Optional<Organization> optionalOrganization = get(accountIdentifier, identifier);
 
     if (optionalOrganization.isPresent()) {
@@ -155,6 +159,8 @@ public class OrganizationServiceImpl implements OrganizationService {
 
       validate(organization);
       Organization updatedOrganization = organizationRepository.save(organization);
+      log.info(String.format("Organization with identifier %s was successfully updated", identifier));
+
       publishEvent(existingOrganization, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return updatedOrganization;
     }
@@ -204,6 +210,11 @@ public class OrganizationServiceImpl implements OrganizationService {
   public boolean delete(String accountIdentifier, String organizationIdentifier, Long version) {
     boolean delete = organizationRepository.delete(accountIdentifier, organizationIdentifier, version);
     if (delete) {
+      log.info(String.format("Organization with identifier %s was successfully deleted", organizationIdentifier));
+    } else {
+      log.error(String.format("Organization with identifier %s could not be deleted", organizationIdentifier));
+    }
+    if (delete) {
       publishEvent(
           Organization.builder().accountIdentifier(accountIdentifier).identifier(organizationIdentifier).build(),
           EventsFrameworkMetadataConstants.DELETE_ACTION);
@@ -221,13 +232,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     return success;
   }
 
-  private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
-  }
-
-  private void validateUpdateOrganizationRequest(
-      String accountIdentifier, String identifier, OrganizationDTO organization) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
+  private void validateUpdateOrganizationRequest(String identifier, OrganizationDTO organization) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, organization.getIdentifier())), false);
   }
 }

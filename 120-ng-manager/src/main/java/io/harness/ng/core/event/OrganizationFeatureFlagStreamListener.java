@@ -1,12 +1,10 @@
 package io.harness.ng.core.event;
 
 import static io.harness.beans.FeatureName.NEXT_GEN_ENABLED;
-import static io.harness.exception.WingsException.USER;
 
 import io.harness.beans.FeatureName;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
@@ -43,11 +41,7 @@ public class OrganizationFeatureFlagStreamListener implements MessageListener {
   }
 
   private boolean processNGEnableAction(String accountId) {
-    try {
-      defaultOrganizationManager.createDefaultOrganization(accountId);
-    } catch (DuplicateFieldException ex) {
-      log.info(String.format("Default Organization for accountIdentifier %s already exists", accountId), ex, USER);
-    }
+    defaultOrganizationManager.createDefaultOrganization(accountId);
     return true;
   }
 }

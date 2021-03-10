@@ -1,6 +1,5 @@
 package io.harness.accesscontrol.roleassignments;
 
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -11,6 +10,8 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 public interface RoleAssignmentService {
+  List<RoleAssignment> createMulti(@Valid @NotNull List<RoleAssignment> roleAssignments);
+
   RoleAssignment create(@Valid @NotNull RoleAssignment roleAssignment);
 
   PageResponse<RoleAssignment> list(
@@ -18,9 +19,7 @@ public interface RoleAssignmentService {
 
   Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
-  List<RoleAssignment> get(@NotEmpty String principal, @NotNull PrincipalType principalType);
-
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
-  long deleteMany(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
+  long deleteMulti(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 }

@@ -27,7 +27,6 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Project")
 public class ProjectDTO {
-  String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
   @ApiModelProperty(required = true) @NGEntityName String name;
@@ -38,9 +37,8 @@ public class ProjectDTO {
   @JsonIgnore Long version;
 
   @Builder
-  public ProjectDTO(String accountIdentifier, String orgIdentifier, String identifier, String name, String color,
-      List<ModuleType> modules, String description, Map<String, String> tags) {
-    this.accountIdentifier = accountIdentifier;
+  public ProjectDTO(String orgIdentifier, String identifier, String name, String color, List<ModuleType> modules,
+      String description, Map<String, String> tags) {
     this.orgIdentifier = orgIdentifier;
     this.identifier = identifier;
     this.name = name;

@@ -3,7 +3,6 @@ package io.harness.accesscontrol.roleassignments.persistence;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.toDBO;
 
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
@@ -14,10 +13,8 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
-import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -61,14 +58,6 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   }
 
   @Override
-  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
-    return roleAssignmentRepository.findByPrincipalIdentifierAndPrincipalType(principal, principalType)
-        .stream()
-        .map(RoleAssignmentDBOMapper::fromDBO)
-        .collect(Collectors.toList());
-  }
-
-  @Override
   public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
     return roleAssignmentRepository.deleteByIdentifierAndScopeIdentifier(identifier, parentIdentifier)
         .stream()
@@ -77,7 +66,7 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
   }
 
   @Override
-  public long deleteMany(RoleAssignmentFilter roleAssignmentFilter) {
+  public long deleteMulti(RoleAssignmentFilter roleAssignmentFilter) {
     return roleAssignmentRepository.deleteMulti(createCriteriaFromFilter(roleAssignmentFilter));
   }
 

@@ -1,4 +1,4 @@
-package io.harness.ngtriggers.beans.scm;
+package io.harness.beans;
 
 import lombok.Builder;
 import lombok.Value;

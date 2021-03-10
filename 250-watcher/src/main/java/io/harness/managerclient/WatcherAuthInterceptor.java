@@ -9,10 +9,10 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class DelegateAuthInterceptor implements Interceptor {
+public class WatcherAuthInterceptor implements Interceptor {
   private TokenGenerator tokenGenerator;
 
-  DelegateAuthInterceptor(TokenGenerator tokenGenerator) {
+  WatcherAuthInterceptor(TokenGenerator tokenGenerator) {
     this.tokenGenerator = tokenGenerator;
   }
 
