@@ -1,5 +1,6 @@
 package io.harness.serializer;
 
+import io.harness.filter.serializer.FiltersRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.morphia.NGAuditServiceMorphiaRegistrar;
 
@@ -14,6 +15,7 @@ public class NGAuditServiceRegistrars {
           .addAll(CommonsRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(FiltersRegistrars.kryoRegistrars)
           .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .build();
 
@@ -22,6 +24,7 @@ public class NGAuditServiceRegistrars {
           .addAll(CommonsRegistrars.morphiaRegistrars)
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(PersistenceRegistrars.morphiaRegistrars)
+          .addAll(FiltersRegistrars.morphiaRegistrars)
           .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .add(NGAuditServiceMorphiaRegistrar.class)
           .build();
