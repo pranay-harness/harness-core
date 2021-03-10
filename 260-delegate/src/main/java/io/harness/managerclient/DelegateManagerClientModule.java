@@ -9,14 +9,14 @@ import io.harness.verificationclient.CVNextGenServiceClientFactory;
 import com.google.inject.AbstractModule;
 
 @TargetModule(Module._420_DELEGATE_AGENT)
-public class ManagerClientModule extends AbstractModule {
+public class DelegateManagerClientModule extends AbstractModule {
   private final String managerBaseUrl;
   private final String accountId;
   private final String accountSecret;
   private final String verificationServiceBaseUrl;
   private final String cvNextGenUrl;
 
-  public ManagerClientModule(String managerBaseUrl, String verificationServiceBaseUrl, String cvNextGenUrl,
+  public DelegateManagerClientModule(String managerBaseUrl, String verificationServiceBaseUrl, String cvNextGenUrl,
       String accountId, String accountSecret) {
     this.managerBaseUrl = managerBaseUrl;
     this.verificationServiceBaseUrl = verificationServiceBaseUrl;

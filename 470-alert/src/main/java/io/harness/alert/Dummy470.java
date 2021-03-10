@@ -1,3 +1,3 @@
 package io.harness.alert;
 
-public class Dummy {}
+public class Dummy470 {}

@@ -34,7 +34,7 @@ import io.harness.grpc.delegateservice.DelegateServiceGrpcAgentClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.logstreaming.LogStreamingModule;
-import io.harness.managerclient.ManagerClientModule;
+import io.harness.managerclient.DelegateManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -156,8 +156,9 @@ public class DelegateApplication {
         bind(DelegateConfiguration.class).toInstance(configuration);
       }
     });
-    modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
-        configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(
+        new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
+            configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
     String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
     modules.add(new ManagerGrpcClientModule(
