@@ -9,7 +9,6 @@ import static io.harness.security.dto.PrincipalType.USER;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.auth0.jwt.interfaces.Claim;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
 import java.util.Map;
