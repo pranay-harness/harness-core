@@ -1,13 +1,13 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
+import static io.harness.constants.Constants.X_HARNESS_WEBHOOK_TOKEN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ngtriggers.Constants.X_HARNESS_WEBHOOK_TOKEN;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_CUSTOM_TRIGGER_FOUND_FOR_PROJECT;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import io.harness.ngtriggers.beans.config.HeaderConfig;
+import io.harness.beans.HeaderConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;

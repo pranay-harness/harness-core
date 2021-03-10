@@ -1,6 +1,6 @@
-package io.harness.ngtriggers.beans.scm;
+package io.harness.beans;
 
-import static io.harness.ngtriggers.beans.scm.WebhookEvent.Type.BRANCH;
+import static io.harness.beans.WebhookEvent.Type.BRANCH;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;

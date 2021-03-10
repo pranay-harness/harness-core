@@ -1,13 +1,13 @@
 package io.harness.ngtriggers.resource;
 
-import static io.harness.ngtriggers.Constants.UNRECOGNIZED_WEBHOOK;
+import static io.harness.constants.Constants.UNRECOGNIZED_WEBHOOK;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.beans.HeaderConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.source.webhook.WebhookAction;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;
