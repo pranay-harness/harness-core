@@ -985,7 +985,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
 
-    gcpConfig.setDelegateSelector("delegate1");
+    gcpConfig.setDelegateSelector(Collections.singleton("delegate1"));
 
     // useDelegate = true, skipValidation = true
     gcpConfig.setUseDelegateSelectors(true);
@@ -1027,7 +1027,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     // useDelegate = true, delegateSelector Provided
     gcpConfig.setUseDelegateSelectors(true);
-    gcpConfig.setDelegateSelector("delegate1");
+    gcpConfig.setDelegateSelector(Collections.singleton("delegate1"));
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(1)).validateCredential(any(), any());
 

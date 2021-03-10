@@ -22,7 +22,7 @@ public class GcpConfigYamlHandler extends CloudProviderYamlHandler<Yaml, GcpConf
                     .type(gcpConfig.getType())
                     .serviceAccountKeyFileContent(getEncryptedYamlRef(
                         gcpConfig.getAccountId(), gcpConfig.getEncryptedServiceAccountKeyFileContent()))
-                    .useDelegate(gcpConfig.isUseDelegateSelectors())
+                    .useDelegateSelectors(gcpConfig.isUseDelegateSelectors())
                     .delegateSelector(gcpConfig.getDelegateSelector())
                     .skipValidation(gcpConfig.isSkipValidation())
                     .build();
