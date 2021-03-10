@@ -292,9 +292,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-                               Pair.of(orgIdentifier, project.getOrgIdentifier())),
-        true);
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(orgIdentifier, project.getOrgIdentifier())), true);
     validateParentOrgExists(accountIdentifier, orgIdentifier);
   }
 
@@ -308,9 +306,7 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void validateUpdateProjectRequest(
       String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-                               Pair.of(orgIdentifier, project.getOrgIdentifier())),
-        true);
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(orgIdentifier, project.getOrgIdentifier())), true);
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
     validateParentOrgExists(accountIdentifier, orgIdentifier);
   }

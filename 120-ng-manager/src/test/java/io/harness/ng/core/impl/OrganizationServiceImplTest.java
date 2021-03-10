@@ -61,12 +61,8 @@ public class OrganizationServiceImplTest extends CategoryTest {
         spy(new OrganizationServiceImpl(organizationRepository, outboxService, ngUserService, transactionTemplate));
   }
 
-  private OrganizationDTO createOrganizationDTO(String accountIdentifier, String identifier) {
-    return OrganizationDTO.builder()
-        .accountIdentifier(accountIdentifier)
-        .identifier(identifier)
-        .name(randomAlphabetic(10))
-        .build();
+  private OrganizationDTO createOrganizationDTO(String identifier) {
+    return OrganizationDTO.builder().identifier(identifier).name(randomAlphabetic(10)).build();
   }
 
   @Test
@@ -74,7 +70,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateOrganization() {
     String accountIdentifier = randomAlphabetic(10);
-    OrganizationDTO organizationDTO = createOrganizationDTO(accountIdentifier, randomAlphabetic(10));
+    OrganizationDTO organizationDTO = createOrganizationDTO(randomAlphabetic(10));
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
 
@@ -90,26 +86,13 @@ public class OrganizationServiceImplTest extends CategoryTest {
     assertEquals(organization, createdOrganization);
   }
 
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
-  public void testCreateOrganization_IncorrectPayload() {
-    String accountIdentifier = randomAlphabetic(10);
-    OrganizationDTO organizationDTO =
-        createOrganizationDTO(accountIdentifier + randomAlphabetic(1), randomAlphabetic(10));
-    Organization organization = toOrganization(organizationDTO);
-    organization.setAccountIdentifier(accountIdentifier);
-
-    organizationService.create(accountIdentifier, organizationDTO);
-  }
-
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
   public void testUpdateExistentOrganization() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    OrganizationDTO organizationDTO = createOrganizationDTO(accountIdentifier, identifier);
+    OrganizationDTO organizationDTO = createOrganizationDTO(identifier);
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
@@ -130,7 +113,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
   public void testUpdateOrganization_IncorrectPayload() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    OrganizationDTO organizationDTO = createOrganizationDTO(accountIdentifier, identifier);
+    OrganizationDTO organizationDTO = createOrganizationDTO(identifier);
     organizationDTO.setName("");
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
@@ -147,7 +130,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
   public void testUpdateNonExistentOrganization() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    OrganizationDTO organizationDTO = createOrganizationDTO(accountIdentifier, identifier);
+    OrganizationDTO organizationDTO = createOrganizationDTO(identifier);
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     organization.setIdentifier(identifier);
