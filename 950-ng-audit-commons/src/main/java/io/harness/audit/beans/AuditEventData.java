@@ -7,6 +7,6 @@ import lombok.Data;
 @Data
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type", visible = true)
-public class AuditEventDataDTO {
+public class AuditEventData {
   @NotNull String type;
 }

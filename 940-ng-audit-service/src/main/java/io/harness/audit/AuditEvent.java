@@ -2,6 +2,7 @@ package io.harness.audit;
 
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
+import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
 import io.harness.audit.beans.YamlDiff;

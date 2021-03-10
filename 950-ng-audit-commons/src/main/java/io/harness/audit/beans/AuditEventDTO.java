@@ -39,7 +39,7 @@ public class AuditEventDTO {
   @NotNull @NotBlank String action;
 
   YamlDiff yamlDiff;
-  @Valid AuditEventDataDTO auditEventData;
+  @Valid AuditEventData auditEventData;
 
   Map<String, String> additionalInfo;
 }
