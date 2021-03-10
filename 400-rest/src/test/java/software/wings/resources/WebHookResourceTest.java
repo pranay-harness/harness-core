@@ -49,6 +49,8 @@ public class WebHookResourceTest extends WingsBaseTest {
   private final String WEBHOOK_ID = "WEBHOOK_ID";
   private final String API_KEY = "API_KEY";
 
+  private final WebHookRequest webHookRequest = WebHookRequest.builder().application(APP_ID).build();
+
   @Before
   public void setup() {
     reset(WEBHOOK_SERVICE);
@@ -59,7 +61,6 @@ public class WebHookResourceTest extends WingsBaseTest {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testWebhookExecuteWithoutFF() {
-    WebHookRequest webHookRequest = WebHookRequest.builder().application(APP_ID).build();
     when(WEBHOOK_SERVICE.execute(WEBHOOK_ID, webHookRequest)).thenReturn(Response.noContent().build());
     Response response = resources.client()
                             .target("/webhooks/" + WEBHOOK_ID)
@@ -76,7 +77,6 @@ public class WebHookResourceTest extends WingsBaseTest {
   public void testWebhookExecuteWithFF() {
     when(FEATURE_FLAG_SERVICE.isEnabled(any(), anyString())).thenReturn(true);
     when(APP_SERVICE.get(APP_ID)).thenReturn(anApplication().isManualTriggerAuthorized(true).build());
-    WebHookRequest webHookRequest = WebHookRequest.builder().application(APP_ID).build();
     when(WEBHOOK_SERVICE.execute(WEBHOOK_ID, webHookRequest)).thenReturn(Response.noContent().build());
 
     Response response = resources.client()
@@ -95,7 +95,6 @@ public class WebHookResourceTest extends WingsBaseTest {
   public void testWebhookExecuteWithFFWithoutApiKey() {
     when(FEATURE_FLAG_SERVICE.isEnabled(any(), anyString())).thenReturn(true);
     when(APP_SERVICE.get(APP_ID)).thenReturn(anApplication().isManualTriggerAuthorized(true).build());
-    WebHookRequest webHookRequest = WebHookRequest.builder().application(APP_ID).build();
     when(WEBHOOK_SERVICE.execute(WEBHOOK_ID, webHookRequest)).thenReturn(Response.noContent().build());
 
     assertThatThrownBy(()
