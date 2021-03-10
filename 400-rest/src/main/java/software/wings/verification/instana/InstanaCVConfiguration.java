@@ -58,15 +58,4 @@ public class InstanaCVConfiguration extends CVConfiguration {
   public boolean isCVTaskBasedCollectionEnabled() {
     return true;
   }
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class InstanaCVConfigurationYaml extends CVConfigurationYaml {
-    private List<InstanaTagFilter> tagFilters;
-  }
 }

@@ -8,9 +8,9 @@ import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
+import software.wings.beans.InfraProvisionerYaml;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.beans.InfrastructureProvisioner.InfraProvisionerYaml;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;

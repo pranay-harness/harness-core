@@ -9,10 +9,10 @@ import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.sm.StateType;
 import software.wings.verification.datadog.DatadogLogCVConfigurationYaml;
 import software.wings.verification.log.BugsnagCVConfigurationYaml;
-import software.wings.verification.log.CustomLogCVServiceConfiguration.CustomLogsCVConfigurationYaml;
-import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
+import software.wings.verification.log.CustomLogsCVConfigurationYaml;
+import software.wings.verification.log.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationYaml;
 import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
 

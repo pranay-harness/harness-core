@@ -86,20 +86,4 @@ public class DynaTraceConfig extends SettingValue implements EncryptableSetting 
         .encryptedDataDetails(secretManager.getEncryptionDetails(this))
         .build();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class DynaTraceYaml extends VerificationProviderYaml {
-    private String apiToken;
-    private String dynaTraceUrl;
-
-    @Builder
-    public DynaTraceYaml(String type, String harnessApiVersion, String dynaTraceUrl, String apiToken,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.dynaTraceUrl = dynaTraceUrl;
-      this.apiToken = apiToken;
-    }
-  }
 }

@@ -70,16 +70,4 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
     fillDataCollectionInfoWithCommonFields(elkDataCollectionInfoV2);
     return elkDataCollectionInfoV2;
   }
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public static final class ElkCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String index;
-    private String hostnameField;
-    private String messageField;
-    private String timestampField;
-    private String timestampFormat;
-  }
 }

@@ -78,15 +78,4 @@ public class LogsCVConfiguration extends CVConfiguration {
     super.copy(cvConfiguration);
     cvConfiguration.setQuery(this.getQuery());
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static class LogsCVConfigurationYaml extends CVConfigurationYaml {
-    private String query;
-    private Long baselineStartMinute;
-    private Long baselineEndMinute;
-    private String alertPriority;
-  }
 }

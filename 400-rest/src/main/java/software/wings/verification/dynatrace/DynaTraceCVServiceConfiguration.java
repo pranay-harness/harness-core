@@ -28,17 +28,4 @@ public class DynaTraceCVServiceConfiguration extends CVConfiguration {
     clonedConfig.setServiceEntityId(this.serviceEntityId);
     return clonedConfig;
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class DynaTraceCVConfigurationYaml extends CVConfigurationYaml {
-    private String dynatraceServiceName;
-    private String dynatraceServiceEntityId;
-  }
 }
