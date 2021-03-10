@@ -15,10 +15,18 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.event.NodeExecutionUpdateEventHandler;
+import io.harness.event.OrchestrationEndEventHandler;
+import io.harness.event.OrchestrationStartEventHandler;
+import io.harness.event.PlanExecutionStatusUpdateEventHandler;
+import io.harness.event.StatusUpdateEventHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
+import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.sdk.core.events.OrchestrationEventLog;
+import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.skip.service.VertexSkipperService;
 
@@ -29,15 +37,23 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
+@Slf4j
 public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private SpringMongoStore mongoStore;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private VertexSkipperService vertexSkipperService;
+  @Inject OrchestrationEventLogRepository orchestrationEventLogRepository;
+  @Inject OrchestrationStartEventHandler orchestrationStartEventHandler;
+  @Inject OrchestrationEndEventHandler orchestrationEndEventHandler;
+  @Inject PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
+  @Inject NodeExecutionUpdateEventHandler nodeExecutionUpdateEventHandler;
+  @Inject StatusUpdateEventHelper statusUpdateEventHelper;
 
   @Override
   public OrchestrationGraph getCachedOrchestrationGraph(String planExecutionId) {
@@ -133,6 +149,59 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     return generatePartialGraph(
         obtainStartingIdFromIdentifier(orchestrationGraph.getAdjacencyList().getGraphVertexMap(), identifier),
         orchestrationGraph);
+  }
+
+  public OrchestrationGraph buildOrchestrationGraphBasedOnLogs(String planExecutionId) {
+    OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+    List<OrchestrationEventLog> unprocessedEventLogs;
+    if (orchestrationGraph == null) {
+      unprocessedEventLogs = orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId);
+    } else {
+      unprocessedEventLogs =
+          orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, orchestrationGraph.getLastUpdatedAt());
+    }
+    long lastUpdatedAt = 0L;
+    if (orchestrationGraph != null) {
+      lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
+    }
+    if (!unprocessedEventLogs.isEmpty()) {
+      for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
+        OrchestrationEventType eventType = orchestrationEventLog.getEvent().getEventType();
+        switch (eventType) {
+          case NODE_EXECUTION_STATUS_UPDATE:
+            orchestrationGraph =
+                statusUpdateEventHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+            break;
+          case ORCHESTRATION_START:
+            orchestrationGraph = orchestrationStartEventHandler.handleEventFromLog(orchestrationEventLog.getEvent());
+            break;
+          case ORCHESTRATION_END:
+            orchestrationGraph =
+                orchestrationEndEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+            break;
+          case PLAN_EXECUTION_STATUS_UPDATE:
+            orchestrationGraph =
+                planExecutionStatusUpdateEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+            break;
+          case NODE_EXECUTION_UPDATE:
+            orchestrationGraph =
+                nodeExecutionUpdateEventHandler.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+            break;
+          default:
+            // do Nothing
+        }
+        lastUpdatedAt = orchestrationEventLog.getCreatedAt();
+      }
+    }
+    if (unprocessedEventLogs.size() > 5) {
+      log.warn("More than 5 Events Processed at a time for given planExecutionId:[{}]", planExecutionId);
+    }
+    if (orchestrationGraph != null) {
+      orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
+      cacheOrchestrationGraph(orchestrationGraph);
+    }
+
+    return orchestrationGraph;
   }
 
   public OrchestrationGraph buildOrchestrationGraph(String planExecutionId) {

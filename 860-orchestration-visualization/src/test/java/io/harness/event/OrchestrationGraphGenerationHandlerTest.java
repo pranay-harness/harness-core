@@ -48,27 +48,29 @@ import java.util.concurrent.TimeUnit;
 import org.assertj.core.util.Maps;
 import org.awaitility.Awaitility;
 import org.bson.Document;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Spy;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
- * Test class for {@link NodeExecutionStatusUpdateEventHandlerV2}
+ * Test class for {@link OrchestrationGraphGenerationHandler}
  */
-public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVisualizationTestBase {
+public class OrchestrationGraphGenerationHandlerTest extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private SpringMongoStore mongoStore;
 
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject @Spy private GraphGenerationService graphGenerationService;
   @Inject private MongoTemplate mongoTemplate;
-  @Inject private NodeExecutionStatusUpdateEventHandlerV2 eventHandlerV2;
+  @Inject private OrchestrationGraphGenerationHandler eventHandlerV2;
 
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
+  @Ignore("Using event sourcing now, will remove/update")
   public void shouldDoNothingIfRuntimeIdIsNull() {
     String planExecutionId = generateUuid();
     OrchestrationEvent event = OrchestrationEvent.builder()
@@ -88,6 +90,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
+  @Ignore("Using event sourcing now, will remove/update")
   public void shouldAddRootNodeIdToTheGraphAndAddVertex() {
     // creating PlanExecution
     PlanExecution planExecution =
@@ -159,6 +162,7 @@ public class NodeExecutionStatusUpdateEventHandlerV2Test extends OrchestrationVi
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
+  @Ignore("Using event sourcing now, will remove/update")
   public void shouldUpdateExistingVertexInGraphAndAddOutcomes() {
     // creating PlanExecution
     PlanExecution planExecution =

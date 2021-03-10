@@ -11,11 +11,11 @@ import io.harness.pms.contracts.execution.Status;
 import java.io.ObjectStreamClass;
 import java.util.List;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import lombok.experimental.Wither;
 
 @OwnedBy(CDC)
-@Value
+@Data
 @Builder
 public class OrchestrationGraph implements Distributable, Nominal {
   public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(OrchestrationGraph.class).getSerialVersionUID();
