@@ -93,20 +93,4 @@ public class ScalyrConfig extends SettingValue implements EncryptableSetting, Ex
     body.put("maxCount", isServiceLevel ? "10000" : "1000");
     return body;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class ScalyrYaml extends VerificationProviderYaml {
-    private String scalyrUrl;
-    private String apiToken;
-
-    @Builder
-    public ScalyrYaml(String type, String harnessApiVersion, String scalyrUrl, String apiToken,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.scalyrUrl = scalyrUrl;
-      this.apiToken = apiToken;
-    }
-  }
 }

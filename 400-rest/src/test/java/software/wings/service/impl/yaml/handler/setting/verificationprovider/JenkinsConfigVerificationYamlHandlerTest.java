@@ -16,9 +16,9 @@ import io.harness.exception.HarnessException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
+import software.wings.beans.VerificationYaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.jenkins.JenkinsUtils;
@@ -35,7 +35,7 @@ public class JenkinsConfigVerificationYamlHandlerTest extends SettingValueConfig
   @InjectMocks @Inject private JenkinsConfigVerificationYamlHandler yamlHandler;
   public static final String url = "https://jenkins.wings.software";
 
-  private Class yamlClass = JenkinsConfig.VerificationYaml.class;
+  private Class yamlClass = VerificationYaml.class;
 
   protected static final String token = "token";
 

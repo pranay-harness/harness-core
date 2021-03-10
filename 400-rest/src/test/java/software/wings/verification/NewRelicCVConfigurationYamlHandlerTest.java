@@ -27,8 +27,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.verification.newrelic.NewRelicCVConfigurationYaml;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
-import software.wings.verification.newrelic.NewRelicCVServiceConfiguration.NewRelicCVConfigurationYaml;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

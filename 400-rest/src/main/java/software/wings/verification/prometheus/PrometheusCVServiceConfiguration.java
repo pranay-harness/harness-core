@@ -63,16 +63,4 @@ public class PrometheusCVServiceConfiguration extends CVConfiguration {
     clonedConfig.setTimeSeriesToAnalyze(getTimeSeriesToAnalyze());
     return clonedConfig;
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class PrometheusCVConfigurationYaml extends CVConfigurationYaml {
-    private List<TimeSeries> timeSeriesList;
-  }
 }

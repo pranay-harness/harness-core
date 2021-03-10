@@ -72,18 +72,4 @@ public class PrometheusConfig extends SettingValue implements EncryptableSetting
         .options(new HashMap<>())
         .build();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class PrometheusYaml extends VerificationProviderYaml {
-    private String prometheusUrl;
-
-    @Builder
-    public PrometheusYaml(
-        String type, String harnessApiVersion, String prometheusUrl, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.prometheusUrl = prometheusUrl;
-    }
-  }
 }

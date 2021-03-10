@@ -6,7 +6,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfigurationYaml;
 import software.wings.verification.log.SplunkCVConfiguration;
-import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationYaml;
+import software.wings.verification.log.SplunkCVConfigurationYaml;
 
 import java.util.List;
 

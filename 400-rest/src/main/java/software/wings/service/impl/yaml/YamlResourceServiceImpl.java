@@ -37,6 +37,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFileOverrideYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.HarnessTag;
@@ -673,8 +674,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   }
 
   private RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
-    ConfigFile.OverrideYaml yaml =
-        (ConfigFile.OverrideYaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE)
+    ConfigFileOverrideYaml yaml =
+        (ConfigFileOverrideYaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE)
             .toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);

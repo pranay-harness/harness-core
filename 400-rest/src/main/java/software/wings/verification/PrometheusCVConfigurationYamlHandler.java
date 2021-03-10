@@ -11,8 +11,8 @@ import io.harness.exception.WingsException;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.sm.StateType;
+import software.wings.verification.prometheus.PrometheusCVConfigurationYaml;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
-import software.wings.verification.prometheus.PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml;
 
 import java.util.List;
 import java.util.Map;

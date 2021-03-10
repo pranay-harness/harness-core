@@ -40,18 +40,6 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
     return clonedConfig;
   }
 
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class StackDriverMetricCVConfigurationYaml extends CVConfigurationYaml {
-    private List<StackDriverMetricDefinition> metricDefinitions;
-  }
-
   public Map<String, TimeSeriesMetricDefinition> fetchMetricTemplate() {
     if (isEmpty(metricDefinitions)) {
       return null;

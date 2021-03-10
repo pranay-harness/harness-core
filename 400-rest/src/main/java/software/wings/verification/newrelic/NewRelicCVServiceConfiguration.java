@@ -65,17 +65,4 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
   public FeatureName getCVTaskBasedCollectionFeatureFlag() {
     return FeatureName.NEWRELIC_24_7_CV_TASK;
   }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class NewRelicCVConfigurationYaml extends CVConfigurationYaml {
-    private String newRelicApplicationName;
-    private List<String> metrics;
-  }
 }

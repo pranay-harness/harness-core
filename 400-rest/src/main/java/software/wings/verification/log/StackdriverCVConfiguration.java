@@ -40,14 +40,4 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setQuery(this.getQuery());
     return clonedConfig;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static class StackdriverCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String hostnameField;
-    private String messageField;
-    private boolean isLogsConfiguration;
-  }
 }
