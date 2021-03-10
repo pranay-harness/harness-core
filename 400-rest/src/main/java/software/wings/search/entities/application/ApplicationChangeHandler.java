@@ -3,6 +3,8 @@ package software.wings.search.entities.application;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.changestreams.ChangeEvent;
+import io.harness.mongo.changestreams.ChangeType;
 
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.AuditHeaderKeys;
@@ -24,8 +26,6 @@ import software.wings.search.framework.EntityInfo;
 import software.wings.search.framework.EntityInfo.EntityInfoKeys;
 import software.wings.search.framework.SearchDao;
 import software.wings.search.framework.SearchEntityUtils;
-import software.wings.search.framework.changestreams.ChangeEvent;
-import software.wings.search.framework.changestreams.ChangeType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -36,7 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
-@BreakDependencyOn("import software.wings.service.intfc.security.EncryptionService")
+@BreakDependencyOn("software.wings.service.intfc.security.EncryptionService")
 public class ShellScriptTaskHandler {
   @Inject private SshExecutorFactory sshExecutorFactory;
   @Inject private WinRmExecutorFactory winrmExecutorFactory;

@@ -18,6 +18,7 @@ public class NGTriggersModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(SCMJavaClientModule.getInstance());
     bind(NGTriggerService.class).to(NGTriggerServiceImpl.class);
   }
 }

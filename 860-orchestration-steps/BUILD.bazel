@@ -15,7 +15,9 @@ java_library(
         "//870-orchestration:module",
         "//870-yaml-beans:module",
         "//878-pipeline-service-utilities:module",
+        "//940-notification-client:module",
         "//955-delegate-beans:module",
+        "//960-notification-beans:module",
         "//960-yaml-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
@@ -40,6 +42,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//860-orchestration-steps/src/test/resources:resource"],
     visibility = ["//visibility:public"],

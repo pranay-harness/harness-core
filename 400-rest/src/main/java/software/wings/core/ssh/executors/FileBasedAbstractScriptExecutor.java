@@ -9,8 +9,8 @@ import static io.harness.logging.LogLevel.WARN;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.delegate.beans.DelegateAgentFileService;
 import io.harness.delegate.beans.DelegateFile;
-import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;

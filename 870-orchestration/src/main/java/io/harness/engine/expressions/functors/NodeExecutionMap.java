@@ -16,8 +16,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -117,7 +117,7 @@ public class NodeExecutionMap extends LateBindingMap {
     if (nodeExecution == null || !entityTypes.contains(NodeExecutionEntityType.STEP_PARAMETERS)) {
       return Optional.empty();
     }
-    return ExpressionEvaluatorUtils.fetchField(nodeExecutionsCache.extractFinalStepParameters(nodeExecution), key);
+    return ExpressionEvaluatorUtils.fetchField(extractFinalStepParameters(nodeExecution), key);
   }
 
   private Optional<Object> fetchOutcomeOrOutput(String key) {
@@ -164,7 +164,18 @@ public class NodeExecutionMap extends LateBindingMap {
     }
   }
 
+  private static Map<String, Object> extractFinalStepParameters(NodeExecution nodeExecution) {
+    if (nodeExecution.getResolvedStepParameters() != null) {
+      Map<String, Object> stepParameters =
+          NodeExecutionUtils.extractAndProcessObject(nodeExecution.getResolvedStepParameters().toJson());
+      if (stepParameters != null) {
+        return stepParameters;
+      }
+    }
+    return NodeExecutionUtils.extractAndProcessObject(nodeExecution.getNode().getStepParameters());
+  }
+
   private static Optional<Object> jsonToObject(String json) {
-    return Optional.ofNullable(RecastOrchestrationUtils.toDocumentFromJson(json));
+    return Optional.ofNullable(NodeExecutionUtils.extractAndProcessObject(json));
   }
 }

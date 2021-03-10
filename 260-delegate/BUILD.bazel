@@ -689,6 +689,7 @@ test_dependencies = [
     "@delegate//:com_squareup_okhttp3_okhttp",
 ] + [
     "//400-rest:supporter-test",
+    "//480-alert-beans:module",
     "//990-commons-test:module",
     "@maven//:com_icegreen_greenmail",
     "@maven//:com_openpojo_openpojo",
@@ -700,6 +701,7 @@ test_dependencies = [
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(
         ["src/test/**/*.java"],
     ),

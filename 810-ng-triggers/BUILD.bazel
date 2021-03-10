@@ -17,6 +17,7 @@ java_library(
         "//950-common-entities:module",
         "//950-ng-project-n-orgs:module",
         "//955-delegate-beans:module",
+        "//955-scm-java-client:module",
         "//960-api-services:module",
         "//970-ng-commons:module",
         "//980-commons:module",
@@ -31,6 +32,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//810-ng-triggers/src/test/resources:resource"],
     visibility = ["//visibility:public"],

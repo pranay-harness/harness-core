@@ -39,11 +39,11 @@ import static java.time.Duration.ofSeconds;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
@@ -53,6 +53,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 
@@ -70,7 +71,6 @@ import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
-import software.wings.service.impl.security.kms.TerraformPlanEncryptDecryptHelper;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -125,7 +125,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
-  @Inject private TerraformPlanEncryptDecryptHelper planEncryptDecryptHelper;
+  @Inject private EncryptDecryptHelper planEncryptDecryptHelper;
 
   public TerraformProvisionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -441,7 +441,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         byte[] terraformPlanFile = getTerraformPlanFile(scriptDirectory, parameters);
         saveExecutionLog(parameters, color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold),
             CommandExecutionStatus.RUNNING, INFO);
-        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptTerraformPlan(
+        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
             terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
       }
 
@@ -487,7 +487,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       FileUtils.deleteQuietly(new File(baseDir));
       if (parameters.getEncryptedTfPlan() != null) {
         try {
-          boolean isSafelyDeleted = planEncryptDecryptHelper.deleteTfPlanFromVault(
+          boolean isSafelyDeleted = planEncryptDecryptHelper.deleteEncryptedRecord(
               parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
           if (isSafelyDeleted) {
             log.info("Terraform Plan has been safely deleted from vault");
@@ -752,7 +752,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
 
-    byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedTerraformPlan(
+    byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedContent(
         parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
 
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);

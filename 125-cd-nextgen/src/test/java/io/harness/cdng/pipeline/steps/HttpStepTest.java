@@ -31,7 +31,7 @@ public class HttpStepTest extends CategoryTest {
         + "    \"metaData\": \"metadataValue\",\n"
         + "    \"correlationId\": \"333333344444444\"\n"
         + "}";
-    HttpStepResponse response = HttpStepResponse.builder().httpResponseBody(body).build();
+    HttpStepResponse response1 = HttpStepResponse.builder().httpResponseBody(body).build();
     ParameterField<Object> var1 =
         ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).metaData>", null, true);
     ParameterField<Object> var2 =
@@ -40,16 +40,18 @@ public class HttpStepTest extends CategoryTest {
     ParameterField<Object> var4 = ParameterField.createValueField("directValue");
     Map<String, Object> variables = new LinkedHashMap<>();
     variables.put("name1", var1);
-    variables.put("name2", var2);
-    variables.put("name3", var3);
     variables.put("name4", var4);
 
-    Map<String, String> evaluatedVariables = HttpStep.evaluateOutputVariables(variables, response);
+    Map<String, String> evaluatedVariables = HttpStep.evaluateOutputVariables(variables, response1);
     assertThat(evaluatedVariables).isNotEmpty();
     assertThat(evaluatedVariables.get("name1")).isEqualTo("metadataValue");
-    assertThat(evaluatedVariables.get("name2")).isEqualTo("<+json.object(httpResponseBody).notPresent>");
-    assertThat(evaluatedVariables.get("name3")).isEqualTo("<+json.not.a.valid.expr>");
     assertThat(evaluatedVariables.containsKey("name4")).isFalse();
+
+    variables.put("name2", var2);
+    variables.put("name3", var3);
+
+    HttpStepResponse response2 = HttpStepResponse.builder().httpResponseBody(body).build();
+    assertThatThrownBy(() -> HttpStep.evaluateOutputVariables(variables, response2)).isNotNull();
   }
 
   @Test

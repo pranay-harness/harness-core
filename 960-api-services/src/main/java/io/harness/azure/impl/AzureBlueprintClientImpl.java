@@ -94,6 +94,43 @@ public class AzureBlueprintClientImpl extends AzureClient implements AzureBluepr
   }
 
   @Override
+  public Blueprint getBlueprint(final AzureConfig azureConfig, final String resourceScope, final String blueprintName) {
+    return getBlueprintWithServiceResponseAsync(azureConfig, resourceScope, blueprintName).toBlocking().single().body();
+  }
+
+  private Observable<ServiceResponse<Blueprint>> getBlueprintWithServiceResponseAsync(
+      final AzureConfig azureConfig, final String resourceScope, final String blueprintName) {
+    if (isBlank(resourceScope)) {
+      throw new IllegalArgumentException(RESOURCE_SCOPE_BLANK_VALIDATION_MSG);
+    }
+    if (!AzureResourceUtility.isValidResourceScope(resourceScope)) {
+      throw new IllegalArgumentException(format(RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG, resourceScope));
+    }
+    if (isBlank(blueprintName)) {
+      throw new IllegalArgumentException(BLUEPRINT_NAME_BLANK_VALIDATION_MSG);
+    }
+
+    return getAzureBlueprintRestClient(azureConfig.getAzureEnvironmentType())
+        .getBlueprint(
+            getAzureBearerAuthToken(azureConfig), resourceScope, blueprintName, AzureBlueprintRestClient.APP_VERSION)
+        .flatMap((Func1<Response<ResponseBody>, Observable<ServiceResponse<Blueprint>>>) response -> {
+          try {
+            ServiceResponse<Blueprint> clientResponse = getBlueprintDelegate(response);
+            return Observable.just(clientResponse);
+          } catch (Exception t) {
+            return Observable.error(t);
+          }
+        });
+  }
+
+  private ServiceResponse<Blueprint> getBlueprintDelegate(Response<ResponseBody> response) throws IOException {
+    return serviceResponseFactory.<Blueprint, CloudException>newInstance(azureJacksonAdapter)
+        .register(200, (new TypeToken<Blueprint>() {}).getType())
+        .registerError(CloudException.class)
+        .build(response);
+  }
+
+  @Override
   public Artifact createOrUpdateArtifact(
       AzureConfig azureConfig, String resourceScope, String blueprintName, String artifactName, String artifactJSON) {
     return createOrUpdateArtifactWithServiceResponseAsync(

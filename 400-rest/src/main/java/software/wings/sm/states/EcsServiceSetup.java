@@ -15,6 +15,7 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_TIMEOUT_MIN;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_TIMEOUT_BUFFER_MIN;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -27,7 +28,6 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
-import io.harness.exception.FailureType;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -91,7 +91,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -442,7 +441,7 @@ public class EcsServiceSetup extends State {
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
 
-    ExecutionResponse.ExecutionResponseBuilder builder =
+    ExecutionResponseBuilder builder =
         ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus);
     if (ecsServiceSetupResponse.isTimeoutFailure()) {
       builder.failureTypes(TIMEOUT);

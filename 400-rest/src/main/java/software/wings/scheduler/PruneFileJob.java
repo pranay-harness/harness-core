@@ -2,7 +2,7 @@ package software.wings.scheduler;
 
 import static java.time.Duration.ofSeconds;
 
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.beans.AppContainer;

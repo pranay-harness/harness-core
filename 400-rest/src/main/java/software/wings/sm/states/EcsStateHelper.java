@@ -20,6 +20,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_T
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_ALL_PHASE_ROLLBACK_DONE;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
+import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
 import static software.wings.sm.states.EcsRunTaskDeploy.GIT_FETCH_FILES_TASK_NAME;
@@ -936,11 +937,11 @@ public class EcsStateHelper {
       updateContainerElementAfterSuccessfulResize(context);
     }
 
-    ExecutionResponse.ExecutionResponseBuilder builder = ExecutionResponse.builder()
-                                                             .stateExecutionData(executionData)
-                                                             .executionStatus(executionStatus)
-                                                             .contextElement(listParam)
-                                                             .notifyElement(listParam);
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(executionData)
+                                           .executionStatus(executionStatus)
+                                           .contextElement(listParam)
+                                           .notifyElement(listParam);
 
     if (null != deployResponse && deployResponse.isTimeoutFailure()) {
       builder.failureTypes(TIMEOUT);

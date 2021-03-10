@@ -1,30 +1,52 @@
 package io.harness.accesscontrol.roleassignments;
 
-import io.harness.accesscontrol.principals.PrincipalType;
+import static lombok.AccessLevel.PRIVATE;
+
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.Failsafe;
+import net.jodah.failsafe.RetryPolicy;
+import org.springframework.transaction.TransactionException;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @ValidateOnExecution
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class RoleAssignmentServiceImpl implements RoleAssignmentService {
-  private final ScopeService scopeService;
-  private final RoleAssignmentDao roleAssignmentDao;
-  private final RoleAssignmentValidator roleAssignmentValidator;
+  ScopeService scopeService;
+  RoleAssignmentDao roleAssignmentDao;
+  RoleAssignmentValidator roleAssignmentValidator;
+  TransactionTemplate transactionTemplate;
+  private static final RetryPolicy<Object> createMultiRetryPolicy = RetryUtils.getRetryPolicy(
+      "[Retrying]: Failed to create the role assignments, the operation is rolled back; attempt: {}",
+      "[Failed]: Failed to create the role assignments, the operation is rolled back; attempt: {}",
+      ImmutableList.of(TransactionException.class), Duration.ofSeconds(15), 3, log);
 
-  @Inject
-  public RoleAssignmentServiceImpl(
-      ScopeService scopeService, RoleAssignmentDao roleAssignmentDao, RoleAssignmentValidator roleAssignmentValidator) {
-    this.scopeService = scopeService;
-    this.roleAssignmentDao = roleAssignmentDao;
-    this.roleAssignmentValidator = roleAssignmentValidator;
+  @Override
+  public List<RoleAssignment> createMulti(List<RoleAssignment> roleAssignments) {
+    return Failsafe.with(createMultiRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      List<RoleAssignment> createdRoleAssignments = new ArrayList<>();
+      roleAssignments.forEach(roleAssignment -> createdRoleAssignments.add(create(roleAssignment)));
+      return createdRoleAssignments;
+    }));
   }
 
   @Override
@@ -35,9 +57,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public PageResponse<RoleAssignment> list(
-      PageRequest pageRequest, String parentIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
-    return roleAssignmentDao.list(pageRequest, parentIdentifier, roleAssignmentFilter);
+  public PageResponse<RoleAssignment> list(PageRequest pageRequest, RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.list(pageRequest, roleAssignmentFilter);
   }
 
   @Override
@@ -46,17 +67,12 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public List<RoleAssignment> get(String principal, PrincipalType principalType) {
-    return roleAssignmentDao.get(principal, principalType);
-  }
-
-  @Override
   public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
     return roleAssignmentDao.delete(identifier, parentIdentifier);
   }
 
   @Override
-  public long deleteMany(String scopeIdentifier, RoleAssignmentFilter roleAssignmentFilter) {
-    return roleAssignmentDao.deleteMany(scopeIdentifier, roleAssignmentFilter);
+  public long deleteMulti(RoleAssignmentFilter roleAssignmentFilter) {
+    return roleAssignmentDao.deleteMulti(roleAssignmentFilter);
   }
 }

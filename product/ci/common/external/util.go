@@ -31,14 +31,14 @@ const (
 	dRemoteUrl       = "DRONE_REMOTE_URL"
 	dCommitSha       = "DRONE_COMMIT_SHA"
 	wrkspcPath       = "HARNESS_WORKSPACE"
-	gitBinPath       = "HARNESS_GIT_BINARY_PATH"
+	gitBin           = "git"
 	diffFilesCmd     = "%s diff --name-only HEAD HEAD@{1} -1"
 )
 
 // GetChangedFiles executes a shell command and retuns list of files changed in PR
-func GetChangedFiles(ctx context.Context, gitPath, workspace string, log *zap.SugaredLogger) ([]string, error) {
+func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]string, error) {
 	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
-	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitPath)).WithDir(workspace)
+	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
 	out, err := cmd.Output()
 
 	if err != nil {
@@ -214,14 +214,6 @@ func GetWrkspcPath() (string, error) {
 	path, ok := os.LookupEnv(wrkspcPath)
 	if !ok {
 		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
-	}
-	return path, nil
-}
-
-func GetGitBinPath() (string, error) {
-	path, ok := os.LookupEnv(gitBinPath)
-	if !ok {
-		return "", fmt.Errorf("git binary path variable not set %s", gitBinPath)
 	}
 	return path, nil
 }

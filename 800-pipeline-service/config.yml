@@ -85,6 +85,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/

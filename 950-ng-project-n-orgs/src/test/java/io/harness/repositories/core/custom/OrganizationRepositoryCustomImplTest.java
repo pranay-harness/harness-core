@@ -55,7 +55,7 @@ public class OrganizationRepositoryCustomImplTest extends CategoryTest {
     when(mongoTemplate.find(any(Query.class), eq(Organization.class))).thenReturn(singletonList(organization));
     when(mongoTemplate.count(any(Query.class), eq(Organization.class))).thenReturn(1L);
 
-    Page<Organization> organizations = organizationRepository.findAll(new Criteria(), pageable);
+    Page<Organization> organizations = organizationRepository.findAll(new Criteria(), pageable, false);
 
     assertEquals(pageable, organizations.getPageable());
     assertEquals(1, organizations.getContent().size());
