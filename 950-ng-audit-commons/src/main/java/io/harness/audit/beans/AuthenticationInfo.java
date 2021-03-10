@@ -7,6 +7,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 
 @Data
@@ -14,5 +15,5 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "AuthenticationInfoKeys")
 public class AuthenticationInfo {
   @NotNull Principal principal;
-  List<KeyValuePair> labels;
+  @Singular List<KeyValuePair> labels;
 }

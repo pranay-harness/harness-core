@@ -5,6 +5,7 @@ import io.harness.ng.core.common.beans.KeyValuePair;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -14,5 +15,5 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class Resource {
   @NotEmpty String type;
   @NotEmpty String identifier;
-  List<KeyValuePair> labels;
+  @Singular List<KeyValuePair> labels;
 }
