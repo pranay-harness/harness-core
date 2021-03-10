@@ -15,7 +15,6 @@ import io.harness.security.annotations.PublicApiWithWhitelist;
 import software.wings.beans.Application;
 import software.wings.beans.WebHookRequest;
 import software.wings.security.annotations.ApiKeyAuthorized;
-import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WebHookService;
 
@@ -43,7 +42,13 @@ public class WebHookResource {
   @Inject private WebHookService webHookService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
-  @Inject private ApiKeyService apiKeyService;
+
+  @Inject
+  public WebHookResource(WebHookService webHookService, FeatureFlagService featureFlagService, AppService appService) {
+    this.webHookService = webHookService;
+    this.featureFlagService = featureFlagService;
+    this.appService = appService;
+  }
 
   @POST
   @Timed
@@ -67,7 +72,6 @@ public class WebHookResource {
       if (application.isManualTriggerAuthorized() && isEmpty(apiKey)) {
         throw new InvalidRequestException("Api Key cannot be empty", WingsException.USER);
       }
-      //      apiKeyService.validate(apiKey, accountId);
     }
     return webHookService.execute(webHookToken, webHookRequest);
   }
