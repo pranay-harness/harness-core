@@ -2,9 +2,7 @@ package io.harness.ccm.views.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
