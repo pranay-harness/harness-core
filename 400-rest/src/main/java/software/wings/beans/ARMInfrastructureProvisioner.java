@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static software.wings.beans.InfrastructureProvisionerType.ARM;
 
+import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
@@ -31,15 +32,13 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
   private ARMInfrastructureProvisioner(String name, String description, List<NameValuePair> variables,
       List<InfrastructureMappingBlueprint> mappingBlueprints, String accountId, String uuid, String appId,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, String entityYamlPath,
-      ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType,
-      boolean isBlueprint) {
+      ARMSourceType sourceType, String templateBody, GitFileConfig gitFileConfig, ARMScopeType scopeType) {
     super(name, description, ARM.name(), variables, mappingBlueprints, accountId, uuid, appId, createdBy, createdAt,
         lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.sourceType = sourceType;
     this.templateBody = templateBody;
     this.gitFileConfig = gitFileConfig;
     this.scopeType = scopeType;
-    this.isBlueprint = isBlueprint;
   }
 
   ARMInfrastructureProvisioner() {
