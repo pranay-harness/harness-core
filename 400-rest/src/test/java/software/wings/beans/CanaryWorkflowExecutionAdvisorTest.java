@@ -61,21 +61,26 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNulls() {
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(null, null, "dummy", null)).isNull();
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
+                   null, null, "dummy", null, FailureStrategyLevel.WORKFLOW))
+        .isNull();
   }
 
   @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNullStrategy() {
-    final List<FailureStrategy> failureStrategies = asList(
-        FailureStrategy.builder().failureTypes(null).build(), FailureStrategy.builder().failureTypes(null).build());
-
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies, null, "dummy", null))
-        .isEqualTo(failureStrategies.get(0));
+    final List<FailureStrategy> failureStrategies =
+        asList(FailureStrategy.builder().executionScope(ExecutionScope.WORKFLOW).failureTypes(null).build(),
+            FailureStrategy.builder().executionScope(ExecutionScope.WORKFLOW).failureTypes(null).build());
 
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "dummy", null))
+                   failureStrategies, null, "dummy", null, FailureStrategyLevel.WORKFLOW))
+        .isEqualTo(failureStrategies.get(0));
+
+    assertThat(
+        CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+            EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(0));
   }
 
@@ -83,15 +88,18 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyWithNullError() {
-    final List<FailureStrategy> failureStrategies =
-        asList(FailureStrategy.builder().failureTypes(asList(FailureType.APPLICATION_ERROR)).build(),
-            FailureStrategy.builder().failureTypes(null).build());
+    final List<FailureStrategy> failureStrategies = asList(FailureStrategy.builder()
+                                                               .executionScope(ExecutionScope.WORKFLOW)
+                                                               .failureTypes(asList(FailureType.APPLICATION_ERROR))
+                                                               .build(),
+        FailureStrategy.builder().executionScope(ExecutionScope.WORKFLOW).failureTypes(null).build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies, null, "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
+                   failureStrategies, null, "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(0));
 
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.noneOf(FailureType.class), "dummy", null))
+                   failureStrategies, EnumSet.noneOf(FailureType.class), "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(0));
   }
 
@@ -99,16 +107,22 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testSelectTopMatchingStrategyFindMatching() {
-    final List<FailureStrategy> failureStrategies =
-        asList(FailureStrategy.builder().failureTypes(asList(FailureType.APPLICATION_ERROR)).build(),
-            FailureStrategy.builder().failureTypes(asList(FailureType.CONNECTIVITY)).build());
+    final List<FailureStrategy> failureStrategies = asList(FailureStrategy.builder()
+                                                               .executionScope(ExecutionScope.WORKFLOW)
+                                                               .failureTypes(asList(FailureType.APPLICATION_ERROR))
+                                                               .build(),
+        FailureStrategy.builder()
+            .executionScope(ExecutionScope.WORKFLOW)
+            .failureTypes(asList(FailureType.CONNECTIVITY))
+            .build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+                   EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(1));
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "dummy", null))
+    assertThat(
+        CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+            EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(0));
   }
 
@@ -119,7 +133,8 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     final List<FailureStrategy> failureStrategies =
         asList(FailureStrategy.builder().specificSteps(null).build(), FailureStrategy.builder().build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies, null, "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
+                   failureStrategies, null, "dummy", null, FailureStrategyLevel.STEP))
         .isEqualTo(failureStrategies.get(0));
   }
 
@@ -130,7 +145,8 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     final List<FailureStrategy> failureStrategies =
         asList(FailureStrategy.builder().specificSteps(asList("n/a")).build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies, null, "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
+                   failureStrategies, null, "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isNull();
   }
 
@@ -141,7 +157,8 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     final List<FailureStrategy> failureStrategies =
         asList(FailureStrategy.builder().specificSteps(asList("dummy")).build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies, null, "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
+                   failureStrategies, null, "dummy", null, FailureStrategyLevel.STEP))
         .isEqualTo(failureStrategies.get(0));
   }
 
@@ -158,8 +175,8 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
             .build(),
         FailureStrategy.builder().specificSteps(asList("n/a")).failureTypes(asList(FailureType.CONNECTIVITY)).build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+                   EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isNull();
   }
 
@@ -171,17 +188,19 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
         FailureStrategy.builder().specificSteps(asList("n/a")).build(),
         FailureStrategy.builder().failureTypes(asList(FailureType.APPLICATION_ERROR)).build(),
         FailureStrategy.builder()
+            .executionScope(ExecutionScope.WORKFLOW)
             .specificSteps(asList("dummy"))
             .failureTypes(asList(FailureType.APPLICATION_ERROR))
             .build(),
         FailureStrategy.builder().specificSteps(asList("n/a")).failureTypes(asList(FailureType.CONNECTIVITY)).build(),
         FailureStrategy.builder()
+            .executionScope(ExecutionScope.WORKFLOW)
             .specificSteps(asList("dummy"))
             .failureTypes(asList(FailureType.CONNECTIVITY))
             .build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy", null))
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+                   EnumSet.<FailureType>of(FailureType.CONNECTIVITY), "dummy", null, FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(4));
   }
 
@@ -423,8 +442,9 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
                                                                .build(),
         FailureStrategy.builder().failureTypes(null).build());
 
-    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(
-                   failureStrategies, EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", null))
+    assertThat(
+        CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+            EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", null, FailureStrategyLevel.WORKFLOW))
         .isNull();
   }
 
@@ -441,7 +461,8 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     final PhaseElement phaseElement = PhaseElement.builder().phaseName("phaseName").build();
 
     assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
-                   EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", phaseElement))
+                   EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", phaseElement,
+                   FailureStrategyLevel.WORKFLOW))
         .isEqualTo(failureStrategies.get(0));
   }
 
@@ -461,5 +482,95 @@ public class CanaryWorkflowExecutionAdvisorTest extends CategoryTest {
     CanaryWorkflowExecutionAdvisor.shouldSkipStep(context, phaseStep, state);
 
     verify(context).renderExpression(expr);
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSelectWFLevelStrategyWithWorkflowScopeOnPhaseStep() {
+    final List<FailureStrategy> failureStrategies = asList(FailureStrategy.builder()
+                                                               .failureTypes(asList(FailureType.APPLICATION_ERROR))
+                                                               .executionScope(ExecutionScope.WORKFLOW)
+                                                               .build(),
+        FailureStrategy.builder().failureTypes(null).build());
+
+    final PhaseElement phaseElement = PhaseElement.builder().phaseName("phaseName").build();
+
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+                   EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", phaseElement,
+                   FailureStrategyLevel.WORKFLOW))
+        .isEqualTo(failureStrategies.get(0));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSelectWFLevelStrategyWithWorkflowScopeOnNonPhaseStep() {
+    final List<FailureStrategy> failureStrategies = asList(FailureStrategy.builder()
+                                                               .failureTypes(asList(FailureType.APPLICATION_ERROR))
+                                                               .executionScope(ExecutionScope.WORKFLOW)
+                                                               .build(),
+        FailureStrategy.builder().failureTypes(null).build());
+
+    assertThat(
+        CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+            EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", null, FailureStrategyLevel.WORKFLOW))
+        .isEqualTo(failureStrategies.get(0));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testSelectWFLevelStrategyFromMultipleWFLevelStrategies() {
+    final List<FailureStrategy> failureStrategies = asList(FailureStrategy.builder()
+                                                               .failureTypes(asList(FailureType.APPLICATION_ERROR))
+                                                               .executionScope(ExecutionScope.WORKFLOW_PHASE)
+                                                               .build(),
+        FailureStrategy.builder()
+            .failureTypes(asList(FailureType.APPLICATION_ERROR))
+            .executionScope(ExecutionScope.WORKFLOW)
+            .build());
+
+    final PhaseElement phaseElement = PhaseElement.builder().phaseName("phaseName").build();
+
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+                   EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", phaseElement,
+                   FailureStrategyLevel.WORKFLOW))
+        .isEqualTo(failureStrategies.get(0));
+
+    assertThat(
+        CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+            EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", null, FailureStrategyLevel.WORKFLOW))
+        .isEqualTo(failureStrategies.get(1));
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testNoMatchingWFLevelStrategyOnPhaseStep() {
+    final List<FailureStrategy> failureStrategies =
+        asList(FailureStrategy.builder().failureTypes(asList(FailureType.APPLICATION_ERROR)).build(),
+            FailureStrategy.builder().failureTypes(null).build());
+
+    final PhaseElement phaseElement = PhaseElement.builder().phaseName("phaseName").build();
+
+    assertThat(CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+                   EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", phaseElement,
+                   FailureStrategyLevel.WORKFLOW))
+        .isNull();
+  }
+
+  @Test
+  @Owner(developers = MILOS)
+  @Category(UnitTests.class)
+  public void testNoMatchingWFLevelStrategyOnNonPhaseStep() {
+    final List<FailureStrategy> failureStrategies =
+        asList(FailureStrategy.builder().failureTypes(asList(FailureType.APPLICATION_ERROR)).build(),
+            FailureStrategy.builder().failureTypes(null).build());
+
+    assertThat(
+        CanaryWorkflowExecutionAdvisor.selectTopMatchingStrategy(failureStrategies,
+            EnumSet.<FailureType>of(FailureType.APPLICATION_ERROR), "stateName", null, FailureStrategyLevel.WORKFLOW))
+        .isNull();
   }
 }
