@@ -34,9 +34,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -135,17 +135,19 @@ public class RoleAssignmentResource {
 
   @POST
   @Path("/multi")
-  @ApiOperation(value = "Create Role Assignments", nickname = "createRoleAssignments")
+  @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
   public ResponseDTO<List<RoleAssignmentResponseDTO>> create(@BeanParam HarnessScopeParams harnessScopeParams,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
-    List<RoleAssignmentResponseDTO> createdRoleAssignments = new ArrayList<>();
-    roleAssignmentCreateRequestDTO.getRoleAssignments().forEach(roleAssignmentDTO -> {
-      harnessResourceGroupService.sync(roleAssignmentDTO.getResourceGroupIdentifier(), scope);
-      createdRoleAssignments.add(
-          toResponseDTO(roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO))));
-    });
-    return ResponseDTO.newResponse(createdRoleAssignments);
+    List<RoleAssignment> roleAssignmentsPayload =
+        roleAssignmentCreateRequestDTO.getRoleAssignments()
+            .stream()
+            .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
+            .collect(Collectors.toList());
+    return ResponseDTO.newResponse(roleAssignmentService.createMulti(roleAssignmentsPayload)
+                                       .stream()
+                                       .map(RoleAssignmentDTOMapper::toResponseDTO)
+                                       .collect(toList()));
   }
 
   @DELETE

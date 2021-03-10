@@ -38,6 +38,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -96,7 +97,10 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
   @Test
   @Owner(developers = AVMOHAN)
   @Category(UnitTests.class)
-  public void shouldFetchRecommendation() throws Exception {
+  @Ignore(
+      "test outdated https://harness.slack.com/archives/C01JMN5P7EX/p1615213693230500?thread_ts=1615212596.227700&cid=C01JMN5P7EX")
+  public void
+  shouldFetchRecommendation() throws Exception {
     K8sWorkloadRecommendation recommendation = getK8sWorkloadRecommendationBuilder().build();
     hPersistence.save(recommendation);
     List<QLK8sWorkloadFilter> filters = getFilters();

@@ -12,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.NameValuePair;
 
@@ -83,7 +84,7 @@ public class AmiArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     Map<String, List<String>> tagMap = new HashMap<>();
     Map<String, String> filterMap = new HashMap<>();
     if (tags != null) {

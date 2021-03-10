@@ -64,9 +64,8 @@ public class ProjectServiceImplTest extends CategoryTest {
     projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, eventProducer, ngUserService));
   }
 
-  private ProjectDTO createProjectDTO(String accountIdentifier, String orgIdentifier, String identifier) {
+  private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
     return ProjectDTO.builder()
-        .accountIdentifier(accountIdentifier)
         .orgIdentifier(orgIdentifier)
         .identifier(identifier)
         .name(randomAlphabetic(10))
@@ -80,7 +79,7 @@ public class ProjectServiceImplTest extends CategoryTest {
   public void testCreateProject_CorrectPayload() {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
-    ProjectDTO projectDTO = createProjectDTO(accountIdentifier, orgIdentifier, randomAlphabetic(10));
+    ProjectDTO projectDTO = createProjectDTO(orgIdentifier, randomAlphabetic(10));
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
@@ -107,13 +106,12 @@ public class ProjectServiceImplTest extends CategoryTest {
   public void testCreateProject_IncorrectPayload() {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
-    ProjectDTO projectDTO =
-        createProjectDTO(accountIdentifier + randomAlphabetic(1), orgIdentifier, randomAlphabetic(10));
+    ProjectDTO projectDTO = createProjectDTO(orgIdentifier, randomAlphabetic(10));
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
 
-    projectService.create(accountIdentifier, orgIdentifier, projectDTO);
+    projectService.create(accountIdentifier, orgIdentifier + randomAlphabetic(1), projectDTO);
   }
 
   @Test
@@ -124,7 +122,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
     String id = randomAlphabetic(10);
-    ProjectDTO projectDTO = createProjectDTO(accountIdentifier, orgIdentifier, identifier);
+    ProjectDTO projectDTO = createProjectDTO(orgIdentifier, identifier);
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);
@@ -154,7 +152,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    ProjectDTO projectDTO = createProjectDTO(accountIdentifier, orgIdentifier, identifier);
+    ProjectDTO projectDTO = createProjectDTO(orgIdentifier, identifier);
     projectDTO.setName("");
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
@@ -173,7 +171,7 @@ public class ProjectServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
-    ProjectDTO projectDTO = createProjectDTO(accountIdentifier, orgIdentifier, identifier);
+    ProjectDTO projectDTO = createProjectDTO(orgIdentifier, identifier);
     Project project = toProject(projectDTO);
     project.setAccountIdentifier(accountIdentifier);
     project.setOrgIdentifier(orgIdentifier);

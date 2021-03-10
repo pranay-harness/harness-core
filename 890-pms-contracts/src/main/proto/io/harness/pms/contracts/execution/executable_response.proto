@@ -15,6 +15,7 @@ message ExecutableResponse {
     TaskExecutableResponse task = 5;
     TaskChainExecutableResponse taskChain = 6;
     SyncExecutableResponse sync = 7;
+    SkipTaskExecutableResponse skipTask = 8;
   }
 }
 
@@ -62,4 +63,8 @@ message TaskExecutableResponse {
   io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
   repeated string logKeys = 3;
   repeated string units = 4;
+}
+
+message SkipTaskExecutableResponse {
+  string message = 1;
 }

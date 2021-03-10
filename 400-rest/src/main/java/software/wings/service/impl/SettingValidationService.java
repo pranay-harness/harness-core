@@ -167,7 +167,8 @@ public class SettingValidationService {
       encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SSHVaultConfig sshVaultConfig = null;
-      if (((HostConnectionAttributes) settingAttribute.getValue()).isVaultSSH()) {
+      if (settingAttribute.getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) settingAttribute.getValue()).isVaultSSH()) {
         sshVaultConfig = sshVaultService.getSSHVaultConfig(settingAttribute.getAccountId(),
             ((HostConnectionAttributes) settingAttribute.getValue()).getSshVaultConfigId());
       }

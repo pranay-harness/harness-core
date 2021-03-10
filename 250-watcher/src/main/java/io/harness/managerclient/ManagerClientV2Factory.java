@@ -70,7 +70,7 @@ public class ManagerClientV2Factory implements Provider<ManagerClientV2> {
       return Http.getOkHttpClientWithProxyAuthSetup()
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
-          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
+          .addInterceptor(new WatcherAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");

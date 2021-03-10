@@ -185,6 +185,7 @@ delegateSelectionLogTaskMetadata {"name": "validUntil_1", "background": true, "e
 delegateSequenceConfig {"name": "appId_1", "background": true} {"appId": 1}
 delegateSequenceConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateSequenceConfig {"name": "uniqueDelegateSequenceIdx", "unique": true} {"accountId": 1, "hostName": 1, "sequenceNum": 1}
+delegateTaskUsageInsights {"name": "byAcctTaskDelType", "unique": true} {"accountId": 1, "taskId": 1, "delegateId": 1, "eventType": 1}
 delegateTaskUsageInsights {"name": "timestamp_1", "background": true} {"timestamp": 1}
 delegateTasks {"name": "index", "background": true} {"status": 1, "expiry": 1}
 delegateTasks {"name": "pulling", "background": true} {"accountId": 1, "status": 1, "data.async": 1, "expiry": 1}
@@ -517,6 +518,7 @@ orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAft
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 organizations {"name": "accountIdentifierNameIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "name": 1}
 organizations {"name": "unique_accountIdentifier_organizationIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1}
+outboxEvents {"name": "createdAt_outbox_Idx", "background": true} {"createdAt": 1}
 outcomeInstances {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 outcomeInstances {"name": "planExecutionIdIdx", "background": true} {"planExecutionId": 1}
 outcomeInstances {"name": "producedBySetupIdIdx", "background": true} {"planExecutionId": 1, "producedBy.setupId": 1, "name": 1}
