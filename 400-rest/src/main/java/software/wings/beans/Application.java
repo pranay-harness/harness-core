@@ -514,7 +514,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends BaseEntityYaml {
     private String description;
-    @JsonProperty("isManualTriggerAuthorized") private boolean isManualTriggerAuthorized;
+    private Boolean isManualTriggerAuthorized;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String description) {
