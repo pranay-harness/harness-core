@@ -1,7 +1,6 @@
 package io.harness.audit.entities;
 
 import io.harness.ModuleType;
-import io.harness.annotation.StoreIn;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
@@ -9,7 +8,6 @@ import io.harness.audit.beans.YamlDiff;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.ng.DbAliases;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.Resource.ResourceKeys;
 import io.harness.ng.core.common.beans.KeyValuePair;
@@ -40,7 +38,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "auditEvents", noClassnameStored = true)
 @Document("auditEvents")
 @TypeAlias("auditEvents")
-@StoreIn(DbAliases.NG_MANAGER)
 public class AuditEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotBlank String accountIdentifier;

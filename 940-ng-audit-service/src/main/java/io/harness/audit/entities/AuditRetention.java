@@ -1,9 +1,7 @@
 package io.harness.audit.entities;
 
-import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.ng.DbAliases;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -23,7 +21,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "auditRetentions", noClassnameStored = true)
 @Document("auditRetentions")
 @TypeAlias("auditRetentions")
-@StoreIn(DbAliases.NG_MANAGER)
 public class AuditRetention {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotBlank String accountId;
