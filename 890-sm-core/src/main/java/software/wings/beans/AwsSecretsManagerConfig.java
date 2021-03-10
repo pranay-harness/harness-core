@@ -88,8 +88,8 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> executionCapabilities =
-        Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-            getEncryptionServiceUrl(), maskingEvaluator));
+        new ArrayList<>(Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            getEncryptionServiceUrl(), maskingEvaluator)));
     if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());

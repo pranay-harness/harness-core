@@ -89,9 +89,9 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    List<ExecutionCapability> executionCapabilities =
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>(
         Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
-            region, maskingEvaluator));
+            region, maskingEvaluator)));
     if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
