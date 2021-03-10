@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.INDER;
 
+import static javax.ws.rs.client.Entity.entity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
@@ -26,7 +27,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WebHookService;
 import software.wings.utils.ResourceTestRule;
 
-import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.junit.Before;
@@ -65,7 +65,7 @@ public class WebHookResourceTest extends WingsBaseTest {
     Response response = resources.client()
                             .target("/webhooks/" + WEBHOOK_ID)
                             .request()
-                            .post(Entity.entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE));
+                            .post(entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE));
 
     assertThat(response).isNotNull();
     verify(WEBHOOK_SERVICE).execute(WEBHOOK_ID, webHookRequest);
@@ -83,7 +83,7 @@ public class WebHookResourceTest extends WingsBaseTest {
                             .target("/webhooks/" + WEBHOOK_ID)
                             .request()
                             .header(API_KEY_HEADER, API_KEY)
-                            .post(Entity.entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE));
+                            .post(entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE));
 
     assertThat(response).isNotNull();
     verify(WEBHOOK_SERVICE).execute(WEBHOOK_ID, webHookRequest);
@@ -101,7 +101,7 @@ public class WebHookResourceTest extends WingsBaseTest {
                            -> resources.client()
                                   .target("/webhooks/" + WEBHOOK_ID)
                                   .request()
-                                  .post(Entity.entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE)))
+                                  .post(entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE)))
         .getCause()
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Api Key cannot be empty");
