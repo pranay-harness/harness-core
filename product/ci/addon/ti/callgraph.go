@@ -33,7 +33,7 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 		relns = append(relns, data)
 	}
 	data := map[string]interface{}{
-		"nodes":     nodes,
+		"nodes": nodes,
 		"relns": relns,
 	}
 	return data

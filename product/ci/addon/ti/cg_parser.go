@@ -60,7 +60,7 @@ func parseInt(cgStr []string) (*Callgraph, error) {
 	return process(inp), nil
 }
 
-func process(inps []Input) (*Callgraph) {
+func process(inps []Input) *Callgraph {
 	var relns []Relation
 	var nodes []Node
 

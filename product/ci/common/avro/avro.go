@@ -20,7 +20,7 @@ type CgphSerialzer struct {
 	codec *goavro.Codec
 }
 
-// NewCgphSerialzer returns new CgphSerialzerr object with the codec
+// NewCgphSerialzer returns new CgphSerialzer object with the codec
 // based on the schema received in the input
 func NewCgphSerialzer(file string) (*CgphSerialzer, error) {
 	schema, err := ioutil.ReadFile(file)
