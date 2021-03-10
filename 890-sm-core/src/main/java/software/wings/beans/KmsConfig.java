@@ -5,6 +5,7 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_FILE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.security.encryption.SecretManagerType.KMS;
@@ -26,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -92,7 +94,7 @@ public class KmsConfig extends SecretManagerConfig {
     List<ExecutionCapability> executionCapabilities = new ArrayList<>(
         Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapabilityForKms(
             region, maskingEvaluator)));
-    if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
+    if (isNotEmpty(delegateSelectors)) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }

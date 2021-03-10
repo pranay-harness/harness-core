@@ -75,8 +75,8 @@ public class ManagerKmsEncryptor implements KmsEncryptor {
 
   @Override
   public boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
-    ValidateSecretManagerConfigurationTaskParameters parameters=ValidateSecretManagerConfigurationTaskParameters
-            .builder().encryptionConfig(encryptionConfig).build();
-    return managerEncryptorHelper.validateConfiguration(accountId,parameters);
+    ValidateSecretManagerConfigurationTaskParameters parameters =
+        ValidateSecretManagerConfigurationTaskParameters.builder().encryptionConfig(encryptionConfig).build();
+    return managerEncryptorHelper.validateConfiguration(accountId, parameters);
   }
 }

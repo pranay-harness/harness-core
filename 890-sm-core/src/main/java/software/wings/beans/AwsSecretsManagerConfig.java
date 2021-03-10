@@ -6,6 +6,7 @@ import static io.harness.beans.SecretManagerCapabilities.CREATE_INLINE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_REFERENCE_SECRET;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_FROM_SM;
 import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.utils.KmsUtils.generateKmsUrl;
 import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.security.encryption.EncryptionType.AWS_SECRETS_MANAGER;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -90,7 +92,7 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
     List<ExecutionCapability> executionCapabilities =
         new ArrayList<>(Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             getEncryptionServiceUrl(), maskingEvaluator)));
-    if (delegateSelectors != null && !delegateSelectors.isEmpty()) {
+    if (isNotEmpty(delegateSelectors)) {
       executionCapabilities.add(
           SelectorCapability.builder().selectors(delegateSelectors).selectorOrigin(TASK_SELECTORS).build());
     }

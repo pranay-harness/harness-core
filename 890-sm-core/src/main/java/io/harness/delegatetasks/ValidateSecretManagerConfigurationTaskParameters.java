@@ -7,19 +7,19 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionConfig;
-import lombok.Builder;
-import lombok.Getter;
 
 import java.util.List;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder
 public class ValidateSecretManagerConfigurationTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
-    private final EncryptedRecord encryptedRecord;
-    private final EncryptionConfig encryptionConfig;
+  private final EncryptedRecord encryptedRecord;
+  private final EncryptionConfig encryptionConfig;
 
-    @Override
-    public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-        return ((SecretManagerConfig) encryptionConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
-    }
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    return ((SecretManagerConfig) encryptionConfig).fetchRequiredExecutionCapabilities(maskingEvaluator);
+  }
 }

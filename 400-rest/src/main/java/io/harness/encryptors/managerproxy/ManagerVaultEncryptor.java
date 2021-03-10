@@ -165,9 +165,9 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
 
   @Override
   public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
-        ValidateSecretManagerConfigurationTaskParameters parameters=ValidateSecretManagerConfigurationTaskParameters
-            .builder().encryptionConfig(encryptionConfig).build();
-        return managerEncryptorHelper.validateConfiguration(accountId,parameters);
+    ValidateSecretManagerConfigurationTaskParameters parameters =
+        ValidateSecretManagerConfigurationTaskParameters.builder().encryptionConfig(encryptionConfig).build();
+    return managerEncryptorHelper.validateConfiguration(accountId, parameters);
   }
 
   @Override
