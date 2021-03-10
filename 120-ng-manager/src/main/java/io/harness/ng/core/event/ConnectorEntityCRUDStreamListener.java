@@ -8,13 +8,11 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESTORE_ACTION;
-import static io.harness.exception.WingsException.USER;
 
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.account.AccountEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
@@ -80,13 +78,7 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   }
 
   private boolean processAccountCreateEvent(AccountEntityChangeDTO accountEntityChangeDTO) {
-    try {
-      harnessSMManager.createHarnessSecretManager(accountEntityChangeDTO.getAccountId(), null, null);
-    } catch (DuplicateFieldException ex) {
-      log.error(String.format("Harness Secret Manager for accountIdentifier %s already exists",
-                    accountEntityChangeDTO.getAccountId()),
-          ex, USER);
-    }
+    harnessSMManager.createHarnessSecretManager(accountEntityChangeDTO.getAccountId(), null, null);
     return true;
   }
 
@@ -122,14 +114,8 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   }
 
   private boolean processOrganizationCreateEvent(OrganizationEntityChangeDTO organizationEntityChangeDTO) {
-    try {
-      harnessSMManager.createHarnessSecretManager(
-          organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier(), null);
-    } catch (DuplicateFieldException ex) {
-      log.error(String.format("Harness Secret Manager for accountIdentifier %s and orgIdentifier %s already exists",
-                    organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier()),
-          ex, USER);
-    }
+    harnessSMManager.createHarnessSecretManager(
+        organizationEntityChangeDTO.getAccountIdentifier(), organizationEntityChangeDTO.getIdentifier(), null);
     return true;
   }
 
@@ -165,17 +151,8 @@ public class ConnectorEntityCRUDStreamListener implements MessageListener {
   }
 
   private boolean processProjectCreateEvent(ProjectEntityChangeDTO projectEntityChangeDTO) {
-    try {
-      harnessSMManager.createHarnessSecretManager(projectEntityChangeDTO.getAccountIdentifier(),
-          projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
-    } catch (DuplicateFieldException ex) {
-      log.error(
-          String.format(
-              "Harness Secret Manager for accountIdentifier %s, orgIdentifier %s and projectIdentifier %s already exists",
-              projectEntityChangeDTO.getAccountIdentifier(), projectEntityChangeDTO.getOrgIdentifier(),
-              projectEntityChangeDTO.getIdentifier()),
-          ex, USER);
-    }
+    harnessSMManager.createHarnessSecretManager(projectEntityChangeDTO.getAccountIdentifier(),
+        projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
 
     ciDefaultEntityManager.createCIDefaultEntities(projectEntityChangeDTO.getAccountIdentifier(),
         projectEntityChangeDTO.getOrgIdentifier(), projectEntityChangeDTO.getIdentifier());
