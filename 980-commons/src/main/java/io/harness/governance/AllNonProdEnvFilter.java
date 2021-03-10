@@ -17,16 +17,4 @@ public class AllNonProdEnvFilter extends EnvironmentFilter {
   public AllNonProdEnvFilter(@JsonProperty("filterType") EnvironmentFilterType filterType) {
     super(filterType);
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("ALL_NON_PROD")
-  public static final class Yaml extends EnvironmentFilterYaml {
-    @Builder
-    public Yaml(@JsonProperty("filterType") EnvironmentFilterType environmentFilterType) {
-      super(environmentFilterType);
-    }
-
-    public Yaml() {}
-  }
 }

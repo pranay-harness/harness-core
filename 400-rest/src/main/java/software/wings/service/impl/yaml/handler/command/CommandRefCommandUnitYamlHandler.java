@@ -5,7 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
@@ -115,7 +115,7 @@ public class CommandRefCommandUnitYamlHandler extends CommandUnitYamlHandler<Com
   }
 
   @Override
-  public Command toBean(AbstractCommandUnit.Yaml yaml) {
+  public Command toBean(AbstractCommandUnitYaml yaml) {
     Command commandRef = super.toBean(yaml);
     commandRef.setReferenceId(yaml.getName());
     return commandRef;

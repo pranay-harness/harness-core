@@ -88,18 +88,4 @@ public class PipelineStage {
       this.runtimeInputs = runtimeInputs;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class WorkflowVariable extends NameValuePair.AbstractYaml {
-    String entityType;
-
-    @Builder
-    public WorkflowVariable(
-        String entityType, String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamls) {
-      super(name, value, valueType, allowedValueYamls);
-      this.entityType = entityType;
-    }
-  }
 }

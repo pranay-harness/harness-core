@@ -24,7 +24,7 @@ public class AwsLambdaCommandUnit extends AbstractCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("AWS_LAMBDA")
-  public static class Yaml extends AbstractCommandUnit.Yaml {
+  public static class Yaml extends AbstractCommandUnitYaml {
     public Yaml() {
       super(CommandUnitType.AWS_LAMBDA.name());
     }

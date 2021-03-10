@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.DownloadArtifactCommandUnit;
 import software.wings.beans.command.DownloadArtifactCommandUnit.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -45,7 +45,7 @@ public class DownloadArtifactCommandUnitYamlHandler
   }
 
   @Override
-  public DownloadArtifactCommandUnit toBean(AbstractCommandUnit.Yaml yaml) {
+  public DownloadArtifactCommandUnit toBean(AbstractCommandUnitYaml yaml) {
     DownloadArtifactCommandUnit.Yaml downloadYaml = (DownloadArtifactCommandUnit.Yaml) yaml;
     DownloadArtifactCommandUnit downloadArtifactCommandUnit = super.toBean(yaml);
     downloadArtifactCommandUnit.setArtifactVariableName(downloadYaml.getArtifactVariableName());

@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, property = "filterType", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = AllAppFilter.Yaml.class, name = "ALL")
+  @JsonSubTypes.Type(value = AllAppFilterYaml.class, name = "ALL")
   , @JsonSubTypes.Type(value = CustomAppFilter.Yaml.class, name = "CUSTOM")
 })
 public abstract class ApplicationFilterYaml extends BaseYaml {

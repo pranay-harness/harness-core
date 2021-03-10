@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.shell.ScriptType;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnitAbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
@@ -84,7 +84,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
   }
 
   @Override
-  public B toBean(AbstractCommandUnit.Yaml yaml) {
+  public B toBean(AbstractCommandUnitYaml yaml) {
     B bean = super.toBean(yaml);
     final ExecCommandUnitAbstractYaml execYaml = (ExecCommandUnitAbstractYaml) yaml;
     ScriptType scriptType = isEmpty(execYaml.getScriptType())
