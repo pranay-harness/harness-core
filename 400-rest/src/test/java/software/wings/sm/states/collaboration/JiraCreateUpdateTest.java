@@ -86,6 +86,10 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   private static final String OPTIONVALUE_2 = "optionvalue2";
   private static final String OPTION_ID_2 = "option_id_2";
   private static final String OPTION_NAME = "Option Name";
+  private static final String UNKNOWN = "UNKNOWN";
+  private static final String TO_DO = "To Do";
+  private static final String MULTISELECT = "multiselect";
+  private static final String CUSTOMFIELD_OPTION_NUMBER = "customfield_option_number";
   @Mock private ExecutionContextImpl context;
   @Mock private JiraHelperService jiraHelperService;
   @Mock private SettingsService settingsService;
@@ -279,12 +283,19 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   public void shouldReturnCustomFieldIdsToNamesMap() {
     jiraCreateUpdateState.setProject("PN");
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    customFields.put(MULTI, null);
+    customFields.put(CUSTOMFIELD_OPTION, null);
+    customFields.put(CUSTOMFIELD_OPTION_2, null);
+    customFields.put(CUSTOMFIELD_OPTION_3, null);
+    customFields.put(CUSTOMFIELD_OPTION_NUMBER, null);
+    jiraCreateUpdateState.setCustomFields(customFields);
     Map<String, String> map = new HashMap<>();
     map.put(MULTI, "Multiselect");
     map.put(CUSTOMFIELD_OPTION, OPTION_NAME);
-    map.put(CUSTOMFIELD_OPTION_2, OPTION_NAME);
-    map.put(CUSTOMFIELD_OPTION_3, OPTION_NAME);
-    map.put("customfield_option_number", "Number");
+    map.put(CUSTOMFIELD_OPTION_2, "Option Name2");
+    map.put(CUSTOMFIELD_OPTION_3, "Option Name3");
+    map.put(CUSTOMFIELD_OPTION_NUMBER, "Number");
 
     assertThat(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse)).isEqualTo(map);
   }
@@ -314,7 +325,8 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     map.put(CUSTOMFIELD_OPTION, option);
     map.put(CUSTOMFIELD_OPTION_2, option2);
 
-    assertThat(jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse)).isEqualTo(map);
+    assertThat(jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()))
+        .isEqualTo(map);
   }
 
   @Test
@@ -337,7 +349,28 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     map.put(MULTI, multi);
     map.put(CUSTOMFIELD_OPTION_2, option);
 
-    assertThat(jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse)).isEqualTo(map);
+    assertThat(jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()))
+        .isEqualTo(map);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldReturnCustomFieldsValuesToIdMapForOnlyUsedCustomFieldsWithTemplatizedRequiredFields() {
+    jiraCreateUpdateState.setProject("PN");
+    jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
+    Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
+    customFields.put("Multiselect", null);
+    jiraCreateUpdateState.setCustomFields(customFields);
+    Map<String, Map<String, String>> map = new HashMap<>();
+    Map<String, String> multi = new HashMap<>();
+    multi.put(MULTISELECTNAME, MULTISELECT_ID);
+    multi.put(MULTISELECTNAME_2, MULTISELECT_ID_2);
+    map.put(MULTI, multi);
+
+    assertThat(
+        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.singletonList("Multiselect")))
+        .isEqualTo(map);
   }
 
   @Test
@@ -351,10 +384,11 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     customFields.put(CUSTOMFIELD_OPTION_3, null);
     jiraCreateUpdateState.setCustomFields(customFields);
 
-    assertThatThrownBy(() -> jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse))
+    assertThatThrownBy(
+        () -> jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()))
         .isInstanceOf(HarnessJiraException.class)
         .hasMessage(
-            "Can not process value for field [Option Name] since there are multiple values with the same name.");
+            "Can not process value for field [Option Name3] since there are multiple values with the same name.");
   }
 
   @Test
@@ -371,7 +405,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.resolveCustomFieldsVars(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
-        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse));
+        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()));
     String resolvedExpression = jiraCreateUpdateState.getCustomFieldsMap().get(CUSTOMFIELD_OPTION).getFieldValue();
 
     assertThat(resolvedExpression).isEqualTo(OPTION_ID_2);
@@ -385,13 +419,13 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
     JiraCustomFieldValue customFieldMultiValue = new JiraCustomFieldValue();
-    customFieldMultiValue.setFieldType("multiselect");
+    customFieldMultiValue.setFieldType(MULTISELECT);
     customFieldMultiValue.setFieldValue("MultiselectName1");
     customFields.put(MULTI, customFieldMultiValue);
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.resolveCustomFieldsVars(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
-        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse));
+        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()));
     String resolvedExpression = jiraCreateUpdateState.getCustomFieldsMap().get(MULTI).getFieldValue();
 
     assertThat(resolvedExpression).isEqualTo(MULTISELECT_ID);
@@ -405,13 +439,13 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
     JiraCustomFieldValue multipleCustomFieldMultiValue = new JiraCustomFieldValue();
-    multipleCustomFieldMultiValue.setFieldType("multiselect");
+    multipleCustomFieldMultiValue.setFieldType(MULTISELECT);
     multipleCustomFieldMultiValue.setFieldValue("MultiselectName1,  multiselectName2 ");
     customFields.put(MULTI, multipleCustomFieldMultiValue);
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.resolveCustomFieldsVars(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
-        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse));
+        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()));
     String resolvedExpression = jiraCreateUpdateState.getCustomFieldsMap().get(MULTI).getFieldValue();
 
     assertThat(resolvedExpression).isEqualTo("multiselect_id_1,multiselect_id_2");
@@ -427,13 +461,14 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     JiraCustomFieldValue numberTypeField = new JiraCustomFieldValue();
     numberTypeField.setFieldType("number");
     numberTypeField.setFieldValue("3");
-    customFields.put("customfield_option_number", numberTypeField);
+    customFields.put(CUSTOMFIELD_OPTION_NUMBER, numberTypeField);
     jiraCreateUpdateState.setCustomFields(customFields);
 
-    assertThatCode(()
-                       -> jiraCreateUpdateState.resolveCustomFieldsVars(
-                           jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
-                           jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse)))
+    assertThatCode(
+        ()
+            -> jiraCreateUpdateState.resolveCustomFieldsVars(
+                jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
+                jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList())))
         .doesNotThrowAnyException();
   }
 
@@ -445,21 +480,21 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
     JiraCustomFieldValue multipleCustomFieldMultiValue = new JiraCustomFieldValue();
-    multipleCustomFieldMultiValue.setFieldType("multiselect");
+    multipleCustomFieldMultiValue.setFieldType(MULTISELECT);
     multipleCustomFieldMultiValue.setFieldValue("Not Allowed");
     customFields.put(MULTI, multipleCustomFieldMultiValue);
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.resolveCustomFieldsVars(jiraCreateUpdateState.mapCustomFieldsIdsToNames(createMetaResponse),
-        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse));
+        jiraCreateUpdateState.mapCustomFieldsValuesToId(createMetaResponse, Collections.emptyList()));
   }
 
   @Test(expected = HarnessJiraException.class)
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldFailProjectValidation() {
-    jiraCreateUpdateState.setProject("UNKNOWN");
-    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setProject(UNKNOWN);
+    jiraCreateUpdateState.setStatus(TO_DO);
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     jiraCreateUpdateState.setPriority("High");
 
@@ -471,7 +506,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFailStatusValidation() {
     jiraCreateUpdateState.setProject("PN");
-    jiraCreateUpdateState.setStatus("UNKNOWN");
+    jiraCreateUpdateState.setStatus(UNKNOWN);
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     jiraCreateUpdateState.setPriority("High");
 
@@ -483,8 +518,8 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFailIssueTypeValidation() {
     jiraCreateUpdateState.setProject("PN");
-    jiraCreateUpdateState.setStatus("To Do");
-    jiraCreateUpdateState.setIssueType("UNKNOWN");
+    jiraCreateUpdateState.setStatus(TO_DO);
+    jiraCreateUpdateState.setIssueType(UNKNOWN);
     jiraCreateUpdateState.setPriority("High");
 
     jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
@@ -495,9 +530,9 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldFailPriorityValidation() {
     jiraCreateUpdateState.setProject("PN");
-    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setStatus(TO_DO);
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
-    jiraCreateUpdateState.setPriority("UNKNOWN");
+    jiraCreateUpdateState.setPriority(UNKNOWN);
 
     jiraCreateUpdateState.validateRequiredFields(createMetaResponse, context);
   }
@@ -507,7 +542,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldPassRequiredFieldsValidation() {
     jiraCreateUpdateState.setProject("PN");
-    jiraCreateUpdateState.setStatus("To Do");
+    jiraCreateUpdateState.setStatus(TO_DO);
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     jiraCreateUpdateState.setPriority("High");
 
@@ -524,7 +559,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
     JiraCustomFieldValue customFieldValue = new JiraCustomFieldValue();
     customFieldValue.setFieldValue("Some Value");
-    customFields.put("UNKNOWN", customFieldValue);
+    customFields.put(UNKNOWN, customFieldValue);
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
@@ -544,7 +579,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
-    assertThat(jiraCreateUpdateState.getCustomFieldsMap().get(MULTI).getFieldType()).isEqualTo("multiselect");
+    assertThat(jiraCreateUpdateState.getCustomFieldsMap().get(MULTI).getFieldType()).isEqualTo(MULTISELECT);
   }
 
   @Test
@@ -574,7 +609,7 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
 
     Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
     JiraCustomFieldValue customFieldValue = new JiraCustomFieldValue();
-    customFields.put(OPTION_NAME, customFieldValue);
+    customFields.put("Option Name 3", customFieldValue);
     jiraCreateUpdateState.setCustomFields(customFields);
 
     jiraCreateUpdateState.inferCustomFieldsTypes(createMetaResponse);
@@ -681,8 +716,8 @@ public class JiraCreateUpdateTest extends WingsBaseTest {
     when(context.renderExpression(jiraCreateUpdateState.getProject())).thenReturn("PN");
     jiraCreateUpdateState.setIssueType(ISSUE_TYPE);
     when(context.renderExpression(jiraCreateUpdateState.getIssueType())).thenReturn(ISSUE_TYPE);
-    jiraCreateUpdateState.setStatus("To Do");
-    when(context.renderExpression(jiraCreateUpdateState.getStatus())).thenReturn("To Do");
+    jiraCreateUpdateState.setStatus(TO_DO);
+    when(context.renderExpression(jiraCreateUpdateState.getStatus())).thenReturn(TO_DO);
     Map<String, JiraCustomFieldValue> customFields = new HashMap<>();
     JiraCustomFieldValue customFieldOptionValue = new JiraCustomFieldValue();
     customFieldOptionValue.setFieldType("option");
