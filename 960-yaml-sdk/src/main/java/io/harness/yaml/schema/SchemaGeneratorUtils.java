@@ -3,7 +3,6 @@ package io.harness.yaml.schema;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.jackson.HarnessJacksonModule;
 
@@ -73,6 +72,5 @@ public class SchemaGeneratorUtils {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());
     mapper.registerModule(new HarnessJacksonModule());
-    mapper.registerModule(new NGHarnessJacksonModule());
   }
 }
