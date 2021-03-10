@@ -3,7 +3,9 @@ package io.harness.ccm.views.entities;
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -12,7 +14,9 @@ import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -24,9 +28,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@CdIndex(name = "account_enabled_type",
-    fields = { @Field("accountId")
-               , @Field("enabled"), @Field("name"), @Field("viewsId"), @Field("type") })
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CEReportScheduleKeys")
@@ -35,6 +36,19 @@ import org.mongodb.morphia.annotations.Id;
 @StoreIn("events")
 public class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
                                          CreatedByAware, UpdatedByAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("account_enabled_type")
+                 .field("accountId")
+                 .field("enabled")
+                 .field("name")
+                 .field("viewsId")
+                 .field("type")
+                 .build())
+        .build();
+  }
+
   @Id String uuid;
   @NotEmpty(message = "Name for report schedule must not be empty")
   @Size(min = 1, max = 32, message = ": for report schedule name must be between 1 and 32 characters long")
