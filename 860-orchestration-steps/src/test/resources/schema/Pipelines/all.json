@@ -326,6 +326,102 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "NotificationChannelWrapper": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Email"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsEmailChannel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MsTeams"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsMSTeamChannel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "PagerDuty"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsPagerDutyChannel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Slack"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsSlackChannel"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "NotificationRules": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notificationMethod": {
+          "$ref": "#/definitions/NotificationChannelWrapper"
+        },
+        "pipelineEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PipelineEvent"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "OnFailureConfig": {
       "type": "object",
       "required": [
@@ -454,6 +550,32 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PipelineEvent": {
+      "type": "object",
+      "properties": {
+        "forStages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "AllEvents",
+            "PipelineStart",
+            "PipelineSuccess",
+            "PipelineFailed",
+            "PipelinePaused",
+            "StageSuccess",
+            "StageFailed",
+            "StageStart",
+            "StepFailed"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PipelineInfoConfig": {
       "type": "object",
       "required": [
@@ -472,6 +594,12 @@
         },
         "name": {
           "type": "string"
+        },
+        "notificationRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NotificationRules"
+          }
         },
         "properties": {
           "$ref": "#/definitions/NGProperties"
@@ -495,6 +623,105 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsEmailChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "recipients": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsMSTeamChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "msTeamKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsNotificationChannel": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsPagerDutyChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "integrationKey": {
+              "type": "string"
+            },
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsSlackChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "webhookUrl": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "RetryFailureActionConfig": {

@@ -93,14 +93,17 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
   protected void addFieldToPropertiesMapUnderStep(
       YamlField fieldNode, YamlNode fieldParentNode, Map<String, YamlProperties> yamlPropertiesMap) {
     String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName;
-    if (YamlUtils.findParentNode(fieldParentNode, YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
-      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.ROLLBACK_STEPS);
-    } else {
-      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.STEPS);
-    }
+    String localName =
+        YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), findFieldNameForLocalName(fieldParentNode));
 
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+  }
+
+  protected String findFieldNameForLocalName(YamlNode fieldParentNode) {
+    if (YamlUtils.findParentNode(fieldParentNode, YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
+      return YAMLFieldNameConstants.ROLLBACK_STEPS;
+    }
+    return YAMLFieldNameConstants.STEPS;
   }
 }

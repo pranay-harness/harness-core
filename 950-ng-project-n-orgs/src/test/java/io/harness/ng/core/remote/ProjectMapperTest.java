@@ -26,7 +26,6 @@ public class ProjectMapperTest extends CategoryTest {
   @Before
   public void setUp() {
     projectDTO = ProjectDTO.builder()
-                     .accountIdentifier(randomAlphabetic(10))
                      .orgIdentifier(randomAlphabetic(10))
                      .identifier(randomAlphabetic(10))
                      .name(randomAlphabetic(10))
@@ -50,7 +49,6 @@ public class ProjectMapperTest extends CategoryTest {
   public void testToProject() {
     Project fromDTO = ProjectMapper.toProject(projectDTO);
     assertNotNull(fromDTO);
-    assertEquals(projectDTO.getAccountIdentifier(), fromDTO.getAccountIdentifier());
     assertEquals(projectDTO.getOrgIdentifier(), fromDTO.getOrgIdentifier());
     assertEquals(projectDTO.getIdentifier(), fromDTO.getIdentifier());
     assertEquals(projectDTO.getName(), fromDTO.getName());
@@ -65,7 +63,6 @@ public class ProjectMapperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testWriteDTO() {
     ProjectDTO fromProject = ProjectMapper.writeDTO(project);
-    assertEquals(project.getAccountIdentifier(), fromProject.getAccountIdentifier());
     assertEquals(project.getOrgIdentifier(), fromProject.getOrgIdentifier());
     assertEquals(project.getIdentifier(), fromProject.getIdentifier());
     assertEquals(project.getName(), fromProject.getName());

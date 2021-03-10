@@ -76,6 +76,8 @@ aeriform("//350-event-xxxxxxxxtests")
 
 aeriform("//360-cg-manager:module")
 
+aeriform("//370-users-syncbridge:module")
+
 aeriform("//380-cg-graphql:module")
 
 aeriform("//380-cg-graphql:tests")
@@ -188,6 +190,10 @@ aeriform("//900-access-control-service:module")
 
 aeriform("//900-access-control-service:tests")
 
+aeriform("//902-aggregator-module:module")
+
+aeriform("//902-aggregator-module:tests")
+
 aeriform("//903-decision-module:module")
 
 aeriform("//903-decision-module:tests")
@@ -252,6 +258,8 @@ aeriform("//950-git-sync-sdk:module")
 
 aeriform("//950-log-client:module")
 
+aeriform("//950-log-client:tests")
+
 aeriform("//950-ng-core:module")
 
 aeriform("//950-ng-core:tests")
@@ -279,6 +287,8 @@ aeriform("//955-delegate-beans:module")
 aeriform("//955-filters-sdk:module")
 
 aeriform("//955-filters-sdk:tests")
+
+aeriform("//955-outbox-sdk:module")
 
 aeriform("//955-setup-usage-sdk:module")
 
@@ -311,6 +321,8 @@ aeriform("//960-recaster:tests")
 aeriform("//960-yaml-sdk:module")
 
 aeriform("//960-yaml-sdk:tests")
+
+aeriform("//965-git-sync-commons:module")
 
 aeriform("//970-api-services-beans:module")
 

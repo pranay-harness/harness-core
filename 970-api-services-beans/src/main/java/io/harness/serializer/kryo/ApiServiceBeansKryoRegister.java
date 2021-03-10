@@ -74,6 +74,7 @@ import io.harness.shell.ShellExecutionData;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
+import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
 
@@ -266,5 +267,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(CustomSourceFile.class, 1450);
 
     kryo.register(AdditionalMetadata.class, 72101);
+    kryo.register(AwsCrossAccountAttributes.class, 7203);
   }
 }

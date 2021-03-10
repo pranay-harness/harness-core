@@ -276,10 +276,10 @@ public class WebhookEventPayloadParser {
 
   @VisibleForTesting
   GitProvider getBitbucketProvider(Set<String> headerKeys) {
-    if (isBitbucketServer(headerKeys)) {
-      return GitProvider.STASH;
-    } else if (containsHeaderKey(headerKeys, BITBUCKET_CLOUD_HEADER_KEY)) {
+    if (containsHeaderKey(headerKeys, BITBUCKET_CLOUD_HEADER_KEY)) {
       return GitProvider.BITBUCKET;
+    } else if (isBitbucketServer(headerKeys)) {
+      return GitProvider.STASH;
     } else {
       StringBuilder stringBuilder = new StringBuilder(
           "TRIGGER: Could not determine if source is Bitbucket Cloud or Server, defaulting to Cloud. Please verify header again. ");

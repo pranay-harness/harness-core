@@ -115,6 +115,9 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getWorkload()).isEqualTo("Deployment/test-scale-count-deployment");
     assertThat(scaleRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(scaleRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+
+    // We need this null as K8sScaleStep does not depend upon Manifests
+    assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
   @Test
@@ -162,6 +165,9 @@ public class K8sScaleStepTest extends CategoryTest {
     assertThat(scaleRequest.getWorkload()).isEqualTo("Deployment/test-scale-percentage-deployment");
     assertThat(scaleRequest.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(scaleRequest.getK8sInfraDelegateConfig()).isEqualTo(infraDelegateConfig);
+
+    // We need this null as K8sScaleStep does not depend upon Manifests
+    assertThat(scaleRequest.getManifestDelegateConfig()).isNull();
   }
 
   @Test

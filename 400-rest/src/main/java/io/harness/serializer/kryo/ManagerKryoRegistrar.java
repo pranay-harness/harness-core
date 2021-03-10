@@ -158,7 +158,6 @@ import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AuthToken;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
@@ -1478,7 +1477,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EntityVersion.class, 71109);
     kryo.register(EntityVersion.ChangeType.class, 71110);
     kryo.register(ArtifactStreamSummary.class, 7202);
-    kryo.register(AwsCrossAccountAttributes.class, 7203);
     kryo.register(AwsEcsListClusterServicesRequest.class, 7206);
     kryo.register(AwsEcsListClusterServicesResponse.class, 7207);
     kryo.register(Deployment.class, 7208);

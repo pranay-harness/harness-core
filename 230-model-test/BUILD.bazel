@@ -3,6 +3,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 java_library(
     name = "module",
+    testonly = True,
     srcs = glob([
         "src/main/**/*.java",
     ]),
@@ -38,6 +39,7 @@ java_library(
 
 java_binary(
     name = "app",
+    testonly = True,
     main_class = "io.harness.testframework.framework.ManagerExecutor",
     runtime_deps = [
         ":module",

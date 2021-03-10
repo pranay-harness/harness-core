@@ -1,9 +1,10 @@
 package software.wings.beans.appmanifest;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.manifest.CustomSourceConfig;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
@@ -11,21 +12,18 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
-import software.wings.yaml.BaseEntityYaml;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@NgUniqueIndex(
-    name = "appManifestIdx", fields = { @Field("appId")
-                                        , @Field("envId"), @Field("serviceId"), @Field("kind") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -33,6 +31,19 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 public class ApplicationManifest extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("appManifestIdx")
+                 .unique(true)
+                 .field(BaseKeys.appId)
+                 .field(ApplicationManifestKeys.envId)
+                 .field(ApplicationManifestKeys.serviceId)
+                 .field(ApplicationManifestKeys.kind)
+                 .build())
+        .build();
+  }
+
   public static final String ID = "_id";
 
   @FdIndex private String accountId;
