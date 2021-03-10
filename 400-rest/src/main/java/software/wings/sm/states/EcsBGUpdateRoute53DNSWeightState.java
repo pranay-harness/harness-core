@@ -4,7 +4,9 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Activity.Type.Command;
@@ -23,6 +25,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.Cd1SetupFields;
@@ -72,6 +75,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject protected EcsStateHelper ecsStateHelper;
 
   public EcsBGUpdateRoute53DNSWeightState(String name) {
@@ -109,10 +113,15 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
     if (stateExecutionData != null) {
       stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
     }
-    return ExecutionResponse.builder()
-        .errorMessage(executionResponse.getErrorMessage())
-        .executionStatus(executionStatus)
-        .build();
+
+    ExecutionResponse.ExecutionResponseBuilder builder =
+        ExecutionResponse.builder().errorMessage(executionResponse.getErrorMessage()).executionStatus(executionStatus);
+    if (null != executionResponse.getEcsCommandResponse()
+        && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -167,6 +176,7 @@ public class EcsBGUpdateRoute53DNSWeightState extends State {
             .oldServiceDiscoveryArn(containerServiceElement.getEcsBGSetupData().getOldServiceDiscoveryArn())
             .newServiceDiscoveryArn(containerServiceElement.getEcsBGSetupData().getNewServiceDiscoveryArn())
             .timeout(containerServiceElement.getServiceSteadyStateTimeout())
+            .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, application.getAccountId()))
             .build();
 
     EcsRoute53WeightUpdateStateExecutionData executionData =
