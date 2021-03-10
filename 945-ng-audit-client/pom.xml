@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>940-secret-manager-client</artifactId>
+    <artifactId>945-ng-audit-client</artifactId>
     <dependencies>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
