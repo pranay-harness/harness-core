@@ -19,7 +19,6 @@ import lombok.experimental.UtilityClass;
 public class ProjectMapper {
   public static Project toProject(ProjectDTO createProjectDTO) {
     return Project.builder()
-        .accountIdentifier(createProjectDTO.getAccountIdentifier())
         .orgIdentifier(createProjectDTO.getOrgIdentifier())
         .identifier(createProjectDTO.getIdentifier())
         .name(createProjectDTO.getName())
@@ -33,7 +32,6 @@ public class ProjectMapper {
 
   public static ProjectDTO writeDTO(Project project) {
     return ProjectDTO.builder()
-        .accountIdentifier(project.getAccountIdentifier())
         .orgIdentifier(project.getOrgIdentifier())
         .identifier(project.getIdentifier())
         .name(project.getName())

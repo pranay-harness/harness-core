@@ -73,7 +73,6 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Organization create(String accountIdentifier, OrganizationDTO organizationDTO) {
-    validateCreateOrganizationRequest(accountIdentifier, organizationDTO);
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     try {
@@ -141,7 +140,7 @@ public class OrganizationServiceImpl implements OrganizationService {
 
   @Override
   public Organization update(String accountIdentifier, String identifier, OrganizationDTO organizationDTO) {
-    validateUpdateOrganizationRequest(accountIdentifier, identifier, organizationDTO);
+    validateUpdateOrganizationRequest(identifier, organizationDTO);
     Optional<Organization> optionalOrganization = get(accountIdentifier, identifier);
 
     if (optionalOrganization.isPresent()) {
@@ -233,13 +232,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     return success;
   }
 
-  private void validateCreateOrganizationRequest(String accountIdentifier, OrganizationDTO organization) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
-  }
-
-  private void validateUpdateOrganizationRequest(
-      String accountIdentifier, String identifier, OrganizationDTO organization) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, organization.getAccountIdentifier())), true);
+  private void validateUpdateOrganizationRequest(String identifier, OrganizationDTO organization) {
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, organization.getIdentifier())), false);
   }
 }
