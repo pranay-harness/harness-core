@@ -12,8 +12,6 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProv
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collection;
-import java.util.Collections;
 
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)
@@ -32,8 +30,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      configBuilder.delegateSelector(Collections.singleton(String.valueOf(input.getDelegateSelector())));
-//      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
+      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
@@ -65,8 +62,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      config.getDelegateSelector().add(String.valueOf(input.getDelegateSelector()));
-//      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
+      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
