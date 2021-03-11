@@ -87,6 +87,8 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
           "Task has expired. It wasn't picked up by any delegate or delegate did not have enough time to finish the execution.");
     }
 
+    // throw exception here
+
     log.info("Deserialize and return the response for task {}", taskId);
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
   }

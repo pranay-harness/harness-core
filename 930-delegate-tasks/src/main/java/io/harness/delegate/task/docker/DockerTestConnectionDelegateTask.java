@@ -22,6 +22,11 @@ public class DockerTestConnectionDelegateTask extends AbstractDelegateRunnableTa
   private static final String EMPTY_STR = "";
   @Inject private DockerValidationHandler dockerValidationHandler;
 
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
+
   public DockerTestConnectionDelegateTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
       BooleanSupplier preExecute) {

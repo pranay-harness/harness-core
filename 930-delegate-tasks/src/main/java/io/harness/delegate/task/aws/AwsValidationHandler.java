@@ -1,8 +1,5 @@
 package io.harness.delegate.task.aws;
 
-import static io.harness.aws.AwsExceptionHandler.handleAmazonClientException;
-import static io.harness.aws.AwsExceptionHandler.handleAmazonServiceException;
-
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsConfig;
 import io.harness.beans.DecryptableEntity;
@@ -13,11 +10,10 @@ import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsValidationParams;
 import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
@@ -68,10 +64,12 @@ public class AwsValidationHandler implements ConnectorValidationHandler {
                    .testedAt(System.currentTimeMillis())
                    .build();
 
-    } catch (AmazonEC2Exception amazonEC2Exception) {
-      handleAmazonServiceException(amazonEC2Exception);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
+      //    } catch (AmazonEC2Exception amazonEC2Exception) {
+      //      handleAmazonServiceException(amazonEC2Exception);
+      //    } catch (AmazonClientException amazonClientException) {
+      //      handleAmazonClientException(amazonClientException);
+    } catch (RuntimeException runtimeException) {
+      throw new InvalidRequestException("failure", runtimeException);
     }
     return result;
   }

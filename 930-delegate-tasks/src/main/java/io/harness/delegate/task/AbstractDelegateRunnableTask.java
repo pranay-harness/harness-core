@@ -18,6 +18,7 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.ThirdPartyApiCallLogDetails;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.exceptionhandler.DelegateExceptionManager;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.exception.WingsException;
@@ -74,6 +75,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     }
   }
 
+  public boolean isSupportingErrorFramework() {
+    return false;
+  }
+
   @SuppressWarnings("PMD")
   private void runDelegateTask() {
     if (!preExecute.getAsBoolean()) {
@@ -124,9 +129,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
-      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-                                .errorMessage(ExceptionUtils.getMessage(exception))
-                                .build());
+      //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
+      //                                .errorMessage(ExceptionUtils.getMessage(exception))
+      //                                .build());
+      taskResponse.response(DelegateExceptionManager.getResponseData(exception, errorNotifyResponseDataBuilder));
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
       log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
