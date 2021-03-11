@@ -20,7 +20,7 @@ import lombok.Value;
 public class QLUpdateGcpCloudProviderInput {
   private RequestField<String> name;
   private RequestField<String> serviceAccountKeySecretId;
-  private RequestField<Set<String>> delegateSelector;
+  private RequestField<String> delegateSelector;
   private RequestField<Boolean> useDelegate;
   private RequestField<Boolean> skipValidation;
 }
