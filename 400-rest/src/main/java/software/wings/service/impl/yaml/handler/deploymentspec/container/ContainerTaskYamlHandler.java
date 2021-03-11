@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Arrays.asList;
 
 import software.wings.beans.container.ContainerDefinition;
+import software.wings.beans.container.ContainerDefinitionYaml;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -73,8 +74,7 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
       List<ContainerDefinition> containerDefinitions = bean.getContainerDefinitions();
       if (isNotEmpty(containerDefinitions)) {
         ContainerDefinition containerDefinition = containerDefinitions.get(0);
-        ContainerDefinition.Yaml containerDefYaml =
-            containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());
+        ContainerDefinitionYaml containerDefYaml = containerDefYamlHandler.toYaml(containerDefinition, bean.getAppId());
         yaml.setContainerDefinition(containerDefYaml);
       }
     }

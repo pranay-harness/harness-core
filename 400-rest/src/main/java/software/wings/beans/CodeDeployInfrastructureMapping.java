@@ -48,31 +48,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
     throw new UnsupportedOperationException();
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private String region;
-    private String applicationName;
-    private String deploymentGroup;
-    private String deploymentConfig;
-    private String hostNameConvention;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String region,
-        String applicationName, String deploymentGroup, String deploymentConfig, String hostNameConvention,
-        Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.region = region;
-      this.applicationName = applicationName;
-      this.deploymentGroup = deploymentGroup;
-      this.deploymentConfig = deploymentConfig;
-      this.hostNameConvention = hostNameConvention;
-    }
-  }
-
   @SchemaIgnore
   @Override
   @Attributes(title = "Connection Type")

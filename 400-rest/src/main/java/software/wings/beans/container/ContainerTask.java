@@ -155,10 +155,10 @@ public abstract class ContainerTask extends DeploymentSpecification implements A
   @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends DeploymentSpecification.Yaml {
     private String advancedConfig;
-    private ContainerDefinition.Yaml containerDefinition;
+    private ContainerDefinitionYaml containerDefinition;
 
     protected Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
+        String type, String harnessApiVersion, String advancedConfig, ContainerDefinitionYaml containerDefinition) {
       super(type, harnessApiVersion);
       this.advancedConfig = advancedConfig;
       this.containerDefinition = containerDefinition;

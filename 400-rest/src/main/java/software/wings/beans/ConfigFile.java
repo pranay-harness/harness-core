@@ -200,36 +200,4 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   public void setDecrypted(boolean decrypted) {
     //
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseEntityYaml {
-    private String targetFilePath;
-    private boolean encrypted;
-    private String fileName;
-    private String description;
-    private String checksum;
-    private String checksumType;
-    private boolean targetToAllEnv;
-    private List<String> targetEnvs = new ArrayList<>();
-
-    public Yaml(String harnessApiVersion) {
-      super(YamlType.CONFIG_FILE.name(), harnessApiVersion);
-    }
-
-    @Builder
-    public Yaml(String harnessApiVersion, String targetFilePath, boolean encrypted, String fileName, String description,
-        String checksum, String checksumType, boolean targetToAllEnv, List<String> targetEnvs) {
-      super(YamlType.CONFIG_FILE.name(), harnessApiVersion);
-      this.targetFilePath = targetFilePath;
-      this.encrypted = encrypted;
-      this.fileName = fileName;
-      this.description = description;
-      this.checksum = checksum;
-      this.checksumType = checksumType;
-      this.targetToAllEnv = targetToAllEnv;
-      this.targetEnvs = targetEnvs;
-    }
-  }
 }

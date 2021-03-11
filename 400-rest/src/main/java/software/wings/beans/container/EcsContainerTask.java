@@ -479,7 +479,7 @@ public class EcsContainerTask extends ContainerTask {
   public static class Yaml extends ContainerTask.Yaml {
     @Builder
     public Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
+        String type, String harnessApiVersion, String advancedConfig, ContainerDefinitionYaml containerDefinition) {
       super(type, harnessApiVersion, advancedConfig, containerDefinition);
     }
   }
