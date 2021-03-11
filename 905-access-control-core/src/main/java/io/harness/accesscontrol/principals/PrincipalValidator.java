@@ -1,11 +1,11 @@
 package io.harness.accesscontrol.principals;
 
-import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.common.validation.ValidationResult;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public interface PrincipalValidator {
   PrincipalType getPrincipalType();
-  void validatePrincipal(@NotNull @Valid Principal principal, @NotNull @Valid Scope scope);
+  ValidationResult validatePrincipal(@NotNull @Valid Principal principal);
 }

@@ -3,9 +3,9 @@ package io.harness.accesscontrol.roleassignments;
 import static lombok.AccessLevel.PRIVATE;
 
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidator;
-import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -32,7 +32,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class RoleAssignmentServiceImpl implements RoleAssignmentService {
-  ScopeService scopeService;
   RoleAssignmentDao roleAssignmentDao;
   RoleAssignmentValidator roleAssignmentValidator;
   TransactionTemplate transactionTemplate;
@@ -52,8 +51,17 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
 
   @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
-    Scope scope = scopeService.buildScopeFromScopeIdentifier(roleAssignment.getScopeIdentifier());
-    roleAssignmentValidator.validate(roleAssignment, scope);
+    RoleAssignmentValidationResult result = roleAssignmentValidator.validate(
+        RoleAssignmentValidationRequest.builder().roleAssignment(roleAssignment).build());
+    if (!result.getPrincipalValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
+    }
+    if (!result.getResourceGroupValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
+    }
+    if (!result.getRoleValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
+    }
     return roleAssignmentDao.create(roleAssignment);
   }
 
@@ -101,5 +109,10 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   @Override
   public long deleteMulti(RoleAssignmentFilter roleAssignmentFilter) {
     return roleAssignmentDao.deleteMulti(roleAssignmentFilter);
+  }
+
+  @Override
+  public RoleAssignmentValidationResult validate(RoleAssignmentValidationRequest validationRequest) {
+    return roleAssignmentValidator.validate(validationRequest);
   }
 }
