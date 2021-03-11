@@ -17,7 +17,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
-import software.wings.beans.CloudFormationInfrastructureProvisioner.Yaml;
+import software.wings.beans.CloudFormationInfrastructureProvisionerYaml;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -58,8 +58,9 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Yaml
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext();
-    Yaml yaml = (Yaml) getYaml(validYamlContent, Yaml.class);
+    ChangeContext<CloudFormationInfrastructureProvisionerYaml> changeContext = getChangeContext();
+    CloudFormationInfrastructureProvisionerYaml yaml = (CloudFormationInfrastructureProvisionerYaml) getYaml(
+        validYamlContent, CloudFormationInfrastructureProvisionerYaml.class);
     changeContext.setYaml(yaml);
     doReturn(APP_ID).when(mockYamlHelper).getAppId(anyString(), anyString());
     doReturn(null).when(mockInfrastructureProvisionerService).getByName(anyString(), anyString());
@@ -79,7 +80,8 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Yaml
     assertThat("Desc").isEqualTo(provisionerSaved.getDescription());
     assertThat(APP_ID).isEqualTo(provisionerSaved.getAppId());
 
-    Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
+    CloudFormationInfrastructureProvisionerYaml yamlFromObject =
+        handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
     String yamlContent = getYamlContent(yamlFromObject);
     assertThat(yamlContent).isEqualTo(validYamlContent);
 
@@ -92,7 +94,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Yaml
                                                               .templateBody("Body1")
                                                               .build();
 
-    Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
+    CloudFormationInfrastructureProvisionerYaml yaml1 = handler.toYaml(provisioner, APP_ID);
     assertThat(yaml1).isNotNull();
     assertThat("CLOUD_FORMATION").isEqualTo(yaml1.getType());
     assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
@@ -101,14 +103,14 @@ public class CloudFormationInfrastructureProvisionerYamlHandlerTest extends Yaml
     assertThat("Desc1").isEqualTo(yaml1.getDescription());
   }
 
-  private ChangeContext<Yaml> getChangeContext() {
+  private ChangeContext<CloudFormationInfrastructureProvisionerYaml> getChangeContext() {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(validYamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<CloudFormationInfrastructureProvisionerYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.PROVISIONER);
     changeContext.setYamlSyncHandler(handler);

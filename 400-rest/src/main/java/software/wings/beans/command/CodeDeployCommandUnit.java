@@ -128,18 +128,4 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
         format("Deployment finished with status [%s]", commandExecutionStatus), LogLevel.INFO);
     return commandExecutionStatus;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("CODE_DEPLOY")
-  public static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml() {
-      super(CommandUnitType.CODE_DEPLOY.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.CODE_DEPLOY.name(), deploymentType);
-    }
-  }
 }

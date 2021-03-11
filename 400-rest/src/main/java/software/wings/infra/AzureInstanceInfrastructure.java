@@ -60,32 +60,4 @@ public class AzureInstanceInfrastructure implements InfraMappingInfrastructurePr
   public String getInfrastructureType() {
     return AZURE_SSH;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AZURE_SSH)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String resourceGroup;
-    private String subscriptionId;
-    private List<AzureTag> tags;
-    private String hostConnectionAttrsName;
-    private String winRmConnectionAttributesName;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String resourceGroup, String subscriptionId, List<AzureTag> tags,
-        String hostConnectionAttrsName, String winRmConnectionAttributesName) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setResourceGroup(resourceGroup);
-      setSubscriptionId(subscriptionId);
-      setTags(tags);
-      setHostConnectionAttrsName(hostConnectionAttrsName);
-      setWinRmConnectionAttributesName(winRmConnectionAttributesName);
-    }
-
-    public Yaml() {
-      super(AZURE_SSH);
-    }
-  }
 }

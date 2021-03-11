@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.BambooConfig;
+import software.wings.beans.BambooConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.BambooConfigYamlHandler;
@@ -34,7 +35,7 @@ public class BambooConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTe
       + "harnessApiVersion: '1.0'\n"
       + "type: BAMBOO";
 
-  private Class yamlClass = BambooConfig.Yaml.class;
+  private Class yamlClass = BambooConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

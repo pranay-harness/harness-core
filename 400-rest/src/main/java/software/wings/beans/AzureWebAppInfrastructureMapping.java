@@ -93,21 +93,4 @@ public class AzureWebAppInfrastructureMapping extends InfrastructureMapping {
   public String getHostConnectionAttrs() {
     return null;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private String subscriptionId;
-    private String resourceGroup;
-
-    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, Map<String, Object> blueprints,
-        String subscriptionId, String resourceGroup) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
-          computeProviderName, blueprints);
-      this.subscriptionId = subscriptionId;
-      this.resourceGroup = resourceGroup;
-    }
-  }
 }

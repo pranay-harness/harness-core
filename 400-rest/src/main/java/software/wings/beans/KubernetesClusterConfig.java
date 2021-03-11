@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMConfigYaml;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -299,16 +300,15 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     private String oidcSecret;
     private String oidcPassword;
     private String oidcClientId;
-    private CCMConfig.Yaml continuousEfficiencyConfig;
+    private CCMConfigYaml continuousEfficiencyConfig;
 
     @lombok.Builder
     public Yaml(boolean useKubernetesDelegate, String delegateName, List<String> delegateSelectors, String type,
         String harnessApiVersion, String masterUrl, String username, String usernameSecretId, String password,
         String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String serviceAccountToken,
-        String clientKeyAlgo, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions,
-        CCMConfig.Yaml ccmConfig, KubernetesClusterAuthType authType, String oidcIdentityProviderUrl,
-        String oidcUsername, OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword,
-        String oidcClientId) {
+        String clientKeyAlgo, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions, CCMConfigYaml ccmConfig,
+        KubernetesClusterAuthType authType, String oidcIdentityProviderUrl, String oidcUsername,
+        OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword, String oidcClientId) {
       super(type, harnessApiVersion, usageRestrictions);
       this.useKubernetesDelegate = useKubernetesDelegate;
       this.delegateName = delegateName;

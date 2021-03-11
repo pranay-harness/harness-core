@@ -99,22 +99,4 @@ public class BambooArtifactStream extends ArtifactStream {
     }
     return validateParameters(jobname);
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String planName;
-    private List<String> artifactPaths;
-    private boolean metadataOnly;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, String planName, List<String> artifactPaths,
-        boolean metadataOnly) {
-      super(BAMBOO.name(), harnessApiVersion, serverName);
-      this.planName = planName;
-      this.artifactPaths = artifactPaths;
-      this.metadataOnly = metadataOnly;
-    }
-  }
 }

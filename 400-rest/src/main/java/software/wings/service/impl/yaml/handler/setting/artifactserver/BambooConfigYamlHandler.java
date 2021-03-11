@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.BambooConfig;
-import software.wings.beans.BambooConfig.Yaml;
+import software.wings.beans.BambooConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -17,26 +17,27 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class BambooConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, BambooConfig> {
+public class BambooConfigYamlHandler extends ArtifactServerYamlHandler<BambooConfigYaml, BambooConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public BambooConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     BambooConfig bambooConfig = (BambooConfig) settingAttribute.getValue();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(bambooConfig.getType())
-                    .url(bambooConfig.getBambooUrl())
-                    .username(bambooConfig.getUsername())
-                    .password(getEncryptedYamlRef(bambooConfig.getAccountId(), bambooConfig.getEncryptedPassword()))
-                    .build();
+    BambooConfigYaml yaml =
+        BambooConfigYaml.builder()
+            .harnessApiVersion(getHarnessApiVersion())
+            .type(bambooConfig.getType())
+            .url(bambooConfig.getBambooUrl())
+            .username(bambooConfig.getUsername())
+            .password(getEncryptedYamlRef(bambooConfig.getAccountId(), bambooConfig.getEncryptedPassword()))
+            .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<BambooConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    BambooConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     BambooConfig config = BambooConfig.builder()
@@ -50,6 +51,6 @@ public class BambooConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, Bam
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return BambooConfigYaml.class;
   }
 }
