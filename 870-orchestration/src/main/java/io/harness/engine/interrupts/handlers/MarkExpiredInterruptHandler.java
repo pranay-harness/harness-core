@@ -5,13 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.execution.NodeExecution.NodeExecutionKeys;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
-import static io.harness.pms.contracts.execution.Status.EXPIRED;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
-import io.harness.engine.interrupts.helpers.AbortHelper;
+import io.harness.engine.interrupts.helpers.ExpiryHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
@@ -28,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MarkExpiredInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private AbortHelper abortHelper;
+  @Inject private ExpiryHelper expiryHelper;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -68,7 +67,7 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
                   .interruptId(interrupt.getUuid())
                   .build()));
 
-      abortHelper.discontinueMarkedInstance(nodeExecution, EXPIRED, interrupt);
+      expiryHelper.expireMarkedInstance(nodeExecution, interrupt);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw ex;
