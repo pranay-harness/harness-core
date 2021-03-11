@@ -69,7 +69,7 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(SSHVaultConfig.class, 15012);
     kryo.register(SSHVaultAuthResult.class, 15013);
     kryo.register(BaseVaultConfig.class, 15014);
-    kryo.register(ValidateSecretManagerConfigurationTaskParameters.class, 15012);
-    kryo.register(ValidateSecretManagerConfigurationTaskResponse.class, 15013);
+    kryo.register(ValidateSecretManagerConfigurationTaskParameters.class, 15015);
+    kryo.register(ValidateSecretManagerConfigurationTaskResponse.class, 15016);
   }
 }
