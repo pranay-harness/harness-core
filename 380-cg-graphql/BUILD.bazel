@@ -45,8 +45,6 @@ test_dependencies = shared_dependencies + [
     "@maven//:com_google_inject_guice",
 ]
 
-run_tests()
-
 java_library(
     name = "tests",
     testonly = True,
