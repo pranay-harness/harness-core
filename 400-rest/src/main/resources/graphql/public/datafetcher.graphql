@@ -139,4 +139,6 @@ enum DataFetcherEnum {
   viewOverviewStats
   runtimeExecutionInputsToResumePipeline
   pipelineResumeRuntime
+  attachTag
+  detachTag
 }
