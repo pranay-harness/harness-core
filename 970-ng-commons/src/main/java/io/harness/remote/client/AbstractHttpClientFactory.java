@@ -1,15 +1,14 @@
 package io.harness.remote.client;
 
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
-import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
-import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
@@ -33,30 +32,20 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public abstract class AbstractHttpClientFactory {
-  public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
-  private String clientId = "NextGenManager";
+  private final String clientId;
   private final ObjectMapper objectMapper;
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
+  protected AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
     this.serviceHttpClientConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
     this.clientId = clientId;
-    objectMapper = getObjectMapper();
-  }
-
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
-    this.serviceHttpClientConfig = secretManagerConfig;
-    this.serviceSecret = serviceSecret;
-    this.tokenGenerator = tokenGenerator;
-    this.kryoConverterFactory = kryoConverterFactory;
     objectMapper = getObjectMapper();
   }
 
@@ -72,7 +61,7 @@ public abstract class AbstractHttpClientFactory {
   }
 
   protected CircuitBreaker getCircuitBreaker() {
-    return CircuitBreaker.ofDefaults(NG_MANAGER_CIRCUIT_BREAKER);
+    return CircuitBreaker.ofDefaults(clientId);
   }
 
   protected ObjectMapper getObjectMapper() {
@@ -96,6 +85,7 @@ public abstract class AbstractHttpClientFactory {
           .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
           .addInterceptor(getCorrelationIdInterceptor())
+          .addInterceptor(getRequestContextInterceptor())
           .addInterceptor(chain -> {
             Request original = chain.request();
 
@@ -107,7 +97,7 @@ public abstract class AbstractHttpClientFactory {
           })
           .build();
     } catch (Exception e) {
-      throw new GeneralException("error while creating okhttp client for Command library service", e);
+      throw new GeneralException(String.format("error while creating okhttp client for %s service", clientId), e);
     }
   }
 
@@ -115,14 +105,7 @@ public abstract class AbstractHttpClientFactory {
   protected Interceptor getAuthorizationInterceptor() {
     final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
-      boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
-      if (!isPrincipalInContext) {
-        SecurityContextBuilder.setContext(new ServicePrincipal(clientId));
-      }
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
-      if (!isPrincipalInContext) {
-        SecurityContextBuilder.unsetContext();
-      }
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };
