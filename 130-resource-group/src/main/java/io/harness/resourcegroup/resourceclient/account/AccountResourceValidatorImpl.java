@@ -17,6 +17,7 @@ import io.harness.resourcegroup.model.Scope;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -56,7 +57,7 @@ public class AccountResourceValidatorImpl implements ResourceValidator {
 
   @Override
   public Set<Scope> getScopes() {
-    return EnumSet.of(Scope.ACCOUNT);
+    return Collections.emptySet();
   }
 
   @Override

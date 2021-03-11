@@ -19,6 +19,8 @@ public interface RoleAssignmentService {
 
   Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
+  RoleAssignment update(@NotNull @Valid RoleAssignment roleAssignment);
+
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
   long deleteMulti(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);

@@ -43,9 +43,13 @@ public class ManifestOutcomeMapper {
 
   private K8sManifestOutcome getK8sOutcome(ManifestAttributes manifestAttributes) {
     K8sManifest k8sManifest = (K8sManifest) manifestAttributes;
+    boolean skipResourceVersioning = !ParameterField.isNull(k8sManifest.getSkipResourceVersioning())
+        && k8sManifest.getSkipResourceVersioning().getValue();
+
     return K8sManifestOutcome.builder()
         .identifier(k8sManifest.getIdentifier())
         .store(k8sManifest.getStoreConfig())
+        .skipResourceVersioning(skipResourceVersioning)
         .build();
   }
 

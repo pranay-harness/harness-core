@@ -45,6 +45,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.getManifestDelegateConfig()).isEqualTo(manifestDelegateConfig);
     assertThat(request.getTaskType()).isEqualTo(K8sTaskType.DEPLOYMENT_ROLLING);
     assertThat(request.getAccountId()).isEqualTo(accountId);
+    assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
   @Test
@@ -58,6 +59,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     K8sRollingDeployRequest request = executeTask(stepParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+    assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
   @Test

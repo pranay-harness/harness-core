@@ -3272,20 +3272,15 @@ public class DelegateServiceImpl implements DelegateService {
           return assignTask(delegateId, taskId, delegateTask);
         }
 
-        // PL-9595 - Revalidate all tasks that are already whitelisted before executing them
-        if ((featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
-                && assignDelegateService.isWhitelisted(delegateTask, delegateId))
-            || assignDelegateService.shouldValidate(delegateTask, delegateId)) {
+        if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
           return resolvePreAssignmentExpressions(delegateTask, SecretManagerMode.APPLY);
-        } else if (!featureFlagService.isEnabled(FeatureName.REVALIDATE_WHITELISTED_DELEGATE, accountId)
-            && assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
-          // Directly assign task only when FF is off and task is already whitelisted.
+        } else if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
           return assignTask(delegateId, taskId, delegateTask);
-        } else {
-          log.info("Delegate is blacklisted for task");
-          return null;
         }
+
+        log.info("Delegate is blacklisted for task");
+        return null;
       }
     } finally {
       log.info("Done with acquire delegate task method");

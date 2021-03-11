@@ -32,6 +32,7 @@ java_binary(
         "//890-pms-contracts:module",
         "//930-ng-core-clients:module",
         "//940-notification-client:module",
+        "//940-feature-flag:module",
         "//950-events-api:module",
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",

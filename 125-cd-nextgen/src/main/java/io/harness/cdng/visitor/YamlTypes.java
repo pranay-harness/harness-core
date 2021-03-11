@@ -69,4 +69,5 @@ public interface YamlTypes {
   String ENVIRONMENT_VARIABLES = "environmentVariables";
 
   String COMMAND_FLAGS_WRAPPER = "commandFlags";
+  String SKIP_RESOURCE_VERSIONING = "skipResourceVersioning";
 }

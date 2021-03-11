@@ -119,7 +119,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     }
 
     success = prepareForBlueGreen(k8sDelegateTaskParams,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
+        k8sBGDeployRequest.isSkipResourceVersioning());
     if (!success) {
       return getFailureResponse();
     }
@@ -226,9 +227,12 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
   }
 
   @VisibleForTesting
-  boolean prepareForBlueGreen(K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
+  boolean prepareForBlueGreen(
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean skipResourceVersioning) {
     try {
-      markVersionedResources(resources);
+      if (!skipResourceVersioning) {
+        markVersionedResources(resources);
+      }
 
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
@@ -313,9 +317,10 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + currentRelease.getNumber());
 
-      executionLogCallback.saveExecutionLog("\nVersioning resources.");
-
-      addRevisionNumber(resources, currentRelease.getNumber());
+      if (!skipResourceVersioning) {
+        executionLogCallback.saveExecutionLog("\nVersioning resources.");
+        addRevisionNumber(resources, currentRelease.getNumber());
+      }
       managedWorkload = getManagedWorkload(resources);
       managedWorkload.appendSuffixInName('-' + stageColor);
       managedWorkload.addLabelsInPodSpec(
