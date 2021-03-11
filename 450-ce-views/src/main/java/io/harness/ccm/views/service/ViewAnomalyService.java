@@ -8,6 +8,5 @@ import io.harness.ccm.views.graphql.QLCEViewGroupBy;
 import java.util.List;
 
 public interface ViewAnomalyService {
-  List<AnomalyEntity> list(
-      List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction);
+  List<AnomalyEntity> list(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy);
 }

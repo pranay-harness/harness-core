@@ -5,6 +5,7 @@ import io.harness.ccm.setup.graphql.EksClusterStatsDataFetcher;
 import io.harness.ccm.setup.graphql.InfraAccountConnectionDataFetcher;
 import io.harness.ccm.setup.graphql.LinkedAccountStatsDataFetcher;
 import io.harness.ccm.setup.graphql.OverviewPageStatsDataFetcher;
+import io.harness.ccm.views.graphql.ViewAnomaliesDataFetcher;
 import io.harness.ccm.views.graphql.ViewEntityStatsDataFetcher;
 import io.harness.ccm.views.graphql.ViewFieldsDataFetcher;
 import io.harness.ccm.views.graphql.ViewFilterStatsDataFetcher;
@@ -388,6 +389,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ResumeExecutionDataFetcher.class);
     bindDataFetcherWithAnnotation(ExecutionInputsDataFetcher.class);
     bindDataFetcherWithAnnotation(ExportExecutionsDataFetcher.class);
+    bindDataFetcherWithAnnotation(ViewAnomaliesDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewEntityStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewFilterStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ViewTimeSeriesStatsDataFetcher.class);

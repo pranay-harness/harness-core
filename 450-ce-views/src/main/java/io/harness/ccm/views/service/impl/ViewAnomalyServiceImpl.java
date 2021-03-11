@@ -25,8 +25,7 @@ public class ViewAnomalyServiceImpl extends ViewsBillingServiceImpl implements V
   @Inject ADViewsQueryBuilder queryBuilder;
   @Inject AnomalyEntityDao anomalyEntityDao;
   @Override
-  public List<AnomalyEntity> list(
-      List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewAggregation> aggregateFunction) {
+  public List<AnomalyEntity> list(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy) {
     // separate filters from wrapper
     List<QLCEViewFilter> idFilters = getIdFilters(filters);
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
