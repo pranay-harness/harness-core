@@ -3,6 +3,7 @@ package io.harness.accesscontrol.roleassignments.api;
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
+import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toResponseDTO;
 
 import static java.util.stream.Collectors.toList;
@@ -164,6 +165,16 @@ public class RoleAssignmentResource {
                                        .stream()
                                        .map(RoleAssignmentDTOMapper::toResponseDTO)
                                        .collect(toList()));
+  }
+
+  @POST
+  @Path("/validate")
+  @ApiOperation(value = "Validate Role Assignment", nickname = "validateRoleAssignment")
+  public ResponseDTO<RoleAssignmentValidationResponseDTO> validate(
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentValidationRequestDTO validationRequest) {
+    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
+    harnessResourceGroupService.sync(validationRequest.getRoleAssignment().getResourceGroupIdentifier(), scope);
+    return ResponseDTO.newResponse(toDTO(roleAssignmentService.validate(fromDTO(scope.toString(), validationRequest))));
   }
 
   @DELETE

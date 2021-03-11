@@ -2,16 +2,16 @@ package io.harness.accesscontrol.roleassignments.validator;
 
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 
+import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult.RoleAssignmentValidationResultBuilder;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
-import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -35,37 +35,56 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
   }
 
   @Override
-  public void validate(RoleAssignment roleAssignment, Scope scope) {
-    validatePrincipal(Principal.builder()
-                          .principalIdentifier(roleAssignment.getPrincipalIdentifier())
-                          .principalType(roleAssignment.getPrincipalType())
-                          .build(),
-        scope);
-    validateRole(roleAssignment.getRoleIdentifier(), scope);
-    validateResourceGroup(roleAssignment.getResourceGroupIdentifier(), scope);
+  public RoleAssignmentValidationResult validate(RoleAssignmentValidationRequest request) {
+    RoleAssignment assignment = request.getRoleAssignment();
+    RoleAssignmentValidationResultBuilder builder = RoleAssignmentValidationResult.builder();
+    if (request.isValidatePrincipal()) {
+      builder.principalValidationResult(validatePrincipal(Principal.builder()
+                                                              .principalIdentifier(assignment.getPrincipalIdentifier())
+                                                              .principalType(assignment.getPrincipalType())
+                                                              .build()));
+    }
+    if (request.isValidateResourceGroup()) {
+      builder.resourceGroupValidationResult(
+          validateResourceGroup(assignment.getResourceGroupIdentifier(), assignment.getScopeIdentifier()));
+    }
+    if (request.isValidateRole()) {
+      builder.roleValidationResult(validateRole(assignment.getRoleIdentifier(), assignment.getScopeIdentifier()));
+    }
+    return builder.build();
   }
 
-  private void validatePrincipal(Principal principal, Scope scope) {
+  private ValidationResult validatePrincipal(Principal principal) {
     PrincipalValidator principalValidator = principalValidatorByType.get(principal.getPrincipalType());
     if (principalValidator == null) {
-      throw new InvalidRequestException(
-          String.format("Incorrect Principal Type. Please select one out of %s", principalValidatorByType.keySet()));
+      return ValidationResult.builder()
+          .valid(false)
+          .errorMessage(
+              String.format("Incorrect Principal Type. Please select one out of %s", principalValidatorByType.keySet()))
+          .build();
     }
-    principalValidator.validatePrincipal(principal, scope);
+    return principalValidator.validatePrincipal(principal);
   }
 
-  private void validateRole(String roleIdentifier, Scope scope) {
-    Optional<Role> role = roleService.get(roleIdentifier, scope.toString(), NO_FILTER);
+  private ValidationResult validateRole(String roleIdentifier, String scopeIdentifier) {
+    Optional<Role> role = roleService.get(roleIdentifier, scopeIdentifier, NO_FILTER);
     if (!role.isPresent()) {
-      throw new InvalidRequestException(String.format("Did not find role in %s", scope.toString()));
+      return ValidationResult.builder()
+          .valid(false)
+          .errorMessage(String.format("Did not find role in %s", scopeIdentifier))
+          .build();
     }
+    return ValidationResult.builder().valid(true).build();
   }
 
-  private void validateResourceGroup(String resourceGroupIdentifier, Scope scope) {
-    Optional<ResourceGroup> resourceGroup = resourceGroupService.get(resourceGroupIdentifier, scope.toString());
+  private ValidationResult validateResourceGroup(String resourceGroupIdentifier, String scopeIdentifier) {
+    Optional<ResourceGroup> resourceGroup = resourceGroupService.get(resourceGroupIdentifier, scopeIdentifier);
     if (!resourceGroup.isPresent()) {
-      throw new InvalidRequestException(
-          String.format("Did not find resource group identifier in %s", scope.toString()));
+      return ValidationResult.builder()
+          .valid(false)
+          .errorMessage(String.format("Did not find resource group identifier in %s", scopeIdentifier))
+          .build();
     }
+    return ValidationResult.builder().valid(true).build();
   }
 }
