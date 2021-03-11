@@ -9,9 +9,8 @@ public class NewRelicDTOToEntity implements ConnectorDTOToEntityMapper<NewRelicC
   @Override
   public NewRelicConnector toConnectorEntity(NewRelicConnectorDTO connectorDTO) {
     return NewRelicConnector.builder()
-        .url(connectorDTO.getUrl())
         .apiKeyRef(SecretRefHelper.getSecretConfigString(connectorDTO.getApiKeyRef()))
-        .accountId(connectorDTO.getAccountId())
+        .newRelicAccountId(connectorDTO.getNewRelicAccountId())
         .build();
   }
 }

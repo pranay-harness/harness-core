@@ -26,8 +26,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NewRelicConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
-  @NotNull String url;
-  String accountId;
+  @NotNull String newRelicAccountId;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData apiKeyRef;
 
   @Override

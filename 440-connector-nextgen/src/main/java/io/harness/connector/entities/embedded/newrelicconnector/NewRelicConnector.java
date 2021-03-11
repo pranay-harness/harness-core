@@ -18,7 +18,6 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.newrelicconnector.NewRelicConnector")
 public class NewRelicConnector extends Connector {
-  private String url;
   private String apiKeyRef;
-  private String accountId;
+  private String newRelicAccountId;
 }
