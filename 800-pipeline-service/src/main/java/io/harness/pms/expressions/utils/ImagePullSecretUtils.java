@@ -1,16 +1,12 @@
 package io.harness.pms.expressions.utils;
 
-import static io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
@@ -29,12 +25,14 @@ import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.utils.IdentifierRefHelper;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
+
+import java.util.Optional;
+
+import static io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Singleton
 @Slf4j
@@ -122,8 +120,6 @@ public class ImagePullSecretUtils {
   }
 
   private String getPasswordExpression(String passwordRef, Ambiance ambiance) {
-    int expressionFunctorToken =
-        Integer.parseInt(ambiance.getSetupAbstractionsMap().get(TaskDataKeys.expressionFunctorToken));
-    return "${ngSecretManager.obtain(\"" + passwordRef + "\", " + expressionFunctorToken + ")}";
+    return "${ngSecretManager.obtain(\"" + passwordRef + "\", " + ambiance.getExpressionFunctorToken() + ")}";
   }
 }
