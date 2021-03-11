@@ -1,8 +1,8 @@
 package io.harness;
 
 import io.harness.beans.SampleBean;
+import io.harness.gitsync.ChangeSet;
 import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub;
-import io.harness.gitsync.Test;
 import io.harness.repositories.TestRepository;
 
 import com.google.inject.Inject;
@@ -12,7 +12,7 @@ public class Tester {
   @Inject GitToHarnessServiceBlockingStub gitToHarnessServiceBlockingStub;
 
   public SampleBean save(String stringToSave) {
-    gitToHarnessServiceBlockingStub.syncRequestFromGit(Test.newBuilder().setAbc("abc").build());
+    gitToHarnessServiceBlockingStub.syncRequestFromGit(ChangeSet.newBuilder().build());
     return cdRepository.save(SampleBean.builder().test1(stringToSave).build());
   }
 }
