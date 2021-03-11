@@ -9,6 +9,7 @@ import static io.harness.steps.StepUtils.prepareTaskRequest;
 
 import static java.lang.String.format;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -18,6 +19,7 @@ import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
+import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -28,10 +30,12 @@ import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -44,6 +48,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -112,9 +117,7 @@ public class K8sStepHelper {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private OutcomeService outcomeService;
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
-
-  private final Set<String> supportedManifestGitStores = ImmutableSet.of(
-      ManifestStoreType.GIT, ManifestStoreType.GITHUB, ManifestStoreType.BITBUCKET, ManifestStoreType.GITLAB);
+  @Inject private EncryptionHelper encryptionHelper;
 
   String getReleaseName(InfrastructureOutcome infrastructure) {
     switch (infrastructure.getKind()) {
@@ -164,6 +167,12 @@ public class K8sStepHelper {
               format("Invalid connector selected in %s. Select Bitbucket connector", message));
         }
         break;
+      case ManifestStoreType.HTTP:
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof HttpHelmConnectorDTO)) {
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select Http Helm connector", message));
+        }
+        break;
       default:
         throw new UnsupportedOperationException(format("Unknown manifest store type: [%s]", manifestStoreType));
     }
@@ -174,16 +183,17 @@ public class K8sStepHelper {
       case ManifestType.K8Manifest:
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
         return K8sManifestDelegateConfig.builder()
-            .storeDelegateConfig(
-                getStoreDelegateConfig(k8sManifestOutcome.getStore(), ambiance, manifestOutcome.getType()))
+            .storeDelegateConfig(getStoreDelegateConfig(
+                k8sManifestOutcome.getStore(), ambiance, manifestOutcome.getType(), manifestOutcome.getType()))
             .build();
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
         return HelmChartManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(
-                helmChartManifestOutcome.getStore(), ambiance, manifestOutcome.getType() + " manifest"))
-            .skipResourceVersioning(helmChartManifestOutcome.isSkipResourceVersioning())
+            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance,
+                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .chartName(helmChartManifestOutcome.getChartName())
+            .chartVersion(helmChartManifestOutcome.getChartVersion())
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
             .helmCommandFlag(getDelegateHelmCommandFlag(helmChartManifestOutcome.getCommandFlags()))
             .build();
@@ -193,26 +203,42 @@ public class K8sStepHelper {
     }
   }
 
-  public StoreDelegateConfig getStoreDelegateConfig(StoreConfig storeConfig, Ambiance ambiance, String manifestType) {
-    if (supportedManifestGitStores.contains(storeConfig.getKind())) {
+  public StoreDelegateConfig getStoreDelegateConfig(
+      StoreConfig storeConfig, Ambiance ambiance, String manifestType, String validationErrorMessage) {
+    if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
       GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), connectorDTO, manifestType);
+      validateManifest(storeConfig.getKind(), connectorDTO, validationErrorMessage);
 
       GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
       NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
       SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
       List<EncryptedDataDetail> encryptedDataDetails =
           gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
-      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO);
-    } else {
-      throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
+      return getGitStoreDelegateConfig(
+          gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType);
     }
+
+    if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
+      HttpStoreConfig httpStoreConfig = (HttpStoreConfig) storeConfig;
+      ConnectorInfoDTO helmConnectorDTO =
+          getConnector(getParameterFieldValue(httpStoreConfig.getConnectorRef()), ambiance);
+      validateManifest(storeConfig.getKind(), helmConnectorDTO, manifestType);
+
+      return HttpHelmStoreDelegateConfig.builder()
+          .repoName(helmConnectorDTO.getIdentifier())
+          .repoDisplayName(helmConnectorDTO.getName())
+          .httpHelmConnector((HttpHelmConnectorDTO) helmConnectorDTO.getConnectorConfig())
+          .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .build();
+    }
+
+    throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
   }
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStoreConfig gitstoreConfig,
       @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
-      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO) {
+      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, String manifestType) {
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO(gitConfigDTO)
         .sshKeySpecDTO(sshKeySpecDTO)
@@ -220,9 +246,23 @@ public class K8sStepHelper {
         .fetchType(gitstoreConfig.getGitFetchType())
         .branch(getParameterFieldValue(gitstoreConfig.getBranch()))
         .commitId(getParameterFieldValue(gitstoreConfig.getCommitId()))
-        .paths(getParameterFieldValue(gitstoreConfig.getPaths()))
+        .paths(getPathsBasedOnManifest(gitstoreConfig, manifestType))
         .connectorName(connectorDTO.getName())
         .build();
+  }
+
+  private List<String> getPathsBasedOnManifest(GitStoreConfig gitstoreConfig, String manifestType) {
+    List<String> paths = new ArrayList<>();
+    switch (manifestType) {
+      case ManifestType.HelmChart:
+        paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
+        break;
+
+      default:
+        paths.addAll(getParameterFieldValue(gitstoreConfig.getPaths()));
+    }
+
+    return paths;
   }
 
   private SSHKeySpecDTO getSshKeySpecDTO(GitConfigDTO gitConfigDTO, Ambiance ambiance) {
@@ -245,6 +285,16 @@ public class K8sStepHelper {
         } else {
           return Collections.emptyList();
         }
+
+      case HTTP_HELM_REPO:
+        HttpHelmConnectorDTO httpHelmConnectorDTO = (HttpHelmConnectorDTO) connectorDTO.getConnectorConfig();
+        List<DecryptableEntity> decryptableEntities = httpHelmConnectorDTO.getDecryptableEntities();
+        if (isNotEmpty(decryptableEntities)) {
+          return secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntities.get(0));
+        } else {
+          return Collections.emptyList();
+        }
+
       case APP_DYNAMICS:
       case SPLUNK:
       case GIT:
@@ -309,7 +359,7 @@ public class K8sStepHelper {
     List<GitFetchFilesConfig> gitFetchFilesConfigs = new ArrayList<>();
 
     for (ValuesManifestOutcome valuesManifest : aggregatedValuesManifests) {
-      if (supportedManifestGitStores.contains(valuesManifest.getStore().getKind())) {
+      if (ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind())) {
         GitStoreConfig gitStoreConfig = (GitStoreConfig) valuesManifest.getStore();
         String connectorId = gitStoreConfig.getConnectorRef().getValue();
         ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
@@ -322,8 +372,8 @@ public class K8sStepHelper {
         List<EncryptedDataDetail> encryptedDataDetails =
             gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-        GitStoreDelegateConfig gitStoreDelegateConfig =
-            getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO);
+        GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
+            gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, ManifestType.VALUES);
 
         gitFetchFilesConfigs.add(GitFetchFilesConfig.builder()
                                      .identifier(valuesManifest.getIdentifier())
@@ -430,7 +480,7 @@ public class K8sStepHelper {
 
   private boolean isAnyRemoteStore(@NotEmpty List<ValuesManifestOutcome> aggregatedValuesManifests) {
     return aggregatedValuesManifests.stream().anyMatch(
-        valuesManifest -> supportedManifestGitStores.contains(valuesManifest.getStore().getKind()));
+        valuesManifest -> ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind()));
   }
 
   public TaskChainResponse executeNextLink(K8sStepExecutor k8sStepExecutor, Ambiance ambiance,
@@ -463,7 +513,7 @@ public class K8sStepHelper {
     List<String> valuesFileContents = new ArrayList<>();
 
     for (ValuesManifestOutcome valuesManifest : valuesManifests) {
-      if (supportedManifestGitStores.contains(valuesManifest.getStore().getKind())) {
+      if (ManifestStoreType.isInGitSubset(valuesManifest.getStore().getKind())) {
         FetchFilesResult gitFetchFilesResult = gitFetchFilesResultMap.get(valuesManifest.getIdentifier());
         valuesFileContents.addAll(
             gitFetchFilesResult.getFiles().stream().map(GitFile::getFileContent).collect(Collectors.toList()));
@@ -540,5 +590,20 @@ public class K8sStepHelper {
     }
 
     return stepResponseBuilder;
+  }
+
+  public boolean getSkipResourceVersioning(ManifestOutcome manifestOutcome) {
+    switch (manifestOutcome.getType()) {
+      case ManifestType.K8Manifest:
+        K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
+        return k8sManifestOutcome.isSkipResourceVersioning();
+
+      case ManifestType.HelmChart:
+        HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
+        return helmChartManifestOutcome.isSkipResourceVersioning();
+
+      default:
+        return false;
+    }
   }
 }

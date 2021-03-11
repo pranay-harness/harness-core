@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -32,6 +33,8 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
@@ -58,6 +61,7 @@ import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.WorkflowYAMLHelper;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
+import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.PipelineYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AccountService;
@@ -79,6 +83,7 @@ import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
@@ -93,10 +98,9 @@ import org.mockito.Mockito;
  * @author rktummala on 1/9/18
  */
 @SetupScheduler
-public class PipelineYamlHandlerTest2 extends YamlHandlerTestBase {
+public class PipelineYamlHandler2Test extends YamlHandlerTestBase {
   private final String APP_NAME = "app1";
   private final String PIPELINE_NAME = "pipeline1";
-  private final String PIPELINE_ID = "pipeline1Id";
   private final String resourcePath = "400-rest/src/test/resources/pipeline";
   @Mock AppService appService;
   @Mock YamlGitService yamlGitService;
@@ -116,6 +120,7 @@ public class PipelineYamlHandlerTest2 extends YamlHandlerTestBase {
   @Mock private WorkflowService workflowService;
   @Mock private WorkflowYAMLHelper workflowYAMLHelper;
   @InjectMocks @Inject private PipelineYamlHandler yamlHandler;
+  @InjectMocks @Inject private PipelineStageYamlHandler pipelineStageYamlHandler;
 
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Pipelines/" + PIPELINE_NAME + ".yaml";
 
@@ -299,6 +304,139 @@ public class PipelineYamlHandlerTest2 extends YamlHandlerTestBase {
     testCRUDpipeline(readYamlStringInFile(ValidPipelineFiles.pipelineApprovalVariable));
   }
 
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCRUDMissingStageName() throws Exception {
+    String validYamlContent = readYamlStringInFile(InValidPipelineFiles.pipelineWithoutStageName);
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(ACCOUNT_ID);
+
+    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.PIPELINE);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Workflow workflow =
+        aWorkflow().name("K8s-roll").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowByName(any(), any())).thenReturn(workflow);
+
+    when(pipelineService.save(any())).thenThrow(new InvalidRequestException("Stage name must not be empty"));
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Stage name must not be empty");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCRUDInvalidWorkflowName() {
+    when(workflowService.readWorkflowByName(any(), any())).thenReturn(null);
+
+    assertThatThrownBy(() -> testCRUDpipeline(readYamlStringInFile(ValidPipelineFiles.pipelineTemplatized)))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Invalid workflow with the given name:K8s-roll");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCRUDInvalidUserGroup() {
+    when(userGroupService.fetchUserGroupByName(any(), eq("test"))).thenReturn(null);
+    assertThatThrownBy(() -> testCRUDpipeline(readYamlStringInFile(ValidPipelineFiles.pipelineApprovalVariable)))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("User group test doesn't exist");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCRUDInvalidTimeout() throws IOException {
+    String validYamlContent = readYamlStringInFile(InValidPipelineFiles.pipelineApprovalWithInvalidTimeout);
+    GitFileChange gitFileChange = new GitFileChange();
+    gitFileChange.setFileContent(validYamlContent);
+    gitFileChange.setFilePath(validYamlFilePath);
+    gitFileChange.setAccountId(ACCOUNT_ID);
+
+    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    changeContext.setChange(gitFileChange);
+    changeContext.setYamlType(YamlType.PIPELINE);
+    changeContext.setYamlSyncHandler(yamlHandler);
+
+    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Workflow workflow =
+        aWorkflow().name("K8s-roll").orchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    when(workflowService.readWorkflowByName(any(), any())).thenReturn(workflow);
+
+    when(pipelineService.save(any())).thenThrow(new InvalidRequestException("Timeout must be an integer"));
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Timeout must be an integer");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCRUDInvalidEntityName() {
+    List<Variable> variables = Arrays.asList(aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build(),
+        aVariable().name("Service").entityType(EntityType.SERVICE).build(),
+        aVariable().name("InfraDefinition_KUBERNETES").entityType(EntityType.INFRASTRUCTURE_DEFINITION).build());
+
+    Workflow workflow = aWorkflow()
+                            .name("K8s-roll")
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(variables).build())
+                            .build();
+
+    when(workflowYAMLHelper.getWorkflowVariableValueBean(
+             anyString(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any()))
+        .thenThrow(new InvalidRequestException("Environment qa does not exist"));
+
+    when(workflowService.readWorkflowByName(any(), any())).thenReturn(workflow);
+    when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
+
+    assertThatThrownBy(() -> testCRUDpipeline(readYamlStringInFile(InValidPipelineFiles.pipelineInvalidEntityName)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Environment qa does not exist");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testCRUDPipelineTemplatizedEdit() throws Exception {
+    List<Variable> variables = Arrays.asList(aVariable().name("Environment").entityType(EntityType.ENVIRONMENT).build(),
+        aVariable().name("Service").entityType(EntityType.SERVICE).build(),
+        aVariable().name("InfraDefinition_KUBERNETES").entityType(EntityType.INFRASTRUCTURE_DEFINITION).build());
+
+    Workflow workflow = aWorkflow()
+                            .name("K8s-roll")
+                            .orchestrationWorkflow(aCanaryOrchestrationWorkflow().withUserVariables(variables).build())
+                            .build();
+    when(workflowService.readWorkflowByName(any(), any())).thenReturn(workflow);
+    when(workflowService.readWorkflow(any(), any())).thenReturn(workflow);
+
+    when(pipelineService.update(any(), eq(false), eq(true))).thenAnswer(invocationOnMock -> {
+      Pipeline pipeline = invocationOnMock.getArgumentAt(0, Pipeline.class);
+      pipeline.getPipelineStages().get(0).setName("Original name");
+      pipeline.getPipelineStages().get(0).getPipelineStageElements().get(0).setWorkflowVariables(
+          Collections.emptyMap());
+      pipeline.getPipelineStages()
+          .stream()
+          .flatMap(ps -> ps.getPipelineStageElements().stream())
+          .filter(pse -> pse.getType().equals(StateType.ENV_STATE.name()))
+          .forEach(pse -> pse.getProperties().put("workflowId", pse.getName()));
+      return pipeline;
+    });
+
+    testCRUDpipeline(readYamlStringInFile(ValidPipelineFiles.pipelineTemplatized));
+  }
+
   private void testCRUDpipeline(String validYamlContent) throws IOException {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
@@ -355,5 +493,12 @@ public class PipelineYamlHandlerTest2 extends YamlHandlerTestBase {
     private static final String pipelineApprovalVariable = "pipelineApprovalVariable.yaml";
     private static final String pipelineUserGroup = "pipelineUserGroup.yaml";
     private static final String pipelineUserGroupTemplatized = "pipelineUserGroupTemplatized.yaml";
+  }
+
+  @UtilityClass
+  private static class InValidPipelineFiles {
+    private static final String pipelineWithoutStageName = "pipelineWithoutStageName.yaml";
+    private static final String pipelineApprovalWithInvalidTimeout = "pipelineApprovalWithInvalidTimeOut.yaml";
+    private static final String pipelineInvalidEntityName = "pipelineInvalidEntityName.yaml";
   }
 }

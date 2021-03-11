@@ -57,6 +57,8 @@ public interface DelegateService extends OwnedByAccount {
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
 
+  DelegateGroup getDelegateGroup(String accountId, String delegateGroupId);
+
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
   List<String> getAvailableVersions(String accountId);
@@ -191,6 +193,8 @@ public interface DelegateService extends OwnedByAccount {
       List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
 
   void regenerateCapabilityPermissions(String accountId, String delegateId);
+
+  String getHostNameForGroupedDelegate(String hostname);
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 

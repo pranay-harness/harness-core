@@ -7,6 +7,7 @@ import io.harness.batch.processing.anomalydetection.SlackNotificationsTasklet;
 import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionProcessor;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsAccountReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsServiceReader;
+import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsUsageTypeReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpProductReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpProjectReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpSkuReader;
@@ -50,7 +51,7 @@ public class AnomalyDetectionConfiguration {
   public Job anomalyDetectionOutOfClusterDailyJob(JobBuilderFactory jobBuilderFactory,
       Step statisticalModelGcpProjectStep, Step statisticalModelGcpSkuStep, Step statisticalModelGcpProductStep,
       Step statisticalModelAwsAccountStep, Step statisticalModelAwsServiceStep, Step removeDuplicatesStep,
-      Step slackNotificationStep) {
+      Step statisticalModelAwsUsageTypeStep, Step slackNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_CLOUD.name())
         .incrementer(new RunIdIncrementer())
         .start(statisticalModelGcpProjectStep)
@@ -58,6 +59,7 @@ public class AnomalyDetectionConfiguration {
         .next(statisticalModelGcpSkuStep)
         .next(statisticalModelAwsAccountStep)
         .next(statisticalModelAwsServiceStep)
+        .next(statisticalModelAwsUsageTypeStep)
         .next(removeDuplicatesStep)
         .next(slackNotificationStep)
         .build();
@@ -134,6 +136,16 @@ public class AnomalyDetectionConfiguration {
   }
 
   @Bean
+  protected Step statisticalModelAwsUsageTypeStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("statisticalModelAwsUsageTypeDailyAnomalyDetectionStep")
+        .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
+        .reader(awsUsageTypeItemReader())
+        .processor(modelProcessor())
+        .writer(timescaleWriter())
+        .build();
+  }
+
+  @Bean
   protected Step removeDuplicatesStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("removeDuplicateAnomaliesStep").tasklet(removeDuplicateAnomaliesTasklet()).build();
   }
@@ -187,6 +199,11 @@ public class AnomalyDetectionConfiguration {
   @Bean
   public ItemReader<AnomalyDetectionTimeSeries> awsServiceItemReader() {
     return new AnomalyDetectionAwsServiceReader();
+  }
+
+  @Bean
+  public ItemReader<AnomalyDetectionTimeSeries> awsUsageTypeItemReader() {
+    return new AnomalyDetectionAwsUsageTypeReader();
   }
 
   // ---------------- Item Processor ----------------------
