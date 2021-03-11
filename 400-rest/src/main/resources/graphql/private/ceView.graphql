@@ -26,6 +26,9 @@ extend type Query {
 
   viewTrendStats(filters: [CEViewFilterWrapper], aggregateFunction: [CEViewAggregation]): ViewTrendStatsData
     @dataFetcher(name: viewTrendStats)
+
+  viewAnomalies(filters: [CEViewFilterWrapper], groupBy: [CEViewGroupBy]): AnomalyDataList
+    @dataFetcher(name: viewAnomalies)
 }
 
 type viewOverviewStatsData {
