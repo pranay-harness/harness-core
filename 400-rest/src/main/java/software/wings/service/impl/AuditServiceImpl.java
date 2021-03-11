@@ -426,12 +426,6 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
-  private AuditHeader getAuditHeaderById(@NotNull String changeSetId) {
-    return wingsPersistence.createQuery(AuditHeader.class)
-        .filter(AuditHeader.ID_KEY2, changeSetId)
-        .project("entityAuditRecords", true)
-        .get();
-  }
   private <T> void addDetails(String accountId, T entity, EntityAuditRecord record, String auditHeaderId) {
     if (entity instanceof User) {
       Account account = accountService.get(accountId);
@@ -480,6 +474,7 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE:
         case ADD:
         case LOGIN:
+        case LOGIN_2FA:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
         case INVOKED:
@@ -515,6 +510,7 @@ public class AuditServiceImpl implements AuditService {
         case REMOVE:
         case DELEGATE_APPROVAL:
         case LOGIN:
+        case LOGIN_2FA:
         case NON_WHITELISTED:
         case INVOKED:
         case CREATE: {
@@ -604,6 +600,7 @@ public class AuditServiceImpl implements AuditService {
           && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
         auditPreference.setOperationTypes(Arrays.stream(Type.values())
                                               .filter(type -> type != Type.LOGIN)
+                                              .filter(type -> type != Type.LOGIN_2FA)
                                               .map(Type::name)
                                               .collect(Collectors.toList()));
       }
