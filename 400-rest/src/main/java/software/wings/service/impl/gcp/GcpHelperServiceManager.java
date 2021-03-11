@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
@@ -50,9 +49,7 @@ public class GcpHelperServiceManager {
     if (gcpConfig.isUseDelegateSelectors()) {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
-          GcpValidationRequest.builder()
-              .delegateSelectors(gcpConfig.getDelegateSelector())
-              .build());
+          GcpValidationRequest.builder().delegateSelectors(gcpConfig.getDelegateSelector()).build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
       if (validationResult.getStatus() != ConnectivityStatus.SUCCESS) {
@@ -62,7 +59,8 @@ public class GcpHelperServiceManager {
     } else {
       // Decrypt gcpConfig
       encryptionService.decrypt(gcpConfig, encryptedDataDetails, false);
-      gcpHelperService.getGkeContainerService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
+      gcpHelperService.getGkeContainerService(
+          gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     }
   }
 

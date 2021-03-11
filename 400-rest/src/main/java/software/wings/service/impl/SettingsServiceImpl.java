@@ -652,8 +652,9 @@ public class SettingsServiceImpl implements SettingsService {
     if (!hasDelegateSelectorProperty(settingAttribute)) {
       return selectors;
     }
-    if (settingAttribute.getValue() instanceof GcpConfig && ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors()) {
-      Set<String> selectorsSet  = (Set<String>) ((GcpConfig) settingAttribute.getValue()).getDelegateSelector();
+    if (settingAttribute.getValue() instanceof GcpConfig
+        && ((GcpConfig) settingAttribute.getValue()).isUseDelegateSelectors()) {
+      Set<String> selectorsSet = (Set<String>) ((GcpConfig) settingAttribute.getValue()).getDelegateSelector();
       selectors.addAll(selectorsSet);
     }
     if (settingAttribute.getValue() instanceof DockerConfig) {

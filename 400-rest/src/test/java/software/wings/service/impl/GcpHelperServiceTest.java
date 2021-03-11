@@ -57,7 +57,8 @@ public class GcpHelperServiceTest extends WingsBaseTest {
     when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
-    gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
+    gcpHelperService.getGoogleCredential(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     verify(gcpCredentialsHelperService, only())
         .getGoogleCredentialWithProxyConfiguredHttpTransport(gcpConfig.getServiceAccountKeyFileContent());
     System.clearProperty("http.proxyHost");
@@ -71,7 +72,8 @@ public class GcpHelperServiceTest extends WingsBaseTest {
     when(gcpCredentialsHelperService.getGoogleCredentialWithProxyConfiguredHttpTransport(
              gcpConfig.getServiceAccountKeyFileContent()))
         .thenReturn(new GoogleCredential());
-    gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
+    gcpHelperService.getGoogleCredential(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
     verify(gcpCredentialsHelperService, only())
         .getGoogleCredentialWithDefaultHttpTransport(gcpConfig.getServiceAccountKeyFileContent());
   }

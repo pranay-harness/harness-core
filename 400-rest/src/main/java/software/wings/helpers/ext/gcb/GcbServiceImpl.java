@@ -194,8 +194,8 @@ public class GcbServiceImpl implements GcbService {
       return gcpHelperService.getDefaultCredentialsAccessToken(TaskType.GCB.name());
     }
     encryptionService.decrypt(gcpConfig, encryptionDetails, false);
-    GoogleCredential gc =
-        gcpHelperService.getGoogleCredential(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
+    GoogleCredential gc = gcpHelperService.getGoogleCredential(
+        gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors());
 
     try {
       if (gc.refreshToken()) {

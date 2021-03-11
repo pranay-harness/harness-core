@@ -63,7 +63,8 @@ public class GcsServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws IllegalAccessException, IOException {
     FieldUtils.writeField(gcsService, "gcpHelperService", gcpHelperService, true);
-    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
+    when(gcpHelperService.getGcsStorageService(
+             gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
         .thenReturn(storage)
         .thenReturn(storage);
     when(storage.objects()).thenReturn(objects);
@@ -91,7 +92,8 @@ public class GcsServiceTest extends WingsBaseTest {
     bucket.setName("bucket");
     bucket.setId("bucketId");
     buckets.setItems(Arrays.asList(bucket));
-    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
+    when(gcpHelperService.getGcsStorageService(
+             gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
         .thenReturn(gcsStorageService);
     when(gcsStorageService.buckets()).thenReturn(bucketsObj);
     when(bucketsObj.list(TEST_PROJECT_ID)).thenReturn(listRequest);
@@ -196,7 +198,8 @@ public class GcsServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldHandleThrownExceptionListBuckets() throws IOException {
-    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
+    when(gcpHelperService.getGcsStorageService(
+             gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
         .thenReturn(gcsStorageService);
     when(gcsStorageService.buckets()).thenReturn(bucketsObj);
     when(bucketsObj.list(TEST_PROJECT_ID)).thenReturn(listRequest);
@@ -209,7 +212,8 @@ public class GcsServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void shouldThrowHandleExceptionWhenGetArtifactBuildDetails() {
-    when(gcpHelperService.getGcsStorageService(gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
+    when(gcpHelperService.getGcsStorageService(
+             gcpConfig.getServiceAccountKeyFileContent(), gcpConfig.isUseDelegateSelectors()))
         .thenThrow(new RuntimeException("some error"));
     assertThatThrownBy(() -> gcsService.getArtifactBuildDetails(gcpConfig, null, "somebucket", "someObj", true))
         .isInstanceOf(InvalidArtifactServerException.class);

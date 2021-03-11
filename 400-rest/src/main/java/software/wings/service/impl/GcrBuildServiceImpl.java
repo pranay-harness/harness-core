@@ -118,7 +118,8 @@ public class GcrBuildServiceImpl implements GcrBuildService {
       encryptionService.decrypt(config, encryptionDetails, false);
       return gcrApiService.verifyImageName(
           GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
-              gcpHelperService.getBasicAuthHeader(config.getServiceAccountKeyFileContent(), config.isUseDelegateSelectors())),
+              gcpHelperService.getBasicAuthHeader(
+                  config.getServiceAccountKeyFileContent(), config.isUseDelegateSelectors())),
           artifactStreamAttributes.getImageName());
     } catch (IOException e) {
       log.error("Could not verify Artifact source", e);
@@ -148,14 +149,13 @@ public class GcrBuildServiceImpl implements GcrBuildService {
     throw new InvalidRequestException("Operation not supported by GCR Build Service", WingsException.USER);
   }
 
-  public String printDelegateSelectors(Set<String> delegateSelectors){
-    String ret="";
-    for (String delegate:delegateSelectors){
-      if (ret==""){
-        ret=ret+delegate;
-      }
-      else{
-        ret=ret+"and"+delegate;
+  public String printDelegateSelectors(Set<String> delegateSelectors) {
+    String ret = "";
+    for (String delegate : delegateSelectors) {
+      if (ret.equals("")) {
+        ret = ret + delegate;
+      } else {
+        ret = ret + "and" + delegate;
       }
     }
     return ret;

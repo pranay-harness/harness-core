@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
 import java.util.Set;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,8 +56,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-                   String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, Set<String> delegateSelector,
-                   boolean skipValidation) {
+      String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, Set<String> delegateSelector,
+      boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
         serviceAccountKeyFileContent == null ? null : serviceAccountKeyFileContent.clone();
@@ -91,8 +90,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-                UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, Set<String> delegateSelector,
-                boolean skipValidation) {
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, Set<String> delegateSelector,
+        boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
       this.delegateSelector = delegateSelector;
