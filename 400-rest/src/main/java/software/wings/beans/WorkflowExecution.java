@@ -71,7 +71,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {

@@ -1,6 +1,7 @@
 def aeriform(target):
     name = target.replace("/", "").replace(":", "!")
     native.genquery(
+        testonly = True,
         name = name + "_aeriform_sources.txt",
         testonly = True,
         expression = "labels(srcs, " + target + ")",
@@ -9,6 +10,7 @@ def aeriform(target):
     )
 
     native.genquery(
+        testonly = True,
         name = name + "_aeriform_dependencies.txt",
         testonly = True,
         expression = "labels(deps, " + target + ")",
@@ -17,6 +19,7 @@ def aeriform(target):
     )
 
     native.genrule(
+        testonly = True,
         name = name + "_aeriform_jdeps",
         testonly = True,
         outs = [name + "_aeriform_jdeps.txt"],

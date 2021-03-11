@@ -294,6 +294,65 @@ public class InfrastructureDefinitionRestUtils {
     return restResponse.getResource();
   }
 
+  public List<String> getSubscriptionLocations(
+      String bearerToken, String appId, String cloudProviderId, String subscriptionId) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    String subscriptionsPath = String.format(
+        "/infrastructure-definitions/compute-providers/%s/subscriptions/%s/locations", cloudProviderId, subscriptionId);
+    RestResponse<List<String>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .contentType(ContentType.JSON)
+                                                  .queryParam("appId", appId)
+                                                  .get(subscriptionsPath)
+                                                  .as(restResponseGenericType.getType());
+
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(subscriptionsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
+  public List<String> getCloudProviderLocations(String bearerToken, String appId, String cloudProviderId) {
+    GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};
+    String subscriptionsPath =
+        String.format("/infrastructure-definitions/compute-providers/%s/locations", cloudProviderId);
+    RestResponse<List<String>> restResponse = Setup.portal()
+                                                  .auth()
+                                                  .oauth2(bearerToken)
+                                                  .contentType(ContentType.JSON)
+                                                  .queryParam("appId", appId)
+                                                  .get(subscriptionsPath)
+                                                  .as(restResponseGenericType.getType());
+
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(subscriptionsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
+  public Map<String, String> getManagementGroups(String bearerToken, String appId, String cloudProviderId) {
+    GenericType<RestResponse<Map<String, String>>> restResponseGenericType =
+        new GenericType<RestResponse<Map<String, String>>>() {};
+    String subscriptionsPath =
+        String.format("/infrastructure-definitions/compute-providers/%s/management-groups", cloudProviderId);
+    RestResponse<Map<String, String>> restResponse = Setup.portal()
+                                                         .auth()
+                                                         .oauth2(bearerToken)
+                                                         .contentType(ContentType.JSON)
+                                                         .queryParam("appId", appId)
+                                                         .get(subscriptionsPath)
+                                                         .as(restResponseGenericType.getType());
+
+    if (restResponse.getResource() == null) {
+      throw new EmptyRestResponseException(subscriptionsPath, String.valueOf(restResponse.getResponseMessages()));
+    }
+
+    return restResponse.getResource();
+  }
+
   public static List<String> listAutoScalingGroups(
       String bearerToken, String accountId, String appId, String cloudProviderId, String region) {
     GenericType<RestResponse<List<String>>> restResponseGenericType = new GenericType<RestResponse<List<String>>>() {};

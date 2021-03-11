@@ -71,6 +71,7 @@ import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
 import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
 import io.harness.delegate.task.aws.AwsDelegateTask;
@@ -1236,6 +1237,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.BUILD_SOURCE_TASK).toInstance(BuildSourceTask.class);
     mapBinder.addBinding(TaskType.DOCKER_ARTIFACT_TASK_NG).toInstance(DockerArtifactTaskNG.class);
     mapBinder.addBinding(TaskType.GCR_ARTIFACT_TASK_NG).toInstance(GcrArtifactTaskNG.class);
+    mapBinder.addBinding(TaskType.ECR_ARTIFACT_TASK_NG).toInstance(EcrArtifactTaskNG.class);
     mapBinder.addBinding(TaskType.AWS_ROUTE53_TASK).toInstance(AwsRoute53Task.class);
     mapBinder.addBinding(TaskType.SHELL_SCRIPT_APPROVAL).toInstance(ShellScriptApprovalTask.class);
     mapBinder.addBinding(TaskType.CUSTOM_GET_BUILDS).toInstance(ServiceImplDelegateTask.class);

@@ -72,7 +72,7 @@ import org.simpleframework.xml.Transient;
       , @Field(StateExecutionInstanceKeys.parentInstanceId), @Field(StateExecutionInstanceKeys.createdAt)
     })
 @Entity(value = "stateExecutionInstances", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 public class StateExecutionInstance implements PersistentEntity, AccountDataRetentionEntity, UuidAware, CreatedAtAware,
                                                UpdatedAtAware, ApplicationAccess {
   @Id private String uuid;

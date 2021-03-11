@@ -120,6 +120,7 @@ public class SettingGenerator {
     AWS_TEST_CLOUD_PROVIDER,
     AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER,
     AZURE_TEST_CLOUD_PROVIDER,
+    AZURE_ARM_TEST_CLOUD_PROVIDER,
     AWS_SPOTINST_TEST_CLOUD_PROVIDER,
     SPOTINST_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
@@ -169,6 +170,8 @@ public class SettingGenerator {
         return ensureAwsDeploymentFunctionalTestsCloudProvider(seed, owners);
       case AZURE_TEST_CLOUD_PROVIDER:
         return ensureAzureTestCloudProvider(seed, owners);
+      case AZURE_ARM_TEST_CLOUD_PROVIDER:
+        return ensureAzureARMTestCloudProvider(seed, owners);
       case AWS_SPOTINST_TEST_CLOUD_PROVIDER:
         return ensureAwsSpotinstTest(seed, owners);
       case SPOTINST_TEST_CLOUD_PROVIDER:
@@ -376,6 +379,28 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .clientId(scmSecret.decryptToString(new SecretName("azure_client_id")))
                            .tenantId(scmSecret.decryptToString(new SecretName("azure_tenant_id")))
+                           .key(azure_key.toCharArray())
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  public SettingAttribute ensureAzureARMTestCloudProvider(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String azure_key = secretGenerator.ensureStored(owners, SecretName.builder().value("azure_arm_key").build());
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName("Test ARM Azure Cloud Provider")
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(account.getUuid())
+            .withValue(AzureConfig.builder()
+                           .accountId(account.getUuid())
+                           .clientId(scmSecret.decryptToString(new SecretName("azure_arm_client_id")))
+                           .tenantId(scmSecret.decryptToString(new SecretName("azure_arm_tenant_id")))
                            .key(azure_key.toCharArray())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())

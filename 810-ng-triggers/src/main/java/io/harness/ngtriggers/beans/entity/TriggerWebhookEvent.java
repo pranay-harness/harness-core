@@ -1,9 +1,9 @@
 package io.harness.ngtriggers.beans.entity;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.beans.HeaderConfig;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 

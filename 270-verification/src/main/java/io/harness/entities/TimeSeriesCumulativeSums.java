@@ -6,11 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.serializer.JsonUtils;
 
@@ -19,7 +18,9 @@ import software.wings.beans.Base;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,12 +37,6 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by Praveen.
  */
 
-@NgUniqueIndex(
-    name = "uniqueIdx", fields = { @Field("appId")
-                                   , @Field("cvConfigId"), @Field("analysisMinute"), @Field("tag") })
-@CdIndex(name = "service_gd_idx",
-    fields = { @Field("cvConfigId")
-               , @Field(value = "analysisMinute", type = IndexType.DESC), @Field("tag") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -52,6 +47,26 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "timeSeriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesCumulativeSums extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueIdx")
+                 .unique(true)
+                 .field(BaseKeys.appId)
+                 .field(TimeSeriesCumulativeSumsKeys.cvConfigId)
+                 .field(TimeSeriesCumulativeSumsKeys.analysisMinute)
+                 .field(TimeSeriesCumulativeSumsKeys.tag)
+                 .build(),
+            SortCompoundMongoIndex.builder()
+                .name("service_gd_idx")
+                .field(TimeSeriesCumulativeSumsKeys.cvConfigId)
+                .field(TimeSeriesCumulativeSumsKeys.analysisMinute)
+                .descSortField(TimeSeriesCumulativeSumsKeys.analysisMinute)
+                .field(TimeSeriesCumulativeSumsKeys.tag)
+                .build())
+        .build();
+  }
+
   @NotEmpty @FdIndex private String cvConfigId;
   @NotEmpty @FdIndex private int analysisMinute;
   @Transient private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;

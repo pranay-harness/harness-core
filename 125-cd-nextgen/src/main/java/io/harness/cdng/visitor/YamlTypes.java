@@ -67,4 +67,6 @@ public interface YamlTypes {
   String HEADERS = "headers";
   String DELEGATE_SELECTORS = "delegateSelectors";
   String ENVIRONMENT_VARIABLES = "environmentVariables";
+
+  String COMMAND_FLAGS_WRAPPER = "commandFlags";
 }

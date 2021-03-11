@@ -237,6 +237,7 @@ public class NGTriggerResource {
 
   @GET
   @Path("regenerateToken")
+  @ApiOperation(value = "Regenerate webhook token", nickname = "generateWebhookToken")
   @Timed
   @ExceptionMetered
   public RestResponse<String> generateWebhookToken() {

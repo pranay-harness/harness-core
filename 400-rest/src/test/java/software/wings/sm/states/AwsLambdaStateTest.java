@@ -197,7 +197,7 @@ public class AwsLambdaStateTest extends CategoryTest {
     when(((DeploymentExecutionContext) mockContext).getDefaultArtifactForService(SERVICE_ID))
         .thenReturn(anArtifact().withArtifactStreamId(ARTIFACT_STREAM_ID).build());
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(mockDockerArtifactStream);
-    when(mockDockerArtifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(mockDockerArtifactStream.fetchArtifactStreamAttributes(any())).thenReturn(artifactStreamAttributes);
     when(mockDockerArtifactStream.getArtifactStreamType()).thenReturn(ArtifactStreamType.AMAZON_S3.name());
     when(mockDockerArtifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, null))
