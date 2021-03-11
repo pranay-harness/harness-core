@@ -576,7 +576,7 @@ public class ViewsQueryBuilder {
     return getSqlOrCondition(conditionList);
   }
 
-  private Condition getPerRuleCondition(ViewRule rule) {
+  protected Condition getPerRuleCondition(ViewRule rule) {
     List<Condition> conditionList = new ArrayList<>();
     for (ViewCondition condition : rule.getViewConditions()) {
       conditionList.add(getCondition(mapConditionToFilter((ViewIdCondition) condition)));
@@ -728,7 +728,7 @@ public class ViewsQueryBuilder {
     }
     QLCEViewFilterOperator operator = filter.getOperator();
 
-    if (filter.getValues().length > 0 && operator == QLCEViewFilterOperator.EQUALS) {
+    if (filter.getValues() != null && filter.getValues().length > 0 && operator == QLCEViewFilterOperator.EQUALS) {
       operator = QLCEViewFilterOperator.IN;
     }
 

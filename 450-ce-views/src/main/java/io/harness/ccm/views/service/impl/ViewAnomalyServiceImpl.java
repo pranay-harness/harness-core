@@ -12,6 +12,7 @@ import io.harness.ccm.views.graphql.QLCEViewSortCriteria;
 import io.harness.ccm.views.graphql.QLCEViewTimeFilter;
 import io.harness.ccm.views.graphql.anomalydetection.ADViewsQueryBuilder;
 import io.harness.ccm.views.service.ViewAnomalyService;
+import io.harness.exception.InvalidArgumentsException;
 
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
@@ -26,6 +27,9 @@ public class ViewAnomalyServiceImpl extends ViewsBillingServiceImpl implements V
   @Inject AnomalyEntityDao anomalyEntityDao;
   @Override
   public List<AnomalyEntity> list(List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy) {
+    SelectQuery query;
+    List<AnomalyEntity> anomalies = new ArrayList<>();
+
     // separate filters from wrapper
     List<QLCEViewFilter> idFilters = getIdFilters(filters);
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
@@ -38,15 +42,12 @@ public class ViewAnomalyServiceImpl extends ViewsBillingServiceImpl implements V
       }
     }
 
-    List<QLCEViewAggregation> aggregationList = Collections.emptyList();
-    List<QLCEViewSortCriteria> sortList = Collections.emptyList();
-
-    SelectQuery query;
-    List<AnomalyEntity> anomalies = new ArrayList<>();
     try {
-      query = queryBuilder.getQuery(viewRules, idFilters, timeFilters, groupBy, aggregationList, sortList);
+      query = queryBuilder.getQuery(viewRules, idFilters, timeFilters, groupBy);
       log.info("Prepared Query for view : {}", query.toString());
       anomalies = anomalyEntityDao.list(query.toString());
+    } catch (InvalidArgumentsException e) {
+      log.warn("Invalid arguments returning a empty list ");
     } catch (Exception e) {
       log.error("Error while fetching anomalies for view , Exception : {} ", e.toString());
     }
