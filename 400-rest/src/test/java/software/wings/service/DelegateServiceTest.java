@@ -3692,15 +3692,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
             .build();
 
-    delegateService.saveDelegateTask(delegateTask, QUEUED);
-
-    if (status != delegateTask.getStatus()) {
-      delegateTask = persistence.findAndModify(
-          persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()),
-          persistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status),
-          HPersistence.returnNewOptions);
-    }
-
+    delegateService.saveDelegateTask(delegateTask, status);
     return delegateTask;
   }
 
