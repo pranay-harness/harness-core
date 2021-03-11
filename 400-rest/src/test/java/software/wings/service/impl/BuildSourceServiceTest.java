@@ -1282,10 +1282,12 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
     when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
-    buildSourceService.getBuildService(
-        SettingAttribute.Builder.aSettingAttribute()
-            .withValue(GcpConfig.builder().useDelegateSelectors(true).delegateSelector(DELEGATE_SELECTOR).build())
-            .build());
+    buildSourceService.getBuildService(SettingAttribute.Builder.aSettingAttribute()
+                                           .withValue(GcpConfig.builder()
+                                                          .useDelegateSelectors(true)
+                                                          .delegateSelector(Collections.singleton(DELEGATE_SELECTOR))
+                                                          .build())
+                                           .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).contains(DELEGATE_SELECTOR);
   }
@@ -1297,10 +1299,12 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
     when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
-    buildSourceService.getBuildService(
-        SettingAttribute.Builder.aSettingAttribute()
-            .withValue(GcpConfig.builder().useDelegateSelectors(false).delegateSelector(DELEGATE_SELECTOR).build())
-            .build());
+    buildSourceService.getBuildService(SettingAttribute.Builder.aSettingAttribute()
+                                           .withValue(GcpConfig.builder()
+                                                          .useDelegateSelectors(false)
+                                                          .delegateSelector(Collections.singleton(DELEGATE_SELECTOR))
+                                                          .build())
+                                           .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();
   }

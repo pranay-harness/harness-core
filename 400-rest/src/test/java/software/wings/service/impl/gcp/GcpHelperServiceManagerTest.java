@@ -63,8 +63,11 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
         .when(delegateService)
         .executeTask(any(DelegateTask.class));
 
-    final GcpConfig gcpConfig =
-        GcpConfig.builder().accountId(ACCOUNT_ID).useDelegateSelectors(true).delegateSelector("foo").build();
+    final GcpConfig gcpConfig = GcpConfig.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .useDelegateSelectors(true)
+                                    .delegateSelector(Collections.singleton("foo"))
+                                    .build();
 
     gcpHelperServiceManager.validateCredential(gcpConfig, Collections.emptyList());
 

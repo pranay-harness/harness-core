@@ -12,6 +12,8 @@ import software.wings.graphql.schema.mutation.cloudProvider.QLUpdateGcpCloudProv
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collection;
+import java.util.Collections;
 
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)

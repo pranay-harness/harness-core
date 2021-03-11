@@ -22,6 +22,8 @@ import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestricti
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
+import java.util.Collections;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,7 +41,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     String accountId = "accountId";
     String encryptedServiceAccountKeyFileContent = "encryptedServiceAccountKeyFileContent";
     boolean useDelegate = true;
-    String delegateSelector = "delegateSelector";
+    Set<String> delegateSelector = Collections.singleton("delegateSelector");
     boolean skipValidation = true;
     GcpConfig gcpConfig = GcpConfig.builder()
                               .accountId(accountId)
@@ -87,8 +89,8 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     boolean skipValidation = true;
     GcpConfig.Yaml yaml = GcpConfig.Yaml.builder()
                               .serviceAccountKeyFileContent(serviceAccountKeyFileContent)
-                              .useDelegate(useDelegate)
-                              .delegateSelector(delegateSelector)
+                              .useDelegateSelectors(useDelegate)
+                              .delegateSelector(Collections.singleton(delegateSelector))
                               .skipValidation(skipValidation)
                               .build();
 
