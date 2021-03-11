@@ -66,7 +66,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
 
-    doNothing().when(awsSecretsManagerService).validateSecretsManagerConfig(any());
+    doNothing().when(awsSecretsManagerService).validateSecretsManagerConfig(any(), any());
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
   }
 
