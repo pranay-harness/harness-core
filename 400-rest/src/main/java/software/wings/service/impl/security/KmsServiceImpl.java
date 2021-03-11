@@ -26,6 +26,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.service.intfc.security.KmsService;
@@ -90,10 +91,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       if (SECRET_MASK.equals(kmsConfig.getKmsArn())) {
         kmsConfig.setKmsArn(savedKmsConfig.getKmsArn());
       }
-      credentialChanged = !Objects.equals(kmsConfig.getRegion(), savedKmsConfig.getRegion())
-          || !Objects.equals(kmsConfig.getAccessKey(), savedKmsConfig.getAccessKey())
-          || !Objects.equals(kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey())
-          || !Objects.equals(kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn());
+      credentialChanged = isCredentialChanged(kmsConfig, savedKmsConfig);
 
       // secret field un-decrypted version of saved KMS config
       savedKmsConfig = wingsPersistence.get(KmsConfig.class, kmsConfig.getUuid());
@@ -174,6 +172,19 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     wingsPersistence.save(arnKeyData);
 
     return parentId;
+  }
+
+  private boolean isCredentialChanged(KmsConfig kmsConfig, KmsConfig savedKmsConfig) {
+    return !Objects.equals(kmsConfig.getRegion(), savedKmsConfig.getRegion())
+        || !Objects.equals(kmsConfig.getAccessKey(), savedKmsConfig.getAccessKey())
+        || !Objects.equals(kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey())
+        || !Objects.equals(kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn())
+        || !Objects.equals(kmsConfig.isAssumeIamRoleOnDelegate(), savedKmsConfig.isAssumeIamRoleOnDelegate())
+        || !Objects.equals(kmsConfig.isAssumeStsRoleOnDelegate(), savedKmsConfig.isAssumeStsRoleOnDelegate())
+        || !Objects.equals(kmsConfig.getRoleArn(), savedKmsConfig.getRoleArn())
+        || !Objects.equals(kmsConfig.getExternalName(), savedKmsConfig.getExternalName())
+        || !Objects.equals(kmsConfig.getAssumeStsRoleDuration(), savedKmsConfig.getAssumeStsRoleDuration())
+        || !Objects.equals(kmsConfig.getDelegateSelectors(), savedKmsConfig.getDelegateSelectors());
   }
 
   @Override
