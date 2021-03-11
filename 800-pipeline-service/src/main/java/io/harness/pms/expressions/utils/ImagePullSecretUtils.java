@@ -1,7 +1,10 @@
 package io.harness.pms.expressions.utils;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
+
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -25,14 +28,12 @@ import io.harness.ngpipeline.artifact.bean.GcrArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.utils.IdentifierRefHelper;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
-
-import java.util.Optional;
-
-import static io.harness.k8s.model.ImageDetails.ImageDetailsBuilder;
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 @Singleton
 @Slf4j

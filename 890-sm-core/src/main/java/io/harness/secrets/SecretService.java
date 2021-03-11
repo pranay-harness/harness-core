@@ -6,6 +6,7 @@ import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.security.encryption.EncryptionType;
 
 import software.wings.security.UsageRestrictions;
@@ -53,6 +54,6 @@ public interface SecretService {
   PageResponse<EncryptedData> listSecretsScopedToAccount(
       @NotEmpty String accountId, @NotNull PageRequest<EncryptedData> pageRequest);
 
-  List<String> filterSecretIdsByReadPermission(
+  List<SecretMetadata> filterSecretIdsByReadPermission(
       Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest);
 }

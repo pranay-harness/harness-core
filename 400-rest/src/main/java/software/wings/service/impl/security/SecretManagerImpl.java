@@ -41,6 +41,7 @@ import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretChangeLog.SecretChangeLogKeys;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
 import io.harness.exception.InvalidRequestException;
@@ -937,7 +938,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<String> filterSecretIdsByReadPermission(
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
       Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
     return secretService.filterSecretIdsByReadPermission(secretIds, accountId, appIdFromRequest, envIdFromRequest);
   }
