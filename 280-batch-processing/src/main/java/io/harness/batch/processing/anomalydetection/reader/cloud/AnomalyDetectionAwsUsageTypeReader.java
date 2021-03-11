@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.springframework.batch.core.StepExecution;
 
-public class AnomalyDetectionGcpProductReader extends AnomalyDetectionCloudReader {
+public class AnomalyDetectionAwsUsageTypeReader extends AnomalyDetectionCloudReader {
   @Override
   public void beforeStep(StepExecution stepExecution) {
     parameters = stepExecution.getJobExecution().getJobParameters();
@@ -55,7 +55,7 @@ public class AnomalyDetectionGcpProductReader extends AnomalyDetectionCloudReade
                              .trainEnd(endTime.minus(1, ChronoUnit.DAYS))
                              .testStart(endTime.minus(1, ChronoUnit.DAYS))
                              .testEnd(endTime)
-                             .entityType(EntityType.GCP_PRODUCT)
+                             .entityType(EntityType.AWS_USAGE_TYPE)
                              .cloudQueryMetaData(queryMetaData)
                              .timeGranularity(TimeGranularity.DAILY)
                              .build();
@@ -64,7 +64,7 @@ public class AnomalyDetectionGcpProductReader extends AnomalyDetectionCloudReade
     CloudBillingFilter startTimeFilter = new CloudBillingFilter();
     startTimeFilter.setStartTime(CloudBillingTimeFilter.builder()
                                      .operator(QLTimeOperator.AFTER)
-                                     .variable(CloudBillingFilter.BILLING_GCP_STARTTIME)
+                                     .variable(CloudBillingFilter.BILLING_AWS_STARTTIME)
                                      .value(timeSeriesMetaData.getTrainStart().toEpochMilli())
                                      .build());
     filterList.add(startTimeFilter);
@@ -72,19 +72,23 @@ public class AnomalyDetectionGcpProductReader extends AnomalyDetectionCloudReade
     CloudBillingFilter endTimeFilter = new CloudBillingFilter();
     endTimeFilter.setStartTime(CloudBillingTimeFilter.builder()
                                    .operator(QLTimeOperator.BEFORE)
-                                   .variable(CloudBillingFilter.BILLING_GCP_STARTTIME)
+                                   .variable(CloudBillingFilter.BILLING_AWS_STARTTIME)
                                    .value(timeSeriesMetaData.getTestEnd().toEpochMilli())
                                    .build());
     filterList.add(endTimeFilter);
 
     // groupby
-    CloudBillingGroupBy projectIdGroupBy = new CloudBillingGroupBy();
-    projectIdGroupBy.setEntityGroupBy(CloudEntityGroupBy.projectId);
-    groupByList.add(projectIdGroupBy);
+    CloudBillingGroupBy awsLinkedAccountGroupBy = new CloudBillingGroupBy();
+    awsLinkedAccountGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsLinkedAccount);
+    groupByList.add(awsLinkedAccountGroupBy);
 
-    CloudBillingGroupBy productGroupBy = new CloudBillingGroupBy();
-    productGroupBy.setEntityGroupBy(CloudEntityGroupBy.product);
-    groupByList.add(productGroupBy);
+    CloudBillingGroupBy awsServiceGroupBy = new CloudBillingGroupBy();
+    awsServiceGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsService);
+    groupByList.add(awsServiceGroupBy);
+
+    CloudBillingGroupBy awsUsageTypeGroupBy = new CloudBillingGroupBy();
+    awsUsageTypeGroupBy.setEntityGroupBy(CloudEntityGroupBy.awsUsageType);
+    groupByList.add(awsUsageTypeGroupBy);
 
     CloudBillingGroupBy startTime = new CloudBillingGroupBy();
     startTime.setTimeTruncGroupby(TimeTruncGroupby.builder().entity(PreAggregatedTableSchema.startTime).build());
@@ -92,18 +96,23 @@ public class AnomalyDetectionGcpProductReader extends AnomalyDetectionCloudReade
 
     // aggeration
     aggregationList.add(CloudBillingAggregate.builder()
-                            .columnName(CloudBillingAggregate.BILLING_GCP_COST)
+                            .columnName(CloudBillingAggregate.AWS_BLENDED_COST)
                             .operationType(QLCCMAggregateOperation.SUM)
                             .build());
-    notNullColumns.add(PreAggregatedTableSchema.cost);
+    notNullColumns.add(PreAggregatedTableSchema.awsBlendedCost);
 
     // sort Critera
     sortCriteriaList.add(CloudBillingSortCriteria.builder()
-                             .sortType(CloudSortType.gcpProjectId)
+                             .sortType(CloudSortType.awsLinkedAccount)
                              .sortOrder(QLSortOrder.ASCENDING)
                              .build());
     sortCriteriaList.add(
-        CloudBillingSortCriteria.builder().sortType(CloudSortType.gcpProduct).sortOrder(QLSortOrder.ASCENDING).build());
+        CloudBillingSortCriteria.builder().sortType(CloudSortType.awsService).sortOrder(QLSortOrder.ASCENDING).build());
+
+    sortCriteriaList.add(CloudBillingSortCriteria.builder()
+                             .sortType(CloudSortType.awsUsageType)
+                             .sortOrder(QLSortOrder.ASCENDING)
+                             .build());
 
     sortCriteriaList.add(
         CloudBillingSortCriteria.builder().sortType(CloudSortType.Time).sortOrder(QLSortOrder.ASCENDING).build());
