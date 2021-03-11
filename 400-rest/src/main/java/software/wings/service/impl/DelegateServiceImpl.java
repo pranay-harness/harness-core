@@ -317,6 +317,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -449,6 +450,20 @@ public class DelegateServiceImpl implements DelegateService {
             }
           });
 
+  private LoadingCache<ImmutablePair<String, String>, DelegateGroup> delegateGroupCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterAccess(1, TimeUnit.HOURS)
+          .build(new CacheLoader<ImmutablePair<String, String>, DelegateGroup>() {
+            @Override
+            public DelegateGroup load(ImmutablePair<String, String> delegateGroupKey) {
+              return persistence.createQuery(DelegateGroup.class)
+                  .filter(DelegateGroupKeys.accountId, delegateGroupKey.getLeft())
+                  .filter(DelegateGroupKeys.uuid, delegateGroupKey.getRight())
+                  .get();
+            }
+          });
+
   public static void embedCapabilitiesInDelegateTask(
       DelegateTask task, Collection<EncryptionConfig> encryptionConfigs, ExpressionEvaluator maskingEvaluator) {
     if (isEmpty(task.getData().getParameters()) || isNotEmpty(task.getExecutionCapabilities())) {
@@ -566,7 +581,8 @@ public class DelegateServiceImpl implements DelegateService {
                                         .project(DelegateKeys.tags, true)
                                         .project(DelegateKeys.delegateName, true)
                                         .project(DelegateKeys.hostName, true)
-                                        .project(DelegateKeys.delegateProfileId, true);
+                                        .project(DelegateKeys.delegateProfileId, true)
+                                        .project(DelegateKeys.delegateGroupId, true);
 
     try (HIterator<Delegate> delegates = new HIterator<>(delegateQuery.fetch())) {
       if (delegates.hasNext()) {
@@ -582,6 +598,19 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public DelegateGroup getDelegateGroup(String accountId, String delegateGroupId) {
+    if (isBlank(accountId) || isBlank(delegateGroupId)) {
+      return null;
+    }
+
+    try {
+      return delegateGroupCache.get(ImmutablePair.of(accountId, delegateGroupId));
+    } catch (ExecutionException | CacheLoader.InvalidCacheLoadException e) {
+      return null;
+    }
+  }
+
+  @Override
   public Set<String> retrieveDelegateSelectors(Delegate delegate) {
     Set<String> selectors = delegate.getTags() == null ? new HashSet<>() : new HashSet<>(delegate.getTags());
 
@@ -593,8 +622,13 @@ public class DelegateServiceImpl implements DelegateService {
   private Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate) {
     SortedMap<String, SelectorType> selectorTypeMap = new TreeMap<>();
 
-    DelegateProfile delegateProfile =
-        delegateProfileService.get(delegate.getAccountId(), delegate.getDelegateProfileId());
+    if (isNotBlank(delegate.getDelegateGroupId())) {
+      DelegateGroup delegateGroup = getDelegateGroup(delegate.getAccountId(), delegate.getDelegateGroupId());
+
+      if (delegateGroup != null) {
+        selectorTypeMap.put(delegateGroup.getName().toLowerCase(), SelectorType.GROUP_NAME);
+      }
+    }
 
     if (isNotBlank(delegate.getHostName())) {
       selectorTypeMap.put(delegate.getHostName().toLowerCase(), SelectorType.HOST_NAME);
@@ -603,6 +637,9 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegate.getDelegateName())) {
       selectorTypeMap.put(delegate.getDelegateName().toLowerCase(), SelectorType.DELEGATE_NAME);
     }
+
+    DelegateProfile delegateProfile =
+        delegateProfileService.get(delegate.getAccountId(), delegate.getDelegateProfileId());
 
     if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
       selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
@@ -762,6 +799,18 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public String getHostNameForGroupedDelegate(String hostname) {
+    if (isNotEmpty(hostname)) {
+      int indexOfLastHyphen = hostname.lastIndexOf('-');
+      if (indexOfLastHyphen > 0) {
+        hostname = hostname.substring(0, indexOfLastHyphen) + "-{n}";
+      }
+    }
+
+    return hostname;
+  }
+
+  @Override
   public DelegateStatus getDelegateStatusWithScalingGroups(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
 
@@ -827,7 +876,11 @@ public class DelegateServiceImpl implements DelegateService {
 
           String delegateType = groupDelegates.get(0).getDelegateType();
           String groupName = groupDelegates.get(0).getDelegateName();
-          String groupHostName = ""; // TODO - use method added in DEL-1638
+
+          String groupHostName = "";
+          if (KUBERNETES.equals(delegateType)) {
+            groupHostName = getHostNameForGroupedDelegate(groupDelegates.get(0).getHostName());
+          }
 
           Map<String, SelectorType> groupSelectors = new HashMap<>();
           groupDelegates.forEach(delegate -> groupSelectors.putAll(retrieveDelegateImplicitSelectors(delegate)));
