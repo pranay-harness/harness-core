@@ -1,6 +1,7 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 
@@ -39,7 +40,12 @@ test_dependencies = shared_dependencies + [
     "@maven//:org_mockito_mockito_core",
     "@maven//:org_powermock_powermock_module_junit4",
     "@maven//:pl_pragmatists_JUnitParams",
+    "@maven//:com_google_inject_extensions_guice_assistedinject",
+    "@maven//:com_google_inject_extensions_guice_multibindings",
+    "@maven//:com_google_inject_guice",
 ]
+
+run_tests()
 
 java_library(
     name = "tests",
