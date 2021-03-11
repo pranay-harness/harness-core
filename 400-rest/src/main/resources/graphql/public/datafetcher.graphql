@@ -56,7 +56,9 @@ enum DataFetcherEnum {
   gcpServiceAccount
   idleCostTrendStats
   infraAccountConnection
+  infrastructureDefinition
   instanceConnection
+  infrastructureDefinitionConnection
   instanceCount
   instanceStats
   k8sAnomalies
