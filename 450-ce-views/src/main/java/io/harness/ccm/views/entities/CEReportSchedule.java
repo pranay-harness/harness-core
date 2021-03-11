@@ -38,11 +38,10 @@ public class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtA
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("account_enabled_type")
-                 .field("accountId")
-                 .field("enabled")
-                 .field("name")
-                 .field("viewsId")
-                 .field("type")
+                 .field(CEReportScheduleKeys.accountId)
+                 .field(CEReportScheduleKeys.enabled)
+                 .field(CEReportScheduleKeys.name)
+                 .field(CEReportScheduleKeys.viewsId)
                  .build())
         .build();
   }
