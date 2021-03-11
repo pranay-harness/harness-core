@@ -11,11 +11,9 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NewRelicCapabilityHelper {
-  private static final String BASE_URL = "https://insights-api.newrelic.com/v1/accounts/";
-
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
       ExpressionEvaluator maskingEvaluator, NewRelicConnectorDTO newRelicConnectorDTO) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        BASE_URL + newRelicConnectorDTO.getNewRelicAccountId(), maskingEvaluator));
+        newRelicConnectorDTO.getUrl(), maskingEvaluator));
   }
 }

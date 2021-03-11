@@ -11,6 +11,7 @@ public class NewRelicDTOToEntity implements ConnectorDTOToEntityMapper<NewRelicC
     return NewRelicConnector.builder()
         .apiKeyRef(SecretRefHelper.getSecretConfigString(connectorDTO.getApiKeyRef()))
         .newRelicAccountId(connectorDTO.getNewRelicAccountId())
+        .url(connectorDTO.getUrl())
         .build();
   }
 }

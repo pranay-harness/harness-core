@@ -32,12 +32,14 @@ public class NewRelicEntityToDTOTest extends CategoryTest {
     String secretIdentifier = "secretIdentifier";
     String apiKeyRef = "apiKeyRef";
     String accountId = "accountId";
+    String url = "https://insights-api.newrelic.com";
 
     NewRelicConnector connector = NewRelicConnector.builder().newRelicAccountId(accountId).apiKeyRef(apiKeyRef).build();
 
     NewRelicConnectorDTO connectorDTO = newRelicEntityToDTO.createConnectorDTO(connector);
     assertThat(connectorDTO).isNotNull();
     assertThat(connectorDTO.getNewRelicAccountId()).isEqualTo(connector.getNewRelicAccountId());
+    assertThat(connector.getUrl()).isEqualTo(connectorDTO.getUrl());
     assertThat(connectorDTO.getApiKeyRef().getIdentifier()).isEqualTo(connector.getApiKeyRef());
   }
 }
