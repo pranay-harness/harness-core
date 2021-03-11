@@ -77,7 +77,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   private String saveKmsConfigInternal(String accountId, KmsConfig kmsConfig) {
     kmsConfig.setAccountId(accountId);
-
     KmsConfig oldConfigForAudit = null;
     KmsConfig savedKmsConfig = null;
     boolean credentialChanged = true;
@@ -109,15 +108,17 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedKmsConfig);
       return secretManagerConfigService.save(savedKmsConfig);
     }
+
     EncryptedData accessKeyData = null;
     if (isNotEmpty(kmsConfig.getAccessKey())) {
       accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
       if (isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
-        checkNotNull(savedAccessKey, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
-        savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
-        savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
-        accessKeyData = savedAccessKey;
+        if (savedAccessKey != null) {
+          savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
+          savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
+          accessKeyData = savedAccessKey;
+        }
       }
       accessKeyData.setAccountId(accountId);
       accessKeyData.setType(KMS);
@@ -130,10 +131,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
       if (isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
-        checkNotNull(savedSecretKey, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
-        savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
-        savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
-        secretKeyData = savedSecretKey;
+        if (savedSecretKey != null) {
+          savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
+          savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
+          secretKeyData = savedSecretKey;
+        }
       }
       secretKeyData.setAccountId(accountId);
       secretKeyData.setType(KMS);
@@ -269,9 +271,15 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   private void decryptKmsConfigSecrets(KmsConfig kmsConfig) {
     if (kmsConfig != null) {
-      kmsConfig.setAccessKey(new String(decryptKey(kmsConfig.getAccessKey().toCharArray())));
-      kmsConfig.setSecretKey(new String(decryptKey(kmsConfig.getSecretKey().toCharArray())));
-      kmsConfig.setKmsArn(new String(decryptKey(kmsConfig.getKmsArn().toCharArray())));
+      if (isNotEmpty(kmsConfig.getAccessKey())) {
+        kmsConfig.setAccessKey(new String(decryptKey(kmsConfig.getAccessKey().toCharArray())));
+      }
+      if (isNotEmpty(kmsConfig.getSecretKey())) {
+        kmsConfig.setSecretKey(new String(decryptKey(kmsConfig.getSecretKey().toCharArray())));
+      }
+      if (isNotEmpty(kmsConfig.getKmsArn())) {
+        kmsConfig.setKmsArn(new String(decryptKey(kmsConfig.getKmsArn().toCharArray())));
+      }
     }
   }
 }
