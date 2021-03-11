@@ -11,6 +11,8 @@ import lombok.Value;
 @Builder
 public class HelmChartManifestDelegateConfig implements ManifestDelegateConfig {
   StoreDelegateConfig storeDelegateConfig;
+  String chartName;
+  String chartVersion;
   HelmVersion helmVersion;
   HelmCommandFlag helmCommandFlag;
 

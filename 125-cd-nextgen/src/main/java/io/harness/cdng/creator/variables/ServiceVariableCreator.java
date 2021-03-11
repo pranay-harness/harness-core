@@ -156,7 +156,21 @@ public class ServiceVariableCreator {
 
   private void addVariablesForHelmChartManifest(
       YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    addVariablesForStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+    YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
+    if (storeNode != null) {
+      YamlField specNode = storeNode.getNode().getField(YamlTypes.SPEC);
+      if (specNode == null) {
+        throw new InvalidRequestException("Invalid store config");
+      }
+
+      if (ManifestStoreType.isInGitSubset(storeNode.getNode().getType())) {
+        addVariablesForGit(specNode, yamlPropertiesMap);
+      } else if (ManifestStoreType.HTTP.equals(storeNode.getNode().getType())) {
+        addVariablesForHttp(specNode, yamlPropertiesMap);
+      } else {
+        throw new InvalidRequestException("Invalid store type");
+      }
+    }
 
     List<YamlField> fields = manifestSpecNode.getNode().fields();
     fields.forEach(field -> {
@@ -168,7 +182,7 @@ public class ServiceVariableCreator {
   }
 
   private void addVariablesFork8sManifest(YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    addVariablesForStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+    addVariablesForK8sAndValueStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
 
     List<YamlField> fields = manifestSpecNode.getNode().fields();
     fields.forEach(field -> {
@@ -180,10 +194,10 @@ public class ServiceVariableCreator {
 
   private void addVariablesForValuesManifest(
       YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    addVariablesForStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+    addVariablesForK8sAndValueStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
   }
 
-  private void addVariablesForStoreConfigYaml(
+  private void addVariablesForK8sAndValueStoreConfigYaml(
       YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
     if (storeNode != null) {
@@ -191,7 +205,7 @@ public class ServiceVariableCreator {
       if (specNode == null) {
         throw new InvalidRequestException("Invalid store config");
       }
-      if (isOneOfManifestStoreType(storeNode.getNode().getType())) {
+      if (ManifestStoreType.isInGitSubset(storeNode.getNode().getType())) {
         addVariablesForGit(specNode, yamlPropertiesMap);
       } else {
         throw new InvalidRequestException("Invalid store type");
@@ -200,6 +214,15 @@ public class ServiceVariableCreator {
   }
 
   private void addVariablesForGit(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlField> fields = gitNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID)) {
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+      }
+    });
+  }
+
+  private void addVariablesForHttp(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
     List<YamlField> fields = gitNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID)) {
@@ -296,17 +319,5 @@ public class ServiceVariableCreator {
         }
       }
     });
-  }
-
-  private static boolean isOneOfManifestStoreType(String manifestType) {
-    switch (manifestType) {
-      case ManifestStoreType.GIT:
-      case ManifestStoreType.BITBUCKET:
-      case ManifestStoreType.GITHUB:
-      case ManifestStoreType.GITLAB:
-        return true;
-      default:
-        return false;
-    }
   }
 }

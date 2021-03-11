@@ -1,5 +1,6 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
@@ -16,6 +17,7 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
+import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -23,8 +25,12 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
+import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
+import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
@@ -261,5 +267,40 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(result).isFalse();
     result = k8sStepHelper.getSkipResourceVersioning(ValuesManifestOutcome.builder().build());
     assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetManifestDelegateConfigForHelmChartUsingHttpRepo() {
+    String connectorRef = "org.http_helm_connector";
+    String chartName = "chartName";
+    String chartVersion = "chartVersion";
+    HttpHelmConnectorDTO httpHelmConnectorConfig =
+        HttpHelmConnectorDTO.builder()
+            .auth(HttpHelmAuthenticationDTO.builder().authType(HttpHelmAuthType.ANONYMOUS).build())
+            .build();
+    HelmChartManifestOutcome manifestOutcome =
+        HelmChartManifestOutcome.builder()
+            .store(HttpStoreConfig.builder().connectorRef(ParameterField.createValueField(connectorRef)).build())
+            .chartName(chartName)
+            .chartVersion(chartVersion)
+            .build();
+
+    doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .connector(ConnectorInfoDTO.builder()
+                                            .connectorType(HTTP_HELM_REPO)
+                                            .connectorConfig(httpHelmConnectorConfig)
+                                            .build())
+                             .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
+    assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.HELM_CHART);
+    assertThat(delegateConfig).isInstanceOf(HelmChartManifestDelegateConfig.class);
+    HelmChartManifestDelegateConfig helmChartDelegateConfig = (HelmChartManifestDelegateConfig) delegateConfig;
+    assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(HttpHelmStoreDelegateConfig.class);
   }
 }

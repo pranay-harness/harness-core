@@ -4,6 +4,9 @@ import static io.harness.cdng.manifest.ManifestType.HelmChart;
 import static io.harness.cdng.manifest.ManifestType.K8Manifest;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
 
+import static java.lang.String.format;
+
+import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -12,12 +15,14 @@ import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.yaml.ParameterField;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
 public class ManifestOutcomeMapper {
@@ -37,7 +42,7 @@ public class ManifestOutcomeMapper {
         return getHelmChartOutcome(manifestAttributes);
       default:
         throw new UnsupportedOperationException(
-            String.format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
+            format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
     }
   }
 
@@ -65,9 +70,38 @@ public class ManifestOutcomeMapper {
     HelmChartManifest helmChartManifest = (HelmChartManifest) manifestAttributes;
     boolean skipResourceVersioning = !ParameterField.isNull(helmChartManifest.getSkipResourceVersioning())
         && helmChartManifest.getSkipResourceVersioning().getValue();
+    String manifestStoreKind = helmChartManifest.getStoreConfig().getKind();
+    String chartName = null;
+    String chartVersion = null;
+
+    if (!ManifestStoreType.isInGitSubset(manifestStoreKind)) {
+      if (ParameterField.isNull(helmChartManifest.getChartName())) {
+        throw new InvalidArgumentsException(
+            Pair.of("chartName", format("required for %s store type", manifestStoreKind)));
+      }
+
+      chartName = helmChartManifest.getChartName().getValue();
+    } else {
+      if (!ParameterField.isNull(helmChartManifest.getChartName())) {
+        throw new InvalidArgumentsException(
+            Pair.of("chartName", format("not allowed for %s store type", manifestStoreKind)));
+      }
+    }
+
+    if (!ParameterField.isNull(helmChartManifest.getChartVersion())) {
+      if (ManifestStoreType.isInGitSubset(manifestStoreKind)) {
+        throw new InvalidArgumentsException(
+            Pair.of("chartVersion", format("not allowed for %s store", manifestStoreKind)));
+      }
+
+      chartVersion = helmChartManifest.getChartVersion().getValue();
+    }
+
     return HelmChartManifestOutcome.builder()
         .identifier(helmChartManifest.getIdentifier())
         .store(helmChartManifest.getStoreConfig())
+        .chartName(chartName)
+        .chartVersion(chartVersion)
         .helmVersion(helmChartManifest.getHelmVersion())
         .skipResourceVersioning(skipResourceVersioning)
         .commandFlags(helmChartManifest.getCommandFlags())
