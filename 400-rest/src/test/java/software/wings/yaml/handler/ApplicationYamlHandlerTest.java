@@ -16,7 +16,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
-import software.wings.beans.Application.Yaml;
+import software.wings.beans.ApplicationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -74,18 +74,18 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Application.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<ApplicationYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
+    ApplicationYaml yamlObject = (ApplicationYaml) getYaml(validYamlContent, ApplicationYaml.class);
     changeContext.setYaml(yamlObject);
 
     Application savedApplication = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     compareApp(application, savedApplication);
 
-    Yaml yaml = yamlHandler.toYaml(this.application, APP_ID);
+    ApplicationYaml yaml = yamlHandler.toYaml(this.application, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isNotNull();
 
@@ -113,12 +113,12 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(invalidYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Application.Yaml> changeContext = new ChangeContext();
+    ChangeContext<ApplicationYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Application.Yaml yamlObject = (Application.Yaml) getYaml(validYamlContent, Yaml.class);
+    ApplicationYaml yamlObject = (ApplicationYaml) getYaml(validYamlContent, ApplicationYaml.class);
     changeContext.setYaml(yamlObject);
 
     thrown.expect(WingsException.class);

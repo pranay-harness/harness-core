@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AmazonS3ArtifactStreamYaml extends ArtifactStream.Yaml {
+public final class AmazonS3ArtifactStreamYaml extends ArtifactStreamYaml {
   private String bucketName;
   private List<String> artifactPaths;
 

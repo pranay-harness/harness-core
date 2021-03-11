@@ -95,15 +95,4 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   public String fetchResourceCategory() {
     return ResourceType.ARTIFACT_SERVER.name();
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, url, username, password, usageRestrictions);
-    }
-  }
 }

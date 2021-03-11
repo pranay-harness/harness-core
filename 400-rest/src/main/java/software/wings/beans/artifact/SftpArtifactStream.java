@@ -77,7 +77,7 @@ public class SftpArtifactStream extends ArtifactStream {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactStream.Yaml {
+  public static final class Yaml extends ArtifactStreamYaml {
     private List<String> artifactPaths;
 
     @lombok.Builder

@@ -219,32 +219,6 @@ public abstract class ArtifactStream
     return keywords;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private String serverName;
-    private String templateUri;
-    private List<NameValuePair> templateVariables;
-
-    public Yaml(String type, String harnessApiVersion, String serverName) {
-      super(type, harnessApiVersion);
-      this.serverName = serverName;
-    }
-
-    public Yaml(String type, String harnessApiVersion) {
-      super(type, harnessApiVersion);
-    }
-
-    public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly, String templateUri,
-        List<NameValuePair> templateVariables) {
-      super(type, harnessApiVersion);
-      this.serverName = serverName;
-      this.templateUri = templateUri;
-      this.templateVariables = templateVariables;
-    }
-  }
-
   @UtilityClass
   public static final class ArtifactStreamKeys {
     // Temporary

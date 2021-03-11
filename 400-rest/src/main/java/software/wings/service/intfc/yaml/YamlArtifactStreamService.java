@@ -7,6 +7,7 @@ import io.harness.rest.RestResponse;
 
 import software.wings.beans.Base;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.yaml.YamlPayload;
 
 /**
@@ -19,7 +20,7 @@ import software.wings.yaml.YamlPayload;
 public interface YamlArtifactStreamService {
   RestResponse<YamlPayload> getArtifactStreamYaml(String appId, String artifactStreamId);
 
-  ArtifactStream.Yaml getArtifactStreamYamlObject(String artifactStreamId);
+  ArtifactStreamYaml getArtifactStreamYamlObject(String artifactStreamId);
 
   String getArtifactStreamYamlString(ArtifactStream artifactStream);
 

@@ -5,6 +5,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.Application;
+import software.wings.beans.ApplicationYaml;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
@@ -38,7 +39,7 @@ public class AppYamlResourceServiceImpl implements AppYamlResourceService {
     Application app = appService.get(appId);
 
     ApplicationYamlHandler yamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION);
-    Application.Yaml applicationYaml = yamlHandler.toYaml(app, appId);
+    ApplicationYaml applicationYaml = yamlHandler.toYaml(app, appId);
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, appId, app.getAccountId(), applicationYaml, app.getName() + YAML_EXTENSION);

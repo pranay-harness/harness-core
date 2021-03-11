@@ -16,7 +16,7 @@ import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 
 import software.wings.beans.InfrastructureType;
-import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.AwsAmiInfrastructureYaml;
 import software.wings.infra.AwsEcsInfrastructure;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.AwsLambdaInfrastructure;
@@ -42,7 +42,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonTypeInfo(use = Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = AwsAmiInfrastructure.Yaml.class, name = AWS_AMI)
+  @JsonSubTypes.Type(value = AwsAmiInfrastructureYaml.class, name = AWS_AMI)
   , @JsonSubTypes.Type(value = AwsEcsInfrastructure.Yaml.class, name = AWS_ECS),
       @JsonSubTypes.Type(value = AwsInstanceInfrastructure.Yaml.class, name = AWS_INSTANCE),
       @JsonSubTypes.Type(value = AwsLambdaInfrastructure.Yaml.class, name = AWS_LAMBDA),

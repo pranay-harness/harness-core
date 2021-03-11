@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AmiArtifactStreamYaml extends ArtifactStream.Yaml {
+public class AmiArtifactStreamYaml extends ArtifactStreamYaml {
   private String platform;
   private String region;
   private List<NameValuePair.Yaml> amiTags = new ArrayList<>();

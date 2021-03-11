@@ -489,19 +489,6 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     return kw;
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String description;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description) {
-      super(type, harnessApiVersion);
-      this.description = description;
-    }
-  }
-
   @UtilityClass
   public static final class ApplicationKeys {
     // Temporary

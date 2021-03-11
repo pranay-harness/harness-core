@@ -82,7 +82,7 @@ public class GcsArtifactStream extends ArtifactStream {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactStream.Yaml {
+  public static final class Yaml extends ArtifactStreamYaml {
     private String bucketName;
     private List<String> artifactPaths;
     private String projectId;

@@ -168,56 +168,6 @@ public class AwsAmiInfrastructure
         : emptySet();
   }
 
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AWS_AMI)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String region;
-    private String autoScalingGroupName;
-    private List<String> classicLoadBalancers;
-    private List<String> targetGroupArns;
-    private String hostNameConvention;
-
-    // Variables for B/G type Ami deployment
-    private List<String> stageClassicLoadBalancers;
-    private List<String> stageTargetGroupArns;
-    private Map<String, String> expressions;
-
-    private AmiDeploymentType amiDeploymentType;
-    private String spotinstElastiGroupJson;
-    private String spotinstCloudProviderName;
-    boolean asgIdentifiesWorkload;
-    boolean useTrafficShift;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String region, String autoScalingGroupName,
-        List<String> classicLoadBalancers, List<String> targetGroupArns, String hostNameConvention,
-        List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns, Map<String, String> expressions,
-        AmiDeploymentType amiDeploymentType, String spotinstElastiGroupJson, String spotinstCloudProviderName,
-        boolean asgIdentifiesWorkload, boolean useTrafficShift) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setRegion(region);
-      setAutoScalingGroupName(autoScalingGroupName);
-      setClassicLoadBalancers(classicLoadBalancers);
-      setTargetGroupArns(targetGroupArns);
-      setHostNameConvention(hostNameConvention);
-      setStageClassicLoadBalancers(stageClassicLoadBalancers);
-      setStageTargetGroupArns(stageTargetGroupArns);
-      setExpressions(expressions);
-      setAmiDeploymentType(amiDeploymentType);
-      setSpotinstCloudProviderName(spotinstCloudProviderName);
-      setSpotinstElastiGroupJson(spotinstElastiGroupJson);
-      setAsgIdentifiesWorkload(asgIdentifiesWorkload);
-      setUseTrafficShift(useTrafficShift);
-    }
-
-    public Yaml() {
-      super(AWS_AMI);
-    }
-  }
-
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.AWS;

@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class AcrArtifactStreamYaml extends ArtifactStream.Yaml {
+public class AcrArtifactStreamYaml extends ArtifactStreamYaml {
   private String subscriptionId;
   private String registryName;
   private String registryHostName;

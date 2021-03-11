@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class WorkflowVariable extends NameValuePair.AbstractYaml {
+public class WorkflowVariable extends NameValuePairAbstractYaml {
   String entityType;
 
   @Builder
