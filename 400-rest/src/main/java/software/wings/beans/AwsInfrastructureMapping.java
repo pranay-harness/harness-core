@@ -21,7 +21,6 @@ import software.wings.stencils.DataProvider;
 import software.wings.utils.Utils;
 
 import com.amazonaws.regions.Regions;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.annotations.VisibleForTesting;
@@ -33,9 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 

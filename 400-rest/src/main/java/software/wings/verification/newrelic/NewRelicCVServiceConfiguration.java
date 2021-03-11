@@ -7,9 +7,7 @@ import io.harness.beans.FeatureName;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import java.util.HashMap;
 import java.util.List;

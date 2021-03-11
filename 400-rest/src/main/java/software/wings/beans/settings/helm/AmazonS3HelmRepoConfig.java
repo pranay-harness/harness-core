@@ -11,10 +11,8 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
 import software.wings.audit.ResourceType;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.HelmRepoYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -23,7 +21,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)

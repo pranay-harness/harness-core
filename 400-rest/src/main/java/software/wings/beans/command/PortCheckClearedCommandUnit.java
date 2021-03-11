@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * Created by peeyushaggarwal on 8/3/16.

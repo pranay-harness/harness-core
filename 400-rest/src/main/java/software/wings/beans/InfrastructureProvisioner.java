@@ -12,7 +12,6 @@ import io.harness.persistence.NameAccess;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;

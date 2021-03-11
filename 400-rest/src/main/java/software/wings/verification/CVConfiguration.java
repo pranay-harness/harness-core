@@ -3,8 +3,6 @@ package software.wings.verification;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.MAX_NUM_ALERT_OCCURRENCES;
 
-import static java.lang.Boolean.parseBoolean;
-
 import io.harness.annotation.HarnessEntity;
 import io.harness.beans.FeatureName;
 import io.harness.mongo.index.FdIndex;
@@ -14,12 +12,10 @@ import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.yaml.YamlConstants;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.sm.StateType;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;

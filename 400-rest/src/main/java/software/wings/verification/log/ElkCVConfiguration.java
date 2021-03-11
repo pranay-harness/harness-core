@@ -9,7 +9,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

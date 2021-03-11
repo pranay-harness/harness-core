@@ -13,7 +13,6 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableSet;
@@ -22,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 

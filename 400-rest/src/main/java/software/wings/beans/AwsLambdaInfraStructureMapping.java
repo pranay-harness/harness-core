@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 

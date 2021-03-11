@@ -9,14 +9,12 @@ import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureTag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @JsonTypeName("AZURE_INFRA")
 @Data

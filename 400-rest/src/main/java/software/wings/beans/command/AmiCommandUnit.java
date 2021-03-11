@@ -5,8 +5,6 @@ import io.harness.logging.CommandExecutionStatus;
 import software.wings.api.DeploymentType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * Created by anubhaw on 12/20/17.

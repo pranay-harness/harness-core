@@ -13,9 +13,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("AZURE_INFRA")

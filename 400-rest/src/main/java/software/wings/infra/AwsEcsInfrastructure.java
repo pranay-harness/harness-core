@@ -16,7 +16,6 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 

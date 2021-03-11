@@ -10,10 +10,8 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
-import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -29,7 +27,6 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.apache.commons.codec.binary.Base64;
 import org.hibernate.validator.constraints.NotEmpty;

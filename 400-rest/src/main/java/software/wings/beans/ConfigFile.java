@@ -9,14 +9,11 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.yaml.YamlType;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;

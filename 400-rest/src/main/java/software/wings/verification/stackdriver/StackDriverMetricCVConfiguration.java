@@ -5,9 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

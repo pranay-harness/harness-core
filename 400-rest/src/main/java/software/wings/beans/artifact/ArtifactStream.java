@@ -20,13 +20,11 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.utils.Utils;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -38,7 +36,6 @@ import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;

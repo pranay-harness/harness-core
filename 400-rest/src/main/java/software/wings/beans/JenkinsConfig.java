@@ -2,8 +2,6 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -21,7 +19,6 @@ import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.ArtifactServerYaml;
-import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;

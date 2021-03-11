@@ -12,7 +12,6 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -20,7 +19,6 @@ import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;

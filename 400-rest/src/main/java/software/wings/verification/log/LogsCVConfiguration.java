@@ -7,13 +7,10 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 @Data

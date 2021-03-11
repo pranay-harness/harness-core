@@ -2,13 +2,8 @@ package software.wings.verification.datadog;
 
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.AllArgsConstructor;

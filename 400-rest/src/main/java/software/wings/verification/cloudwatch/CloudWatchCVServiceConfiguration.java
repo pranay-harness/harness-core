@@ -2,9 +2,7 @@ package software.wings.verification.cloudwatch;
 
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import java.util.List;
 import java.util.Map;
