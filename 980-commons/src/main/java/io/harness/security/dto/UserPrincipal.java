@@ -22,8 +22,9 @@ import lombok.Getter;
 public class UserPrincipal extends Principal {
   String accountId;
 
-  public UserPrincipal(String principal, String accountId) {
-    super(USER, principal);
+  public UserPrincipal(String name, String accountId) {
+    this.type = USER;
+    this.name = name;
     this.accountId = accountId;
   }
 
