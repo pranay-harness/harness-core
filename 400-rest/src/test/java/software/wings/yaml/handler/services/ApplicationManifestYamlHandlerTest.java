@@ -39,6 +39,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -225,11 +226,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCRUDAndGetForLocal() throws IOException {
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(localValidYamlContent, validYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(localValidYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(localValidYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -245,10 +246,10 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testCRUDAndGetForRemote() throws IOException {
-    ChangeContext<ApplicationManifest.Yaml> changeContext = createChangeContext(remoteYamlContent, validYamlFilePath);
+    ChangeContext<ApplicationManifestYaml> changeContext = createChangeContext(remoteYamlContent, validYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(remoteYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(remoteYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -269,10 +270,9 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private void testCRUDAndGetForCustomManifest(String yamlContent, ApplicationManifest appManifest) throws IOException {
-    ChangeContext<ApplicationManifest.Yaml> changeContext = createChangeContext(yamlContent, validYamlFilePath);
+    ChangeContext<ApplicationManifestYaml> changeContext = createChangeContext(yamlContent, validYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(yamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject = (ApplicationManifestYaml) getYaml(yamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -295,10 +295,10 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
         + "  script: echo test\n"
         + "storeType: Local";
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(localManifestWithCustomManifestConfig, validYamlFilePath);
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(localManifestWithCustomManifestConfig, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(localManifestWithCustomManifestConfig, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, asList(changeContext)))
@@ -307,8 +307,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
 
     // Feature Flag is disabled
     when(featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID)).thenReturn(false);
-    changeContext.setYaml(
-        (ApplicationManifest.Yaml) getYaml(customManifestYamlContent, ApplicationManifest.Yaml.class));
+    changeContext.setYaml((ApplicationManifestYaml) getYaml(customManifestYamlContent, ApplicationManifestYaml.class));
     assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, asList(changeContext)))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Custom Manifest feature is not enabled. Please contact Harness support");
@@ -318,18 +317,18 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testFailures() throws IOException {
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(localValidYamlContent, invalidYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(localValidYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(localValidYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
   }
 
   private void validateYamlContent(String yamlFileContent, ApplicationManifest applicationManifest) {
-    ApplicationManifest.Yaml yaml = yamlHandler.toYaml(applicationManifest, APP_ID);
+    ApplicationManifestYaml yaml = yamlHandler.toYaml(applicationManifest, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isNotNull();
 
@@ -351,13 +350,13 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
     }
   }
 
-  private ChangeContext<ApplicationManifest.Yaml> createChangeContext(String fileContent, String filePath) {
+  private ChangeContext<ApplicationManifestYaml> createChangeContext(String fileContent, String filePath) {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(fileContent);
     gitFileChange.setFilePath(filePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<ApplicationManifestYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION_MANIFEST);
     changeContext.setYamlSyncHandler(yamlHandler);
@@ -375,11 +374,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
                                                   .kind(AppManifestKind.VALUES)
                                                   .build();
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(envOverrideLocalValidYamlContent, envOverrideValidYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(envOverrideLocalValidYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(envOverrideLocalValidYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -407,11 +406,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
                                                   .kind(AppManifestKind.VALUES)
                                                   .build();
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(envOverrideRemoteValidYamlContent, envOverrideValidYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(envOverrideRemoteValidYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(envOverrideRemoteValidYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -434,11 +433,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
                                                   .kind(AppManifestKind.VALUES)
                                                   .build();
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(envServiceOverrideLocalValidYamlContent, envServiceOverrideValidYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(envServiceOverrideLocalValidYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(envServiceOverrideLocalValidYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -467,11 +466,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
                                                   .kind(AppManifestKind.VALUES)
                                                   .build();
 
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(envServiceOverrideRemoteValidYamlContent, envServiceOverrideValidYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(envServiceOverrideRemoteValidYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(envServiceOverrideRemoteValidYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -490,11 +489,10 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
     String kustomizeYamlContent = readResourceFile(kustomizeYamlFile);
     ApplicationManifest kustomizeManifest = kustomizeApplicationManifest.cloneInternal();
     kustomizeManifest.setKustomizeConfig(KustomizeConfig.builder().kustomizeDirPath("a").pluginRootDir("b").build());
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
-        createChangeContext(kustomizeYamlContent, validYamlFilePath);
+    ChangeContext<ApplicationManifestYaml> changeContext = createChangeContext(kustomizeYamlContent, validYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(kustomizeYamlContent, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(kustomizeYamlContent, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -514,7 +512,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testFieldsInYaml() {
-    int attributeDiff = attributeDiff(ApplicationManifest.class, ApplicationManifest.Yaml.class);
+    int attributeDiff = attributeDiff(ApplicationManifest.class, ApplicationManifestYaml.class);
     assertThat(attributeDiff).isEqualTo(9);
   }
 
@@ -530,11 +528,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testSkipVersioningForAllK8sObjectException() throws IOException {
     doReturn(false).when(serviceResourceService).isK8sV2Service(any(), any());
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(remoteYamlContentWithSkipVersioing, validYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, asList(changeContext)))
@@ -547,11 +545,11 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testSkipVersioningForAllK8sObject() throws IOException {
     doReturn(true).when(serviceResourceService).isK8sV2Service(any(), any());
-    ChangeContext<ApplicationManifest.Yaml> changeContext =
+    ChangeContext<ApplicationManifestYaml> changeContext =
         createChangeContext(remoteYamlContentWithSkipVersioing, validYamlFilePath);
 
-    ApplicationManifest.Yaml yamlObject =
-        (ApplicationManifest.Yaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifest.Yaml.class);
+    ApplicationManifestYaml yamlObject =
+        (ApplicationManifestYaml) getYaml(remoteYamlContentWithSkipVersioing, ApplicationManifestYaml.class);
     changeContext.setYaml(yamlObject);
 
     ApplicationManifest applicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

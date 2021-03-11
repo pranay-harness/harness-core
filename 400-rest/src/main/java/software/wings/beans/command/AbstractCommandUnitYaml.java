@@ -25,17 +25,18 @@ import lombok.EqualsAndHashCode;
       @JsonSubTypes.Type(value = DockerStopCommandUnit.Yaml.class, name = "DOCKER_STOP"),
       @JsonSubTypes.Type(value = ProcessCheckRunningCommandUnit.Yaml.class, name = "PROCESS_CHECK_RUNNING"),
       @JsonSubTypes.Type(value = ProcessCheckStoppedCommandUnit.Yaml.class, name = "PROCESS_CHECK_STOPPED"),
-      @JsonSubTypes.Type(value = PortCheckClearedCommandUnit.Yaml.class, name = "PORT_CHECK_CLEARED"),
+      @JsonSubTypes.Type(value = PortCheckClearedCommandUnitYaml.class, name = "PORT_CHECK_CLEARED"),
       @JsonSubTypes.Type(value = PortCheckListeningCommandUnit.Yaml.class, name = "PORT_CHECK_LISTENING"),
       @JsonSubTypes.Type(value = ResizeCommandUnit.Yaml.class, name = "RESIZE"),
       @JsonSubTypes.Type(value = CodeDeployCommandUnit.Yaml.class, name = "CODE_DEPLOY"),
       @JsonSubTypes.Type(value = AwsLambdaCommandUnit.Yaml.class, name = "AWS_LAMBDA"),
-      @JsonSubTypes.Type(value = AmiCommandUnit.Yaml.class, name = "AWS_AMI"),
+      @JsonSubTypes.Type(value = AmiCommandUnitYaml.class, name = "AWS_AMI"),
       @JsonSubTypes.Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES"),
       @JsonSubTypes.Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),
       @JsonSubTypes.Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP"),
       @JsonSubTypes.Type(value = DownloadArtifactCommandUnit.Yaml.class, name = "DOWNLOAD_ARTIFACT")
 })
+
 public abstract class AbstractCommandUnitYaml extends BaseYaml {
   private String name;
   private String commandUnitType;

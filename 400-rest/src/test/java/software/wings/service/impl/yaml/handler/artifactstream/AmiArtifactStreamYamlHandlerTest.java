@@ -25,6 +25,7 @@ import software.wings.beans.Application;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AmiArtifactStream;
+import software.wings.beans.artifact.AmiArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -67,7 +68,7 @@ public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
                                               .build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    AmiArtifactStream.Yaml yaml = yamlHandler.toYaml(amiArtifactStream, APP_ID);
+    AmiArtifactStreamYaml yaml = yamlHandler.toYaml(amiArtifactStream, APP_ID);
     assertThat(yaml.getRegion()).isEqualTo("us-east-1");
     assertThat(yaml.getAmiTags().size()).isEqualTo(1);
     assertThat(yaml.getAmiTags().get(0).getName()).isEqualTo("image_version");
@@ -88,13 +89,13 @@ public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
         asList(NameValuePair.Yaml.builder().name("image_version").value("1.0.0").build());
     List<NameValuePair.Yaml> amiFilter =
         asList(NameValuePair.Yaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
-    AmiArtifactStream.Yaml baseYaml = AmiArtifactStream.Yaml.builder()
-                                          .region("us-east-1")
-                                          .amiTags(amiTags)
-                                          .amiFilters(amiFilter)
-                                          .harnessApiVersion("1.0")
-                                          .serverName("test server")
-                                          .build();
+    AmiArtifactStreamYaml baseYaml = AmiArtifactStreamYaml.builder()
+                                         .region("us-east-1")
+                                         .amiTags(amiTags)
+                                         .amiFilters(amiFilter)
+                                         .harnessApiVersion("1.0")
+                                         .serverName("test server")
+                                         .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -140,7 +141,7 @@ public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(AmiArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(AmiArtifactStreamYaml.class);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -154,12 +155,12 @@ public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
         asList(NameValuePair.Yaml.builder().name("image_version").value("1.0.0").build());
     List<NameValuePair.Yaml> amiFilter =
         asList(NameValuePair.Yaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
-    AmiArtifactStream.Yaml baseYaml = AmiArtifactStream.Yaml.builder()
-                                          .amiTags(amiTags)
-                                          .amiFilters(amiFilter)
-                                          .harnessApiVersion("1.0")
-                                          .serverName("test server")
-                                          .build();
+    AmiArtifactStreamYaml baseYaml = AmiArtifactStreamYaml.builder()
+                                         .amiTags(amiTags)
+                                         .amiFilters(amiFilter)
+                                         .harnessApiVersion("1.0")
+                                         .serverName("test server")
+                                         .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)

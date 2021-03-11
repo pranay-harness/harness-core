@@ -52,6 +52,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
+import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
@@ -195,8 +196,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     ApplicationManifest applicationManifest = applicationManifestService.getById(appId, applicationManifestId);
 
     notNullCheck("No Application Manifest with the given id:" + applicationManifestId, applicationManifest);
-    ApplicationManifest.Yaml yaml =
-        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
+    ApplicationManifestYaml yaml =
+        (ApplicationManifestYaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
@@ -320,8 +321,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
    * @return the rest response
    */
   public RestResponse<YamlPayload> getApplicationManifest(String appId, ApplicationManifest manifest) {
-    ApplicationManifest.Yaml yaml =
-        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(manifest))
+    ApplicationManifestYaml yaml =
+        (ApplicationManifestYaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(manifest))
             .toYaml(manifest, appId);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, yaml, INDEX_YAML);
@@ -684,7 +685,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   private RestResponse<YamlPayload> getAppManifestYaml(String accountId, ApplicationManifest applicationManifest) {
     YamlType yamlType = getYamlTypeFromAppManifest(applicationManifest);
 
-    ApplicationManifest.Yaml yaml = (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
+    ApplicationManifestYaml yaml = (ApplicationManifestYaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
         applicationManifest, applicationManifest.getAppId());
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,

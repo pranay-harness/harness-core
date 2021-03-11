@@ -24,17 +24,4 @@ public class AmiCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     return null;
   }
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("AWS_AMI")
-  public static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml() {
-      super(CommandUnitType.AWS_AMI.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.AWS_AMI.name(), deploymentType);
-    }
-  }
 }

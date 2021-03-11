@@ -47,20 +47,4 @@ public class PortCheckClearedCommandUnit extends ExecCommandUnit {
   public List<TailFilePatternEntry> getTailPatterns() {
     return super.getTailPatterns();
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("PORT_CHECK_CLEARED")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    public Yaml() {
-      super(CommandUnitType.PORT_CHECK_CLEARED.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.PORT_CHECK_CLEARED.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-    }
-  }
 }
