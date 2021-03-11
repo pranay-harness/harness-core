@@ -19,8 +19,9 @@ import lombok.Getter;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SERVICE")
 public class ServicePrincipal extends Principal {
-  public ServicePrincipal(String principal) {
-    super(SERVICE, principal);
+  public ServicePrincipal(String name) {
+    this.type = SERVICE;
+    this.name = name;
   }
 
   @Override

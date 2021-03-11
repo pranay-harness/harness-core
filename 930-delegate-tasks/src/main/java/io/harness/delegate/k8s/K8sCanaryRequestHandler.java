@@ -193,8 +193,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
   boolean prepareForCanary(K8sCanaryDeployRequest k8sCanaryDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback logCallback) {
     try {
-      boolean success =
-          k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, k8sDelegateTaskParams, false, logCallback);
+      boolean success = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, k8sDelegateTaskParams,
+          k8sCanaryDeployRequest.isSkipResourceVersioning(), logCallback);
       if (!success) {
         return false;
       }

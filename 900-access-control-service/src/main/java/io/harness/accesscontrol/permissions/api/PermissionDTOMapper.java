@@ -19,13 +19,4 @@ class PermissionDTOMapper {
                         .build())
         .build();
   }
-
-  public static Permission fromDTO(PermissionDTO object) {
-    return Permission.builder()
-        .identifier(object.getIdentifier())
-        .name(object.getName())
-        .status(object.getStatus())
-        .allowedScopeLevels(object.getAllowedScopeLevels())
-        .build();
-  }
 }

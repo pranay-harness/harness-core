@@ -871,7 +871,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     List<String> valuesList = new ArrayList<>();
     HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
     ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
-                                                        .skipResourceVersioning(true)
                                                         .helmVersion(HelmVersion.V3)
                                                         .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
                                                         .helmCommandFlag(helmCommandFlag)
@@ -902,7 +901,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     List<String> filesToRender = Arrays.asList("file1", "file2");
     HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
     ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
-                                                        .skipResourceVersioning(true)
                                                         .helmVersion(HelmVersion.V3)
                                                         .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
                                                         .helmCommandFlag(helmCommandFlag)

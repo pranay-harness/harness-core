@@ -40,6 +40,7 @@ import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
+import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
@@ -165,5 +166,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(GithubStore.class, 12527);
     kryo.register(GitLabStore.class, 12528);
     kryo.register(BitbucketStore.class, 12529);
+    kryo.register(HttpStoreConfig.class, 12530);
   }
 }

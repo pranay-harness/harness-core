@@ -331,11 +331,14 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   public void testPrepareForCanaryCount() throws Exception {
     K8sCanaryHandlerConfig canaryHandlerConfig = k8sCanaryRequestHandler.getK8sCanaryHandlerConfig();
     K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().build();
-    K8sCanaryDeployRequest deployRequest =
-        K8sCanaryDeployRequest.builder().instanceUnitType(NGInstanceUnitType.COUNT).instances(4).build();
+    K8sCanaryDeployRequest deployRequest = K8sCanaryDeployRequest.builder()
+                                               .instanceUnitType(NGInstanceUnitType.COUNT)
+                                               .instances(4)
+                                               .skipResourceVersioning(true)
+                                               .build();
     doReturn(true)
         .when(k8sCanaryBaseHandler)
-        .prepareForCanary(canaryHandlerConfig, delegateTaskParams, false, logCallback);
+        .prepareForCanary(canaryHandlerConfig, delegateTaskParams, true, logCallback);
     doReturn(1).when(k8sCanaryBaseHandler).getCurrentInstances(canaryHandlerConfig, delegateTaskParams, logCallback);
 
     k8sCanaryRequestHandler.prepareForCanary(deployRequest, delegateTaskParams, logCallback);
