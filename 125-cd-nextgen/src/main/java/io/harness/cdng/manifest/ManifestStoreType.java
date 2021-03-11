@@ -6,4 +6,18 @@ public interface ManifestStoreType {
   String GITHUB = "Github";
   String BITBUCKET = "Bitbucket";
   String GITLAB = "GitLab";
+  String HTTP = "Http";
+
+  static boolean isInGitSubset(String manifestType) {
+    switch (manifestType) {
+      case GIT:
+      case GITHUB:
+      case BITBUCKET:
+      case GITLAB:
+        return true;
+
+      default:
+        return false;
+    }
+  }
 }
