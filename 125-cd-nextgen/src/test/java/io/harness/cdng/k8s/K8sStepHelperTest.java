@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -237,9 +238,28 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
     assertThat(helmChartDelegateConfig.getHelmVersion()).isEqualTo(HelmVersion.V3);
-    assertThat(helmChartDelegateConfig.isSkipResourceVersioning()).isTrue();
     assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap())
         .containsKeys(HelmSubCommandType.FETCH, HelmSubCommandType.VERSION);
     assertThat(helmChartDelegateConfig.getHelmCommandFlag().getValueMap()).containsValues("--test", "--test2");
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldReturnSkipResourceVersioning() {
+    boolean result =
+        k8sStepHelper.getSkipResourceVersioning(K8sManifestOutcome.builder().skipResourceVersioning(true).build());
+    assertThat(result).isTrue();
+    result =
+        k8sStepHelper.getSkipResourceVersioning(K8sManifestOutcome.builder().skipResourceVersioning(false).build());
+    assertThat(result).isFalse();
+    result = k8sStepHelper.getSkipResourceVersioning(
+        HelmChartManifestOutcome.builder().skipResourceVersioning(true).build());
+    assertThat(result).isTrue();
+    result = k8sStepHelper.getSkipResourceVersioning(
+        HelmChartManifestOutcome.builder().skipResourceVersioning(false).build());
+    assertThat(result).isFalse();
+    result = k8sStepHelper.getSkipResourceVersioning(ValuesManifestOutcome.builder().build());
+    assertThat(result).isFalse();
   }
 }

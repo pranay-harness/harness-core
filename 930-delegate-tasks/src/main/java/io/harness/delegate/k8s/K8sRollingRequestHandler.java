@@ -108,7 +108,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
     success = prepareForRolling(k8sDelegateTaskParams,
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
-        k8sRollingDeployRequest.isInCanaryWorkflow());
+        k8sRollingDeployRequest.isInCanaryWorkflow(), k8sRollingDeployRequest.isSkipResourceVersioning());
     if (!success) {
       return getFailureResponse();
     }
@@ -227,11 +227,11 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     }
   }
 
-  private boolean prepareForRolling(
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean inCanaryWorkflow) {
+  private boolean prepareForRolling(K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
+      boolean inCanaryWorkflow, boolean skipResourceVersioning) {
     try {
       managedWorkloads = getWorkloads(resources);
-      if (isNotEmpty(managedWorkloads)) {
+      if (isNotEmpty(managedWorkloads) && !skipResourceVersioning) {
         markVersionedResources(resources);
       }
 
@@ -256,8 +256,10 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
         executionLogCallback.saveExecutionLog(color("\nFound following Managed Workloads: \n", Cyan, Bold)
             + k8sTaskHelperBase.getResourcesInTableFormat(managedWorkloads));
 
-        executionLogCallback.saveExecutionLog("\nVersioning resources.");
-        addRevisionNumber(resources, release.getNumber());
+        if (!skipResourceVersioning) {
+          executionLogCallback.saveExecutionLog("\nVersioning resources.");
+          addRevisionNumber(resources, release.getNumber());
+        }
 
         k8sRollingBaseHandler.addLabelsInManagedWorkloadPodSpec(inCanaryWorkflow, managedWorkloads, releaseName);
         k8sRollingBaseHandler.addLabelsInDeploymentSelectorForCanary(inCanaryWorkflow, managedWorkloads);

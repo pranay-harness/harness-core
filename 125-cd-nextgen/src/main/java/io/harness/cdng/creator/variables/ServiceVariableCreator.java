@@ -141,8 +141,10 @@ public class ServiceVariableCreator {
     }
     switch (manifestNode.getNode().getType()) {
       case ManifestType.K8Manifest:
+        addVariablesFork8sManifest(specNode, yamlPropertiesMap);
+        break;
       case ManifestType.VALUES:
-        addVariablesFork8sAndValuesManifest(specNode, yamlPropertiesMap);
+        addVariablesForValuesManifest(specNode, yamlPropertiesMap);
         break;
       case ManifestType.HelmChart:
         addVariablesForHelmChartManifest(specNode, yamlPropertiesMap);
@@ -154,18 +156,8 @@ public class ServiceVariableCreator {
 
   private void addVariablesForHelmChartManifest(
       YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
-    if (storeNode != null) {
-      YamlField specNode = storeNode.getNode().getField(YamlTypes.SPEC);
-      if (specNode == null) {
-        throw new InvalidRequestException("Invalid store config");
-      }
-      if (isOneOfManifestStoreType(storeNode.getNode().getType())) {
-        addVariablesForGit(specNode, yamlPropertiesMap);
-      } else {
-        throw new InvalidRequestException("Invalid store type");
-      }
-    }
+    addVariablesForStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+
     List<YamlField> fields = manifestSpecNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID) && !field.getName().equals(YamlTypes.STORE_CONFIG_WRAPPER)
@@ -175,7 +167,23 @@ public class ServiceVariableCreator {
     });
   }
 
-  private void addVariablesFork8sAndValuesManifest(
+  private void addVariablesFork8sManifest(YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    addVariablesForStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+
+    List<YamlField> fields = manifestSpecNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID) && !field.getName().equals(YamlTypes.STORE_CONFIG_WRAPPER)) {
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+      }
+    });
+  }
+
+  private void addVariablesForValuesManifest(
+      YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    addVariablesForStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+  }
+
+  private void addVariablesForStoreConfigYaml(
       YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
     if (storeNode != null) {
