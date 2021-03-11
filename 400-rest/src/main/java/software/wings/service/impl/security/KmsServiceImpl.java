@@ -105,71 +105,76 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       savedKmsConfig.setDefault(kmsConfig.isDefault());
       savedKmsConfig.setScopedToAccount(kmsConfig.isScopedToAccount());
       savedKmsConfig.setUsageRestrictions(kmsConfig.getUsageRestrictions());
-
       // PL-3237: Audit secret manager config changes.
       generateAuditForSecretManager(accountId, oldConfigForAudit, savedKmsConfig);
-
       return secretManagerConfigService.save(savedKmsConfig);
     }
-
-    EncryptedData accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
-    if (isNotBlank(kmsConfig.getUuid())) {
-      EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
-      checkNotNull(savedAccessKey, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
-      savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
-      savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
-      accessKeyData = savedAccessKey;
+    EncryptedData accessKeyData = null;
+    if (isNotEmpty(kmsConfig.getAccessKey())) {
+      accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
+      if (isNotBlank(kmsConfig.getUuid())) {
+        EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
+        checkNotNull(savedAccessKey, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
+        savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
+        savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
+        accessKeyData = savedAccessKey;
+      }
+      accessKeyData.setAccountId(accountId);
+      accessKeyData.setType(KMS);
+      accessKeyData.setName(kmsConfig.getName() + "_accessKey");
+      String accessKeyId = wingsPersistence.save(accessKeyData);
+      kmsConfig.setAccessKey(accessKeyId);
     }
-    accessKeyData.setAccountId(accountId);
-    accessKeyData.setType(KMS);
-    accessKeyData.setName(kmsConfig.getName() + "_accessKey");
-    String accessKeyId = wingsPersistence.save(accessKeyData);
-    kmsConfig.setAccessKey(accessKeyId);
-
-    EncryptedData secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
-    if (isNotBlank(kmsConfig.getUuid())) {
-      EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
-      checkNotNull(savedSecretKey, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
-      savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
-      savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
-      secretKeyData = savedSecretKey;
+    EncryptedData secretKeyData = null;
+    if (isNotEmpty(kmsConfig.getSecretKey())) {
+      secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
+      if (isNotBlank(kmsConfig.getUuid())) {
+        EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
+        checkNotNull(savedSecretKey, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
+        savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
+        savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
+        secretKeyData = savedSecretKey;
+      }
+      secretKeyData.setAccountId(accountId);
+      secretKeyData.setType(KMS);
+      secretKeyData.setName(kmsConfig.getName() + "_secretKey");
+      String secretKeyId = wingsPersistence.save(secretKeyData);
+      kmsConfig.setSecretKey(secretKeyId);
     }
-    secretKeyData.setAccountId(accountId);
-    secretKeyData.setType(KMS);
-    secretKeyData.setName(kmsConfig.getName() + "_secretKey");
-    String secretKeyId = wingsPersistence.save(secretKeyData);
-    kmsConfig.setSecretKey(secretKeyId);
-
-    EncryptedData arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
-    if (isNotBlank(kmsConfig.getUuid())) {
-      EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
-      checkNotNull(savedArn, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
-      savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
-      savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
-      arnKeyData = savedArn;
+    EncryptedData arnKeyData = null;
+    if (isNotEmpty(kmsConfig.getKmsArn())) {
+      arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
+      if (isNotBlank(kmsConfig.getUuid())) {
+        EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
+        checkNotNull(savedArn, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
+        savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
+        savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
+        arnKeyData = savedArn;
+      }
+      arnKeyData.setAccountId(accountId);
+      arnKeyData.setType(KMS);
+      arnKeyData.setName(kmsConfig.getName() + "_arn");
+      String arnKeyId = wingsPersistence.save(arnKeyData);
+      kmsConfig.setKmsArn(arnKeyId);
     }
-    arnKeyData.setAccountId(accountId);
-    arnKeyData.setType(KMS);
-    arnKeyData.setName(kmsConfig.getName() + "_arn");
-    String arnKeyId = wingsPersistence.save(arnKeyData);
-    kmsConfig.setKmsArn(arnKeyId);
-
     // PL-3237: Audit secret manager config changes.
     generateAuditForSecretManager(accountId, oldConfigForAudit, kmsConfig);
 
     String parentId = secretManagerConfigService.save(kmsConfig);
-
-    accessKeyData.addParent(
-        EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.accessKey, KMS));
-    wingsPersistence.save(accessKeyData);
-
-    secretKeyData.addParent(
-        EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.secretKey, KMS));
-    wingsPersistence.save(secretKeyData);
-
-    arnKeyData.addParent(EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.kmsArn, KMS));
-    wingsPersistence.save(arnKeyData);
-
+    if (accessKeyData != null) {
+      accessKeyData.addParent(
+          EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.accessKey, KMS));
+      wingsPersistence.save(accessKeyData);
+    }
+    if (secretKeyData != null) {
+      secretKeyData.addParent(
+          EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.secretKey, KMS));
+      wingsPersistence.save(secretKeyData);
+    }
+    if (arnKeyData != null) {
+      arnKeyData.addParent(EncryptedDataParent.createParentRef(parentId, KmsConfig.class, KmsConfigKeys.kmsArn, KMS));
+      wingsPersistence.save(arnKeyData);
+    }
     return parentId;
   }
 
@@ -216,17 +221,19 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
-    EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-    checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
-    kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
-
+    if (isNotEmpty(kmsConfig.getAccessKey())) {
+      EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
+      // checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
+      kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
+    }
     if (maskSecret) {
       kmsConfig.maskSecrets();
     } else {
-      EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
-      checkNotNull(secretData, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
-      kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
-
+      if (isNotEmpty(kmsConfig.getSecretKey())) {
+        EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
+        //   checkNotNull(secretData, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
+        kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
+      }
       EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
       checkNotNull(arnData, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
       kmsConfig.setKmsArn(new String(decryptLocal(arnData)));
