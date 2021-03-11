@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.roleassignments.api;
 
+import static io.harness.accesscontrol.common.filter.ManagedFilter.buildFromSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.principals.Principal;
@@ -78,7 +79,7 @@ public class RoleAssignmentDTOMapper {
                       .collect(Collectors.toSet()))
         .principalTypeFilter(
             object.getPrincipalTypeFilter() == null ? new HashSet<>() : object.getPrincipalTypeFilter())
-        .managedFilter(object.getHarnessManagedFilter() == null ? new HashSet<>() : object.getHarnessManagedFilter())
+        .managedFilter(buildFromSet(object.getHarnessManagedFilter()))
         .disabledFilter(object.getDisabledFilter() == null ? new HashSet<>() : object.getDisabledFilter())
         .build();
   }

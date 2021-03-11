@@ -1,7 +1,7 @@
 package io.harness.accesscontrol.roles.persistence;
 
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.Role;
-import io.harness.accesscontrol.roles.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;

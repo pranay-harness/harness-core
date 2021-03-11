@@ -1,9 +1,9 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toResponseDTO;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
 
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PACKAGE;

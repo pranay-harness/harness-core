@@ -1,9 +1,9 @@
 package io.harness.accesscontrol.roles.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toResponseDTO;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roles.Role;
