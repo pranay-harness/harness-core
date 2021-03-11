@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.roleassignments.validator;
 
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;

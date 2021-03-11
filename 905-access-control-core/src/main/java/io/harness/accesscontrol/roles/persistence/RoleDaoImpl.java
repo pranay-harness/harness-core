@@ -1,15 +1,15 @@
 package io.harness.accesscontrol.roles.persistence;
 
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.ONLY_CUSTOM;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.ONLY_MANAGED;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roles.persistence.RoleDBOMapper.toDBO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.Role;
-import io.harness.accesscontrol.roles.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.roles.persistence.RoleDBO.RoleDBOKeys;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;

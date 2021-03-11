@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.roles;
 
-import io.harness.accesscontrol.roles.filter.ManagedFilter;
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
