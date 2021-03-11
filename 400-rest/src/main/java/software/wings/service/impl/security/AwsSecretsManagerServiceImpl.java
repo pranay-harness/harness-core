@@ -67,9 +67,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       if (SECRET_MASK.equals(secretsManagerConfig.getSecretKey())) {
         secretsManagerConfig.setSecretKey(savedSecretsManagerConfig.getSecretKey());
       }
-      credentialChanged = !Objects.equals(secretsManagerConfig.getAccessKey(), savedSecretsManagerConfig.getAccessKey())
-          || !Objects.equals(secretsManagerConfig.getSecretKey(), savedSecretsManagerConfig.getSecretKey());
-
+      credentialChanged = isCredentialChanged(secretsManagerConfig, savedSecretsManagerConfig);
       // secret field un-decrypted version of saved AWS config
       savedSecretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, secretsManagerConfig.getUuid());
       oldConfigForAudit = kryoSerializer.clone(savedSecretsManagerConfig);
@@ -112,6 +110,22 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     generateAuditForSecretManager(accountId, oldConfigForAudit, secretsManagerConfig);
 
     return secretManagerConfigService.save(secretsManagerConfig);
+  }
+
+  private boolean isCredentialChanged(
+      AwsSecretsManagerConfig secretsManagerConfig, AwsSecretsManagerConfig savedSecretsManagerConfig) {
+    return !Objects.equals(secretsManagerConfig.getAccessKey(), savedSecretsManagerConfig.getAccessKey())
+        || !Objects.equals(secretsManagerConfig.getSecretKey(), savedSecretsManagerConfig.getSecretKey())
+        || !Objects.equals(
+            secretsManagerConfig.isAssumeIamRoleOnDelegate(), savedSecretsManagerConfig.isAssumeIamRoleOnDelegate())
+        || !Objects.equals(
+            secretsManagerConfig.isAssumeStsRoleOnDelegate(), savedSecretsManagerConfig.isAssumeStsRoleOnDelegate())
+        || !Objects.equals(secretsManagerConfig.getRoleArn(), savedSecretsManagerConfig.getRoleArn())
+        || !Objects.equals(secretsManagerConfig.getExternalName(), savedSecretsManagerConfig.getExternalName())
+        || !Objects.equals(
+            secretsManagerConfig.getAssumeStsRoleDuration(), savedSecretsManagerConfig.getAssumeStsRoleDuration())
+        || !Objects.equals(
+            secretsManagerConfig.getDelegateSelectors(), savedSecretsManagerConfig.getDelegateSelectors());
   }
 
   @Override

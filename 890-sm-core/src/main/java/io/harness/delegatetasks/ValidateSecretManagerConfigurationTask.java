@@ -37,7 +37,7 @@ public class ValidateSecretManagerConfigurationTask extends AbstractDelegateRunn
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    return null;
+    return run((ValidateSecretManagerConfigurationTaskParameters) parameters);
   }
 
   private ValidateSecretManagerConfigurationTaskResponse run(

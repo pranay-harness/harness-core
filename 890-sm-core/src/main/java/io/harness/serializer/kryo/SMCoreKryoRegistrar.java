@@ -12,6 +12,8 @@ import io.harness.delegatetasks.FetchSecretTaskResponse;
 import io.harness.delegatetasks.UpsertSecretTaskParameters;
 import io.harness.delegatetasks.UpsertSecretTaskResponse;
 import io.harness.delegatetasks.UpsertSecretTaskType;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskResponse;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskParameters;
 import io.harness.delegatetasks.ValidateSecretReferenceTaskResponse;
 import io.harness.exception.SecretManagementDelegateException;
@@ -63,5 +65,8 @@ public class SMCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(DeleteSecretTaskResponse.class, 150009);
     kryo.register(ValidateSecretReferenceTaskResponse.class, 150010);
     kryo.register(UpsertSecretTaskType.class, 15011);
+
+    kryo.register(ValidateSecretManagerConfigurationTaskParameters.class, 15012);
+    kryo.register(ValidateSecretManagerConfigurationTaskResponse.class, 15013);
   }
 }
