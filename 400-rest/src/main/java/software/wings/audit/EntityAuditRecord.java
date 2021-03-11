@@ -7,9 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import java.util.HashMap;
 import lombok.Builder;
 import lombok.Data;
-
 @OwnedBy(PL)
 @Data
 @Builder
@@ -41,4 +41,5 @@ public class EntityAuditRecord {
   private String affectedResourceType;
   private String affectedResourceOperation;
   private long createdAt;
+  private HashMap<String, Object> details;
 }

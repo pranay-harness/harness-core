@@ -27,11 +27,7 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.security.annotations.PublicApiWithWhitelist;
 
-import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.Event;
-import software.wings.beans.HttpMethod;
-import software.wings.beans.User;
+import software.wings.beans.*;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -47,6 +43,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -108,7 +105,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
-  @Inject AuditServiceHelper auditServiceHelper;
+  @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private ApiKeyService apiKeyService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -226,6 +224,11 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
+    if (isExternalApi) {
+      String apiKey = requestContext.getHeaderString("X-Api-Key");
+      ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
+    }
     String uriPath = requestContext.getUriInfo().getPath();
 
     boolean graphQLRequest = isGraphQLRequest(uriPath);

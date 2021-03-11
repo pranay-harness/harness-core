@@ -62,10 +62,12 @@ public class AuditRequestFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
-    if ((isAuditExemptedHttpMethod(requestContext) && isAllowWhitelistedIP(requestContext))
+    if ((isAuditExemptedHttpMethod(requestContext) && isAllowWhitelistedIP(requestContext)
+            && isAllowExternalApi(requestContext))
         || isAuditExemptedResource()) {
       // do not audit idempotent HttpMethod until we have finer control auditing.
       // audit non-whitelisted IP login
+      // audit external APIs using API_Key
       return;
     }
 
@@ -122,6 +124,9 @@ public class AuditRequestFilter implements ContainerRequestFilter {
         || resourceInfo.getResourceClass().getAnnotation(AuditSkip.class) != null;
   }
 
+  private boolean isAllowExternalApi(ContainerRequestContext requestContext) {
+    return !requestContext.getUriInfo().getPath().contains("external/");
+  }
   private boolean isAllowWhitelistedIP(ContainerRequestContext requestContext) {
     return !requestContext.getUriInfo().getPath().contains("whitelist/isEnabled");
   }

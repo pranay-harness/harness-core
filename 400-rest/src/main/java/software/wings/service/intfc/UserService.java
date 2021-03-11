@@ -172,6 +172,15 @@ public interface UserService extends OwnedByAccount {
   User get(@NotEmpty String accountId, @NotEmpty String userId);
 
   /**
+   *
+   * @param accountId the account Id
+   * @param userId the user Id
+   * @param loadUsers to load users
+   *
+   */
+  List<UserGroup> getUserGroupsOfUser(String accountId, String userId, boolean loadUsers);
+
+  /**
    * Gets user from cache or db.
    *
    * @param userId the user id

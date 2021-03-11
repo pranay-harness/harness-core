@@ -45,24 +45,16 @@ import software.wings.audit.AuditRecord.AuditRecordKeys;
 import software.wings.audit.EntityAuditRecord;
 import software.wings.audit.EntityAuditRecord.EntityAuditRecordBuilder;
 import software.wings.audit.ResourceType;
-import software.wings.beans.AuditPreference;
-import software.wings.beans.EntityType;
-import software.wings.beans.EntityYamlRecord;
+import software.wings.beans.*;
 import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
-import software.wings.beans.HarnessTag;
-import software.wings.beans.ServiceVariable;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.User;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.security.UserGroup;
+import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.AuditTrailFeature;
 import software.wings.features.api.RestrictedApi;
-import software.wings.service.intfc.AuditService;
-import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FileService;
-import software.wings.service.intfc.ResourceLookupService;
-import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.*;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
@@ -86,6 +78,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.activity.InvalidActivityException;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
@@ -112,6 +105,9 @@ public class AuditServiceImpl implements AuditService {
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private AuditPreferenceHelper auditPreferenceHelper;
   @Inject private MainConfiguration configuration;
+  @Inject private AccountService accountService;
+  @Inject private UserService userService;
+  @Inject private AuditHelper auditHelper;
 
   private WingsPersistence wingsPersistence;
 
@@ -430,6 +426,28 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
+  private AuditHeader getAuditHeaderById(@NotNull String changeSetId) {
+    return wingsPersistence.createQuery(AuditHeader.class)
+        .filter(AuditHeader.ID_KEY2, changeSetId)
+        .project("entityAuditRecords", true)
+        .get();
+  }
+  private <T> void addDetails(String accountId, T entity, EntityAuditRecord record, String auditHeaderId) {
+    if (entity instanceof User) {
+      Account account = accountService.get(accountId);
+      record.getDetails().put("Authentication", account.getAuthenticationMechanism());
+      User user = (User) entity;
+      record.getDetails().put("MFA", user.isTwoFactorAuthenticationEnabled());
+      List<UserGroup> userGroups = userService.getUserGroupsOfUser(accountId, user.getUuid(), false);
+      List<String> userGroupNamesList = new ArrayList<>();
+      userGroups.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
+      record.getDetails().put("Groups", userGroupNamesList);
+    } else if (entity instanceof ApiKeyEntry) {
+      AuditHeader header = auditHelper.get();
+      record.getDetails().put("resourcePath", header.getResourcePath());
+    }
+  }
+
   @Override
   public <T> void registerAuditActions(String accountId, T oldEntity, T newEntity, Type type) {
     try {
@@ -464,6 +482,7 @@ public class AuditServiceImpl implements AuditService {
         case LOGIN:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
+        case INVOKED:
         case REMOVE:
           entityToQuery = (UuidAccess) newEntity;
           break;
@@ -477,6 +496,7 @@ public class AuditServiceImpl implements AuditService {
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
       EntityAuditRecord record = builder.build();
+      addDetails(accountId, newEntity, record, auditHeaderId);
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
         case LOCK:
@@ -496,6 +516,7 @@ public class AuditServiceImpl implements AuditService {
         case DELEGATE_APPROVAL:
         case LOGIN:
         case NON_WHITELISTED:
+        case INVOKED:
         case CREATE: {
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
             saveEntityYamlForAudit(newEntity, record, accountId);

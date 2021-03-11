@@ -250,7 +250,11 @@ public class Event {
     /**
      * for non-whitelisted users login attempt
      */
-    NON_WHITELISTED
+    NON_WHITELISTED,
+    /**
+     * for API Invocation using API_Key
+     */
+    INVOKED
   }
 
   /**

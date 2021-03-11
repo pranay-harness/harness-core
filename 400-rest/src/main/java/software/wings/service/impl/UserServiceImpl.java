@@ -1044,7 +1044,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private List<UserGroup> getUserGroupsOfUser(String accountId, String userId, boolean loadUsers) {
+  public List<UserGroup> getUserGroupsOfUser(String accountId, String userId, boolean loadUsers) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
                                              .addFilter(UserGroupKeys.accountId, EQ, accountId)
                                              .addFilter(UserGroupKeys.memberIds, EQ, userId)

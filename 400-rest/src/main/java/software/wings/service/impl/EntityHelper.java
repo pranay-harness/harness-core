@@ -89,6 +89,7 @@ import software.wings.verification.CVConfiguration;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -124,6 +125,7 @@ public class EntityHelper {
     String affectedResourceType = EMPTY;
 
     String affectedResourceOperation = Type.UPDATE.name();
+    HashMap<String, Object> details = new HashMap<String, Object>();
 
     if (entity instanceof Environment) {
       Environment environment = (Environment) entity;
@@ -625,7 +627,8 @@ public class EntityHelper {
         .affectedResourceId(affectedResourceId)
         .affectedResourceName(affectedResourceName)
         .affectedResourceType(affectedResourceType)
-        .affectedResourceOperation(affectedResourceOperation);
+        .affectedResourceOperation(affectedResourceOperation)
+        .details(details);
   }
 
   private String getAffectedResourceTypeForSettingValue(SettingValue value) {
