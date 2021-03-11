@@ -11,4 +11,5 @@ public interface GitStoreConfig extends StoreConfig {
   ParameterField<String> getBranch();
   ParameterField<String> getCommitId();
   ParameterField<List<String>> getPaths();
+  ParameterField<String> getFolderPath();
 }
