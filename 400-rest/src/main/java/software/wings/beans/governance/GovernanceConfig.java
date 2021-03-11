@@ -1,10 +1,10 @@
 package software.wings.beans.governance;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -17,15 +17,22 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
+import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.yaml.BaseEntityYaml;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
@@ -42,12 +49,12 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "governanceConfig", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @Slf4j
-@TargetModule(Module._980_COMMONS)
 public class GovernanceConfig
-    implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess, PersistentCronIterable {
+    implements PersistentEntity, UuidAware, UpdatedByAware, AccountAccess, ApplicationAccess, PersistentCronIterable {
   @Id private String uuid;
-
+  @Setter @JsonIgnore @SchemaIgnore private transient boolean syncFromGit;
   @FdIndex private String accountId;
+  @NotNull @SchemaIgnore protected String appId = GLOBAL_APP_ID;
   private boolean deploymentFreeze;
   private EmbeddedUser lastUpdatedBy;
   private List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs;
@@ -117,5 +124,26 @@ public class GovernanceConfig
       return EmptyPredicate.isEmpty(nextIterations) ? null : nextIterations.get(0);
     }
     return EmptyPredicate.isEmpty(nextCloseIterations) ? null : nextCloseIterations.get(0);
+  }
+
+  @Override
+  public String getAppId() {
+    return GLOBAL_APP_ID;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = false)
+  public static final class Yaml extends BaseEntityYaml {
+    private boolean disableAllDeployments;
+    private List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs;
+
+    @lombok.Builder
+    public Yaml(String type, String harnessApiVersion, boolean disableAllDeployments,
+        List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs) {
+      super(type, harnessApiVersion);
+      this.disableAllDeployments = disableAllDeployments;
+      this.timeRangeBasedFreezeConfigs = timeRangeBasedFreezeConfigs;
+    }
   }
 }

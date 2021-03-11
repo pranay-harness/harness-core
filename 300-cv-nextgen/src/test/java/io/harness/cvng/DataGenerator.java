@@ -1,8 +1,18 @@
 package io.harness.cvng;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
+import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.statemachine.beans.AnalysisState;
+import io.harness.cvng.statemachine.beans.AnalysisStatus;
+import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -78,5 +88,39 @@ public class DataGenerator {
         .score(score)
         .hostData(hostDataList)
         .build();
+  }
+
+  private void setCommonFieldsInCvConfig(CVConfig cvConfig) {
+    cvConfig.setAccountId(accountId);
+    cvConfig.setProjectIdentifier(generateUuid());
+    cvConfig.setServiceIdentifier(generateUuid());
+    cvConfig.setConnectorIdentifier(generateUuid());
+    cvConfig.setOrgIdentifier(generateUuid());
+    cvConfig.setEnvIdentifier(generateUuid());
+    cvConfig.setIdentifier(generateUuid());
+    cvConfig.setMonitoringSourceName("monitoringSource");
+  }
+
+  public AppDynamicsCVConfig getAppDynamicsCVConfig() {
+    AppDynamicsCVConfig appDConfig = new AppDynamicsCVConfig();
+    setCommonFieldsInCvConfig(appDConfig);
+    appDConfig.setCategory(CVMonitoringCategory.PERFORMANCE);
+    appDConfig.setVerificationType(VerificationType.TIME_SERIES);
+    appDConfig.setApplicationName(generateUuid());
+    appDConfig.setMetricPack(MetricPack.builder().build());
+    appDConfig.setTierName(generateUuid());
+    return appDConfig;
+  }
+
+  public AnalysisStateMachine buildStateMachine(
+      AnalysisStatus status, String verificationTaskId, AnalysisState analysisState) {
+    AnalysisStateMachine stateMachine = AnalysisStateMachine.builder()
+                                            .verificationTaskId(verificationTaskId)
+                                            .analysisStartTime(Instant.now().minus(5, ChronoUnit.MINUTES))
+                                            .analysisEndTime(Instant.now())
+                                            .build();
+    stateMachine.setCurrentState(analysisState);
+    stateMachine.setStatus(status);
+    return stateMachine;
   }
 }

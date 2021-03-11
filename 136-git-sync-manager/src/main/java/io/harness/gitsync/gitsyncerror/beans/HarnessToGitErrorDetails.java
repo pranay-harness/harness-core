@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "HarnessToGitErrorDetailsKeys")
-@Document("harnessToGitErrorDetails")
+@Document("harnessToGitErrorDetailsNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.harnessToGitErrorDetails")
 public class HarnessToGitErrorDetails implements GitSyncErrorDetails {
   private boolean fullSyncPath;

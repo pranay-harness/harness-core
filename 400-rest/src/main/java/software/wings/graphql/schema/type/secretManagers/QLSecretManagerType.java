@@ -5,6 +5,7 @@ import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.GCP_KMS;
 import static io.harness.security.encryption.EncryptionType.KMS;
 import static io.harness.security.encryption.EncryptionType.VAULT;
+import static io.harness.security.encryption.EncryptionType.VAULT_SSH;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
@@ -23,7 +24,8 @@ public enum QLSecretManagerType implements QLEnum {
   GCP_SECRETS_MANAGER(EncryptionType.GCP_SECRETS_MANAGER),
   CYBERARK(EncryptionType.CYBERARK),
   GOOGLE_KMS(GCP_KMS),
-  CUSTOM(EncryptionType.CUSTOM);
+  CUSTOM(EncryptionType.CUSTOM),
+  SSH(VAULT_SSH);
 
   @Getter private final EncryptionType encryptionType;
 

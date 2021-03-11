@@ -49,7 +49,8 @@ public class ResourceGroupDBO implements PersistentRegularIterable {
   @NotEmpty final String identifier;
   @NotEmpty final String name;
   @NotNull final Set<String> resourceSelectors;
-  final boolean managed;
+  @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
+  @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;
 
   @Setter @CreatedDate Long createdAt;
   @Setter @LastModifiedDate Long lastModifiedAt;
@@ -57,7 +58,7 @@ public class ResourceGroupDBO implements PersistentRegularIterable {
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
 
-  Long nextReconciliationIterationAt;
+  @Setter Long nextReconciliationIterationAt;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

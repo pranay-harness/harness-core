@@ -3,6 +3,7 @@ package io.harness.accesscontrol.resources.resourcegroups;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -13,7 +14,11 @@ public interface ResourceGroupService {
 
   PageResponse<ResourceGroup> list(@NotNull PageRequest pageRequest, @NotEmpty String scopeIdentifier);
 
+  List<ResourceGroup> list(List<String> resourceGroupIdentifiers, String scopeIdentifier);
+
   Optional<ResourceGroup> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
   ResourceGroup delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
+
+  void deleteIfPresent(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 }

@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.azure.arm.taskhandler;
 
-import static io.harness.azure.model.AzureConstants.ARM_DEPLOYMENT_NAME_PATTERN;
+import static io.harness.azure.model.AzureConstants.DEPLOYMENT_NAME_PATTERN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.AzureARMPreDeploymentDataBuilder;
 import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.builder;
@@ -27,6 +27,7 @@ import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentTenan
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Random;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -37,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   @Inject private AzureARMDeploymentService azureARMDeploymentService;
+  private static final Random rand = new Random();
 
   @Override
   protected AzureARMTaskResponse executeTaskInternal(AzureARMTaskParameters azureARMTaskParameters,
@@ -92,13 +94,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
 
     return DeploymentResourceGroupContext.builder()
         .azureClientContext(azureClientContext)
-        .deploymentName(
-            getDeploymentName(deploymentParameters.getDeploymentName(), deploymentParameters.getResourceGroupName()))
+        .deploymentName(getDeploymentName(deploymentParameters))
         .mode(deploymentParameters.getDeploymentMode())
         .templateJson(deploymentParameters.getTemplateJson())
         .parametersJson(deploymentParameters.getParametersJson())
         .logStreamingTaskClient(logStreamingTaskClient)
         .steadyStateTimeoutInMin(deploymentParameters.getTimeoutIntervalInMin())
+        .isRollback(deploymentParameters.isRollback())
         .build();
   }
 
@@ -121,8 +123,7 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
       ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentSubscriptionContext.builder()
         .azureConfig(azureConfig)
-        .deploymentName(
-            getDeploymentName(deploymentParameters.getDeploymentName(), deploymentParameters.getSubscriptionId()))
+        .deploymentName(getDeploymentName(deploymentParameters))
         .deploymentDataLocation(deploymentParameters.getDeploymentDataLocation())
         .subscriptionId(deploymentParameters.getSubscriptionId())
         .mode(deploymentParameters.getDeploymentMode())
@@ -145,8 +146,7 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
       ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentManagementGroupContext.builder()
         .azureConfig(azureConfig)
-        .deploymentName(
-            getDeploymentName(deploymentParameters.getDeploymentName(), deploymentParameters.getManagementGroupId()))
+        .deploymentName(getDeploymentName(deploymentParameters))
         .deploymentDataLocation(deploymentParameters.getDeploymentDataLocation())
         .managementGroupId(deploymentParameters.getManagementGroupId())
         .mode(deploymentParameters.getDeploymentMode())
@@ -168,7 +168,7 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
       AzureConfig azureConfig, ILogStreamingTaskClient logStreamingTaskClient) {
     return DeploymentTenantContext.builder()
         .azureConfig(azureConfig)
-        .deploymentName(getDeploymentName(deploymentParameters.getDeploymentName(), azureConfig.getTenantId()))
+        .deploymentName(getDeploymentName(deploymentParameters))
         .deploymentDataLocation(deploymentParameters.getDeploymentDataLocation())
         .mode(deploymentParameters.getDeploymentMode())
         .templateJson(deploymentParameters.getTemplateJson())
@@ -182,8 +182,13 @@ public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
     return AzureARMDeploymentResponse.builder().outputs(outputs).preDeploymentData(builder().build()).build();
   }
 
-  private String getDeploymentName(String deploymentName, String entityName) {
-    return isEmpty(deploymentName) ? String.format(ARM_DEPLOYMENT_NAME_PATTERN, entityName, System.currentTimeMillis())
-                                   : deploymentName;
+  private String getDeploymentName(AzureARMDeploymentParameters deploymentParameters) {
+    if (!isEmpty(deploymentParameters.getDeploymentName())) {
+      return deploymentParameters.getDeploymentName();
+    }
+    int randomNum = rand.nextInt(1000);
+    return deploymentParameters.isRollback()
+        ? String.format(DEPLOYMENT_NAME_PATTERN, "rollback_" + randomNum, System.currentTimeMillis())
+        : String.format(DEPLOYMENT_NAME_PATTERN, randomNum, System.currentTimeMillis());
   }
 }

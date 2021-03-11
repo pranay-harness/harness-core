@@ -13,6 +13,7 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
+import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
@@ -91,6 +92,9 @@ import io.harness.delegate.beans.connector.docker.DockerTestConnectionTaskRespon
 import io.harness.delegate.beans.connector.docker.DockerValidationParams;
 import io.harness.delegate.beans.connector.gcp.GcpValidationParams;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsValidationParams;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskParams;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse;
+import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
@@ -115,6 +119,7 @@ import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
+import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.delegate.beans.executioncapability.SmbConnectionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 import io.harness.delegate.beans.executioncapability.SocketConnectivityExecutionCapability;
@@ -143,6 +148,8 @@ import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
@@ -230,6 +237,7 @@ import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
@@ -238,6 +246,7 @@ import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
 import io.harness.delegate.task.jira.response.JiraTaskNGResponse.JiraIssueData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
+import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
 import io.harness.delegate.task.k8s.K8sBGDeployResponse;
@@ -254,6 +263,9 @@ import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.shell.ShellScriptApprovalTaskParameters;
 import io.harness.delegate.task.shell.ShellScriptTaskParametersNG;
@@ -371,6 +383,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(RemoteMethodReturnValueData.class, 5122);
     kryo.register(SecretDetail.class, 19001);
     kryo.register(SelectorCapability.class, 19098);
+    kryo.register(SftpCapability.class, 19124);
     kryo.register(ShellScriptApprovalTaskParameters.class, 20001);
     kryo.register(SmbConnectionCapability.class, 19119);
     kryo.register(SmtpCapability.class, 19121);
@@ -573,6 +586,11 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(GcpValidationParams.class, 19545);
     kryo.register(AwsCodeCommitTaskParams.class, 19546);
     kryo.register(AwsCodeCommitValidationParams.class, 19547);
+    kryo.register(HelmChartManifestDelegateConfig.class, 19548);
+    kryo.register(HttpHelmValidationParams.class, 19549);
+
+    kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
+    kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -611,6 +629,12 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(DeleteResourcesType.class, 543257);
     kryo.register(AzureBlueprintDeploymentParameters.class, 543258);
     kryo.register(AzureBlueprintDeploymentResponse.class, 543259);
+    kryo.register(HelmCommandFlag.class, 543260);
+    kryo.register(CustomManifestFetchConfig.class, 543261);
+    kryo.register(CustomManifestValuesFetchParams.class, 543262);
+    kryo.register(CustomManifestValuesFetchResponse.class, 543263);
+    kryo.register(EcrArtifactDelegateRequest.class, 543264);
+    kryo.register(EcrArtifactDelegateResponse.class, 543265);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);
@@ -627,5 +651,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmInstallationParameters.class, 10013);
     kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
+    kryo.register(ChecksumType.class, 5065);
   }
 }

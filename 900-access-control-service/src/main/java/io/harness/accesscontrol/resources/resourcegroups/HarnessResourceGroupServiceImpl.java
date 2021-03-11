@@ -46,18 +46,26 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
   @Override
   public void sync(String identifier, Scope scope) {
     ScopeParams scopeParams = scopeParamsFactory.buildScopeParams(scope);
+    String errorMessage =
+        String.format("Resource group not found with the given identifier in scope %s", scope.toString());
 
-    ResourceGroupResponse resourceGroupResponse = Failsafe.with(retryPolicy).get(() -> {
-      ResourceGroupResponse response = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(identifier,
-          scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME), scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
-          scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)));
-      if (response == null || response.getResourceGroup() == null) {
-        throw new InvalidRequestException(
-            String.format("Resource group not found with the given identifier in scope %s", scope.toString()));
+    ResourceGroupResponse resourceGroupResponse;
+    try {
+      resourceGroupResponse = Failsafe.with(retryPolicy).get(() -> {
+        ResourceGroupResponse response = NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(identifier,
+            scopeParams.getParams().get(ACCOUNT_LEVEL_PARAM_NAME), scopeParams.getParams().get(ORG_LEVEL_PARAM_NAME),
+            scopeParams.getParams().get(PROJECT_LEVEL_PARAM_NAME)));
+        if (response == null || response.getResourceGroup() == null) {
+          throw new InvalidRequestException(errorMessage);
+        }
+        return response;
+      });
+      resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse, scope.toString()));
+    } catch (InvalidRequestException e) {
+      if (e.getMessage().equals(errorMessage)) {
+        log.warn("Did not find the resource group with identifier {} in scope {}", identifier, scope.toString());
+        resourceGroupService.deleteIfPresent(identifier, scope.toString());
       }
-      return response;
-    });
-
-    resourceGroupService.upsert(resourceGroupFactory.buildResourceGroup(resourceGroupResponse, scope.toString()));
+    }
   }
 }

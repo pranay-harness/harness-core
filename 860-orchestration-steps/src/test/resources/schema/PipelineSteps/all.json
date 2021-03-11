@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "discriminator": "type",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "BarrierStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PMSStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "barrierRef"
+          ],
+          "properties": {
+            "barrierRef": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PMSStepInfo": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

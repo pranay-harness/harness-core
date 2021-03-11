@@ -192,8 +192,9 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
           ? jiraHelperService.getCreateMetadata(jiraConnectorId, null, project, accountId, context.getAppId())
           : createMeta;
 
-      Map<String, Map<Object, Object>> customFieldsValueToIdMap = mapCustomFieldsValuesToId(createMetadata);
       Map<String, String> customFieldsIdToNameMap = mapCustomFieldsIdsToNames(createMetadata);
+      Map<String, Map<Object, Object>> customFieldsValueToIdMap =
+          mapCustomFieldsValuesToId(createMetadata, customFieldsIdToNameMap.values());
 
       if (areRequiredFieldsTemplatized) {
         try {
@@ -546,6 +547,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
         .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
         .map(Entry::getValue)
+        .filter(
+            jiraField -> customFields.containsKey(jiraField.getKey()) || customFields.containsKey(jiraField.getName()))
         .filter(jiraField
             -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
                 || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null)
@@ -553,7 +556,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .collect(toMap(JiraField::getKey, JiraField::getName));
   }
 
-  Map<String, Map<Object, Object>> mapCustomFieldsValuesToId(JiraCreateMetaResponse createMetadata) {
+  Map<String, Map<Object, Object>> mapCustomFieldsValuesToId(
+      JiraCreateMetaResponse createMetadata, Collection<String> customFieldNames) {
     return createMetadata.getProjects()
         .stream()
         .filter(jiraProjectData -> jiraProjectData.getKey().equals(project))
@@ -562,6 +566,8 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
         .filter(jiraIssue -> jiraIssue.getName().equals(issueType))
         .flatMap(jiraIssue -> jiraIssue.getJiraFields().entrySet().stream())
         .map(Entry::getValue)
+        .filter(
+            jiraField -> customFields.containsKey(jiraField.getKey()) || customFieldNames.contains(jiraField.getName()))
         .filter(jiraField
             -> jiraField.getSchema().get("type").equals(OPTION) || jiraField.getSchema().get("type").equals(RESOLUTION)
                 || (jiraField.getSchema().get("type").equals(ARRAY) && jiraField.getAllowedValues() != null))
@@ -572,7 +578,13 @@ public class JiraCreateUpdate extends State implements SweepingOutputStateMixin 
                    .collect(toMap(ob
                        -> ob.get(VALUE) != null ? ((String) ob.get(VALUE)).toLowerCase()
                                                 : ((String) ob.get("name")).toLowerCase(),
-                       ob -> ob.get("id")))));
+                       ob -> ob.get("id"), (id, duplicateId) -> {
+                         throw new HarnessJiraException(
+                             String.format(
+                                 "Can not process value for field [%s] since there are multiple values with the same name.",
+                                 jiraField.getName()),
+                             null);
+                       }))));
   }
 
   String parseDateTimeValue(String fieldValue, ExecutionContext context) {

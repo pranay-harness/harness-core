@@ -53,6 +53,11 @@ public final class K8sWorkloadRecommendation
                  .field(K8sWorkloadRecommendationKeys.workloadName)
                  .field(K8sWorkloadRecommendationKeys.workloadType)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_dirty")
+                 .field(K8sWorkloadRecommendationKeys.accountId)
+                 .field(K8sWorkloadRecommendationKeys.dirty)
+                 .build())
         .build();
   }
 
@@ -71,7 +76,7 @@ public final class K8sWorkloadRecommendation
   @Singular @NotEmpty Map<String, ContainerRecommendation> containerRecommendations;
   @Singular @NotEmpty Map<String, ContainerCheckpoint> containerCheckpoints;
 
-  UnitPrice unitPrice;
+  Cost lastDayCost;
   @FdIndex BigDecimal estimatedSavings;
 
   @EqualsAndHashCode.Exclude @FdTtlIndex Instant ttl;

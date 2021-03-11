@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.service.impl.FileServiceUtils.isMongoFileIdFormat;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FileMetadata;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.stream.BoundedInputStream;
 
 import software.wings.DataStorageMode;

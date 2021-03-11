@@ -35,7 +35,7 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
   public static final String TYPE_NOT_IMPLEMENTED_YET = "%s not implemented yet";
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     PublishStepInfo publishStepInfo = (PublishStepInfo) ciStepInfo;
 
@@ -68,6 +68,7 @@ public class PublishStepProtobufSerializer implements ProtobufStepSerializer<Pub
         .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
         .setPublishArtifacts(publishArtifactsStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setLogKey(logKey)
         .build();
   }
 

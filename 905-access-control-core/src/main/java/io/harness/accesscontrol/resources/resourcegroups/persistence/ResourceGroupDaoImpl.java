@@ -4,16 +4,20 @@ import static io.harness.accesscontrol.resources.resourcegroups.persistence.Reso
 import static io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBOMapper.toDBO;
 
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroup;
+import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO.ResourceGroupDBOKeys;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @ValidateOnExecution
@@ -35,6 +39,8 @@ public class ResourceGroupDaoImpl implements ResourceGroupDao {
       resourceGroupUpdateDBO.setVersion(resourceGroupDBO.get().getVersion());
       resourceGroupUpdateDBO.setCreatedAt(resourceGroupDBO.get().getCreatedAt());
       resourceGroupUpdateDBO.setLastModifiedAt(resourceGroupDBO.get().getCreatedAt());
+      resourceGroupUpdateDBO.setNextReconciliationIterationAt(
+          resourceGroupDBO.get().getNextReconciliationIterationAt());
     }
     return fromDBO(resourceGroupRepository.save(resourceGroupUpdateDBO));
   }
@@ -48,6 +54,16 @@ public class ResourceGroupDaoImpl implements ResourceGroupDao {
   }
 
   @Override
+  public List<ResourceGroup> list(List<String> resourceGroupIdentifiers, String scopeIdentifier) {
+    Criteria criteria = Criteria.where(ResourceGroupDBOKeys.scopeIdentifier)
+                            .is(scopeIdentifier)
+                            .and(ResourceGroupDBOKeys.identifier)
+                            .in(resourceGroupIdentifiers);
+    List<ResourceGroupDBO> resourceGroupDBOs = resourceGroupRepository.findAllWithCriteria(criteria);
+    return resourceGroupDBOs.stream().map(ResourceGroupDBOMapper::fromDBO).collect(Collectors.toList());
+  }
+
+  @Override
   public Optional<ResourceGroup> get(String identifier, String scopeIdentifier) {
     return resourceGroupRepository.findByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
         .flatMap(r -> Optional.of(fromDBO(r)));
@@ -56,6 +72,8 @@ public class ResourceGroupDaoImpl implements ResourceGroupDao {
   @Override
   public Optional<ResourceGroup> delete(String identifier, String scopeIdentifier) {
     return resourceGroupRepository.deleteByIdentifierAndScopeIdentifier(identifier, scopeIdentifier)
+        .stream()
+        .findFirst()
         .flatMap(r -> Optional.of(fromDBO(r)));
   }
 }

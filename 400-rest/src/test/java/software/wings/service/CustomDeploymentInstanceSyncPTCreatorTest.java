@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.UUID;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -50,7 +51,7 @@ public class CustomDeploymentInstanceSyncPTCreatorTest extends WingsBaseTest {
 
   ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
 
-  private InfrastructureMapping infraMapping = buildInfraMapping();
+  private final InfrastructureMapping infraMapping = buildInfraMapping();
 
   @Test
   @Owner(developers = OwnerRule.YOGESH)
@@ -75,7 +76,7 @@ public class CustomDeploymentInstanceSyncPTCreatorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCreateIfNoTaskExists() {
     perpetualTaskCreator.createPerpetualTasksForNewDeployment(
-        Arrays.asList(DeploymentSummary.builder().build()), null, infraMapping);
+        singletonList(DeploymentSummary.builder().build()), null, infraMapping);
 
     verify(perpetualTaskService, times(1))
         .createTask(eq(PerpetualTaskType.CUSTOM_DEPLOYMENT_INSTANCE_SYNC), eq(ACCOUNT_ID), captor.capture(),
@@ -104,9 +105,9 @@ public class CustomDeploymentInstanceSyncPTCreatorTest extends WingsBaseTest {
   public void shouldResetTaskOnNewDeployment() {
     final List<String> taskIds =
         perpetualTaskCreator.createPerpetualTasksForNewDeployment(Arrays.asList(DeploymentSummary.builder().build()),
-            Arrays.asList(PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).uuid(UUID).build()), infraMapping);
+            singletonList(PerpetualTaskRecord.builder().accountId(ACCOUNT_ID).uuid(UUID).build()), infraMapping);
 
-    assertThat(taskIds).containsExactly(UUID);
+    assertThat(taskIds).isEmpty();
 
     verify(perpetualTaskService, never()).createTask(any(), anyString(), any(), any(), anyBoolean(), anyString());
 
@@ -114,15 +115,15 @@ public class CustomDeploymentInstanceSyncPTCreatorTest extends WingsBaseTest {
   }
 
   private InfrastructureMapping buildInfraMapping() {
-    CustomInfrastructureMapping infraMapping = CustomInfrastructureMapping.builder().build();
-    infraMapping.setDeploymentTypeTemplateVersion("1");
-    infraMapping.setCustomDeploymentTemplateId(TEMPLATE_ID);
-    infraMapping.setUuid(INFRA_MAPPING_ID);
-    infraMapping.setAccountId(ACCOUNT_ID);
-    infraMapping.setAppId(APP_ID);
-    infraMapping.setEnvId(ENV_ID);
-    infraMapping.setServiceId(SERVICE_ID);
-    infraMapping.setInfraMappingType(InfrastructureMappingType.CUSTOM.name());
-    return infraMapping;
+    CustomInfrastructureMapping infrastructureMapping = CustomInfrastructureMapping.builder().build();
+    infrastructureMapping.setDeploymentTypeTemplateVersion("1");
+    infrastructureMapping.setCustomDeploymentTemplateId(TEMPLATE_ID);
+    infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+    infrastructureMapping.setAccountId(ACCOUNT_ID);
+    infrastructureMapping.setAppId(APP_ID);
+    infrastructureMapping.setEnvId(ENV_ID);
+    infrastructureMapping.setServiceId(SERVICE_ID);
+    infrastructureMapping.setInfraMappingType(InfrastructureMappingType.CUSTOM.name());
+    return infrastructureMapping;
   }
 }

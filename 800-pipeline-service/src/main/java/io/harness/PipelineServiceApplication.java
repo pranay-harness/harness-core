@@ -38,12 +38,14 @@ import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
+import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
@@ -171,6 +173,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
+    injector.getInstance(BarrierServiceImpl.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
@@ -226,6 +229,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
+        .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .build();

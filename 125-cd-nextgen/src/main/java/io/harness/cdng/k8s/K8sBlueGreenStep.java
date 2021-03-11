@@ -2,8 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
@@ -54,9 +53,8 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
     return k8sStepHelper.executeNextLink(this, ambiance, k8sBlueGreenStepParameters, passThroughData, responseDataMap);
   }
 
-  public TaskChainResponse executeK8sTask(K8sManifestOutcome k8sManifestOutcome, Ambiance ambiance,
+  public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
       K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
-    StoreConfig storeConfig = k8sManifestOutcome.getStore();
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     boolean skipDryRun =
         !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
@@ -71,7 +69,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
-            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(storeConfig, ambiance))
+            .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
             .build();
 
@@ -117,6 +115,11 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
     return responseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME)
+                         .outcome(k8sBlueGreenOutcome)
+                         .group(StepOutcomeGroup.STAGE.name())
+                         .build())
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sBlueGreenOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())

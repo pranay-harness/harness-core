@@ -7,7 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Getter
 @Builder
-@Document("gitFileProcessingSummary")
+@Document("gitFileProcessingSummaryNG")
 @TypeAlias("io.harness.gitsync.gitfileactivity.beans.gitFileProcessingSummary")
 public class GitFileProcessingSummary {
   private final Long failureCount;

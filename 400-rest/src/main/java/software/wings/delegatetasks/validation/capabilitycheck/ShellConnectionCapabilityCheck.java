@@ -17,6 +17,7 @@ import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.validation.capabilities.ShellConnectionCapability;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -27,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellConnectionCapabilityCheck implements CapabilityCheck {
   @Inject EncryptionService encryptionService;
+  @Inject SecretManagementDelegateService secretManagementDelegateService;
+
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ShellConnectionCapability capability = (ShellConnectionCapability) delegateCapability;
@@ -66,7 +69,8 @@ public class ShellConnectionCapabilityCheck implements CapabilityCheck {
       ShellConnectionCapability capability, ShellScriptParameters parameters) {
     try {
       int timeout = (int) ofSeconds(15L).toMillis();
-      SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
+      SshSessionConfig expectedSshConfig =
+          parameters.sshSessionConfig(encryptionService, secretManagementDelegateService);
       expectedSshConfig.setSocketConnectTimeout(timeout);
       expectedSshConfig.setSshConnectionTimeout(timeout);
       expectedSshConfig.setSshSessionTimeout(timeout);

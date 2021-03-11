@@ -3,6 +3,8 @@ package software.wings.delegatetasks.azure.arm.deployment.context;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.blueprint.Blueprint;
+import io.harness.azure.model.blueprint.assignment.Assignment;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 
 import java.util.Map;
@@ -18,14 +20,17 @@ import lombok.NoArgsConstructor;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public class DeploymentBlueprintContext {
   private AzureConfig azureConfig;
-  private String resourceScope;
-  private String blueprintId;
+  private String definitionResourceScope;
   private String blueprintName;
+  private Blueprint blueprint;
   private String blueprintJSON;
   private Map<String, String> artifacts;
   private String versionId;
-  private String assignmentName;
+  private Assignment assignment;
   private String assignmentJSON;
+  private String roleAssignmentName;
+  private String assignmentSubscriptionId;
+  private String assignmentResourceScope;
   private ILogStreamingTaskClient logStreamingTaskClient;
   private int steadyStateTimeoutInMin;
 }

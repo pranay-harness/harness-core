@@ -7,7 +7,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -80,14 +79,5 @@ public class NodeExecutionsCache {
     childExecutions.forEach(childExecution -> map.put(childExecution.getUuid(), childExecution));
     childrenMap.put(parentId, childExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList()));
     return childExecutions;
-  }
-
-  public Map<String, Object> extractFinalStepParameters(NodeExecution nodeExecution) {
-    Map<String, Object> stepParameters = NodeExecutionUtils.extractStepParameters(
-        nodeExecution.getResolvedStepParameters() == null ? null : nodeExecution.getResolvedStepParameters().toJson());
-    if (stepParameters != null) {
-      return stepParameters;
-    }
-    return NodeExecutionUtils.extractStepParameters(nodeExecution.getNode().getStepParameters());
   }
 }

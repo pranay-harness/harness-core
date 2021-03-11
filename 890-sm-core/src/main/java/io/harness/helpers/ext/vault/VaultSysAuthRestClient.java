@@ -9,6 +9,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 /**
  * We need a way to automatically determine the Vault server's secret engine version. The
@@ -23,6 +24,8 @@ import retrofit2.http.POST;
 public interface VaultSysAuthRestClient {
   String BASE_VAULT_URL = "v1/sys/mounts";
   String APPROLE_LOGIN_URL = "v1/auth/approle/login";
+  String CONFIG_CA_URL = "v1/{secret-engine-name}/config/ca";
+  String SIGN_PUBLIC_SSH_KEY_URL = "v1/{secret-engine-name}/sign/{role-name}";
 
   /**
    * The JSON response will be returned as a String. The caller of this API need to '/secret/options/version' field in
@@ -31,4 +34,13 @@ public interface VaultSysAuthRestClient {
   @GET(BASE_VAULT_URL) Call<SysMountsResponse> getAllMounts(@Header("X-Vault-Token") String header);
 
   @POST(APPROLE_LOGIN_URL) Call<VaultAppRoleLoginResponse> appRoleLogin(@Body VaultAppRoleLoginRequest request);
+
+  @GET(CONFIG_CA_URL)
+  Call<SSHVaultAuthResponse> fetchAuthPublicKey(
+      @Path(value = "secret-engine-name") String secretEngineName, @Header("X-Vault-Token") String header);
+
+  @POST(SIGN_PUBLIC_SSH_KEY_URL)
+  Call<SignedSSHVaultResponse> fetchSignedPublicKey(@Path(value = "secret-engine-name") String secretEngineName,
+      @Path(value = "role-name") String roleName, @Header("X-Vault-Token") String header,
+      @Body SignedSSHVaultRequest request);
 }

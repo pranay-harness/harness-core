@@ -74,9 +74,6 @@ import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by rohitkarelia on 11/18/19.
- */
 @Api("/setup/delegates")
 @Path("/setup/delegates")
 @Produces("application/json")
@@ -161,6 +158,16 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getAvailableVersions(accountId));
     }
+  }
+
+  @GET
+  @Path("connected-ratio-with-primary")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<Double> getConnectedRatioWithPrimary(
+      @QueryParam("targetVersion") @NotEmpty String targetVersion) {
+    return new RestResponse<>(delegateService.getConnectedRatioWithPrimary(targetVersion));
   }
 
   @GET

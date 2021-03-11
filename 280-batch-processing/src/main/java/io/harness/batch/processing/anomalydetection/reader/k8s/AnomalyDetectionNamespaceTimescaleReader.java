@@ -87,6 +87,7 @@ public class AnomalyDetectionNamespaceTimescaleReader extends AnomalyDetectionTi
 
     List<String> instanceType = new ArrayList<>();
     instanceType.add("K8S_POD");
+    // TODO add fargate here
     filtersList.add(
         QLBillingDataFilter.builder()
             .instanceType(

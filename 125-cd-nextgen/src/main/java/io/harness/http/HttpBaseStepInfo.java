@@ -2,10 +2,8 @@ package io.harness.http;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.variables.NGVariable;
 
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,8 +17,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class HttpBaseStepInfo {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> url;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> method;
-  List<HttpHeaderConfig> headers;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> requestBody;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> assertion;
-  List<NGVariable> outputVariables;
 }

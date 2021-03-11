@@ -1,25 +1,52 @@
 {
   "type": "object",
-  "required": [
-    "identifier"
-  ],
   "discriminator": "type",
-  "properties": {
-    "identifier": {
-      "type": "string"
-    }
-  },
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "CDStepInfo": {
       "type": "object",
-      "required": [
-        "identifier"
-      ],
       "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteResourcesBaseSpec": {
+      "type": "object",
       "properties": {
-        "identifier": {
+        "allManifestPaths": {
+          "type": "boolean"
+        },
+        "deleteNamespace": {
+          "type": "boolean"
+        },
+        "manifestPaths": {
           "type": "string"
+        },
+        "resourceNames": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "ResourceName",
+            "ReleaseName",
+            "ManifestPath"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteResourcesWrapper": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/DeleteResourcesBaseSpec"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "ResourceName",
+            "ReleaseName",
+            "ManifestPath"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -153,7 +180,39 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "K8sBGSwapServicesStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "skipDryRun": {
+              "type": "boolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "K8sBlueGreenStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "skipDryRun": {
+              "type": "boolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sCanaryDeleteStepInfo": {
       "allOf": [
         {
           "$ref": "#/definitions/CDStepInfo"
@@ -182,6 +241,28 @@
           "properties": {
             "instanceSelection": {
               "$ref": "#/definitions/InstanceSelectionWrapper"
+            },
+            "skipDryRun": {
+              "type": "boolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sDeleteStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "deleteResources"
+          ],
+          "properties": {
+            "deleteResources": {
+              "$ref": "#/definitions/DeleteResourcesWrapper"
             },
             "skipDryRun": {
               "type": "boolean"

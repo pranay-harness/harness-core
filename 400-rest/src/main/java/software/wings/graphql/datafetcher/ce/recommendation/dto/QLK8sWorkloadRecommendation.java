@@ -22,7 +22,7 @@ public class QLK8sWorkloadRecommendation {
   String workloadName;
   String clusterId;
   String clusterName;
-  QLUnitPrice unitPrice;
+  QLLastDayCost lastDayCost;
   @Singular List<QLContainerRecommendation> containerRecommendations;
   BigDecimal estimatedSavings;
   int numDays;

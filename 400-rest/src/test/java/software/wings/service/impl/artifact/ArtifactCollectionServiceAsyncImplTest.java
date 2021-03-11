@@ -5,7 +5,6 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.HARSH;
 
 import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -23,11 +22,9 @@ import io.harness.rule.Owner;
 import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream.Action;
 import software.wings.beans.artifact.NexusArtifactStream;
-import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.DelegateService;
 
@@ -105,12 +102,6 @@ public class ArtifactCollectionServiceAsyncImplTest extends WingsBaseTest {
     Map<String, Object> artifactVariables = new HashMap<>();
     artifactVariables.put("path", "todolist");
     artifactVariables.put("buildNo", "1.0");
-    BuildDetails buildDetails = BuildDetails.Builder.aBuildDetails().withNumber("1.0").build();
-    Artifact artifact = Artifact.Builder.anArtifact()
-                            .withUuid(ARTIFACT_ID)
-                            .withAccountId(ACCOUNT_ID)
-                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
-                            .build();
     artifactCollectionServiceAsync.collectNewArtifacts(APP_ID, nexusArtifactStream, "1.0", artifactVariables);
     verify(buildSourceService, times(1)).getBuild(anyString(), anyString(), anyString(), any());
   }

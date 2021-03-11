@@ -283,7 +283,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
                 httpTaskParameters.fetchRequiredExecutionCapabilities(null), null)
             .getTaskId();
 
-    Poller.pollFor(Duration.ofMinutes(3), Duration.ofSeconds(5), () -> {
+    Poller.pollFor(Duration.ofMinutes(4), Duration.ofSeconds(5), () -> {
       NotifyResponse notifyResponse = wingsPersistence.get(NotifyResponse.class, taskId.getId());
       return notifyResponse != null;
     });

@@ -202,6 +202,7 @@ import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionEventAdvisor;
 import software.wings.sm.ExecutionInterrupt;
@@ -272,6 +273,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private DeploymentAuthHandler deploymentAuthHandler;
   @Mock private AuthService authService;
   @Mock private GovernanceConfigService governanceConfigService;
+  @Mock private SSHVaultService sshVaultService;
 
   @Inject private ServiceInstanceService serviceInstanceService;
 

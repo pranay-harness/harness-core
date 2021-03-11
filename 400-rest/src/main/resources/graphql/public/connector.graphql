@@ -123,6 +123,7 @@ type DockerConnector implements Connector {
   id: String
   name: String
   description: String
+  delegateSelectors: [String]
   createdAt: DateTime
   createdBy: User
 }

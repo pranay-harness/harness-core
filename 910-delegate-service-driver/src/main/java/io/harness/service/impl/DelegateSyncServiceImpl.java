@@ -46,9 +46,11 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
                                               .map(key -> key.getId().toString())
                                               .collect(toList());
         for (String taskId : completedSyncTasks) {
+          log.debug("Found response for sync task {}", taskId);
           AtomicLong endAt = syncTaskWaitMap.get(taskId);
           if (endAt != null) {
             synchronized (endAt) {
+              log.debug("Notifying threads for task {}", taskId);
               endAt.set(0L);
               endAt.notifyAll();
             }
@@ -64,11 +66,11 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
   public <T extends ResponseData> T waitForTask(String taskId, String description, Duration timeout) {
     DelegateSyncTaskResponse taskResponse;
     try {
-      log.info("Executing sync task");
+      log.info("Executing sync task {}", taskId);
       AtomicLong endAt =
           syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {
-        while (currentTimeMillis() < endAt.get()) {
+        while (endAt.get() != 0 && currentTimeMillis() < endAt.get()) {
           endAt.wait(timeout.toMillis());
         }
       }
@@ -85,6 +87,7 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
           "Task has expired. It wasn't picked up by any delegate or delegate did not have enough time to finish the execution.");
     }
 
+    log.info("Deserialize and return the response for task {}", taskId);
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
   }
 }

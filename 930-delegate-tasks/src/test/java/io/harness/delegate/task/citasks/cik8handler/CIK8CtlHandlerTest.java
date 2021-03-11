@@ -192,7 +192,7 @@ public class CIK8CtlHandlerTest extends CategoryTest {
     verify(mockSecretSpecBuilder).getRegistrySecretSpec(secretName, imageDetailsWithConnector, namespace);
     verify(mockKubernetesClient).secrets();
     verify(mockKubeSecret).inNamespace(namespace);
-    verify(mockSecretNonNamespacedOp).createOrReplace(mockSecret);
+    verify(mockSecretNonNamespacedOp).create(mockSecret);
   }
 
   @Test

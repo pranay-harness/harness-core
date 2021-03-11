@@ -6,6 +6,7 @@ import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
+import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -20,6 +21,12 @@ public interface AzureBlueprintRestClient {
   Observable<Response<ResponseBody>> createOrUpdateBlueprint(@Header("Authorization") String bearerAuthHeader,
       @Path("resourceScope") String resourceScope, @Path("blueprintName") String blueprintName,
       @Body Object blueprintJSON, @Query("api-version") String appVersion);
+
+  @Headers({"Content-Type: application/json; charset=utf-8", "accept-language: en-US"})
+  @GET("{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}")
+  Observable<Response<ResponseBody>> getBlueprint(@Header("Authorization") String bearerAuthHeader,
+      @Path("resourceScope") String resourceScope, @Path("blueprintName") String blueprintName,
+      @Query("api-version") String appVersion);
 
   @Headers({"Content-Type: application/json; charset=utf-8", "accept-language: en-US"})
   @PUT("{resourceScope}/providers/Microsoft.Blueprint/blueprints/{blueprintName}/artifacts/{artifactName}")
@@ -70,6 +77,12 @@ public interface AzureBlueprintRestClient {
   @Headers({"Content-Type: application/json; charset=utf-8", "accept-language: en-US"})
   @GET("{resourceScope}/providers/Microsoft.Blueprint/blueprintAssignments/{assignmentName}/assignmentOperations")
   Observable<Response<ResponseBody>> listAssignmentOperations(@Header("Authorization") String bearerAuthHeader,
+      @Path("resourceScope") String resourceScope, @Path("assignmentName") String assignmentName,
+      @Query("api-version") String appVersion);
+
+  @Headers({"Content-Type: application/json; charset=utf-8", "accept-language: en-US"})
+  @POST("{resourceScope}/providers/Microsoft.Blueprint/blueprintAssignments/{assignmentName}/whoIsBlueprint")
+  Observable<Response<ResponseBody>> whoIsBlueprint(@Header("Authorization") String bearerAuthHeader,
       @Path("resourceScope") String resourceScope, @Path("assignmentName") String assignmentName,
       @Query("api-version") String appVersion);
 }

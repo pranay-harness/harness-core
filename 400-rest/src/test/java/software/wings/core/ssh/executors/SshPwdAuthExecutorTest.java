@@ -1,8 +1,8 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
@@ -27,7 +27,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -42,6 +42,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ConfigFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.rules.SshRule;
+import software.wings.service.intfc.security.SSHVaultService;
 
 import com.google.common.io.CharStreams;
 import java.io.File;
@@ -101,6 +102,7 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private FileBasedScriptExecutor fileBasedScriptExecutor;
   @Mock private DelegateFileManager fileService;
   @Mock private LogCallback logCallback;
+  @Mock private SSHVaultService sshVaultService;
 
   /**
    * Sets the up.
@@ -199,13 +201,18 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    */
   @Test
   @Owner(developers = ANUBHAW)
-  @Repeat(times = 3, successes = 1)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectionTimeout() {
-    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
-    assertThatThrownBy(() -> executor.executeCommandString("ls"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_TIMEOUT.name());
+    for (int i = 0; i < 10; ++i) {
+      try {
+        executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
+        executor.executeCommandString("sleep 10");
+      } catch (WingsException exception) {
+        if (exception.getMessage().equals(SOCKET_CONNECTION_TIMEOUT.name())) {
+          break;
+        }
+      }
+    }
   }
 
   /**

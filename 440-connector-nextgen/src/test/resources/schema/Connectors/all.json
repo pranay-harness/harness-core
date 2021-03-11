@@ -889,7 +889,8 @@
             "Codecommit",
             "CEAws",
             "CEAzure",
-            "CEK8sCluster"
+            "CEK8sCluster",
+            "HttpHelmRepo"
           ]
         }
       },
@@ -1115,6 +1116,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GitlabConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HttpHelmRepo"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpHelmConnectorDTO"
               }
             }
           }
@@ -2309,6 +2326,105 @@
               "type": "string"
             }
           }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmAuthCredentialsDTO": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmAuthenticationDTO": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "UsernamePassword",
+            "Anonymous"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "UsernamePassword"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpHelmUsernamePasswordDTO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "HttpHelmConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "helmRepoUrl"
+          ],
+          "properties": {
+            "auth": {
+              "$ref": "#/definitions/HttpHelmAuthenticationDTO"
+            },
+            "helmRepoUrl": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpHelmUsernamePasswordDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/HttpHelmAuthCredentialsDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "passwordRef"
+          ],
+          "properties": {
+            "passwordRef": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"

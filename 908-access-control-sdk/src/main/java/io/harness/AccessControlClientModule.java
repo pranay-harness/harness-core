@@ -6,6 +6,7 @@ import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.AccessControlClientImpl;
 import io.harness.accesscontrol.clients.AccessControlHttpClient;
 import io.harness.accesscontrol.clients.AccessControlHttpClientFactory;
+import io.harness.accesscontrol.clients.NoOpAccessControlClientImpl;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
@@ -42,8 +43,12 @@ public class AccessControlClientModule extends AbstractModule {
   @Override
   protected void configure() {
     registerRequiredBindings();
-    bind(AccessControlHttpClient.class).toProvider(AccessControlHttpClientFactory.class).in(Scopes.SINGLETON);
-    bind(AccessControlClient.class).to(AccessControlClientImpl.class).in(Scopes.SINGLETON);
+    if (accessControlClientConfiguration.isEnableAccessControl()) {
+      bind(AccessControlHttpClient.class).toProvider(AccessControlHttpClientFactory.class).in(Scopes.SINGLETON);
+      bind(AccessControlClient.class).to(AccessControlClientImpl.class).in(Scopes.SINGLETON);
+    } else {
+      bind(AccessControlClient.class).to(NoOpAccessControlClientImpl.class).in(Scopes.SINGLETON);
+    }
     NGAccessControlCheckHandler ngAccessControlCheckHandler = new NGAccessControlCheckHandler();
     requestInjection(ngAccessControlCheckHandler);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(NGAccessControlCheck.class), ngAccessControlCheckHandler);

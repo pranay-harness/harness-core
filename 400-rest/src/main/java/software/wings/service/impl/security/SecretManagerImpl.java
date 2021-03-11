@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.CONFIGS;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
@@ -41,6 +41,7 @@ import io.harness.beans.SecretChangeLog;
 import io.harness.beans.SecretChangeLog.SecretChangeLogKeys;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUsageLog;
 import io.harness.exception.InvalidRequestException;
@@ -937,7 +938,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<String> filterSecretIdsByReadPermission(
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
       Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
     return secretService.filterSecretIdsByReadPermission(secretIds, accountId, appIdFromRequest, envIdFromRequest);
   }

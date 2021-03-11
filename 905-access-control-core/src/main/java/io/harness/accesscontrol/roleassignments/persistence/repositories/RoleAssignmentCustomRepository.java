@@ -9,4 +9,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface RoleAssignmentCustomRepository {
   Page<RoleAssignmentDBO> findAll(@NotNull Criteria criteria, @NotNull Pageable pageable);
+
+  long deleteMulti(@NotNull Criteria criteria);
 }

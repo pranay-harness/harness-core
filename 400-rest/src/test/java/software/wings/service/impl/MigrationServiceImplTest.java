@@ -4,7 +4,10 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.migrations.OnPrimaryManagerMigration;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -14,11 +17,11 @@ import software.wings.beans.Schema;
 import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
-import migrations.OnPrimaryManagerMigration;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mongodb.morphia.query.Query;
 
+@TargetModule(Module._390_DB_MIGRATION)
 public class MigrationServiceImplTest extends WingsBaseTest {
   @Inject MigrationServiceImpl migrationService;
   @Inject private HPersistence persistence;

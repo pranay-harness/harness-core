@@ -28,8 +28,7 @@ public class ComplexFieldRecaster implements FieldRecaster {
             // this is a map ex. Dummy<Map<String,String>>
             refObj = new LinkedHashMap<>(value);
           } else if (recaster.getTransformer().hasCustomTransformer(RecastReflectionUtils.getClass(value))) {
-            refObj = recaster.getTransformer().decode(
-                RecastReflectionUtils.getClass(value), value.get(Recaster.ENCODED_VALUE), cf);
+            refObj = recaster.getTransformer().decode(RecastReflectionUtils.getClass(value), value, cf);
           } else {
             refObj = recaster.getObjectFactory().createInstance(recaster, cf, value);
             refObj = recaster.fromDocument(value, refObj);
@@ -70,6 +69,6 @@ public class ComplexFieldRecaster implements FieldRecaster {
   private Document obtainEncodedValue(Recaster recaster, CastedField cf, Object fieldValue) {
     return new Document()
         .append(Recaster.RECAST_CLASS_KEY, cf.getType().getName())
-        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue));
+        .append(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue, cf));
   }
 }

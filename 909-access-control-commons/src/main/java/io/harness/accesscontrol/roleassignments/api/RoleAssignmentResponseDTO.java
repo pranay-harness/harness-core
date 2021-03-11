@@ -13,4 +13,5 @@ public class RoleAssignmentResponseDTO {
   @ApiModelProperty(required = true) String scope;
   Long createdAt;
   Long lastModifiedAt;
+  boolean harnessManaged;
 }

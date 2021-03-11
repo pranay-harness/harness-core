@@ -38,6 +38,11 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
+import io.harness.delegate.beans.connector.helm.HttpHelmAuthCredentialsDTO;
+import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
+import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
+import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
+import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthDTO;
@@ -223,5 +228,10 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsCodeCommitUrlType.class, 19652);
     kryo.register(AwsCodeCommitHttpsAuthType.class, 19653);
     kryo.register(AwsCodeCommitAuthType.class, 19654);
+    kryo.register(HttpHelmAuthCredentialsDTO.class, 19655);
+    kryo.register(HttpHelmAuthenticationDTO.class, 19656);
+    kryo.register(HttpHelmAuthType.class, 19657);
+    kryo.register(HttpHelmConnectorDTO.class, 19658);
+    kryo.register(HttpHelmUsernamePasswordDTO.class, 19659);
   }
 }

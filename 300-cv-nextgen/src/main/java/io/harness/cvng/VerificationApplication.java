@@ -32,6 +32,7 @@ import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.jobs.DataCollectionTaskRecoverNextTaskHandler;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
+import io.harness.cvng.core.jobs.MonitoringSourceMigrationHandler;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
@@ -48,7 +49,6 @@ import io.harness.cvng.statemachine.jobs.AnalysisOrchestrationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ExecutionStatus;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
-import io.harness.cvng.verificationjob.jobs.DeletePerpetualTasksHandler;
 import io.harness.cvng.verificationjob.jobs.ProcessQueuedVerificationJobInstanceHandler;
 import io.harness.cvng.verificationjob.jobs.VerificationJobInstanceTimeoutHandler;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
@@ -264,8 +264,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationTaskOrchestrationIterator(injector);
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
+    registerMonitoringSourceMigrationIterator(injector);
     registerRecoverNextTaskHandlerIterator(injector);
-    registerDeleteDataCollectionWorkersIterator(injector);
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
     registerHealthChecks(environment, injector);
@@ -434,6 +434,34 @@ public class VerificationApplication extends Application<VerificationConfigurati
     dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
+  private void registerMonitoringSourceMigrationIterator(Injector injector) {
+    ScheduledThreadPoolExecutor dataCollectionExecutor =
+        new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder().setNameFormat("migration-iterator").build());
+    // TODO: remove this in the next release
+    MonitoringSourceMigrationHandler monitoringSourceMigrationHandler =
+        injector.getInstance(MonitoringSourceMigrationHandler.class);
+    PersistenceIterator migrationIterator =
+        MongoPersistenceIterator
+            .<MonitoringSourcePerpetualTask, MorphiaFilterExpander<MonitoringSourcePerpetualTask>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(MonitoringSourcePerpetualTask.class)
+            .fieldName(MonitoringSourcePerpetualTaskKeys.migrationIteration)
+            .targetInterval(ofMinutes(5))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(monitoringSourceMigrationHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.filter(MonitoringSourcePerpetualTaskKeys.verificationType,
+                    MonitoringSourcePerpetualTask.VerificationType.LIVE_MONITORING))
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(migrationIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(() -> migrationIterator.process(), 0, 2, TimeUnit.MINUTES);
+  }
+
   private void registerRecoverNextTaskHandlerIterator(Injector injector) {
     ScheduledThreadPoolExecutor dataCollectionExecutor = new ScheduledThreadPoolExecutor(
         3, new ThreadFactoryBuilder().setNameFormat("recover-next-task-iterator").build());
@@ -457,35 +485,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     injector.injectMembers(dataCollectionTaskRecoverHandlerIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(
         () -> dataCollectionTaskRecoverHandlerIterator.process(), 0, 2, TimeUnit.MINUTES);
-  }
-
-  private void registerDeleteDataCollectionWorkersIterator(Injector injector) {
-    // TODO: remove this once moving to MonitoringSourcePerpetualTask is done.
-    ScheduledThreadPoolExecutor verificationTaskExecutor = new ScheduledThreadPoolExecutor(
-        5, new ThreadFactoryBuilder().setNameFormat("delete-data-collection-workers-iterator").build());
-    DeletePerpetualTasksHandler handler = injector.getInstance(DeletePerpetualTasksHandler.class);
-    // TODO: setup alert if this goes above acceptable threshold.
-    PersistenceIterator dataCollectionIterator =
-        MongoPersistenceIterator.<VerificationJobInstance, MorphiaFilterExpander<VerificationJobInstance>>builder()
-            .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(VerificationJobInstance.class)
-            .fieldName(VerificationJobInstanceKeys.deletePerpetualTaskIteration)
-            .targetInterval(ofMinutes(1))
-            .acceptableNoAlertDelay(ofMinutes(10))
-            .executorService(verificationTaskExecutor)
-            .semaphore(new Semaphore(4))
-            .handler(handler)
-            .schedulingType(REGULAR)
-            .filterExpander(query
-                -> query.field(VerificationJobInstanceKeys.executionStatus)
-                       .in(ExecutionStatus.finalStatuses())
-                       .criteria(VerificationJobInstanceKeys.perpetualTaskIds)
-                       .exists())
-            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
-            .redistribute(true)
-            .build();
-    injector.injectMembers(dataCollectionIterator);
-    verificationTaskExecutor.scheduleWithFixedDelay(() -> dataCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerVerificationJobInstanceDataCollectionTaskIterator(Injector injector) {

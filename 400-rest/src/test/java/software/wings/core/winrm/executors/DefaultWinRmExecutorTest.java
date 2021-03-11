@@ -60,8 +60,8 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logCallback, delegateFileManager, true, config, true);
-    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logCallback, delegateFileManager, true, config, true);
+    spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logCallback, delegateFileManager, true, config, false);
+    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logCallback, delegateFileManager, true, config, true, false);
     simpleCommand = "$test=\"someruntimepath\"\n"
         + "echo $test\n"
         + "if($test){\n"
@@ -150,36 +150,6 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
     assertThatThrownBy(() -> spyFileBasedWinRmExecutor.copyFiles("", new ArrayList<>()))
         .isInstanceOf(NotImplementedException.class)
         .hasMessageContaining(DefaultWinRmExecutor.NOT_IMPLEMENTED);
-  }
-
-  @Test
-  @Owner(developers = INDER)
-  @Category(UnitTests.class)
-  public void testCopyConfigCommand() {
-    String command = spyFileBasedWinRmExecutor.getCopyConfigCommand(configFileMetaData, "This is a test");
-    assertThat(command).isEqualTo("#### Convert Base64 string back to config file ####\n"
-        + "\n"
-        + "$DecodedString = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\""
-        + "This is a test"
-        + "\"))\n"
-        + "Write-Host \"Decoding config file on the host.\"\n"
-        + "$decodedFile = \'" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-        + configFileMetaData.getFilename() + "\'\n"
-        + "[IO.File]::WriteAllText($decodedFile, $DecodedString) \n"
-        + "Write-Host \"Copied config file to the host.\"\n");
-  }
-
-  @Test
-  @Owner(developers = INDER)
-  @Category(UnitTests.class)
-  public void testCopyConfigCommandBehindFF() {
-    String command =
-        spyFileBasedWinRmExecutor.getCopyConfigCommandBehindFF(configFileMetaData, "This is a test".getBytes());
-    assertThat(command).isEqualTo("$fileName = \"" + configFileMetaData.getDestinationDirectoryPath() + "\\"
-        + configFileMetaData.getFilename() + "\"\n"
-        + "$commandString = {" + new String("This is a test".getBytes()) + "}"
-        + "\n[IO.File]::WriteAllText($fileName, $commandString,   [Text.Encoding]::UTF8)\n"
-        + "Write-Host \"Copied config file to the host.\"\n");
   }
 
   @Test

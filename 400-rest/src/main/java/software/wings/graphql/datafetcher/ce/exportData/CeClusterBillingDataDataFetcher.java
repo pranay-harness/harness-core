@@ -293,6 +293,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
         node = instanceName;
       } else if (instanceType.equals("K8S_POD")) {
         pod = instanceName;
+      } else if (instanceType.equals("K8S_POD_FARGATE")) {
+        pod = instanceName;
       }
 
       final QLCEDataEntryBuilder dataEntryBuilder = QLCEDataEntry.builder();

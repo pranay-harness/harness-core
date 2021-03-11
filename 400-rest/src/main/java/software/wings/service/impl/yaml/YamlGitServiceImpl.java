@@ -386,7 +386,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, NOTIFICATION_GROUPS_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, GLOBAL_TEMPLATE_LIBRARY_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, SOURCE_REPO_PROVIDERS_FOLDER));
-
+    gitFileChanges.add(generateGitFileChangeForDelete(accountId, YamlConstants.GOVERNANCE_FOLDER));
     gitFileChanges.add(generateGitFileChangeForDelete(accountId, DEFAULTS_YAML));
 
     return gitFileChanges;

@@ -50,10 +50,9 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
       String accountId, String orgId, String projectId, GitFileChange gitFileChange, YamlGitConfigDTO yamlGitConfig) {
     return YamlChangeSet.builder()
         .gitFileChanges(Collections.singletonList(gitFileChange))
-        .gitToHarness(false)
         .organizationId(orgId)
         .projectId(projectId)
-        .status(Status.QUEUED)
+        .status(Status.QUEUED.name())
         .accountId(accountId)
         .scope(getScope(accountId, orgId, projectId))
         .fullSync(false)
@@ -86,13 +85,11 @@ public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
 
   private GitFileLocation buildGitFileLocation(
       String accountId, String orgId, String projectId, String entityType, String entityIdentifier, String entityName) {
-    Optional<YamlGitConfigDTO.RootFolder> defaultRootFolder =
-        yamlGitConfigService.getDefault(projectId, orgId, accountId);
+    Optional<YamlGitConfigDTO.RootFolder> defaultRootFolder = Optional.empty();
 
     return defaultRootFolder
         .map(rootFolder -> {
-          YamlGitConfigDTO yamlGitConfig =
-              yamlGitConfigService.getByFolderIdentifier(projectId, orgId, accountId, rootFolder.getIdentifier());
+          YamlGitConfigDTO yamlGitConfig = YamlGitConfigDTO.builder().build();
           return gitFileLocationRepository.save(GitFileLocation.builder()
                                                     .accountId(accountId)
                                                     .entityIdentifier(entityIdentifier)

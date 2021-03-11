@@ -5,9 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.exception.ExportExecutionsException;
 
 import software.wings.service.intfc.FileService;

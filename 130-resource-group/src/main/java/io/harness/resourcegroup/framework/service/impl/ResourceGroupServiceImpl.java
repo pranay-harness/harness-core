@@ -1,6 +1,7 @@
 package io.harness.resourcegroup.framework.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ACCOUNT;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
@@ -166,6 +167,11 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
+    if (resourceGroup.getFullScopeSelected() && isNotEmpty(resourceGroup.getResourceSelectors())) {
+      return false;
+    } else if (!resourceGroup.getFullScopeSelected() && isEmpty(resourceGroup.getResourceSelectors())) {
+      return false;
+    }
     boolean isValid = staticResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     isValid = isValid && dynamicResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     return isValid;
@@ -225,6 +231,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     savedResourceGroup.setTags(resourceGroup.getTags());
     savedResourceGroup.setDescription(resourceGroup.getDescription());
     if (validate(resourceGroup)) {
+      savedResourceGroup.setFullScopeSelected(resourceGroup.getFullScopeSelected());
       savedResourceGroup.setResourceSelectors(resourceGroup.getResourceSelectors());
     }
     resourceGroup = resourceGroupRepository.save(savedResourceGroup);
@@ -308,25 +315,19 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   public boolean createDefaultResourceGroup(ResourcePrimaryKey resourcePrimaryKey) {
-    String resourceIdentifier = resourcePrimaryKey.getResourceIdetifier();
     String resourceType = resourcePrimaryKey.getResourceType();
     if (resourceType.equals(PROJECT) || resourceType.equals(ORGANIZATION) || resourceType.equals(ACCOUNT)) {
       String description = String.format("All the resources in this %s are included in this resource group.",
           StringUtils.capitalize(resourcePrimaryKey.getResourceType().toLowerCase()));
 
-      ResourceGroupBuilder resourceGroupBuilder =
-          ResourceGroup.builder()
-              .accountIdentifier(resourcePrimaryKey.getAccountIdentifier())
-              .orgIdentifier(resourcePrimaryKey.getOrgIdentifier())
-              .projectIdentifier(resourcePrimaryKey.getProjectIdentifer())
-              .name(resourcePrimaryKey.getResourceIdetifier())
-              .description(description)
-              .harnessManaged(true)
-              .resourceSelectors(
-                  Collections.singletonList(StaticResourceSelector.builder()
-                                                .resourceType(resourcePrimaryKey.getResourceType())
-                                                .identifiers(Collections.singletonList(resourceIdentifier))
-                                                .build()));
+      ResourceGroupBuilder resourceGroupBuilder = ResourceGroup.builder()
+                                                      .accountIdentifier(resourcePrimaryKey.getAccountIdentifier())
+                                                      .orgIdentifier(resourcePrimaryKey.getOrgIdentifier())
+                                                      .projectIdentifier(resourcePrimaryKey.getProjectIdentifer())
+                                                      .name(resourcePrimaryKey.getResourceIdetifier())
+                                                      .description(description)
+                                                      .harnessManaged(true)
+                                                      .fullScopeSelected(true);
       String resourceGroupIdentifier = String.format("_%s", resourcePrimaryKey.getResourceIdetifier());
       boolean created = false;
       int counter = 1;

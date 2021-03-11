@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.steps.approval.HarnessApprovalStep;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
@@ -20,6 +21,7 @@ public class OrchestrationStepsModuleStepRegistrar {
     Map<StepType, Class<? extends Step>> engineSteps = new HashMap<>();
 
     engineSteps.put(BarrierStep.STEP_TYPE, BarrierStep.class);
+    engineSteps.put(HarnessApprovalStep.STEP_TYPE, HarnessApprovalStep.class);
     engineSteps.put(ResourceRestraintStep.STEP_TYPE, ResourceRestraintStep.class);
     engineSteps.put(PipelineSetupStep.STEP_TYPE, PipelineSetupStep.class);
 

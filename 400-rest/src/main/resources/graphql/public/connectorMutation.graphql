@@ -79,6 +79,7 @@ input DockerConnectorInput {
   URL: String!
   userName: String
   passwordSecretId: String
+  delegateSelectors: [String]
 }
 
 input NexusConnectorInput {

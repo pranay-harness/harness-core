@@ -21,25 +21,31 @@ public class SecretGenerator {
   @Inject ScmSecret scmSecret;
   @Inject SecretManager secretManager;
 
-  public String ensureStored(String accountId, SecretName name) {
-    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name.getValue());
+  public String ensureSecretText(String accountId, String name, String value) {
+    final EncryptedData encryptedData = secretManager.getSecretByName(accountId, name);
     if (encryptedData != null) {
       return encryptedData.getUuid();
     }
 
-    SecretText secretText = SecretText.builder()
-                                .name(name.getValue())
-                                .value(scmSecret.decryptToString(name))
-                                .usageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                .build();
+    SecretText secretText =
+        SecretText.builder().name(name).value(value).usageRestrictions(getAllAppAllEnvUsageRestrictions()).build();
     try {
       return secretManager.saveSecretUsingLocalMode(accountId, secretText);
     } catch (WingsException we) {
       if (we.getCause() instanceof DuplicateKeyException) {
-        return secretManager.getSecretByName(accountId, name.getValue()).getUuid();
+        return secretManager.getSecretByName(accountId, name).getUuid();
       }
       throw we;
     }
+  }
+
+  public String ensureSecretText(Owners owners, String name, String value) {
+    final Account account = owners.obtainAccount();
+    return ensureSecretText(account.getUuid(), name, value);
+  }
+
+  public String ensureStored(String accountId, SecretName name) {
+    return ensureSecretText(accountId, name.getValue(), scmSecret.decryptToString(name));
   }
 
   public String ensureStored(Owners owners, SecretName name) {

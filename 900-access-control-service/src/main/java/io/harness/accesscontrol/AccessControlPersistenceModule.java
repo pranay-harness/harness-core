@@ -6,6 +6,7 @@ import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGro
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentPersistenceConfig;
 import io.harness.accesscontrol.roles.persistence.RolePersistenceConfig;
+import io.harness.aggregator.AggregatorPersistenceConfig;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
@@ -98,7 +99,7 @@ public class AccessControlPersistenceModule extends PersistenceModule {
   protected Class<?>[] getConfigClasses() {
     return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
         PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class,
-        ACLPersistenceConfig.class};
+        ACLPersistenceConfig.class, AggregatorPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {

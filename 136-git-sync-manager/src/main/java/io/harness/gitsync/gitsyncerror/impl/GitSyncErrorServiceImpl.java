@@ -2,7 +2,6 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
-import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.HARNESS_TO_GIT;
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitIdOfError;
 
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -51,25 +50,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   @Override
-  public void upsertGitSyncErrors(GitFileChange failedChange, String errorMessage, boolean fullSyncPath,
-      YamlGitConfigDTO yamlGitConfig, boolean gitToHarness) {
-    if (gitToHarness) {
-      upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
-    } else {
-      upsertHarnessToGitError(failedChange, errorMessage, fullSyncPath, yamlGitConfig);
-    }
-  }
-
-  private void upsertHarnessToGitError(
+  public void upsertGitSyncErrors(
       GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
-    log.info(String.format("Upsert haress to git issue for file: %s", failedChange.getFilePath()));
-
-    gitSyncErrorRepository.upsertGitError(failedChange.getAccountId(), failedChange.getFilePath(), HARNESS_TO_GIT,
-        errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info", fullSyncPath,
-        failedChange.getChangeType(), getHarnessToGitErrorDetails(failedChange, fullSyncPath),
-        yamlGitConfig.getGitConnectorId(), yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
-        GitFileLocationHelper.getRootPathSafely(failedChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectId(), yamlGitConfig.getOrganizationId());
+    upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
   }
 
   private void upsertGitToHarnessError(

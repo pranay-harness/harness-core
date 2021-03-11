@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
 
@@ -71,6 +71,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
         .setRun(runStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setLogKey(logKey)
         .build();
   }
 }

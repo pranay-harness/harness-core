@@ -75,7 +75,8 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotEmpty @Size(min = 7, max = 7) String color;
   @Size(max = 128) @Singular List<NGTag> tags;
   @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
-  @NotEmpty @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
+  @NotNull @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
+  @Builder.Default Boolean fullScopeSelected = Boolean.FALSE;
 
   @Builder.Default Boolean deleted = Boolean.FALSE;
   @CreatedDate Long createdAt;

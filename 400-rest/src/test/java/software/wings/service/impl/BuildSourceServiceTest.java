@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MILOS;
 
@@ -42,6 +43,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
@@ -59,6 +61,7 @@ import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.command.GcbTaskParams;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
 import software.wings.beans.template.artifactsource.CustomRepositoryMapping;
@@ -104,10 +107,11 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 public class BuildSourceServiceTest extends WingsBaseTest {
   public static final String DELEGATE_SELECTOR = "delegateSelector";
-  @Mock private SettingsService settingsService;
+  private final SettingsService settingsService = Mockito.mock(SettingsServiceImpl.class);
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock BambooBuildService bambooBuildService;
@@ -1274,7 +1278,9 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldAppendDelegateSelectorToSyncTaskContextWhenGcpConfigIsUseDelegate() {
-    when(settingsService.isSettingValueGcp(any())).thenReturn(true);
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
@@ -1288,7 +1294,8 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldNotAppendDelegateSelectorToSyncTaskContextWhenGcpConfigIsNotUseDelegate() {
-    when(settingsService.isSettingValueGcp(any())).thenReturn(true);
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
@@ -1296,6 +1303,59 @@ public class BuildSourceServiceTest extends WingsBaseTest {
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
     assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNull();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDelegateSelectorForDockerConfig() {
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(DockerConfig.builder()
+                           .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNotEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags())
+        .isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDelegateSelectorForNexusConfig() {
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testDelegateSelectorForArtifactoryConfig() {
+    when(settingsService.isSettingValueGcp(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
+    buildSourceService.getBuildService(
+        SettingAttribute.Builder.aSettingAttribute()
+            .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com/").build())
+            .build());
+    verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNullOrEmpty();
   }
 
   @Test

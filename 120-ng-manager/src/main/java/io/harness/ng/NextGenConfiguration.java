@@ -6,9 +6,11 @@ import io.harness.AccessControlClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
+import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupConfig;
@@ -48,6 +50,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("ciDefaultEntityConfiguration") private CiDefaultEntityConfiguration ciDefaultEntityConfiguration;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
@@ -59,6 +62,9 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
   @JsonProperty("ResoureGroupConfig") private ResourceGroupConfig resoureGroupConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
+  @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
+  @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

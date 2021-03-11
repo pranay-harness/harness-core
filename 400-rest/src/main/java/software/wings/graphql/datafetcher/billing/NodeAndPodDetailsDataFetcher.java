@@ -2,6 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
 
 import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder.INVALID_FILTER_MSG;
@@ -324,7 +325,7 @@ public class NodeAndPodDetailsDataFetcher
         instanceIds.add(entry.getId());
       }
     }
-    if (instanceTypes.contains(K8S_POD)) {
+    if (instanceTypes.contains(K8S_POD) || instanceTypes.contains(K8S_POD_FARGATE)) {
       for (QLNodeAndPodDetailsTableRow entry : costData.getData()) {
         instanceIdToCostData.put(entry.getId(), entry);
         instanceIdWithCluster.add(entry.getId());
@@ -357,7 +358,7 @@ public class NodeAndPodDetailsDataFetcher
     if (instanceTypes.contains(K8S_NODE)) {
       data.addAll(getDataForNodes(instanceIdToCostData, instanceIdToInstanceData, instanceIdWithCluster));
     }
-    if (instanceTypes.contains(K8S_POD)) {
+    if (instanceTypes.contains(K8S_POD) || instanceTypes.contains(K8S_POD_FARGATE)) {
       data.addAll(getDataForPods(instanceIdToCostData, instanceIdToInstanceData, instanceIdWithCluster));
     }
     if (instanceTypes.contains(K8S_PV)) {

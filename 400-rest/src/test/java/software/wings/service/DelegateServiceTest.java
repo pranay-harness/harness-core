@@ -74,7 +74,6 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
-import io.harness.beans.FileMetadata;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilityRequirement;
@@ -89,10 +88,12 @@ import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
+import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateParams;
@@ -111,6 +112,7 @@ import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DuplicateDelegateException;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -121,7 +123,6 @@ import io.harness.delegate.beans.executioncapability.CapabilityType;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
 import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
@@ -130,6 +131,7 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
+import io.harness.network.LocalhostUtils;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Cache;
@@ -178,6 +180,7 @@ import software.wings.service.impl.DelegateConnectionDao;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
+import software.wings.service.impl.DelegateTaskStatusObserver;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -247,6 +250,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
   private static final String DELEGATE_PROFILE_ID = "QFWin33JRlKWKBzpzE5A9A";
+  private static final String DELEGATE_TYPE = "dockerType";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -275,7 +279,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
+  private int port = LocalhostUtils.findFreePort();
+  @Rule public WireMockRule wireMockRule = new WireMockRule(port);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @InjectMocks @Inject private DelegateCache delegateCache;
@@ -288,6 +293,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Inject private HPersistence persistence;
   private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
   private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
+  private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject = mock(Subject.class);
   private Subject<DelegateObserver> subject = mock(Subject.class);
 
   private Account account =
@@ -302,7 +308,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
-        .thenReturn("http://localhost:8888/delegateci.txt");
+        .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
@@ -312,7 +318,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getCurrentJre()).thenReturn("openjdk8u242");
     when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
     when(subdomainUrlHelper.getWatcherMetadataUrl(any(), any(), any()))
-        .thenReturn("http://localhost:8888/watcherci.txt");
+        .thenReturn("http://localhost:" + port + "/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
     when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
@@ -331,7 +337,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
-        .thenReturn("http://localhost:8888/builds/9/delegate.jar");
+        .thenReturn("http://localhost:" + port + "/builds/9/delegate.jar");
     when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
@@ -354,6 +360,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     FieldUtils.writeField(delegateService, "delegateProfileSubject", delegateProfileSubject, true);
     FieldUtils.writeField(delegateService, "subject", subject, true);
     FieldUtils.writeField(delegateTaskService, "retryObserverSubject", retryObserverSubject, true);
+    FieldUtils.writeField(
+        delegateTaskService, "delegateTaskStatusObserverSubject", delegateTaskStatusObserverSubject, true);
   }
 
   @Test
@@ -414,7 +422,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2WithoutScalingGroups() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -432,6 +440,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(0);
+    assertThat(delegateStatus.getDelegateGroupDetails()).hasSize(0);
     validateDelegateInnerProperties(delegateWithoutScalingGroup.getUuid(), delegateStatus.getDelegates().get(0));
   }
 
@@ -441,7 +451,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2ScalingGroupHasCorrectItems() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -519,6 +529,104 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateStatus status = delegateService.getDelegateStatusWithScalingGroups(accountId);
 
     assertThat(status.getScalingGroups()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatus2ScalingGroupWithDelegateGroupDetails() {
+    String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
+
+    when(delegateProfileService.get(accountId, delegateProfileId))
+        .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
+
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+
+    Delegate deletedDelegate =
+        createDelegateBuilder().accountId(accountId).status(DelegateInstanceStatus.DELETED).build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder().name("grp1").accountId(accountId).build();
+    persistence.save(delegateGroup1);
+    DelegateGroup delegateGroup2 = DelegateGroup.builder().name("grp2").accountId(accountId).build();
+    persistence.save(delegateGroup2);
+
+    // these three delegates should be returned for group 1
+    Delegate delegate1 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp1")
+                             .hostName("kube-0")
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .build();
+
+    Delegate delegate2 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp1")
+                             .hostName("kube-1")
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis() - 60000)
+                             .build();
+
+    // this delegate should cause an empty group to be returned
+    Delegate delegate3 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp2")
+                             .delegateGroupId(delegateGroup2.getUuid())
+                             .build();
+
+    persistence.save(Arrays.asList(deletedDelegate, delegate1, delegate2, delegate3));
+
+    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate1.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    DelegateConnection delegateConnection2 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate2.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    persistence.save(delegateConnection1);
+    persistence.save(delegateConnection2);
+
+    DelegateStatus delegateStatus = delegateService.getDelegateStatusWithScalingGroups(accountId);
+
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
+
+    assertThat(delegateStatus.getDelegates()).hasSize(0);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(0);
+    assertThat(delegateStatus.getDelegateGroupDetails()).hasSize(2);
+    assertThat(delegateStatus.getDelegateGroupDetails())
+        .extracting(DelegateGroupDetails::getGroupName)
+        .containsOnly("grp1", "grp2");
+
+    for (DelegateGroupDetails group : delegateStatus.getDelegateGroupDetails()) {
+      if (group.getGroupName().equals("grp1")) {
+        assertThat(group.getDelegates()).hasSize(2);
+        assertThat(group.getDelegateType()).isEqualTo(DELEGATE_TYPE);
+        assertThat(group.getGroupHostName()).isEqualTo("");
+        assertThat(group.getGroupSelectors()).isNotNull();
+        assertThat(group.getGroupSelectors().containsKey("grp1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("kube-0")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("kube-1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("profile")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("s1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("s2")).isTrue();
+        assertThat(group.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
+        assertThat(group.getDelegates())
+            .extracting(DelegateStatus.DelegateInner::getUuid)
+            .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+      } else if (group.getGroupName().equals("grp2")) {
+        assertThat(group.getDelegates()).hasSize(0);
+      }
+    }
   }
 
   @Test
@@ -1420,12 +1528,14 @@ public class DelegateServiceTest extends WingsBaseTest {
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
+            .responseCode(ResponseCode.OK)
             .build());
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
     verify(waitNotifyEngine)
         .doneWith(
             delegateTask.getWaitId(), ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build());
+    verify(delegateTaskStatusObserverSubject).fireInform(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -1593,8 +1703,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath))));
+          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
@@ -1604,7 +1714,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
@@ -1614,7 +1725,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
@@ -1652,7 +1764,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStartOpenJdk.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStartOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
@@ -1661,8 +1774,9 @@ public class DelegateServiceTest extends WingsBaseTest {
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateOpenJdk.sh"))));
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
@@ -1672,7 +1786,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
@@ -1750,8 +1865,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream(expectedLaunchDelegateFilepath))));
+          .isEqualTo(
+              CharStreams
+                  .toString(new InputStreamReader(getClass().getResourceAsStream(expectedLaunchDelegateFilepath)))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(DOCKER_DELEGATE + "/README.txt");
@@ -1787,8 +1904,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml"))));
+          .isEqualTo(
+              CharStreams
+                  .toString(new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -1814,8 +1933,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateWithCiEnabled.yaml"))));
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateWithCiEnabled.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -1909,6 +2030,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
+    delegateCache.get(ACCOUNT_ID, DELEGATE_ID, true);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
   }
@@ -2041,8 +2163,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml"))));
+          .isEqualTo(
+              CharStreams
+                  .toString(new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -2078,8 +2202,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(new InputStreamReader(
-              getClass().getResourceAsStream("/expectedHarnessDelegateNgWithoutDescription.yaml"))));
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgWithoutDescription.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -3566,15 +3692,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
             .build();
 
-    delegateService.saveDelegateTask(delegateTask, QUEUED);
-
-    if (status != delegateTask.getStatus()) {
-      delegateTask = persistence.findAndModify(
-          persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()),
-          persistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status),
-          HPersistence.returnNewOptions);
-    }
-
+    delegateService.saveDelegateTask(delegateTask, status);
     return delegateTask;
   }
 
@@ -3584,7 +3702,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .ip("127.0.0.1")
         .hostName("localhost")
         .delegateName("testDelegateName")
-        .delegateType("dockerType")
+        .delegateType(DELEGATE_TYPE)
         .version(VERSION)
         .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());

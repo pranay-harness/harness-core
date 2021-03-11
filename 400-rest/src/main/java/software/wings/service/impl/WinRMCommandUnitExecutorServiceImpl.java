@@ -79,7 +79,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
     WinRmExecutor winRmExecutor =
         winRmExecutorFactory.getExecutor(winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
     FileBasedWinRmExecutor fileBasedWinRmExecutor = winRmExecutorFactory.getFiledBasedWinRmExecutor(
-        winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet());
+        winRmSessionConfig, context.isDisableWinRMCommandEncodingFFSet(), context.isWinrmCopyConfigOptimize());
 
     ShellCommandExecutionContext shellCommandExecutionContext = new ShellCommandExecutionContext(context);
     shellCommandExecutionContext.setExecutor(winRmExecutor);

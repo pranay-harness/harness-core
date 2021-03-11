@@ -2,12 +2,12 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.manifest.ManifestHelper.normalizeFolderPath;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -30,6 +30,8 @@ import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.deployment.InstanceDetails;
 import io.harness.deployment.InstanceDetails.InstanceType;
 import io.harness.deployment.InstanceDetails.K8s;
@@ -43,6 +45,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.Cd1SetupFields;
@@ -205,10 +208,13 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
   public K8sDelegateManifestConfig createDelegateManifestConfig(
       ExecutionContext context, ApplicationManifest appManifest) {
-    K8sDelegateManifestConfigBuilder manifestConfigBuilder = K8sDelegateManifestConfig.builder()
-                                                                 .manifestStoreTypes(appManifest.getStoreType())
-                                                                 .helmCommandFlag(appManifest.getHelmCommandFlag());
+    K8sDelegateManifestConfigBuilder manifestConfigBuilder =
+        K8sDelegateManifestConfig.builder()
+            .manifestStoreTypes(appManifest.getStoreType())
+            .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag()));
 
+    boolean customManifestEnabled = featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
+    manifestConfigBuilder.customManifestEnabled(customManifestEnabled);
     StoreType storeType = appManifest.getStoreType();
     switch (storeType) {
       case Local:
@@ -237,6 +243,19 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest));
         break;
 
+      case CUSTOM:
+      case CUSTOM_OPENSHIFT_TEMPLATE:
+        if (customManifestEnabled) {
+          CustomManifestSource customManifestSource =
+              CustomManifestSource.builder()
+                  .filePaths(Arrays.asList(appManifest.getCustomSourceConfig().getPath()))
+                  .script(appManifest.getCustomSourceConfig().getScript())
+                  .build();
+          manifestConfigBuilder.customManifestSource(customManifestSource);
+          break;
+        }
+
+      // fallthrough to ignore branch if FF is not enabled
       default:
         unhandled(storeType);
     }
@@ -325,6 +344,79 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private ExecutionResponse executeCustomFetchValuesTask(ExecutionContext context,
+      Map<K8sValuesLocation, ApplicationManifest> appManifestMap, String activityId,
+      K8sStateExecutor k8sStateExecutor) {
+    CustomManifestValuesFetchParams fetchValuesParams =
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, appManifestMap);
+    fetchValuesParams.setActivityId(activityId);
+    fetchValuesParams.setCommandUnitName(FetchFiles);
+    fetchValuesParams.setAppId(context.getAppId());
+
+    Environment env = K8sStateHelper.fetchEnvFromExecutionContext(context);
+    ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
+    String serviceTemplateId = infraMapping == null ? null : serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
+
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(context.getAccountId())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
+            .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+            .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, serviceTemplateId)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK.name())
+                      .parameters(new Object[] {fetchValuesParams})
+                      .timeout(K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis(context)))
+                      .expressionFunctorToken(expressionFunctorToken)
+                      .build())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .build();
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
+    K8sStateExecutionData stateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    if (stateExecutionData != null) {
+      valuesFiles.putAll(stateExecutionData.getValuesFiles());
+    }
+
+    prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    k8sStateExecutor.handleDelegateTask(context, delegateTask);
+
+    return ExecutionResponse.builder()
+        .async(true)
+        .correlationIds(singletonList(delegateTaskId))
+        .stateExecutionData(K8sStateExecutionData.builder()
+                                .activityId(activityId)
+                                .commandName(k8sStateExecutor.commandName())
+                                .currentTaskType(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK)
+                                .valuesFiles(valuesFiles)
+                                .applicationManifestMap(appManifestMap)
+                                .build())
+        .build();
+  }
+
+  private void prepareDelegateTask(ExecutionContext context, K8sStateExecutionData stateExecutionData,
+      DelegateTask delegateTask, int expressionFunctorToken) {
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+
+    context.resetPreparedCache();
+    if (delegateTask.getData().getParameters().length == 1
+        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
+      delegateTask.setWorkflowExecutionId(context.getWorkflowExecutionId());
+      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
+          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
+    }
   }
 
   public void updateManifestsArtifactVariableNames(
@@ -476,18 +568,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             .currentTaskType(TaskType.K8S_COMMAND_TASK)
             .build();
 
-    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
-                                                      .stateExecutionData(stateExecutionData)
-                                                      .adoptDelegateDecryption(true)
-                                                      .expressionFunctorToken(expressionFunctorToken)
-                                                      .build();
-    context.resetPreparedCache();
-    if (delegateTask.getData().getParameters().length == 1
-        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
-      delegateTask.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
-          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
-    }
+    prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);
 
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
     stateExecutionData.setReleaseName(
@@ -519,8 +600,10 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       k8sStateExecutor.validateParameters(context);
       boolean valuesInGit = false;
       boolean valuesInHelmChartRepo = false;
+      boolean valuesInCustomSource = false;
       boolean kustomizeSource = false;
       boolean remoteParams = false;
+      boolean customSourceParams = false;
       boolean ocTemplateSource = false;
 
       Activity activity;
@@ -528,25 +611,28 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       if (openShiftManagerService.isOpenShiftManifestConfig(context)) {
         ocTemplateSource = true;
         appManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, AppManifestKind.OC_PARAMS);
-        if (isNotEmpty(appManifestMap) && isValuesInGit(appManifestMap)) {
-          remoteParams = true;
-        }
+        remoteParams = isValuesInGit(appManifestMap);
+        customSourceParams = isValuesInCustomSource(appManifestMap);
       } else {
         appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
 
         valuesInGit = isValuesInGit(appManifestMap);
         valuesInHelmChartRepo = applicationManifestUtils.isValuesInHelmChartRepo(context);
         kustomizeSource = applicationManifestUtils.isKustomizeSource(context);
+        valuesInCustomSource = isValuesInCustomSource(appManifestMap);
       }
       activity =
           createK8sActivity(context, k8sStateExecutor.commandName(), k8sStateExecutor.stateType(), activityService,
               k8sStateExecutor.commandUnitList(
-                  valuesInGit || valuesInHelmChartRepo || kustomizeSource || ocTemplateSource));
-
+                  valuesInGit || valuesInHelmChartRepo || kustomizeSource || ocTemplateSource || valuesInCustomSource));
+      boolean isCustomManifestFeatureEnabled =
+          featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
       if (valuesInHelmChartRepo) {
         return executeHelmValuesFetchTask(context, activity.getUuid(), k8sStateExecutor.commandName(), timeoutInMillis);
       } else if (valuesInGit || remoteParams) {
         return executeGitTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor.commandName());
+      } else if (isCustomManifestFeatureEnabled && (valuesInCustomSource || customSourceParams)) {
+        return executeCustomFetchValuesTask(context, appManifestMap, activity.getUuid(), k8sStateExecutor);
       } else {
         return k8sStateExecutor.executeK8sTask(context, activity.getUuid());
       }
@@ -561,7 +647,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
       K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
     try {
       K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
-
+      boolean isCustomManifestFeatureEnabled =
+          featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
       TaskType taskType = k8sStateExecutionData.getCurrentTaskType();
       switch (taskType) {
         case HELM_VALUES_FETCH:
@@ -573,6 +660,12 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         case K8S_COMMAND_TASK:
           return k8sStateExecutor.handleAsyncResponseForK8sTask(context, response);
 
+        case CUSTOM_MANIFEST_VALUES_FETCH_TASK:
+          if (isCustomManifestFeatureEnabled) {
+            return handleAsyncResponseForCustomFetchValuesTaskWrapper(k8sStateExecutor, context, response);
+          }
+
+        // fallthrough to ignore branch if FF is not enabled
         default:
           throw new WingsException("Unhandled task type " + taskType);
       }
@@ -637,6 +730,17 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     return false;
   }
 
+  private boolean isValuesInCustomSource(Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+    for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
+      ApplicationManifest applicationManifest = entry.getValue();
+      if (StoreType.CUSTOM == applicationManifest.getStoreType()) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private ExecutionResponse handleAsyncResponseForGitTaskWrapper(
       K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -657,6 +761,36 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     applicationManifestUtils.renderGitConfigForApplicationManifest(context, appManifestMap);
     Map<K8sValuesLocation, Collection<String>> valuesFiles =
         applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, executionResponse);
+    k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
+
+    if (isValuesInCustomSource(appManifestMap)) {
+      return executeCustomFetchValuesTask(context, appManifestMap, activityId, k8sStateExecutor);
+    } else {
+      return k8sStateExecutor.executeK8sTask(context, activityId);
+    }
+  }
+
+  private ExecutionResponse handleAsyncResponseForCustomFetchValuesTaskWrapper(
+      K8sStateExecutor k8sStateExecutor, ExecutionContext context, Map<String, ResponseData> response) {
+    String appId = context.getAppId();
+    String activityId = fetchActivityId(context);
+    CustomManifestValuesFetchResponse executionResponse =
+        (CustomManifestValuesFetchResponse) response.values().iterator().next();
+    ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
+        ? ExecutionStatus.SUCCESS
+        : ExecutionStatus.FAILED;
+
+    if (executionStatus == ExecutionStatus.FAILED) {
+      activityService.updateStatus(activityId, appId, executionStatus);
+      return ExecutionResponse.builder().executionStatus(executionStatus).build();
+    }
+
+    K8sStateExecutionData k8sStateExecutionData = context.getStateExecutionData();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = k8sStateExecutionData.getApplicationManifestMap();
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles =
+        applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(
+            context, appManifestMap, executionResponse);
     k8sStateExecutionData.getValuesFiles().putAll(valuesFiles);
 
     return k8sStateExecutor.executeK8sTask(context, activityId);
@@ -714,7 +848,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             helmChartConfigHelperService.getHelmChartConfigTaskParams(context, applicationManifest))
         .timeoutInMillis(timeoutInMillis)
         .workflowExecutionId(context.getWorkflowExecutionId())
-        .helmCommandFlag(applicationManifest.getHelmCommandFlag())
+        .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()))
         .mergeCapabilities(featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
         .build();
   }
@@ -744,8 +878,11 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
 
     boolean valuesInGit = isValuesInGit(appManifestMap);
+    boolean valuesInCustomSource = isValuesInCustomSource(appManifestMap);
     if (valuesInGit) {
       return executeGitTask(context, appManifestMap, activityId, k8sStateExecutor.commandName());
+    } else if (valuesInCustomSource) {
+      return executeCustomFetchValuesTask(context, appManifestMap, activityId, k8sStateExecutor);
     } else {
       return k8sStateExecutor.executeK8sTask(context, activityId);
     }
@@ -790,18 +927,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
                                                    .currentTaskType(TaskType.HELM_VALUES_FETCH)
                                                    .build();
 
-    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
-                                                      .stateExecutionData(stateExecutionData)
-                                                      .adoptDelegateDecryption(true)
-                                                      .expressionFunctorToken(expressionFunctorToken)
-                                                      .build();
-    context.resetPreparedCache();
-    if (delegateTask.getData().getParameters().length == 1
-        && delegateTask.getData().getParameters()[0] instanceof TaskParameters) {
-      delegateTask.setWorkflowExecutionId(context.getWorkflowExecutionId());
-      ExpressionReflectionUtils.applyExpression(delegateTask.getData().getParameters()[0],
-          (secretMode, value) -> context.renderExpression(value, stateExecutionContext));
-    }
+    prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);
 
     appendDelegateTaskDetails(context, delegateTask);
     String delegateTaskId = delegateService.queueTask(delegateTask);
@@ -924,5 +1050,10 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @Override
   public boolean isSelectionLogsTrackingForTasksEnabled() {
     return true;
+  }
+
+  @Override
+  public void handleDelegateTask(ExecutionContext context, DelegateTask delegateTask) {
+    appendDelegateTaskDetails(context, delegateTask);
   }
 }

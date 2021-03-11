@@ -7,6 +7,7 @@ import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpValidationParamsProvider;
+import io.harness.connector.heartbeat.HttpHelmConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
@@ -40,6 +41,8 @@ import io.harness.connector.mappers.githubconnector.GithubDTOToEntity;
 import io.harness.connector.mappers.githubconnector.GithubEntityToDTO;
 import io.harness.connector.mappers.gitlabconnector.GitlabDTOToEntity;
 import io.harness.connector.mappers.gitlabconnector.GitlabEntityToDTO;
+import io.harness.connector.mappers.helm.HttpHelmDTOToEntity;
+import io.harness.connector.mappers.helm.HttpHelmEntityToDTO;
 import io.harness.connector.mappers.jira.JiraDTOToEntity;
 import io.harness.connector.mappers.jira.JiraEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
@@ -63,6 +66,7 @@ import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
+import io.harness.connector.validator.HttpHelmRepoConnectionValidator;
 import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
@@ -143,6 +147,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.CE_AZURE,
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAzureConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, CEAzureDTOToEntity.class, CEAzureEntityToDTO.class));
+    registrar.put(ConnectorType.HTTP_HELM_REPO,
+        new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,
+            HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class));
   }
 
   public static Class<? extends ConnectionValidator> getConnectorValidator(ConnectorType connectorType) {

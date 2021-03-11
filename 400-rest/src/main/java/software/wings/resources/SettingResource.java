@@ -82,7 +82,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.time.StopWatch;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -137,7 +136,6 @@ public class SettingResource {
     if (isNotEmpty(settingVariableTypes)) {
       pageRequest.addFilter("value.type", IN, settingVariableTypes.toArray());
     }
-    StopWatch watch = StopWatch.createStarted();
     if (gitSshConfigOnly) {
       pageRequest.addFilter("accountId", EQ, accountId);
       pageRequest.addFilter("value.type", EQ, SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES.name());
@@ -158,12 +156,8 @@ public class SettingResource {
     } else {
       result = settingsService.list(pageRequest, currentAppId, currentEnvId);
     }
-    log.info("Time taken to read and filter setting attributes:  {}", watch.getTime());
-    watch.reset();
-    watch.start();
     result.forEach(
         settingAttribute -> settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, true));
-    log.info("Time taken to update setting attributes before sending: {}", watch.getTime());
     return new RestResponse<>(result);
   }
 

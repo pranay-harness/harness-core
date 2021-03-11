@@ -31,6 +31,7 @@ import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.globalcontex.PurgeGlobalContextData;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCreateMetaResponse;
 import io.harness.jira.JiraCustomFieldValue;
@@ -48,6 +49,8 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceFile;
 import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.ManifestType;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -71,6 +74,7 @@ import io.harness.shell.ShellExecutionData;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
+import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
 
@@ -258,7 +262,11 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(NGInstanceUnitType.class, 1445);
     kryo.register(AzureDeploymentMode.class, 1446);
     kryo.register(ARMScopeType.class, 1447);
+    kryo.register(HelmSubCommandType.class, 1448);
+    kryo.register(CustomManifestSource.class, 1449);
+    kryo.register(CustomSourceFile.class, 1450);
 
     kryo.register(AdditionalMetadata.class, 72101);
+    kryo.register(AwsCrossAccountAttributes.class, 7203);
   }
 }

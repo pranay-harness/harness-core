@@ -1,40 +1,41 @@
 package io.harness.governance;
 
-import io.harness.annotations.dev.Module;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
 import software.wings.resources.stats.model.TimeRange;
+import software.wings.service.impl.yaml.handler.governance.GovernanceFreezeConfigYaml;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.ParametersAreNonnullByDefault;
 import lombok.Builder;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.codehaus.jackson.annotate.JsonCreator;
 
 @Getter
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 @Slf4j
 @ParametersAreNonnullByDefault
-@TargetModule(Module._980_COMMONS)
 public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   // if freezeForAllApps=true, ignore appIds
-  private TimeRange timeRange;
+  @Setter private TimeRange timeRange;
 
   public TimeRange getTimeRange() {
     return timeRange;
   }
 
-  @JsonCreator
   @Builder
+  @JsonCreator
   public TimeRangeBasedFreezeConfig(@JsonProperty("freezeForAllApps") boolean freezeForAllApps,
       @JsonProperty("appIds") List<String> appIds,
       @JsonProperty("environmentTypes") List<EnvironmentType> environmentTypes,
@@ -68,5 +69,33 @@ public class TimeRangeBasedFreezeConfig extends GovernanceFreezeConfig {
   @Override
   public long fetchEndTime() {
     return getTimeRange().getTo();
+  }
+
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @JsonTypeName("TIME_RANGE_BASED_FREEZE_CONFIG")
+  public static final class Yaml extends GovernanceFreezeConfigYaml {
+    private String name;
+    private String description;
+    private boolean applicable;
+    private List<String> userGroups;
+    private List<ApplicationFilterYaml> appSelections;
+    private TimeRange.Yaml timeRange;
+
+    @Builder
+    public Yaml(String type, String name, String description, boolean applicable, List<String> userGroups,
+        List<ApplicationFilterYaml> appSelections, TimeRange.Yaml timeRange) {
+      super(type);
+      setName(name);
+      setDescription(description);
+      setApplicable(applicable);
+      setUserGroups(userGroups);
+      setAppSelections(appSelections);
+      setTimeRange(timeRange);
+    }
+
+    public Yaml() {
+      super("TIME_RANGE_BASED_FREEZE_CONFIG");
+    }
   }
 }

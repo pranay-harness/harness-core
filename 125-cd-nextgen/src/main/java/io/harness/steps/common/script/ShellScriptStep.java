@@ -3,7 +3,6 @@ package io.harness.steps.common.script;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -45,6 +44,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
@@ -53,7 +53,6 @@ import io.harness.shell.ShellExecutionData;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
-import io.harness.yaml.core.variables.NGVariable;
 
 import software.wings.beans.TaskType;
 import software.wings.exception.ShellScriptException;
@@ -61,10 +60,10 @@ import software.wings.exception.ShellScriptException;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
@@ -163,25 +162,27 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
         ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
   }
 
-  private Map<String, String> getEnvironmentVariables(List<NGVariable> inputVariables) {
+  private Map<String, String> getEnvironmentVariables(Map<String, Object> inputVariables) {
     if (EmptyPredicate.isEmpty(inputVariables)) {
-      return emptyMap();
+      return new HashMap<>();
     }
-
-    // TODO: handle for secret type later
-    return inputVariables.stream().collect(Collectors.toMap(
-        NGVariable::getName, inputVariable -> String.valueOf(inputVariable.getValue().getValue()), (a, b) -> b));
+    Map<String, String> res = new LinkedHashMap<>();
+    inputVariables.keySet().forEach(
+        key -> res.put(key, ((ParameterField<?>) inputVariables.get(key)).getValue().toString()));
+    return res;
   }
 
-  private List<String> getOutputVars(List<NGVariable> outputVariables) {
+  private List<String> getOutputVars(Map<String, Object> outputVariables) {
     if (EmptyPredicate.isEmpty(outputVariables)) {
       return emptyList();
     }
 
     List<String> outputVars = new ArrayList<>();
-    for (NGVariable inputVariable : outputVariables) {
-      outputVars.add((String) inputVariable.getValue().getValue());
-    }
+    outputVariables.values().forEach(val -> {
+      if (val instanceof ParameterField) {
+        outputVars.add(((ParameterField<?>) val).getValue().toString());
+      }
+    });
     return outputVars;
   }
 
@@ -281,10 +282,10 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
   private ShellScriptOutcome prepareShellScriptOutcome(
       ShellScriptStepParameters stepParameters, Map<String, String> sweepingOutputEnvVariables) {
     Map<String, String> outputVariables = new HashMap<>();
-    for (NGVariable outputVariable : stepParameters.getOutputVariables()) {
-      outputVariables.put(
-          outputVariable.getName(), sweepingOutputEnvVariables.get(outputVariable.getValue().getValue()));
-    }
+    stepParameters.getOutputVariables().keySet().forEach(name -> {
+      Object value = ((ParameterField<?>) stepParameters.getOutputVariables().get(name)).getValue();
+      outputVariables.put(name, sweepingOutputEnvVariables.get(value));
+    });
     return ShellScriptOutcome.builder().outputVariables(outputVariables).build();
   }
 }

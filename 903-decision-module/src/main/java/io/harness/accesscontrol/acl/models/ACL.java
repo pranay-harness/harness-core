@@ -1,6 +1,9 @@
 package io.harness.accesscontrol.acl.models;
 
+import static io.harness.ng.DbAliases.ACCESS_CONTROL;
+
 import io.harness.accesscontrol.acl.models.HACL.HACLKeys;
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -28,6 +31,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("acl")
 @Entity(value = "acl", noClassnameStored = true)
 @TypeAlias("acl")
+@StoreIn(ACCESS_CONTROL)
 public abstract class ACL implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String id;
   @CreatedDate Long createdAt;

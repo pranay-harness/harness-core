@@ -57,4 +57,10 @@ public class EngineJexlContext implements JexlContext {
     originalMap.clear();
     updatesMap.clear();
   }
+
+  public synchronized void addToContext(Map<String, Object> newMap) {
+    if (newMap != null) {
+      originalMap.putAll(newMap);
+    }
+  }
 }

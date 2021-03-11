@@ -14,6 +14,7 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.refobjects.RefType;
 import io.harness.pms.contracts.steps.SkipType;
@@ -52,5 +53,6 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(RepairActionCode.class, 2616);
     kryo.register(SkipInfo.class, SkipInfoKryoSerializer.getInstance(), 2617);
     kryo.register(AdviserResponse.class, AdviserResponseKryoSerializer.getInstance(), 2618);
+    kryo.register(InterruptType.class, 2619);
   }
 }

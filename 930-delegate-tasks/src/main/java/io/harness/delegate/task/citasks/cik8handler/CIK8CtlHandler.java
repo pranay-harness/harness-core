@@ -64,7 +64,7 @@ public class CIK8CtlHandler {
       return null;
     }
 
-    return kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
+    return kubernetesClient.secrets().inNamespace(namespace).create(secret);
   }
 
   public void createPVC(
@@ -124,7 +124,7 @@ public class CIK8CtlHandler {
     Secret secret = secretSpecBuilder.createSecret(secretName, namespace, data);
 
     if (secret != null) {
-      kubernetesClient.secrets().inNamespace(namespace).createOrReplace(secret);
+      kubernetesClient.secrets().inNamespace(namespace).create(secret);
     }
     return secret;
   }
@@ -256,6 +256,10 @@ public class CIK8CtlHandler {
 
   public Boolean deleteService(KubernetesClient kubernetesClient, String namespace, String serviceName) {
     return kubernetesClient.services().inNamespace(namespace).withName(serviceName).delete();
+  }
+
+  public Boolean deleteSecret(KubernetesClient kubernetesClient, String namespace, String secretName) {
+    return kubernetesClient.secrets().inNamespace(namespace).withName(secretName).delete();
   }
 
   public void createGitSecret(KubernetesClient kubernetesClient, String namespace, ConnectorDetails gitConnector)

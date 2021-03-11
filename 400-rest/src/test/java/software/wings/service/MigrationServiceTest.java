@@ -4,7 +4,10 @@ import static io.harness.rule.OwnerRule.BRETT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.migrations.MigrationList;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -12,10 +15,10 @@ import software.wings.WingsBaseTest;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import migrations.MigrationList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._390_DB_MIGRATION)
 public class MigrationServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = BRETT)

@@ -4,11 +4,13 @@ import io.harness.accesscontrol.principals.PrincipalType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @Builder
@@ -17,6 +19,6 @@ import lombok.experimental.FieldNameConstants;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel(value = "UserPrincipal")
 public class HUserPrincipal implements Principal {
-  String principalIdentifier;
-  PrincipalType principalType;
+  @NotEmpty String principalIdentifier;
+  @NotNull PrincipalType principalType;
 }

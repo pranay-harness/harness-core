@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
+import static io.harness.beans.FeatureName.CE_BILLING_DATA_HOURLY_PRE_AGGREGATION;
 import static io.harness.beans.FeatureName.CE_BILLING_DATA_PRE_AGGREGATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -90,6 +91,7 @@ public class BillingDataQueryBuilder {
   private static final String DEFAULT_ENVIRONMENT_TYPE = "ALL";
   public static final String BILLING_DATA_HOURLY_TABLE = "billing_data_hourly t0";
   public static final String BILLING_DATA_PRE_AGGREGATED_TABLE = "billing_data_aggregated t0";
+  public static final String BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE = "billing_data_hourly_aggregated t0";
   private static final long ONE_DAY_MILLIS = 86400000;
   private static final String EMPTY = "";
   protected static final String INVALID_FILTER_MSG = "Invalid combination of group by and filters";
@@ -152,7 +154,13 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
@@ -203,7 +211,13 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
@@ -249,7 +263,12 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     if (isGroupByClusterPresent(groupBy)) {
@@ -692,28 +711,31 @@ public class BillingDataQueryBuilder {
     DbColumn key = getFilterKey(type);
     QLNumberFilter numberFilter = (QLNumberFilter) filter;
 
-    FunctionCall aggregationFunction = FunctionCall.sum();
+    FunctionCall aggregationFn = FunctionCall.sum();
 
     if (type == QLBillingDataFilterType.StorageUtilizationValue) {
-      aggregationFunction = FunctionCall.max();
+      aggregationFn = FunctionCall.max();
     }
 
     switch (numberFilter.getOperator()) {
       case GREATER_THAN:
-        selectQuery.addHaving(
-            BinaryCondition.greaterThan(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+        selectQuery.addHaving(BinaryCondition.greaterThan(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       case LESS_THAN:
-        selectQuery.addHaving(
-            BinaryCondition.lessThan(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+        selectQuery.addHaving(BinaryCondition.lessThan(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       case GREATER_THAN_OR_EQUALS:
         selectQuery.addHaving(
-            BinaryCondition.greaterThanOrEq(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+            BinaryCondition.greaterThanOrEq(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       case LESS_THAN_OR_EQUALS:
-        selectQuery.addHaving(
-            BinaryCondition.lessThanOrEq(aggregationFunction.addColumnParams(key), filter.getValues()[0]));
+        selectQuery.addHaving(BinaryCondition.lessThanOrEq(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case EQUALS:
+        selectQuery.addHaving(BinaryCondition.equalTo(aggregationFn.addColumnParams(key), filter.getValues()[0]));
+        break;
+      case NOT_EQUALS:
+        selectQuery.addHaving(BinaryCondition.notEqualTo(aggregationFn.addColumnParams(key), filter.getValues()[0]));
         break;
       default:
         throw new InvalidRequestException("Invalid NumberFilter: " + filter.getOperator());
@@ -915,6 +937,7 @@ public class BillingDataQueryBuilder {
           break;
         case Pod:
           instanceTypes.add("K8S_POD");
+          instanceTypes.add("K8S_POD_FARGATE");
           isNodeAndPodQuery = true;
           break;
         case PV:
@@ -1106,6 +1129,7 @@ public class BillingDataQueryBuilder {
     if (!isInstanceTypeFilterPresent(filters)) {
       List<String> instanceTypeValues = new ArrayList<>();
       instanceTypeValues.add("ECS_TASK_FARGATE");
+      instanceTypeValues.add("K8S_POD_FARGATE");
       instanceTypeValues.add("ECS_CONTAINER_INSTANCE");
       instanceTypeValues.add("K8S_NODE");
       instanceTypeValues.add("K8S_PV");
@@ -1450,7 +1474,9 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
-    if (ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
+    if (ImmutableSet
+            .of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ", "kmpySmUISimoRrJL6NL73w")
+            .contains(accountId)) {
       return false;
     }
     List<QLBillingDataFilter> validFilters =

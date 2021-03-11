@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.upToOne;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 import static software.wings.beans.DelegateConnection.TTL;
@@ -47,6 +48,16 @@ public class DelegateConnectionDao {
     UpdateOperations<DelegateConnection> updateOperations = persistence.createUpdateOperations(DelegateConnection.class)
                                                                 .set(DelegateConnectionKeys.disconnected, Boolean.TRUE);
     persistence.update(query, updateOperations);
+  }
+
+  public long numberOfActiveDelegateConnectionsPerVersion(String version) {
+    return persistence.createQuery(DelegateConnection.class, excludeAuthority)
+        .field(DelegateConnectionKeys.disconnected)
+        .notEqual(Boolean.TRUE)
+        .field(DelegateConnectionKeys.lastHeartbeat)
+        .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
+        .filter(DelegateConnectionKeys.version, version)
+        .count();
   }
 
   public Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> obtainActiveDelegateConnections(

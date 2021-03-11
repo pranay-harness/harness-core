@@ -3,6 +3,8 @@ package io.harness.pms.plan.creation;
 import io.harness.plancreator.pipeline.NGPipelinePlanCreator;
 import io.harness.plancreator.stages.StagesPlanCreator;
 import io.harness.plancreator.stages.parallel.ParallelPlanCreator;
+import io.harness.plancreator.steps.approval.ApprovalPlanCreator;
+import io.harness.plancreator.steps.internal.BarrierPMSPlanCreator;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
 import io.harness.pms.sdk.core.pipeline.filters.ParallelFilterJsonCreator;
@@ -29,6 +31,8 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new NGPipelinePlanCreator());
     planCreators.add(new StagesPlanCreator());
     planCreators.add(new ParallelPlanCreator());
+    planCreators.add(new BarrierPMSPlanCreator());
+    planCreators.add(new ApprovalPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }

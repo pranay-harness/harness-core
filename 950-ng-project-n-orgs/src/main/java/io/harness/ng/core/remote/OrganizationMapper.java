@@ -16,7 +16,6 @@ import lombok.experimental.UtilityClass;
 public class OrganizationMapper {
   public static Organization toOrganization(OrganizationDTO dto) {
     return Organization.builder()
-        .accountIdentifier(dto.getAccountIdentifier())
         .tags(convertToList(dto.getTags()))
         .description(Optional.ofNullable(dto.getDescription()).orElse(""))
         .identifier(dto.getIdentifier())
@@ -30,7 +29,6 @@ public class OrganizationMapper {
     OrganizationDTO organizationDTO = OrganizationDTO.builder()
                                           .description(organization.getDescription())
                                           .identifier(organization.getIdentifier())
-                                          .accountIdentifier(organization.getAccountIdentifier())
                                           .name(organization.getName())
                                           .tags(convertToMap(organization.getTags()))
                                           .build();

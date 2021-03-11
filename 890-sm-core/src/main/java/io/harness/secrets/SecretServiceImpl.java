@@ -30,7 +30,9 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SecretFile;
 import io.harness.beans.SecretManagerConfig;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretScopeMetadata;
+import io.harness.beans.SecretState;
 import io.harness.beans.SecretText;
 import io.harness.beans.SecretUpdateData;
 import io.harness.data.encoding.EncodingUtils;
@@ -72,6 +74,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @ValidateOnExecution
 @Singleton
@@ -682,16 +685,50 @@ public class SecretServiceImpl implements SecretService {
   }
 
   @Override
-  public List<String> filterSecretIdsByReadPermission(
+  public List<SecretMetadata> filterSecretIdsByReadPermission(
       Set<String> secretIds, String accountId, String appIdFromRequest, String envIdFromRequest) {
     Set<SecretScopeMetadata> secretScopeMetadataSet = new HashSet<>();
     buildSecretScopeMetadataSet(accountId, secretIds, secretScopeMetadataSet);
-    return secretsRBACService
-        .filterSecretsByReadPermission(
-            accountId, new ArrayList<>(secretScopeMetadataSet), appIdFromRequest, envIdFromRequest)
-        .stream()
-        .map(SecretScopeMetadata::getSecretId)
-        .collect(Collectors.toList());
+    Set<String> foundInDatabase =
+        secretScopeMetadataSet.stream().map(SecretScopeMetadata::getSecretId).collect(Collectors.toSet());
+    // collect not available Secret Ids
+    Set<String> notFoundInDatabase = new HashSet<>(secretIds);
+    notFoundInDatabase.removeAll(foundInDatabase);
+    // collect readable secret Ids
+    Set<String> readableSecretIds = secretsRBACService
+                                        .filterSecretsByReadPermission(accountId,
+                                            new ArrayList<>(secretScopeMetadataSet), appIdFromRequest, envIdFromRequest)
+                                        .stream()
+                                        .map(SecretScopeMetadata::getSecretId)
+                                        .collect(Collectors.toSet());
+    // collect not readable Secret Ids
+    Set<String> notReadableSecretIds = new HashSet<>(secretIds);
+    notReadableSecretIds.removeAll(notFoundInDatabase);
+    notReadableSecretIds.removeAll(readableSecretIds);
+
+    return buildAndGetResult(notFoundInDatabase, notReadableSecretIds, readableSecretIds);
+  }
+
+  @NotNull
+  private List<SecretMetadata> buildAndGetResult(
+      Set<String> notFoundInDatabase, Set<String> notReadableSecretIds, Set<String> readableSecretIds) {
+    List<SecretMetadata> result = new ArrayList<>();
+    result.addAll(notFoundInDatabase.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.NOT_FOUND).build();
+                      })
+                      .collect(Collectors.toList()));
+    result.addAll(notReadableSecretIds.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.CANNOT_READ).build();
+                      })
+                      .collect(Collectors.toList()));
+    result.addAll(readableSecretIds.stream()
+                      .map(secretId -> {
+                        return SecretMetadata.builder().secretId(secretId).secretState(SecretState.CAN_READ).build();
+                      })
+                      .collect(Collectors.toList()));
+    return result;
   }
 
   @Override

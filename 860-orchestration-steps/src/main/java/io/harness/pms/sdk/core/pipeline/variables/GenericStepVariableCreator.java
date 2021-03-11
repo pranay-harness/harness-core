@@ -48,16 +48,16 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
   private void addVariablesForStep(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
     YamlField nameField = yamlNode.getField(YAMLFieldNameConstants.NAME);
     if (nameField != null) {
-      addFieldToPropertiesMapUnderStep(nameField, yamlPropertiesMap);
+      addFieldToPropertiesMapUnderStep(nameField, yamlNode, yamlPropertiesMap);
     }
     YamlField descriptionField = yamlNode.getField(YAMLFieldNameConstants.DESCRIPTION);
     if (descriptionField != null) {
-      addFieldToPropertiesMapUnderStep(descriptionField, yamlPropertiesMap);
+      addFieldToPropertiesMapUnderStep(descriptionField, yamlNode, yamlPropertiesMap);
     }
 
     YamlField timeoutField = yamlNode.getField(YAMLFieldNameConstants.TIMEOUT);
     if (timeoutField != null) {
-      addFieldToPropertiesMapUnderStep(timeoutField, yamlPropertiesMap);
+      addFieldToPropertiesMapUnderStep(timeoutField, yamlNode, yamlPropertiesMap);
     }
 
     YamlField specField = yamlNode.getField(YAMLFieldNameConstants.SPEC);
@@ -79,7 +79,7 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
         List<YamlNode> innerFields = field.getNode().asArray();
         innerFields.forEach(f -> addVariablesInComplexObject(yamlPropertiesMap, f));
       } else if (!extraFields.contains(field.getName())) {
-        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, yamlNode, yamlPropertiesMap);
       }
     });
   }
@@ -90,16 +90,20 @@ public abstract class GenericStepVariableCreator extends ChildrenVariableCreator
     return new LinkedHashMap<>();
   }
 
-  protected void addFieldToPropertiesMapUnderStep(YamlField fieldNode, Map<String, YamlProperties> yamlPropertiesMap) {
+  protected void addFieldToPropertiesMapUnderStep(
+      YamlField fieldNode, YamlNode fieldParentNode, Map<String, YamlProperties> yamlPropertiesMap) {
     String fqn = YamlUtils.getFullyQualifiedName(fieldNode.getNode());
-    String localName;
-    if (YamlUtils.findParentNode(fieldNode.getNode(), YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
-      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.ROLLBACK_STEPS);
-    } else {
-      localName = YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), YAMLFieldNameConstants.STEPS);
-    }
+    String localName =
+        YamlUtils.getQualifiedNameTillGivenField(fieldNode.getNode(), findFieldNameForLocalName(fieldParentNode));
 
     yamlPropertiesMap.put(fieldNode.getNode().getCurrJsonNode().textValue(),
         YamlProperties.newBuilder().setLocalName(localName).setFqn(fqn).build());
+  }
+
+  protected String findFieldNameForLocalName(YamlNode fieldParentNode) {
+    if (YamlUtils.findParentNode(fieldParentNode, YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
+      return YAMLFieldNameConstants.ROLLBACK_STEPS;
+    }
+    return YAMLFieldNameConstants.STEPS;
   }
 }

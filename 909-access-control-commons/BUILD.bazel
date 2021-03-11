@@ -1,13 +1,10 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
+    "@maven//:org_hibernate_hibernate_validator",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:io_swagger_swagger_annotations",
     "//:lombok",
@@ -22,14 +19,5 @@ java_library(
 )
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

@@ -7,8 +7,8 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import java.util.List;
 
 public interface GitSyncErrorService {
-  void upsertGitSyncErrors(GitFileChange failedChange, String errorMessage, boolean fullSyncPath,
-      YamlGitConfigDTO yamlGitConfig, boolean gitToHarness);
+  void upsertGitSyncErrors(
+      GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig);
 
   List<GitSyncError> getActiveGitToHarnessSyncErrors(String accountId, String gitConnectorId, String repoName,
       String branchName, String rootFolder, long fromTimestamp);

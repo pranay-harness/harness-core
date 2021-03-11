@@ -14,7 +14,6 @@ import static java.time.Duration.between;
 import static java.util.Collections.emptyMap;
 import static java.util.Optional.ofNullable;
 
-import io.harness.batch.processing.config.k8s.recommendation.WorkloadCostService.Cost;
 import io.harness.batch.processing.config.k8s.recommendation.estimators.ResourceAmountUtils;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
@@ -22,16 +21,15 @@ import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.histogram.Histogram;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
+import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialHistogramAggragator;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.UnitPrice;
 
 import com.google.common.collect.ImmutableSet;
 import io.kubernetes.client.custom.Quantity;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -101,7 +99,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
       List<PartialRecommendationHistogram> partialRecommendationHistogramList =
           workloadRecommendationDao.fetchPartialRecommendationHistogramForWorkload(
-              workloadId, jobStartDate, jobStartDate.minus(Duration.ofDays(7)));
+              workloadId, jobStartDate.minus(Duration.ofDays(7)), jobStartDate);
       Map<String, Histogram> cpuHistograms = new HashMap<>();
       Map<String, Histogram> memoryHistograms = new HashMap<>();
       PartialHistogramAggragator.aggregateInto(partialRecommendationHistogramList, cpuHistograms, memoryHistograms);
@@ -195,16 +193,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
       Instant startInclusive = jobStartDate.minus(Duration.ofDays(7));
       Cost lastDayCost = workloadCostService.getLastAvailableDayCost(workloadId, startInclusive);
       if (lastDayCost != null) {
-        final UnitPrice unitPrice =
-            UnitPrice.builder()
-                .cpu(ofNullable(lastDayCost.getCpuUnitCost())
-                         .map(x -> x.multiply(BigDecimal.valueOf(60L * 60 * 1024), MathContext.DECIMAL128))
-                         .orElse(BigDecimal.valueOf(0.04656D)))
-                .memory(ofNullable(lastDayCost.getMemoryUnitCost())
-                            .map(x -> x.multiply(BigDecimal.valueOf(60L * 60 * 1024), MathContext.DECIMAL128))
-                            .orElse(BigDecimal.valueOf(0.00511D)))
-                .build();
-        recommendation.setUnitPrice(unitPrice);
+        recommendation.setLastDayCost(lastDayCost);
 
         BigDecimal monthlySavings = estimateMonthlySavings(containerRecommendations, lastDayCost);
         recommendation.setEstimatedSavings(monthlySavings);
