@@ -23,7 +23,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -134,27 +133,5 @@ public class AzureArtifactsArtifactStream extends ArtifactStream {
       return isNotEmpty(oldStr) || isNotEmpty(newStr);
     }
     return !oldStr.equals(newStr);
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String packageType;
-    private String project;
-    private String feed;
-    private String packageId;
-    private String packageName;
-
-    @Builder
-    public Yaml(String harnessApiVersion, String serverName, String packageType, String project, String feed,
-        String packageId, String packageName) {
-      super(AZURE_ARTIFACTS.name(), harnessApiVersion, serverName);
-      this.packageType = packageType;
-      this.project = project;
-      this.feed = feed;
-      this.packageId = packageId;
-      this.packageName = packageName;
-    }
   }
 }

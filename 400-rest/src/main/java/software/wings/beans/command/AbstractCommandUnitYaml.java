@@ -10,8 +10,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @TargetModule(Module._870_CG_YAML_BEANS)
+@NoArgsConstructor
 @Data
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "commandUnitType", include = JsonTypeInfo.As.EXISTING_PROPERTY)
@@ -29,7 +31,7 @@ import lombok.EqualsAndHashCode;
       @JsonSubTypes.Type(value = PortCheckListeningCommandUnit.Yaml.class, name = "PORT_CHECK_LISTENING"),
       @JsonSubTypes.Type(value = ResizeCommandUnit.Yaml.class, name = "RESIZE"),
       @JsonSubTypes.Type(value = CodeDeployCommandUnit.Yaml.class, name = "CODE_DEPLOY"),
-      @JsonSubTypes.Type(value = AwsLambdaCommandUnit.Yaml.class, name = "AWS_LAMBDA"),
+      @JsonSubTypes.Type(value = AwsLambdaCommandUnitYaml.class, name = "AWS_LAMBDA"),
       @JsonSubTypes.Type(value = AmiCommandUnitYaml.class, name = "AWS_AMI"),
       @JsonSubTypes.Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES"),
       @JsonSubTypes.Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),

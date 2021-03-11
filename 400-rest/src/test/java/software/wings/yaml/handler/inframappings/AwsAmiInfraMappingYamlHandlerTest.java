@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsAmiInfrastructureMapping.Yaml;
+import software.wings.beans.AwsAmiInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
@@ -57,9 +57,11 @@ public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandl
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
+    ChangeContext<AwsAmiInfrastructureMappingYaml> changeContext =
+        getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    AwsAmiInfrastructureMappingYaml yamlObject =
+        (AwsAmiInfrastructureMappingYaml) getYaml(validYamlContent, AwsAmiInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     AwsAmiInfrastructureMapping infrastructureMapping =
@@ -67,7 +69,7 @@ public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandl
     assertThat(infrastructureMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(infrastructureMapping.getName());
 
-    Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
+    AwsAmiInfrastructureMappingYaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_AMI.name());
 

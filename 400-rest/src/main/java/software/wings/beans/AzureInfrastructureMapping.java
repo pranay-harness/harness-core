@@ -269,24 +269,4 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
       return azureInfrastructureMapping;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends YamlWithComputeProvider {
-    private String subscriptionId;
-    private String resourceGroup;
-    private List<AzureTag> azureTags;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String subscriptionId,
-        String resourceGroup, List<AzureTag> azureTags, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
-          computeProviderName, blueprints);
-      this.subscriptionId = subscriptionId;
-      this.resourceGroup = resourceGroup;
-      this.azureTags = azureTags;
-    }
-  }
 }

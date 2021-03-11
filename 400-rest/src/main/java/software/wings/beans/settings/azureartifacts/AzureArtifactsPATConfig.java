@@ -10,10 +10,8 @@ import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.AzureArtifactsYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -24,7 +22,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -62,21 +59,5 @@ public class AzureArtifactsPATConfig extends SettingValue implements AzureArtifa
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         azureDevopsUrl, maskingEvaluator));
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends AzureArtifactsYaml {
-    private String azureDevopsUrl;
-    private String pat;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String azureDevopsUrl, String pat,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.azureDevopsUrl = azureDevopsUrl;
-      this.pat = pat;
-    }
   }
 }

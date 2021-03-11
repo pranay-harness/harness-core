@@ -8,7 +8,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AwsLambdaInfrastructure;
-import software.wings.infra.AwsLambdaInfrastructure.Yaml;
+import software.wings.infra.AwsLambdaInfrastructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -18,12 +18,12 @@ import java.util.List;
 
 @Singleton
 public class AwsLambdaInfrastructureYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, AwsLambdaInfrastructure> {
+    extends CloudProviderInfrastructureYamlHandler<AwsLambdaInfrastructureYaml, AwsLambdaInfrastructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(AwsLambdaInfrastructure bean, String appId) {
+  public AwsLambdaInfrastructureYaml toYaml(AwsLambdaInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    return Yaml.builder()
+    return AwsLambdaInfrastructureYaml.builder()
         .iamRole(bean.getRole())
         .region(bean.getRegion())
         .securityGroupIds(bean.getSecurityGroupIds())
@@ -37,14 +37,14 @@ public class AwsLambdaInfrastructureYamlHandler
 
   @Override
   public AwsLambdaInfrastructure upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<AwsLambdaInfrastructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     AwsLambdaInfrastructure bean = AwsLambdaInfrastructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(AwsLambdaInfrastructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AwsLambdaInfrastructure bean, ChangeContext<AwsLambdaInfrastructureYaml> changeContext) {
+    AwsLambdaInfrastructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -59,6 +59,6 @@ public class AwsLambdaInfrastructureYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsLambdaInfrastructureYaml.class;
   }
 }

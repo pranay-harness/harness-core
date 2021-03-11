@@ -6,18 +6,19 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig;
-import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfig.Yaml;
+import software.wings.beans.settings.azureartifacts.AzureArtifactsPATConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 @OwnedBy(CDC)
-public class AzureArtifactsPATConfigYamlHandler extends AzureArtifactsYamlHandler<Yaml, AzureArtifactsPATConfig> {
+public class AzureArtifactsPATConfigYamlHandler
+    extends AzureArtifactsYamlHandler<AzureArtifactsPATConfigYaml, AzureArtifactsPATConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public AzureArtifactsPATConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     AzureArtifactsPATConfig azureArtifactsPATConfig = (AzureArtifactsPATConfig) settingAttribute.getValue();
-    Yaml yaml =
-        Yaml.builder()
+    AzureArtifactsPATConfigYaml yaml =
+        AzureArtifactsPATConfigYaml.builder()
             .harnessApiVersion(getHarnessApiVersion())
             .type(azureArtifactsPATConfig.getType())
             .azureDevopsUrl(azureArtifactsPATConfig.getAzureDevopsUrl())
@@ -29,10 +30,10 @@ public class AzureArtifactsPATConfigYamlHandler extends AzureArtifactsYamlHandle
   }
 
   @Override
-  protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<AzureArtifactsPATConfigYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    AzureArtifactsPATConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     AzureArtifactsPATConfig azureArtifactsPATConfig = AzureArtifactsPATConfig.builder()
                                                           .accountId(accountId)
@@ -45,6 +46,6 @@ public class AzureArtifactsPATConfigYamlHandler extends AzureArtifactsYamlHandle
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureArtifactsPATConfigYaml.class;
   }
 }

@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.AzureArtifactsArtifactStream;
-import software.wings.beans.artifact.AzureArtifactsArtifactStream.Yaml;
+import software.wings.beans.artifact.AzureArtifactsArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -13,10 +13,10 @@ import com.google.inject.Singleton;
 @OwnedBy(CDC)
 @Singleton
 public class AzureArtifactsArtifactStreamYamlHandler
-    extends ArtifactStreamYamlHandler<Yaml, AzureArtifactsArtifactStream> {
+    extends ArtifactStreamYamlHandler<AzureArtifactsArtifactStreamYaml, AzureArtifactsArtifactStream> {
   @Override
-  public Yaml toYaml(AzureArtifactsArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AzureArtifactsArtifactStreamYaml toYaml(AzureArtifactsArtifactStream bean, String appId) {
+    AzureArtifactsArtifactStreamYaml yaml = AzureArtifactsArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setPackageType(bean.getProtocolType());
     yaml.setProject(bean.getProject());
@@ -27,9 +27,10 @@ public class AzureArtifactsArtifactStreamYamlHandler
   }
 
   @Override
-  protected void toBean(AzureArtifactsArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(
+      AzureArtifactsArtifactStream bean, ChangeContext<AzureArtifactsArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    AzureArtifactsArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setProtocolType(yaml.getPackageType());
     bean.setProject(yaml.getProject());
     bean.setFeed(yaml.getFeed());
@@ -44,6 +45,6 @@ public class AzureArtifactsArtifactStreamYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureArtifactsArtifactStreamYaml.class;
   }
 }

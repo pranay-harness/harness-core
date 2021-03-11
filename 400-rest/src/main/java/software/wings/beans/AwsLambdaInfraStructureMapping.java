@@ -118,30 +118,6 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
     }
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private String region;
-    private String vpcId;
-    private List<String> subnetIds = new ArrayList<>();
-    private List<String> securityGroupIds = new ArrayList<>();
-    private String role;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String region, String vpcId,
-        List<String> subnetIds, List<String> securityGroupIds, String role, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.region = region;
-      this.vpcId = vpcId;
-      this.subnetIds = subnetIds;
-      this.securityGroupIds = securityGroupIds;
-      this.role = role;
-    }
-  }
-
   @lombok.Builder
   public AwsLambdaInfraStructureMapping(String entityYamlPath, String appId, String accountId, String type, String uuid,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,

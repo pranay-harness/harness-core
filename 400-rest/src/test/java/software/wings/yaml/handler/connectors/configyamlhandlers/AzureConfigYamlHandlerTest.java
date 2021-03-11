@@ -16,6 +16,7 @@ import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
 
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.AzureConfigYamlHandler;
@@ -42,7 +43,7 @@ public class AzureConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTes
       + "harnessApiVersion: '1.0'\n"
       + "type: AZURE";
 
-  private Class yamlClass = AzureConfig.Yaml.class;
+  private Class yamlClass = AzureConfigYaml.class;
 
   @Test
   @Owner(developers = PUNEET)

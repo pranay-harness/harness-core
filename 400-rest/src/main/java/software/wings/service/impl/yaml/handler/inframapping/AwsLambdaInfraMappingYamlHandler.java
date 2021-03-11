@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.AwsLambdaInfraStructureMapping;
-import software.wings.beans.AwsLambdaInfraStructureMapping.Yaml;
+import software.wings.beans.AwsLambdaInfraStructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -16,10 +16,11 @@ import java.util.List;
  */
 @Singleton
 public class AwsLambdaInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsLambdaInfraStructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<AwsLambdaInfraStructureMappingYaml,
+        AwsLambdaInfraStructureMapping> {
   @Override
-  public Yaml toYaml(AwsLambdaInfraStructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AwsLambdaInfraStructureMappingYaml toYaml(AwsLambdaInfraStructureMapping bean, String appId) {
+    AwsLambdaInfraStructureMappingYaml yaml = AwsLambdaInfraStructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AWS_AWS_LAMBDA.name());
     yaml.setRegion(bean.getRegion());
@@ -32,8 +33,8 @@ public class AwsLambdaInfraMappingYamlHandler
 
   @Override
   public AwsLambdaInfraStructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<AwsLambdaInfraStructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    AwsLambdaInfraStructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -56,9 +57,10 @@ public class AwsLambdaInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(AwsLambdaInfraStructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+  private void toBean(AwsLambdaInfraStructureMapping bean,
+      ChangeContext<AwsLambdaInfraStructureMappingYaml> changeContext, String appId, String envId,
+      String computeProviderId, String serviceId) {
+    AwsLambdaInfraStructureMappingYaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
@@ -76,6 +78,6 @@ public class AwsLambdaInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsLambdaInfraStructureMappingYaml.class;
   }
 }

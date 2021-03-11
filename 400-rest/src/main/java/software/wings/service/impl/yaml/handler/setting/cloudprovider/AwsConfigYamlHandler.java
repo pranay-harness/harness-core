@@ -6,7 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.AwsConfig;
-import software.wings.beans.AwsConfig.Yaml;
+import software.wings.beans.AwsConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -14,28 +14,28 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConfig> {
+public class AwsConfigYamlHandler extends CloudProviderYamlHandler<AwsConfigYaml, AwsConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public AwsConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
     String secretValueYamlRef = isNotEmpty(awsConfig.getEncryptedSecretKey())
         ? getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedSecretKey())
         : null;
     boolean useEncryptedAccessKey = awsConfig.isUseEncryptedAccessKey();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .accessKey(getAccessKey(awsConfig))
-                    .accessKeySecretId(useEncryptedAccessKey
-                            ? getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedAccessKey())
-                            : null)
-                    .secretKey(secretValueYamlRef)
-                    .type(awsConfig.getType())
-                    .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
-                    .assumeCrossAccountRole(awsConfig.isAssumeCrossAccountRole())
-                    .crossAccountAttributes(awsConfig.getCrossAccountAttributes())
-                    .tag(awsConfig.getTag())
-                    .defaultRegion(awsConfig.getDefaultRegion())
-                    .build();
+    AwsConfigYaml yaml = AwsConfigYaml.builder()
+                             .harnessApiVersion(getHarnessApiVersion())
+                             .accessKey(getAccessKey(awsConfig))
+                             .accessKeySecretId(useEncryptedAccessKey
+                                     ? getEncryptedYamlRef(awsConfig.getAccountId(), awsConfig.getEncryptedAccessKey())
+                                     : null)
+                             .secretKey(secretValueYamlRef)
+                             .type(awsConfig.getType())
+                             .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
+                             .assumeCrossAccountRole(awsConfig.isAssumeCrossAccountRole())
+                             .crossAccountAttributes(awsConfig.getCrossAccountAttributes())
+                             .tag(awsConfig.getTag())
+                             .defaultRegion(awsConfig.getDefaultRegion())
+                             .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
@@ -49,9 +49,9 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
 
   @Override
   public SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<AwsConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    AwsConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     if (isNotEmpty(yaml.getAccessKey()) && isNotEmpty(yaml.getAccessKeySecretId())) {
@@ -75,6 +75,6 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsConfigYaml.class;
   }
 }

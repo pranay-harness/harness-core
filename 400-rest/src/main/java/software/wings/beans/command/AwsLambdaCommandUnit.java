@@ -20,18 +20,4 @@ public class AwsLambdaCommandUnit extends AbstractCommandUnit {
   public CommandExecutionStatus execute(CommandExecutionContext context) {
     return null;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("AWS_LAMBDA")
-  public static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml() {
-      super(CommandUnitType.AWS_LAMBDA.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.AWS_LAMBDA.name(), deploymentType);
-    }
-  }
 }
