@@ -15,6 +15,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
+import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -48,6 +49,7 @@ import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
 import io.harness.ng.core.NGAggregateModule;
 import io.harness.ng.core.SecretManagementModule;
+import io.harness.ng.core.acl.ACLUserModule;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.api.NGModulesService;
 import io.harness.ng.core.api.NGSecretServiceV2;
@@ -79,6 +81,7 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
@@ -87,6 +90,7 @@ import io.harness.redesign.services.CustomExecutionService;
 import io.harness.redesign.services.CustomExecutionServiceImpl;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroup.ResourceGroupModule;
+import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -244,6 +248,8 @@ public class NextGenModule extends AbstractModule {
     install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
+    install(new NotificationClientModule(appConfig.getNotificationClientConfiguration()));
+
     install(new ProviderModule() {
       @Provides
       @Singleton
@@ -330,9 +336,11 @@ public class NextGenModule extends AbstractModule {
     bind(MessageProcessor.class)
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
-
+    install(new ResourceGroupClientModule(appConfig.getResourceGroupClientConfig().getServiceConfig(),
+        appConfig.getResourceGroupClientConfig().getSecret(), "ng-manager"));
+    install(new ACLUserModule());
     install(new AccessControlClientModule(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
-
+    install(new AccessControlAdminClientModule(appConfig.getAccessControlAdminClientConfiguration(), "NextGenManager"));
     registerEventsFrameworkMessageListeners();
   }
 

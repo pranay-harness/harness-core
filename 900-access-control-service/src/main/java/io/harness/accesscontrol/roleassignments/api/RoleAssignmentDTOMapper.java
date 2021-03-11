@@ -3,6 +3,7 @@ package io.harness.accesscontrol.roleassignments.api;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.buildFromSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
@@ -10,6 +11,7 @@ import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.utils.CryptoUtils;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -79,7 +81,9 @@ public class RoleAssignmentDTOMapper {
                       .collect(Collectors.toSet()))
         .principalTypeFilter(
             object.getPrincipalTypeFilter() == null ? new HashSet<>() : object.getPrincipalTypeFilter())
-        .managedFilter(buildFromSet(object.getHarnessManagedFilter()))
+        .managedFilter(Objects.isNull(object.getHarnessManagedFilter())
+                ? ManagedFilter.NO_FILTER
+                : buildFromSet(object.getHarnessManagedFilter()))
         .disabledFilter(object.getDisabledFilter() == null ? new HashSet<>() : object.getDisabledFilter())
         .build();
   }

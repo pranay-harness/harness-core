@@ -2,11 +2,12 @@ package io.harness.ng.core;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.config.PublisherConfiguration;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.ng.NextGenConfiguration;
-import io.harness.ng.core.invites.api.InvitesService;
-import io.harness.ng.core.invites.api.impl.InvitesServiceImpl;
+import io.harness.ng.core.invites.api.InviteService;
+import io.harness.ng.core.invites.api.impl.InviteServiceImpl;
 import io.harness.ng.core.invites.ext.mail.EmailData;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
@@ -40,7 +41,7 @@ public class InviteModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(InvitesService.class).to(InvitesServiceImpl.class);
+    bind(InviteService.class).to(InviteServiceImpl.class);
     bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(NgUserService.class).to(NgUserServiceImpl.class);
     registerRequiredBindings();
@@ -101,5 +102,6 @@ public class InviteModule extends AbstractModule {
 
   private void registerRequiredBindings() {
     requireBinding(HPersistence.class);
+    requireBinding(AccessControlAdminClient.class);
   }
 }

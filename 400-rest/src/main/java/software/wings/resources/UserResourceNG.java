@@ -12,9 +12,7 @@ import software.wings.service.intfc.UserService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -63,25 +61,8 @@ public class UserResourceNG {
   }
 
   @GET
-  @Path("/usernames")
-  public RestResponse<List<String>> getUsernameFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailList") List<String> emailList) {
-    List<String> usernames = new ArrayList<>();
-    for (String email : emailList) {
-      Optional<User> user = Optional.ofNullable(userService.getUserByEmail(email, accountId));
-      if (user.isPresent()) {
-        usernames.add(user.get().getName());
-      } else {
-        usernames.add(null);
-      }
-    }
-    return new RestResponse<>(usernames);
-  }
-
-  @GET
-  public RestResponse<Optional<User>> getUserFromEmail(
-      @QueryParam("accountId") String accountId, @QueryParam("emailId") String emailId) {
-    return new RestResponse<>(Optional.ofNullable(userService.getUserByEmail(emailId, accountId)));
+  public RestResponse<List<User>> getUserFromEmail(@QueryParam("emailIds") List<String> emailIds) {
+    return new RestResponse<>(userService.getUsersByEmail(emailIds));
   }
 
   @GET

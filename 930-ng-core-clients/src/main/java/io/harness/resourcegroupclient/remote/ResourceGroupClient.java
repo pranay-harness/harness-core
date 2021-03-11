@@ -1,6 +1,8 @@
 package io.harness.resourcegroupclient.remote;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.NGResourceFilterConstants;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
@@ -20,6 +22,13 @@ public interface ResourceGroupClient {
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  @GET(RESOURCE_GROUP_API)
+  Call<ResponseDTO<PageResponse<ResourceGroupResponse>>> getResourceGroups(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(value = NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size);
 
   @GET(RESOURCE_TYPE_API)
   Call<ResponseDTO<ResourceTypeDTO>> getResourceTypes(

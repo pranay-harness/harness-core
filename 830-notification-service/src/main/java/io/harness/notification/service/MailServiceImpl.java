@@ -83,8 +83,8 @@ public class MailServiceImpl implements ChannelService {
     }
 
     try {
-      String subject = null;
-      String body = null;
+      String subject;
+      String body;
       Optional<EmailTemplate> emailTemplateOpt = getTemplate(templateId, notificationRequest.getTeam());
       if (!emailTemplateOpt.isPresent()) {
         log.error(
@@ -116,7 +116,7 @@ public class MailServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse response = send(Collections.singletonList(email), emailSettingDTO.getSubject(),
         emailSettingDTO.getBody(), email, notificationSettingDTO.getAccountId());
-    if (response.getResult().isEmpty() || !response.getResult().get(0).booleanValue()) {
+    if (response.getResult().isEmpty() || NotificationProcessingResponse.isNotificationRequestFailed(response)) {
       throw new NotificationException("Failed to send email. Check SMTP configuration", DEFAULT_ERROR_CODE, USER);
     }
     return true;
@@ -126,8 +126,7 @@ public class MailServiceImpl implements ChannelService {
       List<String> emailIds, String subject, String body, String notificationId, String accountId) {
     NotificationProcessingResponse notificationProcessingResponse;
     SmtpConfigResponse smtpConfigResponse = notificationSettingsService.getSmtpConfigResponse(accountId);
-    if ((notificationSettingsService.getSendNotificationViaDelegate(accountId)
-            && Objects.nonNull(smtpConfigResponse))) {
+    if (notificationSettingsService.getSendNotificationViaDelegate(accountId) && Objects.nonNull(smtpConfigResponse)) {
       DelegateTaskRequest delegateTaskRequest =
           DelegateTaskRequest.builder()
               .accountId(accountId)
@@ -148,7 +147,7 @@ public class MailServiceImpl implements ChannelService {
     } else {
       notificationProcessingResponse = mailSender.send(emailIds, subject, body, notificationId, smtpConfigDefault);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(notificationProcessingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(notificationProcessingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);

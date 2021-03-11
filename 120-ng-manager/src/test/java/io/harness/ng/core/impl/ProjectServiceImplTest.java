@@ -12,6 +12,7 @@ import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -20,6 +21,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.api.ProducerShutdownException;
@@ -31,7 +33,7 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
@@ -54,6 +56,7 @@ public class ProjectServiceImplTest extends CategoryTest {
   private ProjectServiceImpl projectService;
   private Producer eventProducer;
   private NgUserService ngUserService;
+  private AccessControlAdminClient accessControlAdminClient;
 
   @Before
   public void setup() {
@@ -61,7 +64,9 @@ public class ProjectServiceImplTest extends CategoryTest {
     organizationService = mock(OrganizationService.class);
     eventProducer = mock(NoOpProducer.class);
     ngUserService = mock(NgUserService.class);
-    projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, eventProducer, ngUserService));
+    accessControlAdminClient = mock(AccessControlAdminClient.class, RETURNS_DEEP_STUBS);
+    projectService = spy(new ProjectServiceImpl(
+        projectRepository, organizationService, eventProducer, ngUserService, accessControlAdminClient));
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -86,7 +91,7 @@ public class ProjectServiceImplTest extends CategoryTest {
 
     when(projectRepository.save(project)).thenReturn(project);
     when(organizationService.get(accountIdentifier, orgIdentifier)).thenReturn(Optional.of(random(Organization.class)));
-    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
+    when(ngUserService.addUserToScope((String) any(), any())).thenReturn(UserMembership.builder().build());
 
     Project createdProject = projectService.create(accountIdentifier, orgIdentifier, projectDTO);
 

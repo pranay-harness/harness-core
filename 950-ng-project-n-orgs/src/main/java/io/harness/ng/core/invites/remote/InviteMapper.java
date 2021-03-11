@@ -1,7 +1,6 @@
 package io.harness.ng.core.invites.remote;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.ng.core.invites.remote.RoleMapper.toRole;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -23,7 +22,7 @@ public class InviteMapper {
         .id(invite.getId())
         .name(invite.getName())
         .email(invite.getEmail())
-        .role(RoleMapper.writeDTO(invite.getRole()))
+        .roleAssignments(invite.getRoleAssignments())
         .inviteType(invite.getInviteType())
         .approved(invite.getApproved())
         .build();
@@ -34,7 +33,7 @@ public class InviteMapper {
         .id(inviteDTO.getId())
         .name(inviteDTO.getName())
         .email(inviteDTO.getEmail())
-        .role(toRole(inviteDTO.getRole()))
+        .roleAssignments(inviteDTO.getRoleAssignments())
         .inviteType(inviteDTO.getInviteType())
         .approved(inviteDTO.getApproved())
         .accountIdentifier(ngAccess.getAccountIdentifier())
@@ -43,31 +42,26 @@ public class InviteMapper {
         .build();
   }
 
-  static List<Invite> toInviteList(CreateInviteListDTO createInviteListDTO, List<String> usernames, NGAccess ngAccess) {
+  static List<Invite> toInviteList(CreateInviteListDTO createInviteListDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier) {
     if (isEmpty(createInviteListDTO.getUsers())) {
       return new ArrayList<>();
     }
 
     EmailValidator emailValidator = EmailValidator.getInstance();
     List<String> emailIdList = createInviteListDTO.getUsers();
-
     List<Invite> invites = new ArrayList<>();
-    Invite invite = null;
-
-    for (int i = 0; i < emailIdList.size(); i++) {
-      String emailId = emailIdList.get(i);
+    for (String emailId : emailIdList) {
       if (emailValidator.isValid(emailId)) {
-        invite = Invite.builder()
-                     .email(emailId)
-                     .name(usernames.get(i))
-                     .role(toRole(createInviteListDTO.getRole()))
-                     .inviteType(createInviteListDTO.getInviteType())
-                     .approved(Boolean.FALSE)
-                     .accountIdentifier(ngAccess.getAccountIdentifier())
-                     .orgIdentifier(ngAccess.getOrgIdentifier())
-                     .projectIdentifier(ngAccess.getProjectIdentifier())
-                     .build();
-        invites.add(invite);
+        invites.add(Invite.builder()
+                        .email(emailId)
+                        .roleAssignments(createInviteListDTO.getRoleAssignments())
+                        .inviteType(createInviteListDTO.getInviteType())
+                        .approved(Boolean.FALSE)
+                        .accountIdentifier(accountIdentifier)
+                        .orgIdentifier(orgIdentifier)
+                        .projectIdentifier(projectIdentifier)
+                        .build());
       } else {
         invites.add(null);
       }

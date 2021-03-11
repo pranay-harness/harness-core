@@ -18,12 +18,11 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.invites.InviteOperationResponse;
-import io.harness.ng.core.invites.api.InvitesService;
+import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.CreateInviteListDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
-import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.utils.PageUtils;
@@ -38,6 +37,7 @@ import io.swagger.annotations.ApiResponses;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -68,21 +68,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class InviteResource {
-  private static final String PROJECT_URL_FORMAT = "account/%s/projects/%s/orgs/%s/details";
-  private static final String ORG_URL_FORMAT = "account/%s/admin/organizations/%s";
-  private static final String SIGN_UP_URL = "#/login";
   private static final String INVALID_TOKEN_REDIRECT_URL = "account/%s/error?code=INVITE_EXPIRED";
-  private final InvitesService invitesService;
-  private final NgUserService ngUserService;
-  private final String uiBaseUrl;
   private final String ngUiBaseUrl;
+  private final InviteService inviteService;
 
   @Inject
-  InviteResource(InvitesService invitesService, NgUserService ngUserService, @Named("uiBaseUrl") String uiBaseUrl,
-      @Named("ngUiBaseUrl") String ngUiBaseUrl) {
-    this.invitesService = invitesService;
-    this.ngUserService = ngUserService;
-    this.uiBaseUrl = uiBaseUrl;
+  InviteResource(InviteService inviteService, @Named("ngUiBaseUrl") String ngUiBaseUrl) {
+    this.inviteService = inviteService;
     this.ngUiBaseUrl = ngUiBaseUrl;
   }
 
@@ -91,8 +83,8 @@ public class InviteResource {
   @NextGenManagerAuth
   public ResponseDTO<PageResponse<InviteDTO>> getInvites(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier, @BeanParam PageRequest pageRequest) {
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
+      @BeanParam PageRequest pageRequest) {
     projectIdentifier = stripToNull(projectIdentifier);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
@@ -111,7 +103,7 @@ public class InviteResource {
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
     Page<InviteDTO> invites =
-        invitesService.list(criteria, PageUtils.getPageRequest(pageRequest)).map(InviteMapper::writeDTO);
+        inviteService.list(criteria, PageUtils.getPageRequest(pageRequest)).map(InviteMapper::writeDTO);
     return ResponseDTO.newResponse(getNGPageResponse(invites));
   }
 
@@ -120,31 +112,15 @@ public class InviteResource {
   @NextGenManagerAuth
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(
       @QueryParam("accountIdentifier") @NotNull String accountIdentifier,
-      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") String projectIdentifier,
+      @QueryParam("orgIdentifier") String orgIdentifier, @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @Valid CreateInviteListDTO createInviteListDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
-    NGAccess ngAccess = BaseNGAccess.builder()
-                            .accountIdentifier(accountIdentifier)
-                            .orgIdentifier(orgIdentifier)
-                            .projectIdentifier(projectIdentifier)
-                            .build();
-
     List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
-    List<String> usernames = ngUserService.getUsernameFromEmail(accountIdentifier, createInviteListDTO.getUsers());
-    List<String> userMails = createInviteListDTO.getUsers();
-    for (int i = 0; i < usernames.size(); i++) {
-      if (usernames.get(i) == null) {
-        String defaultName = userMails.get(i).split("@", 2)[0];
-        usernames.set(i, defaultName);
-      }
-    }
-    List<Invite> invites = toInviteList(createInviteListDTO, usernames, ngAccess);
-
+    List<Invite> invites = toInviteList(createInviteListDTO, accountIdentifier, orgIdentifier, projectIdentifier);
     for (Invite invite : invites) {
       try {
-        InviteOperationResponse response = invitesService.create(invite);
+        InviteOperationResponse response = inviteService.create(invite);
         inviteOperationResponses.add(response);
       } catch (DuplicateFieldException ex) {
         log.error("error: ", ex);
@@ -159,33 +135,12 @@ public class InviteResource {
   @ApiOperation(value = "Verify user invite", nickname = "verifyInvite")
   public Response verify(
       @QueryParam("token") @NotNull String jwtToken, @QueryParam("accountIdentifier") String accountIdentifier) {
-    Optional<Invite> inviteOpt = invitesService.verify(jwtToken);
-    URI redirectURI;
-    if (inviteOpt.isPresent()) {
-      Invite invite = inviteOpt.get();
-
-      // TODO @Ankush when user signup, check if he has any pending approved invites
-      redirectURI = getRedirectURI(invite);
-    } else {
+    Optional<Invite> inviteOpt = inviteService.verify(jwtToken);
+    URI redirectURI = inviteService.getRedirectURIForAcceptedInvite(inviteOpt.orElse(null));
+    if (Objects.isNull(redirectURI)) {
       redirectURI = URI.create(ngUiBaseUrl + String.format(INVALID_TOKEN_REDIRECT_URL, accountIdentifier));
     }
     return Response.seeOther(redirectURI).build();
-  }
-
-  private URI getRedirectURI(Invite invite) {
-    URI redirectURI;
-    if (Boolean.TRUE.equals(invite.getDeleted())) {
-      if (invite.getProjectIdentifier() == null) {
-        redirectURI = URI.create(
-            String.format(ngUiBaseUrl + ORG_URL_FORMAT, invite.getAccountIdentifier(), invite.getOrgIdentifier()));
-      } else {
-        redirectURI = URI.create(String.format(ngUiBaseUrl + PROJECT_URL_FORMAT, invite.getAccountIdentifier(),
-            invite.getProjectIdentifier(), invite.getOrgIdentifier()));
-      }
-    } else {
-      redirectURI = URI.create(uiBaseUrl + SIGN_UP_URL);
-    }
-    return redirectURI;
   }
 
   @PUT
@@ -197,7 +152,7 @@ public class InviteResource {
     NGAccess ngAccess = BaseNGAccess.builder().accountIdentifier(accountIdentifier).build();
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
-    Optional<Invite> inviteOptional = invitesService.updateInvite(invite);
+    Optional<Invite> inviteOptional = inviteService.updateInvite(invite);
     return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }
 
@@ -208,7 +163,7 @@ public class InviteResource {
   @NextGenManagerAuth
   public ResponseDTO<Optional<InviteDTO>> delete(
       @PathParam("inviteId") @NotNull String inviteId, @QueryParam("accountIdentifier") String accountIdentifier) {
-    Optional<Invite> inviteOptional = invitesService.deleteInvite(inviteId);
+    Optional<Invite> inviteOptional = inviteService.deleteInvite(inviteId);
     return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }
 }

@@ -24,6 +24,7 @@ shared_dependencies = [
     "//878-pipeline-service-utilities:module",
     "//882-pms-sdk-core:module",
     "//890-sm-core:module",
+    "//908-access-control-admin-client:module",
     "//908-access-control-sdk:module",
     "//910-delegate-service-driver:module",
     "//920-delegate-agent-beans:module",

@@ -3,6 +3,7 @@ package io.harness.ng;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -10,10 +11,12 @@ import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
+import io.harness.notification.NotificationClientConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupConfig;
+import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
@@ -60,11 +63,15 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("ngManagerPublicBaseUrl") private String ngManagerPublicBaseUrl;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
-  @JsonProperty("ResoureGroupConfig") private ResourceGroupConfig resoureGroupConfig;
+  @JsonProperty("resourceGroupConfig") private ResourceGroupConfig resoureGroupConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
   @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
+  @JsonProperty("accessControlAdminClient")
+  private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
+  @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
+  @JsonProperty("resourceGroupClientConfig") private ResourceGroupClientConfig resourceGroupClientConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

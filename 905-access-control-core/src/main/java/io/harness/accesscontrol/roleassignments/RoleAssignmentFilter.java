@@ -9,7 +9,9 @@ import io.harness.accesscontrol.roleassignments.validator.ValidRoleAssignmentFil
 
 import java.util.HashSet;
 import java.util.Set;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Value;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -20,10 +22,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class RoleAssignmentFilter {
   @NotEmpty String scopeFilter;
   boolean includeChildScopes;
-  @Builder.Default @NotNull Set<String> resourceGroupFilter = new HashSet<>();
-  @Builder.Default @NotNull Set<String> roleFilter = new HashSet<>();
-  @Builder.Default @NotNull Set<PrincipalType> principalTypeFilter = new HashSet<>();
-  @Builder.Default @NotNull Set<Principal> principalFilter = new HashSet<>();
-  @Builder.Default @NotNull ManagedFilter managedFilter = NO_FILTER;
-  @Builder.Default @NotNull Set<Boolean> disabledFilter = new HashSet<>();
+  @Builder.Default @NotNull @Size(max = 100) Set<String> resourceGroupFilter = new HashSet<>();
+  @Builder.Default @NotNull @Size(max = 100) Set<String> roleFilter = new HashSet<>();
+  @Builder.Default @NotNull @Size(max = 100) Set<PrincipalType> principalTypeFilter = new HashSet<>();
+  @Builder.Default @NotNull @Size(max = 100) Set<Principal> principalFilter = new HashSet<>();
+  @Builder.Default @NotNull @Valid ManagedFilter managedFilter = NO_FILTER;
+  @Builder.Default @NotNull @Size(max = 100) Set<Boolean> disabledFilter = new HashSet<>();
 }

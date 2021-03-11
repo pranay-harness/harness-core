@@ -8,11 +8,14 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -31,8 +34,7 @@ import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.services.api.NgUserService;
@@ -62,19 +64,22 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
+  private static final String PROJECT_ADMIN_ROLE = "_project_admin";
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
   private final Producer eventProducer;
   private final NgUserService ngUserService;
-  private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
+  private final AccessControlAdminClient accessControlAdminClient;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, NgUserService ngUserService,
+      AccessControlAdminClient accessControlAdminClient) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
     this.eventProducer = eventProducer;
     this.ngUserService = ngUserService;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Override
@@ -105,30 +110,46 @@ public class ProjectServiceImpl implements ProjectService {
         "Performing actions post project creation for project with identifier %s and orgIdentifier %s ...",
         project.getIdentifier(), project.getOrgIdentifier()));
     publishEvent(project, EventsFrameworkMetadataConstants.CREATE_ACTION);
-    createUserProjectMap(project);
+    updateUserMembership(project);
+    addUserToAdmins(project);
     log.info(String.format(
         "Successfully completed actions post project creation for project with identifier %s and orgIdentifier %s",
         project.getIdentifier(), project.getOrgIdentifier()));
   }
 
-  private void createUserProjectMap(Project project) {
+  private void addUserToAdmins(Project project) {
     if (SecurityContextBuilder.getPrincipal() != null
         && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
       String userId = SecurityContextBuilder.getPrincipal().getName();
-      Role role = Role.builder()
-                      .accountIdentifier(project.getAccountIdentifier())
-                      .orgIdentifier(project.getOrgIdentifier())
-                      .projectIdentifier(project.getIdentifier())
-                      .name(PROJECT_ADMIN_ROLE_NAME)
-                      .build();
-      UserProjectMap userProjectMap = UserProjectMap.builder()
-                                          .userId(userId)
-                                          .accountIdentifier(project.getAccountIdentifier())
-                                          .orgIdentifier(project.getOrgIdentifier())
-                                          .projectIdentifier(project.getIdentifier())
-                                          .roles(singletonList(role))
-                                          .build();
-      ngUserService.createUserProjectMap(userProjectMap);
+      RoleAssignmentDTO roleAssignmentDTO =
+          RoleAssignmentDTO.builder()
+              .roleIdentifier(PROJECT_ADMIN_ROLE)
+              .disabled(false)
+              .principal(PrincipalDTO.builder()
+                             .type(io.harness.accesscontrol.principals.PrincipalType.USER)
+                             .identifier(userId)
+                             .build())
+              .resourceGroupIdentifier(getFullScopeDefaultResourceGroup(project))
+              .build();
+      getResponse(accessControlAdminClient.createRoleAssignment(
+          project.getAccountIdentifier(), project.getOrgIdentifier(), project.getIdentifier(), roleAssignmentDTO));
+    }
+  }
+
+  private String getFullScopeDefaultResourceGroup(Project project) {
+    return String.format("_%s", project.getIdentifier());
+  }
+
+  private void updateUserMembership(Project project) {
+    if (SecurityContextBuilder.getPrincipal() != null
+        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
+      String userId = SecurityContextBuilder.getPrincipal().getName();
+      ngUserService.addUserToScope(userId,
+          UserMembership.Scope.builder()
+              .accountIdentifier(project.getAccountIdentifier())
+              .orgIdentifier(project.getOrgIdentifier())
+              .projectIdentifier(project.getIdentifier())
+              .build());
     }
   }
 

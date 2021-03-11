@@ -11,6 +11,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -19,13 +20,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.data.domain.Pageable.unpaged;
 
 import io.harness.CategoryTest;
+import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
@@ -50,6 +52,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
   private OutboxService outboxService;
   private TransactionTemplate transactionTemplate;
   private NgUserService ngUserService;
+  private AccessControlAdminClient accessControlAdminClient;
 
   @Before
   public void setup() {
@@ -57,8 +60,9 @@ public class OrganizationServiceImplTest extends CategoryTest {
     outboxService = mock(OutboxService.class);
     ngUserService = mock(NgUserService.class);
     transactionTemplate = mock(TransactionTemplate.class);
-    organizationService =
-        spy(new OrganizationServiceImpl(organizationRepository, outboxService, ngUserService, transactionTemplate));
+    accessControlAdminClient = mock(AccessControlAdminClient.class, RETURNS_DEEP_STUBS);
+    organizationService = spy(new OrganizationServiceImpl(
+        organizationRepository, outboxService, ngUserService, transactionTemplate, accessControlAdminClient));
   }
 
   private OrganizationDTO createOrganizationDTO(String identifier) {
@@ -75,7 +79,7 @@ public class OrganizationServiceImplTest extends CategoryTest {
     organization.setAccountIdentifier(accountIdentifier);
 
     when(organizationRepository.save(organization)).thenReturn(organization);
-    when(ngUserService.createUserProjectMap(any())).thenReturn(UserProjectMap.builder().build());
+    when(ngUserService.addUserToScope((String) any(), any())).thenReturn(UserMembership.builder().build());
     when(outboxService.save(any())).thenReturn(OutboxEvent.builder().build());
     when(transactionTemplate.execute(any())).thenReturn(organization);
 

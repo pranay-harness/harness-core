@@ -194,6 +194,13 @@ if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
   yq write -i $CONFIG_FILE logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 fi
 
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
 replace_key_value ceAwsSetupConfig.accessKey $CE_AWS_ACCESS_KEY
 
 replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
@@ -208,25 +215,22 @@ replace_key_value baseUrls.ui $MANAGER_UI_URL
 
 replace_key_value baseUrls.ngUi $NG_MANAGER_UI_URL
 
-if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
-else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
-fi
+replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 
-if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
-fi
+replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
-if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
-fi
+replace_key_value resourceGroupClientConfig.serviceConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 
-if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
-fi
+replace_key_value resourceGroupClientConfig.secret "$NEXT_GEN_MANAGER_SECRET"
 
-if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
-  yq write -i $CONFIG_FILE ResoureGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
-fi
+replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
+
+replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value accessControlAdminClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+
+replace_key_value accessControlAdminClient.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"
+
+replace_key_value notificationClient.httpClient.baseUrl "$NOTIFICATION_BASE_URL"
+
+replace_key_value notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"

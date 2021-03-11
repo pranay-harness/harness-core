@@ -105,11 +105,11 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
 fi
 
 if [[ "" != "$GRPC_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClient.target $GRPC_MANAGER_TARGET
+  yq write -i $CONFIG_FILE delegateServiceGrpcConfig.target $GRPC_MANAGER_TARGET
 fi
 
 if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClient.authority $GRPC_MANAGER_AUTHORITY
+  yq write -i $CONFIG_FILE delegateServiceGrpcConfig.authority $GRPC_MANAGER_AUTHORITY
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
