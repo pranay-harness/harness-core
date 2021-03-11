@@ -183,7 +183,6 @@ public class K8sStepHelper {
         return HelmChartManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
-            .skipResourceVersioning(helmChartManifestOutcome.isSkipResourceVersioning())
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
             .helmCommandFlag(getDelegateHelmCommandFlag(helmChartManifestOutcome.getCommandFlags()))
             .build();
@@ -556,5 +555,20 @@ public class K8sStepHelper {
     }
 
     return stepResponseBuilder;
+  }
+
+  public boolean getSkipResourceVersioning(ManifestOutcome manifestOutcome) {
+    switch (manifestOutcome.getType()) {
+      case ManifestType.K8Manifest:
+        K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
+        return k8sManifestOutcome.isSkipResourceVersioning();
+
+      case ManifestType.HelmChart:
+        HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
+        return helmChartManifestOutcome.isSkipResourceVersioning();
+
+      default:
+        return false;
+    }
   }
 }

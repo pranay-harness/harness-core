@@ -36,9 +36,10 @@ public abstract class AbstractK8sStepExecutorTestBase extends CategoryTest {
   public void prepare() {
     MockitoAnnotations.initMocks(this);
 
-    manifestOutcome = K8sManifestOutcome.builder().store(storeConfig).build();
+    manifestOutcome = K8sManifestOutcome.builder().skipResourceVersioning(true).store(storeConfig).build();
     doReturn(infraDelegateConfig).when(k8sStepHelper).getK8sInfraDelegateConfig(infrastructureOutcome, ambiance);
     doReturn(manifestDelegateConfig).when(k8sStepHelper).getManifestDelegateConfig(manifestOutcome, ambiance);
+    doReturn(true).when(k8sStepHelper).getSkipResourceVersioning(manifestOutcome);
   }
 
   protected <T extends K8sDeployRequest> T executeTask(K8sStepParameters stepParameters, Class<T> requestType) {
