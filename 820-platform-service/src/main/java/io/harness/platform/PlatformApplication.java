@@ -1,12 +1,11 @@
-package io.harness.notification;
+package io.harness.platform;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.notification.NotificationConfiguration.getResourceClasses;
+import static io.harness.platform.PlatformConfiguration.getResourceClasses;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.AuthorizationServiceHeader;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.ManagedScheduledExecutorService;
@@ -15,7 +14,7 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.notification.annotations.NotificationMicroserviceAuth;
+import io.harness.notification.SeedDataConfiguration;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
 import io.harness.notification.exception.NotificationExceptionMapper;
@@ -24,7 +23,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
-import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -45,31 +43,25 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
-public class NotificationApplication extends Application<NotificationConfiguration> {
-  private static final String APPLICATION_NAME = "Notification Microservice";
+public class PlatformApplication extends Application<PlatformConfiguration> {
+  private static final String APPLICATION_NAME = "Platform Microservice";
 
   public static void main(String[] args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("Shutdown hook, entering maintenance...");
       MaintenanceController.forceMaintenance(true);
     }));
-    new NotificationApplication().run(args);
+    new PlatformApplication().run(args);
   }
 
   private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -80,11 +72,11 @@ public class NotificationApplication extends Application<NotificationConfigurati
   }
 
   @Override
-  public void initialize(Bootstrap<NotificationConfiguration> bootstrap) {
+  public void initialize(Bootstrap<PlatformConfiguration> bootstrap) {
     initializeLogging();
-    bootstrap.addBundle(new SwaggerBundle<NotificationConfiguration>() {
+    bootstrap.addBundle(new SwaggerBundle<PlatformConfiguration>() {
       @Override
-      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(NotificationConfiguration appConfig) {
+      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(PlatformConfiguration appConfig) {
         return getSwaggerConfiguration();
       }
     });
@@ -99,13 +91,12 @@ public class NotificationApplication extends Application<NotificationConfigurati
   }
 
   @Override
-  public void run(NotificationConfiguration appConfig, Environment environment) {
+  public void run(PlatformConfiguration appConfig, Environment environment) {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting Notification Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector =
-        Guice.createInjector(new NotificationModule(appConfig), new MetricRegistryModule(metricRegistry));
+    Injector injector = Guice.createInjector(new PlatformModule(appConfig), new MetricRegistryModule(metricRegistry));
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
@@ -118,7 +109,6 @@ public class NotificationApplication extends Application<NotificationConfigurati
     registerScheduleJobs(injector);
     registerManagedBeans(environment, injector);
     registerQueueListeners(injector, appConfig);
-    registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     populateSeedData(injector, appConfig.getSeedDataConfiguration());
     MaintenanceController.forceMaintenance(false);
@@ -127,7 +117,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
 
   private void registerHealthCheck(Environment environment, Injector injector) {
     final HealthService healthService = injector.getInstance(HealthService.class);
-    environment.healthChecks().register("Notification Application", healthService);
+    environment.healthChecks().register("Platform Application", healthService);
     healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
@@ -149,7 +139,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
         injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response"))));
   }
 
-  private void registerCorsFilter(NotificationConfiguration appConfig, Environment environment) {
+  private void registerCorsFilter(PlatformConfiguration appConfig, Environment environment) {
     FilterRegistration.Dynamic cors = environment.servlets().addFilter("CORS", CrossOriginFilter.class);
     String allowedOrigins = String.join(",", appConfig.getAllowedOrigins());
     cors.setInitParameters(of("allowedOrigins", allowedOrigins, "allowedHeaders",
@@ -181,7 +171,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
-  private void registerQueueListeners(Injector injector, NotificationConfiguration appConfig) {
+  private void registerQueueListeners(Injector injector, PlatformConfiguration appConfig) {
     log.info("Initializing queue listeners...");
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(MongoMessageConsumer.class), 1);
@@ -195,7 +185,7 @@ public class NotificationApplication extends Application<NotificationConfigurati
     defaultSwaggerBundleConfiguration.setVersion("1.0");
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
-    defaultSwaggerBundleConfiguration.setTitle("Notification Service API Reference");
+    defaultSwaggerBundleConfiguration.setTitle("Platform Service API Reference");
     return defaultSwaggerBundleConfiguration;
   }
 
@@ -203,25 +193,6 @@ public class NotificationApplication extends Application<NotificationConfigurati
     log.info("Initializing scheduled jobs...");
     injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
-  }
-
-  private void registerAuthFilters(
-      NotificationConfiguration configuration, Environment environment, Injector injector) {
-    if (configuration.isEnableAuth()) {
-      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NotificationMicroserviceAuth.class)
-              != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NotificationMicroserviceAuth.class)
-              != null;
-      Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put(
-          AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getNotificationSecrets().getJwtAuthSecret());
-      serviceToSecretMapping.put(AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(),
-          configuration.getNotificationSecrets().getJwtIdentityServiceSecret());
-      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
-          configuration.getNotificationSecrets().getManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
-    }
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {

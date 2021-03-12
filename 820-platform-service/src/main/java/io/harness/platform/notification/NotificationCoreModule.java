@@ -1,4 +1,4 @@
-package io.harness.notification.modules;
+package io.harness.platform.notification;
 
 import static io.harness.notification.constant.NotificationServiceConstants.MAILSERVICE;
 import static io.harness.notification.constant.NotificationServiceConstants.MSTEAMSSERVICE;
@@ -9,11 +9,12 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.mongo.queue.NGMongoQueueConsumer;
 import io.harness.ng.core.UserClientModule;
-import io.harness.notification.NotificationConfiguration;
 import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
+import io.harness.notification.modules.SmtpConfigClientModule;
+import io.harness.notification.modules.UserGroupClientModule;
 import io.harness.notification.service.ChannelServiceImpl;
 import io.harness.notification.service.MSTeamsServiceImpl;
 import io.harness.notification.service.MailServiceImpl;
@@ -28,6 +29,7 @@ import io.harness.notification.service.api.NotificationService;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.notification.service.api.SeedDataPopulaterService;
+import io.harness.platform.PlatformConfiguration;
 import io.harness.queue.QueueConsumer;
 
 import com.google.inject.AbstractModule;
@@ -40,20 +42,20 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 public class NotificationCoreModule extends AbstractModule {
-  NotificationConfiguration appConfig;
-  public NotificationCoreModule(NotificationConfiguration appConfig) {
+  PlatformConfiguration appConfig;
+  public NotificationCoreModule(PlatformConfiguration appConfig) {
     this.appConfig = appConfig;
   }
 
   @Override
   public void configure() {
-    install(new UserGroupClientModule(
-        appConfig.getRbacServiceConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
+    install(new UserGroupClientModule(appConfig.getRbacServiceConfig(),
+        appConfig.getPlatformSecrets().getNgManagerServiceSecret(), "NotificationService"));
     install(new UserClientModule(appConfig.getServiceHttpClientConfig(),
-        appConfig.getNotificationSecrets().getManagerServiceSecret(), "NotificationService"));
+        appConfig.getPlatformSecrets().getNgManagerServiceSecret(), "NotificationService"));
     bind(ChannelService.class).to(ChannelServiceImpl.class);
     install(new SmtpConfigClientModule(
-        appConfig.getServiceHttpClientConfig(), appConfig.getNotificationSecrets().getManagerServiceSecret()));
+        appConfig.getServiceHttpClientConfig(), appConfig.getPlatformSecrets().getNgManagerServiceSecret()));
     bind(NotificationSettingsService.class).to(NotificationSettingsServiceImpl.class);
     bind(SeedDataPopulaterService.class).to(SeedDataPopulaterServiceImpl.class);
     bind(ChannelService.class).annotatedWith(Names.named(MAILSERVICE)).to(MailServiceImpl.class);

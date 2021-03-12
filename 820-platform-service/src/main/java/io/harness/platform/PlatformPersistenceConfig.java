@@ -1,4 +1,4 @@
-package io.harness.notification;
+package io.harness.platform;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.mongo.MongoConfig;
@@ -29,12 +29,12 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @EnableMongoRepositories(
     basePackages = {"io.harness.notification"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
-public class NotificationPersistenceConfig extends AbstractMongoConfiguration {
+public class PlatformPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;
 
   @Inject
-  public NotificationPersistenceConfig(Injector injector) {
-    this.mongoBackendConfiguration = injector.getInstance(Key.get(NotificationConfiguration.class)).getMongoConfig();
+  public PlatformPersistenceConfig(Injector injector) {
+    this.mongoBackendConfiguration = injector.getInstance(Key.get(PlatformConfiguration.class)).getMongoConfig();
   }
 
   @Override

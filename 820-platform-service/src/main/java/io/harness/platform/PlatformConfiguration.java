@@ -1,7 +1,9 @@
-package io.harness.notification;
+package io.harness.platform;
 
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.notification.SeedDataConfiguration;
+import io.harness.notification.SmtpConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -23,15 +25,16 @@ import org.reflections.Reflections;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class NotificationConfiguration extends Configuration {
-  public static final String SERVICE_ID = "notification-microservice";
-  public static final String BASE_PACKAGE = "io.harness.notification";
-  public static final String RESOURCE_PACKAGE = "io.harness.notification.remote.resources";
+public class PlatformConfiguration extends Configuration {
+  public static final String SERVICE_ID = "platform-microservice";
+  public static final String BASE_PACKAGE = "io.harness.platform";
+  public static final String PLATFORM_RESOURCE_PACKAGE = "io.harness.platform.remote";
+  public static final String NOTIFICATION_RESOURCE_PACKAGE = "io.harness.notification.remote.resources";
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
   @JsonProperty("rbacServiceConfig") private ServiceHttpClientConfig rbacServiceConfig;
-  @JsonProperty("secrets") private NotificationSecrets notificationSecrets;
+  @JsonProperty("secrets") private PlatformSecrets platformSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
@@ -39,11 +42,11 @@ public class NotificationConfiguration extends Configuration {
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCE_PACKAGE);
+    Reflections reflections = new Reflections(PLATFORM_RESOURCE_PACKAGE, NOTIFICATION_RESOURCE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
-  public NotificationConfiguration() {
+  public PlatformConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");
     defaultServerFactory.setRequestLogFactory(getDefaultlogbackAccessRequestLogFactory());
