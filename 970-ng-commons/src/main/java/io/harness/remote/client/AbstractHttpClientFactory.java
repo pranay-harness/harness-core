@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.network.Http;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
+import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServicePrincipal;
 import io.harness.serializer.JsonSubtypeResolver;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -126,15 +127,14 @@ public abstract class AbstractHttpClientFactory {
   protected Interceptor getAuthorizationInterceptor(ClientMode clientMode) {
     final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
+      Principal principal = SecurityContextBuilder.getPrincipal();
       if (ClientMode.PRIVILEGED == clientMode) {
+        SecurityContextBuilder.unsetPrincipalContext();
         SecurityContextBuilder.setContext(new ServicePrincipal(clientId));
-      } else {
-        boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
-        if (!isPrincipalInContext) {
-          SecurityContextBuilder.unsetPrincipalContext();
-        }
       }
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
+      SecurityContextBuilder.unsetPrincipalContext();
+      SecurityContextBuilder.setContext(principal);
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };
