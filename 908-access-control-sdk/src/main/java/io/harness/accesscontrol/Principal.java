@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "principalType", include = EXISTING_PROPERTY, visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(name = "USER", value = HUserPrincipal.class) })
+@JsonSubTypes({ @JsonSubTypes.Type(name = "USER", value = HPrincipal.class) })
 public interface Principal {
   PrincipalType getPrincipalType();
   String getPrincipalIdentifier();

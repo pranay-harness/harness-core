@@ -2,7 +2,7 @@ package io.harness.accesscontrol.acl.models;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.accesscontrol.HUserPrincipal;
+import io.harness.accesscontrol.HPrincipal;
 import io.harness.persistence.PersistentEntity;
 
 import lombok.AccessLevel;
@@ -26,13 +26,13 @@ public class HACL extends ACL implements PersistentEntity {
   String permission;
   String resourceGroupIdentifier;
   HResource resource;
-  HUserPrincipal principal;
+  HPrincipal principal;
   SourceMetadata sourceMetadata;
   ParentMetadata parentMetadata;
   String aclQueryString;
 
   public static String getAclQueryString(
-      ParentMetadata parentMetadata, HResource resource, HUserPrincipal principal, String permission) {
+      ParentMetadata parentMetadata, HResource resource, HPrincipal principal, String permission) {
     return String.format(ACCOUNT_PREFIX, parentMetadata.getAccountIdentifier())
         + (!isEmpty(parentMetadata.getOrgIdentifier()) ? String.format(ORG_PREFIX, parentMetadata.getOrgIdentifier())
                                                        : "")

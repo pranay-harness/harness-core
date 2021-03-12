@@ -2,13 +2,10 @@ package io.harness.accesscontrol.clients;
 
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.accesscontrol.HUserPrincipal;
+import io.harness.accesscontrol.HPrincipal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.exception.AccessDeniedException;
 import io.harness.remote.client.NGRestUtils;
-import io.harness.security.SecurityContextBuilder;
-import io.harness.security.dto.Principal;
-import io.harness.security.dto.UserPrincipal;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -24,47 +21,44 @@ public class AccessControlClientImpl implements AccessControlClient {
   private final AccessControlHttpClient accessControlHttpClient;
 
   @Override
-  public AccessCheckResponseDTO checkForAccess(
+  public HAccessCheckResponseDTO checkForAccess(
       String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckRequestList) {
-    AccessCheckRequestDTO accessCheckRequestDTO =
-        AccessCheckRequestDTO.builder()
-            .principal(HUserPrincipal.builder().principalType(principalType).principalIdentifier(principal).build())
+    HAccessCheckRequestDTO accessCheckRequestDTO =
+        HAccessCheckRequestDTO.builder()
+            .principal(HPrincipal.builder().principalType(principalType).principalIdentifier(principal).build())
             .permissions(permissionCheckRequestList)
             .build();
-    return NGRestUtils.getResponse(accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
+    return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
   }
 
   @Override
-  public AccessControlDTO checkForAccess(
+  public HAccessControlDTO checkForAccess(
       String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
-    AccessCheckResponseDTO responseDTO =
-        checkForAccess(principal, principalType, Collections.singletonList(permissionCheckDTO));
-    return responseDTO.getAccessControlList().get(0);
-  }
-
-  @Override
-  public AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
-    Principal principal = SecurityContextBuilder.getPrincipal();
-    if (principal instanceof UserPrincipal) {
-      UserPrincipal userPrincipal = (UserPrincipal) principal;
-      return checkForAccess(userPrincipal.getName(), PrincipalType.USER, permissionCheckDTOList);
-    }
-    throw new UnsupportedOperationException("Only <User> principal type is supported as of now.");
-  }
-
-  @Override
-  public AccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO) {
-    return checkForAccess(Collections.singletonList(permissionCheckDTO)).getAccessControlList().get(0);
+    return checkForAccess(principal, principalType, Collections.singletonList(permissionCheckDTO))
+        .getAccessControlList()
+        .get(0);
   }
 
   @Override
   public boolean hasAccess(String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
-    return ((HAccessControlDTO) checkForAccess(principal, principalType, permissionCheckDTO)).isAccessible();
+    return checkForAccess(principal, principalType, permissionCheckDTO).isAccessible();
+  }
+
+  @Override
+  public HAccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
+    HAccessCheckRequestDTO accessCheckRequestDTO =
+        HAccessCheckRequestDTO.builder().principal(null).permissions(permissionCheckDTOList).build();
+    return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
+  }
+
+  @Override
+  public HAccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO) {
+    return checkForAccess(Collections.singletonList(permissionCheckDTO)).getAccessControlList().get(0);
   }
 
   @Override
   public boolean hasAccess(PermissionCheckDTO permissionCheckDTO) {
-    return ((HAccessControlDTO) checkForAccess(permissionCheckDTO)).isAccessible();
+    return checkForAccess(permissionCheckDTO).isAccessible();
   }
 
   @Override

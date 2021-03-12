@@ -17,8 +17,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "PrincipalKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel(value = "UserPrincipal")
-public class HUserPrincipal implements Principal {
+@ApiModel(value = "Principal")
+public class HPrincipal implements Principal {
   @NotEmpty String principalIdentifier;
   @NotNull PrincipalType principalType;
 }

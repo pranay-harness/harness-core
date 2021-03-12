@@ -1,9 +1,11 @@
 package io.harness.accesscontrol.clients;
 
-import io.harness.accesscontrol.Principal;
+import io.harness.accesscontrol.HPrincipal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModel;
 import java.util.List;
+import javax.annotation.Nullable;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -16,7 +18,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AccessCheckRequestDTO {
+@ApiModel(value = "AccessCheckRequest")
+public class HAccessCheckRequestDTO {
   @NotEmpty @Size(max = 1000) List<PermissionCheckDTO> permissions;
-  @Valid Principal principal;
+  @Valid @Nullable HPrincipal principal;
 }

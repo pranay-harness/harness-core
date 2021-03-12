@@ -17,10 +17,11 @@ import com.google.inject.matcher.Matchers;
 
 public class AccessControlClientModule extends AbstractModule {
   private static AccessControlClientModule instance;
-  private AccessControlClientConfiguration accessControlClientConfiguration;
-  private String clientId;
+  private final AccessControlClientConfiguration accessControlClientConfiguration;
+  private final String clientId;
 
-  public AccessControlClientModule(AccessControlClientConfiguration accessControlClientConfiguration, String clientId) {
+  private AccessControlClientModule(
+      AccessControlClientConfiguration accessControlClientConfiguration, String clientId) {
     this.accessControlClientConfiguration = accessControlClientConfiguration;
     this.clientId = clientId;
   }

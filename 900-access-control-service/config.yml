@@ -107,3 +107,6 @@ aggregatorModuleConfig:
     database.include.list: "accesscontrol"
     collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments"
   enabled: false
+
+enableAuth: true
+defaultServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
