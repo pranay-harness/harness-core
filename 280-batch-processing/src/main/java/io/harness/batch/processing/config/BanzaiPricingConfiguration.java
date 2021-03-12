@@ -16,9 +16,14 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 @Configuration
 public class BanzaiPricingConfiguration {
-  private static final String BASE_PRICING_SERVICE_URL = "https://banzaicloud.com/cloudinfo/";
+  @Autowired private BatchMainConfig config;
+  private static final String BASE_PRICING_SERVICE_URL =
+      config.getBanzaiConfig().getHost() + ":" + String.valueOf(config.getBanzaiConfig().getPort()) + "/";
+  // "https://banzaicloud.com/cloudinfo/";
+
   @Bean
   public BanzaiPricingClient banzaiPricingClient() {
+    log.info("BASE_PRICING_SERVICE_URL: {}", BASE_PRICING_SERVICE_URL);
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(120, TimeUnit.SECONDS)
                                     .readTimeout(120, TimeUnit.SECONDS)
