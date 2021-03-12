@@ -38,18 +38,21 @@ public interface K8sDeployRequest extends TaskParameters, ExecutionCapabilityDem
           ((DirectK8sInfraDelegateConfig) k8sInfraDelegateConfig).getKubernetesClusterConfigDTO(), maskingEvaluator));
     }
 
-    if (HELM_CHART == getManifestDelegateConfig().getManifestType()) {
-      HelmChartManifestDelegateConfig helManifestConfig = (HelmChartManifestDelegateConfig) getManifestDelegateConfig();
-      capabilities.add(HelmInstallationCapability.builder()
-                           .version(helManifestConfig.getHelmVersion())
-                           .criteria(String.format("Helm %s Installed", helManifestConfig.getHelmVersion()))
-                           .build());
+    if (getManifestDelegateConfig() != null) {
+      if (HELM_CHART == getManifestDelegateConfig().getManifestType()) {
+        HelmChartManifestDelegateConfig helManifestConfig =
+            (HelmChartManifestDelegateConfig) getManifestDelegateConfig();
+        capabilities.add(HelmInstallationCapability.builder()
+                             .version(helManifestConfig.getHelmVersion())
+                             .criteria(String.format("Helm %s Installed", helManifestConfig.getHelmVersion()))
+                             .build());
 
-      if (HTTP_HELM == helManifestConfig.getStoreDelegateConfig().getType()) {
-        HttpHelmStoreDelegateConfig httpHelmStoreConfig =
-            (HttpHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
-        capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-            httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl(), maskingEvaluator));
+        if (HTTP_HELM == helManifestConfig.getStoreDelegateConfig().getType()) {
+          HttpHelmStoreDelegateConfig httpHelmStoreConfig =
+              (HttpHelmStoreDelegateConfig) helManifestConfig.getStoreDelegateConfig();
+          capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              httpHelmStoreConfig.getHttpHelmConnector().getHelmRepoUrl(), maskingEvaluator));
+        }
       }
     }
 

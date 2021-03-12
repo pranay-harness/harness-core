@@ -11,14 +11,18 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -28,6 +32,8 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BG_SWAP_SERVICES.getYamlType()).build();
   public static final String K8S_BG_SWAP_SERVICES_COMMAND_NAME = "Blue/Green Swap Services";
+  public static final String SKIP_BG_SWAP_SERVICES_STEP_EXECUTION =
+      "Services were not swapped in the forward phase. Skipping swapping in rollback.";
 
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
@@ -35,6 +41,15 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters, StepInputPackage inputPackage) {
+    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
+    boolean stepInRollbackSection = StepUtils.isStepInRollbackSection(ambiance);
+    if (stepInRollbackSection && !optionalOutcome.isFound()) {
+      return TaskRequest.newBuilder()
+          .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_BG_SWAP_SERVICES_STEP_EXECUTION).build())
+          .build();
+    }
+
     K8sBlueGreenOutcome k8sBlueGreenOutcome = (K8sBlueGreenOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
@@ -75,7 +90,14 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
           .build();
     }
 
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    K8sBGSwapServicesOutcome bgSwapServicesOutcome = K8sBGSwapServicesOutcome.builder().build();
+    return stepResponseBuilder.status(Status.SUCCEEDED)
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME)
+                         .outcome(bgSwapServicesOutcome)
+                         .group(StepOutcomeGroup.STAGE.name())
+                         .build())
+        .build();
   }
 
   @Override
