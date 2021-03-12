@@ -1,5 +1,7 @@
 package io.harness.governance;
 
+import static io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
+
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
@@ -15,8 +17,7 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("ALL_NON_PROD")
 public final class AllNonProdEnvFilterYaml extends EnvironmentFilterYaml {
   @Builder
-  public AllNonProdEnvFilterYaml(
-      @JsonProperty("filterType") EnvironmentFilter.EnvironmentFilterType environmentFilterType) {
+  public AllNonProdEnvFilterYaml(@JsonProperty("filterType") EnvironmentFilterType environmentFilterType) {
     super(environmentFilterType);
   }
 

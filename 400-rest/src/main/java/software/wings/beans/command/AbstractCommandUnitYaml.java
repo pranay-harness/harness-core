@@ -13,8 +13,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @TargetModule(Module._870_CG_YAML_BEANS)
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "commandUnitType", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
