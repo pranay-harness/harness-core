@@ -7,6 +7,7 @@ shared_dependencies = [
     "@maven//:org_hibernate_hibernate_validator",
     "@maven//:com_google_code_findbugs_annotations",
     "@maven//:io_swagger_swagger_annotations",
+    "//980-commons:module",
     "//:lombok",
 ]
 

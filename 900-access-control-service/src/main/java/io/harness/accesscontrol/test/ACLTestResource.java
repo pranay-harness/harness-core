@@ -1,9 +1,12 @@
-package io.harness.accesscontrol.acl.resources;
+package io.harness.accesscontrol.test;
 
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.ResourceScope;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -34,6 +37,8 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 public class ACLTestResource {
+  private final AccessControlClient accessControlClient;
+
   @GET
   @Path("/acl-test")
   @ApiOperation(value = "Test ACL", nickname = "testACL")
@@ -41,6 +46,17 @@ public class ACLTestResource {
   public ResponseDTO<String> get(@QueryParam("account") @AccountIdentifier String account,
       @QueryParam("org") @OrgIdentifier String org, @QueryParam("project") @ProjectIdentifier String project,
       @QueryParam("resourceIdentifier") @ResourceIdentifier String resourceIdentifier) {
+    accessControlClient.checkForAccessOrThrow(PermissionCheckDTO.builder()
+                                                  .resourceType("SECRET")
+                                                  .resourceIdentifier(resourceIdentifier)
+                                                  .resourceScope(ResourceScope.builder()
+                                                                     .accountIdentifier(account)
+                                                                     .orgIdentifier(org)
+                                                                     .projectIdentifier(project)
+                                                                     .build())
+                                                  .permission("core.secret.create")
+                                                  .build());
+
     return ResponseDTO.newResponse("accessible");
   }
 }
