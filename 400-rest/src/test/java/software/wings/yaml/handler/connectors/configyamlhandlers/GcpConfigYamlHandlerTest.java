@@ -90,7 +90,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     GcpConfig.Yaml yaml = GcpConfig.Yaml.builder()
                               .serviceAccountKeyFileContent(serviceAccountKeyFileContent)
                               .useDelegateSelectors(useDelegate)
-                              .delegateSelector(Collections.singleton(delegateSelector))
+                              .delegateSelectors(Collections.singleton(delegateSelector))
                               .skipValidation(skipValidation)
                               .build();
 
