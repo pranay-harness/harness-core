@@ -343,16 +343,16 @@ shared_dependencies = [
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-#    data = ["//:resource"],
+    data = ["//:resource"],
 #    main_class = "io.harness.notification.NotificationApplication",
-#    resources = [
-#        "//830-notification-service/src/main/resources:resource",
-#    ],
+    resources = [
+        "//830-notification-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
-#    runtime_deps = [
-#        "//830-notification-service/src/main/resources",
-#        "@maven//:javax_ws_rs_javax_ws_rs_api",
-#    ],
+    runtime_deps = [
+        "//830-notification-service/src/main/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
     deps = shared_dependencies + [
         "@maven//:io_netty_netty_all",
         # keeping guava on top of maven_deps for right version resoulution
@@ -373,19 +373,19 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
-#    data = [
-#        "//830-notification-service/src/test/resources:resource",
-#    ],
-#    resources = [
-#        "//:resource",
-#        "//830-notification-service/src/main/resources:resource",
-#    ],
+    data = [
+        "//830-notification-service/src/test/resources:resource",
+    ],
+    resources = [
+        "//:resource",
+        "//830-notification-service/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
-#    runtime_deps = [
-#        "//830-notification-service/src/main/resources",
-#        "//980-commons/src/test/resources",
-#        "@maven//:javax_ws_rs_javax_ws_rs_api",
-#    ],
+    runtime_deps = [
+        "//830-notification-service/src/main/resources",
+        "//980-commons/src/test/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
     deps = shared_dependencies + test_deps + [
         "module",
         "//:lombok",
