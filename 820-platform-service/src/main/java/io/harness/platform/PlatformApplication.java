@@ -6,6 +6,7 @@ import static io.harness.platform.PlatformConfiguration.getResourceClasses;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.ManagedScheduledExecutorService;
@@ -15,6 +16,7 @@ import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.SeedDataConfiguration;
+import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
 import io.harness.notification.exception.NotificationExceptionMapper;
@@ -23,6 +25,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListenerController;
 import io.harness.remote.CharsetResponseFilter;
 import io.harness.remote.NGObjectMapperHelper;
+import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -43,11 +46,17 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -109,6 +118,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     registerScheduleJobs(injector);
     registerManagedBeans(environment, injector);
     registerQueueListeners(injector, appConfig);
+    registerAuthFilters(appConfig, environment, injector);
     registerHealthCheck(environment, injector);
     populateSeedData(injector, appConfig.getSeedDataConfiguration());
     MaintenanceController.forceMaintenance(false);
@@ -193,6 +203,24 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     log.info("Initializing scheduled jobs...");
     injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+  }
+
+  private void registerAuthFilters(PlatformConfiguration configuration, Environment environment, Injector injector) {
+    if (configuration.isEnableAuth()) {
+      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NotificationMicroserviceAuth.class)
+              != null
+          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NotificationMicroserviceAuth.class)
+              != null;
+      Map<String, String> serviceToSecretMapping = new HashMap<>();
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getPlatformSecrets().getJwtAuthSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(),
+          configuration.getPlatformSecrets().getJwtIdentityServiceSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
+          configuration.getPlatformSecrets().getNgManagerServiceSecret());
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    }
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {

@@ -344,7 +344,7 @@ java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-#    main_class = "io.harness.notification.NotificationApplication",
+    #    main_class = "io.harness.notification.NotificationApplication",
     resources = [
         "//830-notification-service/src/main/resources:resource",
     ],

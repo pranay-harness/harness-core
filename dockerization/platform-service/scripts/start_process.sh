@@ -21,7 +21,7 @@ fi
 echo "Using memory " "$MEMORY"
 
 if [[ -z "$CAPSULE_JAR" ]]; then
-   export CAPSULE_JAR=/opt/harness/notification-service-capsule.jar
+   export CAPSULE_JAR=/opt/harness/platform-service-capsule.jar
 fi
 
 export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8"
@@ -42,5 +42,5 @@ JAVA_OPTS=$JAVA_OPTS" -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar"
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml
 else
-    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/notification-service.log 2>&1
+    java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/platform-service.log 2>&1
 fi

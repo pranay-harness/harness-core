@@ -94,7 +94,7 @@ if [[ "" != "$RBAC_URL" ]]; then
 fi
 
 if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
-  yq write -i $CONFIG_FILE secrets.managerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+  yq write -i $CONFIG_FILE secrets.ngManagerServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then
