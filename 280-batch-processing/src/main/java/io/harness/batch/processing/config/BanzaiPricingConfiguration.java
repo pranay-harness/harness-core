@@ -8,7 +8,6 @@ import io.harness.network.Http;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import retrofit2.Retrofit;
@@ -17,10 +16,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 @Configuration
 public class BanzaiPricingConfiguration {
-  @Autowired private BatchMainConfig config;
-  private String BASE_PRICING_SERVICE_URL =
-      config.getBanzaiConfig().getHost() + ":" + String.valueOf(config.getBanzaiConfig().getPort()) + "/";
-  // "https://banzaicloud.com/cloudinfo/";
+  private String BASE_PRICING_SERVICE_URL = "http://35.232.8.217:80/";
 
   @Bean
   public BanzaiPricingClient banzaiPricingClient() {
