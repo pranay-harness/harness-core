@@ -18,7 +18,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Configuration
 public class BanzaiPricingConfiguration {
   @Autowired private BatchMainConfig config;
-  private static final String BASE_PRICING_SERVICE_URL =
+  private String BASE_PRICING_SERVICE_URL =
       config.getBanzaiConfig().getHost() + ":" + String.valueOf(config.getBanzaiConfig().getPort()) + "/";
   // "https://banzaicloud.com/cloudinfo/";
 
