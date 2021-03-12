@@ -2019,6 +2019,8 @@ public class DelegateServiceImpl implements DelegateService {
 
     log.info("Delegate saved: {}", savedDelegate);
 
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, delegate, savedDelegate, Type.CREATE);
+
     // When polling is enabled for delegate, do not perform these event publishing
     if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
