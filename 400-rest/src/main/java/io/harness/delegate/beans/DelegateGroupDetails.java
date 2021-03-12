@@ -1,5 +1,6 @@
 package io.harness.delegate.beans;
 
+import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.SelectorType;
 
@@ -19,6 +20,7 @@ public class DelegateGroupDetails {
   private String groupName;
   private String groupHostName;
   private Map<String, SelectorType> groupSelectors;
+  private DelegateInsightsDetails delegateInsightsDetails;
   private long lastHeartBeat;
   private List<DelegateStatus.DelegateInner> delegates;
 }

@@ -142,6 +142,7 @@ import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
@@ -591,6 +592,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
+    kryo.register(HttpHelmStoreDelegateConfig.class, 19642);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

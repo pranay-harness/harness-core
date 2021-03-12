@@ -1,8 +1,9 @@
 package io.harness.accesscontrol.roles;
 
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.ONLY_CUSTOM;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.ONLY_MANAGED;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.permissions.Permission;
 import io.harness.accesscontrol.permissions.PermissionFilter;
 import io.harness.accesscontrol.permissions.PermissionService;
@@ -10,7 +11,6 @@ import io.harness.accesscontrol.permissions.PermissionStatus;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
-import io.harness.accesscontrol.roles.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.roles.persistence.RoleDao;
 import io.harness.accesscontrol.scopes.core.ScopeService;

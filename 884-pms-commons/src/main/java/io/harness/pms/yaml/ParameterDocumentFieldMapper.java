@@ -15,14 +15,14 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 @UtilityClass
 public class ParameterDocumentFieldMapper {
   public ParameterDocumentField fromParameterField(ParameterField<?> parameterField, CastedField castedField) {
+    Class<?> cls = findValueClass(null, castedField);
     if (parameterField == null) {
-      Class<?> cls = findValueClass(null, castedField);
       if (cls == null) {
         throw new InvalidRequestException("Parameter field is null");
       }
       return ParameterDocumentField.builder()
           .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(null)))
-          .valueClass(cls)
+          .valueClass(cls.getSimpleName())
           .typeString(cls.isAssignableFrom(String.class))
           .build();
     }
@@ -30,7 +30,7 @@ public class ParameterDocumentFieldMapper {
         .expression(parameterField.isExpression())
         .expressionValue(parameterField.getExpressionValue())
         .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(parameterField.getValue())))
-        .valueClass(findValueClass(parameterField, castedField))
+        .valueClass(cls == null ? null : cls.getSimpleName())
         .inputSetValidator(parameterField.getInputSetValidator())
         .typeString(parameterField.isTypeString())
         .jsonResponseField(parameterField.isJsonResponseField())

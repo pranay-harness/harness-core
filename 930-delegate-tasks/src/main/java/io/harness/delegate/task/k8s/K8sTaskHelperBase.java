@@ -1907,6 +1907,8 @@ public class K8sTaskHelperBase {
         return downloadManifestFilesFromGit(
             storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
 
+      case HTTP_HELM:
+        // TODO: download helm chart files from http helm repo
       default:
         throw new UnsupportedOperationException(
             String.format("Manifest store config type: [%s]", storeDelegateConfig.getType().name()));

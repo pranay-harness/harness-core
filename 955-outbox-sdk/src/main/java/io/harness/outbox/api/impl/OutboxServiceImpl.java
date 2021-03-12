@@ -6,6 +6,7 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.Event;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.OutboxEvent;
@@ -35,6 +36,7 @@ public class OutboxServiceImpl implements OutboxService {
                                   .resource(event.getResource())
                                   .eventData(gson.toJson(event.getEventData()))
                                   .eventType(event.getEventType())
+                                  .globalContext(GlobalContextManager.obtainGlobalContext())
                                   .build();
     return outboxRepository.save(outboxEvent);
   }
