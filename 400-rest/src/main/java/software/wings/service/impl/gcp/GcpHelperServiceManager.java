@@ -49,7 +49,7 @@ public class GcpHelperServiceManager {
     if (gcpConfig.isUseDelegateSelectors()) {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
-          GcpValidationRequest.builder().delegateSelectors(gcpConfig.getDelegateSelector()).build());
+          GcpValidationRequest.builder().delegateSelectors(gcpConfig.getDelegateSelectors()).build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
       if (validationResult.getStatus() != ConnectivityStatus.SUCCESS) {
@@ -72,7 +72,7 @@ public class GcpHelperServiceManager {
   }
 
   private void validateDelegateSelector(GcpConfig gcpConfig) {
-    if (gcpConfig.getDelegateSelector().isEmpty()) {
+    if (gcpConfig.getDelegateSelectors().isEmpty()) {
       throw new InvalidRequestException("No Delegate Selector Found. Unable to validate", USER);
     }
   }

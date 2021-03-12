@@ -57,7 +57,7 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getValue()).isInstanceOf(GcpConfig.class);
     GcpConfig config = (GcpConfig) setting.getValue();
     assertThat(config.getEncryptedServiceAccountKeyFileContent()).isEqualTo(KEY);
-    assertThat(config.getDelegateSelector()).isEqualTo(DELEGATE_SELECTOR);
+    assertThat(config.getDelegateSelectors()).isEqualTo(DELEGATE_SELECTOR);
     assertThat(config.isSkipValidation()).isFalse();
     assertThat(config.isUseDelegateSelectors()).isFalse();
   }
@@ -100,7 +100,7 @@ public class GcpDataFetcherHelperTest extends WingsBaseTest {
     assertThat(setting.getValue()).isInstanceOf(GcpConfig.class);
     GcpConfig config = (GcpConfig) setting.getValue();
     assertThat(config.getEncryptedServiceAccountKeyFileContent()).isEqualTo(KEY);
-    assertThat(config.getDelegateSelector()).isEqualTo(DELEGATE_SELECTOR);
+    assertThat(config.getDelegateSelectors()).isEqualTo(DELEGATE_SELECTOR);
     assertThat(config.isUseDelegateSelectors()).isTrue();
     assertThat(config.isSkipValidation()).isTrue();
   }

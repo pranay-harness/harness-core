@@ -48,7 +48,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
 
   private boolean useDelegateSelectors;
-  private Set<String> delegateSelector;
+  private Set<String> delegateSelectors;
   private boolean skipValidation;
 
   public GcpConfig() {
@@ -56,7 +56,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-      String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, Set<String> delegateSelector,
+      String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, Set<String> delegateSelectors,
       boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
@@ -64,7 +64,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
     this.accountId = accountId;
     this.ccmConfig = ccmConfig;
     this.encryptedServiceAccountKeyFileContent = encryptedServiceAccountKeyFileContent;
-    this.delegateSelector = delegateSelector;
+    this.delegateSelectors = delegateSelectors;
     this.useDelegateSelectors = useDelegateSelectors;
     this.skipValidation = skipValidation;
   }
@@ -85,16 +85,16 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
     private boolean useDelegateSelectors;
-    private Set<String> delegateSelector;
+    private Set<String> delegateSelectors;
     private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, Set<String> delegateSelector,
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, Set<String> delegateSelectors,
         boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
-      this.delegateSelector = delegateSelector;
+      this.delegateSelectors = delegateSelectors;
       this.useDelegateSelectors = useDelegateSelectors;
       this.skipValidation = skipValidation;
     }

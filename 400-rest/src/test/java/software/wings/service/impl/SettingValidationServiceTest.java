@@ -985,7 +985,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     FieldUtils.writeField(settingValidationService, "gcpHelperServiceManager", gcpHelperServiceManager, true);
 
-    gcpConfig.setDelegateSelector(Collections.singleton("delegate1"));
+    gcpConfig.setDelegateSelectors(Collections.singleton("delegate1"));
 
     // useDelegate = true, skipValidation = true
     gcpConfig.setUseDelegateSelectors(true);
@@ -1027,13 +1027,13 @@ public class SettingValidationServiceTest extends WingsBaseTest {
 
     // useDelegate = true, delegateSelector Provided
     gcpConfig.setUseDelegateSelectors(true);
-    gcpConfig.setDelegateSelector(Collections.singleton("delegate1"));
+    gcpConfig.setDelegateSelectors(Collections.singleton("delegate1"));
     settingValidationService.validate(attribute);
     verify(gcpHelperServiceManager, times(1)).validateCredential(any(), any());
 
     // useDelegate = true, no delegateSelector Provided
     gcpConfig.setUseDelegateSelectors(true);
-    gcpConfig.setDelegateSelector(null);
+    gcpConfig.setDelegateSelectors(null);
     assertThatThrownBy(() -> settingValidationService.validate(attribute))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessage("Delegate Selector must be provided if inherit from delegate option is selected.");

@@ -250,7 +250,7 @@ public class SettingValidationService {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
       }
-      if (gcpConfig.isUseDelegateSelectors() && gcpConfig.getDelegateSelector().isEmpty()) {
+      if (gcpConfig.isUseDelegateSelectors() && gcpConfig.getDelegateSelectors().isEmpty()) {
         throw new InvalidArgumentsException(
             "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
       }

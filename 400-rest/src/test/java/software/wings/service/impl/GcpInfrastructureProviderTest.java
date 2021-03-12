@@ -50,7 +50,7 @@ public class GcpInfrastructureProviderTest extends CategoryTest {
     SettingAttribute settingAttributeDelegateBased =
         aSettingAttribute()
             .withValue(
-                GcpConfig.builder().useDelegateSelectors(true).delegateSelector(Collections.singleton("abc")).build())
+                GcpConfig.builder().useDelegateSelectors(true).delegateSelectors(Collections.singleton("abc")).build())
             .build();
 
     gcpInfrastructureProvider.listClusterNames(settingAttribute, null);

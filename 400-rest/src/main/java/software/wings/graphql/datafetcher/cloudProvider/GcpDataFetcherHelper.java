@@ -30,7 +30,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
+      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelectors);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
@@ -62,7 +62,7 @@ public class GcpDataFetcherHelper {
     }
 
     if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
+      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelectors);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
