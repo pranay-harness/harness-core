@@ -62,6 +62,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -143,6 +144,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
+import io.harness.service.intfc.DelegateInsightsService;
 import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
@@ -161,6 +163,8 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateInsightsBarDetails;
+import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.Event.Type;
@@ -278,6 +282,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private CapabilityService capabilityService;
   @Mock private DelegateSyncService delegateSyncService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private DelegateInsightsService delegateInsightsService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -557,6 +562,16 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateGroup delegateGroup2 = DelegateGroup.builder().name("grp2").accountId(accountId).build();
     persistence.save(delegateGroup2);
 
+    // Insights
+    DelegateInsightsDetails delegateInsightsDetails =
+        DelegateInsightsDetails.builder()
+            .insights(ImmutableList.of(
+                DelegateInsightsBarDetails.builder().build(), DelegateInsightsBarDetails.builder().build()))
+            .build();
+    when(
+        delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
+        .thenReturn(delegateInsightsDetails);
+
     // these three delegates should be returned for group 1
     Delegate delegate1 = createDelegateBuilder()
                              .accountId(accountId)
@@ -630,6 +645,8 @@ public class DelegateServiceTest extends WingsBaseTest {
         assertThat(group.getDelegates())
             .extracting(DelegateStatus.DelegateInner::getUuid)
             .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+        assertThat(group.getDelegateInsightsDetails()).isNotNull();
+        assertThat(group.getDelegateInsightsDetails().getInsights()).hasSize(2);
       } else if (group.getGroupName().equals("grp2")) {
         assertThat(group.getDelegates()).isEmpty();
       }
