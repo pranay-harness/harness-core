@@ -264,6 +264,7 @@ import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
@@ -593,6 +594,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
     kryo.register(HttpHelmStoreDelegateConfig.class, 19642);
+    kryo.register(KustomizeManifestDelegateConfig.class, 19700);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);

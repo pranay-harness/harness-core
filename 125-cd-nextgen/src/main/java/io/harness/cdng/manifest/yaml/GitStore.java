@@ -38,6 +38,7 @@ public class GitStore implements GitStoreConfig, Visitable {
   @Wither
   private ParameterField<List<String>> paths;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -55,6 +56,7 @@ public class GitStore implements GitStoreConfig, Visitable {
         .commitId(commitId)
         .paths(paths)
         .folderPath(folderPath)
+        .repoName(repoName)
         .build();
   }
 
@@ -79,6 +81,9 @@ public class GitStore implements GitStoreConfig, Visitable {
     }
     if (!ParameterField.isNull(gitStore.getCommitId())) {
       resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
+    }
+    if (!ParameterField.isNull(gitStore.getRepoName())) {
+      resultantGitStore = resultantGitStore.withRepoName(gitStore.getRepoName());
     }
     return resultantGitStore;
   }
