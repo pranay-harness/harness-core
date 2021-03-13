@@ -1,6 +1,6 @@
 package software.wings.verification.log;
 
-import static software.wings.verification.log.LogsCVConfiguration.*;
+import static software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
