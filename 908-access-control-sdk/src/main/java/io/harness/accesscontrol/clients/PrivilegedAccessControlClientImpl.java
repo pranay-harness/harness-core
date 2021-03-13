@@ -2,7 +2,7 @@ package io.harness.accesscontrol.clients;
 
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.accesscontrol.HPrincipal;
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.exception.AccessDeniedException;
 import io.harness.remote.client.NGRestUtils;
@@ -27,11 +27,11 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public HAccessCheckResponseDTO checkForAccess(
+  public AccessCheckResponseDTO checkForAccess(
       String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckRequestList) {
-    HAccessCheckRequestDTO accessCheckRequestDTO =
-        HAccessCheckRequestDTO.builder()
-            .principal(HPrincipal.builder().principalType(principalType).principalIdentifier(principal).build())
+    AccessCheckRequestDTO accessCheckRequestDTO =
+        AccessCheckRequestDTO.builder()
+            .principal(Principal.builder().principalType(principalType).principalIdentifier(principal).build())
             .permissions(permissionCheckRequestList)
             .build();
     return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
@@ -51,9 +51,9 @@ public class PrivilegedAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public HAccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
-    HAccessCheckRequestDTO accessCheckRequestDTO =
-        HAccessCheckRequestDTO.builder().principal(null).permissions(permissionCheckDTOList).build();
+  public AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
+    AccessCheckRequestDTO accessCheckRequestDTO =
+        AccessCheckRequestDTO.builder().principal(null).permissions(permissionCheckDTOList).build();
     return NGRestUtils.getResponse(this.accessControlHttpClient.getAccessControlList(accessCheckRequestDTO));
   }
 

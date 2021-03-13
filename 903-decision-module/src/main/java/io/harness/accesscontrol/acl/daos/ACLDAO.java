@@ -11,5 +11,15 @@ public interface ACLDAO {
 
   ACL save(ACL acl);
 
-  void deleteByPrincipal(Principal principal);
+  void deleteByPrincipal(String principalType, String principalIdentifier);
+
+  List<ACL> saveAll(List<ACL> acls);
+
+  void deleteAll(List<ACL> acls);
+
+  void deleteByRoleAssignmentId(String roleAssignmentId);
+
+  List<ACL> getByRole(String scopeIdentifier, String identifier);
+
+  List<ACL> getByResourceGroup(String scopeIdentifier, String identifier);
 }

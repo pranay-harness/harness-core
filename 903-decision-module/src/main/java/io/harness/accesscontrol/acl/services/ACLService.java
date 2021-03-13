@@ -8,4 +8,7 @@ import java.util.List;
 
 public interface ACLService {
   AccessCheckResponseDTO checkAccess(Principal principal, List<PermissionCheckDTO> permissionCheckDTOList);
+
+  AccessCheckResponseDTO checkAccess(
+      String principalType, String principalIdentifier, List<PermissionCheckDTO> permissionCheckDTOList);
 }

@@ -1,9 +1,8 @@
 package io.harness.accesscontrol.clients;
 
-import io.harness.accesscontrol.HPrincipal;
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.security.SecurityContextBuilder;
-import io.harness.security.dto.Principal;
 import io.harness.security.dto.UserPrincipal;
 
 import java.util.Collections;
@@ -12,10 +11,10 @@ import java.util.stream.Collectors;
 
 public class NoOpAccessControlClientImpl implements AccessControlClient {
   @Override
-  public HAccessCheckResponseDTO checkForAccess(
+  public AccessCheckResponseDTO checkForAccess(
       String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckDTOList) {
-    return HAccessCheckResponseDTO.builder()
-        .principal(HPrincipal.builder().principalIdentifier(principal).principalType(principalType).build())
+    return AccessCheckResponseDTO.builder()
+        .principal(Principal.builder().principalIdentifier(principal).principalType(principalType).build())
         .accessControlList(permissionCheckDTOList.stream()
                                .map(x
                                    -> HAccessControlDTO.builder()
@@ -38,8 +37,8 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public HAccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
-    Principal principal = SecurityContextBuilder.getPrincipal();
+  public AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
+    io.harness.security.dto.Principal principal = SecurityContextBuilder.getPrincipal();
     if (principal instanceof UserPrincipal) {
       UserPrincipal userPrincipal = (UserPrincipal) principal;
       return checkForAccess(userPrincipal.getName(), PrincipalType.USER, permissionCheckDTOList);

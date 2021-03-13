@@ -105,8 +105,8 @@ aggregatorModuleConfig:
     mongodb.password: ""
     mongodb.ssl.enabled: false
     database.include.list: "accesscontrol"
-    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments"
-  enabled: false
+    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups"
+  enabled: true
 
 enableAuth: true
 defaultServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

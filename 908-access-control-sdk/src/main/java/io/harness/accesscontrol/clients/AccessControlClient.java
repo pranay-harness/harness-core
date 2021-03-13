@@ -14,7 +14,7 @@ public interface AccessControlClient {
    * @return principal for which permissions were checked and list of AccessControlDTO, which contains permission and a
    * field named accessible denoting whether aforementioned principal has the given permission
    */
-  HAccessCheckResponseDTO checkForAccess(
+  AccessCheckResponseDTO checkForAccess(
       String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckDTOList);
 
   /**
@@ -33,7 +33,7 @@ public interface AccessControlClient {
    * @return principal for which permissions were checked for, and list of AccessControlDTO, which contains permission
    * and a field named accessible denoting * whether aforementioned principal has the given permission
    */
-  HAccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList);
+  AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList);
 
   /**
    * Since this API takes no principal, it is picked up from the request context

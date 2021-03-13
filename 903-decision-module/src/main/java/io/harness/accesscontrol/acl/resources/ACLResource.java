@@ -2,10 +2,10 @@ package io.harness.accesscontrol.acl.resources;
 
 import static io.harness.exception.WingsException.USER;
 
-import io.harness.accesscontrol.HPrincipal;
+import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.services.ACLService;
-import io.harness.accesscontrol.clients.HAccessCheckRequestDTO;
-import io.harness.accesscontrol.clients.HAccessCheckResponseDTO;
+import io.harness.accesscontrol.clients.AccessCheckRequestDTO;
+import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.HAccessControlDTO;
 import io.harness.exception.AccessDeniedException;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -13,7 +13,6 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
 
 import com.google.inject.Inject;
@@ -45,16 +44,16 @@ import lombok.extern.slf4j.Slf4j;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @NextGenManagerAuth
-public class HACLResource {
+public class ACLResource {
   private final ACLService aclService;
 
-  private boolean shouldBypassAccessControlChecks(
-      Principal principalInContext, io.harness.accesscontrol.Principal principalToCheckPermissions) {
+  private boolean shouldBypassAccessControlChecks(io.harness.security.dto.Principal principalInContext,
+      io.harness.accesscontrol.Principal principalToCheckPermissions) {
     /*
      bypass access control check if principal in context is SERVICE and principalToCheckPermissions is either null or
      the same service principal
      */
-    Optional<Principal> serviceCall =
+    Optional<io.harness.security.dto.Principal> serviceCall =
         Optional.ofNullable(principalInContext).filter(x -> PrincipalType.SERVICE.equals(x.getType()));
 
     return serviceCall.isPresent()
@@ -62,11 +61,11 @@ public class HACLResource {
             || Objects.equals(serviceCall.get().getName(), principalToCheckPermissions.getPrincipalIdentifier()));
   }
 
-  private boolean shouldApplyAccessControlCheckToQueryPermissions(
-      Principal principalInContext, io.harness.accesscontrol.Principal principalToCheckPermissions) {
+  private boolean shouldApplyAccessControlCheckToQueryPermissions(io.harness.security.dto.Principal principalInContext,
+      io.harness.accesscontrol.Principal principalToCheckPermissions) {
     /* apply access control checks if a principal of type other than SERVICE is trying to check permissions for any
        other principal */
-    Optional<Principal> nonServiceCall =
+    Optional<io.harness.security.dto.Principal> nonServiceCall =
         Optional.ofNullable(principalInContext).filter(x -> !PrincipalType.SERVICE.equals(x.getType()));
     return nonServiceCall.isPresent()
         && (principalToCheckPermissions != null
@@ -75,9 +74,9 @@ public class HACLResource {
 
   @POST
   @ApiOperation(value = "Check for access to resources", nickname = "getAccessControlList")
-  public ResponseDTO<HAccessCheckResponseDTO> get(@Valid @NotNull HAccessCheckRequestDTO dto) {
-    Principal principalInContext = SecurityContextBuilder.getPrincipal();
-    io.harness.accesscontrol.HPrincipal principalToCheckPermissions = dto.getPrincipal();
+  public ResponseDTO<AccessCheckResponseDTO> get(@Valid @NotNull AccessCheckRequestDTO dto) {
+    io.harness.security.dto.Principal principalInContext = SecurityContextBuilder.getPrincipal();
+    Principal principalToCheckPermissions = dto.getPrincipal();
 
     // check if context is valid
     if (principalInContext == null || principalInContext.getName() == null || principalInContext.getType() == null) {
@@ -87,8 +86,8 @@ public class HACLResource {
     // if access check is to be bypassed, directly return response
     if (shouldBypassAccessControlChecks(principalInContext, principalToCheckPermissions)) {
       return ResponseDTO.newResponse(
-          HAccessCheckResponseDTO.builder()
-              .principal(HPrincipal.builder()
+          AccessCheckResponseDTO.builder()
+              .principal(Principal.builder()
                              .principalType(io.harness.accesscontrol.principals.PrincipalType.SERVICE)
                              .principalIdentifier(principalInContext.getName())
                              .build())
@@ -111,9 +110,12 @@ public class HACLResource {
       log.debug("checking for access control checks here...");
     }
 
-    if (principalToCheckPermissions == null) {
+    if (!Optional.ofNullable(principalToCheckPermissions)
+             .map(Principal::getPrincipalIdentifier)
+             .filter(x -> !x.isEmpty())
+             .isPresent()) {
       principalToCheckPermissions =
-          HPrincipal.builder()
+          Principal.builder()
               .principalIdentifier(principalInContext.getName())
               .principalType(io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType(
                   principalInContext.getType()))
@@ -121,7 +123,7 @@ public class HACLResource {
     }
 
     // otherwise forward the call ahead and return response
-    return ResponseDTO.newResponse(
-        (HAccessCheckResponseDTO) aclService.checkAccess(principalToCheckPermissions, dto.getPermissions()));
+    return ResponseDTO.newResponse(aclService.checkAccess(principalToCheckPermissions.getPrincipalType().name(),
+        principalToCheckPermissions.getPrincipalIdentifier(), dto.getPermissions()));
   }
 }

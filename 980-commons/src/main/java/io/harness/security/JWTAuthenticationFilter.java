@@ -3,6 +3,7 @@ package io.harness.security;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.security.SecurityContextBuilder.getPrincipalFromClaims;
 
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -62,8 +63,7 @@ public abstract class JWTAuthenticationFilter implements ContainerRequestFilter,
                 .getOrDefault(sourcePrincipalServiceId.get(), JWTTokenServiceUtils::isServiceAuthorizationValid)
                 .validate(sourcePrincipalToken.get(), secret);
         if (Boolean.TRUE.equals(validate.getLeft())) {
-          SourcePrincipalContextBuilder.setSourcePrincipal(
-              SecurityContextBuilder.getPrincipalFromClaims(validate.getRight()));
+          SourcePrincipalContextBuilder.setSourcePrincipal(getPrincipalFromClaims(validate.getRight()));
           return;
         }
       }
