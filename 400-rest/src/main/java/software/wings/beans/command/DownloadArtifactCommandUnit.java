@@ -252,7 +252,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOWNLOAD_ARTIFACT")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     private String artifactVariableName;
 
     public Yaml() {

@@ -280,7 +280,7 @@ public class ExecCommandUnit extends SshCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("EXEC")
-  public static class Yaml extends AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.EXEC.name());
     }
@@ -290,31 +290,6 @@ public class ExecCommandUnit extends SshCommandUnit {
         List<TailFilePatternEntry.Yaml> filePatternEntryList) {
       super(name, CommandUnitType.EXEC.name(), deploymentType, workingDirectory, scriptType, command,
           filePatternEntryList);
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public static class AbstractYaml extends SshCommandUnit.Yaml {
-    // maps to commandPath
-    private String workingDirectory;
-    private String scriptType;
-    // maps to commandString
-    private String command;
-    // maps to tailPatterns
-    private List<TailFilePatternEntry.Yaml> filePatternEntryList;
-
-    public AbstractYaml(String commandUnitType) {
-      super(commandUnitType);
-    }
-
-    public AbstractYaml(String name, String commandUnitType, String deploymentType, String workingDirectory,
-        String scriptType, String command, List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, commandUnitType, deploymentType);
-      this.workingDirectory = workingDirectory;
-      this.scriptType = scriptType;
-      this.command = command;
-      this.filePatternEntryList = filePatternEntryList;
     }
   }
 }
