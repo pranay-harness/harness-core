@@ -2,6 +2,7 @@ package io.harness.cdng.manifest.mappers;
 
 import static io.harness.cdng.manifest.ManifestType.HelmChart;
 import static io.harness.cdng.manifest.ManifestType.K8Manifest;
+import static io.harness.cdng.manifest.ManifestType.Kustomize;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
 
 import static java.lang.String.format;
@@ -9,6 +10,8 @@ import static java.lang.String.format;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -40,6 +43,8 @@ public class ManifestOutcomeMapper {
         return getValuesOutcome(manifestAttributes);
       case HelmChart:
         return getHelmChartOutcome(manifestAttributes);
+      case Kustomize:
+        return getKustomizeOutcome(manifestAttributes);
       default:
         throw new UnsupportedOperationException(
             format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
@@ -105,6 +110,20 @@ public class ManifestOutcomeMapper {
         .helmVersion(helmChartManifest.getHelmVersion())
         .skipResourceVersioning(skipResourceVersioning)
         .commandFlags(helmChartManifest.getCommandFlags())
+        .build();
+  }
+
+  private KustomizeManifestOutcome getKustomizeOutcome(ManifestAttributes manifestAttributes) {
+    KustomizeManifest kustomizeManifest = (KustomizeManifest) manifestAttributes;
+    boolean skipResourceVersioning = !ParameterField.isNull(kustomizeManifest.getSkipResourceVersioning())
+        && kustomizeManifest.getSkipResourceVersioning().getValue();
+    String pluginPath =
+        !ParameterField.isNull(kustomizeManifest.getPluginPath()) ? kustomizeManifest.getPluginPath().getValue() : null;
+    return KustomizeManifestOutcome.builder()
+        .identifier(kustomizeManifest.getIdentifier())
+        .store(kustomizeManifest.getStoreConfig())
+        .skipResourceVersioning(skipResourceVersioning)
+        .pluginPath(pluginPath)
         .build();
   }
 }
