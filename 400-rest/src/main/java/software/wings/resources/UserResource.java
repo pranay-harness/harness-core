@@ -618,15 +618,17 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginBody, @QueryParam("accountId") String accountId) {
+  public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginBody) {
     // @Todo(Raj): Add support for captcha
-    User user = authenticationManager.defaultLoginAccount(
+    User user = userService.getUserByEmail(loginBody.getEmail());
+    String accountId = user.getDefaultAccountId();
+    User loggedInUser = authenticationManager.defaultLoginAccount(
         authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId);
 
     Account account = accountService.get(accountId);
 
     return new RestResponse<>(NGLoginResponse.builder()
-                                  .user(user)
+                                  .user(loggedInUser)
                                   .showCaptcha(false)
                                   .dashboardPreference(account.getDashboardPreference())
                                   .build());
