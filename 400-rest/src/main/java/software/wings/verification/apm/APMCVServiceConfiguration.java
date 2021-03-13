@@ -14,7 +14,6 @@ import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.verification.CVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
