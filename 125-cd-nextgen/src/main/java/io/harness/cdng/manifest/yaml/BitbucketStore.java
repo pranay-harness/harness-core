@@ -38,6 +38,7 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
   @Wither
   private ParameterField<List<String>> paths;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -55,6 +56,7 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
         .commitId(commitId)
         .paths(paths)
         .folderPath(folderPath)
+        .repoName(repoName)
         .build();
   }
 
@@ -80,6 +82,10 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
     if (!ParameterField.isNull(bitbucketStore.getCommitId())) {
       resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId());
     }
+    if (!ParameterField.isNull(bitbucketStore.getRepoName())) {
+      resultantBitbucketStore = resultantBitbucketStore.withRepoName(bitbucketStore.getRepoName());
+    }
+
     return resultantBitbucketStore;
   }
 

@@ -14,11 +14,14 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.GitStoreConfig;
+import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.connector.ConnectorInfoDTO;
@@ -28,15 +31,19 @@ import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoH
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
+import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
@@ -270,6 +277,36 @@ public class K8sStepHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetManifestDelegateConfigForKustomize() {
+    KustomizeManifestOutcome manifestOutcome =
+        KustomizeManifestOutcome.builder()
+            .store(GitStore.builder()
+                       .branch(ParameterField.createValueField("test"))
+                       .connectorRef(ParameterField.createValueField("org.connectorRef"))
+                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .build())
+            .pluginPath("/usr/bin/kustomize")
+            .build();
+
+    doReturn(
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
+                        .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
+    assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.KUSTOMIZE);
+    assertThat(delegateConfig).isInstanceOf(KustomizeManifestDelegateConfig.class);
+    assertThat(delegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(delegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
+    KustomizeManifestDelegateConfig kustomizeManifestDelegateConfig = (KustomizeManifestDelegateConfig) delegateConfig;
+    assertThat(kustomizeManifestDelegateConfig.getPluginPath()).isEqualTo("/usr/bin/kustomize");
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetManifestDelegateConfigForHelmChartUsingHttpRepo() {
@@ -302,5 +339,69 @@ public class K8sStepHelperTest extends CategoryTest {
     HelmChartManifestDelegateConfig helmChartDelegateConfig = (HelmChartManifestDelegateConfig) delegateConfig;
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
     assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(HttpHelmStoreDelegateConfig.class);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldConvertGitAccountRepoWithRepoName() {
+    GitStoreConfig gitStoreConfig = GithubStore.builder()
+                                        .repoName(ParameterField.createValueField("parent-repo/module"))
+                                        .paths(ParameterField.createValueField(Arrays.asList("path/to")))
+                                        .build();
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitConfigDTO gitConfigDTO =
+        GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
+    GitStoreDelegateConfig gitStoreDelegateConfig = k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig,
+        connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name());
+    assertThat(gitStoreDelegateConfig).isNotNull();
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
+    GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(convertedConfig.getUrl()).isEqualTo("http://localhost/parent-repo/module");
+    assertThat(convertedConfig.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldNotConvertGitRepoWithRepoName() {
+    GitStoreConfig gitStoreConfig = GithubStore.builder()
+                                        .repoName(ParameterField.createValueField("parent-repo/module"))
+                                        .paths(ParameterField.createValueField(Arrays.asList("path/to")))
+                                        .build();
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitConfigDTO gitConfigDTO =
+        GitConfigDTO.builder().gitConnectionType(GitConnectionType.REPO).url("http://localhost/repository").build();
+
+    GitStoreDelegateConfig gitStoreDelegateConfig = k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig,
+        connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO, gitConfigDTO, ManifestType.K8S_MANIFEST.name());
+    assertThat(gitStoreDelegateConfig).isNotNull();
+    assertThat(gitStoreDelegateConfig.getGitConfigDTO()).isInstanceOf(GitConfigDTO.class);
+    GitConfigDTO convertedConfig = (GitConfigDTO) gitStoreDelegateConfig.getGitConfigDTO();
+    assertThat(convertedConfig.getUrl()).isEqualTo("http://localhost/repository");
+    assertThat(convertedConfig.getGitConnectionType()).isEqualTo(GitConnectionType.REPO);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldFailGitRepoConversionIfRepoNameIsMissing() {
+    GitStoreConfig gitStoreConfig =
+        GithubStore.builder().paths(ParameterField.createValueField(Arrays.asList("path/to"))).build();
+    ConnectorInfoDTO connectorInfoDTO = ConnectorInfoDTO.builder().build();
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    GitConfigDTO gitConfigDTO =
+        GitConfigDTO.builder().gitConnectionType(GitConnectionType.ACCOUNT).url("http://localhost").build();
+
+    try {
+      k8sStepHelper.getGitStoreDelegateConfig(gitStoreConfig, connectorInfoDTO, Collections.emptyList(), sshKeySpecDTO,
+          gitConfigDTO, ManifestType.K8S_MANIFEST.name());
+    } catch (Exception thrown) {
+      assertThat(thrown).isNotNull();
+      assertThat(thrown).isInstanceOf(InvalidRequestException.class);
+      assertThat(thrown.getMessage()).isEqualTo("Repo name cannot be empty for Account level git connector");
+    }
   }
 }
