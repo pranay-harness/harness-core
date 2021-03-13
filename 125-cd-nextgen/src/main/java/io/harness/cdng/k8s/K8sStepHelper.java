@@ -21,6 +21,7 @@ import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
@@ -61,6 +62,7 @@ import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -198,6 +200,14 @@ public class K8sStepHelper {
             .helmCommandFlag(getDelegateHelmCommandFlag(helmChartManifestOutcome.getCommandFlags()))
             .build();
 
+      case ManifestType.Kustomize:
+        KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
+        return KustomizeManifestDelegateConfig.builder()
+            .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
+                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .pluginPath(kustomizeManifestOutcome.getPluginPath())
+            .build();
+
       default:
         throw new UnsupportedOperationException(format("Unsupported Manifest type: [%s]", manifestOutcome.getType()));
     }
@@ -255,6 +265,7 @@ public class K8sStepHelper {
     List<String> paths = new ArrayList<>();
     switch (manifestType) {
       case ManifestType.HelmChart:
+      case ManifestType.Kustomize:
         paths.add(getParameterFieldValue(gitstoreConfig.getFolderPath()));
         break;
 
@@ -601,6 +612,10 @@ public class K8sStepHelper {
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
         return helmChartManifestOutcome.isSkipResourceVersioning();
+
+      case ManifestType.Kustomize:
+        KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
+        return kustomizeManifestOutcome.isSkipResourceVersioning();
 
       default:
         return false;

@@ -19,6 +19,7 @@ import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.connector.ConnectorInfoDTO;
@@ -33,6 +34,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
 import io.harness.helm.HelmSubCommandType;
@@ -267,6 +269,36 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(result).isFalse();
     result = k8sStepHelper.getSkipResourceVersioning(ValuesManifestOutcome.builder().build());
     assertThat(result).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetManifestDelegateConfigForKustomize() {
+    KustomizeManifestOutcome manifestOutcome =
+        KustomizeManifestOutcome.builder()
+            .store(GitStore.builder()
+                       .branch(ParameterField.createValueField("test"))
+                       .connectorRef(ParameterField.createValueField("org.connectorRef"))
+                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .build())
+            .pluginPath("/usr/bin/kustomize")
+            .build();
+
+    doReturn(
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
+                        .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
+    assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.KUSTOMIZE);
+    assertThat(delegateConfig).isInstanceOf(KustomizeManifestDelegateConfig.class);
+    assertThat(delegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(delegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
+    KustomizeManifestDelegateConfig kustomizeManifestDelegateConfig = (KustomizeManifestDelegateConfig) delegateConfig;
+    assertThat(kustomizeManifestDelegateConfig.getPluginPath()).isEqualTo("/usr/bin/kustomize");
   }
 
   @Test
