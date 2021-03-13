@@ -21,7 +21,6 @@ import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.exceptionhandler.DelegateExceptionManager;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
-import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.ExceptionLogger;
 
@@ -125,8 +124,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
                                 .errorMessage(ExceptionUtils.getMessage(exception))
                                 .build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
-    } catch (WingsException exception) {
-      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
+    } catch (Exception exception) {
+      //      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
       //                                .errorMessage(ExceptionUtils.getMessage(exception))
       //                                .build());
@@ -161,7 +160,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   }
 
   public boolean isSupportingErrorFramework() {
-    return false;
+    return true;
   }
 
   @Override

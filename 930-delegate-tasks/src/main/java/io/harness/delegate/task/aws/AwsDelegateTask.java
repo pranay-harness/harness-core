@@ -1,12 +1,7 @@
 package io.harness.delegate.task.aws;
 
-import static io.harness.aws.AwsExceptionHandler.handleAmazonClientException;
-import static io.harness.aws.AwsExceptionHandler.handleAmazonServiceException;
-
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsConfig;
-import io.harness.connector.ConnectivityStatus;
-import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -15,7 +10,6 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
-import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -23,10 +17,8 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.services.ec2.model.AmazonEC2Exception;
+import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.google.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -54,26 +46,26 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
     final AwsTaskParams awsTaskParams = (AwsTaskParams) parameters;
     final AwsTaskType awsTaskType = awsTaskParams.getAwsTaskType();
     final List<EncryptedDataDetail> encryptionDetails = awsTaskParams.getEncryptionDetails();
-    try {
-      switch (awsTaskType) {
-        // TODO: we can move this to factory method using guice mapbinder later
-        case VALIDATE:
-          return handleValidateTask(awsTaskParams, encryptionDetails);
-        default:
-          throw new InvalidRequestException("Task type not identified");
-      }
-    } catch (Exception e) {
-      String errorMessage = e.getMessage();
-      ConnectorValidationResult connectorValidationResult =
-          ConnectorValidationResult.builder()
-              .status(ConnectivityStatus.FAILURE)
-              .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)))
-              .errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
-              .testedAt(System.currentTimeMillis())
-              .delegateId(getDelegateId())
-              .build();
-      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
+    //    try {
+    switch (awsTaskType) {
+      // TODO: we can move this to factory method using guice mapbinder later
+      case VALIDATE:
+        return handleValidateTask(awsTaskParams, encryptionDetails);
+      default:
+        throw new InvalidRequestException("Task type not identified");
     }
+    //    } catch (Exception e) {
+    //      String errorMessage = e.getMessage();
+    //      ConnectorValidationResult connectorValidationResult =
+    //          ConnectorValidationResult.builder()
+    //              .status(ConnectivityStatus.FAILURE)
+    //              .errors(Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage)))
+    //              .errorSummary(ngErrorHelper.getErrorSummary(errorMessage))
+    //              .testedAt(System.currentTimeMillis())
+    //              .delegateId(getDelegateId())
+    //              .build();
+    //      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
+    //    }
   }
 
   public DelegateResponseData handleValidateTask(
@@ -83,19 +75,20 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
     final AwsCredentialType awsCredentialType = credential.getAwsCredentialType();
     final AwsConfig awsConfig =
         awsNgConfigMapper.mapAwsConfigWithDecryption(credential, awsCredentialType, encryptionDetails);
-    try {
-      awsClient.validateAwsAccountCredential(awsConfig);
-      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
-                                                                .status(ConnectivityStatus.SUCCESS)
-                                                                .delegateId(getDelegateId())
-                                                                .testedAt(System.currentTimeMillis())
-                                                                .build();
-      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
-    } catch (AmazonEC2Exception amazonEC2Exception) {
-      handleAmazonServiceException(amazonEC2Exception);
-    } catch (AmazonClientException amazonClientException) {
-      handleAmazonClientException(amazonClientException);
-    }
-    throw new InvalidRequestException("Unsuccessful validation");
+    //    try {
+    throw new AmazonCodeDeployException("Error Message");
+    //      awsClient.validateAwsAccountCredential(awsConfig);
+    //      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+    //                                                                .status(ConnectivityStatus.SUCCESS)
+    //                                                                .delegateId(getDelegateId())
+    //                                                                .testedAt(System.currentTimeMillis())
+    //                                                                .build();
+    //      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
+    //    } catch (AmazonEC2Exception amazonEC2Exception) {
+    //      handleAmazonServiceException(amazonEC2Exception);
+    //    } catch (AmazonClientException amazonClientException) {
+    //      handleAmazonClientException(amazonClientException);
+    //    }
+    //    throw new InvalidRequestException("Unsuccessful validation");
   }
 }

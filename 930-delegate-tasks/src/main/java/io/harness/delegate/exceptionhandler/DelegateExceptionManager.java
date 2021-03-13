@@ -48,11 +48,20 @@ public class DelegateExceptionManager {
   }
 
   private WingsException handleException(Exception exception) {
+    WingsException handledException;
     DelegateExceptionHandler delegateExceptionHandler = getExceptionHandler(exception);
     try {
       if (delegateExceptionHandler != null) {
-        return delegateExceptionHandler.handleException(exception);
+        handledException = delegateExceptionHandler.handleException(exception);
+      } else {
+        handledException = (WingsException) exception;
       }
+
+      if (exception.getCause() != null) {
+        handledException.initCause(handleException((Exception) exception.getCause()));
+      }
+      return handledException;
+
     } catch (Exception e) {
       log.error("Exception occured while handling delegate exception : {}", exception, e);
     }
