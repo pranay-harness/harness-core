@@ -66,6 +66,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
                            .encryptedSecretKey(yaml.getSecretKey())
                            .useEc2IamCredentials(yaml.isUseEc2IamCredentials())
                            .tag(yaml.getTag())
+                           .useIRSA(yaml.isUseIRSA())
                            .assumeCrossAccountRole(yaml.isAssumeCrossAccountRole())
                            .crossAccountAttributes(yaml.getCrossAccountAttributes())
                            .defaultRegion(yaml.getDefaultRegion())
