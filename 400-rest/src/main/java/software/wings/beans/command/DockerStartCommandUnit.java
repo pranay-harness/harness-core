@@ -52,7 +52,7 @@ public class DockerStartCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("DOCKER_START")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.DOCKER_START.name());
     }
