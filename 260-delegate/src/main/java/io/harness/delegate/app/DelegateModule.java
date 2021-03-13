@@ -29,6 +29,7 @@ import io.harness.datacollection.impl.DataCollectionServiceImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.exceptionhandler.DelegateExceptionModule;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
@@ -698,6 +699,7 @@ public class DelegateModule extends AbstractModule {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
     install(NGDelegateModule.getInstance());
+    install(DelegateExceptionModule.getInstance());
 
     bind(DelegateAgentService.class).to(DelegateAgentServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);

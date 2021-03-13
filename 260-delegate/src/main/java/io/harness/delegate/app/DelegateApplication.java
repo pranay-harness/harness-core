@@ -190,8 +190,6 @@ public class DelegateApplication {
           configuration.getGrpcServiceConnectorPort(), configuration.getManagerServiceSecret()));
     }
 
-    modules.add(new DelegateExceptionModule());
-
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);
 
