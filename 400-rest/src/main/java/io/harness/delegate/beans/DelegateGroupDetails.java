@@ -1,5 +1,8 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.SelectorType;
@@ -15,6 +18,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 @Builder
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class DelegateGroupDetails {
   private String delegateType;
   private String groupName;
