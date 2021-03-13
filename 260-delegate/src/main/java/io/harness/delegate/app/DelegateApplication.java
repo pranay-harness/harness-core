@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.delegate.exceptionhandler.DelegateExceptionModule;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.delegate.task.citasks.CITaskFactoryModule;
@@ -188,6 +189,8 @@ public class DelegateApplication {
       modules.add(new DelegateGrpcServiceModule(
           configuration.getGrpcServiceConnectorPort(), configuration.getManagerServiceSecret()));
     }
+
+    modules.add(new DelegateExceptionModule());
 
     Injector injector = Guice.createInjector(modules);
     MessageService messageService = injector.getInstance(MessageService.class);

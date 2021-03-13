@@ -47,6 +47,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @Getter private ILogStreamingTaskClient logStreamingTaskClient;
   private Consumer<DelegateTaskResponse> consumer;
   private BooleanSupplier preExecute;
+  @Inject DelegateExceptionManager delegateExceptionManager;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
@@ -75,10 +76,6 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     }
   }
 
-  public boolean isSupportingErrorFramework() {
-    return false;
-  }
-
   @SuppressWarnings("PMD")
   private void runDelegateTask() {
     if (!preExecute.getAsBoolean()) {
@@ -93,6 +90,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
     ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder =
         ErrorNotifyResponseData.builder().delegateMetaInfo(delegateMetaInfo);
+
     try {
       log.info("Started executing task {}", taskId);
 
@@ -132,7 +130,8 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
       //                                .errorMessage(ExceptionUtils.getMessage(exception))
       //                                .build());
-      taskResponse.response(DelegateExceptionManager.getResponseData(exception, errorNotifyResponseDataBuilder));
+      taskResponse.response(delegateExceptionManager.getResponseData(
+          exception, errorNotifyResponseDataBuilder, isSupportingErrorFramework()));
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {
       log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
@@ -159,6 +158,10 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         .delegateTaskId(getTaskId())
         .stateExecutionId(stateExecutionId)
         .build();
+  }
+
+  public boolean isSupportingErrorFramework() {
+    return false;
   }
 
   @Override
