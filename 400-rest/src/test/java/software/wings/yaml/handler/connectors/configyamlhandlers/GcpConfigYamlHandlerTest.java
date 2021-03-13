@@ -107,7 +107,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     assertThat(gcpConfig.getAccountId()).isEqualTo(accountId);
     assertThat(gcpConfig.getEncryptedServiceAccountKeyFileContent()).isEqualTo(serviceAccountKeyFileContent);
     assertThat(gcpConfig.isUseDelegateSelectors()).isEqualTo(useDelegate);
-    assertThat(gcpConfig.getDelegateSelectors()).isEqualTo(delegateSelector);
+    assertThat(gcpConfig.getDelegateSelectors()).isEqualTo(Collections.singleton(delegateSelector));
     assertThat(gcpConfig.isSkipValidation()).isEqualTo(skipValidation);
   }
 }
