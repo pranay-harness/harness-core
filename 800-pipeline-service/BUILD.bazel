@@ -23,7 +23,6 @@ java_binary(
     deps = [
         "@maven//:com_google_guava_guava",
     ] + [
-        "//480-alert-beans:module",
         "//810-ng-triggers:module",
         "//860-orchestration-visualization:module",
         "//870-orchestration:module",
@@ -36,6 +35,7 @@ java_binary(
         "//950-events-api:module",
         "//950-ng-project-n-orgs:module",
         "//950-timeout-engine:module",
+        "//955-alert-beans:module",
         "//955-filters-sdk:module",
         "//960-ng-core-beans:module",
         "//960-notification-beans:module",
