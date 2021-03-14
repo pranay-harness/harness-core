@@ -833,6 +833,19 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       return null;
     }
 
+    if (isTimeoutFailure(level, failureTypes)) {
+      Optional<FailureStrategy> timeoutStrategy =
+          filteredFailureStrategies.stream()
+              .filter(failureStrategy -> isNotEmpty(failureStrategy.getFailureTypes()))
+              .filter(failureStrategy -> failureStrategy.getFailureTypes().contains(FailureType.TIMEOUT_ERROR))
+              .findFirst();
+      if (timeoutStrategy.isPresent()) {
+        return timeoutStrategy.get();
+      }
+    } else {
+      filteredFailureStrategies = filterOutExplicitTimeoutStrategies(filteredFailureStrategies);
+    }
+
     Optional<FailureStrategy> rollbackStrategy =
         filteredFailureStrategies.stream()
             .filter(f -> f.getRepairActionCode() == RepairActionCode.ROLLBACK_WORKFLOW)
@@ -855,6 +868,20 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     } else {
       return filteredFailureStrategies.get(0);
     }
+  }
+
+  private static List<FailureStrategy> filterOutExplicitTimeoutStrategies(
+      List<FailureStrategy> filteredFailureStrategies) {
+    return filteredFailureStrategies.stream()
+        .filter(failureStrategy
+            -> !(isNotEmpty(failureStrategy.getFailureTypes()) && failureStrategy.getFailureTypes().size() == 1
+                && failureStrategy.getFailureTypes().contains(FailureType.TIMEOUT_ERROR)))
+        .collect(toList());
+  }
+
+  private static boolean isTimeoutFailure(FailureStrategyLevel level, EnumSet<FailureType> failureTypes) {
+    return level == FailureStrategyLevel.STEP && isNotEmpty(failureTypes)
+        && failureTypes.contains(FailureType.TIMEOUT_ERROR);
   }
 
   private static FailureStrategy getResolveWorkflowLevelFailureStrategy(

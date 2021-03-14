@@ -673,7 +673,7 @@ public enum StepType {
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlValidator.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
       asList(UTILITY), asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
@@ -781,6 +781,10 @@ public enum StepType {
 
   public Class<? extends StepCompletionYamlValidator> getYamlValidatorClass() {
     return yamlValidatorClass;
+  }
+
+  public boolean supportsTimeoutFailure() {
+    return supportsTimeoutFailure;
   }
 
   public boolean matchesDeploymentType(DeploymentType deploymentType) {

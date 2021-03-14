@@ -152,6 +152,8 @@ FAILURE_TYPE:
       value: VERIFICATION_FAILURE
     - name: Application Error
       value: APPLICATION_ERROR
+    - name: Timeout Error
+      value: TIMEOUT_ERROR
 
 EXECUTION_SCOPE:
     - name: Workflow

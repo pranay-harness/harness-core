@@ -52,6 +52,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
         .httpUrl(httpInternalResponse.getHttpUrl())
         .httpResponseCode(httpInternalResponse.getHttpResponseCode())
         .httpResponseBody(httpInternalResponse.getHttpResponseBody())
+        .timedOut(httpInternalResponse.isTimedOut())
         .build();
   }
 

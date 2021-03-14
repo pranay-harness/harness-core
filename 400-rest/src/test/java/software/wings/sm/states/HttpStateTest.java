@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
@@ -54,6 +55,8 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.exception.FailureType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.http.HttpServiceImpl;
 import io.harness.rule.Owner;
 
@@ -141,6 +144,7 @@ public class HttpStateTest extends WingsBaseTest {
 
   @Mock private WorkflowStandardParams workflowStandardParams;
   @Mock private ActivityHelperService activityHelperService;
+  @Mock private FeatureFlagService featureFlagService;
   @Inject private Injector injector;
   @Mock private DelegateService delegateService;
   @Mock private ExecutionContextImpl executionContext;
@@ -188,6 +192,7 @@ public class HttpStateTest extends WingsBaseTest {
     when(workflowStandardParams.getCurrentUser()).thenReturn(currentUser);
 
     when(activityHelperService.createAndSaveActivity(any(), any(), any(), any(), any())).thenReturn(activity);
+    when(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, ACCOUNT_ID)).thenReturn(true);
   }
 
   @Test
@@ -618,7 +623,7 @@ public class HttpStateTest extends WingsBaseTest {
                                                .httpResponseBody("SocketTimeoutException: Read timed out")
                                                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
-
+    assertThat(response.getFailureTypes()).containsOnly(FailureType.TIMEOUT_ERROR);
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
@@ -743,6 +748,7 @@ public class HttpStateTest extends WingsBaseTest {
         .isEqualToComparingOnlyGivenFields(
             HttpStateExecutionData.builder().assertionStatus("FAILED").httpResponseCode(500).build(), "httpUrl",
             "assertionStatus", "httpResponseCode");
+    assertThat(response.getFailureTypes()).containsOnly(FailureType.TIMEOUT_ERROR);
     assertThat(((HttpStateExecutionData) response.getStateExecutionData()).getHttpResponseBody())
         .contains("Connect to www.google.com:81 ");
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
@@ -756,6 +762,7 @@ public class HttpStateTest extends WingsBaseTest {
     on(httpState).set("templateUtils", templateUtils);
     on(httpState).set("accountService", accountService);
     on(httpState).set("infrastructureMappingService", infrastructureMappingService);
+    on(httpState).set("featureFlagService", featureFlagService);
 
     doAnswer(invocation -> {
       DelegateTask task = invocation.getArgumentAt(0, DelegateTask.class);

@@ -19,4 +19,5 @@ public class HttpInternalResponse {
   private String httpMethod;
   private String httpUrl;
   private String header;
+  private boolean timedOut;
 }
