@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Id;
 @Builder
 @Entity(value = "alerts")
 @HarnessEntity(exportable = false)
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(Module._955_ALERT_BEANS)
 public class Alert
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
