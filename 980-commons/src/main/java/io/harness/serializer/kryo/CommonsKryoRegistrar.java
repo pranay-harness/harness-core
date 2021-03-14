@@ -33,5 +33,8 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(ShellExecutionException.class, 7473);
     kryo.register(LogLevel.class, 71103);
+
+    kryo.register(java.lang.StackTraceElement[].class, 31010);
+    kryo.register(java.lang.StackTraceElement.class, 31011);
   }
 }
