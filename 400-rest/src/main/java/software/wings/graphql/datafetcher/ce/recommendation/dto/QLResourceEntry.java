@@ -8,7 +8,7 @@ import software.wings.graphql.schema.type.QLObject;
 import lombok.Value;
 
 @Value(staticConstructor = "of")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLResourceEntry implements QLObject {
   String name;
   String quantity;

@@ -1,5 +1,7 @@
 package io.harness.ccm.billing.preaggregated;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class PreAggregateBillingServiceImpl implements PreAggregateBillingService {
   private BigQueryService bigQueryService;
   private PreAggregatedBillingDataHelper dataHelper;

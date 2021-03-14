@@ -1,8 +1,12 @@
 package io.harness.ccm.billing.preaggregated;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(Module._490_CE_COMMONS)
 public class PreAggregateConstants {
   public static final String nullStringValueConstant = "Others";
   public static final String countStringValueConstant = "count";

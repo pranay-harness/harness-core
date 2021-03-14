@@ -58,7 +58,7 @@ import org.yaml.snakeyaml.Yaml;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2DataFetcher<QLK8sWorkloadFilter,
     QLNoOpSortCriteria, QLK8SWorkloadRecommendationConnection> {
   private final LoadingCache<String, String> clusterNameCache;

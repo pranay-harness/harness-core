@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "CeActivePodCountTableKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class CeActivePodCountTableSchema {
   DbSpec dbSpec;
   DbSchema dbSchema;

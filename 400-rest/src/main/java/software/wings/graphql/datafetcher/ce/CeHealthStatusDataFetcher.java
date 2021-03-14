@@ -14,7 +14,7 @@ import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class CeHealthStatusDataFetcher implements DataFetcher<CEHealthStatusDTO> {
   @Inject HealthStatusService healthStatusService;
 

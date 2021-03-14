@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(PermissionAttribute.ResourceType.K8S_RECOMMENDATION)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLK8SWorkloadHistogramData {
   List<QLContainerHistogramData> containerHistogramDataList;
 }

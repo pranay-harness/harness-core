@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class CEExportDataQueryMetadata {
   private static final CEExportDataTableSchema schema = new CEExportDataTableSchema();
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }

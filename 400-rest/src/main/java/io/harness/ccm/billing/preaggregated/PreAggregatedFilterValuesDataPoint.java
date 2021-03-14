@@ -1,5 +1,8 @@
 package io.harness.ccm.billing.preaggregated;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.datafetcher.billing.QLEntityData;
 import software.wings.graphql.schema.type.QLK8sLabel;
 
@@ -10,6 +13,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._490_CE_COMMONS)
 public class PreAggregatedFilterValuesDataPoint {
   Set<QLEntityData> region;
   Set<QLEntityData> awsService;
