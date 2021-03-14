@@ -1,3 +1,5 @@
 package io.harness.audit.api;
 
-public class AuditService {}
+import io.harness.audit.beans.AuditEventDTO;
+
+public interface AuditService { AuditEventDTO create(AuditEventDTO auditEventDTO); }

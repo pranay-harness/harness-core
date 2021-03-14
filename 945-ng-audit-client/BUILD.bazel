@@ -7,6 +7,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//950-ng-audit-commons:module",
         "//950-delegate-tasks-beans:module",
         "//950-ng-project-n-orgs:module",
         "//960-yaml-sdk:module",
