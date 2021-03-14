@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
+import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
@@ -88,6 +89,10 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
     }
 
     // throw exception here
+    Object response = kryoSerializer.asInflatedObject(taskResponse.getResponseData());
+    if (response instanceof ErrorNotifyResponseData) {
+      throw((ErrorNotifyResponseData) response).getException();
+    }
 
     log.info("Deserialize and return the response for task {}", taskId);
     return (T) kryoSerializer.asInflatedObject(taskResponse.getResponseData());
