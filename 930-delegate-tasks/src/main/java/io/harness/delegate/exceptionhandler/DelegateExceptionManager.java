@@ -2,6 +2,7 @@ package io.harness.delegate.exceptionhandler;
 
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.exceptionhandler.handler.DelegateExceptionHandler;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -22,8 +23,7 @@ public class DelegateExceptionManager {
   }
 
   public DelegateResponseData getResponseData(Exception exception,
-      ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder,
-      boolean isErrorFramwworkSupportedByTask) {
+      ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder, boolean isErrorFramwworkSupportedByTask) {
     if (!isErrorFramwworkSupportedByTask) {
       // return default response
       return prepareErrorResponse(exception, errorNotifyResponseDataBuilder).build();
@@ -75,7 +75,7 @@ public class DelegateExceptionManager {
   }
 
   private ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder prepareErrorResponse(
-      Exception exception, ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder) {
+      Exception exception, ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder) {
     if (errorNotifyResponseDataBuilder == null) {
       errorNotifyResponseDataBuilder = ErrorNotifyResponseData.builder();
     }
