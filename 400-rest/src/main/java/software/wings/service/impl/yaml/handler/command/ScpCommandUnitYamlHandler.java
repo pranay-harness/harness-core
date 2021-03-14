@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.command;
 
-import software.wings.beans.command.AbstractCommandUnit;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.ScpCommandUnit.Yaml;
@@ -49,7 +49,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
   }
 
   @Override
-  public ScpCommandUnit toBean(AbstractCommandUnit.Yaml yaml) {
+  public ScpCommandUnit toBean(AbstractCommandUnitYaml yaml) {
     ScpCommandUnit.Yaml scpYaml = (ScpCommandUnit.Yaml) yaml;
     ScpCommandUnit scpCommandUnit = super.toBean(yaml);
     scpCommandUnit.setDestinationDirectoryPath(scpYaml.getDestinationDirectoryPath());

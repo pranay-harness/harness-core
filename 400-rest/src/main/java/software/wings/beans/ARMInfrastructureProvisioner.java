@@ -51,28 +51,4 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
   public String variableKey() {
     return VARIABLE_KEY;
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfraProvisionerYaml {
-    private ARMResourceType resourceType;
-    private ARMSourceType sourceType;
-    private String templateBody;
-    private GitFileConfig gitFileConfig;
-    private ARMScopeType scopeType;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String description, List<NameValuePair.Yaml> variables,
-        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, ARMSourceType sourceType, String templateBody,
-        GitFileConfig gitFileConfig, ARMScopeType scopeType, ARMResourceType resourceType) {
-      super(type, harnessApiVersion, description, ARM.name(), variables, mappingBlueprints);
-      this.sourceType = sourceType;
-      this.templateBody = templateBody;
-      this.gitFileConfig = gitFileConfig;
-      this.scopeType = scopeType;
-      this.resourceType = resourceType;
-    }
-  }
 }

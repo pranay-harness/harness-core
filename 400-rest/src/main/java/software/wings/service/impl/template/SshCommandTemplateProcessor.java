@@ -29,7 +29,7 @@ import io.harness.persistence.HIterator;
 import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Variable;
-import software.wings.beans.command.AbstractCommandUnit.Yaml;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitType;
@@ -261,7 +261,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
   private SshCommandTemplate convertYamlCommandToCommandUnits(Template template) {
     SshCommandTemplate sshCommandTemplate = (SshCommandTemplate) template.getTemplateObject();
     List<CommandUnit> commandUnits = new ArrayList<>();
-    for (Yaml commandUnitYaml : sshCommandTemplate.getCommands()) {
+    for (AbstractCommandUnitYaml commandUnitYaml : sshCommandTemplate.getCommands()) {
       CommandUnitYamlHandler commandUnitYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
       CommandUnit commandUnit = commandUnitYamlHandler.toBean(commandUnitYaml);

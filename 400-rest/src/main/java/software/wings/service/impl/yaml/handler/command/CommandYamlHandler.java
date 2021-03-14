@@ -16,8 +16,7 @@ import software.wings.beans.Graph;
 import software.wings.beans.GraphLink;
 import software.wings.beans.GraphNode;
 import software.wings.beans.Service;
-import software.wings.beans.command.AbstractCommandUnit;
-import software.wings.beans.command.AbstractCommandUnit.Yaml;
+import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
@@ -71,7 +70,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     notNullCheck("serviceId is null for given yamlFilePath: " + yamlFilePath, serviceId, USER);
     CommandYaml commandYaml = changeContext.getYaml();
     List<GraphNode> nodeList = Lists.newArrayList();
-    List<Yaml> commandUnitYamlList = commandYaml.getCommandUnits();
+    List<AbstractCommandUnitYaml> commandUnitYamlList = commandYaml.getCommandUnits();
     List<CommandUnit> commandUnitList = Lists.newArrayList();
     List<GraphLink> linkList = Lists.newArrayList();
     String name = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
@@ -79,7 +78,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
 
     if (isNotEmpty(commandUnitYamlList)) {
       GraphNode previousGraphNode = null;
-      for (Yaml commandUnitYaml : commandUnitYamlList) {
+      for (AbstractCommandUnitYaml commandUnitYaml : commandUnitYamlList) {
         CommandUnitYamlHandler commandUnitYamlHandler =
             yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnitYaml.getCommandUnitType());
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, commandUnitYaml);
@@ -195,13 +194,13 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     String commandUnitType = Utils.getStringFromEnum(command.getCommandUnitType());
 
     // command units
-    List<AbstractCommandUnit.Yaml> commandUnitYamlList =
+    List<AbstractCommandUnitYaml> commandUnitYamlList =
         command.getCommandUnits()
             .stream()
             .map(commandUnit -> {
               CommandUnitYamlHandler commandUnitsYamlHandler =
                   yamlHandlerFactory.getYamlHandler(YamlType.COMMAND_UNIT, commandUnit.getCommandUnitType().name());
-              return (AbstractCommandUnit.Yaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
+              return (AbstractCommandUnitYaml) commandUnitsYamlHandler.toYaml(commandUnit, appId);
             })
             .collect(toList());
 
