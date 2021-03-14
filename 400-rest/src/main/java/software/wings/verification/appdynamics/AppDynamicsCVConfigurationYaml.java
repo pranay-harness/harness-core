@@ -1,9 +1,9 @@
 package software.wings.verification.appdynamics;
 
-import static software.wings.verification.CVConfiguration.CVConfigurationYaml;
-
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
