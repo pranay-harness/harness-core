@@ -7,7 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.sm.StateType;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
-import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationYaml;
+import software.wings.verification.stackdriver.StackDriverMetricCVConfigurationYaml;
 
 import java.util.List;
 

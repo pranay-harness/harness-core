@@ -6,7 +6,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,25 +60,5 @@ public class SplunkCVConfiguration extends LogsCVConfiguration {
   @Override
   public boolean isCVTaskBasedCollectionEnabled() {
     return true;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static class SplunkCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private boolean isAdvancedQuery;
-    private String hostnameField;
-
-    @Attributes(title = "Is advanced query", required = false)
-    @DefaultValue("false")
-    @JsonProperty(value = "isAdvancedQuery")
-    public boolean isAdvancedQuery() {
-      return isAdvancedQuery;
-    }
-
-    public void setAdvancedQuery(boolean advancedQuery) {
-      this.isAdvancedQuery = advancedQuery;
-    }
   }
 }

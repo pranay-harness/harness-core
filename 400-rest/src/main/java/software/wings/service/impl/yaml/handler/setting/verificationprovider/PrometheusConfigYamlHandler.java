@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.PrometheusConfig;
-import software.wings.beans.PrometheusConfig.PrometheusYaml;
+import software.wings.beans.PrometheusYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 

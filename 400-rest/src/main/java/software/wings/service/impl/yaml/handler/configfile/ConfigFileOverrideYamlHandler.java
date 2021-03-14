@@ -16,7 +16,7 @@ import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.OverrideYaml;
+import software.wings.beans.ConfigFileOverrideYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -38,13 +38,13 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
-public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml, ConfigFile> {
+public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<ConfigFileOverrideYaml, ConfigFile> {
   @Inject private YamlHelper yamlHelper;
   @Inject private ConfigService configService;
   @Inject private SecretManager secretManager;
 
   @Override
-  public void delete(ChangeContext<OverrideYaml> changeContext) {
+  public void delete(ChangeContext<ConfigFileOverrideYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
@@ -58,7 +58,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       return;
     }
 
-    OverrideYaml yaml = changeContext.getYaml();
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
     if (GLOBAL_SERVICE_NAME_FOR_YAML.equals(serviceName)) {
@@ -75,7 +75,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   }
 
   @Override
-  public OverrideYaml toYaml(ConfigFile bean, String appId) {
+  public ConfigFileOverrideYaml toYaml(ConfigFile bean, String appId) {
     if (bean.getEntityType() != EntityType.SERVICE_TEMPLATE && bean.getEntityType() != EntityType.ENVIRONMENT) {
       throw new InvalidRequestException("Unknown entity type: " + bean.getEntityType());
     }
@@ -87,7 +87,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
       fileName = Utils.normalize(bean.getRelativeFilePath());
     }
 
-    return ConfigFile.OverrideYaml.builder()
+    return ConfigFileOverrideYaml.builder()
         .targetFilePath(bean.getRelativeFilePath())
         .fileName(fileName)
         .checksum(bean.getChecksum())
@@ -98,7 +98,8 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
   }
 
   @Override
-  public ConfigFile upsertFromYaml(ChangeContext<OverrideYaml> changeContext, List<ChangeContext> changeSetContext) {
+  public ConfigFile upsertFromYaml(
+      ChangeContext<ConfigFileOverrideYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -109,7 +110,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
 
     String serviceName = yamlHelper.getServiceNameForFileOverride(yamlFilePath);
 
-    OverrideYaml yaml = changeContext.getYaml();
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
 
     BoundedInputStream inputStream = null;
     ConfigFile previous = get(accountId, yamlFilePath, changeContext);
@@ -189,12 +190,12 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
 
   @Override
   public Class getYamlClass() {
-    return OverrideYaml.class;
+    return ConfigFileOverrideYaml.class;
   }
 
   @Override
-  public ConfigFile get(String accountId, String yamlFilePath, ChangeContext<OverrideYaml> changeContext) {
-    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+  public ConfigFile get(String accountId, String yamlFilePath, ChangeContext<ConfigFileOverrideYaml> changeContext) {
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     String relativeFilePath = yaml.getTargetFilePath();
     return getConfigFile(accountId, yamlFilePath, relativeFilePath);
   }

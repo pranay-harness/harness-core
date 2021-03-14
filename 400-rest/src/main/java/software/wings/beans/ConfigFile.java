@@ -232,32 +232,4 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
       this.targetEnvs = targetEnvs;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class OverrideYaml extends BaseEntityYaml {
-    private String serviceName;
-    private String targetFilePath;
-    private String fileName;
-    private String checksum;
-    private String checksumType;
-    private boolean encrypted;
-
-    public OverrideYaml(String harnessApiVersion) {
-      super(YamlType.CONFIG_FILE_OVERRIDE.name(), harnessApiVersion);
-    }
-
-    @Builder
-    public OverrideYaml(String harnessApiVersion, String serviceName, String targetFilePath, String fileName,
-        String checksum, String checksumType, boolean encrypted) {
-      super(YamlType.CONFIG_FILE_OVERRIDE.name(), harnessApiVersion);
-      this.serviceName = serviceName;
-      this.targetFilePath = targetFilePath;
-      this.fileName = fileName;
-      this.checksum = checksum;
-      this.checksumType = checksumType;
-      this.encrypted = encrypted;
-    }
-  }
 }

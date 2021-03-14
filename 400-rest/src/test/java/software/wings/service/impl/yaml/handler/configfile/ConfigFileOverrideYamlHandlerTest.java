@@ -32,6 +32,7 @@ import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.ConfigFileOverrideYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
@@ -118,13 +119,13 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
         .build();
   }
 
-  private ChangeContext<ConfigFile.OverrideYaml> getOverrideYamlChangeContext(String yamlString, String yamlFilePath)
+  private ChangeContext<ConfigFileOverrideYaml> getOverrideYamlChangeContext(String yamlString, String yamlFilePath)
       throws IOException {
     GitFileChange gitFileChange = getGitFileChange(yamlFilePath, yamlString);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext = new ChangeContext<>();
+    ChangeContext<ConfigFileOverrideYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.CONFIG_FILE_OVERRIDE);
-    ConfigFile.OverrideYaml yaml = (ConfigFile.OverrideYaml) getYaml(yamlString, ConfigFile.OverrideYaml.class);
+    ConfigFileOverrideYaml yaml = (ConfigFileOverrideYaml) getYaml(yamlString, ConfigFileOverrideYaml.class);
     changeContext.setYaml(yaml);
     return changeContext;
   }
@@ -134,7 +135,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testDeleteIfApplicationNotExist() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
 
     configFileOverrideYamlHandler.delete(changeContext);
@@ -147,7 +148,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testDeleteIfEnvironmentNotExist() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
     getApplication();
 
@@ -161,7 +162,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testDeleteWithFileOverrideForAService() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
     getApplication();
     getEnvironment();
@@ -177,7 +178,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testDeleteWithFileOverrideForAllServices() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAllServices);
     getApplication();
     getEnvironment();
@@ -227,9 +228,9 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void shouldNotThrowErrorIfConfigFileAbsentOnUpdate() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
-    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext =
@@ -248,9 +249,9 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void shouldIgnoreTargetToEnvFieldIfPresent() throws IOException {
     String yamlString = getYamlFile(INCORRECT_OVERRIDE_YAML);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
-    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext =
@@ -276,9 +277,9 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testUpdateFromYamlWhenRelativePathHasBackSlashesForAllServices() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML_2);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAllServices);
-    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext =
@@ -299,9 +300,9 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testUpdateFromYamlWhenRelativePathHasBackSlashesForAService() throws IOException {
     String yamlString = getYamlFile(UNENCRYPTED_OVERRIDE_YAML_2);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext =
+    ChangeContext<ConfigFileOverrideYaml> changeContext =
         getOverrideYamlChangeContext(yamlString, yamlFilePathForAService);
-    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext =
@@ -320,8 +321,8 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   private void testUpsertFromYaml(
       String yamlFileName, String configFileName, String yamlFilePath, String configFilePath) throws IOException {
     String yamlString = getYamlFile(yamlFileName);
-    ChangeContext<ConfigFile.OverrideYaml> changeContext = getOverrideYamlChangeContext(yamlString, yamlFilePath);
-    ConfigFile.OverrideYaml yaml = changeContext.getYaml();
+    ChangeContext<ConfigFileOverrideYaml> changeContext = getOverrideYamlChangeContext(yamlString, yamlFilePath);
+    ConfigFileOverrideYaml yaml = changeContext.getYaml();
     boolean isEncrypted = yaml.isEncrypted();
 
     List<ChangeContext> changeSetContext =
@@ -345,7 +346,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
   }
 
   private List<ChangeContext> getChangeSetContexts(String configFileName, String configFilePath,
-      ChangeContext<ConfigFile.OverrideYaml> changeContext, boolean isEncrypted) throws IOException {
+      ChangeContext<ConfigFileOverrideYaml> changeContext, boolean isEncrypted) throws IOException {
     List<ChangeContext> changeSetContext;
     if (!isEncrypted && isNotEmpty(configFileName)) {
       String configFileString = getYamlFile(configFileName);
@@ -358,7 +359,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
     return changeSetContext;
   }
 
-  private ConfigFile testUpdateFromYaml(ChangeContext<ConfigFile.OverrideYaml> changeContext, boolean isEncrypted,
+  private ConfigFile testUpdateFromYaml(ChangeContext<ConfigFileOverrideYaml> changeContext, boolean isEncrypted,
       List<ChangeContext> changeSetContext, String serviceName, ConfigFile savedConfigFile) {
     configFileOverrideYamlHandler.upsertFromYaml(changeContext, changeSetContext);
     verify(configService).update(captor.capture(), any());
@@ -371,7 +372,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
     return updatedConfigFile;
   }
 
-  private ConfigFile testSaveFromYaml(ChangeContext<ConfigFile.OverrideYaml> changeContext, boolean isEncrypted,
+  private ConfigFile testSaveFromYaml(ChangeContext<ConfigFileOverrideYaml> changeContext, boolean isEncrypted,
       List<ChangeContext> changeSetContext, String serviceName) {
     configFileOverrideYamlHandler.upsertFromYaml(changeContext, changeSetContext);
     verify(configService).save(captor.capture(), captorBoundedInputStream.capture());
@@ -384,7 +385,7 @@ public class ConfigFileOverrideYamlHandlerTest extends YamlHandlerTestBase {
     return savedConfigFile;
   }
 
-  private String mockServicesSetup(String yamlFilePath, ConfigFile.OverrideYaml yaml) {
+  private String mockServicesSetup(String yamlFilePath, ConfigFileOverrideYaml yaml) {
     getApplication();
     getEnvironment();
     when(configService.get(eq(APP_ID), anyString(), any(), any())).thenReturn(null);

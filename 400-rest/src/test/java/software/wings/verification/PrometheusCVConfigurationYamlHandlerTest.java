@@ -28,6 +28,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.verification.prometheus.PrometheusCVConfigurationYaml;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.ArrayList;
@@ -99,9 +100,8 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     cvServiceConfiguration.setName("TestPrometheusConfig");
   }
 
-  private PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml buildYaml(List<TimeSeries> timeSeriesList) {
-    PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml =
-        PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml.builder().timeSeriesList(timeSeriesList).build();
+  private PrometheusCVConfigurationYaml buildYaml(List<TimeSeries> timeSeriesList) {
+    PrometheusCVConfigurationYaml yaml = PrometheusCVConfigurationYaml.builder().timeSeriesList(timeSeriesList).build();
     yaml.setServiceName(serviceName);
     yaml.setConnectorName(connectorName);
     return yaml;
@@ -127,8 +127,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
         PrometheusCVServiceConfiguration.builder().timeSeriesToAnalyze(timeSeriesList).build();
     setBasicInfo(cvServiceConfiguration);
 
-    PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml =
-        yamlHandler.toYaml(cvServiceConfiguration, appId);
+    PrometheusCVConfigurationYaml yaml = yamlHandler.toYaml(cvServiceConfiguration, appId);
 
     assertThat(yaml.getServiceName()).isEqualTo(serviceName);
     assertThat(yaml.getTimeSeriesList()).isEqualTo(timeSeriesList);
@@ -149,7 +148,7 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
                            .url(url)
                            .build());
 
-    ChangeContext<PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
     changeContext.setChange(c);
     changeContext.setYaml(buildYaml(timeSeriesList));
@@ -189,10 +188,10 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
 
     List<TimeSeries> timeSeriesList = new ArrayList<>();
 
-    ChangeContext<PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
     changeContext.setChange(c);
-    PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml = buildYaml(timeSeriesList);
+    PrometheusCVConfigurationYaml yaml = buildYaml(timeSeriesList);
     changeContext.setYaml(yaml);
     yamlHandler.upsertFromYaml(changeContext, null);
   }
@@ -208,10 +207,10 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
     timeSeriesList.add(
         TimeSeries.builder().metricName("Metric1").metricType("Error").txnName("Test1").url(url).build());
 
-    ChangeContext<PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
     changeContext.setChange(c);
-    PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml = buildYaml(timeSeriesList);
+    PrometheusCVConfigurationYaml yaml = buildYaml(timeSeriesList);
     changeContext.setYaml(yaml);
     yamlHandler.upsertFromYaml(changeContext, null);
   }
@@ -228,10 +227,10 @@ public class PrometheusCVConfigurationYamlHandlerTest extends WingsBaseTest {
         TimeSeries.builder().metricName("Metric1").metricType("Error").txnName("Test1").url(url).build());
     timeSeriesList.add(TimeSeries.builder().metricName("Metric1").metricType("Logs").txnName("Test2").url(url).build());
 
-    ChangeContext<PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
+    ChangeContext<PrometheusCVConfigurationYaml> changeContext = new ChangeContext<>();
     Change c = Change.Builder.aFileChange().withAccountId(accountId).withFilePath("TestPrometheusConfig.yaml").build();
     changeContext.setChange(c);
-    PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml yaml = buildYaml(timeSeriesList);
+    PrometheusCVConfigurationYaml yaml = buildYaml(timeSeriesList);
     changeContext.setYaml(yaml);
     yamlHandler.upsertFromYaml(changeContext, null);
   }

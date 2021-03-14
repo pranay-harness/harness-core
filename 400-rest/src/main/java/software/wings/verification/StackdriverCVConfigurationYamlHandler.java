@@ -6,7 +6,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
 import software.wings.verification.log.StackdriverCVConfiguration;
-import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
+import software.wings.verification.log.StackdriverCVConfigurationYaml;
 
 import java.util.List;
 

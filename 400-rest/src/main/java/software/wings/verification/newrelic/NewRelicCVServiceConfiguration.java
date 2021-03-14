@@ -8,7 +8,6 @@ import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import java.util.HashMap;
 import java.util.List;
@@ -63,18 +62,5 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
   @Override
   public FeatureName getCVTaskBasedCollectionFeatureFlag() {
     return FeatureName.NEWRELIC_24_7_CV_TASK;
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class NewRelicCVConfigurationYaml extends CVConfigurationYaml {
-    private String newRelicApplicationName;
-    private List<String> metrics;
   }
 }
