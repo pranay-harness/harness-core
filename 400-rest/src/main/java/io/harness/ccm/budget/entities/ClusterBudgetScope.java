@@ -2,6 +2,9 @@ package io.harness.ccm.budget.entities;
 
 import static io.harness.ccm.budget.BudgetScopeType.CLUSTER;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.Arrays;
@@ -18,6 +21,7 @@ import lombok.experimental.FieldNameConstants;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ClusterBudgetScopeKeys")
+@TargetModule(Module._490_CE_COMMONS)
 public class ClusterBudgetScope implements BudgetScope {
   String[] clusterIds;
 

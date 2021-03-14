@@ -1,6 +1,8 @@
 package io.harness.ccm.budget.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.BudgetType;
 import io.harness.iterator.PersistentRegularIterable;
@@ -27,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "budgets", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@TargetModule(Module._490_CE_COMMONS)
 public class Budget
     implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   @Id String uuid;

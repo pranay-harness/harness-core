@@ -8,6 +8,8 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.budget.dao.BudgetDao;
@@ -63,6 +65,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._490_CE_COMMONS)
 public class BudgetUtils {
   @Inject WingsPersistence wingsPersistence;
   @Inject BudgetTimescaleQueryHelper budgetTimescaleQueryHelper;
