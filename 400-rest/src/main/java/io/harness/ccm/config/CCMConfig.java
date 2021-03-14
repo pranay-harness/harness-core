@@ -1,5 +1,7 @@
 package io.harness.ccm.config;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.yaml.BaseYaml;
 
 import lombok.Builder;
@@ -9,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@TargetModule(Module._490_CE_COMMONS)
 public class CCMConfig {
   boolean cloudCostEnabled;
   boolean skipK8sEventCollection;

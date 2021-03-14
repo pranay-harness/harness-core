@@ -4,6 +4,8 @@ import static io.harness.persistence.HQuery.excludeValidate;
 
 import static software.wings.beans.SettingAttribute.SettingCategory.CE_CONNECTOR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.SettingAttribute;
@@ -14,6 +16,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._490_CE_COMMONS)
 public class CeConnectorDao {
   public static final String gcpOrganizationUuidField =
       SettingAttributeKeys.value + "." + CEGcpConfigKeys.organizationSettingId;

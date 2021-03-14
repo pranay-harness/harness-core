@@ -1,5 +1,7 @@
 package io.harness.ccm.config;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -10,6 +12,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._490_CE_COMMONS)
 public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMConfig> {
   @Override
   public CCMConfig.Yaml toYaml(CCMConfig ccmConfig, String appId) {

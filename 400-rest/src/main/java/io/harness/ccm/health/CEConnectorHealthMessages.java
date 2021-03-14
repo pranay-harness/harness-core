@@ -1,7 +1,10 @@
 package io.harness.ccm.health;
 
-import lombok.Getter;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
+import lombok.Getter;
+@TargetModule(Module._490_CE_COMMONS)
 public enum CEConnectorHealthMessages {
   SETTING_ATTRIBUTE_CREATED("Cloud Account Connector has been setup correctly"),
 

@@ -1,10 +1,14 @@
 package io.harness.ccm.license;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import lombok.Getter;
 
 @Getter
+@TargetModule(Module._490_CE_COMMONS)
 public enum CeLicenseType {
   FULL_TRIAL(30, ChronoUnit.DAYS),
   LIMITED_TRIAL(Constants.CE_TRIAL_PERIOD_DAYS, ChronoUnit.DAYS),

@@ -1,5 +1,7 @@
 package io.harness.ccm.communication;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CECommunications.CECommunicationsKeys;
 import io.harness.ccm.communication.entities.CommunicationType;
@@ -10,7 +12,7 @@ import java.util.List;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
+@TargetModule(Module._490_CE_COMMONS)
 public class CECommunicationsDao {
   @Inject private HPersistence persistence;
 

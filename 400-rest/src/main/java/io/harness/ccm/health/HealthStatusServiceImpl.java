@@ -28,6 +28,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.ClusterRecordService;
@@ -59,6 +61,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._490_CE_COMMONS)
 public class HealthStatusServiceImpl implements HealthStatusService {
   private static final String SUCCEEDED = "SUCCEEDED";
   @Inject SettingsService settingsService;

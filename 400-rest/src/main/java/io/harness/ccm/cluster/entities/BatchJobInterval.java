@@ -1,6 +1,8 @@
 package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;

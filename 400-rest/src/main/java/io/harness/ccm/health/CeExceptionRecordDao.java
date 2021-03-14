@@ -1,5 +1,7 @@
 package io.harness.ccm.health;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.CeExceptionRecord.CeExceptionRecordKeys;
 import io.harness.persistence.HPersistence;
 
@@ -10,6 +12,7 @@ import org.mongodb.morphia.query.Sort;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class CeExceptionRecordDao {
   @Inject private HPersistence persistence;
 

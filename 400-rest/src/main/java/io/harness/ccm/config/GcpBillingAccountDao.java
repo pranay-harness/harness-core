@@ -5,6 +5,8 @@ import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.persistence.HPersistence;
 
@@ -13,7 +15,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpBillingAccountDao {
   @Inject private HPersistence persistence;
 

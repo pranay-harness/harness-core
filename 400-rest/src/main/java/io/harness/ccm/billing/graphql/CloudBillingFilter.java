@@ -1,5 +1,8 @@
 package io.harness.ccm.billing.graphql;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.hazelcast.util.Preconditions;
 import com.healthmarketscience.sqlbuilder.Condition;
 import lombok.Data;
@@ -9,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._490_CE_COMMONS)
 public class CloudBillingFilter {
   public static final String BILLING_GCP_STARTTIME = "billing/gcp/starttime";
   public static final String BILLING_GCP_ENDTIME = "billing/gcp/endtime";

@@ -2,6 +2,8 @@ package io.harness.ccm.cluster.dao;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.commons.entities.InstanceData;
 import io.harness.ccm.commons.entities.InstanceData.InstanceDataKeys;
 import io.harness.persistence.HPersistence;
@@ -16,6 +18,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class InstanceDataDao {
   @Inject private HPersistence hPersistence;
 

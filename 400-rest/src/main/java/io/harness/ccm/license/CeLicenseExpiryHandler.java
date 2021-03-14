@@ -5,6 +5,8 @@ import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMinutes;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.iterator.PersistenceIterator;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -20,6 +22,7 @@ import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Optional;
 
+@TargetModule(Module._490_CE_COMMONS)
 public class CeLicenseExpiryHandler implements Handler<Account> {
   private static final int CE_LICENSE_EXPIRY_INTERVAL_DAY = 1;
 

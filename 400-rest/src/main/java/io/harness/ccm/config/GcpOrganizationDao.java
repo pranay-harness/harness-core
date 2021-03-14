@@ -2,6 +2,8 @@ package io.harness.ccm.config;
 
 import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.GcpOrganization.GcpOrganizationKeys;
 import io.harness.persistence.HPersistence;
 
@@ -10,7 +12,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpOrganizationDao {
   @Inject private HPersistence persistence;
 

@@ -4,6 +4,8 @@ import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_AWS_STAR
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_ENDTIME;
 import static io.harness.ccm.billing.graphql.CloudBillingFilter.BILLING_GCP_STARTTIME;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema;
 import io.harness.exception.InvalidRequestException;
@@ -24,6 +26,7 @@ import org.apache.commons.lang3.time.DateUtils;
 
 @Data
 @Builder
+@TargetModule(Module._490_CE_COMMONS)
 public class CloudBillingTimeFilter implements Filter {
   private QLTimeOperator operator;
   private String variable;

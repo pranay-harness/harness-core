@@ -1,5 +1,7 @@
 package io.harness.ccm.config;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.GcpServiceAccount.GcpServiceAccountKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @NgUniqueIndex(name = "no_dup",
     fields = { @Field(GcpServiceAccountKeys.accountId)
                , @Field(GcpServiceAccountKeys.serviceAccountId) })
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpServiceAccount implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   @NotEmpty String serviceAccountId;

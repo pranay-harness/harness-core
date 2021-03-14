@@ -2,6 +2,8 @@ package io.harness.ccm.config;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountService {
   private GcpServiceAccountDao gcpServiceAccountDao;
   private GcpServiceAccountService gcpServiceAccountService;

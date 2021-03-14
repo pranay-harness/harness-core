@@ -2,6 +2,9 @@ package io.harness.ccm.billing;
 
 import static io.harness.ccm.billing.preaggregated.PreAggregatedTableSchema.defaultTableName;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSchema;
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbSpec;
@@ -11,6 +14,7 @@ import lombok.experimental.UtilityClass;
 
 @Value
 @UtilityClass
+@TargetModule(Module._490_CE_COMMONS)
 public class RawBillingTableSchema {
   public static final DbSpec spec;
   public static final DbSchema schema;

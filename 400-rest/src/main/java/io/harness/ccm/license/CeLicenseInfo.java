@@ -1,5 +1,8 @@
 package io.harness.ccm.license;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Duration;
 import lombok.Builder;
@@ -7,6 +10,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@TargetModule(Module._490_CE_COMMONS)
 public class CeLicenseInfo {
   @JsonIgnore public static final int CE_TRIAL_GRACE_PERIOD_DAYS = 15;
 

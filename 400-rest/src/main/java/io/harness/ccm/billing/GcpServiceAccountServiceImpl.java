@@ -6,6 +6,8 @@ import static com.hazelcast.util.Preconditions.checkFalse;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.setup.config.CESetUpConfig;
 
 import software.wings.app.MainConfiguration;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
   public static final String CE_GCP_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   private Iam iamService;

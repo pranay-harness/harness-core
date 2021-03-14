@@ -2,6 +2,8 @@ package io.harness.ccm.config;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.GcpServiceAccountService;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.exception.InvalidRequestException;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpBillingAccountServiceImpl implements GcpBillingAccountService {
   @Inject private GcpServiceAccountService gcpServiceAccountService;
   @Inject private GcpBillingAccountDao gcpBillingAccountDao;

@@ -3,6 +3,8 @@ package io.harness.ccm.billing.dao;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun;
 import io.harness.ccm.billing.entities.CloudBillingTransferRun.CloudBillingTransferRunKeys;
 import io.harness.ccm.billing.entities.TransferJobRunState;
@@ -18,6 +20,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class CloudBillingTransferRunDao {
   @Inject private HPersistence persistence;
 

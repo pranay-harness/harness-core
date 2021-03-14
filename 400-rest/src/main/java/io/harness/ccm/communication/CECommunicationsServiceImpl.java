@@ -1,5 +1,7 @@
 package io.harness.ccm.communication;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CommunicationType;
 
@@ -9,7 +11,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+@TargetModule(Module._490_CE_COMMONS)
 public class CECommunicationsServiceImpl implements CECommunicationsService {
   @Inject CECommunicationsDao ceCommunicationsDao;
   @Inject CeAccountExpirationChecker accountChecker;

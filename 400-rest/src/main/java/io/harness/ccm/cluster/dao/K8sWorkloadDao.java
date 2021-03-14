@@ -8,6 +8,8 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.LT;
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ccm.cluster.entities.K8sLabelFilter;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class K8sWorkloadDao {
   private static final String LABEL_FIELD = K8sWorkloadKeys.labels + ".";
   @Inject private HPersistence persistence;

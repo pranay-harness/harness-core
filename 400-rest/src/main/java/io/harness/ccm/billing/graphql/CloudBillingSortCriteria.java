@@ -1,5 +1,7 @@
 package io.harness.ccm.billing.graphql;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 
 import software.wings.graphql.schema.type.aggregation.QLSortOrder;
@@ -12,6 +14,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(Module._490_CE_COMMONS)
 public class CloudBillingSortCriteria {
   private CloudSortType sortType;
   private QLSortOrder sortOrder;

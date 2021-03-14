@@ -4,6 +4,9 @@ import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.CE_GCP_CREDENT
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getCredentials;
 import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.toGoogleCredential;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpResourceManagerServiceImpl implements GcpResourceManagerService {
   private static CloudResourceManager createCloudResourceManagerService() throws GeneralSecurityException, IOException {
     ServiceAccountCredentials serviceAccountCredentials = getCredentials(CE_GCP_CREDENTIALS_PATH);

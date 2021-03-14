@@ -1,5 +1,7 @@
 package io.harness.ccm.config;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @NgUniqueIndex(name = "no_dup",
     fields = { @Field(GcpBillingAccountKeys.accountId)
                , @Field(GcpBillingAccountKeys.organizationSettingId) })
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpBillingAccount implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   @Id String uuid;
   String accountId;

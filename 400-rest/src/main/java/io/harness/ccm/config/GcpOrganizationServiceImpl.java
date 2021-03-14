@@ -5,6 +5,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.SettingAttribute;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class GcpOrganizationServiceImpl implements GcpOrganizationService {
   private GcpOrganizationDao gcpOrganizationDao;
   private SettingsService settingsService;

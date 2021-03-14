@@ -6,6 +6,9 @@ import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonate
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.ValidationResult;
 
 import com.google.auth.Credentials;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._490_CE_COMMONS)
 public class BigQueryServiceImpl implements BigQueryService {
   @Override
   public BigQuery get() {
