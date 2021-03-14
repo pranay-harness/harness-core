@@ -6,6 +6,8 @@ import static io.harness.ccm.billing.preaggregated.PreAggregatedBillingDataHelpe
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 import static software.wings.graphql.datafetcher.billing.CloudTimeSeriesStatsDataFetcher.OTHERS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
@@ -34,7 +36,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+@TargetModule(Module._375_CE_GRAPHQL)
 public class ViewTimeSeriesStatsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCEViewAggregation, QLCEViewFilterWrapper,
         QLCEViewGroupBy, QLCEViewSortCriteria> {

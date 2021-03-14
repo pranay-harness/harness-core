@@ -2,6 +2,8 @@ package io.harness.ccm.views.graphql;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewField;
@@ -25,6 +27,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._375_CE_GRAPHQL)
 public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFieldsData, QLCEViewFilterWrapper> {
   @Inject private ViewCustomFieldService viewCustomFieldService;
   @Inject private CEMetadataRecordDao metadataRecordDao;

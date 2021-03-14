@@ -1,5 +1,7 @@
 package io.harness.ccm.views.graphql;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -16,6 +18,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(PermissionAttribute.ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class QLViewTimeSeriesData implements QLData {
   List<TimeSeriesDataPoints> stats;
 }

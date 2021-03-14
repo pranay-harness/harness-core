@@ -2,6 +2,8 @@ package io.harness.ccm.views.graphql;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.ccm.views.graphql.QLViewOverviewStatsData.QLViewOverviewStatsDataBuilder;
@@ -25,6 +27,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._375_CE_GRAPHQL)
 public class ViewOverviewStatsDataFetcher
     extends AbstractObjectDataFetcher<QLViewOverviewStatsData, QLNoOpQueryParameters> {
   @Inject HPersistence persistence;

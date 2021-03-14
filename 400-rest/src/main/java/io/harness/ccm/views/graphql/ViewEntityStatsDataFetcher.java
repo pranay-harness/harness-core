@@ -2,6 +2,8 @@ package io.harness.ccm.views.graphql;
 
 import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unified;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.views.service.ViewsBillingService;
 
@@ -15,7 +17,7 @@ import com.google.cloud.bigquery.BigQuery;
 import com.google.inject.Inject;
 import graphql.schema.DataFetchingEnvironment;
 import java.util.List;
-
+@TargetModule(Module._375_CE_GRAPHQL)
 public class ViewEntityStatsDataFetcher extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCEViewAggregation,
     QLCEViewFilterWrapper, QLCEViewGroupBy, QLCEViewSortCriteria> {
   @Inject ViewsBillingService viewsBillingService;
