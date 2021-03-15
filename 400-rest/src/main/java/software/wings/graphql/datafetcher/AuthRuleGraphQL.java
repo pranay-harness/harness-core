@@ -5,7 +5,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.graphql.utils.GraphQLConstants.APP_ID_ARG;
 import static software.wings.graphql.utils.GraphQLConstants.CREATE_APPLICATION_API;
+import static software.wings.graphql.utils.GraphQLConstants.CREATE_USERGROUP_API;
 import static software.wings.graphql.utils.GraphQLConstants.DELETE_APPLICATION_API;
+import static software.wings.graphql.utils.GraphQLConstants.DELETE_USERGROUP_API;
+import static software.wings.graphql.utils.GraphQLConstants.UPDATE_USERGROUP_API;
+import static software.wings.graphql.utils.GraphQLConstants.UPDATE_USERGROUP_PERMISSIONS_API;
 import static software.wings.security.AuthRuleFilter.getAllowedAppIds;
 
 import static java.util.Arrays.asList;
@@ -67,7 +71,8 @@ import org.dataloader.DataLoader;
 @TargetModule(Module._380_CG_GRAPHQL)
 public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   private static final Set<String> apisToEvictUserPermissionRestrictionCache =
-      ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API);
+      ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API, CREATE_USERGROUP_API, DELETE_USERGROUP_API,
+          UPDATE_USERGROUP_API, UPDATE_USERGROUP_PERMISSIONS_API);
   private AuthRuleFilter authRuleFilter;
   private AuthHandler authHandler;
   private AuthService authService;
