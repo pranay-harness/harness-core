@@ -187,6 +187,15 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
+    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
+
+    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
+    if (requestContext.getHeaderString("X-Api-Key") != null) {
+      String apiKey = requestContext.getHeaderString("X-Api-Key");
+      ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
+    }
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
@@ -202,10 +211,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    MultivaluedMap<String, String> pathParameters = requestContext.getUriInfo().getPathParameters();
-    MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
-
-    String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
     boolean isExternalApi = externalAPI();
 
     List<String> appIdsFromRequest = getRequestParamsFromContext("appId", pathParameters, queryParameters);

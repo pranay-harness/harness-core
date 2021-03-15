@@ -18,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -50,6 +51,7 @@ import software.wings.beans.EntityYamlRecord.EntityYamlRecordKeys;
 import software.wings.beans.Event.Type;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.AuditTrailFeature;
@@ -426,8 +428,8 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
-  private <T> void addDetails(String accountId, T entity, EntityAuditRecord record, String auditHeaderId) {
-    if (entity instanceof User) {
+  private <T> void addDetails(String accountId, T entity, EntityAuditRecord record, String auditHeaderId, Type type) {
+    if (entity instanceof User && (type.equals(Type.LOGIN) || type.equals(Type.LOGIN_2FA))) {
       Account account = accountService.get(accountId);
       record.getDetails().put("Authentication", account.getAuthenticationMechanism());
       User user = (User) entity;
@@ -436,9 +438,22 @@ public class AuditServiceImpl implements AuditService {
       List<String> userGroupNamesList = new ArrayList<>();
       userGroups.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
       record.getDetails().put("Groups", userGroupNamesList);
-    } else if (entity instanceof ApiKeyEntry) {
+    } else if (entity instanceof ApiKeyEntry && type.equals(Type.INVOKED)) {
       AuditHeader header = auditHelper.get();
       record.getDetails().put("resourcePath", header.getResourcePath());
+      header.withCreatedBy(EmbeddedUser.builder().name("API").build());
+      System.out.println("djh");
+    } else if (entity instanceof SSOSettings && (type.equals(Type.DELETE) || type.equals(Type.CREATE))) {
+      AuditHeader header = auditHelper.get();
+      String userUuid = header.getCreatedBy().getUuid();
+      User user = userService.get(userUuid);
+      Account account = accountService.get(accountId);
+      record.getDetails().put("Authentication", account.getAuthenticationMechanism());
+      record.getDetails().put("MFA", user.isTwoFactorAuthenticationEnabled());
+      List<UserGroup> userGroups = userService.getUserGroupsOfUser(accountId, user.getUuid(), false);
+      List<String> userGroupNamesList = new ArrayList<>();
+      userGroups.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
+      record.getDetails().put("Groups", userGroupNamesList);
     }
   }
 
@@ -491,7 +506,7 @@ public class AuditServiceImpl implements AuditService {
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
       EntityAuditRecord record = builder.build();
-      addDetails(accountId, newEntity, record, auditHeaderId);
+      addDetails(accountId, entityToQuery, record, auditHeaderId, type);
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
         case LOCK:
