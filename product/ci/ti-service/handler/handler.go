@@ -53,7 +53,8 @@ func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLog
 			sr.Use(AuthMiddleware(config))
 		}
 
-		sr.Post("/select", HandleSelect(tidb, config, log))
+		sr.Post("/select", HandleSelect(tidb, db, config, log))
+		sr.Get("/overview", HandleOverview(db, config, log))
 		return sr
 	}())
 
