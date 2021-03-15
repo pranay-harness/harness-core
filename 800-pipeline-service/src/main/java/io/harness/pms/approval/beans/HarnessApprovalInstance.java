@@ -2,6 +2,7 @@ package io.harness.pms.approval.beans;
 
 import io.harness.plancreator.steps.approval.ApproverInputInfo;
 import io.harness.plancreator.steps.approval.Approvers;
+import io.harness.pms.approval.entities.ApprovalInstance;
 
 import java.util.List;
 import lombok.Builder;
@@ -21,7 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("HarnessApprovalInstances")
 public class HarnessApprovalInstance extends ApprovalInstance {
   // List of ApprovalActivity per user.
-  List<HarnessApprovalActivity> harnessApprovalActivities;
+  List<HarnessApprovalActivity> approvalActivities;
   Approvers approvers;
   List<ApproverInputInfo> approverInputs;
 }
