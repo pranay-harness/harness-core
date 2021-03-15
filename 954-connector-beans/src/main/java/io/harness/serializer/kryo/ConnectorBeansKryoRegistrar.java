@@ -58,6 +58,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
@@ -233,5 +234,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpHelmAuthType.class, 19657);
     kryo.register(HttpHelmConnectorDTO.class, 19658);
     kryo.register(HttpHelmUsernamePasswordDTO.class, 19659);
+    kryo.register(NewRelicConnectorDTO.class, 19660);
   }
 }

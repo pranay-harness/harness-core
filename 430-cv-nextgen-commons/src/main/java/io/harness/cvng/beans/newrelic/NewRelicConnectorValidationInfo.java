@@ -23,7 +23,7 @@ public class NewRelicConnectorValidationInfo extends ConnectorValidationInfo<New
 
   @Override
   public String getBaseUrl() {
-    return getConnectorConfigDTO().getUrl() + BASE_URL + getConnectorConfigDTO().getNewRelicAccountId();
+    return getConnectorConfigDTO().getUrl() + BASE_URL + getConnectorConfigDTO().getNewRelicAccountId() + "/";
   }
 
   @Override
