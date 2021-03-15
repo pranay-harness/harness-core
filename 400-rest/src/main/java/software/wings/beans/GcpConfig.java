@@ -1,21 +1,15 @@
 package software.wings.beans;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.SchemaIgnore;
+import static software.wings.settings.SettingVariableTypes.GCP;
+
+import static java.util.Collections.emptyList;
+
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -23,10 +17,18 @@ import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CloudProviderYaml;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
-
-import static java.util.Collections.emptyList;
-import static software.wings.settings.SettingVariableTypes.GCP;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Created by bzane on 2/28/17
