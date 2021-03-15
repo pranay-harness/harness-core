@@ -90,6 +90,6 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.HELM_CHART_MANIFEST).build();
+    return LevelNode.builder().qualifierName(YamlTypes.HELM_CHART_MANIFEST).isPartOfFQN(false).build();
   }
 }

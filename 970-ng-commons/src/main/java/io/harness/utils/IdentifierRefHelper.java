@@ -7,6 +7,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
 
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -15,9 +16,18 @@ public class IdentifierRefHelper {
 
   public IdentifierRef getIdentifierRef(
       String scopedIdentifierConfig, String accountId, String orgIdentifier, String projectIdentifier) {
+    return getIdentifierRef(scopedIdentifierConfig, accountId, orgIdentifier, projectIdentifier, null);
+  }
+
+  public IdentifierRef getIdentifierRef(String scopedIdentifierConfig, String accountId, String orgIdentifier,
+      String projectIdentifier, Map<String, String> metadata) {
     Scope scope;
     String identifier;
     IdentifierRefBuilder identifierRefBuilder = IdentifierRef.builder().accountIdentifier(accountId);
+
+    if (EmptyPredicate.isNotEmpty(metadata)) {
+      identifierRefBuilder.metadata(metadata);
+    }
 
     if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
       throw new InvalidRequestException("Empty secret ref cannot be given");

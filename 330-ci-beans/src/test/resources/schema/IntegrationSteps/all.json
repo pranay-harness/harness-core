@@ -379,6 +379,36 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterFieldMapStringString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PluginStepInfo": {
       "allOf": [
         {
@@ -580,6 +610,9 @@
             },
             "connector": {
               "type": "string"
+            },
+            "envVariables": {
+              "$ref": "#/definitions/ParameterFieldMapStringString"
             },
             "image": {
               "type": "string"

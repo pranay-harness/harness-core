@@ -155,7 +155,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
                                            azureServiceName, region, azureSubscriptionGuid,
 					                        cloudProvider)
            SELECT TIMESTAMP(UsageDateTime) as startTime, min(ResourceRate) AS azureResourceRate, sum(PreTaxCost) AS cost,
-                ServiceName AS azureServiceName, ResourceLocation as region, SubscriptionGuid as azureSubscriptionGuid,
+                MeterCategory AS azureServiceName, ResourceLocation as region, SubscriptionGuid as azureSubscriptionGuid,
                 "AZURE" AS cloudProvider
            FROM `%s.azureBilling_%s`
            GROUP BY azureServiceName, region, azureSubscriptionGuid, startTime;
@@ -187,15 +187,15 @@ def ingestDataInUnifiedTableTable(client, jsonData):
            INSERT INTO `%s.unifiedTable`
                 (product, startTime, cost,
                 azureMeterCategory, azureMeterSubcategory, azureMeterId,
-                azureMeterName, azureResourceType, azureServiceTier,
+                azureMeterName, azureResourceType,
                 azureInstanceId, region, azureResourceGroup,
                 azureSubscriptionGuid, azureServiceName,
                 cloudProvider, labels)
-           SELECT ServiceName AS product, TIMESTAMP(UsageDateTime) as startTime, PreTaxCost AS cost,
+           SELECT MeterCategory AS product, TIMESTAMP(UsageDateTime) as startTime, PreTaxCost AS cost,
                 MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
-                MeterName as azureMeterName, ResourceType as azureResourceType, ServiceTier as azureServiceTier,
+                MeterName as azureMeterName, ResourceType as azureResourceType,
                 InstanceId as azureInstanceId, ResourceLocation as region,  ResourceGroup as azureResourceGroup,
-                SubscriptionGuid as azureSubscriptionGuid, ServiceName as azureServiceName,
+                SubscriptionGuid as azureSubscriptionGuid, MeterCategory as azureServiceName,
                 "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels
            FROM `%s.azureBilling_%s` ;
      """ % (ds, date_start, date_end, ds, jsonData["projectName"], ds, jsonData["tableSuffix"])
@@ -223,7 +223,16 @@ def createUDF(client, projectId):
                 if(!input || input.length === 0) {
                     return output;
                 }
-                var data = JSON.parse(input);
+                try {
+                    var data = JSON.parse(input);
+                } catch (SyntaxError) {
+                    input="{".concat(input, "}")
+                    try {
+                        var data = JSON.parse(input);
+                    } catch (SyntaxError) {
+                        return output;
+                    }
+                }
                 for (const [key, value] of Object.entries(data)) {
                     newobj = {};
                     newobj.key = key;

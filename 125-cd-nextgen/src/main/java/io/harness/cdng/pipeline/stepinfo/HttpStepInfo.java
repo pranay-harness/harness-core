@@ -84,7 +84,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visita
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.HTTP_STEP).build();
+    return LevelNode.builder().qualifierName(YamlTypes.HTTP_STEP).isPartOfFQN(false).build();
   }
 
   @Override

@@ -5,6 +5,7 @@ import io.harness.cdng.visitor.helper.GitLabStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
@@ -95,6 +96,6 @@ public class GitLabStore implements GitStoreConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("spec").build();
+    return LevelNode.builder().qualifierName(YAMLFieldNameConstants.SPEC).isPartOfFQN(false).build();
   }
 }

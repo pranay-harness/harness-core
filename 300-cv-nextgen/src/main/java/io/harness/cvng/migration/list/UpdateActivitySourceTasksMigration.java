@@ -11,7 +11,8 @@ import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -25,7 +26,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class UpdateActivitySourceTasksMigration implements CNVGMigration {
+public class UpdateActivitySourceTasksMigration implements CVNGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
@@ -64,6 +65,16 @@ public class UpdateActivitySourceTasksMigration implements CNVGMigration {
             cvConfigKey.getProjectIdentifier(), cvConfigKey.getConnectorIdentifier(),
             cvConfigKey.getMonitoringSourceIdentifier()));
     log.info("migration done");
+  }
+
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 
   @Value

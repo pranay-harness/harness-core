@@ -7,6 +7,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -49,10 +50,8 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
                  .field(ResourceGroupKeys.projectIdentifier)
                  .field(ResourceGroupKeys.identifier)
                  .field(ResourceGroupKeys.resourceSelectors)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("uniqueResourceGroup")
