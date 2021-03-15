@@ -5,8 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.JenkinsConfig.VerificationYaml;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.VerificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;

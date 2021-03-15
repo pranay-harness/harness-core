@@ -27,7 +27,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfigurationYaml;
 import software.wings.verification.log.SplunkCVConfiguration;
-import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationYaml;
+import software.wings.verification.log.SplunkCVConfigurationYaml;
 
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;

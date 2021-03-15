@@ -3,11 +3,9 @@ package software.wings.verification.prometheus;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 import software.wings.verification.ServiceGuardThroughputToErrorsMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -62,17 +60,5 @@ public class PrometheusCVServiceConfiguration extends CVConfiguration {
     super.copy(clonedConfig);
     clonedConfig.setTimeSeriesToAnalyze(getTimeSeriesToAnalyze());
     return clonedConfig;
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @Builder
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class PrometheusCVConfigurationYaml extends CVConfigurationYaml {
-    private List<TimeSeries> timeSeriesList;
   }
 }

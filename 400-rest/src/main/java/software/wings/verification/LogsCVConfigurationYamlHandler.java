@@ -13,8 +13,8 @@ import software.wings.verification.log.CustomLogsCVConfigurationYaml;
 import software.wings.verification.log.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
 import software.wings.verification.log.LogsCVConfigurationYaml;
-import software.wings.verification.log.SplunkCVConfiguration.SplunkCVConfigurationYaml;
-import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
+import software.wings.verification.log.SplunkCVConfigurationYaml;
+import software.wings.verification.log.StackdriverCVConfigurationYaml;
 
 import com.google.common.base.Preconditions;
 import java.util.List;

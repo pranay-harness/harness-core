@@ -3,7 +3,6 @@ package software.wings.verification.log;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,15 +38,5 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setMessageField(this.getMessageField());
     clonedConfig.setQuery(this.getQuery());
     return clonedConfig;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static class StackdriverCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String hostnameField;
-    private String messageField;
-    private boolean isLogsConfiguration;
   }
 }

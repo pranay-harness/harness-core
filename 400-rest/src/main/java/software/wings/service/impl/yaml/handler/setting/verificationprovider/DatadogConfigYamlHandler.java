@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DatadogYaml;
-import software.wings.beans.PrometheusConfig;
+import software.wings.beans.PrometheusYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -43,6 +43,6 @@ public class DatadogConfigYamlHandler extends VerificationProviderYamlHandler<Da
 
   @Override
   public Class getYamlClass() {
-    return PrometheusConfig.PrometheusYaml.class;
+    return PrometheusYaml.class;
   }
 }

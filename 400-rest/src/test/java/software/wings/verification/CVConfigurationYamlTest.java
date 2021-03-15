@@ -2,8 +2,6 @@ package software.wings.verification;
 
 import static io.harness.rule.OwnerRule.SOWMYA;
 
-import static software.wings.verification.prometheus.PrometheusCVServiceConfiguration.PrometheusCVConfigurationYaml;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -11,6 +9,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.verification.prometheus.PrometheusCVConfigurationYaml;
 
 import java.util.ArrayList;
 import lombok.extern.slf4j.Slf4j;

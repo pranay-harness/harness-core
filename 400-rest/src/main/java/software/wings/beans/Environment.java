@@ -508,20 +508,6 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
     }
   }
 
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class VariableOverrideYaml extends NameValuePair.AbstractYaml {
-    private String serviceName;
-
-    @lombok.Builder
-    public VariableOverrideYaml(
-        String name, String value, String valueType, List<AllowedValueYaml> allowedValueYamls, String serviceName) {
-      super(name, value, valueType, allowedValueYamls);
-      this.serviceName = serviceName;
-    }
-  }
-
   @UtilityClass
   public static final class EnvironmentKeys {
     // Temporary
