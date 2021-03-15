@@ -15,6 +15,7 @@ import io.harness.security.annotations.PublicApi;
 import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.User;
+import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.annotations.AdminPortalAuth;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.ExternalFacingApiAuth;
@@ -52,7 +53,7 @@ public class AuthHelper {
 
   public UserRequestContext buildUserRequestContext(
       String accountId, User user, boolean emptyAppIdsInReq, boolean harnessSupportUser) {
-    UserRequestContext.UserRequestContextBuilder userRequestContextBuilder =
+    UserRequestContextBuilder userRequestContextBuilder =
         UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
 
     UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
@@ -70,8 +71,7 @@ public class AuthHelper {
   }
 
   private boolean setAppIdFilterInUserRequestContext(
-      UserRequestContext.UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq,
-      Set<String> allowedAppIds) {
+      UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq, Set<String> allowedAppIds) {
     if (!emptyAppIdsInReq) {
       return false;
     }
@@ -131,7 +131,7 @@ public class AuthHelper {
   public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
       UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
       List<String> appIdsFromRequest) {
-    UserRequestContext.UserRequestContextBuilder userRequestContextBuilder =
+    UserRequestContextBuilder userRequestContextBuilder =
         UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
 
     userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
