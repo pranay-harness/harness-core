@@ -225,7 +225,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
     if (isNotEmpty(kmsConfig.getAccessKey())) {
       EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-      //checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
+      // checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
       kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
     }
     if (maskSecret) {

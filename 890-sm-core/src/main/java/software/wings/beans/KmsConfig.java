@@ -104,10 +104,12 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {
-    if (isNotEmpty(this.secretKey))
+    if (isNotEmpty(this.secretKey)) {
       this.secretKey = SECRET_MASK;
-    if (isNotEmpty(this.getKmsArn()))
+    }
+    if (isNotEmpty(this.getKmsArn())) {
       this.kmsArn = SECRET_MASK;
+    }
   }
 
   @Override
