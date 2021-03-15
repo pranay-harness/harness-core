@@ -22,8 +22,6 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
-import software.wings.stencils.DefaultValue;
-
 import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
