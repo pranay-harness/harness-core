@@ -1285,7 +1285,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     buildSourceService.getBuildService(SettingAttribute.Builder.aSettingAttribute()
                                            .withValue(GcpConfig.builder()
                                                           .useDelegateSelectors(true)
-                                                          .delegateSelectors(Collections.singleton(DELEGATE_SELECTOR))
+                                                          .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
                                                           .build())
                                            .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
@@ -1302,7 +1302,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     buildSourceService.getBuildService(SettingAttribute.Builder.aSettingAttribute()
                                            .withValue(GcpConfig.builder()
                                                           .useDelegateSelectors(false)
-                                                          .delegateSelectors(Collections.singleton(DELEGATE_SELECTOR))
+                                                          .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
                                                           .build())
                                            .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());

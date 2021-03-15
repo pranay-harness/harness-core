@@ -806,7 +806,7 @@ public class InfrastructureDefinitionServiceImplTest extends CategoryTest {
         .thenReturn(SettingAttribute.Builder.aSettingAttribute()
                         .withValue(GcpConfig.builder()
                                        .useDelegateSelectors(true)
-                                       .delegateSelectors(Collections.singleton("abc"))
+                                       .delegateSelectors(Collections.singletonList("abc"))
                                        .build())
                         .build());
     InfrastructureDefinition invalid_gcp_k8s_delegate_selector = valid.cloneForUpdate();

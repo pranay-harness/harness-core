@@ -1,15 +1,21 @@
 package software.wings.beans;
 
-import static software.wings.settings.SettingVariableTypes.GCP;
-
-import static java.util.Collections.emptyList;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
-
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -17,19 +23,10 @@ import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
-import java.util.Set;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
-import org.hibernate.validator.constraints.NotEmpty;
+
+import static java.util.Collections.emptyList;
+import static software.wings.settings.SettingVariableTypes.GCP;
 
 /**
  * Created by bzane on 2/28/17
@@ -48,7 +45,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
 
   private boolean useDelegateSelectors;
-  private Set<String> delegateSelectors;
+  private List<String> delegateSelectors;
   private boolean skipValidation;
 
   public GcpConfig() {
@@ -56,7 +53,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-      String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, Set<String> delegateSelectors,
+      String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, List<String> delegateSelectors,
       boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
@@ -85,12 +82,12 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
     private boolean useDelegateSelectors;
-    private Set<String> delegateSelectors;
+    private List<String> delegateSelectors;
     private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, Set<String> delegateSelectors,
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, List<String> delegateSelectors,
         boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;

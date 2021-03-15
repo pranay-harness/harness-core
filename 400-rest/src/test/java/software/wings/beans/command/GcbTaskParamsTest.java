@@ -48,7 +48,7 @@ public class GcbTaskParamsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldReturnListOfExecutionCapabilitiesWithSelectorCapability() {
     when(gcpConfig.isUseDelegateSelectors()).thenReturn(true);
-    when(gcpConfig.getDelegateSelectors()).thenReturn(Collections.singleton(DELEGATE_SELECTOR));
+    when(gcpConfig.getDelegateSelectors()).thenReturn(Collections.singletonList(DELEGATE_SELECTOR));
 
     assertThat(gcbTaskParam.fetchRequiredExecutionCapabilities(null)).hasSize(2);
     SelectorCapability selector = (SelectorCapability) gcbTaskParam.fetchRequiredExecutionCapabilities(null)

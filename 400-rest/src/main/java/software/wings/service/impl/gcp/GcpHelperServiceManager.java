@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,7 +50,7 @@ public class GcpHelperServiceManager {
     if (gcpConfig.isUseDelegateSelectors()) {
       validateDelegateSelector(gcpConfig);
       final GcpResponse gcpResponse = executeSyncTask(gcpConfig.getAccountId(),
-          GcpValidationRequest.builder().delegateSelectors(gcpConfig.getDelegateSelectors()).build());
+          GcpValidationRequest.builder().delegateSelectors(new HashSet<>(gcpConfig.getDelegateSelectors())).build());
       ConnectorValidationResult validationResult =
           ((GcpValidationTaskResponse) gcpResponse).getConnectorValidationResult();
       if (validationResult.getStatus() != ConnectivityStatus.SUCCESS) {

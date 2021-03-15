@@ -1,16 +1,15 @@
 package software.wings.graphql.schema.mutation.cloudProvider;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
-
+import lombok.Builder;
+import lombok.Value;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Set;
-import lombok.Builder;
-import lombok.Value;
+import java.util.List;
 
 @Value
 @Builder
@@ -20,7 +19,7 @@ import lombok.Value;
 public class QLGcpCloudProviderInput {
   private RequestField<String> name;
   private RequestField<String> serviceAccountKeySecretId;
-  private RequestField<Set<String>> delegateSelector;
+  private RequestField<List<String>> delegateSelector;
   private RequestField<Boolean> skipValidation;
   private RequestField<Boolean> useDelegate;
 }

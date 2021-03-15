@@ -41,13 +41,13 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     String accountId = "accountId";
     String encryptedServiceAccountKeyFileContent = "encryptedServiceAccountKeyFileContent";
     boolean useDelegate = true;
-    Set<String> delegateSelector = Collections.singleton("delegateSelector");
+    String delegateSelector = "delegateSelector";
     boolean skipValidation = true;
     GcpConfig gcpConfig = GcpConfig.builder()
                               .accountId(accountId)
                               .encryptedServiceAccountKeyFileContent(encryptedServiceAccountKeyFileContent)
                               .useDelegateSelectors(useDelegate)
-                              .delegateSelectors(delegateSelector)
+                              .delegateSelectors(Collections.singletonList(delegateSelector))
                               .skipValidation(skipValidation)
                               .build();
 
@@ -90,7 +90,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     GcpConfig.Yaml yaml = GcpConfig.Yaml.builder()
                               .serviceAccountKeyFileContent(serviceAccountKeyFileContent)
                               .useDelegateSelectors(useDelegate)
-                              .delegateSelectors(Collections.singleton(delegateSelector))
+                              .delegateSelectors(Collections.singletonList(delegateSelector))
                               .skipValidation(skipValidation)
                               .build();
 

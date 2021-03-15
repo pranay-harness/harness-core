@@ -15,6 +15,7 @@ import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -54,7 +55,7 @@ public class GcbTaskParams implements ExecutionCapabilityDemander {
         new ArrayList<>(gcpConfig.fetchRequiredExecutionCapabilities(maskingEvaluator));
     if (gcpConfig.isUseDelegateSelectors()) {
       executionCapabilities.add(SelectorCapability.builder()
-                                    .selectors(gcpConfig.getDelegateSelectors())
+                                    .selectors(new HashSet<>(gcpConfig.getDelegateSelectors()))
                                     .selectorOrigin(DelegateServiceImpl.TASK_SELECTORS)
                                     .build());
     }
