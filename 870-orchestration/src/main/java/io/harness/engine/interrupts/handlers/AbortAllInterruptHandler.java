@@ -104,6 +104,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
                 .interruptType(interrupt.getType())
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptId(interrupt.getUuid())
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
     if (isEmpty(discontinuingNodeExecutions)) {

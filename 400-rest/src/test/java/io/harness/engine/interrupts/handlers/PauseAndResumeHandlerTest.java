@@ -20,6 +20,7 @@ import io.harness.engine.interrupts.InterruptTestHelper;
 import io.harness.engine.interrupts.steps.SimpleAsyncStep;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -75,8 +76,12 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
     interruptTestHelper.waitForPlanStatus(execution.getUuid(), RUNNING);
 
     // Issue Pause Interrupt
-    Interrupt handledPauseInterrupt = orchestrationService.registerInterrupt(
-        InterruptPackage.builder().planExecutionId(execution.getUuid()).interruptType(InterruptType.PAUSE_ALL).build());
+    Interrupt handledPauseInterrupt =
+        orchestrationService.registerInterrupt(InterruptPackage.builder()
+                                                   .planExecutionId(execution.getUuid())
+                                                   .interruptType(InterruptType.PAUSE_ALL)
+                                                   .interruptConfig(InterruptConfig.newBuilder().build())
+                                                   .build());
     assertThat(handledPauseInterrupt).isNotNull();
     assertThat(handledPauseInterrupt.getState()).isEqualTo(PROCESSING);
 
@@ -92,6 +97,7 @@ public class PauseAndResumeHandlerTest extends WingsBaseTest {
         orchestrationService.registerInterrupt(InterruptPackage.builder()
                                                    .planExecutionId(execution.getUuid())
                                                    .interruptType(InterruptType.RESUME_ALL)
+                                                   .interruptConfig(InterruptConfig.newBuilder().build())
                                                    .build());
     assertThat(handledResumeInterrupt).isNotNull();
 

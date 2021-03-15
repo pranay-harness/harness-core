@@ -34,6 +34,9 @@ import io.harness.ngpipeline.pipeline.executions.beans.PipelineExecutionSummaryF
 import io.harness.ngpipeline.pipeline.executions.beans.ServiceExecutionSummary;
 import io.harness.ngpipeline.pipeline.executions.beans.dto.PipelineExecutionInterruptDTO;
 import io.harness.ngpipeline.pipeline.service.NGPipelineService;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.advisers.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.execution.ExecutionStatus;
@@ -263,9 +266,14 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public PipelineExecutionInterruptDTO registerInterrupt(
       PipelineExecutionInterruptType executionInterruptType, String planExecutionId) {
+    InterruptConfig interruptConfig =
+        InterruptConfig.newBuilder()
+            .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
+            .build();
     InterruptPackage interruptPackage = InterruptPackage.builder()
                                             .interruptType(executionInterruptType.getExecutionInterruptType())
                                             .planExecutionId(planExecutionId)
+                                            .interruptConfig(interruptConfig)
                                             .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return PipelineExecutionInterruptDTO.builder()
