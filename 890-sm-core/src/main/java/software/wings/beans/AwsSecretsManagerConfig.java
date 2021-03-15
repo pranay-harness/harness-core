@@ -106,7 +106,9 @@ public class AwsSecretsManagerConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {
-    this.secretKey = SECRET_MASK;
+    if (isNotEmpty(this.secretKey)) {
+      this.secretKey = SECRET_MASK;
+    }
   }
 
   @Override

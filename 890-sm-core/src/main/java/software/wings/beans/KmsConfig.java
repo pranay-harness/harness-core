@@ -50,13 +50,9 @@ public class KmsConfig extends SecretManagerConfig {
   private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) private String name;
 
-  @Attributes(title = "AWS Access Key", required = true)
-  @Encrypted(fieldName = "aws_access_key")
-  private String accessKey;
+  @Attributes(title = "AWS Access Key") @Encrypted(fieldName = "aws_access_key") private String accessKey;
 
-  @Attributes(title = "AWS Secret Key", required = true)
-  @Encrypted(fieldName = "aws_secret_key")
-  private String secretKey;
+  @Attributes(title = "AWS Secret Key") @Encrypted(fieldName = "aws_secret_key") private String secretKey;
 
   @Attributes(title = "AWS key ARN", required = true) @Encrypted(fieldName = "aws_key_arn") private String kmsArn;
 
@@ -108,8 +104,10 @@ public class KmsConfig extends SecretManagerConfig {
 
   @Override
   public void maskSecrets() {
-    this.secretKey = SECRET_MASK;
-    this.kmsArn = SECRET_MASK;
+    if (isNotEmpty(this.secretKey))
+      this.secretKey = SECRET_MASK;
+    if (isNotEmpty(this.getKmsArn()))
+      this.kmsArn = SECRET_MASK;
   }
 
   @Override

@@ -225,7 +225,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
     if (isNotEmpty(kmsConfig.getAccessKey())) {
       EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-      // checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
+      //checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
       kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
     }
     if (maskSecret) {
@@ -233,7 +233,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     } else {
       if (isNotEmpty(kmsConfig.getSecretKey())) {
         EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
-        //   checkNotNull(secretData, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
+        // checkNotNull(secretData, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
         kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
       }
       EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
@@ -251,7 +251,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
           accountId, UUID.randomUUID().toString(), kmsConfig);
     } catch (WingsException e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, USER);
+      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message + e.getMessage(), USER);
     }
   }
 
