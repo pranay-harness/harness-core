@@ -22,6 +22,7 @@ java_binary(
     ],
     deps = [
         "@maven//:com_google_guava_guava",
+        "@maven//:io_netty_netty_all",
     ] + [
         "//810-ng-triggers:module",
         "//860-orchestration-visualization:module",
