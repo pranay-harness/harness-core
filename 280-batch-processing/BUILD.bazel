@@ -27,7 +27,10 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "@maven//:de_bwaldvogel_mongo_java_server_core",
     "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
     "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
+    "@maven//:io_github_resilience4j_resilience4j_core",
     "@maven//:io_github_resilience4j_resilience4j_retry",
+    "@maven//:io_github_resilience4j_resilience4j_retrofit",
+    "@maven//:io_github_resilience4j_resilience4j_circuitbreaker",
     "@maven//:org_apache_avro_avro",
     "@maven//:org_apache_httpcomponents_httpclient",
     "@maven//:org_apache_httpcomponents_httpcore",
@@ -39,6 +42,7 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "@maven//:org_springframework_boot_spring_boot_autoconfigure",
     "@maven//:org_springframework_boot_spring_boot_starter_batch",
     "@maven//:org_springframework_data_spring_data_mongodb",
+    "@maven//:org_springframework_boot_spring_boot",
     "@maven//:org_springframework_guice_spring_guice",
     "@maven//:software_amazon_awssdk_athena",
     "@maven//:software_amazon_awssdk_auth",
@@ -55,6 +59,18 @@ shared_dependencies = ["@batch//:com_squareup_okhttp3_okhttp"] + [
     "@maven//:ch_qos_logback_logback_classic",
     "@maven//:ch_qos_logback_logback_core",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
+    "@maven//:org_projectlombok_lombok",
+    "@maven//:org_zeroturnaround_zt_exec",
+    "@maven//:com_google_inject_guice",
+    "@maven//:com_google_code_gson_gson",
+    "@maven//:com_google_guava_guava",
+    "@maven//:io_vavr_vavr",
+    "@maven//:org_slf4j_jcl_over_slf4j",
+    "@maven//:org_slf4j_jul_to_slf4j",
+    "@maven//:org_slf4j_log4j_over_slf4j",
+    "@maven//:org_slf4j_slf4j_api",
+    "@maven//:org_apache_logging_log4j_log4j_api",
+    "@maven//:org_apache_logging_log4j_log4j_to_slf4j",
     "//:lombok",
 ]
 
@@ -80,6 +96,10 @@ test_dependencies = shared_dependencies + [
     "//990-commons-test:module",
     "@maven//:org_powermock_powermock_api_mockito",
     "@maven//:org_springframework_boot_spring_boot_starter_test",
+    "@maven//:junit_junit",
+    "@maven//:org_assertj_assertj_core",
+    "@maven//:org_mockito_mockito_core",
+    "@maven//:org_powermock_powermock_module_junit4",
 ]
 
 filegroup(
