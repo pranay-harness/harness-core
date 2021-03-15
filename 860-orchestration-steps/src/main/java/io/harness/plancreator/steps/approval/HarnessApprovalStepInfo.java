@@ -11,12 +11,14 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 @JsonTypeName("HarnessApproval")
 @TypeAlias("HarnessApprovalStepInfo")
 public class HarnessApprovalStepInfo extends HarnessApprovalBaseStepInfo implements PMSStepInfo {
