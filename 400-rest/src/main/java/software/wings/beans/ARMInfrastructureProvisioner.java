@@ -8,13 +8,11 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -50,29 +48,5 @@ public class ARMInfrastructureProvisioner extends InfrastructureProvisioner {
   @Override
   public String variableKey() {
     return VARIABLE_KEY;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfraProvisionerYaml {
-    private ARMResourceType resourceType;
-    private ARMSourceType sourceType;
-    private String templateBody;
-    private GitFileConfig gitFileConfig;
-    private ARMScopeType scopeType;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String description, List<NameValuePair.Yaml> variables,
-        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, ARMSourceType sourceType, String templateBody,
-        GitFileConfig gitFileConfig, ARMScopeType scopeType, ARMResourceType resourceType) {
-      super(type, harnessApiVersion, description, ARM.name(), variables, mappingBlueprints);
-      this.sourceType = sourceType;
-      this.templateBody = templateBody;
-      this.gitFileConfig = gitFileConfig;
-      this.scopeType = scopeType;
-      this.resourceType = resourceType;
-    }
   }
 }

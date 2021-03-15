@@ -27,7 +27,7 @@ public class AmiCommandUnit extends AbstractCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("AWS_AMI")
-  public static class Yaml extends AbstractCommandUnit.Yaml {
+  public static class Yaml extends AbstractCommandUnitYaml {
     public Yaml() {
       super(CommandUnitType.AWS_AMI.name());
     }

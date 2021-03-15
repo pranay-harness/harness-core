@@ -17,7 +17,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -88,25 +87,5 @@ public class AcrArtifactStream extends ArtifactStream {
   @Override
   public boolean checkIfStreamParameterized() {
     return validateParameters(subscriptionId, registryHostName, registryName, repositoryName);
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
-    private String subscriptionId;
-    private String registryName;
-    private String registryHostName;
-    private String repositoryName;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String subscriptionId,
-        String registryName, String registryHostName, String repositoryName) {
-      super(ACR.name(), harnessApiVersion, serverName);
-      this.subscriptionId = subscriptionId;
-      this.registryName = registryName;
-      this.registryHostName = registryHostName;
-      this.repositoryName = repositoryName;
-    }
   }
 }

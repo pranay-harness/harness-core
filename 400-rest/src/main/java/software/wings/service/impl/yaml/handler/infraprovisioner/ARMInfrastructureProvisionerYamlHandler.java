@@ -3,19 +3,18 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.ARMInfrastructureProvisioner.Yaml;
-
 import software.wings.beans.ARMInfrastructureProvisioner;
+import software.wings.beans.ARMInfrastructureProvisionerYaml;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 public class ARMInfrastructureProvisionerYamlHandler
-    extends InfrastructureProvisionerYamlHandler<Yaml, ARMInfrastructureProvisioner> {
+    extends InfrastructureProvisionerYamlHandler<ARMInfrastructureProvisionerYaml, ARMInfrastructureProvisioner> {
   @Override
-  public Yaml toYaml(ARMInfrastructureProvisioner bean, String appId) {
-    Yaml yaml = ARMInfrastructureProvisioner.Yaml.builder().build();
+  public ARMInfrastructureProvisionerYaml toYaml(ARMInfrastructureProvisioner bean, String appId) {
+    ARMInfrastructureProvisionerYaml yaml = ARMInfrastructureProvisionerYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureProvisionerType.ARM.name());
     yaml.setSourceType(bean.getSourceType());
@@ -27,7 +26,7 @@ public class ARMInfrastructureProvisionerYamlHandler
 
   @Override
   public ARMInfrastructureProvisioner upsertFromYaml(
-      ChangeContext<ARMInfrastructureProvisioner.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<ARMInfrastructureProvisionerYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -53,8 +52,8 @@ public class ARMInfrastructureProvisionerYamlHandler
   }
 
   private void toBean(
-      ARMInfrastructureProvisioner bean, ChangeContext<ARMInfrastructureProvisioner.Yaml> changeContext, String appId) {
-    ARMInfrastructureProvisioner.Yaml yaml = changeContext.getYaml();
+      ARMInfrastructureProvisioner bean, ChangeContext<ARMInfrastructureProvisionerYaml> changeContext, String appId) {
+    ARMInfrastructureProvisionerYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setScopeType(yaml.getScopeType());
@@ -65,7 +64,7 @@ public class ARMInfrastructureProvisionerYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ARMInfrastructureProvisionerYaml.class;
   }
 
   @Override

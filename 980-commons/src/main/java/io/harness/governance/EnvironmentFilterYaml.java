@@ -17,9 +17,9 @@ import lombok.NoArgsConstructor;
     use = JsonTypeInfo.Id.NAME, property = "filterType", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CustomEnvFilter.Yaml.class, name = "CUSTOM")
-  , @JsonSubTypes.Type(value = AllEnvFilter.Yaml.class, name = "ALL"),
+  , @JsonSubTypes.Type(value = AllEnvFilterYaml.class, name = "ALL"),
       @JsonSubTypes.Type(value = AllProdEnvFilter.Yaml.class, name = "ALL_PROD"),
-      @JsonSubTypes.Type(value = AllNonProdEnvFilter.Yaml.class, name = "ALL_NON_PROD")
+      @JsonSubTypes.Type(value = AllNonProdEnvFilterYaml.class, name = "ALL_NON_PROD")
 })
 public abstract class EnvironmentFilterYaml extends BaseYaml {
   private EnvironmentFilterType filterType;

@@ -34,7 +34,7 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends AbstractCommandUnit.Yaml {
+  public abstract static class Yaml extends AbstractCommandUnitYaml {
     public Yaml(String commandUnitType) {
       super(commandUnitType);
     }
