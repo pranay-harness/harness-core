@@ -1,5 +1,9 @@
 package io.harness.gitsync;
 
+import io.harness.gitsync.gittoharness.ChangeSetInterceptorService;
+import io.harness.gitsync.gittoharness.GitToHarnessProcessor;
+import io.harness.gitsync.gittoharness.GitToHarnessProcessorImpl;
+import io.harness.gitsync.gittoharness.NoOpChangeSetInterceptorServiceImpl;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitAwarePersistenceImpl;
 import io.harness.gitsync.persistance.GitAwareRepository;
@@ -21,9 +25,11 @@ public class GitSyncSdkModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
-    bind(GitAwareRepository.class).to(GitAwareRepositoryImpl.class);
-    bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>() {});
     install(GitSyncGrpcClientModule.getInstance());
+    bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
+    bind(new TypeLiteral<GitAwareRepository<?, ?, ?>>() {}).to(new TypeLiteral<GitAwareRepositoryImpl<?, ?, ?>>() {});
+    bind(GitAwarePersistence.class).to(GitAwarePersistenceImpl.class);
+    bind(GitToHarnessProcessor.class).to(GitToHarnessProcessorImpl.class);
+    bind(ChangeSetInterceptorService.class).to(NoOpChangeSetInterceptorServiceImpl.class);
   }
 }
