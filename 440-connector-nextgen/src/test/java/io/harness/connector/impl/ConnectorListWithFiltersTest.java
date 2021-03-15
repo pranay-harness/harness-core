@@ -78,6 +78,7 @@ import org.springframework.data.domain.Page;
 public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   @Mock OrganizationService organizationService;
   @Mock ProjectService projectService;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Inject @InjectMocks @Spy DefaultConnectorServiceImpl connectorService;
   @Inject ConnectorRepository connectorRepository;
   @Inject FilterService filterService;
@@ -289,6 +290,7 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
         ConnectorDTO.builder()
             .connectorInfo(
                 ConnectorInfoDTO.builder()
+                    .name(name)
                     .orgIdentifier(orgIdentifier)
                     .projectIdentifier(projectIdentifier)
                     .identifier(identifier)
