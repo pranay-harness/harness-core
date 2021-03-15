@@ -47,7 +47,6 @@ import software.wings.service.intfc.HarnessApiKeyService;
 import software.wings.service.intfc.UserService;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -76,6 +75,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   @Mock HarnessApiKeyService thirdPartyApiKeyService = mock(HarnessApiKeyService.class);
   @Mock ExternalApiRateLimitingService rateLimitingService = mock(ExternalApiRateLimitingService.class);
   @Mock SecretManager secretManager = mock(SecretManager.class);
+  @Mock AuthHelper authHelper;
 
   @InjectMocks AuthenticationFilter authenticationFilter;
 
@@ -92,8 +92,8 @@ public class AuthenticationFilterTest extends CategoryTest {
     when(securityContext.isSecure()).thenReturn(true);
     PortalConfig portalConfig = mock(PortalConfig.class);
     when(configuration.getPortal()).thenReturn(portalConfig);
-    doReturn(false).when(authenticationFilter).isScimAPI();
-    doReturn(false).when(authenticationFilter).isApiKeyAuthorizationAPI();
+    doReturn(false).when(authHelper).isScimAPI();
+    doReturn(false).when(authHelper).apiKeyAuthorizationAPI();
   }
 
   @Test
@@ -105,7 +105,7 @@ public class AuthenticationFilterTest extends CategoryTest {
     assertThat(context.getSecurityContext().isSecure()).isTrue();
 
     doReturn(true).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(authHelper).externalAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
@@ -116,10 +116,10 @@ public class AuthenticationFilterTest extends CategoryTest {
   public void testNoAuthorizationToken() throws IOException {
     try {
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-      doReturn(false).when(authenticationFilter).externalFacingAPI();
-      doReturn(false).when(authenticationFilter).delegateAPI();
-      doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-      doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+      doReturn(false).when(authHelper).externalAPI();
+      doReturn(false).when(authHelper).delegateAPI();
+      doReturn(false).when(authHelper).learningEngineServiceAPI();
+      doReturn(false).when(authHelper).adminPortalAPI();
 
       //      doReturn(false).when(authenticationFilter).thirdPartyApi();
       authenticationFilter.filter(context);
@@ -135,11 +135,11 @@ public class AuthenticationFilterTest extends CategoryTest {
   public void testDelegateRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Delegate token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(authHelper).externalAPI();
     //    doReturn(false).when(authenticationFilter).thirdPartyApi();
-    doReturn(true).when(authenticationFilter).delegateAPI();
+    doReturn(true).when(authHelper).delegateAPI();
     doReturn(false).when(authenticationFilter).identityServiceAPI();
-    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authHelper).adminPortalAPI();
     UriInfo uriInfo = mock(UriInfo.class);
     when(uriInfo.getPathParameters()).thenReturn(new MultivaluedHashMap<>());
     when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<>());
@@ -154,11 +154,11 @@ public class AuthenticationFilterTest extends CategoryTest {
   public void testLearningEngineRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("LearningEngine token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).externalFacingAPI();
-    doReturn(true).when(authenticationFilter).learningEngineServiceAPI();
-    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authHelper).externalAPI();
+    doReturn(true).when(authHelper).learningEngineServiceAPI();
+    doReturn(false).when(authHelper).delegateAPI();
     doReturn(false).when(authenticationFilter).identityServiceAPI();
-    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authHelper).adminPortalAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
@@ -169,11 +169,11 @@ public class AuthenticationFilterTest extends CategoryTest {
   public void testIdentityServiceRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("IdentityService token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).externalFacingAPI();
-    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-    doReturn(false).when(authenticationFilter).delegateAPI();
-    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-    doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+    doReturn(false).when(authHelper).externalAPI();
+    doReturn(false).when(authHelper).learningEngineServiceAPI();
+    doReturn(false).when(authHelper).delegateAPI();
+    doReturn(false).when(authHelper).adminPortalAPI();
+    doReturn(false).when(authHelper).isNextGenManagerAPI();
     doReturn(true).when(authenticationFilter).identityServiceAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
@@ -185,11 +185,11 @@ public class AuthenticationFilterTest extends CategoryTest {
   public void adminPortalRequestAuthentication() throws IOException {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("AdminPortal token");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).delegateAPI();
-    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-    doReturn(false).when(authenticationFilter).isScimAPI();
-    doReturn(false).when(authenticationFilter).externalFacingAPI();
-    doReturn(true).when(authenticationFilter).isAdminPortalRequest();
+    doReturn(false).when(authHelper).delegateAPI();
+    doReturn(false).when(authHelper).learningEngineServiceAPI();
+    doReturn(false).when(authHelper).isScimAPI();
+    doReturn(false).when(authHelper).externalAPI();
+    doReturn(true).when(authHelper).adminPortalAPI();
     authenticationFilter.filter(context);
     assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
@@ -201,12 +201,12 @@ public class AuthenticationFilterTest extends CategoryTest {
     when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("IdentityService token");
     when(context.getHeaderString(USER_IDENTITY_HEADER)).thenReturn("userId");
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).externalFacingAPI();
-    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-    doReturn(false).when(authenticationFilter).delegateAPI();
+    doReturn(false).when(authHelper).externalAPI();
+    doReturn(false).when(authHelper).learningEngineServiceAPI();
+    doReturn(false).when(authHelper).delegateAPI();
     doReturn(false).when(authenticationFilter).identityServiceAPI();
-    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-    doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+    doReturn(false).when(authHelper).adminPortalAPI();
+    doReturn(false).when(authHelper).isNextGenManagerAPI();
     doReturn(true).when(authenticationFilter).isAuthenticatedByIdentitySvc(any(ContainerRequestContext.class));
     doReturn(true).when(authenticationFilter).isIdentityServiceOriginatedRequest(any(ContainerRequestContext.class));
     User user = mock(User.class);
@@ -222,10 +222,10 @@ public class AuthenticationFilterTest extends CategoryTest {
     String apiKey = "ApiKey";
     when(context.getHeaderString(API_KEY_HEADER)).thenReturn(apiKey);
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-    doReturn(false).when(authenticationFilter).delegateAPI();
-    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-    doReturn(true).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(authHelper).delegateAPI();
+    doReturn(false).when(authHelper).learningEngineServiceAPI();
+    doReturn(false).when(authHelper).adminPortalAPI();
+    doReturn(true).when(authHelper).externalAPI();
     doReturn(false).when(rateLimitingService).rateLimitRequest(anyString());
     UriInfo uriInfo = mock(UriInfo.class);
     MultivaluedHashMap<String, String> queryParams = new MultivaluedHashMap<>();
@@ -247,10 +247,10 @@ public class AuthenticationFilterTest extends CategoryTest {
     when(context.getHeaderString(API_KEY_HEADER)).thenReturn(apiKey);
     doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
     doReturn(false).when(authenticationFilter).identityServiceAPI();
-    doReturn(false).when(authenticationFilter).delegateAPI();
-    doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-    doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-    doReturn(true).when(authenticationFilter).externalFacingAPI();
+    doReturn(false).when(authHelper).delegateAPI();
+    doReturn(false).when(authHelper).learningEngineServiceAPI();
+    doReturn(false).when(authHelper).adminPortalAPI();
+    doReturn(true).when(authHelper).externalAPI();
     doReturn(true).when(rateLimitingService).rateLimitRequest(anyString());
     UriInfo uriInfo = mock(UriInfo.class);
     MultivaluedHashMap<String, String> queryParams = new MultivaluedHashMap<>();
@@ -269,12 +269,12 @@ public class AuthenticationFilterTest extends CategoryTest {
     try {
       when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer bearerToken");
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-      doReturn(false).when(authenticationFilter).delegateAPI();
-      doReturn(false).when(authenticationFilter).externalFacingAPI();
-      doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
+      doReturn(false).when(authHelper).delegateAPI();
+      doReturn(false).when(authHelper).externalAPI();
+      doReturn(false).when(authHelper).learningEngineServiceAPI();
       doReturn(false).when(authenticationFilter).identityServiceAPI();
-      doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-      doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+      doReturn(false).when(authHelper).adminPortalAPI();
+      doReturn(false).when(authHelper).isNextGenManagerAPI();
       when(authService.validateToken(anyString())).thenThrow(new WingsException(ErrorCode.USER_DOES_NOT_EXIST));
       authenticationFilter.filter(context);
       failBecauseExceptionWasNotThrown(WingsException.class);
@@ -290,12 +290,12 @@ public class AuthenticationFilterTest extends CategoryTest {
     try {
       when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer bearerToken");
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-      doReturn(false).when(authenticationFilter).delegateAPI();
-      doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-      doReturn(false).when(authenticationFilter).externalFacingAPI();
+      doReturn(false).when(authHelper).delegateAPI();
+      doReturn(false).when(authHelper).learningEngineServiceAPI();
+      doReturn(false).when(authHelper).externalAPI();
       doReturn(false).when(authenticationFilter).identityServiceAPI();
-      doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-      doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+      doReturn(false).when(authHelper).adminPortalAPI();
+      doReturn(false).when(authHelper).isNextGenManagerAPI();
       AuthToken authToken = new AuthToken(ACCOUNT_ID, "testUser", 0L);
       authToken.setUser(mock(User.class));
       when(authService.validateToken(anyString())).thenReturn(authToken);
@@ -312,11 +312,11 @@ public class AuthenticationFilterTest extends CategoryTest {
     try {
       when(context.getHeaderString(HttpHeaders.AUTHORIZATION)).thenReturn("fakeToken");
       doReturn(false).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
-      doReturn(false).when(authenticationFilter).delegateAPI();
-      doReturn(false).when(authenticationFilter).learningEngineServiceAPI();
-      doReturn(false).when(authenticationFilter).externalFacingAPI();
-      doReturn(false).when(authenticationFilter).isAdminPortalRequest();
-      doReturn(false).when(authenticationFilter).isNextGenManagerRequest(any(ResourceInfo.class));
+      doReturn(false).when(authHelper).delegateAPI();
+      doReturn(false).when(authHelper).learningEngineServiceAPI();
+      doReturn(false).when(authHelper).externalAPI();
+      doReturn(false).when(authHelper).adminPortalAPI();
+      doReturn(false).when(authHelper).isNextGenManagerAPI();
       doReturn(false).when(authenticationFilter).identityServiceAPI();
       authenticationFilter.filter(context);
     } catch (WingsException e) {
@@ -343,32 +343,5 @@ public class AuthenticationFilterTest extends CategoryTest {
       assertThat(ex.getCode()).isEqualTo(INVALID_CREDENTIAL);
     }
     assertThat(isAuthorizationValid).isFalse();
-  }
-
-  @Test
-  @Owner(developers = VIKAS)
-  @Category(UnitTests.class)
-  public void testIsNextGenManagerRequest_For_NextGenAuthorization() {
-    Class clazz = SecretsResourceNG.class;
-    when(resourceInfo.getResourceClass()).thenReturn(clazz);
-    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
-
-    boolean isAuthorizationValid = authenticationFilter.isNextGenManagerRequest(resourceInfo);
-    assertThat(isAuthorizationValid).isTrue();
-
-    clazz = AccountResource.class;
-    when(resourceInfo.getResourceClass()).thenReturn(clazz);
-
-    isAuthorizationValid = authenticationFilter.isNextGenManagerRequest(resourceInfo);
-    assertThat(isAuthorizationValid).isFalse();
-  }
-
-  private Method getMockResourceMethod() {
-    Class mockClass = SecretsResourceNG.class;
-    try {
-      return mockClass.getMethod("get", String.class, String.class, String.class, String.class);
-    } catch (NoSuchMethodException e) {
-      return null;
-    }
   }
 }

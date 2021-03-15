@@ -91,6 +91,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private Map<String, String> serviceToSecretMapping;
   private Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping;
 
+  @Inject private AuthHelper authHelper;
+
   @Inject
   public AuthenticationFilter(UserService userService, AuthService authService, AuditService auditService,
       AuditHelper auditHelper, ApiKeyService apiKeyService, HarnessApiKeyService harnessApiKeyService,
@@ -113,23 +115,23 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    if (delegateAPI()) {
+    if (authHelper.delegateAPI()) {
       validateDelegateRequest(containerRequestContext);
       return;
     }
 
-    if (learningEngineServiceAPI()) {
+    if (authHelper.learningEngineServiceAPI()) {
       validateLearningEngineRequest(containerRequestContext);
       return; // do nothing
     }
 
-    if (isScimAPI()) {
+    if (authHelper.isScimAPI()) {
       return;
     }
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-    if (isExternalFacingApiRequest(containerRequestContext) || isApiKeyAuthorizationAPI()) {
+    if (isExternalFacingApiRequest(containerRequestContext) || authHelper.apiKeyAuthorizationAPI()) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
       if (isNotEmpty(apiKey)) {
@@ -163,7 +165,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     GlobalContextManager.set(new GlobalContext());
 
-    if (isAdminPortalRequest()) {
+    if (authHelper.adminPortalAPI()) {
       String adminPortalToken =
           substringAfter(containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION), ADMIN_PORTAL_PREFIX)
               .trim();
@@ -171,7 +173,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return;
     }
 
-    if (isNextGenManagerRequest(resourceInfo)) {
+    if (authHelper.isNextGenManagerAPI()) {
       validateNextGenRequest(containerRequestContext);
       return;
     }
@@ -207,28 +209,29 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     throw new InvalidRequestException(INVALID_CREDENTIAL.name(), INVALID_CREDENTIAL, USER);
   }
 
-  protected boolean isScimAPI() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method resourceMethod = resourceInfo.getResourceMethod();
-
-    return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) != null;
-  }
+  //  protected boolean isScimAPI() {
+  //    Class<?> resourceClass = resourceInfo.getResourceClass();
+  //    Method resourceMethod = resourceInfo.getResourceMethod();
+  //
+  //    return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) !=
+  //    null;
+  //  }
 
   protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {
     String value = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
     return isNotEmpty(value);
   }
 
-  protected boolean isAdminPortalRequest() {
-    return resourceInfo.getResourceMethod().getAnnotation(AdminPortalAuth.class) != null
-        || resourceInfo.getResourceClass().getAnnotation(AdminPortalAuth.class) != null;
-  }
+  //  protected boolean isAdminPortalRequest() {
+  //    return resourceInfo.getResourceMethod().getAnnotation(AdminPortalAuth.class) != null
+  //        || resourceInfo.getResourceClass().getAnnotation(AdminPortalAuth.class) != null;
+  //  }
 
-  @VisibleForTesting
-  boolean isNextGenManagerRequest(ResourceInfo requestResourceInfo) {
-    return requestResourceInfo.getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-        || requestResourceInfo.getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
-  }
+  //  @VisibleForTesting
+  //  boolean isNextGenManagerRequest(ResourceInfo requestResourceInfo) {
+  //    return requestResourceInfo.getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+  //        || requestResourceInfo.getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+  //  }
 
   @VisibleForTesting
   boolean isNextGenAuthorizationValid(ContainerRequestContext containerRequestContext) {
@@ -344,26 +347,26 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   protected boolean authenticationExemptedRequests(ContainerRequestContext requestContext) {
-    return requestContext.getMethod().equals(OPTIONS) || publicAPI() || isPublicApiWithWhitelist()
+    return requestContext.getMethod().equals(OPTIONS) || authHelper.publicAPI() || authHelper.isPublicApiWithWhitelist()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
   }
 
-  private boolean isPublicApiWithWhitelist() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method resourceMethod = resourceInfo.getResourceMethod();
-    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
-        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
-  }
+  //  private boolean isPublicApiWithWhitelist() {
+  //    Class<?> resourceClass = resourceInfo.getResourceClass();
+  //    Method resourceMethod = resourceInfo.getResourceMethod();
+  //    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
+  //        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
+  //  }
 
-  protected boolean publicAPI() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method resourceMethod = resourceInfo.getResourceMethod();
-
-    return resourceMethod.getAnnotation(PublicApi.class) != null
-        || resourceClass.getAnnotation(PublicApi.class) != null;
-  }
+  //  protected boolean publicAPI() {
+  //    Class<?> resourceClass = resourceInfo.getResourceClass();
+  //    Method resourceMethod = resourceInfo.getResourceMethod();
+  //
+  //    return resourceMethod.getAnnotation(PublicApi.class) != null
+  //        || resourceClass.getAnnotation(PublicApi.class) != null;
+  //  }
 
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
     return identityServiceAPI()
@@ -375,7 +378,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   }
 
   private boolean isExternalFacingApiRequest(ContainerRequestContext requestContext) {
-    return externalFacingAPI();
+    return authHelper.externalAPI();
   }
 
   boolean identityServiceAPI() {
@@ -383,31 +386,31 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         || resourceInfo.getResourceClass().getAnnotation(IdentityServiceAuth.class) != null;
   }
 
-  protected boolean delegateAPI() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method resourceMethod = resourceInfo.getResourceMethod();
+  //  protected boolean delegateAPI() {
+  //    Class<?> resourceClass = resourceInfo.getResourceClass();
+  //    Method resourceMethod = resourceInfo.getResourceMethod();
+  //
+  //    return resourceMethod.getAnnotation(DelegateAuth.class) != null
+  //        || resourceClass.getAnnotation(DelegateAuth.class) != null;
+  //  }
 
-    return resourceMethod.getAnnotation(DelegateAuth.class) != null
-        || resourceClass.getAnnotation(DelegateAuth.class) != null;
-  }
+  //  protected boolean learningEngineServiceAPI() {
+  //    Class<?> resourceClass = resourceInfo.getResourceClass();
+  //    Method resourceMethod = resourceInfo.getResourceMethod();
+  //
+  //    return resourceMethod.getAnnotation(LearningEngineAuth.class) != null
+  //        || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
+  //  }
 
-  protected boolean learningEngineServiceAPI() {
-    Class<?> resourceClass = resourceInfo.getResourceClass();
-    Method resourceMethod = resourceInfo.getResourceMethod();
+  //  protected boolean externalFacingAPI() {
+  //    return resourceInfo.getResourceMethod().getAnnotation(ExternalFacingApiAuth.class) != null
+  //        || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
+  //  }
 
-    return resourceMethod.getAnnotation(LearningEngineAuth.class) != null
-        || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
-  }
-
-  protected boolean externalFacingAPI() {
-    return resourceInfo.getResourceMethod().getAnnotation(ExternalFacingApiAuth.class) != null
-        || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
-  }
-
-  protected boolean isApiKeyAuthorizationAPI() {
-    return resourceInfo.getResourceMethod().getAnnotation(ApiKeyAuthorized.class) != null
-        || resourceInfo.getResourceClass().getAnnotation(ApiKeyAuthorized.class) != null;
-  }
+  //  protected boolean isApiKeyAuthorizationAPI() {
+  //    return resourceInfo.getResourceMethod().getAnnotation(ApiKeyAuthorized.class) != null
+  //        || resourceInfo.getResourceClass().getAnnotation(ApiKeyAuthorized.class) != null;
+  //  }
 
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {

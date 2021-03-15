@@ -30,6 +30,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.resources.graphql.TriggeredByType;
+import software.wings.security.AuthHelper;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
@@ -75,6 +76,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   private AuthService authService;
   private HPersistence persistence;
   @Inject private UserService userService;
+  @Inject private AuthHelper authHelper;
 
   @Inject
   public AuthRuleGraphQL(
@@ -182,7 +184,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     boolean isScopedToApp = ResourceType.APPLICATION == resourceType;
 
     if (isEmpty(permissionAttributes) || PermissionType.LOGGED_IN == permissionAttribute.getPermissionType()) {
-      UserRequestContext userRequestContext = authRuleFilter.buildUserRequestContext(
+      UserRequestContext userRequestContext = authHelper.buildUserRequestContext(
           userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopedToApp, appIdsFromRequest);
       user.setUserRequestContext(userRequestContext);
       UserThreadLocal.set(user);
@@ -195,7 +197,7 @@ public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
     }
 
     UserRequestContext userRequestContext =
-        authRuleFilter.buildUserRequestContext(userPermissionInfo, userRestrictionInfo, permissionAttributes, accountId,
+        authHelper.buildUserRequestContext(userPermissionInfo, userRestrictionInfo, permissionAttributes, accountId,
             emptyAppIdsInReq, httpMethod, appIdsFromRequest, false, isAccountLevelPermissions, isScopedToApp);
     user.setUserRequestContext(userRequestContext);
     UserThreadLocal.set(user);
