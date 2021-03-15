@@ -3,14 +3,17 @@ package io.harness.secrets;
 import static io.harness.rule.OwnerRule.PIYUSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.SMCoreTestBase;
 import io.harness.SecretTestUtils;
 import io.harness.beans.EncryptedData;
+import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretScopeMetadata;
+import io.harness.beans.SecretState;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -31,20 +34,39 @@ public class SecretServiceImplTest extends SMCoreTestBase {
   @Owner(developers = PIYUSH)
   @Category(UnitTests.class)
   public void test_itShouldReturnOnlySecretsWithReadPermissionTest() {
-    List<String> secretIds = saveDummySerectsInDB();
+    List<String> secretIds = new ArrayList<>(saveDummySerectsInDB());
+    secretIds.add("notExistingSecretId");
     List<SecretScopeMetadata> mockSecretScopeMetaData = new ArrayList<>();
-    mockSecretScopeMetaData.add(SecretScopeMetadata.builder().secretId(secretIds.get(1)).build());
-    when(secretsRBACService.filterSecretsByReadPermission(anyString(), any(List.class), anyString(), anyString()))
-        .thenReturn(mockSecretScopeMetaData);
-    List<String> secretIdsResponse =
+    mockSecretScopeMetaData.add(SecretScopeMetadata.builder().secretId("secretThatCanbeRead").build());
+    doReturn(mockSecretScopeMetaData)
+        .when(secretsRBACService)
+        .filterSecretsByReadPermission(anyString(), any(List.class), anyString(), anyString());
+    List<SecretMetadata> secretIdsResponse =
         secretService.filterSecretIdsByReadPermission(new HashSet<>(secretIds), "accountId", "dummy", "dummmy");
-    assertThat(secretIdsResponse.size()).isEqualTo(1);
+    assertThat(secretIdsResponse.size()).isEqualTo(3);
+    for (SecretMetadata metadata : secretIdsResponse) {
+      switch (metadata.getSecretId()) {
+        case "notExistingSecretId":
+          assertThat(metadata.getSecretState()).isEqualTo(SecretState.NOT_FOUND);
+          break;
+        case "secretThatCannotBeRead":
+          assertThat(metadata.getSecretState()).isEqualTo(SecretState.CANNOT_READ);
+          break;
+        case "secretThatCanbeRead":
+          assertThat(metadata.getSecretState()).isEqualTo(SecretState.CAN_READ);
+          break;
+        default:
+          fail("Unexpected SecretId returned");
+          break;
+      }
+    }
   }
 
   private List<String> saveDummySerectsInDB() {
     EncryptedData secretThatCannotBeRead = SecretTestUtils.getInlineSecretText();
-    secretThatCannotBeRead.setAccountId("someOtherAccountId");
+    secretThatCannotBeRead.setUuid("secretThatCannotBeRead");
     EncryptedData secretThatCanbeRead = SecretTestUtils.getInlineSecretText();
+    secretThatCanbeRead.setUuid("secretThatCanbeRead");
     secretsDao.saveSecret(secretThatCannotBeRead);
     secretsDao.saveSecret(secretThatCanbeRead);
     return Arrays.asList(secretThatCanbeRead.getUuid(), secretThatCannotBeRead.getUuid());

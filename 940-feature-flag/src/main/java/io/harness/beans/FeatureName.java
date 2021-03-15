@@ -151,7 +151,8 @@ public enum FeatureName {
   WHITELIST_PUBLIC_API,
   WHITELIST_GRAPHQL,
   LOG_APP_DEFAULTS,
-  ENABLE_LOGIN_AUDITS;
+  ENABLE_LOGIN_AUDITS,
+  SETTING_API_BATCH_RBAC; /*Flag to use batch RBAC api exposed by SecretManager*/
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

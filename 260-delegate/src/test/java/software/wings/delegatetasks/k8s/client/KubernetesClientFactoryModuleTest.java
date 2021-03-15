@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.govern.ProviderModule;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -52,6 +53,14 @@ public class KubernetesClientFactoryModuleTest extends CategoryTest {
       @Singleton
       KubernetesContainerService kubernetesContainerService() {
         return mock(KubernetesContainerService.class);
+      }
+    });
+
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      SecretDecryptionService encryptionService() {
+        return mock(SecretDecryptionService.class);
       }
     });
 
