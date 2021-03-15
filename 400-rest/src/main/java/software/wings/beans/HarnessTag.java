@@ -13,7 +13,6 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
-import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.jersey.JsonViews;
@@ -58,20 +57,6 @@ public class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtAware, 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class HarnessTagAbstractYaml extends BaseYaml {
-    private String name;
-    private List<String> allowedValues;
-
-    @lombok.Builder
-    public HarnessTagAbstractYaml(String name, List<String> allowedValues) {
-      this.name = name;
-      this.allowedValues = allowedValues;
-    }
-  }
 
   @Data
   @NoArgsConstructor

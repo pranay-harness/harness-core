@@ -1,9 +1,9 @@
 package software.wings.verification.datadog;
 
-import static software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
-
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+
+import software.wings.verification.log.LogsCVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;

@@ -15,7 +15,7 @@ import software.wings.sm.StateType;
 import software.wings.verification.log.BugsnagCVConfiguration;
 import software.wings.verification.log.BugsnagCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 
 import com.google.inject.Inject;
 import java.util.List;

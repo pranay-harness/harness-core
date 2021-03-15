@@ -4,9 +4,9 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.verification.log.ElkCVConfiguration;
-import software.wings.verification.log.ElkCVConfiguration.ElkCVConfigurationYaml;
+import software.wings.verification.log.ElkCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 
 import java.util.List;
 

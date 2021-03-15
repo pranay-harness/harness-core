@@ -28,8 +28,8 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.dynatrace.DynaTraceService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.verification.dynatrace.DynaTraceCVConfigurationYaml;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
-import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration.DynaTraceCVConfigurationYaml;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;

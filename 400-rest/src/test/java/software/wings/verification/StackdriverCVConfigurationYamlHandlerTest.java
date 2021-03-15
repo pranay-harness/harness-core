@@ -24,7 +24,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 import software.wings.verification.log.StackdriverCVConfiguration;
 import software.wings.verification.log.StackdriverCVConfiguration.StackdriverCVConfigurationYaml;
 

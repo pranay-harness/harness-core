@@ -9,7 +9,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -69,17 +68,5 @@ public class ElkCVConfiguration extends LogsCVConfiguration {
                                                           .build();
     fillDataCollectionInfoWithCommonFields(elkDataCollectionInfoV2);
     return elkDataCollectionInfoV2;
-  }
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public static final class ElkCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String index;
-    private String hostnameField;
-    private String messageField;
-    private String timestampField;
-    private String timestampFormat;
   }
 }

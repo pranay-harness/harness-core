@@ -4,7 +4,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.verification.datadog.DatadogLogCVConfiguration;
 import software.wings.verification.datadog.DatadogLogCVConfigurationYaml;
 import software.wings.verification.log.LogsCVConfiguration;
-import software.wings.verification.log.LogsCVConfiguration.LogsCVConfigurationYaml;
+import software.wings.verification.log.LogsCVConfigurationYaml;
 
 import java.util.List;
 
