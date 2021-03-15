@@ -74,6 +74,6 @@ public class K8sManifest implements ManifestAttributes, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_MANIFEST).build();
+    return LevelNode.builder().qualifierName(YamlTypes.K8S_MANIFEST).isPartOfFQN(false).build();
   }
 }
