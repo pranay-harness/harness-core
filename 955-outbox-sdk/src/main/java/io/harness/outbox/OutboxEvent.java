@@ -1,5 +1,6 @@
 package io.harness.outbox;
 
+import io.harness.context.GlobalContext;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.Resource;
@@ -34,6 +35,8 @@ public class OutboxEvent {
   @NotNull String eventData;
 
   @CreatedDate Long createdAt;
+
+  GlobalContext globalContext;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

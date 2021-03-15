@@ -133,3 +133,11 @@ fi
 if [[ "" != "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceSecret "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET"
 fi
+
+if [[ "" != "$ENABLE_AUTH" ]]; then
+  yq write -i $CONFIG_FILE enableAuth "$ENABLE_AUTH"
+fi
+
+if [[ "" != "$DEFAULT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE defaultServiceSecret "$DEFAULT_SERVICE_SECRET"
+fi

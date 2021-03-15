@@ -37,6 +37,7 @@ import io.harness.serializer.CDNGRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
@@ -132,6 +133,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             .toInstance(Mockito.mock(ConnectorService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
         bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));

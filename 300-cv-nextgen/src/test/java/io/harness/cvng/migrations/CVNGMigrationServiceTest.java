@@ -1,5 +1,6 @@
 package io.harness.cvng.migrations;
 
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,12 +9,18 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.migration.CVNGBackgroundMigrationList;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
+import io.harness.cvng.migration.service.MigrationChecklist;
 import io.harness.rule.Owner;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
@@ -60,5 +67,29 @@ public class CVNGMigrationServiceTest extends CvNextGenTestBase {
       last.set(pair.getKey());
     });
     assertThat(last.get()).isNotEqualTo(-1);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testMigrationChecklist_returnValidDescInChecklist()
+      throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    for (Pair<Integer, Class<? extends CVNGMigration>> pair : CVNGBackgroundMigrationList.getMigrations()) {
+      Method[] methods = MigrationChecklist.class.getDeclaredMethods();
+      CVNGMigration CVNGMigration = pair.getValue().newInstance();
+      for (Method method : methods) {
+        ChecklistItem checklistItem = (ChecklistItem) method.invoke(CVNGMigration);
+        assertThat(checklistItem)
+            .isNotNull()
+            .withFailMessage(
+                "Checklist item can not be null, please put a checklist with desc for method name: %s, migration: %s",
+                method.getName(), CVNGMigration.getClass().getName());
+        assertThat(checklistItem.getDesc())
+            .isNotBlank()
+            .withFailMessage(
+                "Checklist desc can not be empty, please put a checklist with desc for method name %s, migration: %s",
+                method.getName(), CVNGMigration.getClass().getName());
+      }
+    }
   }
 }

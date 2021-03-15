@@ -3,7 +3,6 @@ package software.wings.verification.datadog;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.log.LogsCVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,12 +22,5 @@ public class DatadogLogCVConfiguration extends LogsCVConfiguration {
     super.copy(clonedConfig);
     clonedConfig.setHostnameField(this.getHostnameField());
     return clonedConfig;
-  }
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class DatadogLogCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private String hostnameField;
   }
 }

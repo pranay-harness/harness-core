@@ -14,6 +14,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 public interface EcrService {
+  int MAX_NO_OF_TAGS_PER_IMAGE = 10000;
   /**
    * Gets builds.
    *
@@ -60,6 +61,20 @@ public interface EcrService {
    * @return the list
    */
   List<String> listEcrRegistry(AwsInternalConfig awsConfig, String region);
+  /**
+   * Validates the Image
+   *
+   * @param awsConfig
+   */
+  boolean verifyImageName(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName);
 
   List<Map<String, String>> getLabels(AwsInternalConfig awsConfig, String imageName, String region, List<String> tags);
+
+  boolean validateCredentials(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName);
+
+  BuildDetailsInternal verifyBuildNumber(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag);
+
+  BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex);
 }

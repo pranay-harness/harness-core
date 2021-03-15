@@ -18,7 +18,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.verification.CVConfiguration.CVConfigurationYaml;
 
 import com.google.inject.Inject;
 import java.util.Date;

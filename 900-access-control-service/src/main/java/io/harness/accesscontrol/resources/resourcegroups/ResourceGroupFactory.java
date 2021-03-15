@@ -16,23 +16,24 @@ import java.util.stream.Collectors;
 
 public class ResourceGroupFactory {
   public ResourceGroup buildResourceGroup(ResourceGroupResponse resourceGroupResponse, String scopeIdentifier) {
-    ResourceGroupDTO resourceGroupDto = resourceGroupResponse.getResourceGroup();
+    ResourceGroupDTO resourceGroupDTO = resourceGroupResponse.getResourceGroup();
     Set<String> resourceSelectors;
-    if (resourceGroupDto.getResourceSelectors() == null) {
+    if (resourceGroupDTO.getResourceSelectors() == null) {
       resourceSelectors = new HashSet<>();
     } else {
-      resourceSelectors = resourceGroupDto.getResourceSelectors()
+      resourceSelectors = resourceGroupDTO.getResourceSelectors()
                               .stream()
                               .map(this::buildResourceSelector)
                               .flatMap(Collection::stream)
                               .collect(Collectors.toSet());
     }
     return ResourceGroup.builder()
-        .identifier(resourceGroupDto.getIdentifier())
+        .identifier(resourceGroupDTO.getIdentifier())
         .scopeIdentifier(scopeIdentifier)
-        .name(resourceGroupDto.getName())
+        .name(resourceGroupDTO.getName())
         .resourceSelectors(resourceSelectors)
         .managed(resourceGroupResponse.isHarnessManaged())
+        .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
         .build();
   }
 

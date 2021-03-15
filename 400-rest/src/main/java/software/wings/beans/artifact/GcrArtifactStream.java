@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.ENHANCED_GCR_CONNECTIVITY_CHECK;
 
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
@@ -8,6 +9,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ff.FeatureFlagService;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.text.SimpleDateFormat;
@@ -55,12 +57,13 @@ public class GcrArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .imageName(dockerImageName)
         .dockerBasedDeployment(true)
         .registryHostName(registryHostName)
+        .enhancedGcrConnectivityCheckEnabled(featureFlagService.isEnabled(ENHANCED_GCR_CONNECTIVITY_CHECK, appId))
         .build();
   }
 

@@ -331,7 +331,7 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
 
-    install(new AccessControlClientModule(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
+    install(AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
 
     registerEventsFrameworkMessageListeners();
   }

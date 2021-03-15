@@ -38,6 +38,7 @@ import io.harness.deployment.InstanceDetails;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -106,6 +107,7 @@ public class AzureVMSSStateHelper {
   @Inject private SecretManager secretManager;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private LogService logService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public boolean isBlueGreenWorkflow(ExecutionContext context) {
     return BLUE_GREEN == context.getOrchestrationWorkflowType();
@@ -115,7 +117,8 @@ public class AzureVMSSStateHelper {
       DeploymentExecutionContext context, String serviceId) {
     Artifact artifact = getArtifact(context, serviceId);
     ArtifactStream artifactStream = getArtifactStream(artifact.getArtifactStreamId());
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
 
     String osType = artifactStreamAttributes.getOsType();
     String imageType = artifactStreamAttributes.getImageType();
@@ -548,7 +551,8 @@ public class AzureVMSSStateHelper {
   public ArtifactStreamMapper getConnectorMapper(Artifact artifact) {
     String artifactStreamId = artifact.getArtifactStreamId();
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
     artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());

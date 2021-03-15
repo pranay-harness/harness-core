@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.rule.Owner;
 

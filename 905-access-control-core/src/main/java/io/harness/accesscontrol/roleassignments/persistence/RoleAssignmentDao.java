@@ -1,12 +1,10 @@
 package io.harness.accesscontrol.roleassignments.persistence;
 
-import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
-import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -18,11 +16,11 @@ public interface RoleAssignmentDao {
   PageResponse<RoleAssignment> list(
       @NotNull PageRequest pageRequest, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 
-  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
-  List<RoleAssignment> get(@NotEmpty String principal, @NotNull PrincipalType principalType);
+  RoleAssignment update(@NotNull @Valid RoleAssignment roleAssignment);
 
-  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
-  long deleteMany(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
+  long deleteMulti(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 }

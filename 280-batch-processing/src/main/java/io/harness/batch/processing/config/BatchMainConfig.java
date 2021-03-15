@@ -32,4 +32,5 @@ public class BatchMainConfig {
   @JsonProperty("scheduler-jobs-config") private SchedulerJobsConfig schedulerJobsConfig;
   @JsonProperty("cfConfig") private CfConfig cfConfig;
   @JsonProperty("cePythonService") private CEPythonServiceConfig cePythonServiceConfig;
+  @JsonProperty("banzaiConfig") private BanzaiConfig banzaiConfig;
 }

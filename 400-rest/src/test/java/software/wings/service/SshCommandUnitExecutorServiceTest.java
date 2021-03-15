@@ -1,6 +1,6 @@
 package software.wings.service;
 
-import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.ARTIFACTS;
+import static io.harness.delegate.beans.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.HINGER;
@@ -677,5 +677,28 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     assertThat(commandUnit.fetchEnvVariables().get("WINGS_RUNTIME_PATH")).isEqualTo("/tmp/runtime");
     assertThat(commandUnit.fetchEnvVariables().get("WINGS_STAGING_PATH")).isEqualTo("/tmp/staging");
     assertThat(commandUnit.fetchEnvVariables().get("WINGS_BACKUP_PATH")).isEqualTo("/tmp/backup");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testExecuteWithSocketTimeoutException() {
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .executeOnDelegate(true)
+                                                          .build();
+    CommandUnit commandUnit = mock(CommandUnit.class);
+
+    when(commandUnit.execute(any())).thenThrow(new UncheckedTimeoutException());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> sshCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("SOCKET_CONNECTION_TIMEOUT");
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
   }
 }

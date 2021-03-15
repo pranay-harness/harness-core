@@ -4,8 +4,8 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 
 import io.harness.gitsync.AbstractGitSyncSdkModule;
+import io.harness.gitsync.GitSyncSdkConfiguration;
 import io.harness.gitsync.interceptor.GitSyncThreadDecorator;
-import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.maintenance.MaintenanceController;
 
 import com.google.inject.Guice;
@@ -19,8 +19,10 @@ import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.ws.rs.Path;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -61,8 +63,12 @@ public class GitSyncTestApplication extends Application<GitSyncTestConfiguration
     modules.add(new GitSyncTestModule(config));
     modules.add(new AbstractGitSyncSdkModule() {
       @Override
-      public GrpcClientConfig getGitSyncGrpcClientConfig() {
-        return config.getGrpcClientConfig();
+      public GitSyncSdkConfiguration getGitSyncSdkConfiguration() {
+        final Supplier<List<EntityType>> sortOrder = () -> Collections.singletonList(EntityType.CONNECTORS);
+        return GitSyncSdkConfiguration.builder()
+            .gitSyncSortOrder(sortOrder)
+            .grpcClientConfig(config.getGrpcClientConfig())
+            .build();
       }
     });
     Injector injector = Guice.createInjector(modules);

@@ -23,8 +23,8 @@ var (
 // RunTestsStep represents interface to execute a runTests step
 type runTestsStep struct {
 	id            string           // Id of the step
-	name          string           // Name of the step
 	runTestsInfo  *pb.RunTestsStep // Run tests step information
+	step          *pb.UnitStep
 	containerPort uint32
 	so            output.StageOutput // Output variables of the stage
 	log           *zap.SugaredLogger // Logger
@@ -39,8 +39,8 @@ type RunTestsStep interface {
 func NewRunTestsStep(step *pb.UnitStep, so output.StageOutput, log *zap.SugaredLogger) RunTestsStep {
 	return &runTestsStep{
 		id:           step.GetId(),
-		name:         step.GetDisplayName(),
 		runTestsInfo: step.GetRunTests(),
+		step:         step,
 		so:           so,
 		log:          log,
 	}
@@ -117,13 +117,10 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 func (e *runTestsStep) getExecuteStepArg(diffFiles []string) *addonpb.ExecuteStepRequest {
 	// not the best practice, can take up proxying git calls later
 	e.runTestsInfo.DiffFiles = diffFiles
+	e.step.Step = &pb.UnitStep_RunTests{
+		RunTests: e.runTestsInfo,
+	}
 	return &addonpb.ExecuteStepRequest{
-		Step: &pb.UnitStep{
-			Id:          e.id,
-			DisplayName: e.name,
-			Step: &pb.UnitStep_RunTests{
-				RunTests: e.runTestsInfo,
-			},
-		},
+		Step: e.step,
 	}
 }

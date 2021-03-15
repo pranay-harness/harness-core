@@ -4,6 +4,7 @@ import io.harness.common.EntityReference;
 import io.harness.encryption.Scope;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 
@@ -15,6 +16,7 @@ public class IdentifierRef implements EntityReference {
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
+  Map<String, String> metadata;
 
   @Override
   public String getFullyQualifiedName() {

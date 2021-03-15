@@ -1,6 +1,6 @@
 package software.wings.beans.command;
 
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.BaseScriptExecutor;
 

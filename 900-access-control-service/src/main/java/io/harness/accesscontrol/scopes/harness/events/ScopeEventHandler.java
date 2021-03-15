@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.scopes.harness.events;
 
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.ONLY_CUSTOM;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 
 import io.harness.accesscontrol.commons.events.EventHandler;
@@ -100,7 +100,7 @@ public class ScopeEventHandler implements EventHandler {
   private void deleteRoleAssignments(Scope scope) {
     RoleAssignmentFilter roleAssignmentFilter =
         RoleAssignmentFilter.builder().scopeFilter(scope.toString()).includeChildScopes(true).build();
-    roleAssignmentService.deleteMany(roleAssignmentFilter);
+    roleAssignmentService.deleteMulti(roleAssignmentFilter);
   }
 
   private void deleteRoles(Scope scope) {

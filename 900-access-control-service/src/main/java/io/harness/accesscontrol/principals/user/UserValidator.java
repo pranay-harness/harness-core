@@ -2,10 +2,10 @@ package io.harness.accesscontrol.principals.user;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 
+import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
-import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
@@ -42,15 +42,18 @@ public class UserValidator implements PrincipalValidator {
   }
 
   @Override
-  public void validatePrincipal(Principal principal, Scope scope) {
+  public ValidationResult validatePrincipal(Principal principal) {
     String userId = principal.getPrincipalIdentifier();
-    Failsafe.with(retryPolicy).get(() -> {
+    return Failsafe.with(retryPolicy).get(() -> {
       Optional<User> userOptional =
           RestClientUtils.getResponse(userClient.getUsersByIds(Lists.newArrayList(userId))).stream().findFirst();
       if (!userOptional.isPresent()) {
-        throw new InvalidRequestException(String.format("user not found with the given identifier %s", userId));
+        return ValidationResult.builder()
+            .valid(false)
+            .errorMessage(String.format("user not found with the given identifier %s", userId))
+            .build();
       }
-      return userOptional.get();
+      return ValidationResult.builder().valid(true).build();
     });
   }
 }

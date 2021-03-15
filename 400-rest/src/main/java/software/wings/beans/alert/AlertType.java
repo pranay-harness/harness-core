@@ -7,6 +7,7 @@ import static software.wings.alerts.AlertCategory.Setup;
 import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
@@ -15,7 +16,8 @@ import software.wings.alerts.AlertSeverity;
 
 import lombok.Getter;
 
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(Module._955_ALERT_BEANS)
+@BreakDependencyOn("software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation")
 public enum AlertType {
   ApprovalNeeded(Approval, Warning),
   ManualInterventionNeeded(ManualIntervention, Warning),
