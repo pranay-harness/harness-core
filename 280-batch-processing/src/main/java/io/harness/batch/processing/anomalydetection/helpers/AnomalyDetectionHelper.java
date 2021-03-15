@@ -61,8 +61,13 @@ public class AnomalyDetectionHelper {
           log.warn("Invalid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} ",
               timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService());
           break;
-        case GCP_REGION:
         case AWS_USAGE_TYPE:
+          log.warn(
+              "Invalid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} , awsUsageType : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService(),
+              timeSeries.getAwsUsageType());
+          break;
+        case GCP_REGION:
         case AWS_INSTANCE_TYPE:
         default:
           break;
@@ -111,8 +116,13 @@ public class AnomalyDetectionHelper {
           log.info("Valid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} ",
               timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService());
           break;
-        case GCP_REGION:
         case AWS_USAGE_TYPE:
+          log.warn(
+              "Valid Data for TimeSeries :: AccountId : {} , time : {} , awsAccount : {} , awsService : {} , awsUsageType : {} ",
+              timeSeries.getAccountId(), time.toString(), timeSeries.getAwsAccount(), timeSeries.getAwsService(),
+              timeSeries.getAwsUsageType());
+          break;
+        case GCP_REGION:
         case AWS_INSTANCE_TYPE:
         default:
           break;

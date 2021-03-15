@@ -11,10 +11,10 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FileMetadata;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateFile;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;

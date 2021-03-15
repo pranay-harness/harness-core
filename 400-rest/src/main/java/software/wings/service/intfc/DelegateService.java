@@ -24,7 +24,7 @@ import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
@@ -56,6 +56,8 @@ public interface DelegateService extends OwnedByAccount {
   DelegateStatus getDelegateStatus(String accountId);
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
+
+  DelegateGroup getDelegateGroup(String accountId, String delegateGroupId);
 
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
@@ -191,6 +193,8 @@ public interface DelegateService extends OwnedByAccount {
       List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
 
   void regenerateCapabilityPermissions(String accountId, String delegateId);
+
+  String getHostNameForGroupedDelegate(String hostname);
 
   String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
 

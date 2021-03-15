@@ -189,18 +189,19 @@ public class ARMDeploymentSteadyStateChecker {
   private String getAssignmentProvisioningStatus(
       DeploymentBlueprintSteadyStateContext context, AzureBlueprintClient azureBlueprintClient) {
     String assignmentName = context.getAssignmentName();
-    String resourceScope = context.getAssignmentResourceScope();
-    Assignment assignment = azureBlueprintClient.getAssignment(context.getAzureConfig(), resourceScope, assignmentName);
+    String assignmentResourceScope = context.getAssignmentResourceScope();
+    Assignment assignment =
+        azureBlueprintClient.getAssignment(context.getAzureConfig(), assignmentResourceScope, assignmentName);
 
     if (assignment == null) {
-      throw new InvalidRequestException(
-          format("Assignment is null, assignmentName: %s, assignmentResourceScope: %s", assignmentName, resourceScope));
+      throw new InvalidRequestException(format("Assignment is null, assignmentName: %s, assignmentResourceScope: %s",
+          assignmentName, assignmentResourceScope));
     }
 
     if (assignment.getProperties() == null) {
       throw new InvalidRequestException(
           format("Assignment properties are null, assignmentName: %s, assignmentResourceScope: %s", assignmentName,
-              resourceScope));
+              assignmentResourceScope));
     }
 
     return assignment.getProperties().getProvisioningState().getValue();

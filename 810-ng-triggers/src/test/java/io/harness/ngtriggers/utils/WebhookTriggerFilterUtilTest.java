@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.utils;
 
-import static io.harness.ngtriggers.Constants.X_HARNESS_TRIGGER_ID;
+import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.CLOSED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookAction.OPENED;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.MERGE_REQUEST;
@@ -12,15 +12,15 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.beans.HeaderConfig;
+import io.harness.beans.PRWebhookEvent;
+import io.harness.beans.PRWebhookEvent.PRWebhookEventBuilder;
+import io.harness.beans.WebhookBaseAttributes;
+import io.harness.beans.WebhookBaseAttributes.WebhookBaseAttributesBuilder;
+import io.harness.beans.WebhookEvent.Type;
 import io.harness.category.element.UnitTests;
-import io.harness.ngtriggers.beans.config.HeaderConfig;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.AuthToken;
-import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
-import io.harness.ngtriggers.beans.scm.PRWebhookEvent.PRWebhookEventBuilder;
-import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
-import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes.WebhookBaseAttributesBuilder;
-import io.harness.ngtriggers.beans.scm.WebhookEvent.Type;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData.WebhookPayloadDataBuilder;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;

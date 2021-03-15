@@ -123,7 +123,10 @@ import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.CurrentGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.service.DelegateServiceModule;
+import io.harness.service.impl.DelegateInsightsServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.service.impl.DelegateTaskServiceImpl;
+import io.harness.service.intfc.DelegateTaskService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintPersistenceMonitor;
 import io.harness.stream.AtmosphereBroadcaster;
@@ -922,6 +925,13 @@ public class WingsApplication extends Application<MainConfiguration> {
     KubernetesClusterHandler kubernetesClusterHandler = injector.getInstance(Key.get(KubernetesClusterHandler.class));
     DelegateServiceImpl delegateService = (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));
     delegateService.getSubject().register(kubernetesClusterHandler);
+    delegateService.getDelegateTaskStatusObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
+
+    DelegateTaskServiceImpl delegateTaskService =
+        (DelegateTaskServiceImpl) injector.getInstance(Key.get(DelegateTaskService.class));
+    delegateTaskService.getDelegateTaskStatusObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
     InfrastructureDefinitionServiceImpl infrastructureDefinitionService =
         (InfrastructureDefinitionServiceImpl) injector.getInstance(Key.get(InfrastructureDefinitionService.class));

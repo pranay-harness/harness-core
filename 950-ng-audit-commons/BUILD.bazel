@@ -9,6 +9,7 @@ sources()
 
 shared_dependencies = [
     "//:lombok",
+    "//955-filters-sdk:module",
     "//970-ng-commons:module",
     "//980-commons:module",
     "@maven//:com_google_code_findbugs_annotations",

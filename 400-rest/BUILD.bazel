@@ -13,7 +13,6 @@ shared_dependencies = [
     "//450-ce-views:module",
     "//460-capability:module",
     "//470-alert:module",
-    "//480-alert-beans:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
     "//860-orchestration-steps:module",
@@ -45,6 +44,7 @@ shared_dependencies = [
     "//950-timeout-engine:module",
     "//950-wait-engine:module",
     "//954-connector-beans:module",
+    "//955-alert-beans:module",
     "//960-api-services:module",
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
@@ -695,7 +695,7 @@ java_library(
 
 java_library(
     name = "supporter-test",
-    #testonly = True,
+    testonly = True,
     srcs = glob(
         ["src/supporter-test/**/*.java"],
     ),

@@ -6,10 +6,12 @@ import io.harness.engine.StepTypeLookupService;
 import io.harness.logging.AutoLogContext;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
+import io.harness.pms.sdk.core.events.OrchestrationEventLog;
 import io.harness.pms.sdk.core.events.OrchestrationSubject;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueuePublisher;
+import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -22,6 +24,7 @@ public class OrchestrationEventEmitter {
   @Inject private OrchestrationEventHandlerRegistry handlerRegistry;
   @Inject private QueuePublisher<OrchestrationEvent> orchestrationEventQueue;
   @Inject(optional = true) private StepTypeLookupService stepTypeLookupService;
+  @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
 
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = event.autoLogContext()) {
@@ -29,6 +32,11 @@ public class OrchestrationEventEmitter {
       Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
       subject.registerAll(handlers);
       subject.handleEventSync(event);
+      orchestrationEventLogRepository.save(OrchestrationEventLog.builder()
+                                               .createdAt(System.currentTimeMillis())
+                                               .event(event)
+                                               .planExecutionId(event.getAmbiance().getPlanExecutionId())
+                                               .build());
       if (stepTypeLookupService == null || event.getNodeExecutionProto() == null) {
         orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME), event);
       } else {

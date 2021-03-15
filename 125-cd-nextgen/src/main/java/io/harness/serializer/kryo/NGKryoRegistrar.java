@@ -33,11 +33,17 @@ import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.manifest.yaml.BitbucketStore;
+import io.harness.cdng.manifest.yaml.GitLabStore;
 import io.harness.cdng.manifest.yaml.GitStore;
+import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmCommandFlagType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
+import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
@@ -159,5 +165,11 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmChartManifestOutcome.class, 12524);
     kryo.register(HelmManifestCommandFlag.class, 12525);
     kryo.register(HelmCommandFlagType.class, 12526);
+    kryo.register(GithubStore.class, 12527);
+    kryo.register(GitLabStore.class, 12528);
+    kryo.register(BitbucketStore.class, 12529);
+    kryo.register(HttpStoreConfig.class, 12530);
+    kryo.register(KustomizeManifest.class, 12531);
+    kryo.register(KustomizeManifestOutcome.class, 12532);
   }
 }

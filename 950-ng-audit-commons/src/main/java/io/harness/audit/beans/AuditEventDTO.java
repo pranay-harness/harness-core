@@ -3,9 +3,12 @@ package io.harness.audit.beans;
 import io.harness.ModuleType;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.common.beans.KeyValuePair;
+import io.harness.request.HttpRequestInfo;
+import io.harness.request.RequestMetadata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.Map;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -27,6 +30,8 @@ public class AuditEventDTO {
   HttpRequestInfo httpRequestInfo;
   RequestMetadata requestMetadata;
 
+  Long timestamp;
+
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
   @NotNull ModuleType moduleType;
@@ -35,7 +40,7 @@ public class AuditEventDTO {
   @NotNull @NotBlank String action;
 
   YamlDiff yamlDiff;
-  @Valid AuditEventDataDTO auditEventData;
+  @Valid AuditEventData auditEventData;
 
-  Map<String, String> additionalInfo;
+  List<KeyValuePair> additionalInfo;
 }

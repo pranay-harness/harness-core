@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.beans.ChecksumType;
 import io.harness.beans.EmbeddedUser;
+import io.harness.delegate.beans.ChecksumType;
 
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;

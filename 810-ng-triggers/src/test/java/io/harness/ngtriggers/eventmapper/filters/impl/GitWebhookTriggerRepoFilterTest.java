@@ -9,6 +9,8 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.beans.PRWebhookEvent;
+import io.harness.beans.Repository;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -21,8 +23,6 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
-import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
-import io.harness.ngtriggers.beans.scm.Repository;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.TriggerGitConnectorWrapper;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;

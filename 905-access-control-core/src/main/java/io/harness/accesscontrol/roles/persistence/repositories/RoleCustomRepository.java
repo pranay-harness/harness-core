@@ -16,4 +16,6 @@ public interface RoleCustomRepository {
   Optional<RoleDBO> find(@NotNull Criteria criteria);
 
   UpdateResult updateMulti(@NotNull Criteria criteria, @NotNull Update update);
+
+  long deleteMulti(@NotNull Criteria criteria);
 }

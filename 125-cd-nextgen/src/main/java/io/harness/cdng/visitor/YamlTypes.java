@@ -32,6 +32,7 @@ public interface YamlTypes {
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String HELM_CHART_MANIFEST = ManifestType.HelmChart;
+  String KUSTOMIZE_MANIFEST = ManifestType.Kustomize;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecTypeConstants.HTTP;
@@ -67,4 +68,8 @@ public interface YamlTypes {
   String HEADERS = "headers";
   String DELEGATE_SELECTORS = "delegateSelectors";
   String ENVIRONMENT_VARIABLES = "environmentVariables";
+
+  String COMMAND_FLAGS_WRAPPER = "commandFlags";
+  String SKIP_RESOURCE_VERSIONING = "skipResourceVersioning";
+  String PLUGIN_PATH = "pluginPath";
 }

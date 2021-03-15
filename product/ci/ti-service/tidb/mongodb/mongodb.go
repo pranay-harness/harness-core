@@ -99,15 +99,19 @@ func New(username, password, host, port, dbName string, log *zap.SugaredLogger) 
 }
 
 // queryHelper gets the tests that need to be run corresponding to the packages and classes
-func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.Test, error) {
+func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.RunnableTest, error) {
 	if len(pkgs) != len(classes) {
 		return nil, fmt.Errorf("Length of pkgs: %d and length of classes: %d don't match", len(pkgs), len(classes))
 	}
-	result := []types.Test{}
+	if len(pkgs) == 0 {
+		mdb.Log.Warnw("did not receive any pkg/classes to query DB")
+		return []types.RunnableTest{}, nil
+	}
+	result := []types.RunnableTest{}
 	// Query 1
 	// Get nodes corresponding to the packages and classes
 	nodes := []Node{}
-	var allowedPairs []interface{}
+	allowedPairs := []interface{}{}
 	for idx, pkg := range pkgs {
 		cls := classes[idx]
 		allowedPairs = append(allowedPairs, bson.M{"package": pkg, "class": cls})
@@ -158,22 +162,22 @@ func (mdb *MongoDb) queryHelper(pkgs, classes []string) ([]types.Test, error) {
 			"test IDs", tids, "nodes", tnodes, "length(test ids)", len(tids), "length(nodes)", len(tnodes))
 	}
 	for _, t := range tnodes {
-		result = append(result, types.Test{Pkg: t.Package, Class: t.Class, Method: t.Method})
+		result = append(result, types.RunnableTest{Pkg: t.Package, Class: t.Class, Method: t.Method})
 	}
 
 	return result, nil
 }
 
 // isValid checks whether the test is valid or not
-func isValid(t types.Test) bool {
+func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) ([]types.Test, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) ([]types.RunnableTest, error) {
 	// parse package and class names from the files
 	nodes, err := utils.ParseFileNames(files)
-	m := make(map[types.Test]struct{}) // Get unique tests to run
-	l := []types.Test{}
+	m := make(map[types.RunnableTest]struct{}) // Get unique tests to run
+	l := []types.RunnableTest{}
 	if err != nil {
 		return nil, err
 	}
@@ -183,9 +187,9 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) ([]types.
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
 			// A list with a single empty element indicates that all tests need to be run
-			return []types.Test{{}}, nil
+			return []types.RunnableTest{{}}, nil
 		} else if utils.IsTest(node) {
-			t := types.Test{Pkg: node.Pkg, Class: node.Class, Method: node.Method}
+			t := types.RunnableTest{Pkg: node.Pkg, Class: node.Class, Method: node.Method}
 			if !isValid(t) {
 				mdb.Log.Errorw("received test without pkg/class as input")
 			} else {

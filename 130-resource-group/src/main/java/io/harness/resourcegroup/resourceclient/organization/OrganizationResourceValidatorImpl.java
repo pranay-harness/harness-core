@@ -18,6 +18,7 @@ import io.harness.resourcegroup.model.Scope;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
@@ -59,7 +60,7 @@ public class OrganizationResourceValidatorImpl implements ResourceValidator {
 
   @Override
   public Set<Scope> getScopes() {
-    return EnumSet.of(Scope.ORGANIZATION);
+    return Collections.emptySet();
   }
 
   @Override
@@ -73,7 +74,7 @@ public class OrganizationResourceValidatorImpl implements ResourceValidator {
     try {
       organizationEntityChangeDTO = OrganizationEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking OrganizationEntityChangeDTO for key {}", message.getId(), e);
+      log.error("Exception in unpacking EntityChangeDTO for key {}", message.getId(), e);
     }
     if (Objects.isNull(organizationEntityChangeDTO)) {
       return null;

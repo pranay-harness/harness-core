@@ -5,7 +5,7 @@ import static io.harness.SeedData.seedNames;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.PLATFORMS;
+import static io.harness.delegate.beans.FileBucket.PLATFORMS;
 import static io.harness.generator.AccountGenerator.Accounts;
 import static io.harness.mongo.IndexManager.Mode.AUTO;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;

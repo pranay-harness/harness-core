@@ -9,6 +9,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
@@ -35,6 +37,7 @@ import org.mongodb.morphia.annotations.Transient;
 
 @Data
 @Builder
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class NoEligibleDelegatesAlert implements AlertData {
   @Inject @Transient @SchemaIgnore private transient EnvironmentService environmentService;
   @Inject @Transient @SchemaIgnore private transient AppService appService;

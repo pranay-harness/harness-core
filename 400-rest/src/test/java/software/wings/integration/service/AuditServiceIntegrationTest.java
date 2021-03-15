@@ -1,7 +1,7 @@
 package software.wings.integration.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.AUDITS;
+import static io.harness.delegate.beans.FileBucket.AUDITS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static org.assertj.core.api.Assertions.assertThat;

@@ -45,6 +45,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.exception.GitOperationException;
@@ -127,6 +128,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private LogCallback executionLogCallback;
   @Mock private NGGitService ngGitService;
   @Mock private GitDecryptionHelper gitDecryptionHelper;
+  @Mock private KustomizeTaskHelper kustomizeTaskHelper;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
@@ -871,7 +873,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     List<String> valuesList = new ArrayList<>();
     HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
     ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
-                                                        .skipResourceVersioning(true)
                                                         .helmVersion(HelmVersion.V3)
                                                         .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
                                                         .helmCommandFlag(helmCommandFlag)
@@ -902,7 +903,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     List<String> filesToRender = Arrays.asList("file1", "file2");
     HelmCommandFlag helmCommandFlag = HelmCommandFlag.builder().valueMap(ImmutableMap.of(TEMPLATE, "--debug")).build();
     ManifestDelegateConfig manifestDelegateConfig = HelmChartManifestDelegateConfig.builder()
-                                                        .skipResourceVersioning(true)
                                                         .helmVersion(HelmVersion.V3)
                                                         .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
                                                         .helmCommandFlag(helmCommandFlag)
@@ -922,5 +922,59 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     verify(spyHelper, times(1))
         .renderTemplateForHelmChartFiles(helmPath, "manifest", filesToRender, valuesList, "release", "namespace",
             executionLogCallback, HelmVersion.V3, 600000, helmCommandFlag);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRenderTemplateKustomize() throws Exception {
+    String kustomizePath = "/usr/bin/kustomize";
+    String kustomizePluginPath = "/usr/bin/kustomize/plugin";
+    List<String> valuesList = new ArrayList<>();
+    ManifestDelegateConfig manifestDelegateConfig =
+        KustomizeManifestDelegateConfig.builder()
+            .pluginPath(kustomizePluginPath)
+            .storeDelegateConfig(GitStoreDelegateConfig.builder().paths(Arrays.asList("kustomize-dir")).build())
+            .build();
+    K8sDelegateTaskParams delegateTaskParams =
+        K8sDelegateTaskParams.builder().kustomizeBinaryPath(kustomizePath).build();
+    List<FileData> renderedFiles = new ArrayList<>();
+    doReturn(renderedFiles)
+        .when(kustomizeTaskHelper)
+        .build("manifest", kustomizePath, kustomizePluginPath, "kustomize-dir", executionLogCallback);
+
+    List<FileData> result = k8sTaskHelperBase.renderTemplate(delegateTaskParams, manifestDelegateConfig, "manifest",
+        valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(kustomizeTaskHelper, times(1))
+        .build("manifest", kustomizePath, kustomizePluginPath, "kustomize-dir", executionLogCallback);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRenderTemplateForGivenFilesKustomize() throws Exception {
+    String kustomizePath = "/usr/bin/kustomize";
+    String kustomizePluginPath = "/usr/bin/kustomize/plugin";
+    List<String> valuesList = new ArrayList<>();
+    List<String> fileList = ImmutableList.of("deploy.yaml");
+    ManifestDelegateConfig manifestDelegateConfig = KustomizeManifestDelegateConfig.builder()
+                                                        .pluginPath(kustomizePluginPath)
+                                                        .storeDelegateConfig(GitStoreDelegateConfig.builder().build())
+                                                        .build();
+    K8sDelegateTaskParams delegateTaskParams =
+        K8sDelegateTaskParams.builder().kustomizeBinaryPath(kustomizePath).build();
+    List<FileData> renderedFiles = ImmutableList.of(FileData.builder().fileName("deploy.yaml").build());
+    doReturn(renderedFiles)
+        .when(kustomizeTaskHelper)
+        .buildForApply(kustomizePath, kustomizePluginPath, "manifest", fileList, executionLogCallback);
+
+    List<FileData> result = k8sTaskHelperBase.renderTemplateForGivenFiles(delegateTaskParams, manifestDelegateConfig,
+        "manifest", fileList, valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(kustomizeTaskHelper, times(1))
+        .buildForApply(kustomizePath, kustomizePluginPath, "manifest", fileList, executionLogCallback);
   }
 }

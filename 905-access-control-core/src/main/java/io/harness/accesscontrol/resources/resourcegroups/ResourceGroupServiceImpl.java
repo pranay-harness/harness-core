@@ -82,8 +82,10 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
 
   private ResourceGroup deleteInternal(String identifier, String scopeIdentifier) {
     return Failsafe.with(deleteResourceGroupTransactionPolicy).get(() -> transactionTemplate.execute(status -> {
-      long deleteCount = roleAssignmentService.deleteMany(
-          scopeIdentifier, RoleAssignmentFilter.builder().resourceGroupFilter(Sets.newHashSet(identifier)).build());
+      long deleteCount = roleAssignmentService.deleteMulti(RoleAssignmentFilter.builder()
+                                                               .scopeFilter(scopeIdentifier)
+                                                               .resourceGroupFilter(Sets.newHashSet(identifier))
+                                                               .build());
       return resourceGroupDao.delete(identifier, scopeIdentifier)
           .orElseThrow(()
                            -> new UnexpectedException(String.format(

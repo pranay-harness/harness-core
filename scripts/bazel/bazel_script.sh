@@ -113,6 +113,7 @@ BAZEL_MODULES="\
   //955-delegate-beans/src/main/proto:all \
   //955-delegate-beans:module \
   //940-feature-flag:module \
+  //940-ng-audit-service:module \
   //940-notification-client:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
@@ -124,6 +125,7 @@ BAZEL_MODULES="\
   //950-events-api:module \
   //950-events-framework:module \
   //950-git-sync-sdk:module \
+  //950-ng-audit-commons:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-log-client:module \
@@ -133,6 +135,7 @@ BAZEL_MODULES="\
   //954-connector-beans:module \
   //955-filters-sdk:module \
   //955-setup-usage-sdk:module \
+  //955-scm-java-client:module \
   //960-api-services:module \
   //960-continuous-features:module \
   //960-expression-service/src/main/proto/io/harness/expression/service:all \
@@ -381,6 +384,7 @@ build_bazel_module 930-delegate-tasks
 build_bazel_module 930-ng-core-clients
 build_bazel_module 955-delegate-beans
 build_bazel_module 940-feature-flag
+build_bazel_module 940-ng-audit-service
 build_bazel_module 940-resource-group-beans
 build_bazel_module 940-secret-manager-client
 build_bazel_module 950-command-library-common
@@ -390,6 +394,7 @@ build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
 build_bazel_module 950-git-sync-sdk
 build_bazel_module 950-log-client
+build_bazel_module 950-ng-audit-commons
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-timeout-engine

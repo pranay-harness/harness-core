@@ -3,13 +3,21 @@ package io.serializer.kryo;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
+import io.harness.http.HttpHeaderConfig;
+import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.ng.core.OrgScope;
+import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.Status;
+import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.request.HttpRequestInfo;
+import io.harness.request.RequestMetadata;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -27,6 +35,15 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(Status.class, 19460);
     kryo.register(ErrorDTO.class, 19461);
 
+    kryo.register(KeyValuePair.class, 22004);
+    kryo.register(ResourceScope.class, 22005);
+    kryo.register(AccountScope.class, 22006);
+    kryo.register(OrgScope.class, 22007);
+    kryo.register(ProjectScope.class, 22008);
     kryo.register(Resource.class, 22009);
+    kryo.register(HttpRequestInfo.class, 22010);
+    kryo.register(RequestMetadata.class, 22011);
+
+    kryo.register(HttpHeaderConfig.class, 19462);
   }
 }

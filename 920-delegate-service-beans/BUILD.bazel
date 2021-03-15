@@ -8,6 +8,7 @@ shared_dependencies = [
     "//955-delegate-beans:module",
     "//950-common-entities:module",
     "//950-delegate-tasks-beans:module",
+    "//955-alert-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
     "//970-grpc:module",

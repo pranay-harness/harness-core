@@ -1,15 +1,20 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.pms.contracts.execution.Status.NO_OP;
+import static io.harness.pms.contracts.execution.Status.SKIPPED;
 import static io.harness.pms.contracts.execution.Status.TASK_WAITING;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.SkipTaskExecutableResponse;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.sdk.core.data.StringOutcome;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.PmsNodeExecutionService;
@@ -17,6 +22,7 @@ import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 
 import com.google.common.base.Preconditions;
@@ -58,6 +64,28 @@ public class TaskStrategy implements ExecuteStrategy {
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, TaskRequest taskRequest) {
+    if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
+      pmsNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), NO_OP,
+          ExecutableResponse.newBuilder()
+              .setSkipTask(SkipTaskExecutableResponse.newBuilder()
+                               .setMessage(taskRequest.getSkipTaskRequest().getMessage())
+                               .build())
+              .build(),
+          Collections.emptyList());
+      pmsNodeExecutionService.handleStepResponse(nodeExecution.getUuid(),
+          StepResponseMapper.toStepResponseProto(
+              StepResponse.builder()
+                  .status(SKIPPED)
+                  .stepOutcome(
+                      StepOutcome.builder()
+                          .name("skipOutcome")
+                          .outcome(
+                              StringOutcome.builder().message(taskRequest.getSkipTaskRequest().getMessage()).build())
+                          .build())
+                  .build()));
+      return;
+    }
+
     String taskId = Preconditions.checkNotNull(
         pmsNodeExecutionService.queueTask(nodeExecution.getUuid(), ambiance.getSetupAbstractionsMap(), taskRequest));
 

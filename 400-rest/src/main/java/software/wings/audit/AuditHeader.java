@@ -37,8 +37,7 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AuditHeaderKeys")
 @Entity(value = "audits", noClassnameStored = true)
-@HarnessEntity(exportable = false)
-
+@HarnessEntity(exportable = true)
 public class AuditHeader extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

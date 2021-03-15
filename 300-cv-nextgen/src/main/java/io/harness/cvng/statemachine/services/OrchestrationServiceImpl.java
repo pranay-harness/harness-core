@@ -99,6 +99,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       currentlyExecutingStateMachine = orchestrator.getAnalysisStateMachineQueue().get(0);
     }
 
+    AnalysisStatus stateMachineStatus = null;
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:
@@ -109,7 +110,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         log.info("For {}, state machine is currently RUNNING. "
                 + "We will call executeStateMachine() to handover execution to state machine.",
             orchestrator.getVerificationTaskId());
-        stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
+        stateMachineStatus = stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
         break;
       case FAILED:
       case TIMEOUT:
@@ -121,6 +122,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         break;
       default:
         log.info("Unknown analysis status of the state machine under execution");
+    }
+    if (AnalysisStatus.SUCCESS == stateMachineStatus || AnalysisStatus.COMPLETED == stateMachineStatus) {
+      orchestrateNewAnalysisStateMachine(orchestrator.getVerificationTaskId());
     }
   }
 
@@ -157,7 +161,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
       Optional<AnalysisStateMachine> ignoredStateMachine = analysisStateMachine == null
           ? Optional.empty()
-          : stateMachineService.ignoreOldStatemachine(analysisStateMachine);
+          : stateMachineService.ignoreOldStateMachine(analysisStateMachine);
       if (!ignoredStateMachine.isPresent()) {
         break;
       }

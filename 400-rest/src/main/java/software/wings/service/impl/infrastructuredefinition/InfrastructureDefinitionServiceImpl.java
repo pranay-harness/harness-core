@@ -1044,6 +1044,29 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     return infrastructureDefinition;
   }
 
+  public InfrastructureDefinition getInfraDefById(String accountId, String infraDefId) {
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.accountId, accountId)
+            .filter(InfrastructureDefinitionKeys.uuid, infraDefId)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
+  }
+
+  public InfrastructureDefinition getInfraByName(String accountId, String infraDefName, String envId) {
+    final InfrastructureDefinition infrastructureDefinition =
+        wingsPersistence.createQuery(InfrastructureDefinition.class)
+            .filter(InfrastructureDefinitionKeys.accountId, accountId)
+            .filter(InfrastructureDefinitionKeys.envId, envId)
+            .filter(InfrastructureDefinitionKeys.name, infraDefName)
+            .get();
+
+    customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(infrastructureDefinition);
+    return infrastructureDefinition;
+  }
+
   private void validateInputs(String appId, String serviceId, String infraDefinitionId) {
     if (isEmpty(appId)) {
       throw new InvalidRequestException("App Id can't be empty");

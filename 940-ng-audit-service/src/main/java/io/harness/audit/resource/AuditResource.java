@@ -1,5 +1,7 @@
 package io.harness.audit.resource;
 
+import static io.harness.audit.mapper.AuditEventMapper.toDTO;
+
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -17,6 +19,6 @@ public class AuditResource {
   @ApiOperation(hidden = true, value = "Create Audit")
   @InternalApi
   public ResponseDTO<AuditEventDTO> create(@Body AuditEventDTO auditEventDTO) {
-    return ResponseDTO.newResponse(auditService.create(auditEventDTO));
+    return ResponseDTO.newResponse(toDTO(auditService.create(auditEventDTO)));
   }
 }

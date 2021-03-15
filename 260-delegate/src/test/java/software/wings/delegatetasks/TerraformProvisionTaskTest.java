@@ -31,8 +31,8 @@ import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.service.DelegateAgentFileService;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -361,7 +361,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
 
     doReturn(new ByteArrayInputStream(new byte[] {}))
         .when(delegateFileManager)
-        .downloadByFileId(any(DelegateAgentFileService.FileBucket.class), anyString(), anyString());
+        .downloadByFileId(any(FileBucket.class), anyString(), anyString());
   }
 
   @Test
