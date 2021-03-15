@@ -2,15 +2,16 @@ package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sWorkload.K8sWorkloadKeys;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,32 +32,56 @@ import org.mongodb.morphia.annotations.PrePersist;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "k8sWorkload", noClassnameStored = true)
-@NgUniqueIndex(name = "no_dup_cluster", fields = { @Field(K8sWorkloadKeys.clusterId)
-                                                   , @Field(K8sWorkloadKeys.uid) })
-@CdIndex(name = "accountId_clusterId_labels",
-    fields = { @Field(K8sWorkloadKeys.accountId)
-               , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.labels) })
-@CdIndex(name = "accountId_clusterId_uid",
-    fields = { @Field(K8sWorkloadKeys.accountId)
-               , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.uid) })
-@CdIndex(name = "accountId_clusterId_namespace_name",
-    fields =
-    {
-      @Field(K8sWorkloadKeys.accountId)
-      , @Field(K8sWorkloadKeys.clusterId), @Field(K8sWorkloadKeys.namespace), @Field(K8sWorkloadKeys.name)
-    })
-@CdIndex(name = "accountId_name_labels",
-    fields = { @Field(K8sWorkloadKeys.accountId)
-               , @Field(K8sWorkloadKeys.name), @Field(K8sWorkloadKeys.labels) })
-@CdIndex(name = "accountId_lastUpdatedAt",
-    fields = { @Field(K8sWorkloadKeys.accountId)
-               , @Field(K8sWorkloadKeys.lastUpdatedAt) })
-@CdIndex(name = "accountId_lastUpdatedAt_labels",
-    fields =
-    { @Field(K8sWorkloadKeys.accountId)
-      , @Field(K8sWorkloadKeys.lastUpdatedAt), @Field(K8sWorkloadKeys.labels) })
 @FieldNameConstants(innerTypeName = "K8sWorkloadKeys")
 public final class K8sWorkload implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("no_dup_cluster")
+                 .unique(true)
+                 .field(K8sWorkloadKeys.clusterId)
+                 .field(K8sWorkloadKeys.uid)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_clusterId_labels")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.clusterId)
+                 .field(K8sWorkloadKeys.labels)
+                 .build())
+
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_clusterId_uid")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.clusterId)
+                 .field(K8sWorkloadKeys.uid)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_clusterId_namespace_name")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.clusterId)
+                 .field(K8sWorkloadKeys.namespace)
+                 .field(K8sWorkloadKeys.name)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_name_labels")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.name)
+                 .field(K8sWorkloadKeys.labels)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_lastUpdatedAt")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.lastUpdatedAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_lastUpdatedAt_labels")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.lastUpdatedAt)
+                 .field(K8sWorkloadKeys.labels)
+                 .build())
+        .build();
+  }
+
   @Id String uuid;
   long createdAt;
   long lastUpdatedAt;

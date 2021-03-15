@@ -13,28 +13,21 @@ permissions:
     name: Create Project
     status: ACTIVE
     allowedScopeLevels:
-      - account
       - organization
   - identifier: core.project.view
     name: View Project
     status: ACTIVE
     allowedScopeLevels:
-      - account
-      - organization
       - project
   - identifier: core.project.edit
     name: Edit Project
     status: ACTIVE
     allowedScopeLevels:
-      - account
-      - organization
       - project
   - identifier: core.project.delete
     name: Delete Project
     status: ACTIVE
     allowedScopeLevels:
-      - account
-      - organization
       - project
   - identifier: core.organization.create
     name: Create Organization
@@ -45,19 +38,16 @@ permissions:
     name: View Organization
     status: ACTIVE
     allowedScopeLevels:
-      - account
       - organization
   - identifier: core.organization.edit
     name: Edit Organization
     status: ACTIVE
     allowedScopeLevels:
-      - account
       - organization
   - identifier: core.organization.delete
     name: Delete Organization
     status: ACTIVE
     allowedScopeLevels:
-      - account
       - organization
   - identifier: core.secret.create
     name: Create Secret

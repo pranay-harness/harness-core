@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import io.harness.delegate.beans.DelegateAgentFileService;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
@@ -17,6 +17,6 @@ public interface FileBasedScriptExecutor {
   CommandExecutionStatus copyFiles(String destinationDirectoryPath, ArtifactStreamAttributes artifactStreamAttributes,
       String accountId, String appId, String activityId, String commandUnitName, String hostName);
 
-  CommandExecutionStatus copyGridFsFiles(String destinationDirectoryPath,
-      DelegateAgentFileService.FileBucket fileBucket, List<Pair<String, String>> fileNamesIds);
+  CommandExecutionStatus copyGridFsFiles(
+      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds);
 }

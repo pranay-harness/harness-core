@@ -72,7 +72,7 @@ public class ShellScriptStepInfo extends ShellScriptBaseStepInfo implements CDSt
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SHELL_SCRIPT_STEP).isPartOfFQN(false).build();
   }
 
   @Override

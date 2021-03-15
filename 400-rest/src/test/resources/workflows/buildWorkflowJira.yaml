@@ -1,0 +1,50 @@
+harnessApiVersion: '1.0'
+type: BUILD
+envName: ENV_NAME
+notificationRules:
+- conditions:
+  - PAUSED
+  executionScope: WORKFLOW
+  notificationGroupAsExpression: false
+  userGroupAsExpression: true
+  userGroupExpression: ${user.name}
+phases:
+- daemonSet: false
+  name: Phase 1
+  phaseSteps:
+  - type: PREPARE_STEPS
+    name: Prepare Steps
+    steps:
+    - type: JIRA_CREATE_UPDATE
+      name: Jira
+      properties:
+        customFields:
+          customfield_10103:
+            fieldValue: '12'
+            fieldType: array
+        description: Test description
+        issueType: Story
+        jiraAction: CREATE_TICKET
+        jiraConnectorId: pX0ZoSKDSWC-cAlmQxNHeQ
+        labels:
+        - label
+        priority: null
+        project: TJI
+        summary: Test delete ticket
+    stepsInParallel: false
+  - type: COLLECT_ARTIFACT
+    name: Collect Artifact
+    stepsInParallel: false
+  - type: WRAP_UP
+    name: Wrap Up
+    stepsInParallel: false
+  provisionNodes: false
+  statefulSet: false
+templatized: true
+userVariables:
+- type: NUMBER
+  allowedValues: 0,1,2,3,4,5,6,7
+  fixed: false
+  mandatory: false
+  name: numb
+  value: '0'

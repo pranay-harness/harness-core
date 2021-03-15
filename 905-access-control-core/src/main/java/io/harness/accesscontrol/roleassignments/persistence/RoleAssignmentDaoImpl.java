@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.roleassignments.persistence;
 
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_MANAGED;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.fromDBO;
 import static io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBOMapper.toDBO;
 
@@ -103,8 +105,10 @@ public class RoleAssignmentDaoImpl implements RoleAssignmentDao {
       criteria.and(RoleAssignmentDBOKeys.resourceGroupIdentifier).in(roleAssignmentFilter.getResourceGroupFilter());
     }
 
-    if (!roleAssignmentFilter.getManagedFilter().isEmpty()) {
-      criteria.and(RoleAssignmentDBOKeys.managed).in(roleAssignmentFilter.getManagedFilter());
+    if (ONLY_CUSTOM.equals(roleAssignmentFilter.getManagedFilter())) {
+      criteria.and(RoleAssignmentDBOKeys.managed).in(false, null);
+    } else if (ONLY_MANAGED.equals(roleAssignmentFilter.getManagedFilter())) {
+      criteria.and(RoleAssignmentDBOKeys.managed).is(true);
     }
 
     if (!roleAssignmentFilter.getDisabledFilter().isEmpty()) {

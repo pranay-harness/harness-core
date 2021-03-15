@@ -3,8 +3,8 @@ package software.wings.delegatetasks;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateFileManagerBase;
+import io.harness.delegate.beans.FileBucket;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 

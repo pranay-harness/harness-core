@@ -1,7 +1,7 @@
 package software.wings.service.intfc.security;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.delegate.beans.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.ENCRYPT_DECRYPT_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;

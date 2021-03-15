@@ -4,10 +4,11 @@ import io.harness.pms.yaml.ParameterField;
 
 import lombok.Builder;
 import lombok.Value;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder
 public class ApproverInputInfo {
-  String name;
+  @NotEmpty String name;
   ParameterField<String> defaultValue;
 }

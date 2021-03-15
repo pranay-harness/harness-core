@@ -1474,8 +1474,7 @@ public class BillingDataQueryBuilder {
   }
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
-    if (ImmutableSet
-            .of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ", "kmpySmUISimoRrJL6NL73w")
+    if (ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg", "R7OsqSbNQS69mq74kMNceQ")
             .contains(accountId)) {
       return false;
     }

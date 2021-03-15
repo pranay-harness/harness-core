@@ -32,7 +32,6 @@ import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.CVConfigDataCollectionHandler;
 import io.harness.cvng.core.jobs.DataCollectionTaskRecoverNextTaskHandler;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
-import io.harness.cvng.core.jobs.MonitoringSourceMigrationHandler;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
@@ -264,7 +263,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
     registerVerificationTaskOrchestrationIterator(injector);
     registerVerificationJobInstanceDataCollectionTaskIterator(injector);
     registerDataCollectionTaskIterator(injector);
-    registerMonitoringSourceMigrationIterator(injector);
     registerRecoverNextTaskHandlerIterator(injector);
     registerExceptionMappers(environment.jersey());
     registerCVConfigCleanupIterator(injector);
@@ -432,34 +430,6 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .build();
     injector.injectMembers(activityCollectionIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
-  }
-
-  private void registerMonitoringSourceMigrationIterator(Injector injector) {
-    ScheduledThreadPoolExecutor dataCollectionExecutor =
-        new ScheduledThreadPoolExecutor(2, new ThreadFactoryBuilder().setNameFormat("migration-iterator").build());
-    // TODO: remove this in the next release
-    MonitoringSourceMigrationHandler monitoringSourceMigrationHandler =
-        injector.getInstance(MonitoringSourceMigrationHandler.class);
-    PersistenceIterator migrationIterator =
-        MongoPersistenceIterator
-            .<MonitoringSourcePerpetualTask, MorphiaFilterExpander<MonitoringSourcePerpetualTask>>builder()
-            .mode(PersistenceIterator.ProcessMode.PUMP)
-            .clazz(MonitoringSourcePerpetualTask.class)
-            .fieldName(MonitoringSourcePerpetualTaskKeys.migrationIteration)
-            .targetInterval(ofMinutes(5))
-            .acceptableNoAlertDelay(ofMinutes(1))
-            .executorService(dataCollectionExecutor)
-            .semaphore(new Semaphore(5))
-            .handler(monitoringSourceMigrationHandler)
-            .schedulingType(REGULAR)
-            .filterExpander(query
-                -> query.filter(MonitoringSourcePerpetualTaskKeys.verificationType,
-                    MonitoringSourcePerpetualTask.VerificationType.LIVE_MONITORING))
-            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
-            .redistribute(true)
-            .build();
-    injector.injectMembers(migrationIterator);
-    dataCollectionExecutor.scheduleWithFixedDelay(() -> migrationIterator.process(), 0, 2, TimeUnit.MINUTES);
   }
 
   private void registerRecoverNextTaskHandlerIterator(Injector injector) {

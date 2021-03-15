@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "//:lombok",
     "//970-ng-commons:module",
+    "//980-commons:module",
     "@maven//:aopalliance_aopalliance",
     "@maven//:com_cronutils_cron_utils",
     "@maven//:com_deftlabs_mongo_java_distributed_lock",

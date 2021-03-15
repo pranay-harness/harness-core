@@ -81,8 +81,10 @@ public class AccessControlModule extends AbstractModule {
     install(DecisionModule.getInstance(config.getDecisionModuleConfiguration()));
     install(AggregatorModule.getInstance(config.getAggregatorConfiguration()));
 
+    // remove this later on
     install(AccessControlClientModule.getInstance(
         config.getAccessControlClientConfiguration(), ACCESS_CONTROL_SERVICE.getServiceId()));
+
     install(new ResourceGroupClientModule(config.getResourceGroupClientConfiguration().getResourceGroupServiceConfig(),
         config.getResourceGroupClientConfiguration().getResourceGroupServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId()));

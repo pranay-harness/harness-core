@@ -188,3 +188,11 @@ if [[ "" != "$ANOMALY_DETECTION_USE_PROPHET" ]]; then
   yq write -i $CONFIG_FILE cePythonService.useProphet "$ANOMALY_DETECTION_USE_PROPHET"
 fi
 
+if [[ "" != "$BANZAI_CONFIG_HOST" ]]; then
+  yq write -i $CONFIG_FILE banzaiConfig.host "$BANZAI_CONFIG_HOST"
+fi
+
+if [[ "" != "$BANZAI_CONFIG_PORT" ]]; then
+  yq write -i $CONFIG_FILE banzaiConfig.port "$BANZAI_CONFIG_PORT"
+fi
+

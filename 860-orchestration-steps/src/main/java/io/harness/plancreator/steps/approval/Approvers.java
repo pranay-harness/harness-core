@@ -19,6 +19,5 @@ public class Approvers {
   // Minimum Number of approvals required.
   ParameterField<Integer> minimumCount;
 
-  // todo: what is it?
   ParameterField<Boolean> disallowPipelineExecutor;
 }

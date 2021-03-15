@@ -28,7 +28,7 @@ public abstract class JWTAuthenticationFilter implements ContainerRequestFilter,
   private final Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping;
   private final Map<String, String> serviceToSecretMapping;
 
-  public JWTAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext> > predicate,
+  protected JWTAuthenticationFilter(Predicate<Pair<ResourceInfo, ContainerRequestContext> > predicate,
       Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping, Map<String, String> serviceToSecretMapping) {
     this.predicate = predicate;
     this.serviceToJWTTokenHandlerMapping =
@@ -62,7 +62,7 @@ public abstract class JWTAuthenticationFilter implements ContainerRequestFilter,
   public void filter(
       ContainerRequestContext containerRequestContext, ContainerResponseContext containerResponseContext) {
     if (predicate.test(Pair.of(resourceInfo, containerRequestContext))) {
-      SecurityContextBuilder.unsetContext();
+      SecurityContextBuilder.unsetCompleteContext();
     }
   }
 }

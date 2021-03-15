@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 
 @FieldNameConstants(innerTypeName = "AlertReconciliationKeys")
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(Module._955_ALERT_BEANS)
 public class AlertReconciliation {
   @Getter private boolean needed;
   @Getter @Setter private Long nextIteration;

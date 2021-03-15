@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
@@ -65,6 +66,7 @@ public class FileBasedProcessScriptExecutor extends FileBasedAbstractScriptExecu
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     try {
       Pair<String, Long> fileInfo = fileProvider.getInfo();
+      createDirectoryIfDoesNotExist(remoteFilePath);
       OutputStream out = new FileOutputStream(remoteFilePath + "/" + fileInfo.getKey());
       fileProvider.downloadToStream(out);
       out.flush();

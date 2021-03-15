@@ -10,7 +10,6 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.beans.TaskData.TaskDataKeys;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
@@ -122,8 +121,6 @@ public class ImagePullSecretUtils {
   }
 
   private String getPasswordExpression(String passwordRef, Ambiance ambiance) {
-    int expressionFunctorToken =
-        Integer.parseInt(ambiance.getSetupAbstractionsMap().get(TaskDataKeys.expressionFunctorToken));
-    return "${ngSecretManager.obtain(\"" + passwordRef + "\", " + expressionFunctorToken + ")}";
+    return "${ngSecretManager.obtain(\"" + passwordRef + "\", " + ambiance.getExpressionFunctorToken() + ")}";
   }
 }

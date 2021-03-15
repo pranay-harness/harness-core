@@ -116,8 +116,6 @@ aeriform("//460-capability:tests")
 
 aeriform("//470-alert:module")
 
-aeriform("//480-alert-beans:module")
-
 aeriform("//490-ce-commons:module")
 
 aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")
@@ -286,6 +284,8 @@ aeriform("//950-walktree-visitor:tests")
 
 aeriform("//954-connector-beans:module")
 
+aeriform("//955-alert-beans:module")
+
 aeriform("//955-delegate-beans:module")
 
 aeriform("//955-filters-sdk:module")
@@ -293,6 +293,10 @@ aeriform("//955-filters-sdk:module")
 aeriform("//955-filters-sdk:tests")
 
 aeriform("//955-outbox-sdk:module")
+
+aeriform("//955-scm-java-client:module")
+
+aeriform("//955-scm-java-client:tests")
 
 aeriform("//955-setup-usage-sdk:module")
 

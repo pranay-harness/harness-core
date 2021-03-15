@@ -352,7 +352,11 @@ public class BuildJobEnvInfoBuilder {
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
-
+    Map<String, String> envvars =
+        resolveMapParameter("envVariables", "RunTests", identifier, runTestsStepInfo.getEnvVariables(), false);
+    if (!isEmpty(envvars)) {
+      stepEnvVars.putAll(envvars);
+    }
     return ContainerDefinitionInfo.builder()
         .name(containerName)
         .commands(StepContainerUtils.getCommand())

@@ -7,8 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -18,7 +20,8 @@ const (
 	defaultRunTestsTimeout int64 = 14400 // 4 hour
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
-	bazelCmd                     = "bazelisk" // TODO: use bazel, fall back to bazelisk?
+	bazelCmd                     = "bazel"
+	mvnAgentArg                  = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s/config.ini"
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -114,13 +117,14 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	return r.numRetries, err
 }
 
-func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) string {
+func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	if !r.runOnlySelectedTests {
 		// Run all the tests
-		return fmt.Sprintf("%s test %s -am", mvnCmd, r.args)
+		// TODO -- Aman - check if instumentation is required here too.
+		return fmt.Sprintf("%s %s -am", mvnCmd, r.args), nil
 	}
 	if len(tests) == 0 {
-		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\"")
+		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
 	}
 	// Use only unique classes
 	// TODO: Figure out how to incorporate package information in this
@@ -135,11 +139,16 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) string {
 		ut = append(ut, t.Class)
 	}
 	testStr := strings.Join(ut, ",")
-	return fmt.Sprintf("%s test %s -Dtest=%s -am", mvnCmd, r.args, testStr)
+	wrkspcPath, err := external.GetWrkspcPath()
+	if err != nil {
+		return "", errors.Wrap(err, "error while getting maven command")
+	}
+	fAgentArg := fmt.Sprintf(mvnAgentArg, wrkspcPath)
+	return fmt.Sprintf("%s %s -Dtest=%s -am %s", mvnCmd, r.args, testStr, fAgentArg), nil
 }
 
 func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) string {
-	defaultCmd := fmt.Sprintf("%s test %s //...", bazelCmd, r.args) // run all the tests
+	defaultCmd := fmt.Sprintf("%s %s //...", bazelCmd, r.args) // run all the tests
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd
@@ -176,7 +185,7 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 		rules = append(rules, strings.TrimSuffix(string(resp), "\n"))
 	}
 	testList := strings.Join(rules, " ")
-	return fmt.Sprintf("%s test %s %s", bazelCmd, r.args, testList)
+	return fmt.Sprintf("%s %s %s", bazelCmd, r.args, testList)
 }
 
 func valid(tests []types.RunnableTest) bool {
@@ -209,7 +218,10 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	switch r.buildTool {
 	case "maven":
 		r.log.Infow("setting up maven as the build tool")
-		testCmd = r.getMavenCmd(tests)
+		testCmd, err = r.getMavenCmd(tests)
+		if err != nil {
+			return "", err
+		}
 	case "bazel":
 		r.log.Infow("setting up bazel as the build tool")
 		testCmd = r.getBazelCmd(ctx, tests)

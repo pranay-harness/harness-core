@@ -2,7 +2,6 @@ package io.harness.engine.interrupts.handlers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.execution.NodeExecution.NodeExecutionKeys;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 
@@ -14,7 +13,6 @@ import io.harness.engine.interrupts.helpers.ExpiryHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -58,15 +56,7 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     try {
-      NodeExecution nodeExecution = nodeExecutionService.update(interrupt.getNodeExecutionId(),
-          ops
-          -> ops.addToSet(NodeExecutionKeys.interruptHistories,
-              InterruptEffect.builder()
-                  .interruptType(interrupt.getType())
-                  .tookEffectAt(System.currentTimeMillis())
-                  .interruptId(interrupt.getUuid())
-                  .build()));
-
+      NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
       expiryHelper.expireMarkedInstance(nodeExecution, interrupt);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);

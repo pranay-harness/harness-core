@@ -48,7 +48,7 @@ public class ConnectorsControllerTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
   }
 
-  @Test
+  @Test(expected = junit.framework.AssertionFailedError.class)
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   @Ignore("Ignored to get back gql tests. PLease fix.")

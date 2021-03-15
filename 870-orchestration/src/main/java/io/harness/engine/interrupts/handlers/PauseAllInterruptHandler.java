@@ -82,6 +82,7 @@ public class PauseAllInterruptHandler implements InterruptHandler {
                 .interruptId(interrupt.getUuid())
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
     pausedStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()

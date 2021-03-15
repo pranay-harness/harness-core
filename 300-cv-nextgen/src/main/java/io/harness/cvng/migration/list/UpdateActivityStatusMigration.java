@@ -3,7 +3,8 @@ package io.harness.cvng.migration.list;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 
@@ -13,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-public class UpdateActivityStatusMigration implements CNVGMigration {
+public class UpdateActivityStatusMigration implements CVNGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
 
@@ -37,5 +38,14 @@ public class UpdateActivityStatusMigration implements CNVGMigration {
         }
       }
     }
+  }
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 }

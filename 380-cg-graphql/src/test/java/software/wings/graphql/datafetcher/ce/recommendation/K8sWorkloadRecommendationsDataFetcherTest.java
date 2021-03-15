@@ -19,6 +19,7 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadRec
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadFilter;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadRecommendationPreset;
+import software.wings.graphql.datafetcher.ce.recommendation.dto.QLLastDayCost;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceEntry;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLResourceRequirement;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
@@ -171,9 +172,15 @@ public class K8sWorkloadRecommendationsDataFetcherTest extends AbstractDataFetch
                                                                          + "  memory: 10Mi\n"
                                                                          + "  cpu: 50m\n")
                                                                      .build())
+                                                    .p50(QLResourceRequirement.builder().build())
+                                                    .p80(QLResourceRequirement.builder().build())
+                                                    .p90(QLResourceRequirement.builder().build())
+                                                    .p95(QLResourceRequirement.builder().build())
+                                                    .p99(QLResourceRequirement.builder().build())
                                                     .numDays(7)
                                                     .build())
                        .estimatedSavings(BigDecimal.valueOf(100.0))
+                       .lastDayCost(QLLastDayCost.builder().info("Not Available").build())
                        .numDays(7)
                        .build());
   }

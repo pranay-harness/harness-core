@@ -1,5 +1,6 @@
 package io.harness.walktree.visitor;
 
+import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisitor;
 import io.harness.walktree.visitor.inputset.InputSetTemplateVisitor;
 import io.harness.walktree.visitor.mergeinputset.MergeInputSetVisitor;
@@ -35,9 +36,9 @@ public class SimpleVisitorFactory {
   }
 
   public EntityReferenceExtractorVisitor obtainEntityReferenceExtractorVisitor(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<LevelNode> levelNodes) {
     EntityReferenceExtractorVisitor entityReferenceExtractorVisitor =
-        new EntityReferenceExtractorVisitor(injector, accountIdentifier, orgIdentifier, projectIdentifier);
+        new EntityReferenceExtractorVisitor(injector, accountIdentifier, orgIdentifier, projectIdentifier, levelNodes);
     injector.injectMembers(entityReferenceExtractorVisitor);
     return entityReferenceExtractorVisitor;
   }

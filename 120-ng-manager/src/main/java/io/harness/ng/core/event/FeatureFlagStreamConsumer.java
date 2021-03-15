@@ -47,7 +47,7 @@ public class FeatureFlagStreamConsumer implements Runnable {
     } catch (Exception ex) {
       log.error("Feature flag stream consumer unexpectedly stopped", ex);
     }
-    SecurityContextBuilder.unsetContext();
+    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() throws ConsumerShutdownException {

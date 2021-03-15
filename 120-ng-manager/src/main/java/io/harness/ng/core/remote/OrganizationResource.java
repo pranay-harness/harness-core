@@ -108,9 +108,11 @@ public class OrganizationResource {
     OrganizationFilterDTO organizationFilterDTO =
         OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
+      SortOrder harnessManagedOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.harnessManaged, SortOrder.OrderType.DESC).build();
+      SortOrder nameOrder =
           SortOrder.Builder.aSortOrder().withField(OrganizationKeys.name, SortOrder.OrderType.ASC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
+      pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, nameOrder));
       organizationFilterDTO.setIgnoreCase(true);
     }
     Page<OrganizationResponse> organizations =

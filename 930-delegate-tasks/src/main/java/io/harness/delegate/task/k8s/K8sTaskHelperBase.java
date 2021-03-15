@@ -63,6 +63,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -193,6 +194,7 @@ public class K8sTaskHelperBase {
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
+  @Inject private KustomizeTaskHelper kustomizeTaskHelper;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -1851,6 +1853,12 @@ public class K8sTaskHelperBase {
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
             releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
             helmChartManifest.getHelmCommandFlag());
+      case KUSTOMIZE:
+        KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+        GitStoreDelegateConfig gitStoreDelegateConfig =
+            (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
+        return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -1876,6 +1884,11 @@ public class K8sTaskHelperBase {
         return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, filesList,
             valuesFiles, releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(),
             timeoutInMillis, helmChartManifest.getHelmCommandFlag());
+
+      case KUSTOMIZE:
+        KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+        return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList, executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -1907,6 +1920,8 @@ public class K8sTaskHelperBase {
         return downloadManifestFilesFromGit(
             storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
 
+      case HTTP_HELM:
+        // TODO: download helm chart files from http helm repo
       default:
         throw new UnsupportedOperationException(
             String.format("Manifest store config type: [%s]", storeDelegateConfig.getType().name()));
