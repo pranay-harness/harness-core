@@ -1,0 +1,5 @@
+Var appsQuery = "query?nrql=SELECT count(*)  FROM Transaction,TransactionError FACET appId,appName"
+Var fullQuery = concat(Env:baseUrl, Var:appsQuery)
+Var applications = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+
+
