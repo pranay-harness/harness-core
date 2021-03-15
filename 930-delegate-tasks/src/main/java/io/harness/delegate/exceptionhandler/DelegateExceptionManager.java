@@ -5,6 +5,7 @@ import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.exceptionhandler.handler.DelegateExceptionHandler;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 
 import com.google.inject.Inject;
@@ -70,11 +71,10 @@ public class DelegateExceptionManager {
   }
 
   private WingsException prepareDefaultErrorResponse(Exception exception) {
-    // TODO create new exception type - UnhandledException and use it here
-    return new WingsException(exception);
+    return new UnexpectedException("Unable to handle delegate exception", exception);
   }
 
-  private ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder prepareErrorResponse(
+  private ErrorNotifyResponseDataBuilder prepareErrorResponse(
       Exception exception, ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder) {
     if (errorNotifyResponseDataBuilder == null) {
       errorNotifyResponseDataBuilder = ErrorNotifyResponseData.builder();
