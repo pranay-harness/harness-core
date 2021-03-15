@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class DelegateExceptionManager {
-  private Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
+  private final Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
 
   @Inject
   public DelegateExceptionManager(Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandlerMapping) {
@@ -25,8 +25,8 @@ public class DelegateExceptionManager {
   }
 
   public DelegateResponseData getResponseData(Exception exception,
-      ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder, boolean isErrorFramwworkSupportedByTask) {
-    if (!isErrorFramwworkSupportedByTask) {
+      ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder, boolean isErrorFrameworkSupportedByTask) {
+    if (!isErrorFrameworkSupportedByTask) {
       // return default response
       return prepareErrorResponse(exception, errorNotifyResponseDataBuilder).build();
     }
