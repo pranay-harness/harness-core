@@ -35,6 +35,12 @@ public class CommonStepInfo {
           .setType("HarnessApproval")
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
           .build();
+  StepInfo jiraApprovalStepInfo =
+          StepInfo.newBuilder()
+                  .setName("Jira Approval")
+                  .setType("JiraApproval")
+                  .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
+                  .build();
   public List<StepInfo> getCommonSteps(String accountId) {
     List<StepInfo> stepInfos = new ArrayList<>();
     stepInfos.add(shellScriptStepInfo);
@@ -48,6 +54,7 @@ public class CommonStepInfo {
           FeatureName.NG_HARNESS_APPROVAL, ex);
     }
     stepInfos.add(httpStepInfo);
+    stepInfos.add(jiraApprovalStepInfo);
     return stepInfos;
   }
 }

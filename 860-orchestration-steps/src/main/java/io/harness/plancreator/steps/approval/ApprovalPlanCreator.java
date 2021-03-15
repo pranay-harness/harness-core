@@ -8,6 +8,6 @@ import java.util.Set;
 public class ApprovalPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("HarnessApproval");
+    return Sets.newHashSet("HarnessApproval", "JiraApproval");
   }
 }
