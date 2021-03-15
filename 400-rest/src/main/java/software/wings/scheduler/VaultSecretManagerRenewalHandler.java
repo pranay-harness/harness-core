@@ -52,10 +52,8 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
-                -> query.field(SecretManagerConfigKeys.encryptionType)
-                       .equal(EncryptionType.VAULT)
-                       .field(SecretManagerConfigKeys.encryptionType)
-                       .equal(EncryptionType.VAULT_SSH))
+                -> query.or(query.criteria(SecretManagerConfigKeys.encryptionType).equal(EncryptionType.VAULT),
+                    query.criteria(SecretManagerConfigKeys.encryptionType).equal(EncryptionType.VAULT_SSH)))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));
