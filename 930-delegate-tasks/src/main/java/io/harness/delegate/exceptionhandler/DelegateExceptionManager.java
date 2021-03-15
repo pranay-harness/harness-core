@@ -7,6 +7,7 @@ import io.harness.delegate.exceptionhandler.handler.DelegateExceptionHandler;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.reflection.ReflectionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -59,7 +60,7 @@ public class DelegateExceptionManager {
       }
 
       if (exception.getCause() != null) {
-        handledException.initCause(handleException((Exception) exception.getCause()));
+        setExceptionCause(handledException, handleException((Exception) exception.getCause()));
       }
       return handledException;
 
@@ -82,5 +83,9 @@ public class DelegateExceptionManager {
 
     return errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
         .errorMessage(ExceptionUtils.getMessage(exception));
+  }
+
+  private void setExceptionCause(WingsException exception, Exception cause) throws IllegalAccessException {
+    ReflectionUtils.setObjectField(ReflectionUtils.getFieldByName(exception.getClass(), "cause"), exception, cause);
   }
 }
