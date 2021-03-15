@@ -80,13 +80,12 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private SecretManager secretManager;
   private Map<String, String> serviceToSecretMapping;
   private Map<String, JWTTokenHandler> serviceToJWTTokenHandlerMapping;
-
-  @Inject private AuthHelper authHelper;
+  private AuthHelper authHelper;
 
   @Inject
   public AuthenticationFilter(UserService userService, AuthService authService, AuditService auditService,
       AuditHelper auditHelper, ApiKeyService apiKeyService, HarnessApiKeyService harnessApiKeyService,
-      ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager) {
+      ExternalApiRateLimitingService rateLimitingService, SecretManager secretManager, AuthHelper authHelper) {
     this.userService = userService;
     this.authService = authService;
     this.auditService = auditService;
@@ -95,6 +94,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     this.harnessApiKeyService = harnessApiKeyService;
     this.rateLimitingService = rateLimitingService;
     this.secretManager = secretManager;
+    this.authHelper = authHelper;
     serviceToSecretMapping = getServiceToSecretMapping();
     serviceToJWTTokenHandlerMapping = getServiceToJWTTokenHandlerMapping();
   }

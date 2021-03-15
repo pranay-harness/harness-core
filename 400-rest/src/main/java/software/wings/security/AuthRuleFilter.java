@@ -103,8 +103,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
-  @Inject private ApiKeyService apiKeyService;
-  @Inject private AuthHelper authHelper;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -114,6 +112,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
+  private ApiKeyService apiKeyService;
+  private AuthHelper authHelper;
 
   /**
    * Instantiates a new Auth rule filter.
@@ -126,7 +126,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
       UserService userService, AccountService accountService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils) {
+      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils, ApiKeyService apiKeyService,
+      AuthHelper authHelper) {
     this.authService = authService;
     this.authHandler = authHandler;
     this.appService = appService;
@@ -135,6 +136,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.graphQLUtils = graphQLUtils;
+    this.apiKeyService = apiKeyService;
+    this.authHelper = authHelper;
   }
 
   private boolean isAuthFilteringExempted(String uri) {

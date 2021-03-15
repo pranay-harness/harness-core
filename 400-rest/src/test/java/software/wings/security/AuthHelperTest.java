@@ -6,13 +6,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
+import software.wings.WingsBaseTest;
 import software.wings.resources.AccountResource;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
 
+import com.google.inject.Inject;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ResourceInfo;
 import org.junit.Test;
@@ -20,7 +21,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class AuthHelperTest extends CategoryTest {
+public class AuthHelperTest extends WingsBaseTest {
   @Mock ResourceInfo resourceInfo = mock(ResourceInfo.class);
   @InjectMocks private AuthHelper authHelper;
 

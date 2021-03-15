@@ -63,6 +63,7 @@ import software.wings.beans.User;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.GenericDbCache;
 import software.wings.resources.graphql.GraphQLUtils;
+import software.wings.security.AuthHelper;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
@@ -72,6 +73,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -149,21 +151,24 @@ public class SecureResourceTest extends CategoryTest {
   private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
   private static VersionInfoManager versionInfoManager = mock(VersionInfoManager.class);
   private static ConfigurationController configurationController = mock(ConfigurationController.class);
+  private static ApiKeyService apiKeyService = mock(ApiKeyService.class);
 
   private static AuthService authService =
       new AuthServiceImpl(genericDbCache, hPersistence, userService, userGroupService, usageRestrictionsService,
           harnessCacheManager, authTokenCache, configuration, verificationServiceSecretManager, authHandler,
           harnessUserGroupService, secretManager, versionInfoManager, configurationController);
 
+  private static AuthHelper authHelper = new AuthHelper(authHandler, authService);
+
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
-      accountService, whitelistService, harnessUserGroupService, graphQLUtils);
+      accountService, whitelistService, harnessUserGroupService, graphQLUtils, apiKeyService, authHelper);
 
   /**
    * The constant resources.
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().instance(new SecureResource()).instance(authRuleFilter).build();
+      ResourceTestRule.builder().instance(new SecureResource()).instance(authRuleFilter).instance(authHelper).build();
 
   private String accountKey = "2f6b0988b6fb3370073c3d0505baee59";
 

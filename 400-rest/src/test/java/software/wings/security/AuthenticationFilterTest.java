@@ -73,7 +73,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   @Mock HarnessApiKeyService thirdPartyApiKeyService = mock(HarnessApiKeyService.class);
   @Mock ExternalApiRateLimitingService rateLimitingService = mock(ExternalApiRateLimitingService.class);
   @Mock SecretManager secretManager = mock(SecretManager.class);
-  @Mock AuthHelper authHelper;
+  @Mock AuthHelper authHelper = mock(AuthHelper.class);
 
   @InjectMocks AuthenticationFilter authenticationFilter;
 
@@ -84,7 +84,7 @@ public class AuthenticationFilterTest extends CategoryTest {
   @Before
   public void setUp() {
     authenticationFilter = new AuthenticationFilter(userService, authService, auditService, auditHelper, apiKeyService,
-        thirdPartyApiKeyService, rateLimitingService, secretManager);
+        thirdPartyApiKeyService, rateLimitingService, secretManager, authHelper);
     authenticationFilter = spy(authenticationFilter);
     when(context.getSecurityContext()).thenReturn(securityContext);
     when(securityContext.isSecure()).thenReturn(true);

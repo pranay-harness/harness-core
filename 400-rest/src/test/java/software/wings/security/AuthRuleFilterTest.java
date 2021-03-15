@@ -35,6 +35,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -116,6 +117,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Mock ApiKeyService apiKeyService;
+  @InjectMocks private AuthHelper authHelper;
 
   @Inject @InjectMocks AuthRuleFilter authRuleFilter;
 
@@ -137,6 +139,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
             MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES, MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS,
             MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS, MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES,
             MANAGE_PIPELINE_GOVERNANCE_STANDARDS));
+    on(authRuleFilter).set("authHelper", authHelper);
   }
 
   @Test

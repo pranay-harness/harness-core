@@ -34,9 +34,16 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 
 public class AuthHelper {
-  @Inject private AuthHandler authHandler;
-  @Inject private AuthService authService;
   @Context private ResourceInfo resourceInfo;
+
+  private AuthHandler authHandler;
+  private AuthService authService;
+
+  @Inject
+  public AuthHelper(AuthHandler authHandler, AuthService authService) {
+    this.authHandler = authHandler;
+    this.authService = authService;
+  }
 
   public UserRequestContext buildUserRequestContext(List<PermissionAttribute> requiredPermissionAttributes, User user,
       String accountId, boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
