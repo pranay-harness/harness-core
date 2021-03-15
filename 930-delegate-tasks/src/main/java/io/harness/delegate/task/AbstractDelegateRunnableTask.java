@@ -119,13 +119,15 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       }
       log.info("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
+      // TODO check to move this exception as well to DelegateExceptionManager
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
                                 .errorMessage(ExceptionUtils.getMessage(exception))
                                 .build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (Exception exception) {
-      //      ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
+      // TODO add this exception logging
+      //            ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
       //                                .errorMessage(ExceptionUtils.getMessage(exception))
       //                                .build());
