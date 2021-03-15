@@ -12,7 +12,6 @@ import io.harness.persistence.NameAccess;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.shellscript.provisioner.ShellScriptInfrastructureProvisioner;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
@@ -81,25 +80,6 @@ public abstract class InfrastructureProvisioner
     this.accountId = accountId;
   }
   public abstract String variableKey();
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class InfraProvisionerYaml extends BaseEntityYaml {
-    private String description;
-    private String infrastructureProvisionerType;
-    private List<NameValuePair.Yaml> variables;
-    private List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints;
-
-    public InfraProvisionerYaml(String type, String harnessApiVersion, String description,
-        String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
-        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints) {
-      super(type, harnessApiVersion);
-      this.description = description;
-      this.infrastructureProvisionerType = infrastructureProvisionerType;
-      this.mappingBlueprints = mappingBlueprints;
-    }
-  }
 
   @UtilityClass
   public static final class InfrastructureProvisionerKeys {

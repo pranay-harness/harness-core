@@ -24,7 +24,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.instana.InstanaCVConfiguration;
-import software.wings.verification.instana.InstanaCVConfiguration.InstanaCVConfigurationYaml;
+import software.wings.verification.instana.InstanaCVConfigurationYaml;
 
 import com.amazonaws.services.codedeploy.model.TagFilter;
 import java.util.ArrayList;

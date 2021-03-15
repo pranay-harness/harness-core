@@ -7,13 +7,10 @@ import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_
 import software.wings.service.impl.analysis.FeedbackPriority;
 import software.wings.stencils.DefaultValue;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfigurationYaml;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 @Data
@@ -77,16 +74,5 @@ public class LogsCVConfiguration extends CVConfiguration {
   protected void copy(LogsCVConfiguration cvConfiguration) {
     super.copy(cvConfiguration);
     cvConfiguration.setQuery(this.getQuery());
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static class LogsCVConfigurationYaml extends CVConfigurationYaml {
-    private String query;
-    private Long baselineStartMinute;
-    private Long baselineEndMinute;
-    private String alertPriority;
   }
 }

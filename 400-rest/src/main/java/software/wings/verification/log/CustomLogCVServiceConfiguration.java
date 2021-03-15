@@ -7,7 +7,6 @@ import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
 import software.wings.sm.states.CustomLogVerificationState.Method;
 import software.wings.verification.CVConfiguration;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -65,13 +64,5 @@ public class CustomLogCVServiceConfiguration extends LogsCVConfiguration {
     clonedConfig.setLogCollectionInfo(this.getLogCollectionInfo());
     clonedConfig.setQuery(this.getQuery());
     return clonedConfig;
-  }
-
-  @Data
-  @Builder
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class CustomLogsCVConfigurationYaml extends LogsCVConfigurationYaml {
-    private LogCollectionInfo logCollectionInfo;
   }
 }

@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.DynaTraceConfig;
-import software.wings.beans.DynaTraceConfig.DynaTraceYaml;
+import software.wings.beans.DynaTraceYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 

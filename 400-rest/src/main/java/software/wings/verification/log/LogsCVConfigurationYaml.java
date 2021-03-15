@@ -1,9 +1,9 @@
-package software.wings.verification.datadog;
+package software.wings.verification.log;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.verification.log.LogsCVConfigurationYaml;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
@@ -15,6 +15,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonPropertyOrder({"type", "harnessApiVersion"})
-public final class DatadogLogCVConfigurationYaml extends LogsCVConfigurationYaml {
-  private String hostnameField;
+public class LogsCVConfigurationYaml extends CVConfigurationYaml {
+  private String query;
+  private Long baselineStartMinute;
+  private Long baselineEndMinute;
+  private String alertPriority;
 }

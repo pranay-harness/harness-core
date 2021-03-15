@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.DynaTraceYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.DynaTraceConfigYamlHandler;
@@ -35,7 +36,7 @@ public class DynaTraceConfigYamlHandlerTest extends SettingValueConfigYamlHandle
       + "harnessApiVersion: '1.0'\n"
       + "type: DYNA_TRACE";
 
-  private Class yamlClass = DynaTraceConfig.DynaTraceYaml.class;
+  private Class yamlClass = DynaTraceYaml.class;
 
   @Test
   @Owner(developers = RAGHU)
