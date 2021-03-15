@@ -38,6 +38,6 @@ public class ParallelStageElement implements StageElementWrapper, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PARALLEL_STAGE_ELEMENT).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.PARALLEL_STAGE_ELEMENT).isPartOfFQN(false).build();
   }
 }

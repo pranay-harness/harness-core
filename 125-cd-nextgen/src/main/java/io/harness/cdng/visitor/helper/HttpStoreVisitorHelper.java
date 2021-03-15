@@ -12,6 +12,7 @@ import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class HttpStoreVisitorHelper implements ConfigValidator, EntityReferenceExtractor {
@@ -24,8 +25,8 @@ public class HttpStoreVisitorHelper implements ConfigValidator, EntityReferenceE
   }
 
   @Override
-  public Set<EntityDetailProtoDTO> addReference(
-      Object object, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+  public Set<EntityDetailProtoDTO> addReference(Object object, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, Map<String, Object> contextMap) {
     HttpStoreConfig helmHttpStore = (HttpStoreConfig) object;
     Set<EntityDetailProtoDTO> result = new HashSet<>();
     if (ParameterField.isNull(helmHttpStore.getConnectorRef())) {

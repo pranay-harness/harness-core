@@ -96,6 +96,6 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("spec").build();
+    return LevelNode.builder().qualifierName("spec").isPartOfFQN(false).build();
   }
 }
