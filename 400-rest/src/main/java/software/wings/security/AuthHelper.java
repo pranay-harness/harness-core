@@ -31,10 +31,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Context;
+import lombok.Setter;
 
 public class AuthHelper {
-  @Context private ResourceInfo resourceInfo;
+  @Setter private ResourceInfo resourceInfo;
 
   private AuthHandler authHandler;
   private AuthService authService;

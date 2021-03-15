@@ -13,7 +13,6 @@ import software.wings.WingsBaseTest;
 import software.wings.resources.AccountResource;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
 
-import com.google.inject.Inject;
 import java.lang.reflect.Method;
 import javax.ws.rs.container.ResourceInfo;
 import org.junit.Test;

@@ -101,6 +101,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext containerRequestContext) throws IOException {
+    authHelper.setResourceInfo(resourceInfo);
     if (authenticationExemptedRequests(containerRequestContext)) {
       return;
     }

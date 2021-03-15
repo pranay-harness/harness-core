@@ -188,6 +188,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
    */
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    authHelper.setResourceInfo(resourceInfo);
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
     }
