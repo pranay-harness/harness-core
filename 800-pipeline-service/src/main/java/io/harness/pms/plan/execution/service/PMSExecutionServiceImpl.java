@@ -13,6 +13,9 @@ import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.advisers.ManualIssuer;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -148,11 +151,16 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public InterruptDTO registerInterrupt(
       PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
-    InterruptPackage interruptPackage = InterruptPackage.builder()
-                                            .interruptType(executionInterruptType.getExecutionInterruptType())
-                                            .planExecutionId(planExecutionId)
-                                            .nodeExecutionId(nodeExecutionId)
-                                            .build();
+    InterruptPackage interruptPackage =
+        InterruptPackage.builder()
+            .interruptType(executionInterruptType.getExecutionInterruptType())
+            .planExecutionId(planExecutionId)
+            .nodeExecutionId(nodeExecutionId)
+            .interruptConfig(
+                InterruptConfig.newBuilder()
+                    .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
+                    .build())
+            .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return InterruptDTO.builder()
         .id(interrupt.getUuid())

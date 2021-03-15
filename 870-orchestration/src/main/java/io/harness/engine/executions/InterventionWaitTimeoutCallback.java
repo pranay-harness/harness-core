@@ -10,7 +10,12 @@ import io.harness.engine.interrupts.InterruptPackage.InterruptPackageBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
+import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserIssuer;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.advisers.RetryInterruptConfig;
 import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -53,22 +58,36 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
   @VisibleForTesting
   InterruptPackage getInterruptPackage(InterventionWaitAdvise interventionWaitAdvise) {
     RepairActionCode repairActionCode = interventionWaitAdvise.getRepairActionCode();
+    InterruptConfig.Builder interruptConfigBuilder = InterruptConfig.newBuilder().setIssuedBy(
+        IssuedBy.newBuilder()
+            .setAdviserIssuer(AdviserIssuer.newBuilder().setAdviserType(AdviseType.INTERVENTION_WAIT).build())
+            .build());
     InterruptPackageBuilder interruptPackageBuilder =
         InterruptPackage.builder().planExecutionId(planExecutionId).nodeExecutionId(nodeExecutionId);
     switch (repairActionCode) {
       case MARK_AS_SUCCESS:
-        return interruptPackageBuilder.interruptType(InterruptType.MARK_SUCCESS).build();
+        return interruptPackageBuilder.interruptType(InterruptType.MARK_SUCCESS)
+            .interruptConfig(interruptConfigBuilder.build())
+            .build();
       case RETRY:
-        return interruptPackageBuilder.interruptType(InterruptType.RETRY).build();
+        interruptConfigBuilder.setRetryInterruptConfig(RetryInterruptConfig.newBuilder().build());
+        return interruptPackageBuilder.interruptType(InterruptType.RETRY)
+            .interruptConfig(interruptConfigBuilder.build())
+            .build();
       case IGNORE:
-        return interruptPackageBuilder.interruptType(InterruptType.IGNORE).build();
+        return interruptPackageBuilder.interruptType(InterruptType.IGNORE)
+            .interruptConfig(interruptConfigBuilder.build())
+            .build();
       case ON_FAIL:
         return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP)
+            .interruptConfig(interruptConfigBuilder.build())
             .metadata(Collections.singletonMap(InterruptType.NEXT_STEP.name(), interventionWaitAdvise.getNextNodeId()))
             .build();
       case UNKNOWN:
       case END_EXECUTION:
-        return interruptPackageBuilder.interruptType(InterruptType.ABORT_ALL).build();
+        return interruptPackageBuilder.interruptType(InterruptType.ABORT_ALL)
+            .interruptConfig(interruptConfigBuilder.build())
+            .build();
       default:
         throw new InvalidRequestException("No Execution Type Available for RepairAction Code: " + repairActionCode);
     }
