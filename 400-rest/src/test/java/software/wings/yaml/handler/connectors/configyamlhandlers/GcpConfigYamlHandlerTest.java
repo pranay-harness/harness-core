@@ -1,16 +1,12 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
-import static io.harness.rule.OwnerRule.SAINATH;
-
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.when;
-
+import com.google.inject.Inject;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
@@ -21,13 +17,13 @@ import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConf
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.intfc.security.SecretManager;
 
-import com.google.inject.Inject;
 import java.util.Collections;
-import java.util.Set;
-import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+
+import static io.harness.rule.OwnerRule.SAINATH;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private GcpConfigYamlHandler gcpConfigYamlHandler;
