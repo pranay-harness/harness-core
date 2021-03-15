@@ -360,14 +360,14 @@ public class AuthenticationManager {
       }
 
     } catch (WingsException we) {
-      log.warn("Failed to login via default mechanism", we);
+      log.error("Failed to login via default mechanism", we);
       if (NON_INVALID_CREDENTIALS_ERROR_CODES.contains(we.getCode())) {
         throw we;
       } else {
         throw new WingsException(INVALID_CREDENTIAL, USER);
       }
     } catch (Exception e) {
-      log.warn("Failed to login via default mechanism", e);
+      log.error("Failed to login via default mechanism", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
@@ -407,7 +407,7 @@ public class AuthenticationManager {
         return loggedInUser;
       }
     } catch (Exception e) {
-      log.warn("Failed to login via SSO", e);
+      log.error("Failed to login via SSO", e);
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }

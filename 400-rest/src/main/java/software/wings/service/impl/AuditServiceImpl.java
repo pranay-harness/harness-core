@@ -440,9 +440,9 @@ public class AuditServiceImpl implements AuditService {
       record.getDetails().put("Groups", userGroupNamesList);
     } else if (entity instanceof ApiKeyEntry && type.equals(Type.INVOKED)) {
       AuditHeader header = auditHelper.get();
+      record.getDetails().put("Authentication", "API Key");
       record.getDetails().put("resourcePath", header.getResourcePath());
-      header.withCreatedBy(EmbeddedUser.builder().name("API").build());
-      System.out.println("djh");
+      //    header.withCreatedBy(EmbeddedUser.builder().name("API").build());
     } else if (entity instanceof SSOSettings && (type.equals(Type.DELETE) || type.equals(Type.CREATE))) {
       AuditHeader header = auditHelper.get();
       String userUuid = header.getCreatedBy().getUuid();

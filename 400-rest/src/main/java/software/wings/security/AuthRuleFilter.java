@@ -191,7 +191,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-    if (requestContext.getHeaderString("X-Api-Key") != null) {
+    if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
       String apiKey = requestContext.getHeaderString("X-Api-Key");
       ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
       auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
