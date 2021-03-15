@@ -85,6 +85,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
     outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(1);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sRollingOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.OUTPUT);
+    assertThat(outcome.getGroup()).isNull();
   }
 
   @Override

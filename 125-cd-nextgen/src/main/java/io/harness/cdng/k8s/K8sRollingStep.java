@@ -123,7 +123,6 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sRollingOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }
