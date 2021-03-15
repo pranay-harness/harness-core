@@ -29,9 +29,9 @@
             <version>4.0.5</version>
         </dependency>
         <dependency>
-            <groupId>io.harness.cf</groupId>
-            <artifactId>cf-client-sdk-java</artifactId>
-            <version>1.0.0-20210126.200034-12</version>
+            <groupId>io.harness</groupId>
+            <artifactId>ff-java-server-sdk</artifactId>
+            <version>0.0.2</version>
         </dependency>
         <dependency>
             <groupId>io.swagger</groupId>
