@@ -8,6 +8,7 @@ import io.harness.yaml.core.intfc.WithIdentifier;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
+// Test
 @JsonTypeInfo(use = NAME, include = WRAPPER_OBJECT)
 @JsonTypeName("trigger")
 public interface NGTriggerInterface extends WithIdentifier {}
