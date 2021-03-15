@@ -10,6 +10,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse.DelegateSyncTaskResponseKeys;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateSyncService;
@@ -91,7 +92,10 @@ public class DelegateSyncServiceImpl implements DelegateSyncService {
     // throw exception here
     Object response = kryoSerializer.asInflatedObject(taskResponse.getResponseData());
     if (response instanceof ErrorNotifyResponseData) {
-      throw((ErrorNotifyResponseData) response).getException();
+      WingsException exception = ((ErrorNotifyResponseData) response).getException();
+      if (exception != null) {
+        throw exception;
+      }
     }
 
     log.info("Deserialize and return the response for task {}", taskId);
