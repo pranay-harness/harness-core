@@ -20,6 +20,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import org.apache.commons.lang3.StringUtils;
 
 public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<RunTestsStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
@@ -40,10 +41,16 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
 
     RunTestsStep.Builder runTestsStepBuilder = RunTestsStep.newBuilder();
 
-    runTestsStepBuilder.setPreTestCommand(RunTimeInputHandler.resolveStringParameter(
-        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPreCommand(), false));
-    runTestsStepBuilder.setPostTestCommand(RunTimeInputHandler.resolveStringParameter(
-        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPostCommand(), false));
+    String preTestCommand = RunTimeInputHandler.resolveStringParameter(
+        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPreCommand(), false);
+    if (StringUtils.isNotEmpty(preTestCommand)) {
+      runTestsStepBuilder.setPreTestCommand(preTestCommand);
+    }
+    String postTestCommand = RunTimeInputHandler.resolveStringParameter(
+        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPostCommand(), false);
+    if (StringUtils.isNotEmpty(postTestCommand)) {
+      runTestsStepBuilder.setPostTestCommand(postTestCommand);
+    }
     runTestsStepBuilder.setArgs(runTestsStepInfo.getArgs());
     runTestsStepBuilder.setContainerPort(port);
     runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
