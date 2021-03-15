@@ -4,7 +4,9 @@ load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
-    "//850-ng-pipeline-commons:module",
+    "//950-events-api:module",
+    "//950-events-api/src/main/proto:950_events_api_java_proto",
+    "//950-events-api/src/main/proto:950_events_api_proto",
     "//870-yaml-beans:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",

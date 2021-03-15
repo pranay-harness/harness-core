@@ -35,6 +35,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -50,7 +51,6 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -81,11 +81,11 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
+        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
             .toInstance(mock(NoOpProducer.class));
-        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
-        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }
     });
     modules.add(mongoTypeModule(annotations));
