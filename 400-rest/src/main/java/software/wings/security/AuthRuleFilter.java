@@ -23,12 +23,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.HarnessApiKeyAuth;
-import io.harness.security.annotations.LearningEngineAuth;
-import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.security.annotations.PublicApi;
-import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -40,14 +35,9 @@ import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
-import software.wings.security.UserRequestContext.UserRequestContextBuilder;
-import software.wings.security.annotations.AdminPortalAuth;
-import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.ListAPI;
-import software.wings.security.annotations.ScimAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -64,7 +54,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -346,13 +335,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
   }
 
-  //  private boolean isPublicApiWithWhitelist() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
-  //        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
-  //  }
-
   private void checkForWhitelisting(
       String accountId, FeatureName featureName, ContainerRequestContext requestContext, User user) {
     String forwardedFor = servletRequest.getHeader(X_FORWARDED_FOR);
@@ -469,39 +451,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return allowedAppIds;
   }
 
-  //  private UserRequestContext buildUserRequestContext(List<PermissionAttribute> requiredPermissionAttributes, User
-  //  user,
-  //      String accountId, boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean
-  //      skipAuth, boolean accountLevelPermissions, boolean harnessSupportUser) {
-  //    UserRequestContext userRequestContext =
-  //        buildUserRequestContext(accountId, user, emptyAppIdsInReq, harnessSupportUser);
-  //
-  //    if (!accountLevelPermissions) {
-  //      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
-  //          userRequestContext.isAppIdFilterRequired(), userRequestContext.getAppIds(), appIdsFromRequest);
-  //    }
-  //    return userRequestContext;
-  //  }
-  //
-  //  private UserRequestContext buildUserRequestContext(
-  //      String accountId, User user, boolean emptyAppIdsInReq, boolean harnessSupportUser) {
-  //    UserRequestContextBuilder userRequestContextBuilder =
-  //        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
-  //
-  //    UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user, false);
-  //    userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
-  //
-  //    UserRestrictionInfo userRestrictionInfo =
-  //        authService.getUserRestrictionInfo(accountId, user, userPermissionInfo, false);
-  //    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
-  //
-  //    Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
-  //    setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
-  //
-  //    userRequestContextBuilder.harnessSupportUser(harnessSupportUser);
-  //    return userRequestContextBuilder.build();
-  //  }
-
   private boolean skipAuth(List<PermissionAttribute> requiredPermissionAttributes) {
     if (CollectionUtils.isEmpty(requiredPermissionAttributes)) {
       return false;
@@ -509,22 +458,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     return requiredPermissionAttributes.stream().anyMatch(PermissionAttribute::isSkipAuth);
   }
-
-  //  private boolean setAppIdFilterInUserRequestContext(
-  //      UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq, Set<String> allowedAppIds) {
-  //    if (!emptyAppIdsInReq) {
-  //      return false;
-  //    }
-  //
-  //    List<ResourceType> requiredResourceTypes = getAllResourceTypes();
-  //    if (isPresent(requiredResourceTypes, ResourceType.APPLICATION)) {
-  //      userRequestContextBuilder.appIdFilterRequired(true);
-  //      userRequestContextBuilder.appIds(allowedAppIds);
-  //      return true;
-  //    }
-  //
-  //    return false;
-  //  }
 
   private boolean isPresent(List<ResourceType> requiredResourceTypes, ResourceType resourceType) {
     return requiredResourceTypes.stream().anyMatch(requiredResourceType -> requiredResourceType == resourceType);
@@ -587,28 +520,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         || resourceClass.getAnnotation(IdentityServiceAuth.class) != null;
   }
 
-  //  private boolean adminPortalAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //    return resourceMethod.getAnnotation(AdminPortalAuth.class) != null
-  //        || resourceClass.getAnnotation(AdminPortalAuth.class) != null;
-  //  }
-
-  //  private boolean isNextGenManagerAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //    return resourceMethod.getAnnotation(NextGenManagerAuth.class) != null
-  //        || resourceClass.getAnnotation(NextGenManagerAuth.class) != null;
-  //  }
-
-  //  private boolean publicAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(PublicApi.class) != null
-  //        || resourceClass.getAnnotation(PublicApi.class) != null;
-  //  }
-
   private boolean harnessClientApi() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
     Method resourceMethod = resourceInfo.getResourceMethod();
@@ -616,38 +527,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return resourceMethod.getAnnotation(HarnessApiKeyAuth.class) != null
         || resourceClass.getAnnotation(HarnessApiKeyAuth.class) != null;
   }
-
-  //  private boolean externalAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(ExternalFacingApiAuth.class) != null
-  //        || resourceClass.getAnnotation(ExternalFacingApiAuth.class) != null;
-  //  }
-
-  //  protected boolean apiKeyAuthorizationAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(ApiKeyAuthorized.class) != null
-  //        || resourceClass.getAnnotation(ApiKeyAuthorized.class) != null;
-  //  }
-
-  //  private boolean delegateAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(DelegateAuth.class) != null
-  //        || resourceClass.getAnnotation(DelegateAuth.class) != null;
-  //  }
-
-  //  private boolean learningEngineServiceAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(LearningEngineAuth.class) != null
-  //        || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
-  //  }
 
   private boolean listAPI() {
     Class<?> resourceClass = resourceInfo.getResourceClass();
@@ -738,14 +617,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
   }
 
-  //  private boolean isScimAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) !=
-  //    null;
-  //  }
-
   private User setUserAndUserRequestContextUsingApiKey(String apiKey, String accountId,
       ContainerRequestContext requestContext, boolean emptyAppIdsInReq, List<String> appIdsFromRequest) {
     if (accountId == null) {
@@ -783,42 +654,4 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     UserThreadLocal.set(user);
     return user;
   }
-
-  //  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
-  //      UserRestrictionInfo userRestrictionInfo, List<PermissionAttribute> requiredPermissionAttributes, String
-  //      accountId, boolean emptyAppIdsInReq, String httpMethod, List<String> appIdsFromRequest, boolean skipAuth,
-  //      boolean accountLevelPermissions, boolean isScopeToApp) {
-  //    UserRequestContext userRequestContext = buildUserRequestContext(
-  //        userPermissionInfo, userRestrictionInfo, accountId, emptyAppIdsInReq, isScopeToApp, appIdsFromRequest);
-  //
-  //    if (!accountLevelPermissions) {
-  //      authHandler.setEntityIdFilterIfGet(httpMethod, skipAuth, requiredPermissionAttributes, userRequestContext,
-  //          userRequestContext.isAppIdFilterRequired(), userRequestContext.getAppIds(), appIdsFromRequest);
-  //    }
-  //    return userRequestContext;
-  //  }
-  //
-  //  public UserRequestContext buildUserRequestContext(UserPermissionInfo userPermissionInfo,
-  //      UserRestrictionInfo userRestrictionInfo, String accountId, boolean emptyAppIdsInReq, boolean isScopedToApp,
-  //      List<String> appIdsFromRequest) {
-  //    UserRequestContextBuilder userRequestContextBuilder =
-  //        UserRequestContext.builder().accountId(accountId).entityInfoMap(new HashMap<>());
-  //
-  //    userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
-  //    userRequestContextBuilder.userRestrictionInfo(userRestrictionInfo);
-  //
-  //    if (isScopedToApp) {
-  //      Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
-  //      if (emptyAppIdsInReq) {
-  //        userRequestContextBuilder.appIdFilterRequired(true);
-  //        userRequestContextBuilder.appIds(allowedAppIds);
-  //      } else {
-  //        if (isEmpty(allowedAppIds) || !allowedAppIds.containsAll(appIdsFromRequest)) {
-  //          throw new WingsException(ErrorCode.ACCESS_DENIED);
-  //        }
-  //      }
-  //    }
-  //
-  //    return userRequestContextBuilder.build();
-  //  }
 }

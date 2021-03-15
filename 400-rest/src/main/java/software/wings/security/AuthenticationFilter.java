@@ -28,20 +28,11 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.security.JWTAuthenticationFilter;
 import io.harness.security.JWTTokenHandler;
 import io.harness.security.SecurityContextBuilder;
-import io.harness.security.annotations.DelegateAuth;
-import io.harness.security.annotations.LearningEngineAuth;
-import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.security.annotations.PublicApi;
-import io.harness.security.annotations.PublicApiWithWhitelist;
 
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.security.annotations.AdminPortalAuth;
-import software.wings.security.annotations.ApiKeyAuthorized;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
-import software.wings.security.annotations.ScimAPI;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
@@ -353,21 +344,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
   }
 
-  //  private boolean isPublicApiWithWhitelist() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //    return resourceMethod.getAnnotation(PublicApiWithWhitelist.class) != null
-  //        || resourceClass.getAnnotation(PublicApiWithWhitelist.class) != null;
-  //  }
-
-  //  protected boolean publicAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(PublicApi.class) != null
-  //        || resourceClass.getAnnotation(PublicApi.class) != null;
-  //  }
-
   private boolean isIdentityServiceRequest(ContainerRequestContext requestContext) {
     return identityServiceAPI()
         && startsWith(requestContext.getHeaderString(HttpHeaders.AUTHORIZATION), IDENTITY_SERVICE_PREFIX);
@@ -385,32 +361,6 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     return resourceInfo.getResourceMethod().getAnnotation(IdentityServiceAuth.class) != null
         || resourceInfo.getResourceClass().getAnnotation(IdentityServiceAuth.class) != null;
   }
-
-  //  protected boolean delegateAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(DelegateAuth.class) != null
-  //        || resourceClass.getAnnotation(DelegateAuth.class) != null;
-  //  }
-
-  //  protected boolean learningEngineServiceAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(LearningEngineAuth.class) != null
-  //        || resourceClass.getAnnotation(LearningEngineAuth.class) != null;
-  //  }
-
-  //  protected boolean externalFacingAPI() {
-  //    return resourceInfo.getResourceMethod().getAnnotation(ExternalFacingApiAuth.class) != null
-  //        || resourceInfo.getResourceClass().getAnnotation(ExternalFacingApiAuth.class) != null;
-  //  }
-
-  //  protected boolean isApiKeyAuthorizationAPI() {
-  //    return resourceInfo.getResourceMethod().getAnnotation(ApiKeyAuthorized.class) != null
-  //        || resourceInfo.getResourceClass().getAnnotation(ApiKeyAuthorized.class) != null;
-  //  }
 
   private String getRequestParamFromContext(
       String key, MultivaluedMap<String, String> pathParameters, MultivaluedMap<String, String> queryParameters) {

@@ -37,8 +37,6 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.resources.AccountResource;
-import software.wings.resources.secretsmanagement.SecretsResourceNG;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AuditService;
 import software.wings.service.intfc.AuthService;
