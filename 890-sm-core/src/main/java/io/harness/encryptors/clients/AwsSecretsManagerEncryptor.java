@@ -88,7 +88,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "Secret creation failed after " + NUM_OF_RETRIES + " retries";
+          String message = "Secret creation failed after " + NUM_OF_RETRIES + " retries" + e.getMessage();
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -111,7 +111,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "Secret update failed after " + NUM_OF_RETRIES + " retries";
+          String message = "Secret update failed after " + NUM_OF_RETRIES + " retries" + e.getMessage();
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -132,7 +132,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "Secret update failed after " + NUM_OF_RETRIES + " retries";
+          String message = "Secret update failed after " + NUM_OF_RETRIES + " retries" + e.getMessage();
           throw new SecretManagementDelegateException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -187,6 +187,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
     AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
     try {
+      log.info("Validating AWS SecretManager configuration Start: {}", secretsManagerConfig);
       AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
       GetSecretValueRequest request =
           new GetSecretValueRequest().withSecretId(AWS_SECRETS_MANAGER_VALIDATION_URL + System.currentTimeMillis());
@@ -195,6 +196,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
       // this exception is expected. It means the credentials are correct, but can't find the resource
       // which means the connectivity to AWS Secrets Manger is ok.
     } catch (AWSSecretsManagerException e) {
+      log.error("AWS_SECRETS_MANAGER_OPERATION_ERROR : validateSecretManagerConfiguration {}", e.getErrorMessage());
       String message =
           "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
@@ -313,19 +315,28 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     } else if (secretsManagerConfig.isAssumeStsRoleOnDelegate()) {
       log.info("Assuming STS role on delegate : Instantiating STSAssumeRoleSessionCredentialsProvider with config:"
           + secretsManagerConfig);
-      Preconditions.checkNotNull(
-          secretsManagerConfig.getRoleArn(), "You must provide RoleARN if AssumeStsRole is selected");
+      if (isEmpty(secretsManagerConfig.getRoleArn())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide RoleARN if AssumeStsRole is selected", USER);
+      }
       STSAssumeRoleSessionCredentialsProvider.Builder sessionCredentialsProviderBuilder =
           new STSAssumeRoleSessionCredentialsProvider.Builder(
               secretsManagerConfig.getRoleArn(), UUIDGenerator.generateUuid());
-      sessionCredentialsProviderBuilder.withRoleSessionDurationSeconds(secretsManagerConfig.getAssumeStsRoleDuration());
+      if (secretsManagerConfig.getAssumeStsRoleDuration() > 0) {
+        sessionCredentialsProviderBuilder.withRoleSessionDurationSeconds(
+            secretsManagerConfig.getAssumeStsRoleDuration());
+      }
       sessionCredentialsProviderBuilder.withExternalId(secretsManagerConfig.getExternalName());
       return sessionCredentialsProviderBuilder.build();
     } else {
-      Preconditions.checkNotNull(
-          secretsManagerConfig.getAccessKey(), "You must provide an AccessKey if AssumeIAMRole is not selected");
-      Preconditions.checkNotNull(
-          secretsManagerConfig.getSecretKey(), "You must provide a SecretKey if AssumeIAMRole is not selected");
+      if (isEmpty(secretsManagerConfig.getAccessKey())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide an AccessKey if AssumeIAMRole is not enabled", USER);
+      }
+      if (isEmpty(secretsManagerConfig.getSecretKey())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide a SecretKey if AssumeIAMRole is not enabled", USER);
+      }
       log.warn("Using Secret and Access Key (Deprecated): Instantiating AWSStaticCredentialsProvider with config:"
           + secretsManagerConfig);
       return new AWSStaticCredentialsProvider(

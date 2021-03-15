@@ -22,6 +22,8 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.security.encryption.SecretManagerType;
 
+import software.wings.stencils.DefaultValue;
+
 import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
@@ -32,6 +34,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -61,6 +64,7 @@ public class KmsConfig extends SecretManagerConfig {
   @Attributes(title = "AWS AssumeIamRole") private boolean assumeIamRoleOnDelegate;
   @Attributes(title = "AWS AssumeStsRole") private boolean assumeStsRoleOnDelegate;
   @Attributes(title = "AWS AssumeStsRoleDuration")
+  @Builder.Default
   private int assumeStsRoleDuration = STSSessionCredentialsProvider.DEFAULT_DURATION_SECONDS;
   @Attributes(title = "AWS AssumeStsRoleARN") private String roleArn;
   @Attributes(title = "AWS AssumeStsExternalName") private String externalName;

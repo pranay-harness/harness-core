@@ -3,6 +3,7 @@ package io.harness.encryptors.clients;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
@@ -96,7 +97,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         log.warn("Encryption failed. trial num: {}", failedAttempts, e);
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
-            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
+            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES) + e.getMessage();
             throw new DelegateRetryableException(
                 new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
           }
@@ -131,7 +132,8 @@ public class AwsKmsEncryptor implements KmsEncryptor {
         if (isRetryable(e)) {
           if (failedAttempts == NUM_OF_RETRIES) {
             String reason =
-                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES);
+                format("Decryption failed for encryptedData %s after %d retries", data.getName(), NUM_OF_RETRIES)
+                + e.getMessage();
             throw new DelegateRetryableException(
                 new SecretManagementDelegateException(KMS_OPERATION_ERROR, reason, e, USER));
           }
@@ -145,8 +147,12 @@ public class AwsKmsEncryptor implements KmsEncryptor {
 
   @Override
   public boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    log.info("Validating AWS KMS configuration Start {}", encryptionConfig.getName());
     GenerateDataKeyResult generateDataKeyResult = generateKmsKey((KmsConfig) encryptionConfig);
-    return generateDataKeyResult != null && !generateDataKeyResult.getKeyId().isEmpty();
+    boolean isValidConfiguration = generateDataKeyResult != null && !generateDataKeyResult.getKeyId().isEmpty();
+    log.info("Validating AWS KMS configuration End {0} isValidConfiguration: {1}", encryptionConfig.getName(),
+        isValidConfiguration);
+    return isValidConfiguration;
   }
 
   private GenerateDataKeyResult generateKmsKey(KmsConfig kmsConfig) {
@@ -203,17 +209,26 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     } else if (kmsConfig.isAssumeStsRoleOnDelegate()) {
       log.info("Assuming STS role on delegate : Instantiating STSAssumeRoleSessionCredentialsProvider with config:"
           + kmsConfig);
-      Preconditions.checkNotNull(kmsConfig.getRoleArn(), "You must provide RoleARN if AssumeStsRole is selected");
+      if (isEmpty(kmsConfig.getRoleArn())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide RoleARN if AssumeStsRole is selected", USER);
+      }
       STSAssumeRoleSessionCredentialsProvider.Builder sessionCredentialsProviderBuilder =
           new STSAssumeRoleSessionCredentialsProvider.Builder(kmsConfig.getRoleArn(), UUIDGenerator.generateUuid());
-      sessionCredentialsProviderBuilder.withRoleSessionDurationSeconds(kmsConfig.getAssumeStsRoleDuration());
+      if (kmsConfig.getAssumeStsRoleDuration() > 0) {
+        sessionCredentialsProviderBuilder.withRoleSessionDurationSeconds(kmsConfig.getAssumeStsRoleDuration());
+      }
       sessionCredentialsProviderBuilder.withExternalId(kmsConfig.getExternalName());
       return sessionCredentialsProviderBuilder.build();
     } else {
-      Preconditions.checkNotNull(
-          kmsConfig.getAccessKey(), "You must provide an AccessKey if AssumeIAMRole is not selected");
-      Preconditions.checkNotNull(
-          kmsConfig.getSecretKey(), "You must provide a SecretKey if AssumeIAMRole is not selected");
+      if (isEmpty(kmsConfig.getAccessKey())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide an AccessKey if AssumeIAMRole is not enabled", USER);
+      }
+      if (isEmpty(kmsConfig.getSecretKey())) {
+        throw new SecretManagementDelegateException(
+            AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide a SecretKey if AssumeIAMRole is not enabled", USER);
+      }
       log.warn("Using Secret and Access Key (Deprecated): Instantiating AWSStaticCredentialsProvider with config:"
           + kmsConfig);
       return new AWSStaticCredentialsProvider(
