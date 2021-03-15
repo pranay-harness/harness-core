@@ -6,12 +6,17 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
+    resource_jars = [
+        "//970-ng-commons/src/main/proto:970_ng_java_contract_proto",
+    ],
     resources = [
         "//970-ng-commons/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//970-ng-commons/src/main/proto:970_ng_commons_proto",
+        "//970-ng-commons/src/main/proto:970_ng_java_contract_proto",
         "//980-commons:module",
         "@maven//:ch_qos_logback_contrib_logback_jackson",
         "@maven//:ch_qos_logback_contrib_logback_json_classic",

@@ -5,6 +5,7 @@ import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -23,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GIT)
+@OneOfField(fields = {"paths", "folderPath"})
 @SimpleVisitorHelper(helperClass = GitStoreVisitorHelper.class)
 @TypeAlias("gitStore")
 public class GitStore implements GitStoreConfig, Visitable {
@@ -35,6 +37,8 @@ public class GitStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -51,6 +55,8 @@ public class GitStore implements GitStoreConfig, Visitable {
         .branch(branch)
         .commitId(commitId)
         .paths(paths)
+        .folderPath(folderPath)
+        .repoName(repoName)
         .build();
   }
 
@@ -64,6 +70,9 @@ public class GitStore implements GitStoreConfig, Visitable {
     if (!ParameterField.isNull(gitStore.getPaths())) {
       resultantGitStore = resultantGitStore.withPaths(gitStore.getPaths());
     }
+    if (!ParameterField.isNull(gitStore.getFolderPath())) {
+      resultantGitStore = resultantGitStore.withFolderPath(gitStore.getFolderPath());
+    }
     if (gitStore.getGitFetchType() != null) {
       resultantGitStore = resultantGitStore.withGitFetchType(gitStore.getGitFetchType());
     }
@@ -72,6 +81,9 @@ public class GitStore implements GitStoreConfig, Visitable {
     }
     if (!ParameterField.isNull(gitStore.getCommitId())) {
       resultantGitStore = resultantGitStore.withCommitId(gitStore.getCommitId());
+    }
+    if (!ParameterField.isNull(gitStore.getRepoName())) {
+      resultantGitStore = resultantGitStore.withRepoName(gitStore.getRepoName());
     }
     return resultantGitStore;
   }

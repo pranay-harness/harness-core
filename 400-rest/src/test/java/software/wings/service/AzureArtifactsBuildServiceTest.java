@@ -69,7 +69,8 @@ public class AzureArtifactsBuildServiceTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldValidateArtifactSource() {
-    ArtifactStreamAttributes artifactStreamAttributes = azureArtifactsArtifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        azureArtifactsArtifactStream.fetchArtifactStreamAttributes(null);
     when(azureArtifactsService.validateArtifactSource(azureArtifactsPATConfig, null, artifactStreamAttributes))
         .thenReturn(true);
     assertThat(
@@ -87,7 +88,8 @@ public class AzureArtifactsBuildServiceTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldGetBuilds() {
-    ArtifactStreamAttributes artifactStreamAttributes = azureArtifactsArtifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        azureArtifactsArtifactStream.fetchArtifactStreamAttributes(null);
     when(azureArtifactsService.getBuilds(artifactStreamAttributes, azureArtifactsPATConfig, null))
         .thenReturn(
             Lists.newArrayList(aBuildDetails().withNumber("10").build(), aBuildDetails().withNumber("9").build()));

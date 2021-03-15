@@ -1,9 +1,9 @@
 package io.harness.accesscontrol.roles.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toResponseDTO;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roles.Role;
@@ -86,6 +86,9 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    if (!identifier.equals(roleDTO.getIdentifier())) {
+      throw new InvalidRequestException("Role identifier in the request body and the url do not match");
+    }
     return ResponseDTO.newResponse(toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
   }
 

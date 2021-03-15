@@ -958,8 +958,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .stream()
             .anyMatch(type -> type.name().equals(artifactStreamType))) {
       if (artifactStream.shouldValidate()) {
-        buildSourceService.validateArtifactSource(
-            artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
+        buildSourceService.validateArtifactSource(artifactStream.fetchAppId(), artifactStream.getSettingId(),
+            artifactStream.fetchArtifactStreamAttributes(featureFlagService));
       }
     } else if (CUSTOM.name().equals(artifactStreamType) && artifactStream.shouldValidate()) {
       try {

@@ -10,9 +10,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.beans.BuildDetailsInternal;
 import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetadataKeys;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
+import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidArtifactServerException;
+import io.harness.expression.RegexFunctor;
 
 import software.wings.service.impl.AwsApiHelperService;
 
@@ -27,6 +31,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by brett on 7/15/17
@@ -100,5 +105,57 @@ public class EcrServiceImpl implements EcrService {
   public List<Map<String, String>> getLabels(
       AwsInternalConfig awsConfig, String imageName, String region, List<String> tags) {
     return Collections.singletonList(awsApiHelperService.fetchLabels(awsConfig, imageName, region, tags));
+  }
+
+  @Override
+  public BuildDetailsInternal getLastSuccessfulBuildFromRegex(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tagRegex) {
+    List<BuildDetailsInternal> builds =
+        getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+    builds = builds.stream()
+                 .filter(build -> new RegexFunctor().match(tagRegex, build.getNumber()))
+                 .sorted(new BuildDetailsInternalComparatorDescending())
+                 .collect(toList());
+    if (builds.isEmpty()) {
+      throw new InvalidArtifactServerException(
+          "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER);
+    }
+    return builds.get(0);
+  }
+
+  @Override
+  public boolean verifyImageName(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName) {
+    try {
+      getBuilds(awsConfig, imageUrl, region, imageName, 1);
+    } catch (Exception e) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public boolean validateCredentials(AwsInternalConfig awsConfig, String imageUrl, String region, String imageName) {
+    try {
+      getBuilds(awsConfig, imageUrl, region, imageName, 1);
+    } catch (Exception e) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public BuildDetailsInternal verifyBuildNumber(
+      AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag) {
+    try {
+      List<BuildDetailsInternal> builds =
+          getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+      builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
+      if (builds.size() != 1) {
+        throw new InvalidArtifactServerException("Didn't get build number", USER);
+      }
+      return builds.get(0);
+    } catch (Exception e) {
+      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+    }
   }
 }

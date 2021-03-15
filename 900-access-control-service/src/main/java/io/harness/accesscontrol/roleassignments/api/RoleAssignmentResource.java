@@ -1,9 +1,10 @@
 package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
+import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toResponseDTO;
-import static io.harness.accesscontrol.roles.filter.ManagedFilter.NO_FILTER;
 
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PACKAGE;
@@ -23,6 +24,7 @@ import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -37,12 +39,14 @@ import io.swagger.annotations.ApiResponses;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -133,6 +137,19 @@ public class RoleAssignmentResource {
     return ResponseDTO.newResponse(toResponseDTO(createdRoleAssignment));
   }
 
+  @PUT
+  @Path("{identifier}")
+  @ApiOperation(value = "Update Role Assignment", nickname = "updateRoleAssignment")
+  public ResponseDTO<RoleAssignmentResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
+    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
+    if (!identifier.equals(roleAssignmentDTO.getIdentifier())) {
+      throw new InvalidRequestException("Role Assignment identifier in the request body and the url do not match.");
+    }
+    RoleAssignment updatedRoleAssignment = roleAssignmentService.update(fromDTO(scope.toString(), roleAssignmentDTO));
+    return ResponseDTO.newResponse(toResponseDTO(updatedRoleAssignment));
+  }
+
   @POST
   @Path("/multi")
   @ApiOperation(value = "Create Multiple Role Assignments", nickname = "createRoleAssignments")
@@ -148,6 +165,16 @@ public class RoleAssignmentResource {
                                        .stream()
                                        .map(RoleAssignmentDTOMapper::toResponseDTO)
                                        .collect(toList()));
+  }
+
+  @POST
+  @Path("/validate")
+  @ApiOperation(value = "Validate Role Assignment", nickname = "validateRoleAssignment")
+  public ResponseDTO<RoleAssignmentValidationResponseDTO> validate(
+      @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentValidationRequestDTO validationRequest) {
+    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
+    harnessResourceGroupService.sync(validationRequest.getRoleAssignment().getResourceGroupIdentifier(), scope);
+    return ResponseDTO.newResponse(toDTO(roleAssignmentService.validate(fromDTO(scope.toString(), validationRequest))));
   }
 
   @DELETE

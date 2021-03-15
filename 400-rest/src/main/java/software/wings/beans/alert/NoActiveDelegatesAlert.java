@@ -1,12 +1,15 @@
 package software.wings.beans.alert;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
 public class NoActiveDelegatesAlert implements AlertData {
   private String accountId;
 

@@ -401,7 +401,7 @@ fn check_for_promotion(
             .iter()
             .cloned()
             .collect();
-            let indirect_classes = [dependent_class.name.clone()].iter().cloned().collect();
+
             results.push(if class.break_dependencies_on.contains(src) {
                 Report {
                     kind: Kind::DevAction,
@@ -412,7 +412,7 @@ fn check_for_promotion(
                     action: Default::default(),
                     for_class: class.name.clone(),
                     for_team: class.team(),
-                    indirect_classes: indirect_classes,
+                    indirect_classes: Default::default(),
                     for_modules: mdls,
                 }
             } else {
@@ -425,7 +425,7 @@ fn check_for_promotion(
                     action: Default::default(),
                     for_class: class.name.clone(),
                     for_team: class.team(),
-                    indirect_classes: indirect_classes,
+                    indirect_classes: [dependent_class.name.clone()].iter().cloned().collect(),
                     for_modules: mdls,
                 }
             });

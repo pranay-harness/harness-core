@@ -33,7 +33,6 @@ directories:
   450-ce-views
   460-capability
   470-alert
-  480-alert-beans
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
@@ -67,6 +66,7 @@ directories:
   920-delegate-service-beans
   930-delegate-tasks
   930-ng-core-clients
+  955-alert-beans
   955-delegate-beans
   940-feature-flag
   940-ng-audit-service

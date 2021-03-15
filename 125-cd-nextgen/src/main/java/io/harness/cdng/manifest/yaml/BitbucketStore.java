@@ -5,6 +5,7 @@ import io.harness.cdng.visitor.helper.BitbucketStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -23,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.BITBUCKET)
+@OneOfField(fields = {"paths", "folderPath"})
 @SimpleVisitorHelper(helperClass = BitbucketStoreVisitorHelper.class)
 @TypeAlias("bitbucketStore")
 public class BitbucketStore implements GitStoreConfig, Visitable {
@@ -35,6 +37,8 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -51,6 +55,8 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
         .branch(branch)
         .commitId(commitId)
         .paths(paths)
+        .folderPath(folderPath)
+        .repoName(repoName)
         .build();
   }
 
@@ -64,6 +70,9 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
     if (!ParameterField.isNull(bitbucketStore.getPaths())) {
       resultantBitbucketStore = resultantBitbucketStore.withPaths(bitbucketStore.getPaths());
     }
+    if (!ParameterField.isNull(bitbucketStore.getFolderPath())) {
+      resultantBitbucketStore = resultantBitbucketStore.withFolderPath(bitbucketStore.getFolderPath());
+    }
     if (bitbucketStore.getGitFetchType() != null) {
       resultantBitbucketStore = resultantBitbucketStore.withGitFetchType(bitbucketStore.getGitFetchType());
     }
@@ -73,6 +82,10 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
     if (!ParameterField.isNull(bitbucketStore.getCommitId())) {
       resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId());
     }
+    if (!ParameterField.isNull(bitbucketStore.getRepoName())) {
+      resultantBitbucketStore = resultantBitbucketStore.withRepoName(bitbucketStore.getRepoName());
+    }
+
     return resultantBitbucketStore;
   }
 

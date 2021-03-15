@@ -48,6 +48,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -258,5 +259,20 @@ public class StepUtils {
       unitKeys.add(logKey);
     }
     return unitKeys;
+  }
+
+  public static boolean isStepInRollbackSection(Ambiance ambiance) {
+    List<Level> levelsList = ambiance.getLevelsList();
+    if (isEmpty(levelsList)) {
+      return false;
+    }
+
+    Optional<Level> optionalLevel =
+        ambiance.getLevelsList()
+            .stream()
+            .filter(level -> level.getStepType().getType().equals("ROLLBACK_OPTIONAL_CHILD_CHAIN"))
+            .findFirst();
+
+    return optionalLevel.isPresent();
   }
 }

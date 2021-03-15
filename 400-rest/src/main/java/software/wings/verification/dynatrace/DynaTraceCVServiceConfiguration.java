@@ -1,6 +1,7 @@
 package software.wings.verification.dynatrace;
 
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;

@@ -15,6 +15,8 @@ import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.serializer.JsonUtils;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class AssignmentJsonValidator implements Validator<String> {
   @Override
   public void validate(final String assignJson) {
@@ -70,8 +72,8 @@ public class AssignmentJsonValidator implements Validator<String> {
         throw new InvalidArgumentsException(AzureConstants.PROPERTIES_SCOPE_BLANK_VALIDATION_MSG);
       }
       if (!scope.startsWith(RESOURCE_SCOPE_SUBSCRIPTION_PATTERN)) {
-        throw new InvalidArgumentsException(format(
-            "Assignment properties.scope has to being assigned to a subscription for management group resource scope, scope: %s ",
+        throw new InvalidArgumentsException(format("Not valid value of properties.scope property. Required format "
+                + "/subscriptions/{subscriptionId}, but found - scope: %s",
             scope));
       }
       if (scope.endsWith("/")) {
@@ -79,6 +81,18 @@ public class AssignmentJsonValidator implements Validator<String> {
             format("Not valid value of properties.scope property, ending with '/' character. Required format "
                     + "/subscriptions/{subscriptionId}, but found - scope: %s",
                 scope));
+      }
+    }
+
+    if (ResourceScopeType.SUBSCRIPTION == resourceScopeType) {
+      String blueprintId = assignment.getProperties().getBlueprintId();
+      String scope = assignment.getProperties().getScope();
+
+      if (StringUtils.isNotBlank(scope)
+          && !scope.equals(AzureResourceUtility.getDefinitionResourceScope(blueprintId))) {
+        throw new InvalidArgumentsException(format(
+            "Not valid value of properties.scope property. Required same value as for blueprint definition resource scope, property.scope: %s",
+            scope));
       }
     }
   }

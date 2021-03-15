@@ -22,6 +22,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -48,6 +49,7 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.impl.aws.model.response.AwsLambdaDetailsResponse;
+import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.WingsTestConstants;
 
@@ -85,6 +87,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
   @Mock private DelegateFileManager mockDelegateFileManager;
+  @Mock private AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
   private SettingAttribute awsSetting =
       aSettingAttribute()
@@ -392,7 +395,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   public void test_getFunctionDetails_error() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
     doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), any());
-
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doThrow(new AmazonServiceException("service exception"))
         .when(mockClient)
@@ -402,6 +405,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest, false));
 
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     doThrow(new AmazonClientException("client exception")).when(mockClient).getFunction(any(GetFunctionRequest.class));
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> awsLambdaHelperServiceDelegate.getFunctionDetails(awsLambdaDetailsRequest, false));

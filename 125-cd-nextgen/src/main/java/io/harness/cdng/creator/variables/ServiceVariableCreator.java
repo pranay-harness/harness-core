@@ -141,34 +141,21 @@ public class ServiceVariableCreator {
     }
     switch (manifestNode.getNode().getType()) {
       case ManifestType.K8Manifest:
-        addVariablesForK8sManifest(specNode, yamlPropertiesMap);
+      case ManifestType.Kustomize:
+        addVariablesFork8sManifest(specNode, yamlPropertiesMap);
         break;
       case ManifestType.VALUES:
         addVariablesForValuesManifest(specNode, yamlPropertiesMap);
+        break;
+      case ManifestType.HelmChart:
+        addVariablesForHelmChartManifest(specNode, yamlPropertiesMap);
         break;
       default:
         throw new InvalidRequestException("Invalid manifest type");
     }
   }
 
-  private void addVariablesForK8sManifest(YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
-    YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
-    if (storeNode != null) {
-      YamlField specNode = storeNode.getNode().getField(YamlTypes.SPEC);
-      if (specNode == null) {
-        throw new InvalidRequestException("Invalid store config");
-      }
-      switch (storeNode.getNode().getType()) {
-        case ManifestStoreType.GIT:
-          addVariablesForGit(specNode, yamlPropertiesMap);
-          break;
-        default:
-          throw new InvalidRequestException("Invalid store type");
-      }
-    }
-  }
-
-  private void addVariablesForValuesManifest(
+  private void addVariablesForHelmChartManifest(
       YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
     if (storeNode != null) {
@@ -176,17 +163,67 @@ public class ServiceVariableCreator {
       if (specNode == null) {
         throw new InvalidRequestException("Invalid store config");
       }
-      switch (storeNode.getNode().getType()) {
-        case ManifestStoreType.GIT:
-          addVariablesForGit(specNode, yamlPropertiesMap);
-          break;
-        default:
-          throw new InvalidRequestException("Invalid store type");
+
+      if (ManifestStoreType.isInGitSubset(storeNode.getNode().getType())) {
+        addVariablesForGit(specNode, yamlPropertiesMap);
+      } else if (ManifestStoreType.HTTP.equals(storeNode.getNode().getType())) {
+        addVariablesForHttp(specNode, yamlPropertiesMap);
+      } else {
+        throw new InvalidRequestException("Invalid store type");
+      }
+    }
+
+    List<YamlField> fields = manifestSpecNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID) && !field.getName().equals(YamlTypes.STORE_CONFIG_WRAPPER)
+          && !field.getName().equals(YamlTypes.COMMAND_FLAGS_WRAPPER)) {
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+      }
+    });
+  }
+
+  private void addVariablesFork8sManifest(YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    addVariablesForK8sAndValueStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+
+    List<YamlField> fields = manifestSpecNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID) && !field.getName().equals(YamlTypes.STORE_CONFIG_WRAPPER)) {
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+      }
+    });
+  }
+
+  private void addVariablesForValuesManifest(
+      YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    addVariablesForK8sAndValueStoreConfigYaml(manifestSpecNode, yamlPropertiesMap);
+  }
+
+  private void addVariablesForK8sAndValueStoreConfigYaml(
+      YamlField manifestSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    YamlField storeNode = manifestSpecNode.getNode().getField(YamlTypes.STORE_CONFIG_WRAPPER);
+    if (storeNode != null) {
+      YamlField specNode = storeNode.getNode().getField(YamlTypes.SPEC);
+      if (specNode == null) {
+        throw new InvalidRequestException("Invalid store config");
+      }
+      if (ManifestStoreType.isInGitSubset(storeNode.getNode().getType())) {
+        addVariablesForGit(specNode, yamlPropertiesMap);
+      } else {
+        throw new InvalidRequestException("Invalid store type");
       }
     }
   }
 
   private void addVariablesForGit(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlField> fields = gitNode.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YamlTypes.UUID)) {
+        VariableCreatorHelper.addFieldToPropertiesMap(field, yamlPropertiesMap, YamlTypes.SERVICE_CONFIG);
+      }
+    });
+  }
+
+  private void addVariablesForHttp(YamlField gitNode, Map<String, YamlProperties> yamlPropertiesMap) {
     List<YamlField> fields = gitNode.getNode().fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YamlTypes.UUID)) {

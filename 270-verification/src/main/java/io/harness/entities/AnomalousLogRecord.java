@@ -11,8 +11,8 @@ import static io.harness.persistence.GoogleDataStoreAware.readString;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.exception.WingsException;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.GoogleDataStoreAware;
 
 import software.wings.sm.StateType;
@@ -21,10 +21,13 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
@@ -33,17 +36,27 @@ import org.mongodb.morphia.annotations.Id;
  * 4/9/2019
  */
 
-@NgUniqueIndex(
-    name = "analysisMinIndex", fields = { @Field("serviceId")
-                                          , @Field("cvConfigId"), @Field("analysisMinute") })
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@FieldNameConstants(innerTypeName = "AnomalousLogRecordsKey")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "anomalousLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class AnomalousLogRecord implements GoogleDataStoreAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("analysisMinIndex")
+                 .unique(true)
+                 .field(AnomalousLogRecordsKey.serviceId)
+                 .field(AnomalousLogRecordsKey.cvConfigId)
+                 .field(AnomalousLogRecordsKey.analysisMinute)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private String cvConfigId;
   private long analysisMinute;

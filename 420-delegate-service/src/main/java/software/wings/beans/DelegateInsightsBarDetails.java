@@ -1,7 +1,9 @@
 package software.wings.beans;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.tuple.Pair;
@@ -11,5 +13,5 @@ import org.apache.commons.lang3.tuple.Pair;
 @Builder
 public class DelegateInsightsBarDetails {
   private long timeStamp;
-  private List<Pair<DelegateInsightsType, Integer>> counts;
+  @Default private List<Pair<DelegateInsightsType, Long>> counts = new ArrayList<>();
 }

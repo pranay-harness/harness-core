@@ -5,6 +5,7 @@ import io.harness.cdng.visitor.helper.GithubStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -23,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GITHUB)
+@OneOfField(fields = {"paths", "folderPath"})
 @SimpleVisitorHelper(helperClass = GithubStoreVisitorHelper.class)
 @TypeAlias("githubStore")
 public class GithubStore implements GitStoreConfig, Visitable {
@@ -35,6 +37,8 @@ public class GithubStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -51,6 +55,8 @@ public class GithubStore implements GitStoreConfig, Visitable {
         .branch(branch)
         .commitId(commitId)
         .paths(paths)
+        .folderPath(folderPath)
+        .repoName(repoName)
         .build();
   }
 
@@ -64,6 +70,9 @@ public class GithubStore implements GitStoreConfig, Visitable {
     if (!ParameterField.isNull(githubStore.getPaths())) {
       resultantGithubStore = resultantGithubStore.withPaths(githubStore.getPaths());
     }
+    if (!ParameterField.isNull(githubStore.getFolderPath())) {
+      resultantGithubStore = resultantGithubStore.withFolderPath(githubStore.getFolderPath());
+    }
     if (githubStore.getGitFetchType() != null) {
       resultantGithubStore = resultantGithubStore.withGitFetchType(githubStore.getGitFetchType());
     }
@@ -72,6 +81,9 @@ public class GithubStore implements GitStoreConfig, Visitable {
     }
     if (!ParameterField.isNull(githubStore.getCommitId())) {
       resultantGithubStore = resultantGithubStore.withCommitId(githubStore.getCommitId());
+    }
+    if (!ParameterField.isNull(githubStore.getRepoName())) {
+      resultantGithubStore = resultantGithubStore.withRepoName(githubStore.getRepoName());
     }
     return resultantGithubStore;
   }

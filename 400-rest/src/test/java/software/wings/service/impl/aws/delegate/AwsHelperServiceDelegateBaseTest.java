@@ -7,6 +7,9 @@ import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REG
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.spy;
 
 import io.harness.category.element.UnitTests;
@@ -15,6 +18,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.delegate.AwsEcrApiHelperServiceDelegateBase;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -27,14 +31,18 @@ import com.amazonaws.services.ecs.model.ServiceNotFoundException;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 public class AwsHelperServiceDelegateBaseTest extends WingsBaseTest {
+  @Mock private AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
   @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testHandleAmazonClientException() {
     AwsHelperServiceDelegateBase delegateBase = spy(AwsHelperServiceDelegateBase.class);
     AmazonClientException exception = new AmazonClientException("Error Message");
+    on(delegateBase).set("awsEcrApiHelperServiceDelegateBase", awsEcrApiHelperServiceDelegateBase);
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonClientException(any());
     assertThatThrownBy(() -> delegateBase.handleAmazonClientException(exception))
         .isInstanceOf(InvalidRequestException.class);
   }
@@ -44,6 +52,8 @@ public class AwsHelperServiceDelegateBaseTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleAmazonServiceException() {
     AwsHelperServiceDelegateBase delegateBase = spy(AwsHelperServiceDelegateBase.class);
+    on(delegateBase).set("awsEcrApiHelperServiceDelegateBase", awsEcrApiHelperServiceDelegateBase);
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegateBase).handleAmazonServiceException(any());
     AmazonServiceException exception1 = new AmazonCodeDeployException("Error Message");
     assertThatThrownBy(() -> delegateBase.handleAmazonServiceException(exception1))
         .isInstanceOf(InvalidRequestException.class);

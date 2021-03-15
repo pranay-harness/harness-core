@@ -6,7 +6,7 @@ import static io.harness.network.Localhost.getLocalHostName;
 
 import static java.util.Arrays.asList;
 
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.LearningEngineAuth;
