@@ -67,10 +67,9 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     String appName = yamlHelper.getAppName(yamlFilePath);
     Application current = anApplication().accountId(accountId).name(appName).description(yaml.getDescription()).build();
 
-    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
-      if (yaml.getIsManualTriggerAuthorized() != null) {
-        current.setIsManualTriggerAuthorized(yaml.getIsManualTriggerAuthorized());
-      }
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)
+        && yaml.getIsManualTriggerAuthorized() != null) {
+      current.setIsManualTriggerAuthorized(yaml.getIsManualTriggerAuthorized());
     }
 
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
