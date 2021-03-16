@@ -1,7 +1,9 @@
-package io.harness.plancreator.steps.approval;
+package io.harness.steps.approval.harness;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.approval.harness.beans.ApproverInputInfo;
+import io.harness.steps.approval.harness.beans.Approvers;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
@@ -20,6 +22,6 @@ public class HarnessApprovalBaseStepInfo {
   @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   ParameterField<Boolean> includePipelineExecutionHistory;
-  Approvers approvers;
+  @NotNull Approvers approvers;
   List<ApproverInputInfo> approverInputs;
 }
