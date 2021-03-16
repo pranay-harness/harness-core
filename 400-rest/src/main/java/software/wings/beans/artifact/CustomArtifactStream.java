@@ -90,7 +90,7 @@ public class CustomArtifactStream extends ArtifactStream {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
+  public static class Yaml extends ArtifactStreamYaml {
     @NotNull private List<Script> scripts = new ArrayList<>();
     private List<String> delegateTags = new ArrayList<>();
 

@@ -55,6 +55,7 @@ import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -246,7 +247,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   private RestResponse<YamlPayload> getArtifactTrigger(String appId, ArtifactStream artifactStream) {
     String artifactStreamId = artifactStream.getUuid();
-    ArtifactStream.Yaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
+    ArtifactStreamYaml artifactStreamYaml = yamlArtifactStreamService.getArtifactStreamYamlObject(artifactStreamId);
     if (!GLOBAL_APP_ID.equals(appId)) {
       // TODO: ASR: IMP: hack to make yaml push work as yaml changes require binding info but the binding info is
       // deleted in parallel

@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.beans.config.ArtifactoryConfig.Yaml;
+import software.wings.beans.config.ArtifactoryConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -17,9 +17,9 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, ArtifactoryConfig> {
+public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<ArtifactoryConfigYaml, ArtifactoryConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public ArtifactoryConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     ArtifactoryConfig artifactoryConfig = (ArtifactoryConfig) settingAttribute.getValue();
     String encryptedPassword = null;
     if (artifactoryConfig.hasCredentials()) {
@@ -27,22 +27,22 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
           getEncryptedYamlRef(artifactoryConfig.getAccountId(), artifactoryConfig.getEncryptedPassword());
     }
 
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(artifactoryConfig.getType())
-                    .url(artifactoryConfig.getArtifactoryUrl())
-                    .username(artifactoryConfig.getUsername())
-                    .password(encryptedPassword)
-                    .build();
+    ArtifactoryConfigYaml yaml = ArtifactoryConfigYaml.builder()
+                                     .harnessApiVersion(getHarnessApiVersion())
+                                     .type(artifactoryConfig.getType())
+                                     .url(artifactoryConfig.getArtifactoryUrl())
+                                     .username(artifactoryConfig.getUsername())
+                                     .password(encryptedPassword)
+                                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
-  protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<ArtifactoryConfigYaml> changeContext,
+      List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    ArtifactoryConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     ArtifactoryConfig config = ArtifactoryConfig.builder()
@@ -56,6 +56,6 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ArtifactoryConfigYaml.class;
   }
 }

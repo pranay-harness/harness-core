@@ -4,7 +4,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.EntityType.APPLICATION;
 
 import software.wings.beans.Application;
-import software.wings.beans.Application.Yaml;
+import software.wings.beans.ApplicationYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
@@ -23,13 +23,13 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 @Singleton
-public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Application> {
+public class ApplicationYamlHandler extends BaseYamlHandler<ApplicationYaml, Application> {
   @Inject YamlHelper yamlHelper;
   @Inject AppService appService;
   @Inject YamlGitService yamlGitService;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<ApplicationYaml> changeContext) {
     Application application = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (application != null) {
       appService.delete(application.getUuid(), changeContext.getChange().isSyncFromGit());
@@ -38,21 +38,22 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   }
 
   @Override
-  public Application.Yaml toYaml(Application application, String appId) {
-    Yaml yaml = Yaml.builder()
-                    .type(APPLICATION.name())
-                    .description(application.getDescription())
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .build();
+  public ApplicationYaml toYaml(Application application, String appId) {
+    ApplicationYaml yaml = ApplicationYaml.builder()
+                               .type(APPLICATION.name())
+                               .description(application.getDescription())
+                               .harnessApiVersion(getHarnessApiVersion())
+                               .build();
 
     updateYamlWithAdditionalInfo(application, appId, yaml);
     return yaml;
   }
 
   @Override
-  public Application upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public Application upsertFromYaml(
+      ChangeContext<ApplicationYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
-    Yaml yaml = changeContext.getYaml();
+    ApplicationYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Application previous = get(accountId, yamlFilePath);
 
@@ -88,7 +89,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public Class getYamlClass() {
-    return Application.Yaml.class;
+    return ApplicationYaml.class;
   }
 
   @Override

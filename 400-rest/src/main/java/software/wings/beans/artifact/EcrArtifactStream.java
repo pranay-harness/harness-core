@@ -82,7 +82,7 @@ public class EcrArtifactStream extends ArtifactStream {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
+  public static class Yaml extends ArtifactStreamYaml {
     private String imageName;
     private String region;
 

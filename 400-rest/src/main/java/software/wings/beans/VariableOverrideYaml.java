@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class VariableOverrideYaml extends NameValuePair.AbstractYaml {
+public final class VariableOverrideYaml extends NameValuePairAbstractYaml {
   private String serviceName;
 
   @lombok.Builder

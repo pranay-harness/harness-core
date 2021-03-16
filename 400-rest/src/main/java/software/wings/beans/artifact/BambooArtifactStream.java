@@ -103,7 +103,7 @@ public class BambooArtifactStream extends ArtifactStream {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
+  public static class Yaml extends ArtifactStreamYaml {
     private String planName;
     private List<String> artifactPaths;
     private boolean metadataOnly;

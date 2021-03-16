@@ -19,7 +19,7 @@ import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.HarnessTagLink;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairAbstractYaml;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.trigger.ArtifactSelection.ArtifactSelectionKeys;
@@ -207,7 +207,7 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     @Data
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
-    public static class TriggerVariable extends NameValuePair.AbstractYaml {
+    public static class TriggerVariable extends NameValuePairAbstractYaml {
       String entityType;
 
       @Builder

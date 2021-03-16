@@ -15,7 +15,6 @@ import io.harness.persistence.NameAccess;
 
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
-import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import com.google.common.base.MoreObjects;
@@ -26,10 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -487,19 +483,6 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     Set<String> kw = KeywordsAware.super.generateKeywords();
     kw.addAll(asList(name, description));
     return kw;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String description;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String description) {
-      super(type, harnessApiVersion);
-      this.description = description;
-    }
   }
 
   @UtilityClass

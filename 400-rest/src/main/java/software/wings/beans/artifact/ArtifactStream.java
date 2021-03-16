@@ -20,13 +20,11 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.utils.Utils;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -38,7 +36,6 @@ import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
@@ -217,32 +214,6 @@ public abstract class ArtifactStream
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, sourceName, artifactStreamType));
     return keywords;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private String serverName;
-    private String templateUri;
-    private List<NameValuePair> templateVariables;
-
-    public Yaml(String type, String harnessApiVersion, String serverName) {
-      super(type, harnessApiVersion);
-      this.serverName = serverName;
-    }
-
-    public Yaml(String type, String harnessApiVersion) {
-      super(type, harnessApiVersion);
-    }
-
-    public Yaml(String type, String harnessApiVersion, String serverName, boolean metadataOnly, String templateUri,
-        List<NameValuePair> templateVariables) {
-      super(type, harnessApiVersion);
-      this.serverName = serverName;
-      this.templateUri = templateUri;
-      this.templateVariables = templateVariables;
-    }
   }
 
   @UtilityClass

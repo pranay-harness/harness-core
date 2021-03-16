@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
-import software.wings.beans.artifact.ArtifactoryArtifactStream.Yaml;
+import software.wings.beans.artifact.ArtifactoryArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.RepositoryType;
 
@@ -17,10 +17,11 @@ import com.google.inject.Singleton;
  */
 @OwnedBy(CDC)
 @Singleton
-public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Yaml, ArtifactoryArtifactStream> {
+public class ArtifactoryArtifactStreamYamlHandler
+    extends ArtifactStreamYamlHandler<ArtifactoryArtifactStreamYaml, ArtifactoryArtifactStream> {
   @Override
-  public Yaml toYaml(ArtifactoryArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public ArtifactoryArtifactStreamYaml toYaml(ArtifactoryArtifactStream bean, String appId) {
+    ArtifactoryArtifactStreamYaml yaml = ArtifactoryArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     if (isNotEmpty(bean.getArtifactPattern())) {
@@ -41,9 +42,10 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
   }
 
   @Override
-  protected void toBean(ArtifactoryArtifactStream artifactStream, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(ArtifactoryArtifactStream artifactStream,
+      ChangeContext<ArtifactoryArtifactStreamYaml> changeContext, String appId) {
     super.toBean(artifactStream, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    ArtifactoryArtifactStreamYaml yaml = changeContext.getYaml();
     artifactStream.setArtifactPaths(yaml.getArtifactPaths());
     if (isNotEmpty(yaml.getArtifactPattern())) {
       artifactStream.setArtifactPattern(yaml.getArtifactPattern());
@@ -68,6 +70,6 @@ public class ArtifactoryArtifactStreamYamlHandler extends ArtifactStreamYamlHand
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ArtifactoryArtifactStreamYaml.class;
   }
 }
