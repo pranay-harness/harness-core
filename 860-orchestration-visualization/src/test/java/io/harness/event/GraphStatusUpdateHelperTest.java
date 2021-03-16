@@ -57,20 +57,19 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 /**
  * Test class for {@link OrchestrationGraphGenerationHandler}
  */
-public class OrchestrationGraphGenerationHandlerTest extends OrchestrationVisualizationTestBase {
+public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestBase {
   @Inject private PlanExecutionService planExecutionService;
   @Inject private SpringMongoStore mongoStore;
 
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject @Spy private GraphGenerationService graphGenerationService;
   @Inject private MongoTemplate mongoTemplate;
-  @Inject private OrchestrationGraphGenerationHandler eventHandlerV2;
+  @Inject private GraphStatusUpdateHelper eventHandlerV2;
 
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
-  @Ignore("Using event sourcing now, will remove/update")
   public void shouldDoNothingIfRuntimeIdIsNull() {
     String planExecutionId = generateUuid();
     OrchestrationEvent event = OrchestrationEvent.builder()
@@ -81,7 +80,7 @@ public class OrchestrationGraphGenerationHandlerTest extends OrchestrationVisual
                                    .nodeExecutionProto(NodeExecutionProto.newBuilder().build())
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
-    eventHandlerV2.handleEvent(event);
+    eventHandlerV2.handleEvent(event, OrchestrationGraph.builder().build());
 
     verify(graphGenerationService, never()).getCachedOrchestrationGraph(planExecutionId);
   }
@@ -139,14 +138,12 @@ public class OrchestrationGraphGenerationHandlerTest extends OrchestrationVisual
                                    .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
-    eventHandlerV2.handleEvent(event);
+    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event, cachedGraph);
 
     Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
       OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
       return !graphInternal.getRootNodeIds().isEmpty();
     });
-
-    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());
@@ -162,7 +159,6 @@ public class OrchestrationGraphGenerationHandlerTest extends OrchestrationVisual
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   @RealMongo
-  @Ignore("Using event sourcing now, will remove/update")
   public void shouldUpdateExistingVertexInGraphAndAddOutcomes() {
     // creating PlanExecution
     PlanExecution planExecution =
@@ -228,14 +224,7 @@ public class OrchestrationGraphGenerationHandlerTest extends OrchestrationVisual
                                    .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(dummyStart))
                                    .eventType(NODE_EXECUTION_STATUS_UPDATE)
                                    .build();
-    eventHandlerV2.handleEvent(event);
-
-    Awaitility.await().atMost(2, TimeUnit.SECONDS).pollInterval(500, TimeUnit.MILLISECONDS).until(() -> {
-      OrchestrationGraph graphInternal = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
-      return graphInternal.getAdjacencyList().getGraphVertexMap().get(dummyStart.getUuid()).getStatus() == SUCCEEDED;
-    });
-
-    OrchestrationGraph updatedGraph = graphGenerationService.getCachedOrchestrationGraph(planExecution.getUuid());
+    OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(event, cachedGraph);
 
     assertThat(updatedGraph).isNotNull();
     assertThat(updatedGraph.getPlanExecutionId()).isEqualTo(planExecution.getUuid());

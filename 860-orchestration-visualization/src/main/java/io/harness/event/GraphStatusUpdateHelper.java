@@ -2,6 +2,7 @@ package io.harness.event;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.DelegateInfoHelper;
 import io.harness.beans.GraphVertex;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.beans.converter.GraphVertexConverter;
@@ -10,6 +11,7 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
@@ -22,13 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class StatusUpdateEventHelper {
+public class GraphStatusUpdateHelper {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
-
-  public void handleEvent(OrchestrationEvent event) {}
+  @Inject private DelegateInfoHelper delegateInfoHelper;
 
   public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
     // ToDo(Alexei) rewrite when proto will contain all the fields
@@ -77,6 +78,9 @@ public class StatusUpdateEventHelper {
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
         newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
             pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId, true)));
+        newValue.setDelegateSelectionLogParams(
+            delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
+                nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance())));
       }
       return newValue;
     });
