@@ -2,10 +2,10 @@ package software.wings.resources;
 
 import static io.harness.rule.OwnerRule.INDER;
 
-import static javax.ws.rs.client.Entity.entity;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
+import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -68,6 +68,7 @@ public class WebHookResourceTest extends WingsBaseTest {
                             .post(entity(webHookRequest, MediaType.APPLICATION_JSON_TYPE));
 
     assertThat(response).isNotNull();
+    verify(APP_SERVICE, never()).get(anyString());
     verify(WEBHOOK_SERVICE).execute(WEBHOOK_ID, webHookRequest);
   }
 
