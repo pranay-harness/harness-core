@@ -266,6 +266,7 @@ public class NgPipelineExecutionServiceImpl implements NgPipelineExecutionServic
   @Override
   public PipelineExecutionInterruptDTO registerInterrupt(
       PipelineExecutionInterruptType executionInterruptType, String planExecutionId) {
+    // TODO(sahil): we need to clean these apis plus these extra pojos including PipelineExecutionInterruptType
     InterruptConfig interruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
