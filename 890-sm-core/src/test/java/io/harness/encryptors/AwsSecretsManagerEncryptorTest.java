@@ -167,7 +167,7 @@ public class AwsSecretsManagerEncryptorTest extends CategoryTest {
           awsSecretsManagerConfig.getAccountId(), secretName, plainTextValue, awsSecretsManagerConfig);
       fail("Create Secret should have failed");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("Secret creation failed after 3 retries");
+      assertThat(e.getMessage()).contains("Secret creation failed after 3 retries");
       assertThat(e.getCause()).isOfAnyClassIn(AWSSecretsManagerException.class);
     }
   }
@@ -188,7 +188,7 @@ public class AwsSecretsManagerEncryptorTest extends CategoryTest {
           mock(EncryptedRecord.class), awsSecretsManagerConfig);
       fail("Update Secret should have failed");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("Secret update failed after 3 retries");
+      assertThat(e.getMessage()).contains("Secret update failed after 3 retries");
       assertThat(e.getCause()).isOfAnyClassIn(AWSSecretsManagerException.class);
     }
   }
@@ -210,7 +210,7 @@ public class AwsSecretsManagerEncryptorTest extends CategoryTest {
           awsSecretsManagerConfig.getAccountId(), secretName, encryptedRecord, awsSecretsManagerConfig);
       fail("Rename Secret should have failed");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("Secret update failed after 3 retries");
+      assertThat(e.getMessage()).contains("Secret update failed after 3 retries");
       assertThat(e.getCause()).isOfAnyClassIn(ResourceNotFoundException.class);
     }
   }

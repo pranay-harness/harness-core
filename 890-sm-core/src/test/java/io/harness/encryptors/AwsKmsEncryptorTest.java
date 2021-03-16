@@ -102,13 +102,14 @@ public class AwsKmsEncryptorTest extends CategoryTest {
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
   public void testEncryptSecret_shouldThrowException() {
+    System.out.println("Test");
     String value = UUIDGenerator.generateUuid();
     when(awskms.generateDataKey(any())).thenThrow(new KeyUnavailableException("Dummy error"));
     try {
       awsKmsEncryptor.encryptSecret(UUIDGenerator.generateUuid(), value, kmsConfig);
       fail("The test method should have thrown an exception");
     } catch (DelegateRetryableException e) {
-      assertThat(e.getCause().getMessage()).isEqualTo("Encryption failed after 3 retries");
+      assertThat(e.getCause().getMessage()).contains("Encryption failed after 3 retries");
     }
   }
 
@@ -128,7 +129,7 @@ public class AwsKmsEncryptorTest extends CategoryTest {
       fail("The test method should have thrown an exception");
     } catch (DelegateRetryableException e) {
       assertThat(e.getCause().getMessage())
-          .isEqualTo(String.format("Decryption failed for encryptedData %s after 3 retries", testRecord.getName()));
+          .contains(String.format("Decryption failed for encryptedData %s after 3 retries", testRecord.getName()));
     }
   }
 }
