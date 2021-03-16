@@ -1,9 +1,9 @@
-package io.harness;
+package io.harness.changehandlers;
 
+import io.harness.ChangeHandler;
+import io.harness.ccm.views.entities.CEView;
 import io.harness.changestreamsframework.ChangeEvent;
 import io.harness.timescaledb.TimeScaleDBService;
-
-import software.wings.beans.Application;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,7 +18,7 @@ import org.bouncycastle.util.Strings;
 
 @Slf4j
 @Singleton
-public class TimeScaleDBChangeHandler implements ChangeHandler {
+public class ViewTimeScaleDBChangeHandler implements ChangeHandler {
   private static final int MAX_RETRY_COUNT = 5;
   @Inject private TimeScaleDBService timeScaleDBService;
 
@@ -44,7 +44,6 @@ public class TimeScaleDBChangeHandler implements ChangeHandler {
 
   public boolean dbOperation(String query) {
     boolean successfulOperation = false;
-    log.info("In dbOperation, Query: {}", query);
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
       while (!successfulOperation && retryCount < MAX_RETRY_COUNT) {
@@ -66,9 +65,13 @@ public class TimeScaleDBChangeHandler implements ChangeHandler {
   private Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
     Map<String, String> columnValueMapping = new HashMap<>();
     // TODO: make this Handling generic
-    Application fullDocument = (Application) changeEvent.getFullDocument();
+    CEView fullDocument = (CEView) changeEvent.getFullDocument();
     columnValueMapping.put(Strings.toUpperCase("uuid"), changeEvent.getUuid());
-    columnValueMapping.put(Strings.toUpperCase("appid"), fullDocument.getAppId());
+    columnValueMapping.put(
+        Strings.toUpperCase("defaultcharttype"), fullDocument.getViewVisualization().getChartType().toString());
+    columnValueMapping.put(
+        Strings.toUpperCase("defaultgroupby"), fullDocument.getViewVisualization().getGroupBy().getFieldId());
+    columnValueMapping.put(Strings.toUpperCase("totalcost"), Double.toString(fullDocument.getTotalCost()));
     columnValueMapping.put(Strings.toUpperCase("name"), fullDocument.getName());
     return columnValueMapping;
   }

@@ -15,7 +15,7 @@ events-mongo:
   indexManagerMode: AUTO
 
 timescaledb:
-  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessccmdev"
   timescaledbUsername: "harnessappdev"
   timescaledbPassword: "harnessappdev"
   connectTimeout: 10

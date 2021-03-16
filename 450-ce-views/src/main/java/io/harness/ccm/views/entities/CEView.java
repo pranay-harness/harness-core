@@ -2,6 +2,8 @@ package io.harness.ccm.views.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
+import io.harness.changestreamsframework.ChangeDataCapture;
+import io.harness.changestreamsframework.ChangeDataCaptureSink;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -27,6 +29,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "CEViewKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceView", noClassnameStored = true)
+@ChangeDataCapture(
+    table = "ViewChangeDataCapture", dataStore = "events", sink = {ChangeDataCaptureSink.TIMESCALE}, fields = {})
 public class CEView implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
                                CreatedByAware, UpdatedByAware {
   @Id String uuid;
