@@ -41,7 +41,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
-import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filesystem.FileIo;
@@ -69,7 +68,6 @@ import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.settings.SettingValue;
 
-import com.google.inject.Inject;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -979,12 +977,13 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     verify(chartMuseumClient, never()).stopChartMuseumServer(chartMuseumServer.getStartedProcess());
   }
 
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testInitHelm() throws Exception {
     String workingDirectory = "/working/directory";
     String expectedInitCommand = format("v2/helm init -c --skip-refresh --home %s/helm", workingDirectory);
-    doReturn(workingDirectory).when(helmTaskHelper).createNewDirectoryAtPath(anyString());
+    doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
         .when(helmTaskHelperBase)
         .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand,

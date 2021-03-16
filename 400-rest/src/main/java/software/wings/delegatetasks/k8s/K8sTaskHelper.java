@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
@@ -12,7 +13,6 @@ import static io.harness.logging.LogLevel.INFO;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
-import static software.wings.delegatetasks.helm.HelmTaskHelper.getChartDirectory;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
