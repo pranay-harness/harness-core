@@ -158,6 +158,7 @@ public class BillingDataQueryBuilder {
           && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
           && areAggregationsValidForPreAggregation(aggregateFunction)) {
         selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
       } else {
         selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
       }
@@ -408,7 +409,12 @@ public class BillingDataQueryBuilder {
         selectQuery.addCustomFromTable(schema.getBillingDataTable());
       }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     if (isValidGroupByForFilterValues(groupBy)) {
