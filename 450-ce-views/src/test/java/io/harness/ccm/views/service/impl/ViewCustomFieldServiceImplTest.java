@@ -119,8 +119,8 @@ public class ViewCustomFieldServiceImplTest extends CategoryTest {
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
   public void testGetCustomFieldPerView() {
-    doReturn(Collections.singletonList(viewCustomField())).when(viewCustomFieldDao).findByViewId(UUID);
-    List<ViewField> customFields = viewCustomFieldService.getCustomFieldsPerView(UUID);
+    doReturn(Collections.singletonList(viewCustomField())).when(viewCustomFieldDao).findByViewId(UUID, ACCOUNT_ID);
+    List<ViewField> customFields = viewCustomFieldService.getCustomFieldsPerView(UUID, ACCOUNT_ID);
     assertThat(customFields.size()).isEqualTo(1);
   }
 
