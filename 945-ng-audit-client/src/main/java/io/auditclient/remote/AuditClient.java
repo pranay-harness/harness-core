@@ -8,7 +8,7 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public interface AuditClient {
-  String AUDIT_SAVE_API = "ng/audits";
+  String AUDIT_SAVE_API = "audits";
 
   @POST(AUDIT_SAVE_API) Call<RestResponse<AuditEventDTO>> createAudit(@Body AuditEventDTO auditEventDTO);
 }

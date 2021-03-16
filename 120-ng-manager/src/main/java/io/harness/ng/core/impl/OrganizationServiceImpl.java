@@ -10,6 +10,9 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.ModuleType;
+import io.harness.audit.beans.AuditEventDTO;
+import io.harness.auditclient.remote.AuditClient;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -58,17 +61,20 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final OutboxService outboxService;
   private final NgUserService ngUserService;
   private final TransactionTemplate transactionTemplate;
+  private final AuditClient auditClient;
   private static final String ORGANIZATION_ADMIN_ROLE_NAME = "Organization Admin";
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
-      NgUserService ngUserService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate) {
+      NgUserService ngUserService, @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
+      AuditClient auditClient) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.ngUserService = ngUserService;
     this.transactionTemplate = transactionTemplate;
+    this.auditClient = auditClient;
   }
 
   @Override
@@ -81,6 +87,15 @@ public class OrganizationServiceImpl implements OrganizationService {
       log.info(String.format("Organization with identifier %s was successfully created", organization.getIdentifier()));
 
       createUserProjectMap(organization);
+
+      AuditEventDTO auditEventDTO =
+          AuditEventDTO.builder()
+              .accountIdentifier(organization.getAccountIdentifier())
+              .action("CREATED")
+              .moduleType(ModuleType.CORE)
+              .resource(Resource.builder().identifier(organization.getIdentifier()).type("Organization").build())
+              .build();
+      auditClient.createAudit(auditEventDTO);
       return savedOrganization;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
