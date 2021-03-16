@@ -18,7 +18,6 @@ import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
