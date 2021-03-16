@@ -58,7 +58,10 @@ public enum EntityType {
       ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STEPS, EntityYamlRootNames.DEPLOYMENT_STEP, IdentifierRef.class),
   @JsonProperty(EntityTypeConstants.DEPLOYMENT_STAGE)
   DEPLOYMENT_STAGE(
-      ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, EntityYamlRootNames.DEPLOYMENT_STAGE, IdentifierRef.class);
+      ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, EntityYamlRootNames.DEPLOYMENT_STAGE, IdentifierRef.class),
+  @JsonProperty(EntityTypeConstants.APPROVAL_STAGE)
+  APPROVAL_STAGE(
+      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, EntityYamlRootNames.APPROVAL_STAGE, IdentifierRef.class);
 
   private final ModuleType moduleType;
   String yamlName;
