@@ -17,7 +17,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -250,7 +249,7 @@ public class SettingValidationService {
         throw new InvalidArgumentsException(
             "Validation can be skipped only if inherit from delegate option is selected.", USER);
       }
-      if (gcpConfig.isUseDelegateSelectors() && EmptyPredicate.isEmpty(gcpConfig.getDelegateSelectors())) {
+      if (gcpConfig.isUseDelegateSelectors() && isEmpty(gcpConfig.getDelegateSelectors())) {
         throw new InvalidArgumentsException(
             "Delegate Selector must be provided if inherit from delegate option is selected.", USER);
       }
@@ -359,7 +358,7 @@ public class SettingValidationService {
   }
 
   private void validateDelegateSelectorsProvided(SettingValue settingValue) {
-    if (EmptyPredicate.isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+    if (isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
       throw new InvalidRequestException("No Delegate Selector Provided.", USER);
     }
   }
