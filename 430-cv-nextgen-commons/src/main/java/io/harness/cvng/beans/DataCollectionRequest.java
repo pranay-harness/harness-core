@@ -6,6 +6,7 @@ import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsCapab
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.K8sTaskCapabilityHelper;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkCapabilityHelper;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -82,6 +83,9 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
       case GCP:
         return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
             "https://storage.cloud.google.com/", maskingEvaluator));
+      case NEW_RELIC:
+        return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            ((NewRelicConnectorDTO) connectorInfoDTO.getConnectorConfig()).getUrl(), maskingEvaluator));
       default:
         throw new InvalidRequestException("Connector capability not found");
     }

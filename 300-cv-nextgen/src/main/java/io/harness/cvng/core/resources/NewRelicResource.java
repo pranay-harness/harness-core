@@ -17,6 +17,7 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -54,7 +55,7 @@ public class NewRelicResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
-      @QueryParam("offset") @NotNull int offset, @QueryParam("filter") String filter,
+      @QueryParam("offset") @NotNull int offset, @QueryParam("filter") @DefaultValue("") String filter,
       @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(newRelicService.getNewRelicApplications(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, filter, tracingId));
