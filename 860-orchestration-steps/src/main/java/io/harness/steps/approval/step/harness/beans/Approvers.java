@@ -1,4 +1,4 @@
-package io.harness.steps.approval.harness.beans;
+package io.harness.steps.approval.step.harness.beans;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;

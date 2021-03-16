@@ -729,8 +729,22 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     User user = UserThreadLocal.get();
-    List<String> userGroupMembers = fetchUserGroupsMemberIds(accountId, userGroupIds);
+    return verifyUserAuthorizedToAcceptOrRejectApproval(accountId, user, userGroupIds);
+  }
 
+  @Override
+  public boolean verifyUserAuthorizedToAcceptOrRejectApproval(
+      String accountId, String userId, List<String> userGroupIds) {
+    if (userId == null || isEmpty(userGroupIds)) {
+      return false;
+    }
+
+    User user = userService.get(userId);
+    return verifyUserAuthorizedToAcceptOrRejectApproval(accountId, user, userGroupIds);
+  }
+
+  private boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, User user, List<String> userGroupIds) {
+    List<String> userGroupMembers = fetchUserGroupsMemberIds(accountId, userGroupIds);
     return userService.isUserVerified(user) && isNotEmpty(userGroupMembers)
         && userGroupMembers.contains(user.getUuid());
   }

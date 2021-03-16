@@ -1,10 +1,13 @@
-package io.harness.steps.approval.harness;
+package io.harness.steps.approval.step;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.plancreator.steps.internal.PMSStepInfo;
+import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.approval.harness.beans.ApproverInputInfo;
-import io.harness.steps.approval.harness.beans.Approvers;
+import io.harness.steps.approval.step.harness.beans.ApproverInputInfo;
+import io.harness.steps.approval.step.harness.beans.Approvers;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -16,12 +19,13 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TypeAlias("HarnessApprovalBaseStepInfo")
-public class HarnessApprovalBaseStepInfo {
+@TypeAlias("approvalBaseStepInfo")
+public abstract class ApprovalBaseStepInfo implements PMSStepInfo, WithRollbackInfo {
+  @JsonIgnore String name;
+  @JsonIgnore String identifier;
+
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> approvalMessage;
   @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   ParameterField<Boolean> includePipelineExecutionHistory;
-  @NotNull Approvers approvers;
-  List<ApproverInputInfo> approverInputs;
 }

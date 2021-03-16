@@ -1,3 +1,3 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.beans;
 
 public enum ApprovalStatus { WAITING, APPROVED, REJECTED }

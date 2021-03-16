@@ -157,6 +157,8 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
 
   boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, List<String> userGroupIds);
 
+  boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, String userId, List<String> userGroupIds);
+
   UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
       @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName);
 

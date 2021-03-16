@@ -1,4 +1,6 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.beans;
+
+import io.harness.steps.approval.step.entities.ApprovalInstance;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
@@ -31,4 +33,11 @@ public class ApprovalInstanceResponseDTO {
 
   Long createdAt;
   Long lastModifiedAt;
+
+  public static ApprovalInstanceResponseDTO fromApprovalInstance(ApprovalInstance instance) {
+    if (instance == null) {
+      return null;
+    }
+    return instance.toApprovalInstanceResponseDTO();
+  }
 }
