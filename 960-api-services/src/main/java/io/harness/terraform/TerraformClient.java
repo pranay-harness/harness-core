@@ -44,7 +44,7 @@ public interface TerraformClient {
       @Nonnull LogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException;
 
   @Nonnull
-  CliResponse getWorkspacelist(Map<String, String> envVariables, String scriptDirectory,
+  CliResponse getWorkspaceList(Map<String, String> envVariables, String scriptDirectory,
       @Nonnull LogCallback executionLogCallback) throws InterruptedException, TimeoutException, IOException;
 
   @Nonnull
