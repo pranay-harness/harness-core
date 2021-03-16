@@ -378,7 +378,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
-  public void shouldUpdateApplicationWithOutIsManualTriggerAuthorized() {
+  public void shouldUpdateApplicationWithoutIsManualTriggerAuthorized() {
     when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
     Application application = anApplication().uuid(APP_ID).name(APP_NAME).accountId(ACCOUNT_ID).build();
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
