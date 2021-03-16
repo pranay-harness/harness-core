@@ -8,5 +8,7 @@ public enum ArtifactTaskType {
   VALIDATE_ARTIFACT_SOURCE,
   GET_LABELS,
   GET_PLANS,
-  GET_FEEDS
+  GET_FEEDS,
+  GET_IMAGE_URL,
+  GET_AUTH_TOKEN,
 }
