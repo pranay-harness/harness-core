@@ -129,6 +129,8 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
+import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiRequestType;
 import io.harness.delegate.beans.gitapi.GitApiResult;
@@ -656,5 +658,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
     kryo.register(ChecksumType.class, 5065);
+
+    kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
+    kryo.register(DecryptGitAPIAccessTaskResponse.class, 543267);
   }
 }

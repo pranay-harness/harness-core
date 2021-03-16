@@ -16,6 +16,7 @@ java_library(
         "//440-connector-nextgen:module",
         "//940-secret-manager-client:module",
         "//950-delegate-tasks-beans:module",
+        "//954-connector-beans:module",
         "//955-delegate-beans:module",
         "//965-git-sync-commons:module",
         "//970-ng-commons:module",
