@@ -4,6 +4,6 @@ Var applications = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
 print Var:applications
 Var appList = []
 Var eachApplication = {}
-
+return Var:appList
 
 

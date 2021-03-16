@@ -16,6 +16,8 @@ public class NewRelicApplicationFetchRequest extends DataCollectionRequest<NewRe
   public static final String DSL = StackdriverDashboardRequest.readDSL(
       "newrelic-applications.datacollection", NewRelicApplicationFetchRequest.class);
 
+  private String filter;
+
   @Override
   public String getDSL() {
     return DSL;
