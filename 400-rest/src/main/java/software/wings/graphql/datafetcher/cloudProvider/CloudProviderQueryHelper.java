@@ -6,7 +6,6 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
-import software.wings.beans.Log;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
@@ -19,11 +18,9 @@ import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProvi
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.sql.SQLException;
 import java.util.List;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.ValidationException;
 
 /**
  * @author rktummala on 07/12/19
