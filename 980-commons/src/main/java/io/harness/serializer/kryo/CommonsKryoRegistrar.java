@@ -10,10 +10,6 @@ import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.logging.LogLevel;
-import io.harness.security.dto.ApiKeyPrincipal;
-import io.harness.security.dto.Principal;
-import io.harness.security.dto.ServicePrincipal;
-import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
@@ -37,10 +33,5 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(ShellExecutionException.class, 7473);
     kryo.register(LogLevel.class, 71103);
-
-    kryo.register(Principal.class, 3600);
-    kryo.register(UserPrincipal.class, 3601);
-    kryo.register(ApiKeyPrincipal.class, 3602);
-    kryo.register(ServicePrincipal.class, 3603);
   }
 }
