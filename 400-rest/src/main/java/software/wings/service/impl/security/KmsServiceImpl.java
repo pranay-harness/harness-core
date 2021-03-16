@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
@@ -26,7 +27,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.service.intfc.security.KmsService;
@@ -113,21 +113,70 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       return secretManagerConfigService.save(savedKmsConfig);
     }
 
-    EncryptedData accessKeyData = getEncryptedDataForSecretField(
-        savedKmsConfig, kmsConfig, kmsConfig.getAccessKey(), savedKmsConfig.getAccessKey(), ACCESS_KEY_SUFFIX);
-    EncryptedData secretKeyData = getEncryptedDataForSecretField(
-        savedKmsConfig, kmsConfig, kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey(), SECRET_KEY_SUFFIX);
-    EncryptedData arnKeyData = getEncryptedDataForSecretField(
-        savedKmsConfig, kmsConfig, kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn(), ARN_SUFFIX);
-    accessKeyData = saveOrUpdateEncryptedRecord(accountId, kmsConfig, kmsConfig.getAccessKey(),
-        savedKmsConfig.getAccessKey(), accessKeyData, ACCESS_KEY_SUFFIX);
-    secretKeyData = saveOrUpdateEncryptedRecord(accountId, kmsConfig, kmsConfig.getSecretKey(),
-        savedKmsConfig.getSecretKey(), secretKeyData, SECRET_KEY_SUFFIX);
-    arnKeyData = saveOrUpdateEncryptedRecord(
-        accountId, kmsConfig, kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn(), arnKeyData, ARN_SUFFIX);
-    kmsConfig.setAccessKey(accessKeyData.getUuid());
-    kmsConfig.setSecretKey(secretKeyData.getUuid());
-    kmsConfig.setKmsArn(arnKeyData.getUuid());
+    EncryptedData accessKeyData = null;
+    if (isNotEmpty(kmsConfig.getAccessKey())) {
+      accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
+      if (isNotBlank(kmsConfig.getUuid())) {
+        EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
+        if (savedAccessKey != null) {
+          savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
+          savedAccessKey.setEncryptedValue(accessKeyData.getEncryptedValue());
+          accessKeyData = savedAccessKey;
+        }
+      }
+      accessKeyData.setAccountId(accountId);
+      accessKeyData.setType(KMS);
+      accessKeyData.setName(kmsConfig.getName() + ACCESS_KEY_SUFFIX);
+      String accessKeyId = wingsPersistence.save(accessKeyData);
+      kmsConfig.setAccessKey(accessKeyId);
+    } else {
+      if (savedKmsConfig != null) {
+        cleanUpEncryptedRecordEntry(accountId, savedKmsConfig.getAccessKey());
+        log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
+            savedKmsConfig.getAccessKey(), savedKmsConfig.getName());
+      }
+    }
+    EncryptedData secretKeyData = null;
+    if (isNotEmpty(kmsConfig.getSecretKey())) {
+      secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
+      if (isNotBlank(kmsConfig.getUuid())) {
+        EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
+        if (savedSecretKey != null) {
+          savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
+          savedSecretKey.setEncryptedValue(secretKeyData.getEncryptedValue());
+          secretKeyData = savedSecretKey;
+        }
+      }
+      secretKeyData.setAccountId(accountId);
+      secretKeyData.setType(KMS);
+      secretKeyData.setName(kmsConfig.getName() + SECRET_KEY_SUFFIX);
+      String secretKeyId = wingsPersistence.save(secretKeyData);
+      kmsConfig.setSecretKey(secretKeyId);
+    } else {
+      if (savedKmsConfig != null) {
+        cleanUpEncryptedRecordEntry(accountId, savedKmsConfig.getSecretKey());
+        log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
+            savedKmsConfig.getSecretKey(), savedKmsConfig.getName());
+      }
+    }
+    EncryptedData arnKeyData = null;
+    if (isNotEmpty(kmsConfig.getKmsArn())) {
+      arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
+      if (isNotBlank(kmsConfig.getUuid())) {
+        EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
+        checkNotNull(savedArn, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
+        savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
+        savedArn.setEncryptedValue(arnKeyData.getEncryptedValue());
+        arnKeyData = savedArn;
+      }
+      arnKeyData.setAccountId(accountId);
+      arnKeyData.setType(KMS);
+      arnKeyData.setName(kmsConfig.getName() + ARN_SUFFIX);
+      String arnKeyId = wingsPersistence.save(arnKeyData);
+      kmsConfig.setKmsArn(arnKeyId);
+    } else {
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, "ARN reference cannot be null", USER);
+    }
     // PL-3237: Audit secret manager config changes.
     generateAuditForSecretManager(accountId, oldConfigForAudit, kmsConfig);
     String parentId = secretManagerConfigService.save(kmsConfig);
@@ -150,7 +199,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   private EncryptedData saveOrUpdateEncryptedRecord(String accountId, KmsConfig kmsConfig, String newKeyToUpdate,
       String oldKeyId, EncryptedData encryptedData, String keySuffix) {
-    //if there is a key to update save the encrypted data
+    // if there is a key to update save the encrypted data
     if (isNotEmpty(newKeyToUpdate) && encryptedData != null) {
       encryptedData.setAccountId(accountId);
       encryptedData.setType(KMS);
@@ -158,7 +207,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       wingsPersistence.save(encryptedData);
       return encryptedData;
     } else {
-      //if key is not sent that means it needs to be removed from EncryptedRecords as well
+      // if key is not sent that means it needs to be removed from EncryptedRecords as well
       cleanUpEncryptedRecordEntry(accountId, oldKeyId);
       return null;
     }
@@ -271,25 +320,5 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
         kmsConfig.setKmsArn(new String(decryptKey(kmsConfig.getKmsArn().toCharArray())));
       }
     }
-  }
-
-  private EncryptedData getEncryptedDataForSecretField(KmsConfig savedKmsConfig, KmsConfig kmsConfig,
-      String newSecretValue, String oldSecretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = isNotEmpty(newSecretValue) ? encryptLocal(newSecretValue.toCharArray()) : null;
-    if (savedKmsConfig != null && encryptedData != null) {
-      // Get by auth token encrypted record by Id or name.
-      Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
-      query.criteria(EncryptedDataKeys.accountId)
-          .equal(kmsConfig.getAccountId())
-          .or(query.criteria(ID_KEY).equal(oldSecretValue),
-              query.criteria(EncryptedDataKeys.name).equal(kmsConfig.getName() + secretNameSuffix));
-      EncryptedData savedEncryptedData = query.get();
-      if (savedEncryptedData != null) {
-        savedEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
-        savedEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
-        encryptedData = savedEncryptedData;
-      }
-    }
-    return encryptedData;
   }
 }

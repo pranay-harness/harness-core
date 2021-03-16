@@ -93,7 +93,6 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     EncryptedData secretKeyEncryptedData = getEncryptedDataForSecretField(
         savedSecretsManagerConfig, secretsManagerConfig, secretsManagerConfig.getSecretKey(), SECRET_KEY_NAME_SUFFIX);
 
-    secretsManagerConfig.setSecretKey(null);
     String secretsManagerConfigId;
     try {
       secretsManagerConfigId = secretManagerConfigService.save(secretsManagerConfig);
@@ -102,10 +101,20 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
           "Another AWS Secrets Manager configuration with the same name or URL exists", e, USER_SRE);
     }
 
-    // Create a LOCAL encrypted record for AWS secret key
-    String secretKeyEncryptedDataId = saveSecretField(secretsManagerConfig, secretsManagerConfigId,
-        secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX, AwsSecretsManagerConfigKeys.secretKey);
-    secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
+    if (isEmpty(secretsManagerConfig.getSecretKey())) {
+      if (savedSecretsManagerConfig != null && isNotEmpty(savedSecretsManagerConfig.getSecretKey())) {
+        wingsPersistence.delete(EncryptedData.class, savedSecretsManagerConfig.getSecretKey());
+        log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
+            secretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
+        secretsManagerConfig.setSecretKey(null);
+        log.info("Updated secret key referenece as Null for Aws Secrets Manager '{}'", secretsManagerConfig.getName());
+      }
+    } else {
+      // Create a LOCAL encrypted record for AWS secret key
+      String secretKeyEncryptedDataId = saveSecretField(secretsManagerConfig, secretsManagerConfigId,
+          secretKeyEncryptedData, SECRET_KEY_NAME_SUFFIX, AwsSecretsManagerConfigKeys.secretKey);
+      secretsManagerConfig.setSecretKey(secretKeyEncryptedDataId);
+    }
     // PL-3237: Audit secret manager config changes.
     generateAuditForSecretManager(accountId, oldConfigForAudit, secretsManagerConfig);
 
