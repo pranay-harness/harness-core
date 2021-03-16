@@ -1,9 +1,16 @@
 package io.harness.accesscontrol.roleassignments.api;
 
+import static io.harness.accesscontrol.common.filter.ManagedFilter.buildFromSet;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.accesscontrol.commons.validation.ValidationResultMapper;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
+import io.harness.utils.CryptoUtils;
 
 import java.util.HashSet;
 import java.util.stream.Collectors;
@@ -43,7 +50,9 @@ public class RoleAssignmentDTOMapper {
 
   public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
     return RoleAssignment.builder()
-        .identifier(object.getIdentifier())
+        .identifier(isEmpty(object.getIdentifier())
+                ? "role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20))
+                : object.getIdentifier())
         .scopeIdentifier(scopeIdentifier)
         .principalIdentifier(object.getPrincipal().getIdentifier())
         .principalType(object.getPrincipal().getType())
@@ -54,8 +63,10 @@ public class RoleAssignmentDTOMapper {
         .build();
   }
 
-  public static RoleAssignmentFilter fromDTO(RoleAssignmentFilterDTO object) {
+  public static RoleAssignmentFilter fromDTO(String scopeIdentifier, RoleAssignmentFilterDTO object) {
     return RoleAssignmentFilter.builder()
+        .scopeFilter(scopeIdentifier)
+        .includeChildScopes(false)
         .roleFilter(object.getRoleFilter() == null ? new HashSet<>() : object.getRoleFilter())
         .resourceGroupFilter(
             object.getResourceGroupFilter() == null ? new HashSet<>() : object.getResourceGroupFilter())
@@ -71,8 +82,26 @@ public class RoleAssignmentDTOMapper {
                       .collect(Collectors.toSet()))
         .principalTypeFilter(
             object.getPrincipalTypeFilter() == null ? new HashSet<>() : object.getPrincipalTypeFilter())
-        .managedFilter(object.getHarnessManagedFilter() == null ? new HashSet<>() : object.getHarnessManagedFilter())
+        .managedFilter(buildFromSet(object.getHarnessManagedFilter()))
         .disabledFilter(object.getDisabledFilter() == null ? new HashSet<>() : object.getDisabledFilter())
+        .build();
+  }
+
+  public static RoleAssignmentValidationRequest fromDTO(
+      String scopeIdentifier, RoleAssignmentValidationRequestDTO object) {
+    return RoleAssignmentValidationRequest.builder()
+        .roleAssignment(fromDTO(scopeIdentifier, object.getRoleAssignment()))
+        .validatePrincipal(object.isValidatePrincipal())
+        .validateResourceGroup(object.isValidateResourceGroup())
+        .validateRole(object.isValidateRole())
+        .build();
+  }
+
+  public static RoleAssignmentValidationResponseDTO toDTO(RoleAssignmentValidationResult object) {
+    return RoleAssignmentValidationResponseDTO.builder()
+        .principalValidationResult(ValidationResultMapper.toDTO(object.getPrincipalValidationResult()))
+        .resourceGroupValidationResult(ValidationResultMapper.toDTO(object.getResourceGroupValidationResult()))
+        .roleValidationResult(ValidationResultMapper.toDTO(object.getRoleValidationResult()))
         .build();
   }
 }

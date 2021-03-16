@@ -5,8 +5,8 @@ use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 
-use crate::java_class::{JavaClass, JavaClassTraits};
-use crate::java_module::{JavaModule, modules};
+use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM};
+use crate::java_module::{modules, JavaModule};
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -22,6 +22,14 @@ pub struct Analyze {
     /// Filter the reports by affected module root root_filter.
     #[clap(short, long)]
     root_filter: Option<String>,
+
+    /// Filter the reports by team.
+    #[clap(short, long)]
+    team_filter: Option<String>,
+
+    /// Filter the reports by team.
+    #[clap(short, long)]
+    only_team_filter: bool,
 
     #[clap(short, long)]
     auto_actionable_filter: bool,
@@ -47,6 +55,7 @@ struct Report {
     action: String,
 
     for_class: String,
+    for_team: String,
     indirect_classes: HashSet<String>,
 
     for_modules: HashSet<String>,
@@ -58,7 +67,11 @@ pub fn analyze(opts: Analyze) {
     let modules = modules();
     //println!("{:?}", modules);
 
-    if opts.module_filter.is_some() && !modules.keys().any(|module_name| module_name.eq(opts.module_filter.as_ref().unwrap())) {
+    if opts.module_filter.is_some()
+        && !modules
+            .keys()
+            .any(|module_name| module_name.eq(opts.module_filter.as_ref().unwrap()))
+    {
         panic!("There is no module {}", opts.module_filter.unwrap());
     }
 
@@ -111,6 +124,7 @@ pub fn analyze(opts: Analyze) {
     });
 
     class_modules.iter().for_each(|tuple| {
+        results.extend(check_for_team(tuple.0, tuple.1));
         results.extend(check_already_in_target(tuple.0, tuple.1));
         results.extend(check_for_extra_break(tuple.0, tuple.1));
         results.extend(check_for_promotion(
@@ -164,8 +178,9 @@ pub fn analyze(opts: Analyze) {
         .iter()
         .filter(|&report| filter_report(&opts, report) || indirect_classes.contains(&report.for_class))
         .filter(|&report| filter_by_auto_actionable(&opts, report))
+        .filter(|&report| filter_by_team(&opts, report))
         .for_each(|report| {
-            println!("{:?}: {}", &report.kind, &report.message);
+            println!("{:?}: [{}] {}", &report.kind, &report.for_team, &report.message);
             if opts.auto_actionable_command && !report.action.is_empty() {
                 println!("   {}", &report.action);
             }
@@ -182,7 +197,7 @@ pub fn analyze(opts: Analyze) {
 }
 
 fn filter_report(opts: &Analyze, report: &Report) -> bool {
-    filter_by_class(&opts, report) &&    filter_by_module(&opts, report) && filter_by_root(&opts, report)
+    filter_by_class(&opts, report) && filter_by_module(&opts, report) && filter_by_root(&opts, report)
 }
 
 fn filter_by_class(opts: &Analyze, report: &Report) -> bool {
@@ -193,15 +208,18 @@ fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
     opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
 }
 
+fn filter_by_team(opts: &Analyze, report: &Report) -> bool {
+    opts.team_filter.is_none()
+        || (report.for_team.eq(opts.team_filter.as_ref().unwrap())
+            || (!opts.only_team_filter && report.for_team.eq(UNKNOWN_TEAM)))
+}
+
 fn filter_by_auto_actionable(opts: &Analyze, report: &Report) -> bool {
     !opts.auto_actionable_filter || !report.action.is_empty()
 }
 
 fn filter_by_root(opts: &Analyze, report: &Report) -> bool {
-    opts.root_filter.is_none()
-        || report.for_modules.iter().any(|name| {
-        is_with_root(opts, name)
-    })
+    opts.root_filter.is_none() || report.for_modules.iter().any(|name| is_with_root(opts, name))
 }
 
 fn is_with_root(opts: &Analyze, module_name: &String) -> bool {
@@ -228,6 +246,7 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
                 message: format!("{} has no dependency on {}", class.name, break_dependency),
                 action: Default::default(),
                 for_class: class.name.clone(),
+                for_team: class.team(),
                 indirect_classes: Default::default(),
                 for_modules: modules,
             })
@@ -254,6 +273,7 @@ fn check_for_classes_in_more_than_one_module(
                     message: format!("{} appears in {} and {}", class.name, module.name, tracked_module.name),
                     action: Default::default(),
                     for_class: class.name.clone(),
+                    for_team: class.team(),
                     indirect_classes: Default::default(),
                     for_modules: [module.name.clone(), tracked_module.name.clone()]
                         .iter()
@@ -283,6 +303,7 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
                 ),
                 action: Default::default(),
                 for_class: Default::default(),
+                for_team: Default::default(),
                 indirect_classes: Default::default(),
                 for_modules: [module.name.clone(), dependent.name.clone()].iter().cloned().collect(),
             });
@@ -308,6 +329,7 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
                 ),
                 action: Default::default(),
                 for_class: class.name.clone(),
+                for_team: class.team(),
                 indirect_classes: Default::default(),
                 for_modules: [module.name.clone()].iter().cloned().collect(),
             })
@@ -371,11 +393,15 @@ fn check_for_promotion(
             && !target_module.dependencies.contains(&dependent_target_module.name)
         {
             issue = true;
-            let mdls = [module.name.clone(), dependent_target_module.name.clone(), target_module.name.clone()]
-                .iter()
-                .cloned()
-                .collect();
-            let indirect_classes = [dependent_class.name.clone()].iter().cloned().collect();
+            let mdls = [
+                module.name.clone(),
+                dependent_target_module.name.clone(),
+                target_module.name.clone(),
+            ]
+            .iter()
+            .cloned()
+            .collect();
+
             results.push(if class.break_dependencies_on.contains(src) {
                 Report {
                     kind: Kind::DevAction,
@@ -385,7 +411,8 @@ fn check_for_promotion(
                     ),
                     action: Default::default(),
                     for_class: class.name.clone(),
-                    indirect_classes: indirect_classes,
+                    for_team: class.team(),
+                    indirect_classes: Default::default(),
                     for_modules: mdls,
                 }
             } else {
@@ -397,7 +424,8 @@ fn check_for_promotion(
                     ),
                     action: Default::default(),
                     for_class: class.name.clone(),
-                    indirect_classes: indirect_classes,
+                    for_team: class.team(),
+                    indirect_classes: [dependent_class.name.clone()].iter().cloned().collect(),
                     for_modules: mdls,
                 }
             });
@@ -410,52 +438,61 @@ fn check_for_promotion(
     });
 
     if !issue && not_ready_yet.is_empty() {
-        let mdls = [module.name.clone(), target_module.name.clone()].iter().cloned().collect();
-            let module = class_modules.get(class);
+        let mdls = [module.name.clone(), target_module.name.clone()]
+            .iter()
+            .cloned()
+            .collect();
+        let module = class_modules.get(class);
 
-            let msg = format!("{} is ready to go to {}", class.name, target_module.name);
+        let msg = format!("{} is ready to go to {}", class.name, target_module.name);
 
-            results.push(match module {
-                None => Report {
-                    kind: Kind::DevAction,
-                    action: Default::default(),
-                    message: msg,
-                    for_class: class.name.clone(),
-                    indirect_classes: Default::default(),
-                    for_modules: mdls,
-                },
-                Some(&module) => Report {
-                    kind: Kind::AutoAction,
-                    message: msg,
-                    action: format!(
-                        "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
-                        module.directory,
-                        class.relative_location(),
-                        target_module.directory
-                    ),
-                    for_class: class.name.clone(),
-                    indirect_classes: Default::default(),
-                    for_modules: mdls,
-                },
-            });
+        results.push(match module {
+            None => Report {
+                kind: Kind::DevAction,
+                action: Default::default(),
+                message: msg,
+                for_class: class.name.clone(),
+                for_team: class.team(),
+                indirect_classes: Default::default(),
+                for_modules: mdls,
+            },
+            Some(&module) => Report {
+                kind: Kind::AutoAction,
+                message: msg,
+                action: format!(
+                    "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
+                    module.directory,
+                    class.relative_location(),
+                    target_module.directory
+                ),
+                for_class: class.name.clone(),
+                for_team: class.team(),
+                indirect_classes: Default::default(),
+                for_modules: mdls,
+            },
+        });
     }
 
     if !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
 
-            results.push(Report {
-                kind: Kind::Blocked,
-                message: format!(
-                    "{} does not have untargeted dependencies to go to {}. First move {}",
-                    class.name,
-                    target_module.name,
-                    not_ready_yet.join(", ")
-                ),
-                action: Default::default(),
-                for_class: class.name.clone(),
-                indirect_classes: all_classes,
-                for_modules: [module.name.clone(), target_module.name.clone()].iter().cloned().collect(),
-            });
+        results.push(Report {
+            kind: Kind::Blocked,
+            message: format!(
+                "{} does not have untargeted dependencies to go to {}. First move {}",
+                class.name,
+                target_module.name,
+                not_ready_yet.join(", ")
+            ),
+            action: Default::default(),
+            for_class: class.name.clone(),
+            for_team: class.team(),
+            indirect_classes: all_classes,
+            for_modules: [module.name.clone(), target_module.name.clone()]
+                .iter()
+                .cloned()
+                .collect(),
+        });
     }
 
     results
@@ -516,10 +553,14 @@ fn check_for_demotion(
                 && !dependee_target_module.dependencies.contains(&target_module.name)
             {
                 issue = true;
-                let mdls = [module.name.clone(), dependee_target_module.name.clone(), target_module.name.clone()]
-                    .iter()
-                    .cloned()
-                    .collect();
+                let mdls = [
+                    module.name.clone(),
+                    dependee_target_module.name.clone(),
+                    target_module.name.clone(),
+                ]
+                .iter()
+                .cloned()
+                .collect();
                 let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
                 results.push(if dependee_class.break_dependencies_on.contains(&class.name) {
                     Report {
@@ -530,6 +571,7 @@ fn check_for_demotion(
                         ),
                         action: Default::default(),
                         for_class: dependee_class.name.clone(),
+                        for_team: class.team(),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
                     }
@@ -541,6 +583,7 @@ fn check_for_demotion(
                             class.name, dependee_class.name, dependee_target_module.name, target_module.name
                         ),
                         action: Default::default(),
+                        for_team: class.team(),
                         for_class: class.name.clone(),
                         indirect_classes: indirect_classes,
                         for_modules: mdls,
@@ -556,54 +599,63 @@ fn check_for_demotion(
     }
 
     if !issue && not_ready_yet.is_empty() {
-        let mdls = [module.name.clone(), target_module.name.clone()].iter().cloned().collect();
+        let mdls = [module.name.clone(), target_module.name.clone()]
+            .iter()
+            .cloned()
+            .collect();
 
-            let module = class_modules.get(class);
+        let module = class_modules.get(class);
 
-            let msg = format!("{} is ready to go to {}", class.name, target_module.name);
+        let msg = format!("{} is ready to go to {}", class.name, target_module.name);
 
-            results.push(match module {
-                None => Report {
-                    kind: Kind::DevAction,
-                    action: Default::default(),
-                    message: msg,
-                    for_class: class.name.clone(),
-                    indirect_classes: Default::default(),
-                    for_modules: mdls,
-                },
-                Some(&module) => Report {
-                    kind: Kind::AutoAction,
-                    message: msg,
-                    action: format!(
-                        "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
-                        module.directory,
-                        class.relative_location(),
-                        target_module.directory
-                    ),
-                    for_class: class.name.clone(),
-                    indirect_classes: Default::default(),
-                    for_modules: mdls,
-                },
-            });
-        }
+        results.push(match module {
+            None => Report {
+                kind: Kind::DevAction,
+                action: Default::default(),
+                message: msg,
+                for_class: class.name.clone(),
+                for_team: class.team(),
+                indirect_classes: Default::default(),
+                for_modules: mdls,
+            },
+            Some(&module) => Report {
+                kind: Kind::AutoAction,
+                message: msg,
+                action: format!(
+                    "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
+                    module.directory,
+                    class.relative_location(),
+                    target_module.directory
+                ),
+                for_class: class.name.clone(),
+                for_team: class.team(),
+                indirect_classes: Default::default(),
+                for_modules: mdls,
+            },
+        });
+    }
 
     if !not_ready_yet.is_empty() {
-            all_classes.insert(class.name.clone());
+        all_classes.insert(class.name.clone());
 
-            results.push(Report {
-                kind: Kind::Blocked,
-                message: format!(
-                    "{} does not have dependees to go to {}. First move {}",
-                    class.name,
-                    target_module.name,
-                    not_ready_yet.join(", ")
-                ),
-                action: Default::default(),
-                for_class: class.name.clone(),
-                indirect_classes: all_classes,
-                for_modules: [module.name.clone(), target_module.name.clone()].iter().cloned().collect(),
-            });
-        }
+        results.push(Report {
+            kind: Kind::Blocked,
+            message: format!(
+                "{} does not have dependees to go to {}. First move {}",
+                class.name,
+                target_module.name,
+                not_ready_yet.join(", ")
+            ),
+            action: Default::default(),
+            for_class: class.name.clone(),
+            for_team: class.team(),
+            indirect_classes: all_classes,
+            for_modules: [module.name.clone(), target_module.name.clone()]
+                .iter()
+                .cloned()
+                .collect(),
+        });
+    }
 
     results
 }
@@ -617,9 +669,28 @@ fn target_module_needed(class: &JavaClass) -> Report {
         ),
         action: Default::default(),
         for_class: class.name.clone(),
+        for_team: class.team(),
         indirect_classes: Default::default(),
         for_modules: Default::default(),
     }
+}
+
+fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+    let mut results: Vec<Report> = Vec::new();
+
+    if class.team.is_none() {
+        results.push(Report {
+            kind: Kind::ToDo,
+            message: format!("{} is missing team", class.name),
+            action: Default::default(),
+            for_class: class.name.clone(),
+            for_team: class.team(),
+            indirect_classes: Default::default(),
+            for_modules: [module.name.clone()].iter().cloned().collect(),
+        });
+    }
+
+    results
 }
 
 fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
@@ -634,6 +705,7 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
             ),
             action: Default::default(),
             for_class: class.name.clone(),
+            for_team: class.team(),
             indirect_classes: Default::default(),
             for_modules: [module.name.clone()].iter().cloned().collect(),
         });

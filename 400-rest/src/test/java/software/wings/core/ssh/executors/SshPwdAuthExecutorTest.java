@@ -2,7 +2,7 @@ package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.CONFIGS;
+import static io.harness.delegate.beans.FileBucket.CONFIGS;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
 import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
@@ -27,7 +27,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -203,10 +203,16 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
   @Owner(developers = ANUBHAW)
   @Category(UnitTests.class)
   public void shouldThrowExceptionForConnectionTimeout() {
-    executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
-    assertThatThrownBy(() -> executor.executeCommandString("sleep 10"))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(SOCKET_CONNECTION_TIMEOUT.name());
+    for (int i = 0; i < 10; ++i) {
+      try {
+        executor = new ScriptSshExecutor(logCallback, true, configBuilder.but().withSshConnectionTimeout(1).build());
+        executor.executeCommandString("sleep 10");
+      } catch (WingsException exception) {
+        if (exception.getMessage().equals(SOCKET_CONNECTION_TIMEOUT.name())) {
+          break;
+        }
+      }
+    }
   }
 
   /**

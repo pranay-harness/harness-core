@@ -1,31 +1,31 @@
 package io.harness.pms.plan.execution;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
 import io.harness.NGCommonEntityConstants;
-import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.plan.Plan;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
-import io.harness.pms.plan.creation.PlanCreatorMergeService;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.preflight.PreFlightCause;
+import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.preflight.PreFlightEntityErrorInfo;
+import io.harness.pms.preflight.PreFlightStatus;
+import io.harness.pms.preflight.connector.ConnectorCheckResponse;
+import io.harness.pms.preflight.connector.ConnectorWrapperResponse;
+import io.harness.pms.preflight.inputset.PipelineInputResponse;
+import io.harness.pms.preflight.inputset.PipelineWrapperResponse;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Collections;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -37,8 +37,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,361 +50,9 @@ import org.hibernate.validator.constraints.NotEmpty;
 @PipelineServiceAuth
 @Slf4j
 public class PlanExecutionResource {
-  private static final String pipelineYaml = "pipeline:\n"
-      + "        identifier: p1\n"
-      + "        name: pipeline1\n"
-      + "        stages:\n"
-      + "          - stage:\n"
-      + "              identifier: managerDeployment\n"
-      + "              type: deployment\n"
-      + "              name: managerDeployment\n"
-      + "              spec:\n"
-      + "                service:\n"
-      + "                  identifier: manager\n"
-      + "                  name: manager\n"
-      + "                  serviceDefinition:\n"
-      + "                    type: k8s\n"
-      + "                    spec:\n"
-      + "                      field11: value1\n"
-      + "                      field12: value2\n"
-      + "                infrastructure:\n"
-      + "                  environment:\n"
-      + "                    identifier: stagingInfra\n"
-      + "                    type: preProduction\n"
-      + "                    name: staging\n"
-      + "                  infrastructureDefinition:\n"
-      + "                    type: k8sDirect\n"
-      + "                    tmpBool: <+abc.def>\n"
-      + "                    spec:\n"
-      + "                      connectorRef: pEIkEiNPSgSUsbWDDyjNKw\n"
-      + "                      namespace: harness\n"
-      + "                      releaseName: testingqa\n"
-      + "                execution:\n"
-      + "                  steps:\n"
-      + "                    - step:\n"
-      + "                        identifier: managerCanary\n"
-      + "                        type: k8sCanary\n"
-      + "                        spec:\n"
-      + "                          field11: value1\n"
-      + "                          field12: value2\n"
-      + "                    - step:\n"
-      + "                        identifier: managerVerify\n"
-      + "                        type: appdVerify\n"
-      + "                        spec:\n"
-      + "                          field21: value1\n"
-      + "                          field22: value2\n"
-      + "                    - step:\n"
-      + "                        identifier: managerRolling\n"
-      + "                        type: k8sRolling\n"
-      + "                        spec:\n"
-      + "                          field31: value1\n"
-      + "                          field32: value2\n";
-
-  @Inject private final OrchestrationService orchestrationService;
-  @Inject private final PlanCreatorMergeService planCreatorMergeService;
   @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
   @Inject private final PMSExecutionService pmsExecutionService;
   @Inject private final TriggeredByHelper triggeredByHelper;
-
-  private static final String tempPipeline = "pipeline:\n"
-      + "  name: \"Manager Service Deployment\"\n"
-      + "  identifier: managerServiceDeployment\n"
-      + "  stages:\n"
-      + "    - stage:\n"
-      + "        identifier: qaStage\n"
-      + "        name: \"qa stage\"\n"
-      + "        type: Deployment\n"
-      + "        spec:\n"
-      + "          service:\n"
-      + "            identifier: manager\n"
-      + "            serviceDefinition:\n"
-      + "              type: \"Kubernetes\"\n"
-      + "              spec:\n"
-      + "                artifacts:\n"
-      + "                  primary:\n"
-      + "                    type: Dockerhub\n"
-      + "                    spec:\n"
-      + "                      connectorRef: \"https://registry.hub.docker.com/\"\n"
-      + "                      imagePath: \"library/nginx\"\n"
-      + "                      tag: \"1.18\"\n"
-      + "                manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}\n"
-      + "                  - manifest:\n"
-      + "                      identifier: baseValues\n"
-      + "                      type: K8sManifest\n"
-      + "                      spec:\n"
-      + "                        store:\n"
-      + "                          type: Git\n"
-      + "                          # Git|Local\n"
-      + "                          spec:\n"
-      + "                            connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q\n"
-      + "                            gitFetchType: Branch\n"
-      + "                            branch: master\n"
-      + "                            paths:\n"
-      + "                              - test/spec\n"
-      + "            stageOverrides:\n"
-      + "              manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}\n"
-      + "                - manifest:\n"
-      + "                    identifier: qaOverride\n"
-      + "                    type: Values\n"
-      + "                    spec:\n"
-      + "                      store:\n"
-      + "                        type: Git\n"
-      + "                        spec:\n"
-      + "                          connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q\n"
-      + "                          gitFetchType: Branch\n"
-      + "                          branch: master\n"
-      + "                          paths:\n"
-      + "                            - test/qa/values_1.yaml\n"
-      + "              artifacts:\n"
-      + "                primary:\n"
-      + "                  type: Dockerhub\n"
-      + "                  spec:\n"
-      + "                    tag: \"1.18\"\n"
-      + "          infrastructure:\n"
-      + "            environment:\n"
-      + "              identifier: stagingInfra\n"
-      + "              type: PreProduction\n"
-      + "              tags:\n"
-      + "                cloud: GCP\n"
-      + "                team: cdp\n"
-      + "            # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED\n"
-      + "            # Dynamic type ???\n"
-      + "            infrastructureDefinition:\n"
-      + "              # Infrastructure Type. Options: kubernetes-cluster, kubernetes-direct, kubernetes-gke, ecs, data-center, etc. See Infrastructure Types. REQUIRED\n"
-      + "              # Dynamic type ???\n"
-      + "              type: KubernetesDirect\n"
-      + "              spec:\n"
-      + "                # Spec for Infrastructure Type kubernetes-direct\n"
-      + "                connectorRef: pEIkEiNPSgSUsbWDDyjNKw\n"
-      + "                # namespace\n"
-      + "                namespace: harness\n"
-      + "                # release name\n"
-      + "                releaseName: testingqa\n"
-      + "          execution:\n"
-      + "            steps:\n"
-      + "              - step:\n"
-      + "                  name: \"Rollout Deployment\"\n"
-      + "                  identifier: rolloutDeployment1\n"
-      + "                  type: K8sRollingDeploy\n"
-      + "                  spec:\n"
-      + "                    timeout: 120000\n"
-      + "                    skipDryRun: false\n"
-      + "            rollbackSteps:\n"
-      + "              - step:\n"
-      + "                  name: \"Rollback Rollout Deployment\"\n"
-      + "                  identifier: rollbackRolloutDeployment1\n"
-      + "                  type: K8sRollingRollback\n"
-      + "                  spec:\n"
-      + "                    timeout: 120000\n"
-      + "              - step:\n"
-      + "                  identifier: shellScript1\n"
-      + "                  type: ShellScript\n"
-      + "                  spec:\n"
-      + "                    executeOnDelegate: true\n"
-      + "                    connectionType: SSH\n"
-      + "                    scriptType: BASH\n"
-      + "                    scriptString: |\n"
-      + "                      echo 'I should be executed during rollback'\n"
-      + "    - stage:\n"
-      + "        identifier: prodStage\n"
-      + "        name: \"prod stage\"\n"
-      + "        type: Deployment\n"
-      + "        spec:\n"
-      + "          service:\n"
-      + "            useFromStage:\n"
-      + "              stage: qaStage\n"
-      + "            stageOverrides:\n"
-      + "              manifests:   # {k8s |  values | pcf |  helmSourceRepo | helmSourceRepo | kustomize | openShift}\n"
-      + "                - manifest:\n"
-      + "                    identifier: prodOverride\n"
-      + "                    type: Values\n"
-      + "                    spec:\n"
-      + "                      store:\n"
-      + "                        type: Git\n"
-      + "                        spec:\n"
-      + "                          connectorRef: eJ9pksJFQDmjq6ZFbAoR-Q\n"
-      + "                          gitFetchType: Branch\n"
-      + "                          branch: master\n"
-      + "                          paths:\n"
-      + "                            - test/prod/values.yaml\n"
-      + "              artifacts:\n"
-      + "                primary:\n"
-      + "                  type: Dockerhub\n"
-      + "                  spec:\n"
-      + "                    tag: \"1.18\"\n"
-      + "          infrastructure:\n"
-      + "            useFromStage:\n"
-      + "              stage: qaStage\n"
-      + "              overrides:\n"
-      + "                environment:\n"
-      + "                  identifier: prodInfra\n"
-      + "                infrastructureDefinition:\n"
-      + "                  type: KubernetesDirect\n"
-      + "                  spec:\n"
-      + "                    releaseName: testingProd\n"
-      + "          execution:\n"
-      + "            steps:\n"
-      + "              - stepGroup:\n"
-      + "                  name: StepGroup1\n"
-      + "                  identifier: StepGroup1\n"
-      + "                  steps:\n"
-      + "                    - parallel:\n"
-      + "                        - step:\n"
-      + "                            name: http step 1\n"
-      + "                            identifier: httpStep1\n"
-      + "                            type: Http\n"
-      + "                            spec:\n"
-      + "                              socketTimeoutMillis: 1000\n"
-      + "                              method: GET\n"
-      + "                              url: http://httpstat.us/200\n"
-      + "              - step:\n"
-      + "                  name: \"Rollout Deployment\"\n"
-      + "                  identifier: rolloutDeployment2\n"
-      + "                  type: K8sRollingDeploy\n"
-      + "                  spec:\n"
-      + "                    timeout: 120000\n"
-      + "                    skipDryRun: false\n"
-      + "            rollbackSteps:\n"
-      + "              - step:\n"
-      + "                  name: \"Rollback Rollout Deployment\"\n"
-      + "                  identifier: rollbackRolloutDeployment2\n"
-      + "                  type: K8sRollingRollback\n"
-      + "                  spec:\n"
-      + "                    timeout: 120000";
-
-  private static final String manifestPipeline = "pipeline:\n"
-      + "  name: P1\n"
-      + "  identifier: P1\n"
-      + "  description: \"\"\n"
-      + "  stages:\n"
-      + "    - stage:\n"
-      + "        name: S1\n"
-      + "        identifier: S1\n"
-      + "        description: \"\"\n"
-      + "        type: Deployment\n"
-      + "        spec:\n"
-      + "          service:\n"
-      + "            identifier: nginx\n"
-      + "            name: nginx\n"
-      + "            description: \"\"\n"
-      + "            serviceDefinition:\n"
-      + "              type: Kubernetes\n"
-      + "              spec:\n"
-      + "                artifacts:\n"
-      + "                  sidecars: []\n"
-      + "                  primary:\n"
-      + "                    type: Dockerhub\n"
-      + "                    spec:\n"
-      + "                      connectorRef: docker_public\n"
-      + "                      imagePath: library/nginx\n"
-      + "                      tag: stable-perl\n"
-      + "                manifests:\n"
-      + "                  - manifest:\n"
-      + "                      identifier: k8s_test_manifest\n"
-      + "                      type: K8sManifest\n"
-      + "                      spec:\n"
-      + "                        store:\n"
-      + "                          type: Git\n"
-      + "                          spec:\n"
-      + "                            connectorRef: git_test\n"
-      + "                            gitFetchType: Branch\n"
-      + "                            branch: master\n"
-      + "                            commitId: \"\"\n"
-      + "                            paths:\n"
-      + "                              - logs/quickstart.yaml\n"
-      + "                artifactOverrideSets: []\n"
-      + "                manifestOverrideSets: []\n"
-      + "          infrastructure:\n"
-      + "            environment:\n"
-      + "              name: k8s\n"
-      + "              identifier: k8s\n"
-      + "              description: \"\"\n"
-      + "              type: PreProduction\n"
-      + "            infrastructureDefinition:\n"
-      + "              type: KubernetesDirect\n"
-      + "              spec:\n"
-      + "                connectorRef: k8s_sa\n"
-      + "                namespace: garvit-test\n"
-      + "                releaseName: garvit-test-nginx\n"
-      + "          execution:\n"
-      + "            steps:\n"
-      + "              - step:\n"
-      + "                  name: http step 1\n"
-      + "                  identifier: httpStep1\n"
-      + "                  type: Http\n"
-      + "                  spec:\n"
-      + "                    socketTimeoutMillis: 1000\n"
-      + "                    method: GET\n"
-      + "                    url: https://www.google.com/";
-
-  private static final String ngPipeline = "pipeline:\n"
-      + "  name: P1\n"
-      + "  identifier: P1\n"
-      + "  description: \"\"\n"
-      + "  stages:\n"
-      + "    - stage:\n"
-      + "        name: S1\n"
-      + "        identifier: S1\n"
-      + "        description: \"\"\n"
-      + "        type: Deployment\n"
-      + "        spec:\n"
-      + "          service:\n"
-      + "            identifier: nginx\n"
-      + "            name: nginx\n"
-      + "            description: \"\"\n"
-      + "            serviceDefinition:\n"
-      + "              type: Kubernetes\n"
-      + "              spec:\n"
-      + "                artifacts:\n"
-      + "                  sidecars: []\n"
-      + "                  primary:\n"
-      + "                    type: Dockerhub\n"
-      + "                    spec:\n"
-      + "                      connectorRef: docker_public\n"
-      + "                      imagePath: library/nginx\n"
-      + "                      tag: stable-perl\n"
-      + "                manifests: []\n"
-      + "                artifactOverrideSets: []\n"
-      + "                manifestOverrideSets: []\n"
-      + "          infrastructure:\n"
-      + "            environment:\n"
-      + "              name: k8s\n"
-      + "              identifier: k8s\n"
-      + "              description: \"\"\n"
-      + "              type: PreProduction\n"
-      + "            infrastructureDefinition:\n"
-      + "              type: KubernetesDirect\n"
-      + "              spec:\n"
-      + "                connectorRef: k8s_sa\n"
-      + "                namespace: garvit-test\n"
-      + "                releaseName: garvit-test-nginx\n"
-      + "          execution:\n"
-      + "            steps:\n"
-      + "              - step:\n"
-      + "                  name: http step 1\n"
-      + "                  identifier: httpStep1\n"
-      + "                  type: Http\n"
-      + "                  spec:\n"
-      + "                    socketTimeoutMillis: 1000\n"
-      + "                    method: GET\n"
-      + "                    url: https://www.google.com/\n";
-
-  @GET
-  @ApiOperation(value = "Execute A Pipeline", nickname = "executePipeline")
-  public Response executePipeline() throws IOException {
-    String processedYaml = YamlUtils.injectUuid(pipelineYaml);
-    PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(processedYaml);
-    Plan plan = PlanExecutionUtils.extractPlan(resp);
-    PlanExecution planExecution = orchestrationService.startExecution(plan,
-        new HashMap<>(ImmutableMap.of(
-            "accountId", "kmpySmUISimoRrJL6NL73w", "orgIdentifier", "harness", "projectIdentifier", "pipeline")),
-        ExecutionMetadata.newBuilder()
-            .setExecutionUuid(generateUuid())
-            .setRunSequence(0)
-            .setTriggerInfo(ExecutionTriggerInfo.newBuilder().setTriggerType(MANUAL).build())
-            .build());
-    return Response.ok(planExecution, MediaType.APPLICATION_JSON_TYPE).build();
-  }
 
   @POST
   @Path("/{identifier}")
@@ -416,9 +62,9 @@ public class PlanExecutionResource {
   runPipelineWithInputSetPipelineYaml(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam("identifier") @NotEmpty String pipelineIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
-      @ApiParam(hidden = true, type = "") String inputSetPipelineYaml) throws IOException {
+      @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
     PlanExecution planExecution = pipelineExecuteHelper.runPipelineWithInputSetPipelineYaml(accountId, orgIdentifier,
         projectIdentifier, pipelineIdentifier, inputSetPipelineYaml,
         ExecutionTriggerInfo.newBuilder()
@@ -438,7 +84,7 @@ public class PlanExecutionResource {
   runPipelineWithInputSetIdentifierList(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @PathParam("identifier") @NotEmpty String pipelineIdentifier,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @NotEmpty String pipelineIdentifier,
       @QueryParam("useFQNIfError") @DefaultValue("false") boolean useFQNIfErrorResponse,
       @NotNull @Valid MergeInputSetRequestDTOPMS mergeInputSetRequestDTO) throws IOException {
     ExecutionTriggerInfo triggerInfo = ExecutionTriggerInfo.newBuilder()
@@ -455,8 +101,10 @@ public class PlanExecutionResource {
   @PUT
   @ApiOperation(value = "pause, resume or stop the pipeline executions", nickname = "handleInterrupt")
   @Path("/interrupt/{planExecutionId}")
-  public ResponseDTO<InterruptDTO> handleInterrupt(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
+  public ResponseDTO<InterruptDTO> handleInterrupt(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId) {
     return ResponseDTO.newResponse(
@@ -467,12 +115,71 @@ public class PlanExecutionResource {
   @PUT
   @ApiOperation(value = "pause, resume or stop the stage executions", nickname = "handleStageInterrupt")
   @Path("/interrupt/{planExecutionId}/{nodeExecutionId}")
-  public ResponseDTO<InterruptDTO> handleStageInterrupt(@NotNull @QueryParam("accountIdentifier") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgId, @NotNull @QueryParam("projectIdentifier") String projectId,
+  public ResponseDTO<InterruptDTO> handleStageInterrupt(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId,
       @NotNull @PathParam("nodeExecutionId") String nodeExecutionId) {
     return ResponseDTO.newResponse(
         pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId));
+  }
+
+  @POST
+  @ApiOperation(value = "initiate pre flight check", nickname = "startPreflightCheck")
+  @Path("/preflightCheck")
+  public ResponseDTO<String> startPreFlightCheck(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    return ResponseDTO.newResponse("dummyPreFlightCheckId");
+  }
+
+  @GET
+  @ApiOperation(value = "initiate pre flight check", nickname = "getPreflightCheckResponse")
+  @Path("/getPreflightCheckResponse")
+  public ResponseDTO<PreFlightDTO> getPreflightCheckResponse(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    return ResponseDTO.newResponse(
+        PreFlightDTO.builder()
+            .pipelineInputWrapperResponse(
+                PipelineWrapperResponse.builder()
+                    .status(PreFlightStatus.FAILURE)
+                    .pipelineInputResponse(Collections.singletonList(
+                        PipelineInputResponse.builder()
+                            .fqn("pipeline.stages.s1.execution.steps.google.url")
+                            .stageName("s1")
+                            .stepName("google")
+                            .success(false)
+                            .errorInfo(
+                                PreFlightEntityErrorInfo.builder()
+                                    .causes(Collections.singletonList(
+                                        PreFlightCause.builder().cause("No value provided for runtime input").build()))
+                                    .build())
+                            .build()))
+                    .build())
+            .connectorWrapperResponse(
+                ConnectorWrapperResponse.builder()
+                    .status(PreFlightStatus.FAILURE)
+                    .checkResponses(Collections.singletonList(
+                        ConnectorCheckResponse.builder()
+                            .connectorIdentifier("conn1")
+                            .fqn("pipeline.stages.s1.infrastructure.connectorRef")
+                            .stageName("s1")
+                            .errorInfo(PreFlightEntityErrorInfo.builder()
+                                           .causes(Collections.singletonList(
+                                               PreFlightCause.builder().cause("Connector not reachable").build()))
+                                           .build())
+                            .build()))
+                    .build())
+            .status(PreFlightStatus.SUCCESS)
+            .build());
   }
 }

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
+import static io.harness.beans.FeatureName.IRSA_FOR_EKS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
@@ -167,7 +168,8 @@ public class SettingValidationService {
       encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SSHVaultConfig sshVaultConfig = null;
-      if (((HostConnectionAttributes) settingAttribute.getValue()).isVaultSSH()) {
+      if (settingAttribute.getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) settingAttribute.getValue()).isVaultSSH()) {
         sshVaultConfig = sshVaultService.getSSHVaultConfig(settingAttribute.getAccountId(),
             ((HostConnectionAttributes) settingAttribute.getValue()).getSshVaultConfigId());
       }
@@ -445,6 +447,10 @@ public class SettingValidationService {
             throw new InvalidRequestException("Invalid AWS region provided: " + value.getDefaultRegion(), USER);
           }
         }
+      }
+
+      if (featureFlagService.isNotEnabled(IRSA_FOR_EKS, settingAttribute.getAccountId()) && value.isUseIRSA()) {
+        throw new InvalidRequestException("AWS EKS IRSA is not enabled for this harness account", USER);
       }
       awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
     } catch (Exception e) {

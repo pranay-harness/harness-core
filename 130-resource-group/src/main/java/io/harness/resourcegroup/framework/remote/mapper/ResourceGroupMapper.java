@@ -24,6 +24,7 @@ public class ResourceGroupMapper {
         .color(resourceGroupDTO.getColor())
         .tags(convertToList(resourceGroupDTO.getTags()))
         .resourceSelectors(resourceGroupDTO.getResourceSelectors())
+        .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
         .description(resourceGroupDTO.getDescription())
         .build();
   }
@@ -41,6 +42,7 @@ public class ResourceGroupMapper {
         .color(resourceGroup.getColor())
         .tags(convertToMap(resourceGroup.getTags()))
         .resourceSelectors(resourceGroup.getResourceSelectors())
+        .fullScopeSelected(Boolean.TRUE.equals(resourceGroup.getFullScopeSelected()))
         .description(resourceGroup.getDescription())
         .build();
   }

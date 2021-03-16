@@ -14,8 +14,8 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
@@ -342,7 +342,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         aLog()
             .appId(context.getAppId())
             .activityId(context.getActivityId())
-            .hostName(context.getHost().getPublicDns())
+            .hostName(context.getHost() == null ? null : context.getHost().getPublicDns())
             .logLevel(logLevel)
             .commandUnitName(getName())
             .logLine(line)

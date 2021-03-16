@@ -8,6 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//890-pms-contracts:module",
+        "//920-delegate-service-beans:module",
         "//950-walktree-visitor:module",
         "//960-persistence:module",
         "//960-recaster:module",

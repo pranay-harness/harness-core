@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -19,8 +19,10 @@ import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,10 +47,18 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "secretUsageLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "SecretUsageLogKeys")
-@CdIndex(name = "acctEncryptedDataIdx", fields = { @Field("accountId")
-                                                   , @Field("encryptedDataId") })
 public class SecretUsageLog implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                        UpdatedByAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("acctEncryptedDataIdx")
+                 .field(SecretUsageLogKeys.accountId)
+                 .field(SecretUsageLogKeys.encryptedDataId)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;

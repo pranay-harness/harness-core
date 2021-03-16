@@ -2,6 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.pms.approval.entities.HarnessApprovalInstance;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -16,6 +17,7 @@ public class PMSPipelineMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PmsSdkInstance.class);
     set.add(InputSetEntity.class);
     set.add(PipelineExecutionSummaryEntity.class);
+    set.add(HarnessApprovalInstance.class);
   }
 
   @Override

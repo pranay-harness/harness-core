@@ -126,6 +126,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -148,6 +149,7 @@ import software.wings.sm.WorkflowStandardParams;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.google.inject.MembersInjector;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -314,6 +316,9 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private TemplateUtils templateUtils;
   @Mock private TemplateService templateService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+
+  @Inject MembersInjector<WorkflowStandardParams> injector;
 
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
@@ -645,7 +650,7 @@ public class CommandStateTest extends WingsBaseTest {
     setWorkflowStandardParams(artifact, command);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
@@ -730,7 +735,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
@@ -916,7 +921,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
@@ -966,6 +971,116 @@ public class CommandStateTest extends WingsBaseTest {
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
     verify(settingsService, times(3)).get(anyString());
+
+    verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
+    verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
+    verify(artifactStreamService).get(ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, activityHelperService,
+        serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
+    verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  /**
+   * Execute with rollback artifact on execute on delegate
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void executeOnDelegateWithRollbackArtifact() throws Exception {
+    Artifact artifact =
+        anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+
+    Artifact rollbackArtifact = anArtifact()
+                                    .withUuid("ROLLBACK_ARTIFACT_ID")
+                                    .withAppId(APP_ID)
+                                    .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                                    .build();
+
+    ArtifactStreamAttributes artifactStreamAttributes = ArtifactStreamAttributes.builder().metadataOnly(false).build();
+    Command command =
+        aCommand()
+            .addCommandUnits(
+                ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS).build())
+            .build();
+
+    setWorkflowStandardParams(artifact, command);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setExecuteOnDelegate(true);
+    commandState.setRollback(true);
+
+    injector.injectMembers(workflowStandardParams);
+    on(workflowStandardParams).set("artifactService", artifactService);
+    on(workflowStandardParams).set("artifactStreamServiceBindingService", artifactStreamServiceBindingService);
+    workflowStandardParams.setRollbackArtifactIds(singletonList("ROLLBACK_ARTIFACT_ID"));
+
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.findPreviousArtifact(any(), any(), any())).thenReturn(rollbackArtifact);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+    when(artifactService.get(eq("ROLLBACK_ARTIFACT_ID"))).thenReturn(rollbackArtifact);
+    when(artifactStreamServiceBindingService.listArtifactStreamIds(SERVICE_ID))
+        .thenReturn(singletonList("ARTIFACT_STREAM_ID"));
+
+    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStream.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
+    when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
+    when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
+    when(serviceCommandExecutorService.execute(command,
+             aCommandExecutionContext()
+                 .appId(APP_ID)
+                 .backupPath(BACKUP_PATH)
+                 .runtimePath(RUNTIME_PATH)
+                 .stagingPath(STAGING_PATH)
+                 .executionCredential(null)
+                 .activityId(ACTIVITY_ID)
+                 .artifactStreamAttributes(artifactStreamAttributes)
+                 .artifactServerEncryptedDataDetails(new ArrayList<>())
+                 .build()))
+        .thenReturn(SUCCESS);
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+    when(context.getStateExecutionData()).thenReturn(executionResponse.getStateExecutionData());
+    commandState.handleAsyncResponse(
+        context, ImmutableMap.of(ACTIVITY_ID, CommandExecutionResult.builder().status(SUCCESS).build()));
+
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).getWithDetails(APP_ID, null);
+    verify(serviceResourceService).getDeploymentType(any(), any(), any());
+
+    verify(serviceInstanceService).get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID);
+
+    // verify that activity is created using rollback artifact
+    verify(activityHelperService)
+        .createAndSaveActivity(any(ExecutionContext.class), any(Activity.Type.class), anyString(), anyString(),
+            anyList(), eq(rollbackArtifact));
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    verify(serviceResourceService).getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START");
+    verify(serviceResourceService).findPreviousArtifact(any(), any(), any());
+
+    DelegateTaskBuilder delegateBuilder = getDelegateBuilder(artifact, artifactStreamAttributes, command);
+    DelegateTask delegateTask = delegateBuilder.build();
+
+    delegateService.queueTask(delegateTask);
+
+    verify(context, times(4)).getContextElement(ContextElementType.STANDARD);
+    verify(context, times(3)).getContextElement(ContextElementType.INSTANCE);
+    verify(context, times(1)).fetchInfraMappingId();
+    verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
+    verify(context, times(5)).renderExpression(anyString());
+    verify(context, times(1)).getServiceVariables();
+    verify(context, times(1)).getSafeDisplayServiceVariables();
+    verify(context, times(4)).getAppId();
+    verify(context).getStateExecutionData();
+
+    verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
+    verify(settingsService, times(1)).get(anyString());
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
@@ -1051,7 +1166,7 @@ public class CommandStateTest extends WingsBaseTest {
 
     // Now Setting attribute null
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(settingsService.get(SETTING_ID)).thenReturn(null);
@@ -1675,7 +1790,7 @@ public class CommandStateTest extends WingsBaseTest {
                 .build());
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
-    when(artifactStream.fetchArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.fetchArtifactStreamAttributes(featureFlagService)).thenReturn(artifactStreamAttributes);
     when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,

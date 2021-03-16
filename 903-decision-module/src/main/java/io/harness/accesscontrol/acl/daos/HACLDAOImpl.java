@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.acl.daos;
 
-import io.harness.accesscontrol.HUserPrincipal;
+import io.harness.accesscontrol.HPrincipal;
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.acl.models.HACL;
@@ -29,18 +29,19 @@ public class HACLDAOImpl implements ACLDAO {
   private final HACLRepository accessControlRepository;
 
   private String getACLQuery(
-      ParentMetadata parentMetadata, HResource resource, HUserPrincipal hPrincipal, String permission) {
+      ParentMetadata parentMetadata, HResource resource, HPrincipal hPrincipal, String permission) {
     return HACL.getAclQueryString(parentMetadata, resource, hPrincipal, permission);
   }
 
-  private List<ACL> processACLQueries(List<PermissionCheckDTO> permissionsRequired, HUserPrincipal hPrincipal) {
+  private List<ACL> processACLQueries(List<PermissionCheckDTO> permissionsRequired, HPrincipal hPrincipal) {
     List<ACL> aclList = new ArrayList<>();
     permissionsRequired.forEach(permissionCheckDTO -> {
-      ParentMetadata parentMetadata = ParentMetadata.builder()
-                                          .accountIdentifier(permissionCheckDTO.getAccountIdentifier())
-                                          .orgIdentifier(permissionCheckDTO.getOrgIdentifier())
-                                          .projectIdentifier(permissionCheckDTO.getProjectIdentifier())
-                                          .build();
+      ParentMetadata parentMetadata =
+          ParentMetadata.builder()
+              .accountIdentifier(permissionCheckDTO.getResourceScope().getAccountIdentifier())
+              .orgIdentifier(permissionCheckDTO.getResourceScope().getOrgIdentifier())
+              .projectIdentifier(permissionCheckDTO.getResourceScope().getProjectIdentifier())
+              .build();
 
       Optional<String> queryStringForAccountScope =
           Optional.ofNullable(parentMetadata.getAccountIdentifier())
@@ -97,7 +98,7 @@ public class HACLDAOImpl implements ACLDAO {
 
   @Override
   public List<ACL> get(Principal principal, List<PermissionCheckDTO> permissionsRequired) {
-    return processACLQueries(permissionsRequired, (HUserPrincipal) principal);
+    return processACLQueries(permissionsRequired, (HPrincipal) principal);
   }
 
   @Override

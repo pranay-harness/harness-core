@@ -52,6 +52,6 @@ public class ServiceDefinition implements Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_DEFINITION).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SERVICE_DEFINITION).isPartOfFQN(false).build();
   }
 }

@@ -28,7 +28,7 @@ public class GraphVertexConverter {
         .status(nodeExecution.getStatus())
         .failureInfo(nodeExecution.getFailureInfo())
         .skipInfo(nodeExecution.getSkipInfo())
-        .stepParameters(nodeExecution.getResolvedStepParameters())
+        .stepParameters(nodeExecution.getResolvedStepInputs())
         .mode(nodeExecution.getMode())
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())

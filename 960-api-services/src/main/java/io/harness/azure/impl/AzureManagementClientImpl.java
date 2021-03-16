@@ -8,6 +8,7 @@ import static io.harness.azure.model.AzureConstants.DEPLOYMENT_NAME_BLANK_VALIDA
 import static io.harness.azure.model.AzureConstants.LOCATION_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.LOCATION_SET_AT_RESOURCE_GROUP_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.MANAGEMENT_GROUP_ID_BLANK_VALIDATION_MSG;
+import static io.harness.azure.model.AzureConstants.NEXT_PAGE_LINK_BLANK_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.RESOURCE_GROUP_NAME_NULL_VALIDATION_MSG;
 import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
 
@@ -18,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.azure.AzureClient;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.azure.client.AzureManagementClient;
+import io.harness.azure.client.AzureManagementRestClient;
 import io.harness.azure.context.ARMDeploymentSteadyStateContext;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
@@ -25,12 +27,14 @@ import io.harness.azure.model.AzureARMRGTemplateExportOptions;
 import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.management.ManagementGroupInfo;
-import io.harness.azure.model.management.ManagementGroupListResult;
 import io.harness.azure.utility.AzureUtils;
 import io.harness.exception.AzureClientException;
 import io.harness.serializer.JsonUtils;
 
+import com.google.common.reflect.TypeToken;
 import com.google.inject.Singleton;
+import com.microsoft.azure.CloudException;
+import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.resources.Deployment;
@@ -45,14 +49,18 @@ import com.microsoft.azure.management.resources.implementation.DeploymentOperati
 import com.microsoft.azure.management.resources.implementation.DeploymentOperationsInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentValidateResultInner;
 import com.microsoft.azure.management.resources.implementation.DeploymentsInner;
+import com.microsoft.azure.management.resources.implementation.PageImpl;
+import com.microsoft.rest.ServiceResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.ResponseBody;
 import org.jetbrains.annotations.NotNull;
 import retrofit2.Response;
+import rx.Observable;
+import rx.functions.Func1;
 
 @Singleton
 @Slf4j
@@ -84,25 +92,57 @@ public class AzureManagementClientImpl extends AzureClient implements AzureManag
   }
 
   @Override
-  public List<ManagementGroupInfo> listManagementGroups(AzureConfig azureConfig) {
-    log.debug("Start listing management groups, client id: {}", azureConfig.getClientId());
-    Response<ManagementGroupListResult> response;
-    try {
-      response = getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
-                     .listManagementGroups(getAzureBearerAuthToken(azureConfig))
-                     .execute();
-    } catch (IOException e) {
-      String errorMessage = "Error occurred while listing management groups";
-      throw new AzureClientException(errorMessage, e);
-    }
+  public List<ManagementGroupInfo> listManagementGroups(final AzureConfig azureConfig) {
+    ServiceResponse<Page<ManagementGroupInfo>> response =
+        listManagementSinglePageAsync(azureConfig).toBlocking().single();
 
-    if (response.isSuccessful()) {
-      ManagementGroupListResult managementGroupListResult = response.body();
-      return managementGroupListResult.getValue();
-    } else {
-      handleAzureErrorResponse(response.errorBody(), response.raw());
+    return new PagedList<ManagementGroupInfo>(response.body()) {
+      @Override
+      public Page<ManagementGroupInfo> nextPage(String nextPageLink) {
+        return listManagementNextSinglePageAsync(azureConfig, nextPageLink).toBlocking().single().body();
+      }
+    };
+  }
+
+  public Observable<ServiceResponse<Page<ManagementGroupInfo>>> listManagementSinglePageAsync(
+      final AzureConfig azureConfig) {
+    return getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
+        .listManagementGroups(getAzureBearerAuthToken(azureConfig))
+        .flatMap((Func1<Response<ResponseBody>, Observable<ServiceResponse<Page<ManagementGroupInfo>>>>) response -> {
+          try {
+            ServiceResponse<PageImpl<ManagementGroupInfo>> result = listManagementDelegate(response);
+            return Observable.just(new ServiceResponse<Page<ManagementGroupInfo>>(result.body(), result.response()));
+          } catch (Exception t) {
+            return Observable.error(t);
+          }
+        });
+  }
+
+  public Observable<ServiceResponse<Page<ManagementGroupInfo>>> listManagementNextSinglePageAsync(
+      final AzureConfig azureConfig, final String nextPageLink) {
+    if (nextPageLink == null) {
+      throw new IllegalArgumentException(NEXT_PAGE_LINK_BLANK_VALIDATION_MSG);
     }
-    return Collections.emptyList();
+    String nextUrl = String.format("%s", nextPageLink);
+
+    return getAzureManagementRestClient(azureConfig.getAzureEnvironmentType())
+        .listNext(getAzureBearerAuthToken(azureConfig), nextUrl, AzureManagementRestClient.APP_VERSION)
+        .flatMap((Func1<Response<ResponseBody>, Observable<ServiceResponse<Page<ManagementGroupInfo>>>>) response -> {
+          try {
+            ServiceResponse<PageImpl<ManagementGroupInfo>> result = listManagementDelegate(response);
+            return Observable.just(new ServiceResponse<Page<ManagementGroupInfo>>(result.body(), result.response()));
+          } catch (Exception t) {
+            return Observable.error(t);
+          }
+        });
+  }
+
+  private ServiceResponse<PageImpl<ManagementGroupInfo>> listManagementDelegate(Response<ResponseBody> response)
+      throws IOException {
+    return serviceResponseFactory.<PageImpl<ManagementGroupInfo>, CloudException>newInstance(azureJacksonAdapter)
+        .register(200, (new TypeToken<PageImpl<ManagementGroupInfo>>() {}).getType())
+        .registerError(CloudException.class)
+        .build(response);
   }
 
   @Override

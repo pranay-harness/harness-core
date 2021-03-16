@@ -13,6 +13,7 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
+import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
@@ -128,6 +129,8 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse.GitCommandStatu
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
+import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
 import io.harness.delegate.beans.gitapi.GitApiFindPRTaskResponse;
 import io.harness.delegate.beans.gitapi.GitApiRequestType;
 import io.harness.delegate.beans.gitapi.GitApiResult;
@@ -141,12 +144,15 @@ import io.harness.delegate.beans.nexus.NexusTaskResponse;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactDelegateResponse;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateRequest;
+import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateRequest;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
@@ -260,6 +266,7 @@ import io.harness.delegate.task.k8s.K8sScaleRequest;
 import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
@@ -588,6 +595,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(HttpHelmConnectivityTaskParams.class, 19640);
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
+    kryo.register(HttpHelmStoreDelegateConfig.class, 19642);
+    kryo.register(KustomizeManifestDelegateConfig.class, 19700);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -630,6 +639,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CustomManifestFetchConfig.class, 543261);
     kryo.register(CustomManifestValuesFetchParams.class, 543262);
     kryo.register(CustomManifestValuesFetchResponse.class, 543263);
+    kryo.register(EcrArtifactDelegateRequest.class, 543264);
+    kryo.register(EcrArtifactDelegateResponse.class, 543265);
 
     kryo.register(CapabilityParameters.class, 10001);
     kryo.register(PermissionResult.class, 10002);
@@ -646,5 +657,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmInstallationParameters.class, 10013);
     kryo.register(SmtpParameters.class, 10014);
     kryo.register(UnitProgressData.class, 95001);
+    kryo.register(ChecksumType.class, 5065);
+
+    kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
+    kryo.register(DecryptGitAPIAccessTaskResponse.class, 543267);
   }
 }

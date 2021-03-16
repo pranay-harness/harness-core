@@ -1,12 +1,14 @@
 package io.harness.accesscontrol.roles.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roles.api.RoleDTOMapper.toResponseDTO;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
@@ -58,11 +60,11 @@ public class RoleResource {
 
   @GET
   @ApiOperation(value = "Get Roles", nickname = "getRoleList")
-  public ResponseDTO<PageResponse<RoleResponseDTO>> get(@BeanParam PageRequest pageRequest,
-      @BeanParam HarnessScopeParams harnessScopeParams,
-      @QueryParam("includeHarnessManaged") boolean includeHarnessManaged) {
+  public ResponseDTO<PageResponse<RoleResponseDTO>> get(
+      @BeanParam PageRequest pageRequest, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    PageResponse<Role> pageResponse = roleService.list(pageRequest, scopeIdentifier, includeHarnessManaged);
+    RoleFilter roleFilter = RoleFilter.builder().scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
+    PageResponse<Role> pageResponse = roleService.list(pageRequest, roleFilter);
     return ResponseDTO.newResponse(pageResponse.map(RoleDTOMapper::toResponseDTO));
   }
 
@@ -73,7 +75,7 @@ public class RoleResource {
       @BeanParam HarnessScopeParams harnessScopeParams, @QueryParam("harnessManaged") boolean isHarnessManaged) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(toResponseDTO(
-        roleService.get(identifier, scopeIdentifier, isHarnessManaged).<InvalidRequestException>orElseThrow(() -> {
+        roleService.get(identifier, scopeIdentifier, NO_FILTER).<InvalidRequestException>orElseThrow(() -> {
           throw new InvalidRequestException("Role not found with the given scope and identifier");
         })));
   }
@@ -84,6 +86,9 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> update(@NotNull @PathParam(IDENTIFIER_KEY) String identifier,
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleDTO roleDTO) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    if (!identifier.equals(roleDTO.getIdentifier())) {
+      throw new InvalidRequestException("Role identifier in the request body and the url do not match");
+    }
     return ResponseDTO.newResponse(toResponseDTO(roleService.update(fromDTO(scopeIdentifier, roleDTO))));
   }
 
@@ -103,6 +108,6 @@ public class RoleResource {
   public ResponseDTO<RoleResponseDTO> delete(
       @NotNull @PathParam(IDENTIFIER_KEY) String identifier, @BeanParam HarnessScopeParams harnessScopeParams) {
     String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
-    return ResponseDTO.newResponse(toResponseDTO(roleService.delete(identifier, scopeIdentifier, false)));
+    return ResponseDTO.newResponse(toResponseDTO(roleService.delete(identifier, scopeIdentifier)));
   }
 }

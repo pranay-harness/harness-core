@@ -1,6 +1,6 @@
 package io.harness.pms.sdk.core.adviser.rollback;
 
-import static io.harness.annotations.dev.HarnessTeam.NG;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -27,7 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-@OwnedBy(NG)
+@OwnedBy(PL)
 public class RollbackCustomAdviser implements Adviser {
   @Inject private OutcomeService outcomeService;
 

@@ -45,6 +45,7 @@ public class SplunkConnectorTest extends CategoryTest {
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @InjectMocks DefaultConnectorServiceImpl connectorService;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
 
   String userName = "userName";
   String password = "password";

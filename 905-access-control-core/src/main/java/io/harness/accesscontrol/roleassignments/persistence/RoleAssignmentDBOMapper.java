@@ -16,6 +16,7 @@ class RoleAssignmentDBOMapper {
         .roleIdentifier(object.getRoleIdentifier())
         .managed(object.isManaged())
         .disabled(object.isDisabled())
+        .version(object.getVersion())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
         .build();
@@ -31,6 +32,7 @@ class RoleAssignmentDBOMapper {
         .roleIdentifier(object.getRoleIdentifier())
         .managed(object.isManaged())
         .disabled(object.isDisabled())
+        .version(object.getVersion())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
         .build();

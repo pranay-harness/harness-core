@@ -38,7 +38,7 @@ public enum BatchJobType {
   CE_SEGMENT_CALL(900, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), OTHERS),
   CLUSTER_DATA_TO_BIG_QUERY(1000, 1, ChronoUnit.DAYS, Arrays.asList(ACTUAL_IDLE_COST_BILLING), IN_CLUSTER_BILLING),
   ANOMALY_DETECTION_K8S(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING),
-  ANOMALY_DETECTION_CLOUD(1000, 1, ChronoUnit.DAYS, singletonList(ANOMALY_DETECTION_K8S), OUT_OF_CLUSTER);
+  ANOMALY_DETECTION_CLOUD(1000, 1, ChronoUnit.DAYS, singletonList(INSTANCE_BILLING), IN_CLUSTER_BILLING);
 
   // Specifies order in which the jobs are to be run
   private final int order;

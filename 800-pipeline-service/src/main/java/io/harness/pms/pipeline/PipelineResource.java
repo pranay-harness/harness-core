@@ -15,8 +15,8 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.notification.bean.NotificationRules;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -214,11 +214,11 @@ public class PipelineResource implements YamlSchemaResource {
   @GET
   @Path("/steps")
   @ApiOperation(value = "Get Steps for given module", nickname = "getSteps")
-  public ResponseDTO<StepCategory> getSteps(
-      @NotNull @QueryParam("category") String category, @NotNull @QueryParam("module") String module) {
+  public ResponseDTO<StepCategory> getSteps(@NotNull @QueryParam("category") String category,
+      @NotNull @QueryParam("module") String module, @QueryParam("accountId") String accountId) {
     log.info("Get Steps for given module");
 
-    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
+    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category, accountId));
   }
 
   @POST

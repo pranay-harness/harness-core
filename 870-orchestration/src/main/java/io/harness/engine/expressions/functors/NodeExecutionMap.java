@@ -8,16 +8,19 @@ import static java.util.Arrays.asList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.NodeExecutionsCache;
+import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.outcomes.OutcomeException;
 import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -74,8 +77,8 @@ public class NodeExecutionMap extends LateBindingMap {
       return null;
     }
 
-    return fetchFirst(
-        asList(this::fetchChild, this::fetchNodeExecutionField, this::fetchStepParameters, this::fetchOutcomeOrOutput),
+    return fetchFirst(asList(this::fetchCurrentStatus, this::fetchChild, this::fetchNodeExecutionField,
+                          this::fetchStepParameters, this::fetchOutcomeOrOutput),
         (String) key);
   }
 
@@ -95,6 +98,19 @@ public class NodeExecutionMap extends LateBindingMap {
 
   private Optional<Object> fetchChild(String key) {
     return children.containsKey(key) ? Optional.of(children.get(key)) : Optional.empty();
+  }
+
+  // This function calculates status of the node TILL now.
+  private Optional<Object> fetchCurrentStatus(String key) {
+    if (!key.equals(OrchestrationConstants.CURRENT_STATUS)) {
+      return Optional.empty();
+    }
+    if (nodeExecution == null) {
+      return Optional.empty();
+    }
+    List<NodeExecution> allChildren = nodeExecutionsCache.findAllChildren(nodeExecution.getUuid());
+    Status status = OrchestrationUtils.calculateEndStatus(allChildren, ambiance.getPlanExecutionId());
+    return Optional.of(status.name());
   }
 
   private Optional<Object> fetchNodeExecutionField(String key) {
@@ -117,7 +133,7 @@ public class NodeExecutionMap extends LateBindingMap {
     if (nodeExecution == null || !entityTypes.contains(NodeExecutionEntityType.STEP_PARAMETERS)) {
       return Optional.empty();
     }
-    return ExpressionEvaluatorUtils.fetchField(nodeExecutionsCache.extractFinalStepParameters(nodeExecution), key);
+    return ExpressionEvaluatorUtils.fetchField(extractFinalStepParameters(nodeExecution), key);
   }
 
   private Optional<Object> fetchOutcomeOrOutput(String key) {
@@ -164,7 +180,18 @@ public class NodeExecutionMap extends LateBindingMap {
     }
   }
 
+  private static Map<String, Object> extractFinalStepParameters(NodeExecution nodeExecution) {
+    if (nodeExecution.getResolvedStepParameters() != null) {
+      Map<String, Object> stepParameters =
+          NodeExecutionUtils.extractAndProcessObject(nodeExecution.getResolvedStepParameters().toJson());
+      if (stepParameters != null) {
+        return stepParameters;
+      }
+    }
+    return NodeExecutionUtils.extractAndProcessObject(nodeExecution.getNode().getStepParameters());
+  }
+
   private static Optional<Object> jsonToObject(String json) {
-    return Optional.ofNullable(RecastOrchestrationUtils.toDocumentFromJson(json));
+    return Optional.ofNullable(NodeExecutionUtils.extractAndProcessObject(json));
   }
 }

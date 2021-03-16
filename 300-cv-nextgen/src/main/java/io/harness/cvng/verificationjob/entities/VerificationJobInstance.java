@@ -96,16 +96,13 @@ public final class VerificationJobInstance
   @Setter(AccessLevel.NONE) private Instant deploymentStartTime;
   @Setter(AccessLevel.PRIVATE) private Instant startTime;
   @FdIndex private Long dataCollectionTaskIteration;
-  @FdIndex private Long analysisOrchestrationIteration;
-  @FdIndex private Long deletePerpetualTaskIteration;
   @FdIndex private Long timeoutTaskIteration;
 
   // TODO: Refactor and Split into separate job instances
 
   // this stuff is only required for deployment verification
   @Setter(AccessLevel.NONE) private Duration dataCollectionDelay;
-  private List<String> perpetualTaskIds;
-  private Map<String, String> connectorsToPerpetualTaskIdsMap;
+
   private Set<String> oldVersionHosts;
   private Set<String> newVersionHosts;
   private Integer newHostsTrafficSplitPercentage;
@@ -162,11 +159,6 @@ public final class VerificationJobInstance
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
-
-    if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
-      this.deletePerpetualTaskIteration = nextIteration;
-      return;
-    }
     if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
       this.timeoutTaskIteration = nextIteration;
       return;
@@ -180,9 +172,6 @@ public final class VerificationJobInstance
       return this.dataCollectionTaskIteration;
     }
 
-    if (VerificationJobInstanceKeys.deletePerpetualTaskIteration.equals(fieldName)) {
-      return this.deletePerpetualTaskIteration;
-    }
     if (VerificationJobInstanceKeys.timeoutTaskIteration.equals(fieldName)) {
       return this.timeoutTaskIteration;
     }

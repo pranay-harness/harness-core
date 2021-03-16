@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "//:lombok",
     "//970-ng-commons:module",
+    "//980-commons:module",
     "@maven//:aopalliance_aopalliance",
     "@maven//:com_cronutils_cron_utils",
     "@maven//:com_deftlabs_mongo_java_distributed_lock",
@@ -75,11 +76,11 @@ java_library(
 
 java_library(
     name = "supporter-test",
-    #testonly = True,
+    testonly = True,
     srcs = glob(["src/supporter-test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
+        ":module",
         "//:lombok",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
@@ -100,8 +101,8 @@ java_library(
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "module",
-        "supporter-test",
+        ":module",
+        ":supporter-test",
         "//:lombok",
     ],
 )

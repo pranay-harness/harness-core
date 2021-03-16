@@ -18,6 +18,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownArtifactStreamTypeException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueueConsumer;
@@ -71,6 +72,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
   @Inject private DelegateService delegateService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private SecretManager secretManager;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject
   public ArtifactCollectEventListener(QueueConsumer<CollectEvent> queueConsumer) {
@@ -142,14 +144,15 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .accountId(accountId)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
             .waitId(waitId)
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(TaskType.BAMBOO_COLLECTION.name())
-                      .parameters(
-                          new Object[] {bambooConfig, secretManager.getEncryptionDetails(bambooConfig, null, null),
-                              bambooArtifactStream.fetchArtifactStreamAttributes(), artifact.getMetadata()})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .build())
+            .data(
+                TaskData.builder()
+                    .async(true)
+                    .taskType(TaskType.BAMBOO_COLLECTION.name())
+                    .parameters(new Object[] {bambooConfig,
+                        secretManager.getEncryptionDetails(bambooConfig, null, null),
+                        bambooArtifactStream.fetchArtifactStreamAttributes(featureFlagService), artifact.getMetadata()})
+                    .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                    .build())
             .build();
       }
       case NEXUS: {
@@ -166,7 +169,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
                     .async(true)
                     .taskType(TaskType.NEXUS_COLLECTION.name())
                     .parameters(new Object[] {nexusConfig, secretManager.getEncryptionDetails(nexusConfig, null, null),
-                        nexusArtifactStream.fetchArtifactStreamAttributes(), artifact.getMetadata()})
+                        nexusArtifactStream.fetchArtifactStreamAttributes(featureFlagService), artifact.getMetadata()})
                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                     .build())
             .build();
@@ -227,7 +230,8 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
                             .accountId(accountId)
                             .azureArtifactsConfig(azureArtifactsConfig)
                             .encryptedDataDetails(secretManager.getEncryptionDetails(azureArtifactsConfig, null, null))
-                            .artifactStreamAttributes(azureArtifactsArtifactStream.fetchArtifactStreamAttributes())
+                            .artifactStreamAttributes(
+                                azureArtifactsArtifactStream.fetchArtifactStreamAttributes(featureFlagService))
                             .artifactMetadata(artifact.getMetadata())
                             .build()})
                     .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)

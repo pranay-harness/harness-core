@@ -56,6 +56,7 @@ public class EntityDetailProtoToRestMapper {
         .projectIdentifier(nullIfEmpty(identifierRef.getProjectIdentifier().getValue()))
         .scope(mapEventToRestScopeEnum(identifierRef.getScope()))
         .identifier(identifierRef.getIdentifier().getValue())
+        .metadata(identifierRef.getMetadataMap())
         .build();
   }
 
@@ -67,6 +68,8 @@ public class EntityDetailProtoToRestMapper {
         return Scope.ORG;
       case PROJECT:
         return Scope.PROJECT;
+      case UNKNOWN:
+        return Scope.UNKNOWN;
       case UNRECOGNIZED:
       default:
         throw new UnknownEnumTypeException("scope", String.valueOf(scope));

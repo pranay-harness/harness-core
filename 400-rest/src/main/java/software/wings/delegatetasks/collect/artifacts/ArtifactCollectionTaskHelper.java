@@ -14,7 +14,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateFile;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArgumentsException;

@@ -34,6 +34,7 @@ import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.ng.core.invites.ext.mail.EmailNotificationListener;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
@@ -48,6 +49,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.request.RequestContextFilter;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.security.InternalApiAuthFilter;
@@ -197,6 +199,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector, appConfig);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
+    registerRequestContextFilter(environment);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
@@ -205,6 +208,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     intializeGitSync(injector, appConfig);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {
@@ -276,6 +283,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

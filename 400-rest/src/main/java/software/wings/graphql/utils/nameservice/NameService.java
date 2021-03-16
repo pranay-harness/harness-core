@@ -29,5 +29,7 @@ public interface NameService {
   String pipelineExecution = "PipelineExecution";
   String user = "User";
 
+  String infrastructureDefinition = "InfrastructureDefinition";
+
   NameResult getNames(@NotNull Set<String> ids, @NotNull String type);
 }

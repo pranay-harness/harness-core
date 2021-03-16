@@ -7,7 +7,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CONNECTOR_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
-import static io.harness.lock.DistributedLockImplementation.REDIS;
+import static io.harness.lock.DistributedLockImplementation.MONGO;
 
 import io.harness.AccessControlClientModule;
 import io.harness.OrchestrationModule;
@@ -31,6 +31,7 @@ import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.gitsync.GitSyncModule;
 import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
+import io.harness.gitsync.core.runnable.HarnessToGitPushMessageListener;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -72,12 +73,15 @@ import io.harness.ng.core.gitsync.GitSyncManagerInterface;
 import io.harness.ng.core.gitsync.YamlHandler;
 import io.harness.ng.core.impl.OrganizationServiceImpl;
 import io.harness.ng.core.impl.ProjectServiceImpl;
+import io.harness.ng.core.outbox.NextGenOutboxEventHandler;
 import io.harness.ng.core.schema.YamlBaseUrlService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.redesign.services.CustomExecutionService;
@@ -97,6 +101,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import software.wings.security.ThreadLocalUserProvider;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -107,6 +112,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -162,7 +168,7 @@ public class NextGenModule extends AbstractModule {
   @Provides
   @Singleton
   DistributedLockImplementation distributedLockImplementation() {
-    return REDIS;
+    return MONGO;
   }
 
   @Provides
@@ -184,6 +190,13 @@ public class NextGenModule extends AbstractModule {
             .build());
     log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
     return delegateCallbackToken;
+  }
+
+  @Provides
+  @Named("yaml-schema-mapper")
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapper() {
+    return Jackson.newObjectMapper();
   }
 
   @Override
@@ -303,6 +316,8 @@ public class NextGenModule extends AbstractModule {
     install(new ResourceGroupModule(
         appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(PersistentLockModule.getInstance());
+    install(new TransactionOutboxModule());
+    bind(OutboxEventHandler.class).to(NextGenOutboxEventHandler.class);
     bind(ProjectService.class).to(ProjectServiceImpl.class);
     bind(OrganizationService.class).to(OrganizationServiceImpl.class);
     bind(NGModulesService.class).to(NGModulesServiceImpl.class);
@@ -326,7 +341,7 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
 
-    install(new AccessControlClientModule(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
+    install(AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
 
     registerEventsFrameworkMessageListeners();
   }
@@ -353,6 +368,10 @@ public class NextGenModule extends AbstractModule {
     bind(MessageListener.class)
         .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
         .to(EntityActivityCrudEventMessageListener.class);
+    // todo(abhinav): Move to git sync msvc if it breaks out.
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
+        .to(HarnessToGitPushMessageListener.class);
   }
 
   private OrchestrationModuleConfig getOrchestrationConfig() {

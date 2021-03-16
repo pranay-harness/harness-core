@@ -39,7 +39,7 @@ public class EventListener implements Runnable {
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
     }
-    SecurityContextBuilder.unsetContext();
+    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() throws ConsumerShutdownException {
@@ -68,9 +68,27 @@ public class EventListener implements Runnable {
   }
 
   private boolean processMessage(Message message) {
-    Set<EventConsumer> filteredConsumers = eventConsumers.stream()
-                                               .filter(eventConsumer -> eventConsumer.getEventFilter().filter(message))
-                                               .collect(Collectors.toSet());
-    return filteredConsumers.stream().allMatch(eventConsumer -> eventConsumer.getEventHandler().handle(message));
+    if (message.getMessage() == null) {
+      return true;
+    }
+    Set<EventConsumer> filteredConsumers =
+        eventConsumers.stream()
+            .filter(eventConsumer -> {
+              try {
+                return eventConsumer.getEventFilter().filter(message);
+              } catch (Exception e) {
+                log.error("Event Filter failed to filter the message {} due to exception", message, e);
+                return false;
+              }
+            })
+            .collect(Collectors.toSet());
+    return filteredConsumers.stream().allMatch(eventConsumer -> {
+      try {
+        return eventConsumer.getEventHandler().handle(message);
+      } catch (Exception e) {
+        log.error("Event Handler failed to process the message {} due to exception", message, e);
+        return false;
+      }
+    });
   }
 }

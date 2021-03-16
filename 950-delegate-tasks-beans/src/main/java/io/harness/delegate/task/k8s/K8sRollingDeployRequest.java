@@ -24,4 +24,5 @@ public class K8sRollingDeployRequest implements K8sDeployRequest {
   boolean localOverrideFeatureFlag;
   String accountId;
   boolean deprecateFabric8Enabled;
+  boolean skipResourceVersioning;
 }

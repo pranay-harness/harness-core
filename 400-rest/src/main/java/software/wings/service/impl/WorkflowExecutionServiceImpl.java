@@ -482,8 +482,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             != pipelineExecution.getPipeline().getPipelineStages().size()) {
           boolean isAnyStageLooped =
               pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
-          if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())
-              && isAnyStageLooped) {
+          if (isAnyStageLooped) {
             continue;
           } else {
             res.remove(i);
@@ -763,10 +762,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 stageExecution.setMessage(envStateExecutionData.getErrorMsg());
               }
               stageExecutionDataList.add(stageExecution);
-            } else if ((ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
-                           || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType()))
-                && featureFlagService.isEnabled(
-                    FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
+            } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
+                || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
               if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
                 setWaitingForInputFlag(stateExecutionInstance, stageExecution);
               }
@@ -4329,82 +4326,88 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline) {
-    WorkflowExecution workflowExecution =
-        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
-    if (workflowExecution == null) {
-      throw new InvalidBaselineConfigurationException(
-          "No workflow execution found with id: " + workflowExecutionId + " appId: " + appId);
-    }
-    List<WorkflowExecution> workflowExecutions = new ArrayList<>();
-    switch (workflowExecution.getWorkflowType()) {
-      case PIPELINE:
-        PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
-        if (pipelineExecution == null) {
-          throw new InvalidBaselineConfigurationException("Pipeline has not been executed.");
-        }
-
-        List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
-        if (isEmpty(pipelineStageExecutions)) {
-          throw new InvalidBaselineConfigurationException("No workflows have been executed for this pipeline.");
-        }
-        pipelineStageExecutions.forEach(
-            pipelineStageExecution -> workflowExecutions.addAll(pipelineStageExecution.getWorkflowExecutions()));
-        break;
-      case ORCHESTRATION:
-        workflowExecutions.add(workflowExecution);
-        break;
-      default:
-        unhandled(workflowExecution.getWorkflowType());
-    }
-
-    Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
-
-    if (!isEmpty(workflowExecutions)) {
-      workflowExecutions.forEach(stageExecution -> {
-        String executionUuid = stageExecution.getUuid();
-        List<StateExecutionInstance> stateExecutionInstances =
-            wingsPersistence.createQuery(StateExecutionInstance.class)
-                .filter(StateExecutionInstanceKeys.appId, appId)
-                .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
-                .asList();
-
-        boolean containsVerificationState = false;
-        for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
-          StateType stateType = StateType.valueOf(stateExecutionInstance.getStateType());
-          if (stateType.isVerificationState()) {
-            containsVerificationState = true;
-            break;
+    try (WorkflowExecutionLogContext ignored = new WorkflowExecutionLogContext(workflowExecutionId, OVERRIDE_ERROR)) {
+      log.info("marking baseline for app {} execution {} value {}", appId, workflowExecutionId, isBaseline);
+      WorkflowExecution workflowExecution =
+          wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
+      if (workflowExecution == null) {
+        throw new InvalidBaselineConfigurationException(
+            "No workflow execution found with id: " + workflowExecutionId + " appId: " + appId);
+      }
+      List<WorkflowExecution> workflowExecutions = new ArrayList<>();
+      switch (workflowExecution.getWorkflowType()) {
+        case PIPELINE:
+          PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+          if (pipelineExecution == null) {
+            throw new InvalidBaselineConfigurationException("Pipeline has not been executed.");
           }
-        }
 
-        if (containsVerificationState) {
-          for (String serviceId : stageExecution.getServiceIds()) {
-            WorkflowExecutionBaseline executionBaseline = WorkflowExecutionBaseline.builder()
-                                                              .workflowId(stageExecution.getWorkflowId())
-                                                              .workflowExecutionId(executionUuid)
-                                                              .envId(stageExecution.getEnvId())
-                                                              .serviceId(serviceId)
-                                                              .accountId(workflowExecution.getAccountId())
-                                                              .build();
-            executionBaseline.setAppId(stageExecution.getAppId());
-            if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
-              executionBaseline.setPipelineExecutionId(workflowExecutionId);
+          List<PipelineStageExecution> pipelineStageExecutions = pipelineExecution.getPipelineStageExecutions();
+          if (isEmpty(pipelineStageExecutions)) {
+            throw new InvalidBaselineConfigurationException("No workflows have been executed for this pipeline.");
+          }
+          pipelineStageExecutions.forEach(
+              pipelineStageExecution -> workflowExecutions.addAll(pipelineStageExecution.getWorkflowExecutions()));
+          break;
+        case ORCHESTRATION:
+          workflowExecutions.add(workflowExecution);
+          break;
+        default:
+          unhandled(workflowExecution.getWorkflowType());
+      }
+
+      log.info("workflow executions to proceess {}",
+          workflowExecutions.stream().map(execution -> execution.getUuid()).collect(Collectors.toList()));
+      Set<WorkflowExecutionBaseline> baselines = new HashSet<>();
+
+      if (!isEmpty(workflowExecutions)) {
+        workflowExecutions.forEach(stageExecution -> {
+          String executionUuid = stageExecution.getUuid();
+          List<StateExecutionInstance> stateExecutionInstances =
+              wingsPersistence.createQuery(StateExecutionInstance.class)
+                  .filter(StateExecutionInstanceKeys.appId, appId)
+                  .filter(StateExecutionInstanceKeys.executionUuid, executionUuid)
+                  .asList();
+
+          boolean containsVerificationState = false;
+          for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+            StateType stateType = StateType.valueOf(stateExecutionInstance.getStateType());
+            if (stateType.isVerificationState()) {
+              containsVerificationState = true;
+              break;
             }
-            baselines.add(executionBaseline);
           }
-        }
-      });
-    }
 
-    if (isEmpty(baselines)) {
-      throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
-          "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.")
-          .addParam("message",
-              "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.");
-    }
+          if (containsVerificationState) {
+            for (String serviceId : stageExecution.getServiceIds()) {
+              WorkflowExecutionBaseline executionBaseline = WorkflowExecutionBaseline.builder()
+                                                                .workflowId(stageExecution.getWorkflowId())
+                                                                .workflowExecutionId(executionUuid)
+                                                                .envId(stageExecution.getEnvId())
+                                                                .serviceId(serviceId)
+                                                                .accountId(workflowExecution.getAccountId())
+                                                                .build();
+              executionBaseline.setAppId(stageExecution.getAppId());
+              if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+                executionBaseline.setPipelineExecutionId(workflowExecutionId);
+              }
+              baselines.add(executionBaseline);
+            }
+          }
+        });
+      }
 
-    workflowExecutionBaselineService.markBaseline(Lists.newArrayList(baselines), workflowExecutionId, isBaseline);
-    return baselines;
+      log.info("execution baseline {}", baselines);
+      if (isEmpty(baselines)) {
+        throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
+            "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.")
+            .addParam("message",
+                "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.");
+      }
+
+      workflowExecutionBaselineService.markBaseline(Lists.newArrayList(baselines), workflowExecutionId, isBaseline);
+      return baselines;
+    }
   }
 
   @Override

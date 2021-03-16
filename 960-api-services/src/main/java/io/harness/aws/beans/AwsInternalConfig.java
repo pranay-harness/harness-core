@@ -21,13 +21,14 @@ import lombok.ToString;
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
 public class AwsInternalConfig implements EncryptableSetting {
-  private static final String AWS_URL = "https://aws.amazon.com/";
+  public static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;
   @Attributes(title = "Secret Key") @Encrypted(fieldName = "secret_key") private char[] secretKey;
   @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
   private AwsCrossAccountAttributes crossAccountAttributes;
   private String defaultRegion;
   private boolean assumeCrossAccountRole;
+  private boolean useIRSA;
   @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;
 
   @Override
