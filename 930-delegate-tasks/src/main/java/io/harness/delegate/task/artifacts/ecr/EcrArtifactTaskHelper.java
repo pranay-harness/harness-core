@@ -37,6 +37,12 @@ public class EcrArtifactTaskHelper {
       case VALIDATE_ARTIFACT_SOURCE:
         artifactTaskResponse = getSuccessTaskResponse(ecrArtifactTaskHandler.validateArtifactImage(attributes));
         break;
+      case GET_IMAGE_URL:
+        artifactTaskResponse = getSuccessTaskResponse(ecrArtifactTaskHandler.getEcrImageUrl(attributes));
+        break;
+      case GET_AUTH_TOKEN:
+        artifactTaskResponse = getSuccessTaskResponse(ecrArtifactTaskHandler.getAmazonEcrAuthToken(attributes));
+        break;
       default:
         log.error("No corresponding Ecr artifact task type [{}]", artifactTaskParameters.toString());
         return ArtifactTaskResponse.builder()

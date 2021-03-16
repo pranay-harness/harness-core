@@ -25,6 +25,7 @@ import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -100,6 +101,27 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
     }
     return getSuccessTaskExecutionResponse(
         Collections.singletonList(EcrRequestResponseMapper.toEcrResponse(lastSuccessfulBuild, attributesRequest)));
+  }
+
+  public ArtifactTaskExecutionResponse getEcrImageUrl(EcrArtifactDelegateRequest attributesRequest) {
+    AwsInternalConfig awsInternalConfig = getAwsInternalConfig(attributesRequest);
+    String ecrImageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
+        awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
+
+    return getSuccessTaskExecutionResponse(
+        Collections.singletonList(EcrArtifactDelegateResponse.builder().imageUrl(ecrImageUrl).build()));
+  }
+
+  public ArtifactTaskExecutionResponse getAmazonEcrAuthToken(EcrArtifactDelegateRequest attributesRequest) {
+    AwsInternalConfig awsInternalConfig = getAwsInternalConfig(attributesRequest);
+    String ecrImageUrl = awsEcrApiHelperServiceDelegate.getEcrImageUrl(
+        awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
+    String authToken = awsEcrApiHelperServiceDelegate.getAmazonEcrAuthToken(
+        awsInternalConfig, ecrImageUrl.substring(0, ecrImageUrl.indexOf('.')), attributesRequest.getRegion());
+
+    List<EcrArtifactDelegateResponse> ecrArtifactDelegateResponseList = new ArrayList<>();
+    ecrArtifactDelegateResponseList.add(EcrArtifactDelegateResponse.builder().authToken(authToken).build());
+    return getSuccessTaskExecutionResponse(ecrArtifactDelegateResponseList);
   }
 
   private EcrInternalConfig getEcrInternalConfig(EcrArtifactDelegateRequest attributesRequest) throws IOException {
