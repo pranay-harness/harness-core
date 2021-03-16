@@ -59,7 +59,7 @@ public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
 
   @Override
   public BinaryResponseData waitForTask(String taskId, String description, Duration timeout) {
-    DelegateSyncTaskResponse taskResponse;
+    DelegateSyncTaskResponse taskResponse = null;
     Query query = query(where("_id").is(taskId));
     String collectionName = morphiaCustomCollectionNames.get(DelegateSyncTaskResponse.class);
     try {
@@ -68,10 +68,16 @@ public class PmsDelegateSyncServiceImpl implements DelegateSyncService {
           syncTaskWaitMap.computeIfAbsent(taskId, k -> new AtomicLong(currentTimeMillis() + timeout.toMillis()));
       synchronized (endAt) {
         while (currentTimeMillis() < endAt.get()) {
-          endAt.wait(timeout.toMillis());
+          endAt.wait(5000);
+          taskResponse = persistence.findOne(query, DelegateSyncTaskResponse.class, collectionName);
+          if (taskResponse != null) {
+            break;
+          }
         }
       }
-      taskResponse = persistence.findOne(query, DelegateSyncTaskResponse.class, collectionName);
+      if (taskResponse == null) {
+        taskResponse = persistence.findOne(query, DelegateSyncTaskResponse.class, collectionName);
+      }
     } catch (Exception e) {
       throw new InvalidArgumentsException(Pair.of("args", "Error while waiting for completion"), e);
     } finally {
