@@ -10,7 +10,9 @@ import static io.harness.logging.LogLevel.INFO;
 import static software.wings.beans.Log.Builder.aLog;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -34,7 +36,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.SshHelperUtils;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -58,7 +59,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
    */
   @Inject private DelegateLogService logService;
 
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
 
   @Inject private Injector injector;
 
@@ -114,8 +115,8 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
 
     try {
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
-      commandExecutionStatus = timeLimiter.callWithTimeout(
-          () -> commandUnit.execute(shellCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
+      commandExecutionStatus =
+          timeLimiter.callInterruptible(ofMillis(timeoutMs), () -> commandUnit.execute(shellCommandExecutionContext));
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           logBuilder.logLevel(ERROR)

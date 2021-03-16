@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
@@ -27,8 +28,6 @@ import com.google.cloud.kms.v1.CryptoKeyName;
 import com.google.cloud.kms.v1.DecryptResponse;
 import com.google.cloud.kms.v1.EncryptResponse;
 import com.google.cloud.kms.v1.KeyManagementServiceClient;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.protobuf.ByteString;
 import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
@@ -52,7 +51,7 @@ public class GcpKmsEncryptorTest extends CategoryTest {
 
   @Before
   public void setup() {
-    TimeLimiter timeLimiter = new SimpleTimeLimiter();
+    HTimeLimiter timeLimiter = new HTimeLimiter();
     gcpKmsEncryptor = spy(new GcpKmsEncryptor(timeLimiter));
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     gcpKmsConfig = GcpKmsConfig.builder()

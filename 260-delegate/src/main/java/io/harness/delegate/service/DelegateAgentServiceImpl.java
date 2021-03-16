@@ -81,6 +81,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
@@ -160,7 +161,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -308,7 +308,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private TokenGenerator tokenGenerator;
   @Inject private AsyncHttpClient asyncHttpClient;
   @Inject private Clock clock;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private DelegateDecryptionService delegateDecryptionService;
   @Inject private DelegateLogService delegateLogService;
@@ -1001,11 +1001,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean resultExists = new File("profile.result").exists();
         String profileId = profileParams == null ? "" : profileParams.getProfileId();
         long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
-        RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
+        RestResponse<DelegateProfileParams> response = timeLimiter.callInterruptible(ofSeconds(15),
             ()
                 -> delegateExecute(
-                    delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)),
-            15L, TimeUnit.SECONDS, true);
+                    delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
         if (response != null) {
           applyProfile(response.getResource());
         }
@@ -1123,10 +1122,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     // MultipartBody.Part is used to send also the actual file name
     Part part = Part.createFormData("file", profileResult.getName(), requestFile);
-    timeLimiter.callWithTimeout(()
-                                    -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
-                                        delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)),
-        15L, TimeUnit.SECONDS, true);
+    timeLimiter.callInterruptible(ofSeconds(15),
+        ()
+            -> delegateExecute(delegateAgentManagerClient.saveProfileResult(
+                delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)));
   }
 
   private void startInputCheck() {
@@ -1200,10 +1199,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } else {
         log.info("Checking for upgrade");
         try {
-          RestResponse<DelegateScripts> restResponse = timeLimiter.callWithTimeout(
-              ()
-                  -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)),
-              1L, TimeUnit.MINUTES, true);
+          RestResponse<DelegateScripts> restResponse = timeLimiter.callInterruptible(
+              ofMinutes(1), () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version)));
           DelegateScripts delegateScripts = restResponse.getResource();
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
@@ -1246,10 +1243,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void pollForTask() {
     if (pollingForTasks.get() && shouldContactManager()) {
       try {
-        List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
-            ()
-                -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)),
-            15L, TimeUnit.SECONDS, true);
+        List<DelegateTaskEvent> taskEvents = timeLimiter.callInterruptible(
+            ofSeconds(15), () -> delegateExecute(delegateAgentManagerClient.pollTaskEvents(delegateId, accountId)));
         if (isNotEmpty(taskEvents)) {
           log.info("Processing DelegateTaskEvents {}", taskEvents);
           for (DelegateTaskEvent taskEvent : taskEvents) {
@@ -1493,7 +1488,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .build();
 
       try {
-        timeLimiter.callWithTimeout(() -> socket.fire(JsonUtils.asJson(delegateParams)), 15L, TimeUnit.SECONDS, true);
+        timeLimiter.callInterruptible(ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending heartbeat", ex);
@@ -1514,10 +1509,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
-        timeLimiter.callWithTimeout(() -> {
+        timeLimiter.callInterruptible(ofSeconds(15), () -> {
           DelegateParams delegateParams = builder.build().toBuilder().keepAlivePacket(true).build();
           return socket.fire(JsonUtils.asJson(delegateParams));
-        }, 15L, TimeUnit.SECONDS, true);
+        });
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending keep alive packet", ex);
       } catch (Exception e) {
@@ -1574,10 +1569,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       setSwitchStorage(receivedDelegateResponse.isUseCdn());
       updateJreVersion(receivedDelegateResponse.getJreVersion());
 
-      timeLimiter.callWithTimeout(()
-                                      -> delegateExecute(delegateAgentManagerClient.doConnectionHeartbeat(
-                                          delegateId, accountId, connectionHeartbeat)),
-          15L, TimeUnit.SECONDS, true);
+      timeLimiter.callInterruptible(ofSeconds(15),
+          ()
+              -> delegateExecute(
+                  delegateAgentManagerClient.doConnectionHeartbeat(delegateId, accountId, connectionHeartbeat)));
       lastHeartbeatSentAt.set(clock.millis());
 
     } catch (UncheckedTimeoutException ex) {
@@ -2127,7 +2122,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       Response<ResponseBody> response = null;
       try {
-        response = timeLimiter.callWithTimeout(() -> {
+        response = timeLimiter.callInterruptible(ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
@@ -2142,7 +2137,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             }
           }
           return resp;
-        }, 30L, TimeUnit.SECONDS, true);
+        });
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending response to manager", ex);
       } catch (Exception e) {
@@ -2185,7 +2180,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
     if (taskFuture != null) {
       try {
-        timeLimiter.callWithTimeout(taskFuture::get, 5L, TimeUnit.SECONDS, true);
+        timeLimiter.callInterruptible(ofSeconds(5), taskFuture::get);
       } catch (UncheckedTimeoutException e) {
         ignoredOnPurpose(e);
         log.error("Timed out getting task future");

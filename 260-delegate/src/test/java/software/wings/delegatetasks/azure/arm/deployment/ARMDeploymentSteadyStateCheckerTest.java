@@ -16,12 +16,11 @@ import io.harness.azure.impl.AzureManagementClientImpl;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import java.util.List;
@@ -41,7 +40,7 @@ public class ARMDeploymentSteadyStateCheckerTest extends CategoryTest {
   @Mock private LogCallback mockLogCallback;
   @Mock private AzureManagementClientImpl azureManagementClient;
   @InjectMocks private ARMDeploymentSteadyStateChecker armSteadyStateChecker;
-  private final TimeLimiter timeLimiter = new FakeTimeLimiter();
+  private final HTimeLimiter timeLimiter = new HTimeLimiter();
 
   @Before
   public void setUp() throws Exception {

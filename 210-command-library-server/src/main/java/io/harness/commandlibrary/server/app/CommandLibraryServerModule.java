@@ -11,6 +11,7 @@ import io.harness.commandlibrary.server.service.intfc.CommandArchiveHandler;
 import io.harness.commandlibrary.server.service.intfc.CommandService;
 import io.harness.commandlibrary.server.service.intfc.CommandStoreService;
 import io.harness.commandlibrary.server.service.intfc.CommandVersionService;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.UnexpectedException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.persistence.HPersistence;
@@ -58,6 +59,7 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(Clock.class).toInstance(Clock.systemUTC());
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(HTimeLimiter.class).toInstance(new HTimeLimiter());
     bind(CommandStoreService.class).to(CommandStoreServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
     bind(CommandVersionService.class).to(CommandVersionServiceImpl.class);

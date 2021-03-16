@@ -22,6 +22,7 @@ import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureNetworkClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureLoadBalancerDetailForBGDeployment;
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
@@ -31,7 +32,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
@@ -57,7 +57,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient azureComputeClient;
   @Mock private AzureNetworkClient azureNetworkClient;
   @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
 
   @Inject @InjectMocks AzureVMSSSwitchRouteTaskHandler switchRouteTaskHandler;
 
@@ -133,7 +133,7 @@ public class AzureVMSSSwitchRouteTaskHandlerTest extends WingsBaseTest {
     LoadBalancer loadBalancer = mock(LoadBalancer.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
-    doReturn(Boolean.TRUE).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doReturn(Boolean.TRUE).when(mockTimeLimiter).callInterruptible(any(), any());
 
     AzureConfig azureConfig = AzureConfig.builder().build();
     when(

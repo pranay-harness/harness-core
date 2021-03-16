@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -75,7 +76,6 @@ import io.harness.shell.SshSessionConfig;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.ContainerStatusBuilder;
@@ -103,7 +103,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
@@ -129,7 +128,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock private KubernetesContainerService mockKubernetesContainerService;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Mock private LogCallback executionLogCallback;
   @Mock private NGGitService ngGitService;
   @Mock private GitDecryptionHelper gitDecryptionHelper;
@@ -148,7 +147,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void setup() throws Exception {
     doAnswer(invocation -> invocation.getArgumentAt(0, Callable.class).call())
         .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+        .callInterruptible(any(), any(Callable.class));
   }
 
   @Test
@@ -414,9 +413,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   public void testGetLoadBalancerEndpointServiceNotReady() throws Exception {
     List<KubernetesResource> resources = singletonList(getServiceResource("LoadBalancer"));
 
-    doThrow(new UncheckedTimeoutException())
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    doThrow(new UncheckedTimeoutException()).when(mockTimeLimiter).callInterruptible(any(), any(Callable.class));
 
     String endpoint = k8sTaskHelperBase.getLoadBalancerEndpoint(KUBERNETES_CONFIG, resources);
     assertThat(endpoint).isNull();

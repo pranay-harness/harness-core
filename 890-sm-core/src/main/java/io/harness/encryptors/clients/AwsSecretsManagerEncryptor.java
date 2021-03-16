@@ -9,8 +9,10 @@ import static io.harness.helpers.ext.vault.VaultRestClientFactory.getFullPath;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.security.encryption.EncryptedRecord;
@@ -36,12 +38,10 @@ import com.amazonaws.services.secretsmanager.model.Tag;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretRequest;
 import com.amazonaws.services.secretsmanager.model.UpdateSecretResult;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class AwsSecretsManagerEncryptor implements VaultEncryptor {
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
   private final int NUM_OF_RETRIES = 3;
   private static final String KEY_SEPARATOR = "#";
   private static final JsonParser JSON_PARSER = new JsonParser();
@@ -61,7 +61,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   }
 
   @Inject
-  public AwsSecretsManagerEncryptor(TimeLimiter timeLimiter) {
+  public AwsSecretsManagerEncryptor(HTimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
   }
 
@@ -72,8 +72,8 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> upsertSecretInternal(name, plaintext, null, awsSecretsManagerConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> upsertSecretInternal(name, plaintext, null, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -93,10 +93,8 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            ()
-                -> upsertSecretInternal(name, plaintext, existingRecord, awsSecretsManagerConfig),
-            10, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(10), () -> upsertSecretInternal(name, plaintext, existingRecord, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -116,8 +114,8 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> renameSecretInternal(name, existingRecord, awsSecretsManagerConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> renameSecretInternal(name, existingRecord, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -159,8 +157,8 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, awsSecretsManagerConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> fetchSecretValueInternal(encryptedRecord, awsSecretsManagerConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);

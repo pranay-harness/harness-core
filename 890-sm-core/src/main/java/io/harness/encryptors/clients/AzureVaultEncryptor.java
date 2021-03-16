@@ -9,8 +9,10 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.azure.AzureParsedSecretReference;
@@ -21,14 +23,12 @@ import io.harness.security.encryption.EncryptionConfig;
 
 import software.wings.beans.AzureVaultConfig;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,11 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(PL)
 public class AzureVaultEncryptor implements VaultEncryptor {
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
   private final int NUM_OF_RETRIES = 3;
 
   @Inject
-  public AzureVaultEncryptor(TimeLimiter timeLimiter) {
+  public AzureVaultEncryptor(HTimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
   }
 
@@ -52,8 +52,8 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> upsertInternal(accountId, name, plaintext, null, azureConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> upsertInternal(accountId, name, plaintext, null, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -73,8 +73,8 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> upsertInternal(accountId, name, plaintext, existingRecord, azureConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> upsertInternal(accountId, name, plaintext, existingRecord, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -94,8 +94,8 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> renameSecretInternal(accountId, name, existingRecord, azureConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> renameSecretInternal(accountId, name, existingRecord, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
@@ -175,8 +175,8 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     while (true) {
       try {
         log.info("Trying to decrypt record {} by {}", encryptedRecord.getEncryptionKey(), azureConfig.getVaultName());
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, azureConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> fetchSecretValueInternal(encryptedRecord, azureConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);

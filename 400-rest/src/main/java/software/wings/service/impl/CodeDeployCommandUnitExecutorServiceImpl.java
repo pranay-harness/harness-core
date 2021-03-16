@@ -16,7 +16,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -34,9 +33,6 @@ public class CodeDeployCommandUnitExecutorServiceImpl implements CommandUnitExec
    * The Log service.
    */
   @Inject private DelegateLogService logService;
-
-  @Inject private TimeLimiter timeLimiter;
-
   @Inject private Injector injector;
 
   @Override

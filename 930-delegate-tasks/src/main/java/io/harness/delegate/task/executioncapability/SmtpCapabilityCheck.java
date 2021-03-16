@@ -1,18 +1,18 @@
 package io.harness.delegate.task.executioncapability;
 
+import static java.time.Duration.ofMillis;
+
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.CapabilitySubjectPermissionBuilder;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.SmtpParameters;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SmtpCapability;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 import javax.mail.AuthenticationFailedException;
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class SmtpCapabilityCheck implements CapabilityCheck, ProtoCapabilityCheck {
-  private static final TimeLimiter timeLimiter = new SimpleTimeLimiter();
+  private static final HTimeLimiter timeLimiter = new HTimeLimiter();
 
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
@@ -48,7 +48,7 @@ public class SmtpCapabilityCheck implements CapabilityCheck, ProtoCapabilityChec
 
   static boolean isCapable(boolean useSsl, boolean startTls, String host, int port, String username) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofMillis(10000), () -> {
         boolean result = false;
         try {
           Properties props = new Properties();
@@ -75,7 +75,7 @@ public class SmtpCapabilityCheck implements CapabilityCheck, ProtoCapabilityChec
           log.warn("SMTP: Unknown Exception", e);
         }
         return result;
-      }, 10000, TimeUnit.MILLISECONDS, true);
+      });
     } catch (Exception e) {
       log.warn("Failed to validate email delegate communication", e);
     }

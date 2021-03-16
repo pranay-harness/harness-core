@@ -2,8 +2,11 @@ package io.harness.perpetualtask;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static java.time.Duration.ofMillis;
+
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
@@ -11,7 +14,6 @@ import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.util.Durations;
 import java.time.Instant;
@@ -26,7 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 public class PerpetualTaskLifecycleManager {
   private final long timeoutMillis;
   private final PerpetualTaskId taskId;
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
   private final PerpetualTaskExecutionParams params;
   private final PerpetualTaskExecutionContext context;
   private final PerpetualTaskExecutor perpetualTaskExecutor;
@@ -38,7 +40,7 @@ public class PerpetualTaskLifecycleManager {
 
   PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskExecutionContext context,
       Map<String, PerpetualTaskExecutor> factoryMap, PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
-      TimeLimiter timeLimiter, AtomicInteger currentlyExecutingPerpetualTasksCount) {
+      HTimeLimiter timeLimiter, AtomicInteger currentlyExecutingPerpetualTasksCount) {
     this.taskId = taskId;
     this.context = context;
     this.timeLimiter = timeLimiter;
@@ -51,7 +53,7 @@ public class PerpetualTaskLifecycleManager {
 
   void startTask() {
     try {
-      timeLimiter.callWithTimeout(this::call, timeoutMillis, TimeUnit.MILLISECONDS, true);
+      timeLimiter.callInterruptible(ofMillis(timeoutMillis), this::call);
     } catch (UncheckedTimeoutException tex) {
       log.warn("Timed out starting task", tex);
     } catch (Exception ex) {

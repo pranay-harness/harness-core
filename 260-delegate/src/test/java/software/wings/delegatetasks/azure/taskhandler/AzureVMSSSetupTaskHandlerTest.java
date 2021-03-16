@@ -10,7 +10,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -33,6 +32,7 @@ import io.harness.azure.model.AzureVMSSAutoScaleSettingsData;
 import io.harness.azure.model.AzureVMSSTagsData;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthDTO;
 import io.harness.delegate.beans.azure.AzureVMAuthType;
@@ -50,7 +50,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.command.ExecutionLogCallback;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.microsoft.azure.management.compute.GalleryImage;
 import com.microsoft.azure.management.compute.GalleryImageIdentifier;
 import com.microsoft.azure.management.compute.OperatingSystemStateTypes;
@@ -77,7 +76,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureNetworkClient mockAzureNetworkClient;
   @Mock private AzureAutoScaleSettingsClient mockAzureAutoScaleSettingsClient;
   @Mock private AzureAutoScaleHelper mockAzureAutoScaleHelper;
-  @Mock private TimeLimiter timeLimiter;
+  @Mock private HTimeLimiter timeLimiter;
   private final int minInstances = 0;
   private final int maxInstances = 2;
   private final int desiredInstances = 1;
@@ -481,7 +480,7 @@ public class AzureVMSSSetupTaskHandlerTest extends WingsBaseTest {
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
     doNothing().when(mockCallback).saveExecutionLog(anyString(), any(), any());
-    doReturn(Boolean.TRUE).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doReturn(Boolean.TRUE).when(timeLimiter).callInterruptible(any(), any());
     doReturn(mockCallback).when(azureVMSSSetupTaskHandler).getLogCallBack(any(), anyString());
     return mockCallback;
   }

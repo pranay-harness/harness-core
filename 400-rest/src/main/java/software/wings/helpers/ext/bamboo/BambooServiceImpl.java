@@ -10,10 +10,12 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
@@ -32,7 +34,6 @@ import software.wings.service.intfc.security.EncryptionService;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -49,7 +50,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
@@ -70,7 +70,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 public class BambooServiceImpl implements BambooService {
   @Inject private EncryptionService encryptionService;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   private BambooRestClient getBambooClient(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
@@ -190,7 +190,7 @@ public class BambooServiceImpl implements BambooService {
   private Map<String, String> getPlanKeys(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, int maxResults) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofSeconds(110), () -> {
         BambooRestClient bambooRestClient = getBambooClient(bambooConfig, encryptionDetails);
         log.info("Retrieving plan keys for bamboo server {}", bambooConfig);
         log.info("Fetching plans starting at index: [0] from bamboo server {}", bambooConfig.getBambooUrl());
@@ -242,7 +242,7 @@ public class BambooServiceImpl implements BambooService {
         }
         log.info("Retrieving plan keys for bamboo server {} success", bambooConfig);
         return planNameMap;
-      }, 110L, TimeUnit.SECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new InvalidArtifactServerException("Bamboo server took too long to respond", e);
     } catch (WingsException e) {
@@ -275,7 +275,7 @@ public class BambooServiceImpl implements BambooService {
   public List<BuildDetails> getBuilds(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails,
       String planKey, List<String> artifactPaths, int maxNumberOfBuilds) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofSeconds(20), () -> {
         List<BuildDetails> buildDetailsList = new ArrayList<>();
         Call<JsonNode> request =
             getBambooClient(bambooConfig, encryptionDetails)
@@ -313,7 +313,7 @@ public class BambooServiceImpl implements BambooService {
           }
           throw new ArtifactServerException("Error in fetching builds from bamboo server", e, USER);
         }
-      }, 20L, TimeUnit.SECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new InvalidArtifactServerException("Bamboo server took too long to respond", e);
     } catch (WingsException e) {
@@ -327,7 +327,7 @@ public class BambooServiceImpl implements BambooService {
   public List<String> getArtifactPath(
       BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails, String planKey) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofSeconds(20), () -> {
         List<String> artifactPaths = new ArrayList<>();
         BuildDetails lastSuccessfulBuild = getLastSuccessfulBuild(bambooConfig, encryptionDetails, planKey);
         if (lastSuccessfulBuild != null) {
@@ -339,7 +339,7 @@ public class BambooServiceImpl implements BambooService {
                   .collect(toList())));
         }
         return artifactPaths;
-      }, 20L, TimeUnit.SECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       throw new InvalidArtifactServerException("Bamboo server took too long to respond", e);
     } catch (WingsException e) {

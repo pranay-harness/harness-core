@@ -36,6 +36,7 @@ import static software.wings.beans.LogWeight.Normal;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
@@ -46,6 +47,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.FileData;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.container.ContainerInfo;
@@ -125,7 +127,6 @@ import io.harness.shell.SshSessionConfig;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -188,7 +189,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @Slf4j
 public class K8sTaskHelperBase {
   public static final Set<String> openshiftResources = ImmutableSet.of("Route");
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private KubernetesContainerService kubernetesContainerService;
   @Inject private KubernetesHelperService kubernetesHelperService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
@@ -284,7 +285,7 @@ public class K8sTaskHelperBase {
 
   public List<K8sPod> getPodDetailsWithLabels(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
       Map<String, String> labels, long timeoutinMillis) throws Exception {
-    return timeLimiter.callWithTimeout(
+    return timeLimiter.callInterruptible(ofMillis(timeoutinMillis),
         ()
             -> kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, namespace, labels)
                    .stream()
@@ -313,8 +314,7 @@ public class K8sTaskHelperBase {
                          .labels(metadata.getLabels() != null ? new HashMap<>(metadata.getLabels()) : null)
                          .build();
                    })
-                   .collect(toList()),
-        timeoutinMillis, TimeUnit.MILLISECONDS, true);
+                   .collect(toList()));
   }
 
   public List<K8sPod> getPodDetailsWithTrack(KubernetesConfig kubernetesConfig, String namespace, String releaseName,
@@ -346,7 +346,7 @@ public class K8sTaskHelperBase {
 
   private <T> T waitForLoadBalancerService(String name, Callable<T> getLoadBalancerService, int timeoutInSeconds) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofSeconds(timeoutInSeconds), () -> {
         while (true) {
           T result = getLoadBalancerService.call();
           if (result != null) {
@@ -358,7 +358,7 @@ public class K8sTaskHelperBase {
               sleepTimeInSeconds);
           sleep(ofSeconds(sleepTimeInSeconds));
         }
-      }, timeoutInSeconds, TimeUnit.SECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out waiting for LoadBalancer service. Moving on.", e);
     } catch (Exception e) {
@@ -1676,11 +1676,10 @@ public class K8sTaskHelperBase {
       for (KubernetesResource kubernetesResource : resources) {
         String steadyCondition = kubernetesResource.getMetadataAnnotationValue(HarnessAnnotations.steadyStateCondition);
         currentSteadyCondition = steadyCondition;
-        success = timeLimiter.callWithTimeout(
+        success = timeLimiter.callInterruptible(ofMillis(timeoutInMillis),
             ()
                 -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
-                    k8sDelegateTaskParams, executionLogCallback),
-            timeoutInMillis, TimeUnit.MILLISECONDS, true);
+                    k8sDelegateTaskParams, executionLogCallback));
 
         if (!success) {
           break;

@@ -3,18 +3,17 @@ package io.harness.batch.processing;
 import static io.harness.event.app.EventServiceApplication.EVENTS_STORE;
 
 import static com.google.common.base.Verify.verify;
+import static java.time.Duration.ofMillis;
 
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -65,12 +64,12 @@ public class ApplicationReadyListener {
   @EventListener(ApplicationReadyEvent.class)
   @Order(Ordered.HIGHEST_PRECEDENCE)
   void ensureMongoConnectivity() throws Exception {
-    TimeLimiter timeLimiter = new SimpleTimeLimiter();
+    HTimeLimiter timeLimiter = new HTimeLimiter();
     try {
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMillis(hPersistence.healthExpectedResponseTimeout().toMillis()), () -> {
         hPersistence.isHealthy();
         return null;
-      }, hPersistence.healthExpectedResponseTimeout().toMillis(), TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out waiting for mongo connectivity");
       throw e;

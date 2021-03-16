@@ -12,6 +12,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.clients.HashicorpVaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
@@ -24,7 +25,6 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.beans.VaultConfig;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -60,7 +60,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
                       .secretEngineName(UUIDGenerator.generateUuid())
                       .secretEngineVersion(1)
                       .build();
-    hashicorpVaultEncryptor = new HashicorpVaultEncryptor(new SimpleTimeLimiter());
+    hashicorpVaultEncryptor = new HashicorpVaultEncryptor(new HTimeLimiter());
     mockStatic(VaultRestClientFactory.class);
     PowerMockito.when(VaultRestClientFactory.create(vaultConfig)).thenReturn(vaultRestClient);
     PowerMockito.when(VaultRestClientFactory.getFullPath(eq(vaultConfig.getBasePath()), anyString()))

@@ -48,6 +48,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -84,7 +85,6 @@ import software.wings.utils.WingsTestConstants;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.io.CharStreams;
-import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
 import java.io.File;
@@ -164,7 +164,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
   @Before
   public void setupMocks() {
-    on(sshCommandUnitExecutorService).set("timeLimiter", new FakeTimeLimiter());
+    on(sshCommandUnitExecutorService).set("timeLimiter", new HTimeLimiter());
   }
 
   /**

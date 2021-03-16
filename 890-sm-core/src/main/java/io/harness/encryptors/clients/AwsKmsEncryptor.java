@@ -10,8 +10,10 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
@@ -38,7 +40,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.nio.ByteBuffer;
@@ -65,12 +66,12 @@ import lombok.extern.slf4j.Slf4j;
 public class AwsKmsEncryptor implements KmsEncryptor {
   private static final int DEFAULT_KMS_TIMEOUT = 30; // in seconds
   private final int NUM_OF_RETRIES = 3;
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
   private final Cache<KmsEncryptionKeyCacheKey, byte[]> kmsEncryptionKeyCache =
       Caffeine.newBuilder().maximumSize(2000).expireAfterAccess(2, TimeUnit.HOURS).build();
 
   @Inject
-  public AwsKmsEncryptor(TimeLimiter timeLimiter) {
+  public AwsKmsEncryptor(HTimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
   }
 
@@ -80,8 +81,8 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(DEFAULT_KMS_TIMEOUT), () -> encryptInternal(accountId, value, kmsConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("Encryption failed. trial num: {}", failedAttempts, e);
@@ -113,8 +114,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
           return decryptInternalIfCached(data, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
-          return timeLimiter.callWithTimeout(
-              () -> decryptInternal(data, kmsConfig), DEFAULT_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+          return timeLimiter.callInterruptible(ofSeconds(DEFAULT_KMS_TIMEOUT), () -> decryptInternal(data, kmsConfig));
         }
       } catch (Exception e) {
         failedAttempts++;

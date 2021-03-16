@@ -11,6 +11,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.helpers.ext.helm.HelmHelper.filterWorkloads;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.replace;
@@ -18,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.replace;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -82,7 +84,6 @@ import software.wings.service.intfc.yaml.GitClient;
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -96,7 +97,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -118,7 +118,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Inject private HelmClient helmClient;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private GitService gitService;
   @Inject private EncryptionService encryptionService;
   @Inject private HelmCommandHelper helmCommandHelper;
@@ -239,10 +239,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       HelmCommandRequest commandRequest, LogCallback executionLogCallback, long timeoutInMillis) throws Exception {
     List<ContainerInfo> containerInfos = new ArrayList<>();
     LogCallback finalExecutionLogCallback = executionLogCallback;
-    timeLimiter.callWithTimeout(
-        ()
-            -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())),
-        timeoutInMillis, TimeUnit.MILLISECONDS, true);
+    timeLimiter.callInterruptible(ofMillis(timeoutInMillis),
+        () -> containerInfos.addAll(fetchContainerInfo(commandRequest, finalExecutionLogCallback, new ArrayList<>())));
     return containerInfos;
   }
 
@@ -588,7 +586,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   @Override
   public HelmCommandResponse ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) {
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofMillis(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS), () -> {
         HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(helmCommandRequest);
         if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
           throw new InvalidRequestException(cliResponse.getOutput());
@@ -598,7 +596,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
         CommandExecutionStatus commandExecutionStatus =
             helm3 ? CommandExecutionStatus.FAILURE : CommandExecutionStatus.SUCCESS;
         return new HelmCommandResponse(commandExecutionStatus, cliResponse.getOutput());
-      }, DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out while finding helm client and server version";
       log.error(msg, e);

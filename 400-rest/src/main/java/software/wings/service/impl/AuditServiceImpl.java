@@ -11,6 +11,7 @@ import static io.harness.threading.Morpheus.sleep;
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
@@ -21,6 +22,7 @@ import static org.mongodb.morphia.query.Sort.descending;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.context.GlobalContextData;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
@@ -68,7 +70,6 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
@@ -102,7 +103,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private EntityHelper entityHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;
@@ -355,7 +356,7 @@ public class AuditServiceImpl implements AuditService {
     log.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
     try {
       log.info("Start: Deleting audit records older than {} days", days);
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMinutes(10), () -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
                                                .field(AuditHeaderKeys.createdAt)
@@ -404,7 +405,7 @@ public class AuditServiceImpl implements AuditService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES, true);
+      });
     } catch (Exception ex) {
       log.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }

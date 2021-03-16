@@ -24,13 +24,14 @@ import static io.harness.spotinst.model.SpotInstConstants.defaultSteadyStateTime
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -50,7 +51,6 @@ import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -67,7 +67,7 @@ public abstract class SpotInstTaskHandler {
   @Inject protected DelegateLogService delegateLogService;
   @Inject protected SpotInstHelperServiceDelegate spotInstHelperServiceDelegate;
   @Inject protected AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
-  @Inject protected TimeLimiter timeLimiter;
+  @Inject protected HTimeLimiter timeLimiter;
   @Inject protected AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
 
   public SpotInstTaskExecutionResponse executeTask(
@@ -133,14 +133,14 @@ public abstract class SpotInstTaskHandler {
     ExecutionLogCallback waitLogCallback = getLogCallBack(parameters, waitCommandUnitName);
     waitLogCallback.saveExecutionLog(format("Waiting for Elastigroup: [%s] to reach steady state", elastiGroupId));
     try {
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMinutes(steadyStateTimeOut), () -> {
         while (true) {
           if (allInstancesHealthy(spotInstToken, spotInstAccountId, elastiGroupId, waitLogCallback, targetInstances)) {
             return true;
           }
           sleep(ofSeconds(20));
         }
-      }, steadyStateTimeOut, MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       String errorMessage =
           format("Timed out while waiting for steady state for Elastigroup: [%s]. Workflow execution: [%s]",

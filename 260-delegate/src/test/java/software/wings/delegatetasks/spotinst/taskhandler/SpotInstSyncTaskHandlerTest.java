@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupNamesParameters;
@@ -31,7 +32,6 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import com.amazonaws.services.ec2.model.Instance;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.util.Collections;
 import org.junit.Test;
@@ -45,7 +45,7 @@ public class SpotInstSyncTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;
   @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
 
   @Spy @Inject @InjectMocks SpotInstSyncTaskHandler handler;

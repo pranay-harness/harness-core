@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class HTimeLimiter {
-  SimpleTimeLimiter simpleTimeLimiter;
+  private final SimpleTimeLimiter simpleTimeLimiter;
 
   @Inject
   public HTimeLimiter() {

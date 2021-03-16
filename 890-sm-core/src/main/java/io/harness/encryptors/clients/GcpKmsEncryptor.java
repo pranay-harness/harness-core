@@ -10,8 +10,10 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.clients.AwsKmsEncryptor.KmsEncryptionKeyCacheKey;
@@ -35,7 +37,6 @@ import com.google.cloud.kms.v1.KeyManagementServiceClient;
 import com.google.cloud.kms.v1.KeyManagementServiceSettings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
@@ -65,13 +66,13 @@ import lombok.extern.slf4j.Slf4j;
 public class GcpKmsEncryptor implements KmsEncryptor {
   private static final int DEFAULT_GCP_KMS_TIMEOUT = 20;
   private final int NUM_OF_RETRIES = 3;
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
 
   private final Cache<KmsEncryptionKeyCacheKey, byte[]> kmsEncryptionKeyCache =
       Caffeine.newBuilder().maximumSize(2000).expireAfterAccess(2, TimeUnit.HOURS).build();
 
   @Inject
-  public GcpKmsEncryptor(TimeLimiter timeLimiter) {
+  public GcpKmsEncryptor(HTimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
   }
 
@@ -80,8 +81,8 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, gcpKmsConfig), DEFAULT_GCP_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(DEFAULT_GCP_KMS_TIMEOUT), () -> encryptInternal(accountId, value, gcpKmsConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("Encryption failed. Trial Number {}", failedAttempts, e);
@@ -144,8 +145,8 @@ public class GcpKmsEncryptor implements KmsEncryptor {
           return decryptInternalIfCached(encryptedData, cachedEncryptedKey, System.currentTimeMillis());
         } else {
           // Use TimeLimiter.callWithTimeout only if the KMS plain text key is not cached.
-          return timeLimiter.callWithTimeout(
-              () -> decryptInternal(encryptedData, gcpKmsConfig), DEFAULT_GCP_KMS_TIMEOUT, TimeUnit.SECONDS, true);
+          return timeLimiter.callInterruptible(
+              ofSeconds(DEFAULT_GCP_KMS_TIMEOUT), () -> decryptInternal(encryptedData, gcpKmsConfig));
         }
       } catch (Exception e) {
         failedAttempts++;

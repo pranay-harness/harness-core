@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -12,13 +14,13 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.watcher.service.WatcherServiceImpl;
 
 import com.google.common.base.Charsets;
-import com.google.common.util.concurrent.TimeLimiter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -27,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +43,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class WatcherServiceImplTest extends CategoryTest {
-  @Mock private TimeLimiter timeLimiter;
+  @Mock private HTimeLimiter timeLimiter;
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
   private static final String TEST_RESOURCE_PATH = "250-watcher/src/test/resources/service/";
@@ -236,8 +237,7 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
-        .thenReturn(restResponse);
+    when(timeLimiter.callInterruptible(eq(ofSeconds(15)), any(Callable.class))).thenReturn(restResponse);
 
     boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
 
@@ -254,17 +254,14 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
-        .thenReturn(restResponse);
+    when(timeLimiter.callInterruptible(eq(ofSeconds(15)), any(Callable.class))).thenReturn(restResponse);
     IOException ioException = new IOException("test");
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(1L), eq(TimeUnit.MINUTES), eq(true)))
-        .thenThrow(ioException);
+    when(timeLimiter.callInterruptible(eq(ofMinutes(1)), any(Callable.class))).thenThrow(ioException);
 
     boolean downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
     assertThat(downloadSuccesful).isFalse();
 
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(1L), eq(TimeUnit.MINUTES), eq(true)))
-        .thenThrow(Exception.class);
+    when(timeLimiter.callInterruptible(eq(ofMinutes(1)), any(Callable.class))).thenThrow(Exception.class);
     downloadSuccesful = watcherService.downloadRunScriptsBeforeRestartingDelegateAndWatcher();
     assertThat(downloadSuccesful).isFalse();
   }
@@ -312,7 +309,7 @@ public class WatcherServiceImplTest extends CategoryTest {
 
     RestResponse<DelegateConfiguration> restResponse =
         RestResponse.Builder.aRestResponse().withResource(delegateConfiguration).build();
-    when(timeLimiter.callWithTimeout(any(Callable.class), eq(15L), eq(TimeUnit.SECONDS), eq(true)))
+    when(timeLimiter.callInterruptible(eq(ofSeconds(15)), any(Callable.class)))
         .thenReturn(restResponse)
         .thenReturn(null);
 

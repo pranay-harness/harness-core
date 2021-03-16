@@ -9,6 +9,7 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretText;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.SecretManagementException;
@@ -36,7 +37,6 @@ import com.google.cloud.secretmanager.v1.SecretVersion;
 import com.google.cloud.secretmanager.v1.SecretVersionName;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
@@ -56,10 +56,10 @@ import org.threeten.bp.Duration;
 public class GcpSecretsManagerEncryptor implements VaultEncryptor {
   public static final int MAX_RETRY_ATTEMPTS = 3;
   public static final int TOTAL_TIMEOUT_IN_SECONDS = 30;
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
 
   @Inject
-  public GcpSecretsManagerEncryptor(TimeLimiter timeLimiter) {
+  public GcpSecretsManagerEncryptor(HTimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
   }
 

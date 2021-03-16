@@ -20,6 +20,7 @@ import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
@@ -28,7 +29,6 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
@@ -59,7 +59,7 @@ import rx.Observable;
 public class AzureVMSSDeployTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureComputeClient azureComputeClient;
   @Mock private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Spy @InjectMocks AzureVMSSDeployTaskHandler deployTaskHandler;
   @Inject @InjectMocks AzureVMSSRollbackTaskHandler rollbackTaskHandler;
   private final int newInstancesSize = 5;

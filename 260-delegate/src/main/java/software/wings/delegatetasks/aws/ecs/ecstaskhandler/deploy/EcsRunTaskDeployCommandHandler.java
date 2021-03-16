@@ -5,10 +5,12 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.CommandExecutionException;
 import io.harness.exception.ExceptionUtils;
@@ -36,13 +38,11 @@ import com.amazonaws.services.ecs.model.RunTaskRequest;
 import com.amazonaws.services.ecs.model.RunTaskResult;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.TaskDefinition;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import groovy.lang.Singleton;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -52,7 +52,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsHelperService awsHelperService = new AwsHelperService();
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
 
   @Override
   public EcsCommandExecutionResponse executeTaskInternal(EcsCommandRequest ecsCommandRequest,
@@ -256,7 +256,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
     final AwsConfig awsConfig =
         awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails, false);
     try {
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMinutes(timeout), () -> {
         while (true) {
           List<Task> tasks = ecsDeployCommandTaskHelper.getTasksFromTaskArn(
               awsConfig, clusterName, region, triggeredRunTaskArns, encryptedDataDetails, executionLogCallback);
@@ -299,7 +299,7 @@ public class EcsRunTaskDeployCommandHandler extends EcsCommandTaskHandler {
           executionLogCallback.saveExecutionLog(taskStatusLog);
           sleep(ofSeconds(10));
         }
-      }, timeout, TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       executionLogCallback.saveExecutionLog(
           "Timed out waiting for run tasks to complete", LogLevel.ERROR, CommandExecutionStatus.FAILURE);

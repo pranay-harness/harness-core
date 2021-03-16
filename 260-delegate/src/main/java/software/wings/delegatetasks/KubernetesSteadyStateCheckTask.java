@@ -1,8 +1,11 @@
 package software.wings.delegatetasks;
 
+import static java.time.Duration.ofMillis;
+
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -21,13 +24,11 @@ import software.wings.beans.container.KubernetesSteadyStateCheckParams;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +39,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
   @Inject private DelegateLogService delegateLogService;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ContainerDeploymentDelegateBaseHelper containerDeploymentDelegateBaseHelper;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
 
   public KubernetesSteadyStateCheckTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
@@ -73,10 +74,8 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
 
     List<ContainerInfo> containerInfos = new ArrayList<>();
     try {
-      timeLimiter.callWithTimeout(
-          ()
-              -> containerInfos.addAll(doSteadyStateCheck(kubernetesSteadyStateCheckParams, executionLogCallback)),
-          kubernetesSteadyStateCheckParams.getTimeoutMillis(), TimeUnit.MILLISECONDS, true);
+      timeLimiter.callInterruptible(ofMillis(kubernetesSteadyStateCheckParams.getTimeoutMillis()),
+          () -> containerInfos.addAll(doSteadyStateCheck(kubernetesSteadyStateCheckParams, executionLogCallback)));
 
       executionLogCallback.saveExecutionLog(
           "Command finished with status " + ExecutionStatus.SUCCESS, LogLevel.INFO, CommandExecutionStatus.SUCCESS);

@@ -36,6 +36,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -50,6 +51,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.container.ContainerInfo.ContainerInfoBuilder;
 import io.harness.container.ContainerInfo.Status;
@@ -77,7 +79,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -155,7 +156,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -190,7 +190,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       "CE: The provided serviceaccount is missing the following permissions: %n %s. Please grant these to the service account.";
 
   @Inject private KubernetesHelperService kubernetesHelperService = new KubernetesHelperService();
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private K8sResourceValidatorImpl k8sResourceValidator;
   @Inject private OidcTokenRetriever oidcTokenRetriever;
@@ -238,7 +238,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   public HasMetadata getController(KubernetesConfig kubernetesConfig, String name, String namespace) {
     try {
       Callable<HasMetadata> controller = getControllerInternal(kubernetesConfig, name, namespace);
-      return timeLimiter.callWithTimeout(controller, 2L, TimeUnit.MINUTES, true);
+      return timeLimiter.callInterruptible(ofMinutes(2), controller);
     } catch (WingsException e) {
       throw e;
     } catch (UncheckedTimeoutException e) {
@@ -1469,7 +1469,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           sleep(ofSeconds(5));
         }
       };
-      timeLimiter.callWithTimeout(callbable, serviceSteadyStateTimeout, TimeUnit.MINUTES, true);
+      timeLimiter.callInterruptible(ofMinutes(serviceSteadyStateTimeout), callbable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to stop";
       log.error(msg, e);
@@ -1600,7 +1600,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           }
         }
       };
-      return timeLimiter.callWithTimeout(callable, waitMinutes, TimeUnit.MINUTES, true);
+      return timeLimiter.callInterruptible(ofMinutes(waitMinutes), callable);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out waiting for pods to be ready";
       log.error(msg, e);

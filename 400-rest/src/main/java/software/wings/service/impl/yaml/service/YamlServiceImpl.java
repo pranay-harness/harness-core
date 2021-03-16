@@ -152,7 +152,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -221,7 +220,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private transient YamlGitService yamlGitService;
   @Inject private AuthService authService;
   @Inject private ExecutorService executorService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private YamlResourceService yamlResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;

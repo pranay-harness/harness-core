@@ -18,13 +18,10 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMapOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -34,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -43,7 +41,6 @@ import io.harness.rule.Owner;
 
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.gson.reflect.TypeToken;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -133,7 +130,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import okhttp3.Call;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -257,7 +253,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Mock private Call k8sApiCall;
 
   @Mock private KubernetesHelperService kubernetesHelperService;
-  @Mock private TimeLimiter timeLimiter;
+  @Mock private HTimeLimiter timeLimiter;
   @Mock private Clock clock;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @Spy @InjectMocks private OidcTokenRetriever oidcTokenRetriever;
@@ -368,8 +364,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     spec = new ReplicationControllerSpec();
     spec.setReplicas(8);
     replicationController.setSpec(spec);
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean()))
-        .thenReturn(replicationController);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(replicationController);
 
     deployment = new Deployment();
     deploymentSpec = new DeploymentSpec();
@@ -401,15 +396,15 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     assertThat(args.getValue()).isEqualTo("ctrl");
     verify(scalableReplicationController).delete();
 
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(deployment);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(deployment);
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, "ctrl");
     verify(scalableDeployment).delete();
 
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(statefulSet);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(statefulSet);
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, "ctrl");
     verify(statefulSetResource).delete();
 
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(daemonSet);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(daemonSet);
     kubernetesContainerService.deleteController(KUBERNETES_CONFIG, "ctrl");
     verify(daemonSetResource).delete();
   }
@@ -468,7 +463,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNPEInGetContainerInfosWhenReady() throws Exception {
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(null);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(null);
 
     try {
       kubernetesContainerService.getContainerInfosWhenReady(
@@ -480,8 +475,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
       fail("Should not reach here.");
     }
 
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean()))
-        .thenReturn(replicationController);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(replicationController);
     kubernetesContainerService.getContainerInfosWhenReady(
         KUBERNETES_CONFIG, "controllerName", 0, 0, 0, asList(), false, null, false, 0L, "default");
   }
@@ -535,11 +529,11 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     verify(namespacedDeployments).createOrReplace(deployment);
 
     statefulSet.setMetadata(objectMeta);
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(statefulSet);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(statefulSet);
     kubernetesContainerService.createOrReplaceController(KUBERNETES_CONFIG, statefulSet);
     verify(namespacedStatefulsets.withName(anyString())).patch(statefulSet);
 
-    when(timeLimiter.callWithTimeout(any(), anyLong(), isA(TimeUnit.class), anyBoolean())).thenReturn(null);
+    when(timeLimiter.callInterruptible(any(), any())).thenReturn(null);
     kubernetesContainerService.createOrReplaceController(KUBERNETES_CONFIG, statefulSet);
     verify(namespacedStatefulsets).create(statefulSet);
 

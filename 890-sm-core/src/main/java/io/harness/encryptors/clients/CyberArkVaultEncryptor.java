@@ -8,8 +8,10 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.helpers.ext.cyberark.CyberArkReadResponse;
@@ -20,11 +22,9 @@ import io.harness.security.encryption.EncryptionConfig;
 
 import software.wings.beans.CyberArkConfig;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
@@ -34,10 +34,10 @@ import retrofit2.Response;
 @Slf4j
 @OwnedBy(PL)
 public class CyberArkVaultEncryptor implements VaultEncryptor {
-  private final TimeLimiter timeLimiter;
+  private final HTimeLimiter timeLimiter;
 
   @Inject
-  public CyberArkVaultEncryptor(TimeLimiter timeLimiter) {
+  public CyberArkVaultEncryptor(HTimeLimiter timeLimiter) {
     this.timeLimiter = timeLimiter;
   }
 
@@ -76,8 +76,8 @@ public class CyberArkVaultEncryptor implements VaultEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callInterruptible(
+            ofSeconds(15), () -> fetchValueInternal(encryptedRecord.getPath(), cyberArkConfig));
       } catch (Exception e) {
         failedAttempts++;
         log.warn("decryption failed. trial num: {}", failedAttempts, e);

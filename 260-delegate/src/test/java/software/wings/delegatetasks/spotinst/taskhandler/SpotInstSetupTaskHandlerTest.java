@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
@@ -55,7 +56,6 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,7 +73,7 @@ public class SpotInstSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;
   @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
 
   @Spy @Inject @InjectMocks SpotInstSetupTaskHandler spotInstSetupTaskHandler;

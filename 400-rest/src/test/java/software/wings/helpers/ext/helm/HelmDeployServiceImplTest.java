@@ -48,6 +48,7 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -104,8 +105,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.HelmTestConstants;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.IOException;
 import java.util.Collections;
@@ -114,7 +113,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -129,7 +127,7 @@ import wiremock.com.google.common.collect.ImmutableMap;
 public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmClient helmClient;
   @Mock private GitService gitService;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Mock private EncryptionService encryptionService;
   @Mock private HelmCommandHelper helmCommandHelper;
   @Mock private ExecutionLogCallback logCallback;
@@ -152,7 +150,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
   private HelmDeployServiceImpl spyHelmDeployService = spy(new HelmDeployServiceImpl());
 
-  private TimeLimiter timeLimiter = new FakeTimeLimiter();
+  private HTimeLimiter timeLimiter = new HTimeLimiter();
   private HelmInstallCommandRequest helmInstallCommandRequest;
   private HelmInstallCommandResponse helmInstallCommandResponse;
   private HelmCliResponse helmCliReleaseHistoryResponse;
@@ -332,7 +330,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDeployTimeout() throws Exception {
-    TimeLimiter mockTimeLimiter = mock(TimeLimiter.class);
+    HTimeLimiter mockTimeLimiter = mock(HTimeLimiter.class);
     on(helmDeployService).set("timeLimiter", mockTimeLimiter);
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
     helmCliListReleasesResponse.setOutput(HelmTestConstants.LIST_RELEASE_V2);
@@ -344,7 +342,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doThrow(new UncheckedTimeoutException("Timed out"))
         .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+        .callInterruptible(any(), any(Callable.class));
 
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -1036,13 +1034,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testRollbackTimeout() throws Exception {
-    TimeLimiter mockTimeLimiter = mock(TimeLimiter.class);
+    HTimeLimiter mockTimeLimiter = mock(HTimeLimiter.class);
     on(helmDeployService).set("timeLimiter", mockTimeLimiter);
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
 
     doThrow(new UncheckedTimeoutException("Timed out"))
         .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+        .callInterruptible(any(), any(Callable.class));
     doReturn(
         HelmInstallCommandResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build())
         .when(helmClient)

@@ -12,12 +12,14 @@ import static io.harness.logging.LogLevel.INFO;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureNetworkClient;
 import io.harness.azure.model.AzureConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
 import io.harness.exception.InvalidRequestException;
@@ -26,7 +28,6 @@ import io.harness.exception.WingsException;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.microsoft.azure.CloudException;
@@ -36,7 +37,6 @@ import com.microsoft.azure.management.compute.VirtualMachineInstanceView;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSet;
 import com.microsoft.azure.management.compute.VirtualMachineScaleSetVM;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -47,7 +47,7 @@ public abstract class AzureVMSSTaskHandler {
   @Inject protected AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
   @Inject protected AzureNetworkClient azureNetworkClient;
   @Inject protected DelegateLogService delegateLogService;
-  @Inject protected TimeLimiter timeLimiter;
+  @Inject protected HTimeLimiter timeLimiter;
 
   public AzureVMSSTaskExecutionResponse executeTask(
       AzureVMSSTaskParameters azureVMSSTaskParameters, AzureConfig azureConfig) {
@@ -148,7 +148,7 @@ public abstract class AzureVMSSTaskHandler {
       int autoScalingSteadyStateTimeout, ExecutionLogCallback logCallBack,
       AzureRestCallBack<VirtualMachineScaleSet> restCallBack) {
     try {
-      timeLimiter.callWithTimeout(() -> {
+      timeLimiter.callInterruptible(ofMinutes(autoScalingSteadyStateTimeout), () -> {
         logCallBack.saveExecutionLog(
             format("Checking the status of VMSS: [%s] VM instances", virtualMachineScaleSet.name()), INFO);
         while (true) {
@@ -162,7 +162,7 @@ public abstract class AzureVMSSTaskHandler {
           }
           sleep(ofSeconds(AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL));
         }
-      }, autoScalingSteadyStateTimeout, TimeUnit.MINUTES, true);
+      });
     } catch (InterruptedException | UncheckedTimeoutException e) {
       String message = "Timed out waiting for provisioning VMSS VM instances to desired capacity. \n" + e.getMessage();
       logCallBack.saveExecutionLog(message, ERROR, FAILURE);

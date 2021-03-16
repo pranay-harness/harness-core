@@ -8,6 +8,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.rest.RestResponse;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -15,10 +16,10 @@ import io.harness.verificationclient.CVNextGenServiceClient;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,12 +32,12 @@ import lombok.extern.slf4j.Slf4j;
 @TargetModule(Module._420_DELEGATE_AGENT)
 public class KubernetesActivitiesStoreService {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   private Cache<String, List<KubernetesActivityDTO>> activitiesCache;
 
   @Inject
   public KubernetesActivitiesStoreService(CVNextGenServiceClient cvNextGenServiceClient,
-      @Named("asyncExecutor") ExecutorService executorService, TimeLimiter timeLimiter) {
+      @Named("asyncExecutor") ExecutorService executorService, HTimeLimiter timeLimiter) {
     this.cvNextGenServiceClient = cvNextGenServiceClient;
     this.timeLimiter = timeLimiter;
     this.activitiesCache = Caffeine.newBuilder()
@@ -66,11 +67,10 @@ public class KubernetesActivitiesStoreService {
           }
           try {
             log.info("Dispatching {} activities for [{}] [{}]", activities.size(), accountId, activitySourceConfigId);
-            RestResponse<Boolean> restResponse = timeLimiter.callWithTimeout(
+            RestResponse<Boolean> restResponse = timeLimiter.callInterruptible(Duration.ofSeconds(30),
                 ()
-                    -> execute(
-                        cvNextGenServiceClient.saveKubernetesActivities(accountId, activitySourceConfigId, activities)),
-                30, TimeUnit.SECONDS, true);
+                    -> execute(cvNextGenServiceClient.saveKubernetesActivities(
+                        accountId, activitySourceConfigId, activities)));
             if (restResponse == null) {
               return;
             }

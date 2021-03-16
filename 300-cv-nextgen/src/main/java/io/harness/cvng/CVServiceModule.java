@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -268,6 +269,7 @@ public class CVServiceModule extends AbstractModule {
       bindTheMonitoringSourceImportStatusCreators();
       bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
       bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+      bind(HTimeLimiter.class).toInstance(new HTimeLimiter());
       bind(StackdriverService.class).to(StackdriverServiceImpl.class);
       bind(CVEventService.class).to(CVEventServiceImpl.class);
       bind(RedisConfig.class)

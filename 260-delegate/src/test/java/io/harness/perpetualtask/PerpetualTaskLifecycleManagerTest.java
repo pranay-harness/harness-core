@@ -10,11 +10,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.perpetualtask.ecs.EcsPerpetualTaskParams;
 import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 import io.harness.rule.Owner;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.Any;
 import java.time.Instant;
@@ -36,7 +36,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 public class PerpetualTaskLifecycleManagerTest extends CategoryTest {
   private PerpetualTaskLifecycleManager perpetualTaskLifecycleManager;
   private final Map<String, PerpetualTaskExecutor> factoryMap = new HashMap<>();
-  @Mock private TimeLimiter timeLimiter;
+  @Mock private HTimeLimiter timeLimiter;
   @Mock private PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient;
 
   @Mock private PerpetualTaskExecutor perpetualTaskExecutor;

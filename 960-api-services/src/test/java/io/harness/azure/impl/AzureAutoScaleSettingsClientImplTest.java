@@ -10,7 +10,6 @@ import io.harness.network.Http;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.microsoft.azure.Page;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
@@ -44,7 +43,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Azure.class, AzureClient.class, Http.class, TimeLimiter.class})
+@PrepareForTest({Azure.class, AzureClient.class, Http.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 public class AzureAutoScaleSettingsClientImplTest extends CategoryTest {
   @Mock private Azure.Configurable configurable;

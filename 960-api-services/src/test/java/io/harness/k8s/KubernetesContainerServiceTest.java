@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
 import io.harness.k8s.kubectl.GetCommand;
@@ -29,7 +30,6 @@ import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.rule.Owner;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
 import io.kubernetes.client.openapi.ApiClient;
@@ -55,7 +55,7 @@ public class KubernetesContainerServiceTest extends CategoryTest {
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder().namespace("default").build();
 
   @Mock private KubernetesHelperService kubernetesHelperService;
-  @Mock private TimeLimiter timeLimiter;
+  @Mock private HTimeLimiter timeLimiter;
   @Mock private Clock clock;
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @Mock private K8sResourceValidatorImpl k8sResourceValidator;

@@ -7,10 +7,12 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.threading.Morpheus.sleep;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -32,7 +34,6 @@ import com.google.api.services.container.model.MasterAuth;
 import com.google.api.services.container.model.NodeConfig;
 import com.google.api.services.container.model.Operation;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -41,7 +42,6 @@ import com.mongodb.util.JSON;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GkeClusterServiceImpl implements GkeClusterService {
   @Inject private GcpHelperService gcpHelperService = new GcpHelperService();
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private EncryptionService encryptionService;
 
   @Override
@@ -148,7 +148,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
       String location, String operationLogMessage) {
     log.info(operationLogMessage + "...");
     try {
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(ofMinutes(gcpHelperService.getTimeoutMins()), () -> {
         while (true) {
           String status =
               gkeContainerService.projects()
@@ -163,7 +163,7 @@ public class GkeClusterServiceImpl implements GkeClusterService {
           }
           sleep(ofSeconds(gcpHelperService.getSleepIntervalSecs()));
         }
-      }, gcpHelperService.getTimeoutMins(), TimeUnit.MINUTES, true);
+      });
     } catch (UncheckedTimeoutException e) {
       log.error("Timed out checking operation status");
       return "UNKNOWN";

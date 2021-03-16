@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -31,6 +30,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -61,7 +61,6 @@ import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.TagDescription;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.InstanceState;
-import com.google.common.util.concurrent.TimeLimiter;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -76,7 +75,7 @@ import org.mockito.Spy;
 public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
   @Mock private EncryptionService mockEncryptionService;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Mock private AwsCallTracker mockTracker;
   @Spy @InjectMocks private AwsAsgHelperServiceDelegateImpl awsAsgHelperServiceDelegate;
 
@@ -240,7 +239,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
           singletonList(new AutoScalingGroup().withLaunchConfigurationName("launch_config")), mockCallback);
       verify(mockClient).deleteAutoScalingGroup(any());
       verify(mockClient).deleteLaunchConfiguration(any());
-      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      verify(mockTimeLimiter).callInterruptible(any(), any());
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }
@@ -259,7 +258,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
           singletonList(new AutoScalingGroup().withLaunchTemplate(new LaunchTemplateSpecification())), mockCallback);
       verify(mockClient).deleteAutoScalingGroup(any());
       verify(mockClient, times(0)).deleteLaunchConfiguration(any());
-      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      verify(mockTimeLimiter).callInterruptible(any(), any());
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }
@@ -297,7 +296,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   private static class Mocks {
     AmazonAutoScalingClient amazonAutoScalingClient;
     LogCallback mockCallback;
-    TimeLimiter mockTimeLimiter;
+    HTimeLimiter mockTimeLimiter;
     AwsCallTracker mockTracker;
   }
 
@@ -307,7 +306,7 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     LogCallback mockCallback = mock(LogCallback.class);
     doNothing().when(mockTracker).trackASGCall(anyString());
-    doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doReturn(true).when(mockTimeLimiter).callInterruptible(any(), any());
 
     return Mocks.builder()
         .amazonAutoScalingClient(mockClient)
@@ -386,11 +385,13 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new SetDesiredCapacityResult()).when(mockClient).setDesiredCapacity(any());
     doNothing().when(mockTracker).trackASGCall(anyString());
     try {
-      doReturn(true).when(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
-      awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
+      doReturn(true)
+          .when(mockTimeLimiter)
+          .callInterruptible(any(), any())
+              awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+                  AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
       verify(mockClient).setDesiredCapacity(any());
-      verify(mockTimeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+      verify(mockTimeLimiter).callInterruptible(any(), any());
     } catch (Exception ex) {
       fail(format("Test threw an exception: [%s]", ex.getMessage()));
     }

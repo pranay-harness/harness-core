@@ -8,11 +8,13 @@ import static io.harness.threading.Morpheus.sleep;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Schema.SCHEMA_ID;
 
+import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
@@ -40,14 +42,12 @@ import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.yaml.YamlGitService;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -66,7 +66,7 @@ public class MigrationServiceImpl implements MigrationService {
   @Inject private YamlGitService yamlGitService;
 
   @Inject private ExecutorService executorService;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private ConfigurationController configurationController;
 
   @Override
@@ -128,7 +128,7 @@ public class MigrationServiceImpl implements MigrationService {
         executorService.submit(() -> {
           try (AcquiredLock ignore =
                    persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-            timeLimiter.<Boolean>callWithTimeout(() -> {
+            timeLimiter.<Boolean>callInterruptible(ofHours(2), () -> {
               log.info("[Migration] - Updating schema background version from {} to {}", currentBackgroundVersion,
                   maxBackgroundVersion);
 
@@ -152,7 +152,7 @@ public class MigrationServiceImpl implements MigrationService {
 
               log.info("[Migration] - Background migration complete");
               return true;
-            }, 2, TimeUnit.HOURS, true);
+            });
           } catch (Exception ex) {
             log.warn("background work", ex);
           }
@@ -261,7 +261,7 @@ public class MigrationServiceImpl implements MigrationService {
         executorService.submit(() -> {
           try (AcquiredLock ignore = persistentLocker.acquireLock(
                    Schema.class, "TimeScaleDBBackground-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-            timeLimiter.<Boolean>callWithTimeout(() -> {
+            timeLimiter.<Boolean>callInterruptible(ofHours(2), () -> {
               log.info("[TimeScaleDBDataMigration] - Updating schema background version from {} to {}",
                   currentTimeScaleDBDataMigration, maxTimeScaleDBDataMigration);
 
@@ -295,7 +295,7 @@ public class MigrationServiceImpl implements MigrationService {
                 log.info("TimeScaleDBData migration was not successful ");
               }
               return true;
-            }, 2, TimeUnit.HOURS, true);
+            });
           } catch (Exception ex) {
             log.warn("timescaledbData background work", ex);
           }
@@ -340,7 +340,7 @@ public class MigrationServiceImpl implements MigrationService {
     executorService.submit(() -> {
       try (AcquiredLock ignore =
                persistentLocker.acquireLock(Schema.class, "OnPrimaryManager-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-        timeLimiter.<Boolean>callWithTimeout(() -> {
+        timeLimiter.<Boolean>callInterruptible(ofHours(2), () -> {
           final int currentOnPrimaryMigrationVersion = getCurrentOnPrimaryMigrationVersion();
           if (currentOnPrimaryMigrationVersion < maxOnPrimaryManagerMigrationVersion) {
             log.info("[Migration] - Updating schema primary manager version from {} to {}",
@@ -368,7 +368,7 @@ public class MigrationServiceImpl implements MigrationService {
             log.info("[Migration] - Schema primary manager is up to date");
           }
           return true;
-        }, 2, TimeUnit.HOURS, true);
+        });
       } catch (Exception ex) {
         log.warn("primary manager work", ex);
       }

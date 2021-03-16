@@ -21,6 +21,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -46,8 +47,6 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
@@ -1984,7 +1983,7 @@ public class NexusServiceTest extends WingsBaseTest {
   public void shouldReturnCorrectErrorMessagesForGetGroupIdPathsUsingPrivateApis() throws Exception {
     NexusThreeServiceImpl nexusThreeService = Mockito.mock(NexusThreeServiceImpl.class);
     Reflect.on(nexusService).set("nexusThreeService", nexusThreeService);
-    TimeLimiter timeLimiter = new FakeTimeLimiter();
+    HTimeLimiter timeLimiter = new HTimeLimiter();
     Reflect.on(nexusService).set("timeLimiter", timeLimiter);
 
     RuntimeException e = new RuntimeException(new TimeoutException());
@@ -2014,7 +2013,7 @@ public class NexusServiceTest extends WingsBaseTest {
   public void shouldReturnCorrectErrorMessagesForGetGroupIdPaths() throws Exception {
     NexusTwoServiceImpl nexusTwoService = Mockito.mock(NexusTwoServiceImpl.class);
     Reflect.on(nexusService).set("nexusTwoService", nexusTwoService);
-    TimeLimiter timeLimiter = new FakeTimeLimiter();
+    HTimeLimiter timeLimiter = new HTimeLimiter();
     Reflect.on(nexusService).set("timeLimiter", timeLimiter);
 
     RuntimeException e = new RuntimeException(new TimeoutException());

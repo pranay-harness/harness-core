@@ -73,7 +73,6 @@ import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
@@ -99,7 +98,6 @@ import org.mongodb.morphia.query.UpdateResults;
 @Slf4j
 public class ResourceLookupServiceImpl implements ResourceLookupService {
   @Inject private FileService fileService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private EntityHelper entityHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private EntityNameCache entityNameCache;

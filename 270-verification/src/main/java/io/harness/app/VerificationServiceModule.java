@@ -1,5 +1,6 @@
 package io.harness.app;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
 import io.harness.exception.WingsException;
@@ -93,6 +94,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(Clock.class).toInstance(Clock.systemUTC());
 
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(HTimeLimiter.class).toInstance(new HTimeLimiter());
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(CVTaskService.class).to(CVTaskServiceImpl.class);

@@ -19,7 +19,6 @@ import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +30,6 @@ import org.apache.commons.lang3.NotImplementedException;
 @Slf4j
 public class NexusDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private SecretDecryptionService decryptionService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject NexusMapper nexusMapper;
   @Inject NGErrorHelper ngErrorHelper;
   @Inject NexusValidationHandler nexusValidationHandler;

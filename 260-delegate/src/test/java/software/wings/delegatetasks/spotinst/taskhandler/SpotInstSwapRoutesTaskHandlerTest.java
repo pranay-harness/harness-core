@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 import io.harness.rule.Owner;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import com.amazonaws.services.elasticloadbalancingv2.model.Action;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeListenersResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.Listener;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.Optional;
@@ -48,7 +48,7 @@ public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;
   @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
-  @Mock private TimeLimiter mockTimeLimiter;
+  @Mock private HTimeLimiter mockTimeLimiter;
   @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
 
   @Spy @Inject @InjectMocks SpotInstSwapRoutesTaskHandler spotInstSwapRoutesTaskHandler;

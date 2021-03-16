@@ -43,6 +43,7 @@ import static io.harness.watcher.app.WatcherApplication.getProcessId;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.join;
+import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -64,6 +65,7 @@ import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateScripts;
@@ -93,7 +95,6 @@ import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -188,7 +189,7 @@ public class WatcherServiceImpl implements WatcherService {
   @Inject @Named("commandCheckExecutor") private ScheduledExecutorService commandCheckExecutor;
   @Inject private ExecutorService executorService;
   @Inject private Clock clock;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private WatcherConfiguration watcherConfiguration;
   @Inject private MessageService messageService;
   @Inject private ManagerClientV2 managerClient;
@@ -891,10 +892,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void checkAccountStatus() {
     try {
-      RestResponse<String> restResponse = timeLimiter.callWithTimeout(
-          ()
-              -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())),
-          5L, TimeUnit.SECONDS, true);
+      RestResponse<String> restResponse = timeLimiter.callInterruptible(ofSeconds(5),
+          () -> SafeHttpCall.execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())));
 
       if (restResponse == null) {
         return;
@@ -921,10 +920,8 @@ public class WatcherServiceImpl implements WatcherService {
   public List<String> findExpectedDelegateVersions() {
     try {
       if (multiVersion) {
-        RestResponse<DelegateConfiguration> restResponse = timeLimiter.callWithTimeout(
-            ()
-                -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())),
-            15L, TimeUnit.SECONDS, true);
+        RestResponse<DelegateConfiguration> restResponse = timeLimiter.callInterruptible(ofSeconds(15),
+            () -> SafeHttpCall.execute(managerClient.getDelegateConfiguration(watcherConfiguration.getAccountId())));
 
         if (restResponse == null) {
           return null;
@@ -965,15 +962,13 @@ public class WatcherServiceImpl implements WatcherService {
 
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
-      restResponse = timeLimiter.callWithTimeout(
-          ()
-              -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)),
-          1L, TimeUnit.MINUTES, true);
+      restResponse = timeLimiter.callInterruptible(ofMinutes(1),
+          () -> SafeHttpCall.execute(managerClient.getDelegateScripts(watcherConfiguration.getAccountId(), version)));
     } else {
-      restResponse = timeLimiter.callWithTimeout(()
-                                                     -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                                                         watcherConfiguration.getAccountId(), version, delegateSize)),
-          1L, TimeUnit.MINUTES, true);
+      restResponse = timeLimiter.callInterruptible(ofMinutes(1),
+          ()
+              -> SafeHttpCall.execute(
+                  managerClient.getDelegateScriptsNg(watcherConfiguration.getAccountId(), version, delegateSize)));
     }
 
     if (restResponse == null) {
@@ -1022,11 +1017,10 @@ public class WatcherServiceImpl implements WatcherService {
       return;
     }
 
-    RestResponse<String> restResponse = timeLimiter.callWithTimeout(
+    RestResponse<String> restResponse = timeLimiter.callInterruptible(ofSeconds(30),
         ()
             -> SafeHttpCall.execute(
-                managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())),
-        30L, TimeUnit.SECONDS, true);
+                managerClient.getDelegateDownloadUrl(minorVersion, watcherConfiguration.getAccountId())));
     if (restResponse == null) {
       return;
     }

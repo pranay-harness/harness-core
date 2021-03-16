@@ -6,21 +6,21 @@ import static io.harness.watcher.app.WatcherApplication.getConfiguration;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.substringBetween;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.logging.AccessTokenBean;
 import io.harness.logging.RemoteStackdriverLogAppender;
 import io.harness.managerclient.ManagerClientV2;
 import io.harness.rest.RestResponse;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender {
   private static final String APP_NAME = "watcher";
 
-  private static TimeLimiter timeLimiter;
+  private static HTimeLimiter timeLimiter;
   private static ManagerClientV2 managerClient;
 
   private String accountId = "";
@@ -59,8 +59,8 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
     }
 
     try {
-      RestResponse<AccessTokenBean> response = timeLimiter.callWithTimeout(
-          () -> execute(managerClient.getLoggingToken(getAccountId())), 15L, TimeUnit.SECONDS, true);
+      RestResponse<AccessTokenBean> response = timeLimiter.callInterruptible(
+          Duration.ofSeconds(15), () -> execute(managerClient.getLoggingToken(getAccountId())));
       if (response != null) {
         return response.getResource();
       }
@@ -73,7 +73,7 @@ public class WatcherStackdriverLogAppender extends RemoteStackdriverLogAppender 
     return null;
   }
 
-  public static void setTimeLimiter(TimeLimiter timeLimiter) {
+  public static void setTimeLimiter(HTimeLimiter timeLimiter) {
     WatcherStackdriverLogAppender.timeLimiter = timeLimiter;
   }
 

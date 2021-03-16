@@ -11,7 +11,9 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofMillis;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -34,7 +36,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.CommandUnitExecutorService;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -52,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   @Inject private DelegateLogService logService;
-  @Inject private TimeLimiter timeLimiter;
+  @Inject private HTimeLimiter timeLimiter;
   @Inject private Injector injector;
   @Inject private WinRmExecutorFactory winRmExecutorFactory;
 
@@ -89,8 +90,8 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
 
     try {
       long timeoutMs = context.getTimeout() == null ? TimeUnit.MINUTES.toMillis(10) : context.getTimeout().longValue();
-      commandExecutionStatus = timeLimiter.callWithTimeout(
-          () -> commandUnit.execute(shellCommandExecutionContext), timeoutMs, TimeUnit.MILLISECONDS, true);
+      commandExecutionStatus =
+          timeLimiter.callInterruptible(ofMillis(timeoutMs), () -> commandUnit.execute(shellCommandExecutionContext));
     } catch (InterruptedException | TimeoutException | UncheckedTimeoutException e) {
       logService.save(context.getAccountId(),
           aLog()

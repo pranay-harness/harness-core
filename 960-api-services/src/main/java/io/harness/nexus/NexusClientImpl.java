@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyMap;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
@@ -14,11 +15,10 @@ import io.harness.exception.WingsException;
 
 import software.wings.utils.RepositoryFormat;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLHandshakeException;
 import javax.xml.stream.XMLStreamException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,14 +26,14 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class NexusClientImpl {
-  @Inject TimeLimiter timeLimiter;
+  @Inject HTimeLimiter timeLimiter;
   @Inject NexusThreeClientImpl nexusThreeService;
   @Inject NexusTwoClientImpl nexusTwoService;
 
   public Map<String, String> getRepositories(NexusRequest nexusConfig, String repositoryFormat) {
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      return timeLimiter.callWithTimeout(() -> {
+      return timeLimiter.callInterruptible(Duration.ofSeconds(20), () -> {
         if (isNexusTwo) {
           if (RepositoryFormat.docker.name().equals(repositoryFormat)) {
             throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
@@ -46,7 +46,7 @@ public class NexusClientImpl {
           }
           return nexusThreeService.getRepositories(nexusConfig, repositoryFormat);
         }
-      }, 20L, TimeUnit.SECONDS, true);
+      });
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

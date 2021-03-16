@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.task.gcp.helpers.GcpHelperService;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.KubernetesConfig;
@@ -41,7 +42,6 @@ import com.google.api.services.container.model.Operation;
 import com.google.api.services.container.model.UpdateClusterRequest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -138,7 +138,7 @@ public class GkeClusterServiceImplTest extends WingsBaseTest {
     notFoundException = new GoogleJsonResponseException(
         new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_NOT_FOUND, "not found", httpHeaders),
         googleJsonError);
-    on(gkeClusterService).set("timeLimiter", new FakeTimeLimiter());
+    on(gkeClusterService).set("timeLimiter", new HTimeLimiter());
   }
 
   @Test

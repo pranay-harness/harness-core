@@ -32,14 +32,13 @@ import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import software.wings.delegatetasks.azure.AzureServiceCallBack;
 
-import com.google.common.util.concurrent.FakeTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.monitor.EventData;
@@ -62,7 +61,7 @@ import org.mockito.MockitoAnnotations;
 public class SlotSteadyStateCheckerTest extends CategoryTest {
   @Mock private LogCallback mockLogCallback;
   @InjectMocks private SlotSteadyStateChecker slotSteadyStateChecker;
-  private final TimeLimiter timeLimiter = new FakeTimeLimiter();
+  private final HTimeLimiter timeLimiter = new HTimeLimiter();
 
   private static final String SOURCE_SLOT = "sourceSlot";
   private static final String TARGET_SLOT = "targetSlot";

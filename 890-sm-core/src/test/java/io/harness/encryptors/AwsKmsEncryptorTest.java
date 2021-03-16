@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
@@ -27,8 +28,6 @@ import com.amazonaws.services.kms.model.DecryptResult;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.KeyUnavailableException;
-import com.google.common.util.concurrent.SimpleTimeLimiter;
-import com.google.common.util.concurrent.TimeLimiter;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -44,7 +43,7 @@ public class AwsKmsEncryptorTest extends CategoryTest {
 
   @Before
   public void setup() {
-    TimeLimiter timeLimiter = new SimpleTimeLimiter();
+    HTimeLimiter timeLimiter = new HTimeLimiter();
     awsKmsEncryptor = spy(new AwsKmsEncryptor(timeLimiter));
     kmsConfig = KmsConfig.builder()
                     .uuid(UUIDGenerator.generateUuid())

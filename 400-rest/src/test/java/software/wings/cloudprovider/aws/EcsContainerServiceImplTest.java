@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -36,6 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
 import io.harness.eraro.ErrorCode;
@@ -83,7 +83,6 @@ import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -104,7 +103,7 @@ import org.mockito.Mock;
  */
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
-  @Mock private TimeLimiter timeLimiter;
+  @Mock private HTimeLimiter timeLimiter;
   @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
@@ -260,30 +259,22 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testWaitForTasksToBeInRunningStateButDontThrowException() throws Exception {
-    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doReturn(null).when(timeLimiter).callInterruptible(any(), any());
     UpdateServiceCountRequestData requestData = mock(UpdateServiceCountRequestData.class);
     ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
 
-    doThrow(new TimeoutException(null, "timeout", null))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doThrow(new TimeoutException(null, "timeout", null)).when(timeLimiter).callInterruptible(any(), any());
     assertThatExceptionOfType(TimeoutException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
 
-    doThrow(new InvalidRequestException("timeout"))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doThrow(new InvalidRequestException("timeout")).when(timeLimiter).callInterruptible(any(), any());
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
 
-    doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE)).when(timeLimiter).callInterruptible(any(), any());
     ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
 
-    doThrow(new WingsException(ErrorCode.INIT_TIMEOUT))
-        .when(timeLimiter)
-        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    doThrow(new WingsException(ErrorCode.INIT_TIMEOUT)).when(timeLimiter).callInterruptible(any(), any());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
   }
