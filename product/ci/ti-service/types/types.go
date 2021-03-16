@@ -100,7 +100,7 @@ type RunnableTest struct {
 	Selection Selection `json:"selection"` // information on why a test was selected
 }
 
-type SelectTestsResponse struct {
+type SelectTestsResp struct {
 	TotalTests int            `json:"total_tests"`
 	Tests      []RunnableTest `json:"tests"`
 }

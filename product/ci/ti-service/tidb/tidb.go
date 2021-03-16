@@ -8,5 +8,5 @@ import (
 
 type TiDB interface {
 	// GetTestsToRun reads in the changed files and returns which tests to run.
-	GetTestsToRun(ctx context.Context, files []string) (types.SelectTestsResponse, error)
+	GetTestsToRun(ctx context.Context, files []string) (types.SelectTestsResp, error)
 }

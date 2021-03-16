@@ -173,9 +173,9 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.SelectTestsResponse, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
-	res := types.SelectTestsResponse{}
+	res := types.SelectTestsResp{}
 	totalTests := 0
 	nodes, err := utils.ParseFileNames(files)
 	if err != nil {
@@ -209,7 +209,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
 			// A list with a single empty element indicates that all tests need to be run
-			return types.SelectTestsResponse{}, nil
+			return types.SelectTestsResp{}, nil
 		} else if utils.IsTest(node) {
 			t := types.RunnableTest{Pkg: node.Pkg, Class: node.Class}
 			if !isValid(t) {

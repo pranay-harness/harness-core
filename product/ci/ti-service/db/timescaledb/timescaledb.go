@@ -333,12 +333,11 @@ func (tdb *TimeScaleDb) GetTestSuites(
 }
 
 func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
-	buildId, stageId, stepId string, selected types.SelectTestsResponse) error {
+	buildId, stageId, stepId string, selected types.SelectTestsResp) error {
 	sel := 0
 	src := 0
 	new := 0
 	upd := 0
-	t := now()
 	for _, t := range selected.Tests {
 		if t.Selection == types.SelectNewTest {
 			new += 1
@@ -349,17 +348,17 @@ func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID
 		}
 		sel += 1
 	}
-	entries := 13
+	entries := 12
 	valueArgs := make([]interface{}, 0, entries)
-	valueArgs = append(valueArgs, t, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
+	valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
 		selected.TotalTests, sel, src, new, upd)
 	stmt := fmt.Sprintf(
 		`
 					INSERT INTO %s
-					(created_at, account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
+					(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id,
 					test_count, test_selected, source_code_test, new_test, updated_test)
 					VALUES %s`, table, constructPsqlInsertStmt(1, entries))
-	_, err := tdb.Conn.Exec(stmt, valueArgs...)
+	_, err := tdb.Conn.ExecContext(ctx, stmt, valueArgs...)
 	if err != nil {
 		tdb.Log.Errorw("could not write test data to database", zap.Error(err))
 		return err
