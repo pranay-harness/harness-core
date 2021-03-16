@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 public class AuditEventMapper {
   public static AuditEvent fromDTO(AuditEventDTO dto) {
     return AuditEvent.builder()
-        .id(dto.getId())
+        .insertId(dto.getInsertId())
         .accountIdentifier(dto.getAccountIdentifier())
         .orgIdentifier(dto.getOrgIdentifier())
         .projectIdentifier(dto.getProjectIdentifier())
@@ -28,7 +28,7 @@ public class AuditEventMapper {
 
   public static AuditEventDTO toDTO(AuditEvent auditEvent) {
     return AuditEventDTO.builder()
-        .id(auditEvent.getId())
+        .insertId(auditEvent.getInsertId())
         .accountIdentifier(auditEvent.getAccountIdentifier())
         .orgIdentifier(auditEvent.getOrgIdentifier())
         .projectIdentifier(auditEvent.getProjectIdentifier())

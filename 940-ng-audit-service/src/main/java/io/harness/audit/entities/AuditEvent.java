@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("auditEvents")
 public class AuditEvent {
   @Id @org.mongodb.morphia.annotations.Id String id;
+  @NotBlank String insertId;
   @NotBlank String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
@@ -78,6 +79,13 @@ public class AuditEvent {
                  .field(AuditEventKeys.resourceIdentifier)
                  .field(AuditEventKeys.resourceLabelKeys)
                  .field(AuditEventKeys.resourceLabelValues)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("ngAuditEventUniqueIdx")
+                 .field(AuditEventKeys.accountIdentifier)
+                 .field(AuditEventKeys.insertId)
+                 .field(AuditEventKeys.timestamp)
+                 .unique(true)
                  .build())
         .build();
   }

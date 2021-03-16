@@ -22,7 +22,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class AuditEventDTO {
-  @NotNull @NotBlank String id;
+  @NotNull @NotBlank String insertId;
   @NotNull @NotBlank String accountIdentifier;
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @EntityIdentifier(allowBlank = true) String projectIdentifier;
