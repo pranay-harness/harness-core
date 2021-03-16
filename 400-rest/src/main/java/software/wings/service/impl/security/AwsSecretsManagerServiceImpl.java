@@ -105,10 +105,10 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       if (savedSecretsManagerConfig != null && isNotEmpty(savedSecretsManagerConfig.getSecretKey())) {
         wingsPersistence.delete(EncryptedData.class, savedSecretsManagerConfig.getSecretKey());
         log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
-            secretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
-        secretsManagerConfig.setSecretKey(null);
+            savedSecretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
         log.info("Updated secret key referenece as Null for Aws Secrets Manager '{}'", secretsManagerConfig.getName());
       }
+      secretsManagerConfig.setSecretKey(null);
     } else {
       // Create a LOCAL encrypted record for AWS secret key
       String secretKeyEncryptedDataId = saveSecretField(secretsManagerConfig, secretsManagerConfigId,
