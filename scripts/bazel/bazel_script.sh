@@ -116,6 +116,7 @@ BAZEL_MODULES="\
   //940-notification-client:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //949-git-sync-sdk:module \
   //950-command-library-common:module \
   //950-common-entities:module \
   //950-delegate-tasks-beans/src/main/proto:all \
@@ -123,7 +124,6 @@ BAZEL_MODULES="\
   //950-events-api/src/main/proto:all \
   //950-events-api:module \
   //950-events-framework:module \
-  //950-git-sync-sdk:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
   //950-log-client:module \
@@ -258,8 +258,7 @@ build_bazel_application_module() {
   BAZEL_MODULE="//${module}:module"
   BAZEL_DEPLOY_MODULE="//${module}:module_deploy.jar"
 
-  if [ "${BUILD_BAZEL_DEPLOY_JAR}" == "true" ]
-  then
+  if [ "${BUILD_BAZEL_DEPLOY_JAR}" == "true" ]; then
     bazel ${bazelrc} build $BAZEL_DEPLOY_MODULE ${GCP} ${BAZEL_ARGUMENTS}
   fi
 
@@ -389,7 +388,7 @@ build_bazel_module 950-common-entities
 build_bazel_module 950-delegate-tasks-beans
 build_bazel_module 950-events-api
 build_bazel_module 950-events-framework
-build_bazel_module 950-git-sync-sdk
+build_bazel_module 949-git-sync-sdk
 build_bazel_module 950-log-client
 build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
