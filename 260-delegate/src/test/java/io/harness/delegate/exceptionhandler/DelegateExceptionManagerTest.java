@@ -8,10 +8,10 @@ import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -53,7 +53,7 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
 
     ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
     assertThat(errorNotifyResponseData.getException()).isNotNull();
-    assertThat(errorNotifyResponseData.getException() instanceof UnexpectedException).isTrue();
+    assertThat(errorNotifyResponseData.getException() instanceof DelegateErrorHandlerException).isTrue();
   }
 
   @Test
