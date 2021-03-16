@@ -7,6 +7,7 @@ import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
 import static io.harness.filesystem.FileIo.writeUtf8StringToFile;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
@@ -168,8 +169,9 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
       case HTTP_HELM:
         HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) storeDelegateConfig;
-        decryptionService.decrypt(
-            httpHelmStoreConfig.getHttpHelmConnector(), httpHelmStoreConfig.getEncryptedDataDetails());
+        for (DecryptableEntity entity : httpHelmStoreConfig.getHttpHelmConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(entity, httpHelmStoreConfig.getEncryptedDataDetails());
+        }
         break;
 
       default:

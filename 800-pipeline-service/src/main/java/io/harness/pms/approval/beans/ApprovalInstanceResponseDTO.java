@@ -19,7 +19,7 @@ public class ApprovalInstanceResponseDTO {
 
   @NotNull ApprovalType type;
   @NotNull ApprovalStatus status;
-  String approvalMessage;
+  @NotNull String approvalMessage;
   boolean includePipelineExecutionHistory;
   long deadline;
 

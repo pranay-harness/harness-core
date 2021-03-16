@@ -61,19 +61,21 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
-    if (null != instant && batchJobType.getBatchJobBucket() != BatchJobBucket.OUT_OF_CLUSTER
-        && batchJobType != BatchJobType.INSTANCE_BILLING_AGGREGATION) {
-      Instant startInstant = Instant.now().minus(MAX_IN_CLUSTER_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
-      instant = startInstant.isAfter(instant) ? startInstant : instant;
-    }
-
     if (null != instant && BatchJobType.ANOMALY_DETECTION_K8S == batchJobType) {
-      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
+      return instant;
     }
 
     if (null != instant && BatchJobType.ANOMALY_DETECTION_CLOUD == batchJobType) {
-      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+      return instant;
+    }
+
+    if (null != instant && batchJobType.getBatchJobBucket() != BatchJobBucket.OUT_OF_CLUSTER
+        && batchJobType != BatchJobType.INSTANCE_BILLING_AGGREGATION) {
+      Instant startInstant = Instant.now().minus(MAX_IN_CLUSTER_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 

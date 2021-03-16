@@ -3,6 +3,7 @@ package io.harness.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -49,6 +50,7 @@ public class GraphVertex implements Serializable {
   private ExecutionMode mode;
 
   private List<ExecutableResponse> executableResponses;
+  private List<DelegateSelectionLogParams> delegateSelectionLogParams;
   private List<InterruptEffect> interruptHistories;
   private List<Document> outcomeDocuments;
   private List<String> retryIds;

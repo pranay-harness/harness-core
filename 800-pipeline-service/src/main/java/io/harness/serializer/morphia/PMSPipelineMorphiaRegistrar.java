@@ -2,7 +2,7 @@ package io.harness.serializer.morphia;
 
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.pms.approval.beans.HarnessApprovalInstance;
+import io.harness.pms.approval.entities.HarnessApprovalInstance;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
