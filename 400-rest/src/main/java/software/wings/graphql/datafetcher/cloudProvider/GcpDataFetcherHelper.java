@@ -25,12 +25,12 @@ public class GcpDataFetcherHelper {
       input.getSkipValidation().getValue().ifPresent(configBuilder::skipValidation);
     }
 
-    if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegateSelectors);
+    if (input.getUseDelegateSelectors().isPresent()) {
+      input.getUseDelegateSelectors().getValue().ifPresent(configBuilder::useDelegateSelectors);
     }
 
-    if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelectors);
+    if (input.getDelegateSelectors().isPresent()) {
+      input.getDelegateSelectors().getValue().ifPresent(configBuilder::delegateSelectors);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {
@@ -57,12 +57,12 @@ public class GcpDataFetcherHelper {
       input.getSkipValidation().getValue().ifPresent(config::setSkipValidation);
     }
 
-    if (input.getUseDelegate().isPresent()) {
-      input.getUseDelegate().getValue().ifPresent(config::setUseDelegateSelectors);
+    if (input.getUseDelegateSelectors().isPresent()) {
+      input.getUseDelegateSelectors().getValue().ifPresent(config::setUseDelegateSelectors);
     }
 
-    if (input.getDelegateSelector().isPresent()) {
-      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelectors);
+    if (input.getDelegateSelectors().isPresent()) {
+      input.getDelegateSelectors().getValue().ifPresent(config::setDelegateSelectors);
     }
 
     if (input.getServiceAccountKeySecretId().isPresent()) {

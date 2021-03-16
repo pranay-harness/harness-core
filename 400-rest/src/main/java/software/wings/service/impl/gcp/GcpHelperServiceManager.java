@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import io.harness.beans.DelegateTask;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -73,7 +74,7 @@ public class GcpHelperServiceManager {
   }
 
   private void validateDelegateSelector(GcpConfig gcpConfig) {
-    if (gcpConfig.getDelegateSelectors().isEmpty()) {
+    if (EmptyPredicate.isEmpty(gcpConfig.getDelegateSelectors())) {
       throw new InvalidRequestException("No Delegate Selector Found. Unable to validate", USER);
     }
   }
