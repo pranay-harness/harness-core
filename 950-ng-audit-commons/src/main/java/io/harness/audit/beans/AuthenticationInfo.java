@@ -1,9 +1,9 @@
 package io.harness.audit.beans;
 
 import io.harness.ng.core.common.beans.KeyValuePair;
-import io.harness.security.dto.Principal;
 
 import java.util.List;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +14,6 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "AuthenticationInfoKeys")
 public class AuthenticationInfo {
-  @NotNull Principal principal;
+  @NotNull @Valid Principal principal;
   @Singular List<KeyValuePair> labels;
 }
