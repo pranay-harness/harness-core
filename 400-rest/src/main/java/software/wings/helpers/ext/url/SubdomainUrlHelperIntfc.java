@@ -1,7 +1,11 @@
 package software.wings.helpers.ext.url;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import javax.servlet.http.HttpServletRequest;
 
+@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
 public interface SubdomainUrlHelperIntfc {
   String getPortalBaseUrl(String accountId);
 

@@ -10,5 +10,8 @@ RUN apk add --update \
     && rm -rf /var/cache/apk/*
 RUN apk add git
 COPY linux_amd64_pure_stripped/engine /usr/local/bin/ci-lite-engine
-RUN chmod +x /usr/local/bin/ci-lite-engine
+RUN addgroup -S 65534 && adduser -S 65534 -G 65534
+RUN chown -R 65534:65534 /usr/local/bin
+USER 65534
+
 CMD ["/usr/local/bin/ci-lite-engine"]

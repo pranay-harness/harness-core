@@ -87,6 +87,9 @@ public class ProjectServiceImpl implements ProjectService {
     try {
       validate(project);
       Project savedProject = projectRepository.save(project);
+      log.info(String.format("Project with identifier %s and orgIdentifier %s was successfully created",
+          project.getIdentifier(), orgIdentifier));
+
       performActionsPostProjectCreation(project);
       return savedProject;
     } catch (DuplicateKeyException ex) {
@@ -98,8 +101,14 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void performActionsPostProjectCreation(Project project) {
+    log.info(String.format(
+        "Performing actions post project creation for project with identifier %s and orgIdentifier %s ...",
+        project.getIdentifier(), project.getOrgIdentifier()));
     publishEvent(project, EventsFrameworkMetadataConstants.CREATE_ACTION);
     createUserProjectMap(project);
+    log.info(String.format(
+        "Successfully completed actions post project creation for project with identifier %s and orgIdentifier %s",
+        project.getIdentifier(), project.getOrgIdentifier()));
   }
 
   private void createUserProjectMap(Project project) {
@@ -152,6 +161,9 @@ public class ProjectServiceImpl implements ProjectService {
       project.setModules(moduleTypeList);
       validate(project);
       Project updatedProject = projectRepository.save(project);
+      log.info(String.format(
+          "Project with identifier %s and orgIdentifier %s was successfully updated", identifier, orgIdentifier));
+
       publishEvent(existingProject, EventsFrameworkMetadataConstants.UPDATE_ACTION);
       return updatedProject;
     }
@@ -171,7 +183,11 @@ public class ProjectServiceImpl implements ProjectService {
               .build());
     } catch (ProducerShutdownException e) {
       log.error("Failed to send event to events framework projectIdentifier: " + project.getIdentifier(), e);
+      return;
     }
+    log.info(String.format(
+        "Successfully published project %s event to redis for project with identifier %s and orgIdentifier %s", action,
+        project.getIdentifier(), project.getOrgIdentifier()));
   }
 
   private ByteString getProjectPayload(Project project) {
@@ -243,6 +259,13 @@ public class ProjectServiceImpl implements ProjectService {
       @ProjectIdentifier String projectIdentifier, Long version) {
     boolean delete = projectRepository.delete(accountIdentifier, orgIdentifier, projectIdentifier, version);
     if (delete) {
+      log.info(String.format("Project with identifier %s and orgIdentifier %s was successfully deleted",
+          projectIdentifier, orgIdentifier));
+    } else {
+      log.error(String.format(
+          "Project with identifier %s and orgIdentifier %s could not be deleted", projectIdentifier, orgIdentifier));
+    }
+    if (delete) {
       publishEvent(Project.builder()
                        .accountIdentifier(accountIdentifier)
                        .orgIdentifier(orgIdentifier)
@@ -269,9 +292,7 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-                               Pair.of(orgIdentifier, project.getOrgIdentifier())),
-        true);
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(orgIdentifier, project.getOrgIdentifier())), true);
     validateParentOrgExists(accountIdentifier, orgIdentifier);
   }
 
@@ -285,9 +306,7 @@ public class ProjectServiceImpl implements ProjectService {
 
   private void validateUpdateProjectRequest(
       String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project) {
-    verifyValuesNotChanged(Lists.newArrayList(Pair.of(accountIdentifier, project.getAccountIdentifier()),
-                               Pair.of(orgIdentifier, project.getOrgIdentifier())),
-        true);
+    verifyValuesNotChanged(Lists.newArrayList(Pair.of(orgIdentifier, project.getOrgIdentifier())), true);
     verifyValuesNotChanged(Lists.newArrayList(Pair.of(identifier, project.getIdentifier())), false);
     validateParentOrgExists(accountIdentifier, orgIdentifier);
   }

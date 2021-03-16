@@ -4,6 +4,7 @@ public class OrchestrationStepTypes {
   private OrchestrationStepTypes() {}
 
   public static final String BARRIER = "BARRIER";
+  public static final String HARNESS_APPROVAL = "HARNESS_APPROVAL";
   public static final String RESOURCE_RESTRAINT = "RESOURCE_RESTRAINT";
   public static final String FORK = "FORK";
   public static final String SECTION = "SECTION";

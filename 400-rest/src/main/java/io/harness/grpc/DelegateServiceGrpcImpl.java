@@ -120,6 +120,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
               .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
               .executionCapabilities(capabilities)
               .tags(taskSelectors)
+              .selectionLogsTrackingEnabled(request.getSelectionTrackingLogEnabled())
               .data(TaskData.builder()
                         .parked(taskDetails.getParked())
                         .async(taskDetails.getMode() == TaskMode.ASYNC)

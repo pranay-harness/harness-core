@@ -6,6 +6,14 @@ roles:
         - core.project.view
         - core.project.edit
         - core.project.delete
+        - core.secret.create
+        - core.secret.view
+        - core.secret.edit
+        - core.secret.delete
+        - core.connector.create
+        - core.connector.view
+        - core.connector.edit
+        - core.connector.delete
       allowedScopeLevels:
         - project
       managed: true
@@ -14,6 +22,8 @@ roles:
       description: View a project
       permissions:
         - core.project.view
+        - core.secret.view
+        - core.connector.view
       allowedScopeLevels:
         - project
       managed: true
@@ -25,9 +35,14 @@ roles:
         - core.organization.edit
         - core.organization.delete
         - core.project.create
-        - core.project.view
-        - core.project.edit
-        - core.project.delete
+        - core.secret.create
+        - core.secret.view
+        - core.secret.edit
+        - core.secret.delete
+        - core.connector.create
+        - core.connector.view
+        - core.connector.edit
+        - core.connector.delete
       allowedScopeLevels:
         - organization
       managed: true
@@ -36,7 +51,8 @@ roles:
       description: View an organization
       permissions:
         - core.organization.view
-        - core.project.view
+        - core.secret.view
+        - core.connector.view
       allowedScopeLevels:
         - organization
       managed: true
@@ -47,13 +63,14 @@ roles:
         - core.account.edit
         - core.account.delete
         - core.organization.create
-        - core.organization.view
-        - core.organization.edit
-        - core.organization.delete
-        - core.project.create
-        - core.project.view
-        - core.project.edit
-        - core.project.delete
+        - core.secret.create
+        - core.secret.view
+        - core.secret.edit
+        - core.secret.delete
+        - core.connector.create
+        - core.connector.view
+        - core.connector.edit
+        - core.connector.delete
       allowedScopeLevels:
         - account
       managed: true
@@ -61,8 +78,8 @@ roles:
       name: Account Viewer
       description: View an account
       permissions:
-        - core.organization.view
-        - core.project.view
+        - core.secret.view
+        - core.connector.view
       allowedScopeLevels:
         - account
       managed: true

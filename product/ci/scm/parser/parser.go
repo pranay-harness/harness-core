@@ -18,6 +18,7 @@ import (
 	"github.com/wings-software/portal/product/ci/scm/converter"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -33,7 +34,7 @@ const (
 func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	log *zap.SugaredLogger) (*pb.ParseWebhookResponse, error) {
 	start := time.Now()
-	webhook, err := parseRequest(in)
+	webhook, err := parseWebhookRequest(in)
 	if err != nil {
 		log.Errorw(
 			"Failed to parse input webhook payload",
@@ -93,8 +94,8 @@ func ParseWebhook(ctx context.Context, in *pb.ParseWebhookRequest,
 	}
 }
 
-// parseRequest parses incoming request and convert it to scm.Webhook
-func parseRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
+// parseWebhookRequest parses incoming request and convert it to scm.Webhook
+func parseWebhookRequest(in *pb.ParseWebhookRequest) (scm.Webhook, error) {
 	body := strings.NewReader(in.GetBody())
 	r, err := http.NewRequest(defaultMethod, defaultPath, body)
 	if err != nil {

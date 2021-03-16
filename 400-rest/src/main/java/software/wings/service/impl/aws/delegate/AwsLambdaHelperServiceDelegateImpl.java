@@ -22,7 +22,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.DelegateAgentFileService;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -637,8 +637,8 @@ public class AwsLambdaHelperServiceDelegateImpl
     }
 
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
-    try (InputStream inputStream = delegateFileManager.downloadArtifactByFileId(
-             DelegateAgentFileService.FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
+    try (InputStream inputStream =
+             delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
       String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
       File artifactFile = new File(workingDirecotry.getAbsolutePath() + "/" + fileName);
 

@@ -204,6 +204,10 @@ public class AnomalyDetectionBigQueryServiceImpl {
             currentTimeSeries.setAwsService(
                 row.get(PreAggregatedTableSchema.awsServiceCode.getColumnNameSQL()).getStringValue());
             break;
+          case awsUsageType:
+            currentTimeSeries.setAwsUsageType(
+                row.get(PreAggregatedTableSchema.awsUsageType.getColumnNameSQL()).getStringValue());
+            break;
           default:
             log.error("Not valid entity type : {} ", type);
             throw new InvalidArgumentsException("Invalid Entity encountered");

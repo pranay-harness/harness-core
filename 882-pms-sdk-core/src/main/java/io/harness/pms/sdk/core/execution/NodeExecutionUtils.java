@@ -14,7 +14,6 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
@@ -42,21 +41,20 @@ public class NodeExecutionUtils {
     return executableResponses.get(executableResponses.size() - 1);
   }
 
-  public Document extractStepParameters(String json) {
+  public Document extractObject(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
     return RecastOrchestrationUtils.toDocumentFromJson(json);
   }
 
-  public Document extractAndProcessStepParameters(String json) {
+  public Document extractAndProcessObject(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
     return (Document) resolveObject(RecastOrchestrationUtils.toDocumentFromJson(json));
   }
 
-  @VisibleForTesting
   public Object resolveObject(Object o) {
     if (o == null) {
       return null;
@@ -64,7 +62,7 @@ public class NodeExecutionUtils {
     return ExpressionEvaluatorUtils.updateExpressions(o, new ExtractResolveFunctorImpl());
   }
 
-  public static class ExtractResolveFunctorImpl implements ExpressionResolveFunctor {
+  public class ExtractResolveFunctorImpl implements ExpressionResolveFunctor {
     @Override
     public String processString(String expression) {
       return expression;

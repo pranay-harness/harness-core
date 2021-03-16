@@ -101,8 +101,8 @@ public class AzureBlueprintDeploymentTaskHandler extends AbstractAzureARMTaskHan
         AzureResourceUtility.getBlueprintNameFromBlueprintJson(blueprintJson);
     if (blueprintNameFromBlueprintJson.isPresent() && blueprintName.equals(blueprintNameFromBlueprintJson.get())) {
       throw new InvalidArgumentsException(format(
-          "Not match blueprint name in blueprint json file and in assignment json properties.blueprintId property. "
-              + "Found name in blueprint json: %s, and in assignment json properties.blueprintId: %s",
+          "Not match blueprint name found in blueprint json file with properties.blueprintId property in assign json file. "
+              + "Found name in blueprint json: %s, and properties.blueprintId: %s",
           blueprintNameFromBlueprintJson.get(), blueprintName));
     }
   }

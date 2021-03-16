@@ -20,6 +20,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
@@ -67,6 +68,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
+            .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, k8sRollingDeployRequest, ambiance, infrastructure);
@@ -96,13 +98,14 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
     StepResponseBuilder stepResponseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
 
+    InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
       return K8sStepHelper
           .getFailureResponseBuilder(k8sRollingStepParameters, k8sTaskExecutionResponse, stepResponseBuilder)
+          .stepOutcome(getOutcomeDuringFailure(infrastructure))
           .build();
     }
 
-    InfrastructureOutcome infrastructure = (InfrastructureOutcome) passThroughData;
     K8sRollingDeployResponse k8sTaskResponse =
         (K8sRollingDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
@@ -117,6 +120,20 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
                          .outcome(k8sRollingOutcome)
                          .group(StepOutcomeGroup.STAGE.name())
                          .build())
+        .stepOutcome(StepResponse.StepOutcome.builder()
+                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .outcome(k8sRollingOutcome)
+                         .build())
+        .build();
+  }
+
+  private StepOutcome getOutcomeDuringFailure(InfrastructureOutcome infrastructure) {
+    K8sRollingOutcome k8sRollingOutcome =
+        K8sRollingOutcome.builder().releaseName(k8sStepHelper.getReleaseName(infrastructure)).build();
+    return StepOutcome.builder()
+        .name(OutcomeExpressionConstants.K8S_ROLL_OUT)
+        .outcome(k8sRollingOutcome)
+        .group(StepOutcomeGroup.STAGE.name())
         .build();
   }
 }

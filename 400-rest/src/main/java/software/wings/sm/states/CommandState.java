@@ -734,7 +734,8 @@ public class CommandState extends State {
           WingsException.USER);
     }
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
       SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -781,7 +782,8 @@ public class CommandState extends State {
               WingsException.USER);
         }
 
-        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+        ArtifactStreamAttributes artifactStreamAttributes =
+            artifactStream.fetchArtifactStreamAttributes(featureFlagService);
         artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
         if (!ArtifactStreamType.CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
@@ -1175,6 +1177,10 @@ public class CommandState extends State {
 
   private Artifact findArtifact(String serviceId, ExecutionContext context) {
     if (isRollback()) {
+      if (context.getContextElement(ContextElementType.INSTANCE) == null) {
+        WorkflowStandardParams contextElement = context.getContextElement(ContextElementType.STANDARD);
+        return contextElement.getRollbackArtifactForService(serviceId);
+      }
       Artifact previousArtifact = serviceResourceService.findPreviousArtifact(
           context.getAppId(), context.getWorkflowExecutionId(), context.getContextElement(ContextElementType.INSTANCE));
       if (previousArtifact != null) {

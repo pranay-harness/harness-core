@@ -1,0 +1,53 @@
+extend type Mutation {
+  # Attach a tag to an entity
+  attachTag(input: AttachTagInput!): AttachTagPayload @dataFetcher(name: attachTag)
+  # Detach a tag from an entity
+  detachTag(input: DetachTagInput!): DetachTagPayload @dataFetcher(name: detachTag)
+}
+
+input AttachTagInput {
+  clientMutationId: String
+  # Unique ID of the harness entity
+  entityId: String!
+  # Type of entity the tag is to be attached to
+  entityType: TagEntityType!
+  # Name of the tag
+  name: String!
+  # Value of the tag
+  value: String
+}
+
+enum TagEntityType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+  WORKFLOW
+  PIPELINE
+}
+
+input DetachTagInput {
+  clientMutationId: String
+  # Unique ID of the harness entity
+  entityId: String!
+  # Type of entity the tag is to be detached from
+  entityType: TagEntityType!
+  # Name of the tag
+  name: String!
+}
+
+type AttachTagPayload {
+  clientMutationId: String
+  # Attached tag details
+  tagLink: TagLink
+}
+
+type DetachTagPayload {
+  clientMutationId: String
+}
+
+type TagLink {
+  name: String
+  value: String
+  entityId: String
+  entityType: TagEntityType
+}

@@ -49,6 +49,6 @@ public class InfrastructureDef implements Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.INFRASTRUCTURE_DEF).build();
+    return LevelNode.builder().qualifierName(YamlTypes.INFRASTRUCTURE_DEF).isPartOfFQN(false).build();
   }
 }

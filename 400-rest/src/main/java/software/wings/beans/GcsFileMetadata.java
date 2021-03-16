@@ -2,7 +2,7 @@ package software.wings.beans;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.delegate.beans.ChecksumType;
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 

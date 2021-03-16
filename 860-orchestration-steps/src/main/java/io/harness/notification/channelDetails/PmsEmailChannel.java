@@ -27,6 +27,7 @@ public class PmsEmailChannel extends PmsNotificationChannel {
     return EmailChannel.builder()
         .accountId(accountId)
         .recipients(recipients)
+        .userGroupIds(userGroups)
         .team(Team.PIPELINE)
         .templateData(templateData)
         .templateId(templateId)

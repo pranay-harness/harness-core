@@ -1,20 +1,22 @@
 package io.harness.engine.executions.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
-import io.harness.engine.interrupts.InterruptHelper;
 import io.harness.engine.interrupts.statusupdate.StepStatusUpdateInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecution.PlanExecutionKeys;
 import io.harness.plan.Plan;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
@@ -22,6 +24,7 @@ import io.harness.repositories.PlanExecutionRepository;
 
 import com.google.inject.Inject;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -111,8 +114,18 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
 
   private void emitEvent(PlanExecution planExecution) {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
-                               .ambiance(InterruptHelper.buildFromPlanExecution(planExecution))
+                               .ambiance(buildFromPlanExecution(planExecution))
                                .eventType(OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE)
                                .build());
+  }
+
+  public Ambiance buildFromPlanExecution(PlanExecution planExecution) {
+    return Ambiance.newBuilder()
+        .setPlanExecutionId(planExecution.getUuid())
+        .putAllSetupAbstractions(
+            isEmpty(planExecution.getSetupAbstractions()) ? new HashMap<>() : planExecution.getSetupAbstractions())
+        .setMetadata(
+            planExecution.getMetadata() == null ? ExecutionMetadata.newBuilder().build() : planExecution.getMetadata())
+        .build();
   }
 }

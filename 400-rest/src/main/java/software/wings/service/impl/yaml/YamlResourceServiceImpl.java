@@ -95,7 +95,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfiguration.CVConfigurationYaml;
+import software.wings.verification.CVConfigurationYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;

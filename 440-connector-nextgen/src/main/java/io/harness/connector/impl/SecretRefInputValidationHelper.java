@@ -2,10 +2,12 @@ package io.harness.connector.impl;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnexpectedException;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
@@ -13,11 +15,17 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class SecretRefInputValidationHelper {
   private SecretCrudService secretCrudService;
 
@@ -29,6 +37,26 @@ public class SecretRefInputValidationHelper {
         ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
     validateTheScopeOfTheSecret(secretRefData, secretIdentifiers);
     validateTheSecretIsPresent(secretRefData, secretIdentifiers);
+  }
+
+  public Set<SecretRefData> getDecryptableFieldsData(List<DecryptableEntity> decryptableEntities) {
+    Set<SecretRefData> secrets = new HashSet<>();
+
+    for (DecryptableEntity decryptableEntity : decryptableEntities) {
+      List<Field> secretFields = decryptableEntity.getSecretReferenceFields();
+      for (Field secretField : secretFields) {
+        SecretRefData secretRefData = null;
+        try {
+          secretField.setAccessible(true);
+          secretRefData = (SecretRefData) secretField.get(decryptableEntity);
+        } catch (IllegalAccessException ex) {
+          log.info("Error reading the secret data", ex);
+          throw new UnexpectedException("Error processing the data");
+        }
+        secrets.add(secretRefData);
+      }
+    }
+    return secrets;
   }
 
   private void validateTheScopeOfTheSecret(SecretRefData secretRefData, NGAccess ngAccess) {

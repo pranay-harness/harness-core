@@ -55,6 +55,7 @@ import io.harness.connector.entities.embedded.kubernetescluster.KubernetesCluste
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesClusterDetails;
 import io.harness.connector.entities.embedded.kubernetescluster.KubernetesDelegateDetails;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
+import io.harness.connector.entities.embedded.newrelicconnector.NewRelicConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
@@ -89,6 +90,7 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(CEK8sDetails.class);
     set.add(AwsCodeCommitConfig.class);
     set.add(HttpHelmConnector.class);
+    set.add(NewRelicConnector.class);
   }
 
   @Override

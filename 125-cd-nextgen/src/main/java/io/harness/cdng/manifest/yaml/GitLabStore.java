@@ -5,6 +5,8 @@ import io.harness.cdng.visitor.helper.GitLabStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -23,6 +25,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestStoreType.GITLAB)
+@OneOfField(fields = {"paths", "folderPath"})
 @SimpleVisitorHelper(helperClass = GitLabStoreVisitorHelper.class)
 @TypeAlias("gitLabStore")
 public class GitLabStore implements GitStoreConfig, Visitable {
@@ -35,6 +38,8 @@ public class GitLabStore implements GitStoreConfig, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> folderPath;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> repoName;
 
   // For Visitor Framework Impl
   String metadata;
@@ -51,6 +56,8 @@ public class GitLabStore implements GitStoreConfig, Visitable {
         .branch(branch)
         .commitId(commitId)
         .paths(paths)
+        .folderPath(folderPath)
+        .repoName(repoName)
         .build();
   }
 
@@ -64,6 +71,9 @@ public class GitLabStore implements GitStoreConfig, Visitable {
     if (!ParameterField.isNull(gitLabStore.getPaths())) {
       resultantGitLabStore = resultantGitLabStore.withPaths(gitLabStore.getPaths());
     }
+    if (!ParameterField.isNull(gitLabStore.getFolderPath())) {
+      resultantGitLabStore = resultantGitLabStore.withFolderPath(gitLabStore.getFolderPath());
+    }
     if (gitLabStore.getGitFetchType() != null) {
       resultantGitLabStore = resultantGitLabStore.withGitFetchType(gitLabStore.getGitFetchType());
     }
@@ -72,6 +82,9 @@ public class GitLabStore implements GitStoreConfig, Visitable {
     }
     if (!ParameterField.isNull(gitLabStore.getCommitId())) {
       resultantGitLabStore = resultantGitLabStore.withCommitId(gitLabStore.getCommitId());
+    }
+    if (!ParameterField.isNull(gitLabStore.getRepoName())) {
+      resultantGitLabStore = resultantGitLabStore.withRepoName(gitLabStore.getRepoName());
     }
     return resultantGitLabStore;
   }
@@ -83,6 +96,6 @@ public class GitLabStore implements GitStoreConfig, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("spec").build();
+    return LevelNode.builder().qualifierName(YAMLFieldNameConstants.SPEC).isPartOfFQN(false).build();
   }
 }

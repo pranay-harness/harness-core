@@ -80,6 +80,6 @@ public class StepElement implements ExecutionWrapper, WithIdentifier, WithSkipCo
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_ELEMENT).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_ELEMENT).isPartOfFQN(false).build();
   }
 }

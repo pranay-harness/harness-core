@@ -49,6 +49,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
+import io.harness.request.RequestContextFilter;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.security.InternalApiAuthFilter;
@@ -198,6 +199,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerQueueListeners(injector, appConfig);
     registerExecutionPlanCreators(injector);
     registerAuthFilters(appConfig, environment, injector);
+    registerRequestContextFilter(environment);
     registerPipelineSDK(appConfig, injector);
     registerYamlSdk(injector);
     registerHealthCheck(environment, injector);
@@ -206,6 +208,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     intializeGitSync(injector, appConfig);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void intializeGitSync(Injector injector, NextGenConfiguration nextGenConfiguration) {

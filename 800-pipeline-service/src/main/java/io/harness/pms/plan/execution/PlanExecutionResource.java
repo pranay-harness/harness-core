@@ -11,14 +11,21 @@ import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.preflight.PreFlightCause;
 import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.preflight.PreFlightEntityErrorInfo;
 import io.harness.pms.preflight.PreFlightStatus;
+import io.harness.pms.preflight.connector.ConnectorCheckResponse;
+import io.harness.pms.preflight.connector.ConnectorWrapperResponse;
+import io.harness.pms.preflight.inputset.PipelineInputResponse;
+import io.harness.pms.preflight.inputset.PipelineWrapperResponse;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.io.IOException;
+import java.util.Collections;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -120,7 +127,7 @@ public class PlanExecutionResource {
   }
 
   @POST
-  @ApiOperation(value = "initiate pre flight check", nickname = "preflightCheck")
+  @ApiOperation(value = "initiate pre flight check", nickname = "startPreflightCheck")
   @Path("/preflightCheck")
   public ResponseDTO<String> startPreFlightCheck(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
@@ -132,7 +139,7 @@ public class PlanExecutionResource {
   }
 
   @GET
-  @ApiOperation(value = "initiate pre flight check", nickname = "preflightCheck")
+  @ApiOperation(value = "initiate pre flight check", nickname = "getPreflightCheckResponse")
   @Path("/getPreflightCheckResponse")
   public ResponseDTO<PreFlightDTO> getPreflightCheckResponse(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
@@ -140,6 +147,39 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse(PreFlightDTO.builder().status(PreFlightStatus.SUCCESS).build());
+    return ResponseDTO.newResponse(
+        PreFlightDTO.builder()
+            .pipelineInputWrapperResponse(
+                PipelineWrapperResponse.builder()
+                    .status(PreFlightStatus.FAILURE)
+                    .pipelineInputResponse(Collections.singletonList(
+                        PipelineInputResponse.builder()
+                            .fqn("pipeline.stages.s1.execution.steps.google.url")
+                            .stageName("s1")
+                            .stepName("google")
+                            .success(false)
+                            .errorInfo(
+                                PreFlightEntityErrorInfo.builder()
+                                    .causes(Collections.singletonList(
+                                        PreFlightCause.builder().cause("No value provided for runtime input").build()))
+                                    .build())
+                            .build()))
+                    .build())
+            .connectorWrapperResponse(
+                ConnectorWrapperResponse.builder()
+                    .status(PreFlightStatus.FAILURE)
+                    .checkResponses(Collections.singletonList(
+                        ConnectorCheckResponse.builder()
+                            .connectorIdentifier("conn1")
+                            .fqn("pipeline.stages.s1.infrastructure.connectorRef")
+                            .stageName("s1")
+                            .errorInfo(PreFlightEntityErrorInfo.builder()
+                                           .causes(Collections.singletonList(
+                                               PreFlightCause.builder().cause("Connector not reachable").build()))
+                                           .build())
+                            .build()))
+                    .build())
+            .status(PreFlightStatus.SUCCESS)
+            .build());
   }
 }

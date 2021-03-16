@@ -67,6 +67,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
