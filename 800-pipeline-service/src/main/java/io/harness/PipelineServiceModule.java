@@ -64,6 +64,7 @@ import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -75,6 +76,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -287,5 +289,12 @@ public class PipelineServiceModule extends AbstractModule {
   public ExecutorService templateRegistrationExecutionServiceThreadPool() {
     return ThreadPool.create(
         1, 1, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("TemplateRegistrationService-%d").build());
+  }
+
+  @Provides
+  @Named("yaml-schema-mapper")
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapper() {
+    return Jackson.newObjectMapper();
   }
 }
