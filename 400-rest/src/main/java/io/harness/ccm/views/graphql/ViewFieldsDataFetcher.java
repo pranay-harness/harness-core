@@ -41,7 +41,7 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
       isExplorerQuery = !metadataFilter.isPreview();
       viewId = metadataFilter.getViewId();
-      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId);
+      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId, accountId);
     }
 
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();

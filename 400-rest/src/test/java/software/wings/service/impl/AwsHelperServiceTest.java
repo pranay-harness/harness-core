@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
@@ -49,6 +51,9 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.Activity;
@@ -67,6 +72,7 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ecr.AmazonECRClient;
@@ -92,11 +98,20 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({WebIdentityTokenCredentialsProvider.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*", "javax.crypto.*"})
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
   @Mock AwsConfig awsConfig;
@@ -106,6 +121,7 @@ public class AwsHelperServiceTest extends WingsBaseTest {
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     when(awsConfig.isCertValidationRequired()).thenReturn(false);
     when(awsConfig.getDefaultRegion()).thenReturn(Regions.US_EAST_1.getName());
   }
@@ -588,5 +604,27 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     verify(tracker, times(1)).trackEC2Call("List Regions");
     assertThat(actual).hasSize(2);
     assertThat(actual).containsExactly("us-east-1", "us-east-2");
+  }
+
+  @Test(expected = com.amazonaws.SdkClientException.class)
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testAttachCredentialsAndBackoffPolicyWithIRSA() {
+    PowerMockito.mockStatic(System.class);
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_ROLE_ARN_ENV_VAR)).thenReturn("abcd");
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_WEB_IDENTITY_ENV_VAR)).thenReturn("/jkj");
+    AwsInternalConfig awsInternalConfig = mock(AwsInternalConfig.class);
+    when(awsInternalConfig.isUseEc2IamCredentials()).thenReturn(false);
+    when(awsInternalConfig.isUseIRSA()).thenReturn(true);
+    when(awsInternalConfig.isAssumeCrossAccountRole()).thenReturn(false);
+    AwsClientBuilder awsClientBuilder = AmazonEC2ClientBuilder.standard().withRegion("us-east-1");
+    doCallRealMethod()
+        .when(awsApiHelperService)
+        .attachCredentialsAndBackoffPolicy(eq(awsClientBuilder), eq(awsInternalConfig));
+
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(awsClientBuilder, awsInternalConfig);
+
+    assertThat(awsClientBuilder.getCredentials()).isInstanceOf(WebIdentityTokenCredentialsProvider.class);
+    awsClientBuilder.getCredentials().getCredentials().getAWSSecretKey();
   }
 }

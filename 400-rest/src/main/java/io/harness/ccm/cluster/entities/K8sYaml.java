@@ -4,16 +4,18 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.annotation.StoreIn;
 import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import java.util.Base64;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,11 +29,18 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
 @Entity(value = "k8sYaml", noClassnameStored = true)
-
-@CdIndex(name = "accountId_hash", fields = { @Field(K8sYamlKeys.accountId)
-                                             , @Field(value = K8sYamlKeys.hash) })
 @FieldNameConstants(innerTypeName = "K8sYamlKeys")
 public final class K8sYaml implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_hash")
+                 .field(K8sYamlKeys.accountId)
+                 .field(K8sYamlKeys.hash)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   long createdAt;
 

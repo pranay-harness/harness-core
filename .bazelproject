@@ -33,7 +33,6 @@ directories:
   450-ce-views
   460-capability
   470-alert
-  480-alert-beans
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
@@ -46,6 +45,7 @@ directories:
   870-cg-yaml-beans
   870-orchestration
   870-yaml-beans
+  874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
   879-pms-sdk
@@ -67,18 +67,19 @@ directories:
   920-delegate-service-beans
   930-delegate-tasks
   930-ng-core-clients
+  955-alert-beans
   955-delegate-beans
   940-feature-flag
   940-notification-client
   940-resource-group-beans
   940-secret-manager-client
+  949-git-sync-sdk
   950-command-library-common
   950-log-client
   950-common-entities
   950-delegate-tasks-beans
   950-events-api
   950-events-framework
-  950-git-sync-sdk
   950-ng-core
   950-ng-project-n-orgs
   950-timeout-engine

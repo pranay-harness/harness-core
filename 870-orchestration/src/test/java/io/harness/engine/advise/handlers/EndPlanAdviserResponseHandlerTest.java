@@ -16,8 +16,11 @@ import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.advisers.AdviseType;
+import io.harness.pms.contracts.advisers.AdviserIssuer;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
@@ -95,9 +98,17 @@ public class EndPlanAdviserResponseHandlerTest extends OrchestrationTestBase {
     endPlanAdviserResponseHandler.handleAdvise(
         nodeExecution, AdviserResponse.newBuilder().setEndPlanAdvise(advise).setType(AdviseType.END_PLAN).build());
     verify(interruptManager, times(1))
-        .register(InterruptPackage.builder()
-                      .planExecutionId(PLAN_EXECUTION_ID)
-                      .interruptType(InterruptType.ABORT_ALL)
-                      .build());
+        .register(
+            InterruptPackage.builder()
+                .planExecutionId(PLAN_EXECUTION_ID)
+                .interruptType(InterruptType.ABORT_ALL)
+                .interruptConfig(
+                    InterruptConfig.newBuilder()
+                        .setIssuedBy(IssuedBy.newBuilder()
+                                         .setAdviserIssuer(
+                                             AdviserIssuer.newBuilder().setAdviserType(AdviseType.END_PLAN).build())
+                                         .build())
+                        .build())
+                .build());
   }
 }

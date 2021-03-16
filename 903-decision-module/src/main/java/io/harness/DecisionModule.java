@@ -14,7 +14,7 @@ import com.google.inject.multibindings.Multibinder;
 
 public class DecisionModule extends AbstractModule {
   private static DecisionModule instance;
-  private DecisionModuleConfiguration decisionModuleConfiguration;
+  private final DecisionModuleConfiguration decisionModuleConfiguration;
 
   public DecisionModule(DecisionModuleConfiguration decisionModuleConfiguration) {
     this.decisionModuleConfiguration = decisionModuleConfiguration;

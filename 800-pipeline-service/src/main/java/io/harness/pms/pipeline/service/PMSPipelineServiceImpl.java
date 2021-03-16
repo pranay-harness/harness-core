@@ -66,7 +66,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private FilterService filterService;
   @Inject private PipelineSetupUsageHelper pipelineSetupUsageHelper;
-
+  @Inject private CommonStepInfo commonStepInfo;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
   @VisibleForTesting static String LIBRARY = "Library";
@@ -293,11 +293,11 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public StepCategory getSteps(String module, String category) {
+  public StepCategory getSteps(String module, String category, String accountId) {
     Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
         pmsSdkInstanceService.getInstanceNameToSupportedSteps();
     StepCategory stepCategory =
-        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module));
+        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module), accountId);
     for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
       if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
         continue;
@@ -315,7 +315,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return stepCategory;
   }
 
-  private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
+  private StepCategory calculateStepsForModuleBasedOnCategory(
+      String category, List<StepInfo> stepInfos, String accountId) {
     List<StepInfo> filteredStepTypes = new ArrayList<>();
     if (!stepInfos.isEmpty()) {
       filteredStepTypes =
@@ -325,7 +326,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                       || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
               .collect(Collectors.toList());
     }
-    filteredStepTypes.addAll(CommonStepInfo.getCommonSteps());
+    filteredStepTypes.addAll(commonStepInfo.getCommonSteps(accountId));
     StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
     for (StepInfo stepType : filteredStepTypes) {
       addToTopLevel(stepCategory, stepType);

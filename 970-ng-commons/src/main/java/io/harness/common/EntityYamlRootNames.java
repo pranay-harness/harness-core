@@ -27,4 +27,5 @@ public class EntityYamlRootNames {
   public static String CV_KUBERNETES_ACTIVITY_SOURCE = "cvKubernetesActivitySource";
   public static String DEPLOYMENT_STEP = "deploymentSteps";
   public static String DEPLOYMENT_STAGE = "deploymentStage";
+  public static String APPROVAL_STAGE = "approvalStage";
 }

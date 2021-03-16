@@ -5,6 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.steps.approval.harness.HarnessApprovalStepParameters;
+import io.harness.steps.approval.stage.ApprovalStageStepParameters;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -45,5 +47,7 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     h.put("steps.section.chain.SectionChainPassThroughData", SectionChainPassThroughData.class);
     h.put("steps.section.chain.SectionStepParameters", SectionChainStepParameters.class);
     h.put("steps.section.SectionStepParameters", SectionStepParameters.class);
+    h.put("steps.approval.ApprovalStageStepParameters", ApprovalStageStepParameters.class);
+    h.put("steps.approval.HarnessApprovalStepParameters", HarnessApprovalStepParameters.class);
   }
 }

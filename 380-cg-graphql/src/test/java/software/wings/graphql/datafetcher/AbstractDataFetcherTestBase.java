@@ -14,6 +14,8 @@ import io.harness.ccm.setup.CEClusterDao;
 import io.harness.persistence.HPersistence;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.CloudProviderType;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
@@ -38,10 +40,14 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.dl.WingsPersistence;
 import software.wings.events.TestUtils;
+import software.wings.infra.AwsAmiInfrastructure;
+import software.wings.infra.InfraMappingInfrastructureProvider;
+import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HarnessTagService;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -65,6 +71,8 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String TAG_VALUE_MODULE2 = "MODULE2";
   public static final String TAG_MODULE1 = "MODULE:MODULE1";
   public static final String TAG_MODULE2 = "MODULE:MODULE2";
+  public static final String INFRA1_ID_ENV1_APP1_ACCOUNT1 = "INFRA1_ID_ENV1_APP1_ACCOUNT1";
+  public static final String INFRA2_ID_ENV1_APP1_ACCOUNT1 = "INFRA2_ID_ENV1_APP1_ACCOUNT1";
   public static final String TAG_ENVTYPE = "ENVTYPE";
   public static final String TAG_VALUE_PROD = "PROD";
   public static final String TAG_VALUE_NON_PROD = "NON_PROD";
@@ -142,6 +150,7 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   @Inject ServiceResourceService serviceResourceService;
   @Inject EnvironmentService environmentService;
   @Inject InstanceService instanceService;
+  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject SettingsService settingsService;
   @Inject TriggerService triggerService;
   @Inject WorkflowService workflowService;
@@ -232,6 +241,24 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
         Service.builder().name(serviceName).uuid(serviceId).appId(appId).accountId(accountId).build());
     setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
     return service;
+  }
+
+  public InfrastructureDefinition createInfrastructureDefinition(
+      String accountId, String envId, String appId, String infrastructureId, String infrastructureName) {
+    InfraMappingInfrastructureProvider infraMappingInfrastructureProvider = AwsAmiInfrastructure.builder().build();
+    InfrastructureDefinition infrastructureDefinition =
+        infrastructureDefinitionService.save(InfrastructureDefinition.builder()
+                                                 .name(infrastructureName)
+                                                 .uuid(infrastructureId)
+                                                 .envId(envId)
+                                                 .accountId(accountId)
+                                                 .cloudProviderType(CloudProviderType.AWS)
+                                                 .appId(appId)
+                                                 .infrastructure(infraMappingInfrastructureProvider)
+                                                 .deploymentType(DeploymentType.AMI)
+                                                 .build(),
+            true);
+    return infrastructureDefinition;
   }
 
   public Environment createEnv(

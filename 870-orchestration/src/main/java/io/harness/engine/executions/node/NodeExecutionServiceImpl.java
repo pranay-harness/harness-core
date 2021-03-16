@@ -16,7 +16,6 @@ import io.harness.exception.UnexpectedException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.NodeExecutionMapper;
-import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
@@ -215,13 +214,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       String interruptId, InterruptType interruptType, String planExecutionId, List<String> leafInstanceIds) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
-    ops.addToSet(NodeExecutionKeys.interruptHistories,
-        InterruptEffect.builder()
-            .interruptId(interruptId)
-            .tookEffectAt(System.currentTimeMillis())
-            .interruptType(interruptType)
-            .build());
-
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.uuid).in(leafInstanceIds));
     UpdateResult updateResult = mongoTemplate.updateMulti(query, ops, NodeExecution.class);

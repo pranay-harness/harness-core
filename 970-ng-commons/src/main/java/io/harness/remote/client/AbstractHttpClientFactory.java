@@ -1,6 +1,7 @@
 package io.harness.remote.client;
 
 import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -33,69 +34,79 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
 public abstract class AbstractHttpClientFactory {
-  public static final String NG_MANAGER_CIRCUIT_BREAKER = "ng-manager";
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final ServiceTokenGenerator tokenGenerator;
   private final KryoConverterFactory kryoConverterFactory;
-  private String clientId = "NextGenManager";
+  private final String clientId;
   private final ObjectMapper objectMapper;
+  private final boolean enableCircuitBreaker;
+  private final ClientMode clientMode;
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
+  protected AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
     this.serviceHttpClientConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
     this.clientId = clientId;
-    objectMapper = getObjectMapper();
+    this.objectMapper = getObjectMapper();
+    this.enableCircuitBreaker = false;
+    this.clientMode = ClientMode.NON_PRIVILEGED;
   }
 
   public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory) {
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
+      boolean enableCircuitBreaker, ClientMode clientMode) {
     this.serviceHttpClientConfig = secretManagerConfig;
     this.serviceSecret = serviceSecret;
     this.tokenGenerator = tokenGenerator;
     this.kryoConverterFactory = kryoConverterFactory;
-    objectMapper = getObjectMapper();
+    this.clientId = clientId;
+    this.objectMapper = getObjectMapper();
+    this.enableCircuitBreaker = enableCircuitBreaker;
+    this.clientMode = clientMode;
   }
 
   protected Retrofit getRetrofit() {
     String baseUrl = serviceHttpClientConfig.getBaseUrl();
-    return new Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .addConverterFactory(kryoConverterFactory)
-        .client(getUnsafeOkHttpClient(baseUrl))
-        .addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()))
-        .addConverterFactory(JacksonConverterFactory.create(objectMapper))
-        .build();
+    Retrofit.Builder retrofitBuilder = new Retrofit.Builder()
+                                           .baseUrl(baseUrl)
+                                           .addConverterFactory(kryoConverterFactory)
+                                           .client(getUnsafeOkHttpClient(baseUrl, this.clientMode))
+                                           .addConverterFactory(JacksonConverterFactory.create(objectMapper));
+    if (this.enableCircuitBreaker) {
+      retrofitBuilder.addCallAdapterFactory(CircuitBreakerCallAdapter.of(getCircuitBreaker()));
+    }
+    return retrofitBuilder.build();
   }
 
   protected CircuitBreaker getCircuitBreaker() {
-    return CircuitBreaker.ofDefaults(NG_MANAGER_CIRCUIT_BREAKER);
+    return CircuitBreaker.ofDefaults(this.clientId);
   }
 
   protected ObjectMapper getObjectMapper() {
-    ObjectMapper objectMapper = new ObjectMapper();
-    objectMapper.setSubtypeResolver(new JsonSubtypeResolver(objectMapper.getSubtypeResolver()));
-    objectMapper.setConfig(objectMapper.getSerializationConfig().withView(JsonViews.Public.class));
-    objectMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
-    objectMapper.registerModule(new ProtobufModule());
-    objectMapper.registerModule(new Jdk8Module());
-    objectMapper.registerModule(new GuavaModule());
-    objectMapper.registerModule(new JavaTimeModule());
-    return objectMapper;
+    ObjectMapper objMapper = new ObjectMapper();
+    objMapper.setSubtypeResolver(new JsonSubtypeResolver(objMapper.getSubtypeResolver()));
+    objMapper.setConfig(objMapper.getSerializationConfig().withView(JsonViews.Public.class));
+    objMapper.disable(FAIL_ON_UNKNOWN_PROPERTIES);
+    objMapper.registerModule(new ProtobufModule());
+    objMapper.registerModule(new Jdk8Module());
+    objMapper.registerModule(new GuavaModule());
+    objMapper.registerModule(new JavaTimeModule());
+    return objMapper;
   }
 
-  protected OkHttpClient getUnsafeOkHttpClient(String baseUrl) {
+  protected OkHttpClient getUnsafeOkHttpClient(String baseUrl, ClientMode clientMode) {
     try {
       return Http
           .getUnsafeOkHttpClientBuilder(baseUrl, serviceHttpClientConfig.getConnectTimeOutSeconds(),
               serviceHttpClientConfig.getReadTimeOutSeconds())
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
-          .addInterceptor(getAuthorizationInterceptor())
+          .addInterceptor(getAuthorizationInterceptor(clientMode))
           .addInterceptor(getCorrelationIdInterceptor())
+          .addInterceptor(getRequestContextInterceptor())
           .addInterceptor(chain -> {
             Request original = chain.request();
 
@@ -107,22 +118,23 @@ public abstract class AbstractHttpClientFactory {
           })
           .build();
     } catch (Exception e) {
-      throw new GeneralException("error while creating okhttp client for Command library service", e);
+      throw new GeneralException(String.format("error while creating okhttp client for %s service", clientId), e);
     }
   }
 
   @NotNull
-  protected Interceptor getAuthorizationInterceptor() {
+  protected Interceptor getAuthorizationInterceptor(ClientMode clientMode) {
     final Supplier<String> secretKeySupplier = this::getServiceSecret;
     return chain -> {
-      boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
-      if (!isPrincipalInContext) {
+      if (ClientMode.PRIVILEGED == clientMode) {
         SecurityContextBuilder.setContext(new ServicePrincipal(clientId));
+      } else {
+        boolean isPrincipalInContext = SecurityContextBuilder.getPrincipal() != null;
+        if (!isPrincipalInContext) {
+          SecurityContextBuilder.unsetPrincipalContext();
+        }
       }
       String token = tokenGenerator.getServiceToken(secretKeySupplier.get());
-      if (!isPrincipalInContext) {
-        SecurityContextBuilder.unsetContext();
-      }
       Request request = chain.request();
       return chain.proceed(request.newBuilder().header("Authorization", clientId + StringUtils.SPACE + token).build());
     };

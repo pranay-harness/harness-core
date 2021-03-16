@@ -24,6 +24,16 @@ public interface AzureBlueprintClient {
       AzureConfig azureConfig, String resourceScope, String blueprintName, String blueprintJSON);
 
   /**
+   * Get a blueprint definition.
+   *
+   * @param azureConfig
+   * @param resourceScope
+   * @param blueprintName
+   * @return
+   */
+  Blueprint getBlueprint(AzureConfig azureConfig, String resourceScope, String blueprintName);
+
+  /**
    * Create or update blueprint artifact.
    *
    * @param azureConfig

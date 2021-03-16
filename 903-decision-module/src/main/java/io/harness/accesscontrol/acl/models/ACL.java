@@ -42,11 +42,7 @@ public abstract class ACL implements PersistentEntity {
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder()
-                 .name("aclQueryStringUniqueIdx")
-                 .unique(true)
-                 .field(HACLKeys.aclQueryString)
-                 .build())
+        .add(CompoundMongoIndex.builder().name("aclQueryStringIdx").field(HACLKeys.aclQueryString).build())
         .build();
   }
 }

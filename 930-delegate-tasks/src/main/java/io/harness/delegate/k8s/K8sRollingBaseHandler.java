@@ -2,7 +2,6 @@ package io.harness.delegate.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.logging.LogLevel.INFO;
 
 import static java.util.Arrays.asList;
 
@@ -18,7 +17,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.Release.KubernetesResourceIdRevision;
-import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -116,8 +114,6 @@ public class K8sRollingBaseHandler {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
     k8sTaskHelperBase.describe(client, k8sDelegateTaskParams, executionLogCallback);
-
-    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
   }
 
   public List<K8sPod> getPods(long timeoutInMillis, List<KubernetesResource> managedWorkloads,

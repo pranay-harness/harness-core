@@ -22,6 +22,7 @@ import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.jackson.Jackson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -57,8 +58,8 @@ public class YamlSchemaProviderTest extends CategoryTest {
     YamlSchemaHelper yamlSchemaHelper = Mockito.spy(new YamlSchemaHelper(yamlSchemaRootClasses));
     yamlSchemaProvider = new YamlSchemaProvider(yamlSchemaHelper);
     schema = getResource("testSchema/sampleSchema.json");
-    YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+    YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
+        new JacksonClassHelper(), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
     Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     yamlSchemaHelper.initializeSchemaMaps(entityTypeJsonNodeMap);
     doReturn(YamlSchemaWithDetails.builder()

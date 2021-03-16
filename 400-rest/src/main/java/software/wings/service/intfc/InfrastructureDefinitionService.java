@@ -41,6 +41,10 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<InfrastructureDefinition> listByCustomDeploymentTypeIds(
       @NotBlank String accountId, @NotNull List<String> deploymentTemplateIds, int limit);
 
+  InfrastructureDefinition getInfraDefById(String accountId, String infraDefId);
+
+  InfrastructureDefinition getInfraByName(String accountId, String infraDefName, String envId);
+
   PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
       PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty String appId, @NotEmpty String envId);
 

@@ -3,6 +3,7 @@ package software.wings.delegatetasks.azure.arm.deployment.context;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
+import io.harness.azure.model.blueprint.Blueprint;
 import io.harness.azure.model.blueprint.assignment.Assignment;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 
@@ -21,6 +22,7 @@ public class DeploymentBlueprintContext {
   private AzureConfig azureConfig;
   private String definitionResourceScope;
   private String blueprintName;
+  private Blueprint blueprint;
   private String blueprintJSON;
   private Map<String, String> artifacts;
   private String versionId;

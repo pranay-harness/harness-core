@@ -1,17 +1,16 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.DatadogConfig;
-import software.wings.beans.DatadogConfig.DatadogYaml;
+import software.wings.beans.DatadogYaml;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
-public class DatadogConfigYamlHandler
-    extends VerificationProviderYamlHandler<DatadogConfig.DatadogYaml, DatadogConfig> {
+public class DatadogConfigYamlHandler extends VerificationProviderYamlHandler<DatadogYaml, DatadogConfig> {
   @Override
-  public DatadogConfig.DatadogYaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public DatadogYaml toYaml(SettingAttribute settingAttribute, String appId) {
     DatadogConfig config = (DatadogConfig) settingAttribute.getValue();
 
     DatadogYaml yaml = DatadogYaml.builder()
@@ -26,10 +25,10 @@ public class DatadogConfigYamlHandler
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<DatadogConfig.DatadogYaml> changeContext,
-      List<ChangeContext> changeSetContext) {
+  protected SettingAttribute toBean(
+      SettingAttribute previous, ChangeContext<DatadogYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    DatadogConfig.DatadogYaml yaml = changeContext.getYaml();
+    DatadogYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     DatadogConfig datadogConfig = DatadogConfig.builder()

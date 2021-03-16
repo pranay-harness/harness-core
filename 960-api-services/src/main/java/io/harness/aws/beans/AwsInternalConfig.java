@@ -28,6 +28,7 @@ public class AwsInternalConfig implements EncryptableSetting {
   private AwsCrossAccountAttributes crossAccountAttributes;
   private String defaultRegion;
   private boolean assumeCrossAccountRole;
+  private boolean useIRSA;
   @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;
 
   @Override

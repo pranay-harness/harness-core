@@ -1,9 +1,12 @@
 package io.harness.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.security.PrincipalContextData.PRINCIPAL_CONTEXT;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.GlobalContext;
 import io.harness.govern.Switch;
+import io.harness.manage.GlobalContextManager;
 import io.harness.security.dto.ApiKeyPrincipal;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
@@ -20,6 +23,7 @@ public class SecurityContextBuilder {
   public static final String PRINCIPAL_TYPE = "type";
   public static final String PRINCIPAL_NAME = "name";
   public static final String ACCOUNT_ID = "accountId";
+  public static final String EMAIL = "email";
 
   public void setContext(Map<String, Claim> claimMap) {
     Principal principal = null;
@@ -43,14 +47,25 @@ public class SecurityContextBuilder {
   }
 
   public void setContext(Principal principal) {
-    PrincipalThreadLocal.set(principal);
+    if (!GlobalContextManager.isAvailable()) {
+      GlobalContextManager.set(new GlobalContext());
+    }
+    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(principal).build());
   }
 
   public Principal getPrincipal() {
-    return PrincipalThreadLocal.get();
+    PrincipalContextData principalContextData = GlobalContextManager.get(PRINCIPAL_CONTEXT);
+    if (principalContextData == null) {
+      return null;
+    }
+    return principalContextData.getPrincipal();
   }
 
-  public void unsetContext() {
-    PrincipalThreadLocal.unset();
+  public void unsetPrincipalContext() {
+    GlobalContextManager.unset(PRINCIPAL_CONTEXT);
+  }
+
+  public void unsetCompleteContext() {
+    GlobalContextManager.unset();
   }
 }
