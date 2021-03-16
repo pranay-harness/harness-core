@@ -3,6 +3,7 @@ package software.wings.resources;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.*;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -618,12 +619,20 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginBody) {
+  public RestResponse<NGLoginResponse> nglogin(NGLoginRequest loginRequest) {
     // @Todo(Raj): Add support for captcha
-    User user = userService.getUserByEmail(loginBody.getEmail());
+
+    if (!isValidNGLoginRequest(loginRequest)) {
+      throw new WingsException(INVALID_PARAMS);
+    }
+
+    User user = userService.getUserByEmail(loginRequest.getEmail());
+    if (user == null) {
+      throw new WingsException(INVALID_CREDENTIAL);
+    }
     String accountId = user.getDefaultAccountId();
     User loggedInUser = authenticationManager.defaultLoginAccount(
-        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId);
+        authenticationManager.extractToken(loginRequest.getAuthorization(), BASIC), accountId);
 
     Account account = accountService.get(accountId);
 
@@ -1348,5 +1357,9 @@ public class UserResource {
   @Data
   public static class ResendInvitationEmailRequest {
     @NotBlank private String email;
+  }
+
+  private boolean isValidNGLoginRequest(NGLoginRequest loginRequest) {
+    return StringUtils.isNotEmpty(loginRequest.getEmail()) && StringUtils.isNotEmpty(loginRequest.getAuthorization());
   }
 }

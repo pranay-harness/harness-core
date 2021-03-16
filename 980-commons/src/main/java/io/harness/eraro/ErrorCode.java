@@ -68,6 +68,8 @@ public enum ErrorCode {
 
   INVALID_CREDENTIAL(UNAUTHORIZED),
 
+  INVALID_PARAMS(BAD_REQUEST),
+
   INVALID_KEY("Invalid key"),
 
   INVALID_KEYPATH,
