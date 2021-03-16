@@ -99,6 +99,7 @@ modules = [
     "//930-ng-core-clients",
     "//940-resource-group-beans",
     "//940-secret-manager-client",
+    "//945-cvng-delegate-tasks-beans",
     "//950-command-library-common",
     "//950-common-entities",
     "//950-delegate-tasks-beans",
