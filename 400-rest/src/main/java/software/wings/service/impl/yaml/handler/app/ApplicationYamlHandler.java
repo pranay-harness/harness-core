@@ -51,7 +51,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
                     .build();
 
     if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, application.getAccountId())) {
-      yaml.setIsManualTriggerAuthorized(application.isManualTriggerAuthorized());
+      yaml.setIsManualTriggerAuthorized(application.getIsManualTriggerAuthorized());
     }
     updateYamlWithAdditionalInfo(application, appId, yaml);
     return yaml;
@@ -68,7 +68,9 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     Application current = anApplication().accountId(accountId).name(appName).description(yaml.getDescription()).build();
 
     if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
-      current.setManualTriggerAuthorized(yaml.getIsManualTriggerAuthorized());
+      if (yaml.getIsManualTriggerAuthorized() != null) {
+        current.setIsManualTriggerAuthorized(yaml.getIsManualTriggerAuthorized());
+      }
     }
 
     current.setSyncFromGit(changeContext.getChange().isSyncFromGit());

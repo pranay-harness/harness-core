@@ -371,7 +371,7 @@ public class AppServiceImpl implements AppService {
         wingsPersistence.createUpdateOperations(Application.class).set("name", app.getName()).set("keywords", keywords);
 
     if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, savedApp.getAccountId())) {
-      operations.set(ApplicationKeys.isManualTriggerAuthorized, app.isManualTriggerAuthorized());
+      operations.set(ApplicationKeys.isManualTriggerAuthorized, app.getIsManualTriggerAuthorized());
     }
 
     setUnset(operations, "description", app.getDescription());

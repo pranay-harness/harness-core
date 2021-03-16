@@ -86,16 +86,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
   private transient Map<String, String> defaults = new HashMap<>();
   private boolean sample;
 
-  @JsonProperty("isManualTriggerAuthorized")
-  public boolean isManualTriggerAuthorized() {
-    return isManualTriggerAuthorized;
-  }
-
-  public void setManualTriggerAuthorized(boolean manualTriggerAuthorized) {
-    isManualTriggerAuthorized = manualTriggerAuthorized;
-  }
-
-  private boolean isManualTriggerAuthorized;
+  @Getter @Setter private Boolean isManualTriggerAuthorized;
 
   public boolean isSample() {
     return sample;
@@ -352,7 +343,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
     private Map<String, String> defaults;
     private YamlGitConfig yamlGitConfig;
     private boolean sample;
-    private boolean isManualTriggerAuthorized;
+    private Boolean isManualTriggerAuthorized;
 
     private Builder() {}
 
@@ -450,7 +441,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       return this;
     }
 
-    public Builder isManualTriggerAuthorized(boolean isManualTriggerAuthorized) {
+    public Builder isManualTriggerAuthorized(Boolean isManualTriggerAuthorized) {
       this.isManualTriggerAuthorized = isManualTriggerAuthorized;
       return this;
     }
@@ -497,7 +488,7 @@ public class Application extends Base implements KeywordsAware, NameAccess, TagA
       application.setDefaults(defaults);
       application.setYamlGitConfig(yamlGitConfig);
       application.setSample(sample);
-      application.setManualTriggerAuthorized(isManualTriggerAuthorized);
+      application.setIsManualTriggerAuthorized(isManualTriggerAuthorized);
       return application;
     }
   }

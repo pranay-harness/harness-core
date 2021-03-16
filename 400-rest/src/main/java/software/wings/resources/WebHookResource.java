@@ -39,9 +39,9 @@ import javax.ws.rs.core.Response;
 @Produces("application/json")
 @PublicApiWithWhitelist
 public class WebHookResource {
-  @Inject private WebHookService webHookService;
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private AppService appService;
+  private WebHookService webHookService;
+  private FeatureFlagService featureFlagService;
+  private AppService appService;
 
   @Inject
   public WebHookResource(WebHookService webHookService, FeatureFlagService featureFlagService, AppService appService) {
@@ -69,7 +69,7 @@ public class WebHookResource {
     if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)) {
       String appId = webHookRequest.getApplication();
       Application application = appService.get(appId);
-      if (application.isManualTriggerAuthorized() && isEmpty(apiKey)) {
+      if (application.getIsManualTriggerAuthorized() && isEmpty(apiKey)) {
         throw new InvalidRequestException("Api Key cannot be empty", WingsException.USER);
       }
     }

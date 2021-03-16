@@ -1,5 +1,6 @@
 package software.wings.yaml.handler;
 
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
 
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
@@ -50,11 +52,14 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private HarnessTagYamlHelper harnessTagYamlHelper;
   @Mock private YamlPushService yamlPushService;
+  @Mock private FeatureFlagService featureFlagService;
 
   private final String APP_NAME = "app1";
   private Application application;
 
   private String validYamlContent = "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml";
+  private String validYamlContentWithManualTriggerAuthorized =
+      "harnessApiVersion: '1.0'\ntype: APPLICATION\ndescription: valid application yaml\nisManualTriggerAuthorized: true";
   private String validYamlFilePath = "Setup/Applications/" + APP_NAME + "/Index.yaml";
   private String invalidYamlFilePath = "Setup/ApplicationsInvalid/" + APP_NAME + "/Index.yaml";
 
@@ -72,6 +77,10 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws IOException {
+    testCRUDAndGet(validYamlContent);
+  }
+
+  private void testCRUDAndGet(String validYamlContent) throws IOException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     GitFileChange gitFileChange = new GitFileChange();
@@ -166,5 +175,29 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(rhs.getName()).isEqualTo(lhs.getName());
     assertThat(rhs.getAccountId()).isEqualTo(lhs.getAccountId());
     assertThat(rhs.getDescription()).isEqualTo(lhs.getDescription());
+    if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)) {
+      assertThat(rhs.getIsManualTriggerAuthorized()).isEqualTo(lhs.getIsManualTriggerAuthorized());
+    }
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCRUDAndGetWithManualTriggerAuthorizedField() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+    application.setIsManualTriggerAuthorized(true);
+
+    testCRUDAndGet(validYamlContentWithManualTriggerAuthorized);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCRUDAndGetWithFFOn() throws IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
+
+    testCRUDAndGet(validYamlContent);
   }
 }
