@@ -158,6 +158,7 @@ public class BillingDataQueryBuilder {
           && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
           && areAggregationsValidForPreAggregation(aggregateFunction)) {
         selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
       } else {
         selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
       }
