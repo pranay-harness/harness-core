@@ -18,18 +18,11 @@ message RetryInterruptConfig {
 }
 
 message IssuedBy {
-  IssuedType issuedType = 2;
   oneof issuer {
     ManualIssuer manualIssuer = 3;
     AdviserIssuer adviserIssuer = 4;
     TimeoutIssuer timeoutIssuer = 5;
   }
-}
-
-enum IssuedType {
-  MANUAL = 0;
-  ADVISER = 1;
-  TIMEOUT = 2;
 }
 
 message ManualIssuer {
