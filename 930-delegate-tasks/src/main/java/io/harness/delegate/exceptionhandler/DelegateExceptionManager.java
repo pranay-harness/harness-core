@@ -4,8 +4,9 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
 import io.harness.delegate.exceptionhandler.handler.DelegateExceptionHandler;
+import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.UnexpectedException;
+import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
@@ -20,13 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegateExceptionManager {
   @Inject private Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
   @Inject private KryoSerializer kryoSerializer;
-
-  //  @Inject
-  //  public DelegateExceptionManager(Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandlerMapping,
-  //  ) {
-  //    exceptionHandler = exceptionHandlerMapping;
-  //
-  //  }
 
   public DelegateResponseData getResponseData(Exception exception,
       ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder, boolean isErrorFrameworkSupportedByTask) {
@@ -60,9 +54,11 @@ public class DelegateExceptionManager {
       if (delegateExceptionHandler != null) {
         handledException = delegateExceptionHandler.handleException(exception);
       } else {
-        // check if exception is wingsException, throw custom exception
-        // log it here and return default response
-        handledException = (WingsException) exception;
+        if (exception instanceof WingsException) {
+          handledException = (WingsException) exception;
+        } else {
+          throw new DelegateErrorHandlerException("Delegate exception handler not registered");
+        }
       }
 
       if (exception.getCause() != null) {
@@ -72,18 +68,17 @@ public class DelegateExceptionManager {
 
     } catch (Exception e) {
       log.error("Exception occured while handling delegate exception : {}", exception, e);
+      return prepareUnhandledExceptionResponse(exception);
     }
-
-    return prepareDefaultErrorResponse(exception);
   }
 
-  private WingsException prepareDefaultErrorResponse(Exception exception) {
-    if (!kryoSerializer.isRegistered(exception.getClass())) {
-      // log -- unable to handle exception due to non-rgistration to kryo
-      // define new custom exception --- kryo wrapper
-      // set message from exception
+  private WingsException prepareUnhandledExceptionResponse(Exception exception) {
+    Exception unhandledException = exception;
+    if (!kryoSerializer.isRegistered(unhandledException.getClass())) {
+      log.error("Kyro handler not found for exception", unhandledException);
+      unhandledException = new KryoHandlerNotFoundException(unhandledException.getMessage());
     }
-    return new UnexpectedException("Unable to handle delegate exception", exception);
+    return new DelegateErrorHandlerException("Unable to handle delegate exception", unhandledException);
   }
 
   private ErrorNotifyResponseDataBuilder prepareErrorResponse(
