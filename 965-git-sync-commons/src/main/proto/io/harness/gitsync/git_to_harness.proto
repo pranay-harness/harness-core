@@ -13,12 +13,13 @@ service GitToHarnessService {
 
 message ChangeSets {
   repeated ChangeSet change_set = 1;
+  string account_id = 2;
 }
 
 message ChangeSet {
   string id = 1;
   string yaml = 2;
-  string accountId = 3;
+  string account_id = 3;
   io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 4;
   string commit_id = 5;
   string object_id = 6;
@@ -27,6 +28,8 @@ message ChangeSet {
 
 message ProcessingResponse {
   repeated FileProcessingResponse response = 1;
+  string account_id = 2;
+  ProcessingFailureStage processing_failure_stage = 3;
 }
 
 message FileProcessingResponse {
@@ -40,5 +43,14 @@ enum FileProcessingStatus {
   SUCCESS = 0;
   FAILURE = 1;
   SKIPPED = 2;
+  // Used for internal flag for files not processed. Externally it is same as SKIPPED.
+  UNPROCESSED = 3;
   // todo(abhinav): Already processed?
+}
+
+enum ProcessingFailureStage {
+  RECEIVE_STAGE = 0;
+  SORT_STAGE = 1;
+  PROCESS_STAGE = 2;
+  POST_PROCESS_STAGE = 3;
 }

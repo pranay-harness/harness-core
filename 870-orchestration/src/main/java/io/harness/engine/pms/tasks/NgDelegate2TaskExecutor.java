@@ -101,6 +101,7 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
         .addAllSelectors(delegateTaskRequest.getSelectorsList())
         .addAllCapabilities(delegateTaskRequest.getCapabilitiesList())
         .setCallbackToken(tokenSupplier.get())
+        .setSelectionTrackingLogEnabled(delegateTaskRequest.getSelectionTrackingLogEnabled())
         .build();
   }
 

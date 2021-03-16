@@ -219,7 +219,8 @@ public class StepUtils {
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
                                       .putAllValues(MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap()))
-                                      .build());
+                                      .build())
+            .setSelectionTrackingLogEnabled(true);
 
     if (isNotEmpty(capabilities)) {
       requestBuilder.addAllCapabilities(

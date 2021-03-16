@@ -45,6 +45,7 @@ directories:
   870-cg-yaml-beans
   870-orchestration
   870-yaml-beans
+  874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
   879-pms-sdk
@@ -73,13 +74,13 @@ directories:
   940-notification-client
   940-resource-group-beans
   940-secret-manager-client
+  949-git-sync-sdk
   950-command-library-common
   950-log-client
   950-common-entities
   950-delegate-tasks-beans
   950-events-api
   950-events-framework
-  950-git-sync-sdk
   950-ng-audit-commons
   950-ng-core
   950-ng-project-n-orgs

@@ -15,6 +15,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import io.dropwizard.jackson.Jackson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -70,7 +71,7 @@ public class YamlSchemaGeneratorTest extends CategoryTest {
   }
 
   private void setup(Class<?> clazz) {
-    SwaggerGenerator swaggerGenerator = new SwaggerGenerator();
+    SwaggerGenerator swaggerGenerator = new SwaggerGenerator(Jackson.newObjectMapper());
     JacksonClassHelper jacksonClassHelper = new JacksonClassHelper();
     final List<YamlSchemaRootClass> yamlSchemaRootClasses =
         Collections.singletonList(YamlSchemaRootClass.builder().entityType(EntityType.CONNECTORS).clazz(clazz).build());

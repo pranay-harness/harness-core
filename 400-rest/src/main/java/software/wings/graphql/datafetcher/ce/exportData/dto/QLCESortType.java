@@ -10,7 +10,19 @@ public enum QLCESortType {
   TIME(CEExportDataMetadataFields.STARTTIME),
   TOTALCOST(CEExportDataMetadataFields.SUM),
   UNALLOCATEDCOST(CEExportDataMetadataFields.UNALLOCATEDCOST),
-  IDLECOST(CEExportDataMetadataFields.IDLECOST);
+  IDLECOST(CEExportDataMetadataFields.IDLECOST),
+  WORKLOAD(CEExportDataMetadataFields.WORKLOADNAME),
+  NAMESPACE(CEExportDataMetadataFields.NAMESPACE),
+  CLUSTER(CEExportDataMetadataFields.CLUSTERID),
+  APPLICATION(CEExportDataMetadataFields.APPID),
+  SERVICE(CEExportDataMetadataFields.SERVICEID),
+  ENVIRONMENT(CEExportDataMetadataFields.ENVID),
+  REGION(CEExportDataMetadataFields.REGION),
+  ECS_SERVICE(CEExportDataMetadataFields.CLOUDSERVICENAME),
+  TASK(CEExportDataMetadataFields.TASKID),
+  LAUNCHTYPE(CEExportDataMetadataFields.LAUNCHTYPE),
+  WORKLOADTYPE(CEExportDataMetadataFields.WORKLOADTYPE),
+  INSTANCE(CEExportDataMetadataFields.INSTANCEID);
 
   private CEExportDataMetadataFields billingMetaData;
 

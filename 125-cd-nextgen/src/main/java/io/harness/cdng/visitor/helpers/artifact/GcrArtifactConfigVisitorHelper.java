@@ -18,6 +18,7 @@ import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -33,13 +34,23 @@ public class GcrArtifactConfigVisitorHelper implements ConfigValidator, EntityRe
     if (ParameterField.isNull(gcrArtifactConfig.getConnectorRef())) {
       return result;
     }
+    String fullQualifiedDomainName =
+        VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
+    Map<String, String> metadata = new HashMap<>(Collections.singletonMap("fqn", fullQualifiedDomainName));
     if (!gcrArtifactConfig.getConnectorRef().isExpression()) {
       String connectorRefString = gcrArtifactConfig.getConnectorRef().getValue();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-      Map<String, String> metadata = Collections.singletonMap("fqn", fullQualifiedDomainName);
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
+      EntityDetailProtoDTO entityDetail =
+          EntityDetailProtoDTO.newBuilder()
+              .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
+              .setType(EntityTypeProtoEnum.CONNECTORS)
+              .build();
+      result.add(entityDetail);
+    } else {
+      metadata.put("expression", gcrArtifactConfig.getConnectorRef().getExpressionValue());
+      IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
+          orgIdentifier, projectIdentifier, gcrArtifactConfig.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =
           EntityDetailProtoDTO.newBuilder()
               .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))

@@ -46,10 +46,12 @@ import org.reflections.Reflections;
 @Slf4j
 public class AbstractSnippetChecker {
   List<YamlSchemaRootClass> yamlSchemaRootClasses;
+  ObjectMapper objectMapper;
 
   @Inject
-  public AbstractSnippetChecker(List<YamlSchemaRootClass> yamlSchemaRootClasses) {
+  public AbstractSnippetChecker(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper) {
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
+    this.objectMapper = objectMapper;
   }
   public void snippetTests() throws IOException {
     if (isEmpty(yamlSchemaRootClasses)) {
@@ -62,7 +64,7 @@ public class AbstractSnippetChecker {
       return;
     }
     YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
     final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final Class tagsEnum = getTagsEnum(reflections);
     for (Pair<String, Pair<EntityType, ClassLoader>> snippet : snippetsIndex) {
