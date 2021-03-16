@@ -17,6 +17,5 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sScaleBaseStepInfo {
   @NotNull InstanceSelectionWrapper instanceSelection;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workload;
-  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipSteadyStateCheck;
 }

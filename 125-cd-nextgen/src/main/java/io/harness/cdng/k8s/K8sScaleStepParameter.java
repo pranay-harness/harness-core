@@ -61,7 +61,6 @@ public class K8sScaleStepParameter extends K8sScaleBaseStepInfo implements K8sSt
     return RecastOrchestrationUtils.toDocumentJson(K8sScaleStepParameter.infoBuilder()
                                                        .instanceSelection(instanceSelection)
                                                        .workload(workload)
-                                                       .skipDryRun(skipDryRun)
                                                        .skipSteadyStateCheck(skipSteadyStateCheck)
                                                        .timeout(timeout)
                                                        .rollbackInfo(rollbackInfo)
