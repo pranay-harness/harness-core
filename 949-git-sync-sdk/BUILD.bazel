@@ -7,6 +7,7 @@ java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
+        "//950-events-api:module",
         "//960-persistence:module",
         "//965-git-sync-commons:module",
         "//970-api-services-beans:module",

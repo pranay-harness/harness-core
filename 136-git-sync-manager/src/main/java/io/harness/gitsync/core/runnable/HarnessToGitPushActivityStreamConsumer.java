@@ -1,11 +1,12 @@
-package io.harness.ng.core.event;
+package io.harness.gitsync.core.runnable;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
-import static io.harness.eventsframework.EventsFrameworkConstants.SETUP_USAGE;
+import static io.harness.eventsframework.EventsFrameworkConstants.HARNESS_TO_GIT_PUSH;
 
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
@@ -18,28 +19,29 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SetupUsageStreamConsumer implements Runnable {
+public class HarnessToGitPushActivityStreamConsumer implements Runnable {
   private final Consumer redisConsumer;
   private final List<MessageListener> messageListenersList;
 
   @Inject
-  public SetupUsageStreamConsumer(@Named(SETUP_USAGE) Consumer redisConsumer,
-      @Named(SETUP_USAGE) MessageListener setupUsageChangeEventMessageProcessor) {
+  public HarnessToGitPushActivityStreamConsumer(@Named(HARNESS_TO_GIT_PUSH) Consumer redisConsumer,
+      @Named(HARNESS_TO_GIT_PUSH) MessageListener activityEventMessageProcessor) {
     this.redisConsumer = redisConsumer;
     messageListenersList = new ArrayList<>();
-    messageListenersList.add(setupUsageChangeEventMessageProcessor);
+    messageListenersList.add(activityEventMessageProcessor);
   }
 
   @Override
   public void run() {
     log.info("Started the consumer for setup usage stream");
+    // todo(abhinav): change to git sync manager when it seprates out.
     SecurityContextBuilder.setContext(new ServicePrincipal(NG_MANAGER.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
         pollAndProcessMessages();
       }
     } catch (Exception ex) {
-      log.error("Setup Usage consumer unexpectedly stopped", ex);
+      log.error("Harness to git consumer unexpectedly stopped", ex);
     }
     SecurityContextBuilder.unsetCompleteContext();
   }
@@ -76,7 +78,6 @@ public class SetupUsageStreamConsumer implements Runnable {
         success.set(false);
       }
     });
-
     return success.get();
   }
 }
