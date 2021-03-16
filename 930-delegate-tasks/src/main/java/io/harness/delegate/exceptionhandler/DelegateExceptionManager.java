@@ -8,6 +8,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.reflection.ReflectionUtils;
+import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,12 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class DelegateExceptionManager {
-  private final Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
+  @Inject private Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
+  @Inject private KryoSerializer kryoSerializer;
 
-  @Inject
-  public DelegateExceptionManager(Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandlerMapping) {
-    exceptionHandler = exceptionHandlerMapping;
-  }
+  //  @Inject
+  //  public DelegateExceptionManager(Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandlerMapping,
+  //  ) {
+  //    exceptionHandler = exceptionHandlerMapping;
+  //
+  //  }
 
   public DelegateResponseData getResponseData(Exception exception,
       ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder, boolean isErrorFrameworkSupportedByTask) {
@@ -56,6 +60,8 @@ public class DelegateExceptionManager {
       if (delegateExceptionHandler != null) {
         handledException = delegateExceptionHandler.handleException(exception);
       } else {
+        // check if exception is wingsException, throw custom exception
+        // log it here and return default response
         handledException = (WingsException) exception;
       }
 
@@ -72,6 +78,11 @@ public class DelegateExceptionManager {
   }
 
   private WingsException prepareDefaultErrorResponse(Exception exception) {
+    if (!kryoSerializer.isRegistered(exception.getClass())) {
+      // log -- unable to handle exception due to non-rgistration to kryo
+      // define new custom exception --- kryo wrapper
+      // set message from exception
+    }
     return new UnexpectedException("Unable to handle delegate exception", exception);
   }
 

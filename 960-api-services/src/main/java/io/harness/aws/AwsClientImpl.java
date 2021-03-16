@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -75,7 +76,7 @@ public class AwsClientImpl implements AwsClient {
       if (amazonEC2Exception.getStatusCode() == 401) {
         if (!awsConfig.isEc2IamCredentials()) {
           if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
-            throw new InvalidRequestException("Access Key should not be empty");
+            throw new HintException("Access Key should not be empty", amazonEC2Exception);
           } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
             throw new InvalidRequestException("Secret Key should not be empty");
           }

@@ -17,7 +17,6 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -76,8 +75,8 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
     final AwsConfig awsConfig =
         awsNgConfigMapper.mapAwsConfigWithDecryption(credential, awsCredentialType, encryptionDetails);
     //    try {
-    throw new AmazonCodeDeployException("Error Message");
-    //      awsClient.validateAwsAccountCredential(awsConfig);
+    //    throw new AmazonCodeDeployException("Error Message");
+    awsClient.validateAwsAccountCredential(awsConfig);
     //      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
     //                                                                .status(ConnectivityStatus.SUCCESS)
     //                                                                .delegateId(getDelegateId())
@@ -90,5 +89,7 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
     //      handleAmazonClientException(amazonClientException);
     //    }
     //    throw new InvalidRequestException("Unsuccessful validation");
+
+    return null;
   }
 }
