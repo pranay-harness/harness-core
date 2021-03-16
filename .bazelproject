@@ -45,6 +45,7 @@ directories:
   870-cg-yaml-beans
   870-orchestration
   870-yaml-beans
+  874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
   879-pms-sdk
