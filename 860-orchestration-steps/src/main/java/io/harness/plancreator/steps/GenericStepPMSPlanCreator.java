@@ -57,8 +57,10 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
 import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
+import io.harness.yaml.core.failurestrategy.manualintervention.ManualFailureSpecConfig;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
+import io.harness.yaml.core.failurestrategy.retry.RetryFailureSpecConfig;
 import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -259,14 +261,27 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           if (retryAction.getSpecConfig().getRetryIntervals().isExpression()) {
             throw new InvalidRequestException("RetryIntervals cannot be expression/runtime input. Please give values.");
           }
+
+          FailureStrategyActionConfig actionUnderRetry = retryAction.getSpecConfig().getOnRetryFailure().getAction();
+
+          if (validateActionAfterRetryFailure(actionUnderRetry) != true) {
+            throw new InvalidRequestException("Retry action cannot have post retry failure action as Retry");
+          }
+          // validating Retry -> Manual Intervention -> Retry
+          if (actionUnderRetry.getType().equals(NGFailureActionType.MANUAL_INTERVENTION)) {
+            if (validateRetryActionUnderManualAction(
+                    ((ManualInterventionFailureActionConfig) actionUnderRetry).getSpecConfig())) {
+              throw new InvalidRequestException(
+                  "Retry Action cannot be applied under Manual Action which itself is in Retry Action");
+            }
+          }
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(RetryAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                       RetryAdviserParameters.builder()
                           .applicableFailureTypes(failureTypes)
                           .nextNodeId(nextNodeUuid)
-                          .repairActionCodeAfterRetry(toRepairAction(
-                              retryAction.getSpecConfig().getOnRetryFailure().getAction(), rollbackInfoBuilder))
+                          .repairActionCodeAfterRetry(toRepairAction(actionUnderRetry, rollbackInfoBuilder))
                           .retryCount(retryCount.getValue())
                           .waitIntervalList(retryAction.getSpecConfig()
                                                 .getRetryIntervals()
@@ -307,13 +322,26 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
           break;
         case MANUAL_INTERVENTION:
           ManualInterventionFailureActionConfig actionConfig = (ManualInterventionFailureActionConfig) action;
+
+          FailureStrategyActionConfig actionUnderManualIntervention =
+              actionConfig.getSpecConfig().getOnTimeout().getAction();
+          if (actionUnderManualIntervention.getType().equals(NGFailureActionType.MANUAL_INTERVENTION)) {
+            throw new InvalidRequestException("Manual Action cannot be applied as PostTimeOut Action");
+          }
+          // validating Manual Intervention -> Retry -> Manual Intervention
+          if (actionUnderManualIntervention.getType().equals(NGFailureActionType.RETRY)) {
+            if (validateManualActionUnderRetryAction(
+                    ((RetryFailureActionConfig) actionUnderManualIntervention).getSpecConfig())) {
+              throw new InvalidRequestException(
+                  "Manual Action cannot be applied under Retry Action which itself is in Manual Action");
+            }
+          }
           adviserObtainmentList.add(
               adviserObtainmentBuilder.setType(ManualInterventionAdviser.ADVISER_TYPE)
                   .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
                       ManualInterventionAdviserParameters.builder()
                           .applicableFailureTypes(failureTypes)
-                          .timeoutAction(toRepairAction(
-                              actionConfig.getSpecConfig().getOnTimeout().getAction(), rollbackInfoBuilder))
+                          .timeoutAction(toRepairAction(actionUnderManualIntervention, rollbackInfoBuilder))
                           .timeout((int) TimeoutUtils.getTimeoutInSeconds(actionConfig.getSpecConfig().getTimeout(), 0))
                           .build())))
                   .build());
@@ -324,6 +352,31 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     }
 
     return adviserObtainmentList;
+  }
+
+  public boolean validateManualActionUnderRetryAction(RetryFailureSpecConfig retrySpecConfig) {
+    if (retrySpecConfig.getOnRetryFailure().getAction().getType().equals(NGFailureActionType.MANUAL_INTERVENTION)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean validateRetryActionUnderManualAction(ManualFailureSpecConfig manualSpecConfig) {
+    if (manualSpecConfig.getOnTimeout().getAction().getType().equals(NGFailureActionType.RETRY)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  public boolean validateActionAfterRetryFailure(FailureStrategyActionConfig action) {
+    switch (action.getType()) {
+      case RETRY:
+        return false;
+      default:
+        return true;
+    }
   }
 
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {
@@ -420,6 +473,8 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
         return RepairActionCode.ON_FAIL;
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
+      case RETRY:
+        return RepairActionCode.RETRY;
       default:
         throw new InvalidRequestException(
 
