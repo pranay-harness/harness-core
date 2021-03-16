@@ -12,7 +12,6 @@ import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
 import software.wings.beans.HelmCommandFlagConfig;
 import software.wings.helpers.ext.kustomize.KustomizeConfig;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -20,7 +19,6 @@ import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.NonNull;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
@@ -86,33 +84,4 @@ public class ApplicationManifest extends Base implements AccountAccess {
   }
 
   public enum AppManifestSource { SERVICE, ENV, ENV_SERVICE }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static final class Yaml extends BaseEntityYaml {
-    private String storeType;
-    private GitFileConfig gitFileConfig;
-    private HelmChartConfig helmChartConfig;
-    private KustomizeConfig kustomizeConfig;
-    private CustomSourceConfig customSourceConfig;
-    private Boolean pollForChanges;
-    private Boolean skipVersioningForAllK8sObjects;
-    private HelmCommandFlagConfig helmCommandFlag;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
-        HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
-        Boolean pollForChanges, HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
-      super(type, harnessApiVersion);
-      this.storeType = storeType;
-      this.gitFileConfig = gitFileConfig;
-      this.helmChartConfig = helmChartConfig;
-      this.kustomizeConfig = kustomizeConfig;
-      this.customSourceConfig = customSourceConfig;
-      this.pollForChanges = pollForChanges;
-      this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
-      this.helmCommandFlag = helmCommandFlag;
-    }
-  }
 }

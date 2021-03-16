@@ -18,6 +18,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.AmazonS3HelmRepoConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -31,7 +32,7 @@ public class AmazonS3HelmRepoConfigYamlHandlerTest extends SettingValueConfigYam
   @InjectMocks @Inject private AmazonS3HelmRepoConfigYamlHandler yamlHandler;
   @InjectMocks @Inject private HPersistence persistence;
 
-  private Class yamlClass = AmazonS3HelmRepoConfig.Yaml.class;
+  private Class yamlClass = AmazonS3HelmRepoConfigYaml.class;
   private static final String AMAZONS3_HELM_CHART_SETTING_NAME = "AmazonS3-Helm-Repo";
   private static final String CLOUD_PROVIDER_NAME = "Amazon-Cloud-Provider";
   private static final String CLOUD_PROVIDER_ID = "Amazon-Cloud-Provider-Id";

@@ -14,8 +14,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
-import software.wings.beans.NameValuePair;
-
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Joiner;
 import java.util.ArrayList;
@@ -27,7 +25,6 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
 @JsonTypeName("AMI")
@@ -142,25 +139,5 @@ public class AmiArtifactStream extends ArtifactStream {
   public static class Tag {
     private String key;
     private String value;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStream.Yaml {
-    private String platform;
-    private String region;
-    private List<NameValuePair.Yaml> amiTags = new ArrayList<>();
-    private List<NameValuePair.Yaml> amiFilters = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, List<NameValuePair.Yaml> amiTags, String region,
-        String platform, List<NameValuePair.Yaml> amiFilters) {
-      super(AMI.name(), harnessApiVersion, serverName);
-      this.amiTags = amiTags;
-      this.region = region;
-      this.platform = platform;
-      this.amiFilters = amiFilters;
-    }
   }
 }

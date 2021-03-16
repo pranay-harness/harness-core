@@ -92,7 +92,7 @@ import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
-import software.wings.beans.trigger.ArtifactSelection;
+import software.wings.beans.trigger.ArtifactSelectionYaml;
 import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.workflow.StepSkipStrategy;
@@ -508,7 +508,7 @@ public enum YamlType {
   WEBHOOK_EVENT(ObjectType.WEBHOOK_EVENT, "", "", WebhookEventYaml.class),
   TRIGGER_VARIABLE(ObjectType.TRIGGER_VARIABLE, "", "", TriggerVariableYaml.class),
   TRIGGER_ARTIFACT_VALUE(ObjectType.TRIGGER_ARTIFACT_VALUE, "", "", TriggerArtifactSelectionValueYaml.class),
-  ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelection.Yaml.class),
+  ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelectionYaml.class),
   MANIFEST_SELECTION(ObjectType.MANIFEST_SELECTION, "", "", ManifestSelection.Yaml.class),
   TAG(EntityType.TAG.name(), generatePath(PATH_DELIMITER, false, SETUP_FOLDER, TAGS_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class),

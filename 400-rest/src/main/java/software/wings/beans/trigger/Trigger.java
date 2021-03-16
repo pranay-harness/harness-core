@@ -183,14 +183,14 @@ public class Trigger extends Base implements NameAccess, TagAware, ApplicationAc
     private String executionType;
     private String executionName;
     private boolean continueWithDefaultValues;
-    private List<ArtifactSelection.Yaml> artifactSelections = new ArrayList<>();
+    private List<ArtifactSelectionYaml> artifactSelections = new ArrayList<>();
     private List<ManifestSelection.Yaml> manifestSelections = new ArrayList<>();
     private List<TriggerVariable> workflowVariables = new ArrayList<>();
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String executionType, String executionName,
         List<TriggerVariable> workflowVariables, List<TriggerConditionYaml> triggerCondition,
-        List<ArtifactSelection.Yaml> artifactSelections, List<ManifestSelection.Yaml> manifestSelections,
+        List<ArtifactSelectionYaml> artifactSelections, List<ManifestSelection.Yaml> manifestSelections,
         boolean continueWithDefaultValues) {
       super(EntityType.TRIGGER.name(), harnessApiVersion);
       this.continueWithDefaultValues = continueWithDefaultValues;

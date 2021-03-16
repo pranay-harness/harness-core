@@ -13,6 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.AppDynamicsConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
@@ -34,7 +35,7 @@ public class AppDynamicsConfigYamlHandlerTest extends SettingValueConfigYamlHand
       + "controllerUrl: https://wingsnfr.saas.appdynamics.com:443/controller\n"
       + "type: APP_DYNAMICS";
 
-  private Class yamlClass = AppDynamicsConfig.Yaml.class;
+  private Class yamlClass = AppDynamicsConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

@@ -3,12 +3,9 @@ package software.wings.beans.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.yaml.BaseYaml;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
@@ -72,30 +69,5 @@ public class ArtifactSelection {
       return pipelineName;
     }
     return workflowName;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    String type;
-    private String artifactStreamName;
-    private boolean regex;
-    private String artifactFilter;
-    String workflowName;
-    String pipelineName;
-    String serviceName;
-
-    @lombok.Builder
-    public Yaml(String type, String artifactStreamName, String workflowName, String artifactFilter, String serviceName,
-        boolean regex, String pipelineName) {
-      this.artifactStreamName = artifactStreamName;
-      this.workflowName = workflowName;
-      this.pipelineName = pipelineName;
-      this.artifactFilter = artifactFilter;
-      this.type = type;
-      this.regex = regex;
-      this.serviceName = serviceName;
-    }
   }
 }

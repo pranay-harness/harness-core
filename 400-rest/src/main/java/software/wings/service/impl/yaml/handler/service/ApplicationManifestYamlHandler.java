@@ -18,7 +18,7 @@ import software.wings.beans.HelmChartConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.beans.appmanifest.ApplicationManifest.Yaml;
+import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, ApplicationManifest> {
+public class ApplicationManifestYamlHandler extends BaseYamlHandler<ApplicationManifestYaml, ApplicationManifest> {
   @Inject YamlHelper yamlHelper;
   @Inject ApplicationManifestService applicationManifestService;
   @Inject GitFileConfigHelperService gitFileConfigHelperService;
@@ -48,8 +48,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   @Inject FeatureFlagService featureFlagService;
 
   @Override
-  public Yaml toYaml(ApplicationManifest applicationManifest, String appId) {
-    return Yaml.builder()
+  public ApplicationManifestYaml toYaml(ApplicationManifest applicationManifest, String appId) {
+    return ApplicationManifestYaml.builder()
         .type(yamlResourceService.getYamlTypeFromAppManifest(applicationManifest).name())
         .harnessApiVersion(getHarnessApiVersion())
         .storeType(applicationManifest.getStoreType().name())
@@ -64,7 +64,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   }
 
   @Override
-  public ApplicationManifest upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public ApplicationManifest upsertFromYaml(
+      ChangeContext<ApplicationManifestYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -86,8 +87,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
   }
 
-  private ApplicationManifest toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private ApplicationManifest toBean(ChangeContext<ApplicationManifestYaml> changeContext) {
+    ApplicationManifestYaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -133,7 +134,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     return manifest;
   }
 
-  private KustomizeConfig getKustomizeConfigFromYaml(Yaml yaml, StoreType storeType) {
+  private KustomizeConfig getKustomizeConfigFromYaml(ApplicationManifestYaml yaml, StoreType storeType) {
     KustomizeConfig kustomizeConfig = yaml.getKustomizeConfig();
     if (kustomizeConfig != null && storeType != StoreType.KustomizeSourceRepo) {
       throw new InvalidRequestException(
@@ -144,7 +145,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ApplicationManifestYaml.class;
   }
 
   @Override
@@ -155,7 +156,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<ApplicationManifestYaml> changeContext) {
     Change change = changeContext.getChange();
 
     ApplicationManifest applicationManifest = get(change.getAccountId(), change.getFilePath());
@@ -181,7 +182,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     return gitFileConfigHelperService.getGitFileConfigForToYaml(applicationManifest.getGitFileConfig());
   }
 
-  private GitFileConfig getGitFileConfigFromYaml(String accountId, String appId, Yaml yaml, StoreType storeType) {
+  private GitFileConfig getGitFileConfigFromYaml(
+      String accountId, String appId, ApplicationManifestYaml yaml, StoreType storeType) {
     GitFileConfig gitFileConfig = yaml.getGitFileConfig();
 
     if (gitFileConfig == null) {
@@ -203,7 +205,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     return helmChartConfigHelperService.getHelmChartConfigForToYaml(applicationManifest.getHelmChartConfig());
   }
 
-  private HelmChartConfig getHelmChartConfigFromYaml(String accountId, String appId, Yaml yaml, StoreType storeType) {
+  private HelmChartConfig getHelmChartConfigFromYaml(
+      String accountId, String appId, ApplicationManifestYaml yaml, StoreType storeType) {
     HelmChartConfig helmChartConfig = yaml.getHelmChartConfig();
     if (helmChartConfig == null) {
       return null;
@@ -233,7 +236,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
   }
 
-  private CustomSourceConfig getCustomSourceConfigFromYaml(String accountId, Yaml yaml, StoreType storeType) {
+  private CustomSourceConfig getCustomSourceConfigFromYaml(
+      String accountId, ApplicationManifestYaml yaml, StoreType storeType) {
     if (isCustomSource(storeType) && !featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, accountId)) {
       throw new InvalidRequestException("Custom Manifest feature is not enabled. Please contact Harness support");
     }

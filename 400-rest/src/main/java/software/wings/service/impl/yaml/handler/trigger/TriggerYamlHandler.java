@@ -31,6 +31,7 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.trigger.ArtifactSelection;
+import software.wings.beans.trigger.ArtifactSelectionYaml;
 import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.Yaml;
@@ -125,7 +126,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
           convertToTriggerYamlVariables(appId, bean.getWorkflowVariables(), pipeline.getPipelineVariables());
     }
 
-    List<ArtifactSelection.Yaml> artifactSelectionList =
+    List<ArtifactSelectionYaml> artifactSelectionList =
         bean.getArtifactSelections()
             .stream()
             .map(artifactSelection -> { return artifactSelectionYamlHandler.toYaml(artifactSelection, appId); })
@@ -140,7 +141,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
         : null;
 
     if (isNotEmpty(artifactSelectionList)) {
-      for (ArtifactSelection.Yaml artifactSelectionYAML : artifactSelectionList) {
+      for (ArtifactSelectionYaml artifactSelectionYAML : artifactSelectionList) {
         if (bean.getWorkflowType() == WorkflowType.ORCHESTRATION) {
           artifactSelectionYAML.setPipelineName(null);
         } else if (bean.getWorkflowType() == WorkflowType.PIPELINE) {
