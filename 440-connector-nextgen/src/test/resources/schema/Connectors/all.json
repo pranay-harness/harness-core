@@ -890,7 +890,8 @@
             "CEAws",
             "CEAzure",
             "CEK8sCluster",
-            "HttpHelmRepo"
+            "HttpHelmRepo",
+            "NewRelic"
           ]
         }
       },
@@ -1180,6 +1181,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/LocalConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "NewRelic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/NewRelicConnectorDTO"
               }
             }
           }
@@ -2819,6 +2836,33 @@
           "properties": {
             "default": {
               "type": "boolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NewRelicConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "newRelicAccountId",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "newRelicAccountId": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
             }
           }
         }
