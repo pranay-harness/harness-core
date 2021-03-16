@@ -23,6 +23,7 @@ public class SecurityContextBuilder {
   public static final String PRINCIPAL_TYPE = "type";
   public static final String PRINCIPAL_NAME = "name";
   public static final String ACCOUNT_ID = "accountId";
+  public static final String EMAIL = "email";
 
   public void setContext(Map<String, Claim> claimMap) {
     Principal principal = null;
