@@ -1,0 +1,24 @@
+From 266b3d38af3bf66a760ca811b23905889d21185d Mon Sep 17 00:00:00 2001
+From: Sri Pardha Chidella <sripardha.chidella@harness.io>
+Date: Wed, 17 Mar 2021 14:26:28 +0530
+Subject: [PATCH 4/4] [CDP-16114]: formatting
+
+---
+ .../helpers/ext/k8s/request/K8sRollingDeployTaskParameters.java  | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/400-rest/src/main/java/software/wings/helpers/ext/k8s/request/K8sRollingDeployTaskParameters.java b/400-rest/src/main/java/software/wings/helpers/ext/k8s/request/K8sRollingDeployTaskParameters.java
+index 78f08b64b3..88c84e1e42 100644
+--- a/400-rest/src/main/java/software/wings/helpers/ext/k8s/request/K8sRollingDeployTaskParameters.java
++++ b/400-rest/src/main/java/software/wings/helpers/ext/k8s/request/K8sRollingDeployTaskParameters.java
+@@ -10,7 +10,6 @@ import io.harness.k8s.model.HelmVersion;
+ 
+ import java.util.List;
+ import java.util.Set;
+-
+ import lombok.Builder;
+ import lombok.Data;
+ import lombok.EqualsAndHashCode;
+-- 
+2.24.3 (Apple Git-128)
+

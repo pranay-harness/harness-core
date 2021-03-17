@@ -9,6 +9,7 @@ import io.harness.expression.Expression;
 import io.harness.k8s.model.HelmVersion;
 
 import java.util.List;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,9 +28,10 @@ public class K8sDeleteTaskParameters extends K8sTaskParameters {
   public K8sDeleteTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
-      String resources, boolean deleteNamespacesForRelease, HelmVersion helmVersion, String filePaths) {
+      String resources, boolean deleteNamespacesForRelease, HelmVersion helmVersion, String filePaths,
+      Set<String> delegateSelectors) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.resources = resources;

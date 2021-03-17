@@ -61,6 +61,12 @@ public class K8sApplyState extends AbstractK8sState {
   private String stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+
+  @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    return getDelegateSelectors();
+  }
 
   @Override
   public Integer getTimeoutMillis() {

@@ -83,6 +83,12 @@ public class K8sDelete extends AbstractK8sState {
 
   @Trimmed @Getter @Setter @Attributes(title = "File paths") private String filePaths;
   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+
+  @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    return getDelegateSelectors();
+  }
 
   @Override
   public Integer getTimeoutMillis() {

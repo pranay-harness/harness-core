@@ -76,6 +76,12 @@ public class K8sScale extends AbstractK8sState {
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+
+  @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    return getDelegateSelectors();
+  }
 
   @Override
   public Integer getTimeoutMillis() {

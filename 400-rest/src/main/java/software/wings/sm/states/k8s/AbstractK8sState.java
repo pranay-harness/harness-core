@@ -298,6 +298,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
 
+    Set<String> renderedAndTrimmedSelectors = getRenderedAndTrimmedSelectors(context);
+    fetchFilesTaskParams.setDelegateSelectors(renderedAndTrimmedSelectors);
+
     applicationManifestUtils.setValuesPathInGitFetchFilesTaskParams(fetchFilesTaskParams);
 
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
@@ -515,6 +518,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
     k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
+    Set<String> renderedAndTrimmedSelectors = getRenderedAndTrimmedSelectors(context);
+    k8sTaskParameters.setDelegateSelectors(renderedAndTrimmedSelectors);
 
     long taskTimeoutInMillis = DEFAULT_ASYNC_CALL_TIMEOUT;
 
@@ -1046,6 +1051,12 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @Override public abstract ExecutionResponse execute(ExecutionContext context);
 
   @Override public abstract void handleAbortEvent(ExecutionContext context);
+
+  public abstract List<String> getDelegateSelectors(ExecutionContext context);
+
+  protected Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
+    return k8sStateHelper.getRenderedAndTrimmedSelectors(context, getDelegateSelectors(context));
+  }
 
   @Override
   public boolean isSelectionLogsTrackingForTasksEnabled() {

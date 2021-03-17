@@ -58,6 +58,12 @@ public class K8sTrafficSplitState extends AbstractK8sState {
   @Setter
   @Attributes(title = "Destination Weights")
   private List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+
+  @Override
+  public List<String> getDelegateSelectors(ExecutionContext context) {
+    return getDelegateSelectors();
+  }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {

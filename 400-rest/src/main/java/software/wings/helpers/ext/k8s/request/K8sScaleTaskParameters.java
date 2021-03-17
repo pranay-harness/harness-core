@@ -8,6 +8,7 @@ import io.harness.k8s.model.HelmVersion;
 import software.wings.beans.InstanceUnitType;
 
 import java.util.Optional;
+import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,9 +26,9 @@ public class K8sScaleTaskParameters extends K8sTaskParameters {
   public K8sScaleTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, String workload, Integer instances, InstanceUnitType instanceUnitType,
-      Integer maxInstances, boolean skipSteadyStateCheck, HelmVersion helmVersion) {
+      Integer maxInstances, boolean skipSteadyStateCheck, HelmVersion helmVersion, Set<String> delegateSelectors) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
     this.workload = workload;
     this.instances = instances;
     this.instanceUnitType = instanceUnitType;

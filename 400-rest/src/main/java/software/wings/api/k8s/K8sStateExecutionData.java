@@ -45,6 +45,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   @Builder.Default private Set<String> namespaces = new HashSet<>();
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
+  private Set<String> delegateSelectors;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -90,6 +91,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
         .namespaces(namespaces)
         .helmChartInfo(helmChartInfo)
         .blueGreenStageColor(blueGreenStageColor)
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }

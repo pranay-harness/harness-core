@@ -1,0 +1,151 @@
+From 4bdf5bd9ade4993b64885aef25fa64363b85b4e1 Mon Sep 17 00:00:00 2001
+From: Sri Pardha Chidella <sripardha.chidella@harness.io>
+Date: Tue, 16 Mar 2021 18:37:04 +0530
+Subject: [PATCH 1/4] [CDP-16114]: k8s state
+
+---
+ .../java/software/wings/sm/states/k8s/AbstractK8sState.java | 2 ++
+ .../java/software/wings/sm/states/k8s/K8sApplyState.java    | 6 ++++++
+ .../software/wings/sm/states/k8s/K8sBlueGreenDeploy.java    | 6 ++++++
+ .../java/software/wings/sm/states/k8s/K8sCanaryDeploy.java  | 6 ++++++
+ .../main/java/software/wings/sm/states/k8s/K8sDelete.java   | 6 ++++++
+ .../java/software/wings/sm/states/k8s/K8sRollingDeploy.java | 6 ++++++
+ .../main/java/software/wings/sm/states/k8s/K8sScale.java    | 6 ++++++
+ .../software/wings/sm/states/k8s/K8sTrafficSplitState.java  | 6 ++++++
+ 8 files changed, 44 insertions(+)
+
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/AbstractK8sState.java b/400-rest/src/main/java/software/wings/sm/states/k8s/AbstractK8sState.java
+index 447d3eae28..f7bc1df879 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/AbstractK8sState.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/AbstractK8sState.java
+@@ -1047,6 +1047,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
+ 
+   @Override public abstract void handleAbortEvent(ExecutionContext context);
+ 
++  public abstract List<String> getDelegateSelectors(ExecutionContext context);
++
+   @Override
+   public boolean isSelectionLogsTrackingForTasksEnabled() {
+     return true;
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sApplyState.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sApplyState.java
+index acb06c2820..ceca03facc 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sApplyState.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sApplyState.java
+@@ -61,6 +61,12 @@ public class K8sApplyState extends AbstractK8sState {
+   private String stateTimeoutInMinutes;
+   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
+   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context){
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public Integer getTimeoutMillis() {
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sBlueGreenDeploy.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sBlueGreenDeploy.java
+index c9aa957692..ed167728af 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sBlueGreenDeploy.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sBlueGreenDeploy.java
+@@ -62,6 +62,12 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
+ 
+   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
+   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context){
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public Integer getTimeoutMillis() {
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sCanaryDeploy.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sCanaryDeploy.java
+index 10a428b333..c67675ec0c 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sCanaryDeploy.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sCanaryDeploy.java
+@@ -76,6 +76,12 @@ public class K8sCanaryDeploy extends AbstractK8sState {
+   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
+   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
+   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context){
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public Integer getTimeoutMillis() {
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sDelete.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sDelete.java
+index 3fab99bcbe..4e01bd049b 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sDelete.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sDelete.java
+@@ -83,6 +83,12 @@ public class K8sDelete extends AbstractK8sState {
+ 
+   @Trimmed @Getter @Setter @Attributes(title = "File paths") private String filePaths;
+   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context){
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public Integer getTimeoutMillis() {
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sRollingDeploy.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sRollingDeploy.java
+index bf8c133794..1e8896610d 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sRollingDeploy.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sRollingDeploy.java
+@@ -66,6 +66,12 @@ public class K8sRollingDeploy extends AbstractK8sState {
+ 
+   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
+   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context){
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public Integer getTimeoutMillis() {
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sScale.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sScale.java
+index a3ce2ff765..829b3a9fdb 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sScale.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sScale.java
+@@ -76,6 +76,12 @@ public class K8sScale extends AbstractK8sState {
+   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
+   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
+   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context) {
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public Integer getTimeoutMillis() {
+diff --git a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sTrafficSplitState.java b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sTrafficSplitState.java
+index 87b155589a..2ea31aadcc 100644
+--- a/400-rest/src/main/java/software/wings/sm/states/k8s/K8sTrafficSplitState.java
++++ b/400-rest/src/main/java/software/wings/sm/states/k8s/K8sTrafficSplitState.java
+@@ -58,6 +58,12 @@ public class K8sTrafficSplitState extends AbstractK8sState {
+   @Setter
+   @Attributes(title = "Destination Weights")
+   private List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
++  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
++
++  @Override
++  public List<String> getDelegateSelectors(ExecutionContext context) {
++    return getDelegateSelectors();
++  }
+ 
+   @Override
+   public ExecutionResponse execute(ExecutionContext context) {
+-- 
+2.24.3 (Apple Git-128)
+

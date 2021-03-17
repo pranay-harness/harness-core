@@ -21,4 +21,5 @@ public class K8sExecutionSummary extends StepExecutionSummary {
   private Set<String> namespaces;
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
+  private Set<String> delegateSelectors;
 }
