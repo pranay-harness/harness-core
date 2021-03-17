@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.model;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
@@ -15,6 +17,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsRequest implements ExecutionCapabilityDemander {
   @NotNull private AwsConfig awsConfig;
   @NotNull private List<EncryptedDataDetail> encryptionDetails;

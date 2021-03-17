@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.application;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.Application;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.schema.query.QLApplicationGitSyncConfigQueryParameters;
@@ -13,6 +16,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ApplicationGitSyncConfigDataFetcher
     extends AbstractObjectDataFetcher<QLGitSyncConfig, QLApplicationGitSyncConfigQueryParameters> {
   @Inject AppService appService;

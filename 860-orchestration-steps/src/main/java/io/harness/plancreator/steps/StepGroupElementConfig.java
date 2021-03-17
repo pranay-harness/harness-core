@@ -1,8 +1,10 @@
 package io.harness.plancreator.steps;
 
+import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -25,8 +27,9 @@ public class StepGroupElementConfig {
   @NotNull @EntityIdentifier String identifier;
   @EntityName String name;
 
-  List<FailureStrategyConfig> failureStrategies;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
 
+  List<FailureStrategyConfig> failureStrategies;
   @NotNull List<ExecutionWrapperConfig> steps;
   List<ExecutionWrapperConfig> rollbackSteps;
 }

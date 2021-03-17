@@ -7,7 +7,9 @@ import static software.wings.graphql.utils.nameservice.NameService.trigger;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.trigger.Trigger;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class TriggerConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLTriggerFilter, QLNoOpSortCriteria, QLTriggerConnection> {
   @Inject TriggerQueryHelper triggerQueryHelper;

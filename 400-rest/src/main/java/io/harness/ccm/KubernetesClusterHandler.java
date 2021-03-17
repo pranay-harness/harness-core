@@ -48,6 +48,11 @@ public class KubernetesClusterHandler implements DelegateObserver {
     // do nothing
   }
 
+  @Override
+  public void onReconnected(String accountId, String delegateId) {
+    // do nothing
+  }
+
   private void createKubernetes(Delegate delegate) {
     KubernetesClusterConfig kubernetesClusterConfig =
         KubernetesClusterConfig.builder()

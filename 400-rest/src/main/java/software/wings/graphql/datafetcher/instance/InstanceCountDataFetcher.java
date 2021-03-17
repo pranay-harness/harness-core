@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.instance;
 
 import static io.harness.govern.Switch.unhandled;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.instance.dashboard.InstanceStatsUtils;
@@ -19,6 +21,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class InstanceCountDataFetcher
     extends AbstractObjectDataFetcher<QLInstanceCount, QLInstancesCountQueryParameters> {
   @Inject DashboardStatisticsService dashboardService;

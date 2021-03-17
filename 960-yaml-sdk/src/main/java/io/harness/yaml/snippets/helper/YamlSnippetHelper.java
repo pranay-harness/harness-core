@@ -3,26 +3,35 @@ package io.harness.yaml.snippets.helper;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.yaml.schema.YamlSchemaRoot;
+import io.harness.yaml.YamlSdkInitConstants;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.bean.YamlSnippets;
 import io.harness.yaml.snippets.dto.YamlSnippetMetaDataDTO;
+import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
+import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 
 @Singleton
 @Slf4j
 public class YamlSnippetHelper {
+  @Inject List<YamlSchemaRootClass> yamlSchemaRootClasses;
   /**
    * Used to maintain Map of tag with snippet metadata. It will be used for fast retrieval of snippet based on tags.
    */
@@ -35,26 +44,25 @@ public class YamlSnippetHelper {
 
   /**
    * @param snippetMetadata is the String representation of index.xml {@link YamlSnippetMetaData}
-   * @param clazz
+   * @param yamlSchemaRootClass
    */
-  public void preComputeTagsAndNameMap(String snippetMetadata, Class clazz) {
+  public void preComputeTagsAndNameMap(String snippetMetadata, YamlSchemaRootClass yamlSchemaRootClass) {
     YamlSnippets yamlSnippets = getYamlSnippets(snippetMetadata);
     if (yamlSnippets == null || isEmpty(yamlSnippets.getYamlSnippetMetaDataList())) {
       log.info("No Yaml Snippet found while initialising.");
       return;
     }
-    populateSchemaMetaDataInSnippet(yamlSnippets, clazz);
+    populateSchemaMetaDataInSnippet(yamlSnippets, yamlSchemaRootClass);
     preComputeTagMap(yamlSnippets);
     preComputeNameSnippetMap(yamlSnippets);
   }
 
-  private void populateSchemaMetaDataInSnippet(YamlSnippets yamlSnippets, Class clazz) {
-    final YamlSchemaRoot annotation = (YamlSchemaRoot) clazz.getAnnotation(YamlSchemaRoot.class);
+  private void populateSchemaMetaDataInSnippet(YamlSnippets yamlSnippets, YamlSchemaRootClass clazz) {
     yamlSnippets.getYamlSnippetMetaDataList().forEach(yamlSnippetMetaData -> {
-      yamlSnippetMetaData.setAvailableAtAccountLevel(annotation.availableAtAccountLevel());
-      yamlSnippetMetaData.setAvailableAtOrgLevel(annotation.availableAtOrgLevel());
-      yamlSnippetMetaData.setAvailableAtProjectLevel(annotation.availableAtProjectLevel());
-      yamlSnippetMetaData.setSchemaEntityType(annotation.value().getYamlName());
+      yamlSnippetMetaData.setAvailableAtAccountLevel(clazz.isAvailableAtAccountLevel());
+      yamlSnippetMetaData.setAvailableAtOrgLevel(clazz.isAvailableAtOrgLevel());
+      yamlSnippetMetaData.setAvailableAtProjectLevel(clazz.isAvailableAtProjectLevel());
+      yamlSnippetMetaData.setSchemaEntityType(clazz.getEntityType().getYamlName());
     });
   }
 
@@ -112,5 +120,32 @@ public class YamlSnippetHelper {
     String normalized = Normalizer.normalize(noDots, Form.NFD);
     String slug = NONLATIN.matcher(normalized).replaceAll("");
     return slug.toLowerCase(Locale.ENGLISH);
+  }
+
+  /**
+   * Initialises snippet which caches and maintains maps for fast retrieval of snippets and snippets metadata {@link
+   * YamlSnippetsDTO}.
+   *
+   * @throws InvalidRequestException when snippets couldn't be initialized.
+   */
+  public void initializeSnippets() {
+    try {
+      yamlSchemaRootClasses.forEach(yamlSchemaRootClass -> {
+        try {
+          final String snippetIndexPathForEntityType =
+              YamlSchemaUtils.getSnippetIndexPathForEntityType(yamlSchemaRootClass.getEntityType(),
+                  YamlSdkInitConstants.snippetBasePath, YamlSdkInitConstants.snippetIndexFile);
+          String snippetMetaData = IOUtils.resourceToString(
+              snippetIndexPathForEntityType, StandardCharsets.UTF_8, yamlSchemaRootClass.getClazz().getClassLoader());
+          preComputeTagsAndNameMap(snippetMetaData, yamlSchemaRootClass);
+          log.info("Initialized Yaml Snippets for {}", yamlSchemaRootClass.getEntityType());
+        } catch (IOException e) {
+          log.info("No Yaml Snippets found for {}", yamlSchemaRootClass.getEntityType());
+        }
+      });
+
+    } catch (Exception e) {
+      throw new InvalidRequestException("Cannot initialize snippets", e);
+    }
   }
 }

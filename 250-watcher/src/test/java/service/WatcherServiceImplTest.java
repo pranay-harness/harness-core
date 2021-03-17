@@ -45,6 +45,8 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Mock private TimeLimiter timeLimiter;
   @InjectMocks @Spy private WatcherServiceImpl watcherService;
 
+  private static final String TEST_RESOURCE_PATH = "250-watcher/src/test/resources/service/";
+
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
@@ -85,9 +87,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldMigrateConfigDelegateDefaultFreemium() throws IOException {
     List<String> configDelegateSourceLines =
-        FileUtils.readLines(getFileFromResources("service/config-delegate.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-delegate.yml"), Charsets.UTF_8);
     List<String> configDelegateExpectedLines =
-        FileUtils.readLines(getFileFromResources("service/config-delegate-migrated-2.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-delegate-migrated-2.yml"), Charsets.UTF_8);
     List<String> resultLines = new ArrayList<>();
 
     boolean updated = watcherService.updateConfigFileContentsWithNewUrls(
@@ -106,9 +108,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldMigrateConfigWatcherDefaultFreemium() throws IOException {
     List<String> configWatcherSourceLines =
-        FileUtils.readLines(getFileFromResources("service/config-watcher.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-watcher.yml"), Charsets.UTF_8);
     List<String> configWatcherExpectedLines =
-        FileUtils.readLines(getFileFromResources("service/config-watcher-migrated-2.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-watcher-migrated-2.yml"), Charsets.UTF_8);
     List<String> resultLines = new ArrayList<>();
 
     boolean updated = watcherService.updateConfigFileContentsWithNewUrls(
@@ -126,9 +128,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldMigrateConfigDelegateProd() throws IOException {
     List<String> configDelegateSourceLines =
-        FileUtils.readLines(getFileFromResources("service/config-delegate.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-delegate.yml"), Charsets.UTF_8);
     List<String> configDelegateExpectedLines =
-        FileUtils.readLines(getFileFromResources("service/config-delegate-migrated-1.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-delegate-migrated-1.yml"), Charsets.UTF_8);
     List<String> resultLines = new ArrayList<>();
 
     boolean updated = watcherService.updateConfigFileContentsWithNewUrls(
@@ -146,9 +148,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldMigrateConfigWatcherProd() throws IOException {
     List<String> configWatcherSourceLines =
-        FileUtils.readLines(getFileFromResources("service/config-watcher.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-watcher.yml"), Charsets.UTF_8);
     List<String> configWatcherExpectedLines =
-        FileUtils.readLines(getFileFromResources("service/config-watcher-migrated-1.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-watcher-migrated-1.yml"), Charsets.UTF_8);
     List<String> resultLines = new ArrayList<>();
 
     boolean updated = watcherService.updateConfigFileContentsWithNewUrls(
@@ -166,9 +168,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldMigrateConfigDelegateProdMissingConfigs() throws IOException {
     List<String> configDelegateSourceLines =
-        FileUtils.readLines(getFileFromResources("service/config-delegate-no-grpc.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-delegate-no-grpc.yml"), Charsets.UTF_8);
     List<String> configDelegateExpectedLines =
-        FileUtils.readLines(getFileFromResources("service/config-delegate-migrated-added-grpc.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-delegate-migrated-added-grpc.yml"), Charsets.UTF_8);
     List<String> resultLines = new ArrayList<>();
 
     boolean updated = watcherService.updateConfigFileContentsWithNewUrls(
@@ -186,9 +188,9 @@ public class WatcherServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldMigrateConfigWatcherProdMissingConfigs() throws IOException {
     List<String> configWatcherSourceLines =
-        FileUtils.readLines(getFileFromResources("service/config-watcher-no-grpc.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-watcher-no-grpc.yml"), Charsets.UTF_8);
     List<String> configWatcherExpectedLines =
-        FileUtils.readLines(getFileFromResources("service/config-watcher-migrated-added-grpc.yml"), Charsets.UTF_8);
+        FileUtils.readLines(new File(TEST_RESOURCE_PATH + "config-watcher-migrated-added-grpc.yml"), Charsets.UTF_8);
     List<String> resultLines = new ArrayList<>();
 
     boolean updated = watcherService.updateConfigFileContentsWithNewUrls(

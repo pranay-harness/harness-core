@@ -3,6 +3,7 @@ package io.harness.pms.pipeline;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
@@ -25,4 +26,6 @@ public class PMSPipelineSummaryResponseDTO {
   long lastUpdatedAt;
   Set<String> modules;
   ExecutionSummaryInfoDTO executionSummaryInfo;
+  Map<String, org.bson.Document> filters;
+  List<String> stageNames;
 }

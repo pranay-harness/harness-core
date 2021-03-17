@@ -2,7 +2,9 @@ package software.wings.graphql.datafetcher.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Workflow;
 import software.wings.graphql.datafetcher.user.UserController;
@@ -18,6 +20,7 @@ import lombok.experimental.UtilityClass;
  */
 @OwnedBy(CDC)
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class WorkflowController {
   public static void populateWorkflow(@NotNull Workflow workflow, QLWorkflowBuilder builder) {
     builder.id(workflow.getUuid())

@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-;
-
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -20,6 +18,8 @@ public abstract class ActivitySourceDTO {
   long lastUpdatedAt;
   @NotNull String identifier;
   @NotNull String name;
+  String orgIdentifier;
+  String projectIdentifier;
 
   public abstract ActivitySourceType getType();
 }

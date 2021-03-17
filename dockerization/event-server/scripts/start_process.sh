@@ -21,7 +21,7 @@ export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError 
 
 
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/event-service-config.yml
+    java $JAVA_OPTS -jar $CAPSULE_JAR server /opt/harness/event-service-config.yml
 else
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/event-service-config.yml > /opt/harness/logs/event-server.log 2>&1
+    java $JAVA_OPTS -jar $CAPSULE_JAR server /opt/harness/event-service-config.yml > /opt/harness/logs/event-server.log 2>&1
 fi

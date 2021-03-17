@@ -5,6 +5,8 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class EncryptedTextController {
   @Inject SecretManager secretManager;
   @Inject UsageScopeController usageScopeController;

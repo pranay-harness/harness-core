@@ -26,7 +26,7 @@ import java.util.function.Supplier;
 public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     RunStepInfo runStepInfo = (RunStepInfo) ciStepInfo;
 
@@ -45,16 +45,16 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
     UnitTestReport reports = runStepInfo.getReports();
     if (reports != null) {
       if (reports.getType() == UnitTestReportType.JUNIT) {
-        Report report = Report.newBuilder()
-                            .setType(Report.Type.JUNIT)
-                            .addAllPaths(resolveJunitReport(reports, step.getIdentifier()))
-                            .build();
+        JUnitTestReport junitTestReport = (JUnitTestReport) reports.getSpec();
+        List<String> resolvedReport = junitTestReport.resolve(step.getIdentifier(), "run");
+
+        Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolvedReport).build();
         runStepBuilder.addReports(report);
       }
     }
 
     List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "Run", runStepInfo.getIdentifier(), runStepInfo.getOutputVariables(), false);
+        "OutputVariables", "Run", step.getIdentifier(), runStepInfo.getOutputVariables(), false);
     if (isNotEmpty(output)) {
       runStepBuilder.addAllEnvVarOutputs(output);
     }
@@ -71,11 +71,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
         .setDisplayName(Optional.ofNullable(runStepInfo.getDisplayName()).orElse(""))
         .setRun(runStepBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setLogKey(logKey)
         .build();
-  }
-
-  public List<String> resolveJunitReport(UnitTestReport unitTestReport, String identifier) {
-    JUnitTestReport junitTestReport = (JUnitTestReport) unitTestReport.getSpec();
-    return RunTimeInputHandler.resolveListParameter("paths", "run", identifier, junitTestReport.getPaths(), false);
   }
 }

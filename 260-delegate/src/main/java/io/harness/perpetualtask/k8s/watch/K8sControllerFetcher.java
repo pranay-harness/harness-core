@@ -5,6 +5,9 @@ import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import io.kubernetes.client.informer.cache.Store;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
@@ -16,6 +19,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class K8sControllerFetcher {
   private final Map<String, Store<?>> stores;
   private final CrdWorkloadFetcher crdWorkloadFetcher;

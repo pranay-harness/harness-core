@@ -11,9 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
@@ -29,10 +29,12 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -66,12 +68,18 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
     AzureWebAppSwapSlotsParameters azureWebAppSlotSwapParameters = buildAzureWebAppSlotSwapParameters();
     AzureConfig azureConfig = buildAzureConfig();
 
-    mockSwapSlots();
+    ArgumentCaptor<String> targetSlotCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<AzureAppServiceDeploymentContext> deploymentContextArgumentCaptor =
+        ArgumentCaptor.forClass(AzureAppServiceDeploymentContext.class);
 
     AzureAppServiceTaskResponse azureAppServiceTaskResponse =
         slotSwapTaskHandler.executeTaskInternal(azureWebAppSlotSwapParameters, azureConfig, mockLogStreamingTaskClient);
-
     assertThat(azureAppServiceTaskResponse).isNotNull();
+
+    verify(azureAppServiceDeploymentService)
+        .swapSlotsUsingCallback(deploymentContextArgumentCaptor.capture(), targetSlotCaptor.capture(), any());
+    assertThat(targetSlotCaptor.getValue()).isEqualTo(TARGET_SLOT_NAME);
+    assertThat(deploymentContextArgumentCaptor.getValue().getSlotName()).isEqualTo(SOURCE_SLOT_NAME);
   }
 
   @Test
@@ -140,9 +148,5 @@ public class AzureWebAppSlotSwapTaskHandlerTest extends WingsBaseTest {
 
   private AzureConfig buildAzureConfig() {
     return AzureConfig.builder().clientId("clientId").key("key".toCharArray()).tenantId("tenantId").build();
-  }
-
-  private void mockSwapSlots() {
-    doNothing().when(azureAppServiceDeploymentService).swapSlots(any(), eq(TARGET_SLOT_NAME), any());
   }
 }

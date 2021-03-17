@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.ssoProvider;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
@@ -25,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SsoProviderConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLSSOProviderFilter, QLNoOpSortCriteria, QLSSOProviderConnection> {
   @Inject private SSOService ssoService;

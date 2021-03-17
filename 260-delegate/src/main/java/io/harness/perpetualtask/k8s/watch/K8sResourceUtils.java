@@ -2,6 +2,8 @@ package io.harness.perpetualtask.k8s.watch;
 
 import static java.util.Optional.ofNullable;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.perpetualtask.k8s.watch.Quantity.Builder;
 
 import com.google.common.collect.ImmutableMap;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class K8sResourceUtils {
   private static final String K8S_CPU_RESOURCE = "cpu";
   private static final String K8S_MEMORY_RESOURCE = "memory";

@@ -62,6 +62,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>130-resource-group</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>136-git-sync-manager</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -73,6 +78,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>440-connector-nextgen</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>909-access-control-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -243,29 +253,6 @@
                         <goals>
                             <goal>java</goal>
                         </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>software.wings</groupId>
-                <artifactId>899-yaml-schema-plugin</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>compile</phase>
-                        <configuration>
-                            <rootClasses>
-                                <rootClass>io.harness.connector.ConnectorDTO</rootClass>
-                                <rootClass>io.harness.ng.core.dto.secrets.SecretRequestWrapper</rootClass>
-                                <rootClass>io.harness.plancreator.pipeline.PipelineConfig</rootClass>
-                                <rootClass>io.harness.delegate.beans.DelegateSetupDetails</rootClass>
-                                <rootClass>io.harness.cdng.pipeline.CDStepInfo</rootClass>
-                                <rootClass>io.harness.cdng.creator.plan.stage.DeploymentStageConfig</rootClass>
-                            </rootClasses>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>

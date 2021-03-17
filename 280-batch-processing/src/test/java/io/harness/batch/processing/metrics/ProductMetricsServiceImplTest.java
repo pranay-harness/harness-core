@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccountDao;
@@ -19,7 +19,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ProductMetricsServiceImplTest extends BatchProcessingBaseTest {
+public class ProductMetricsServiceImplTest extends BatchProcessingTestBase {
   private String accountId = "ACCOUNT_ID";
   private String gcpOrganizationUuid = "1";
 

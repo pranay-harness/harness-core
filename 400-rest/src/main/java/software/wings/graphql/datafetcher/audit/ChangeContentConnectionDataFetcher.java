@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.audit;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
 
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ChangeContentConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLChangeContentFilter, QLNoOpSortCriteria, QLChangeContentConnection> {
   @Inject private ChangeContentHelper changeContentHelper;

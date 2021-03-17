@@ -7,6 +7,7 @@ import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEAR
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
 
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
@@ -45,6 +46,9 @@ public interface VerificationManagerClient {
   @DELETE(CV_DATA_COLLECTION_PATH + "/delete-task")
   Call<RestResponse<Void>> deleteDataCollectionPerpetualTask(
       @Query("accountId") String accountId, @Query("taskId") String taskId);
+
+  @GET(CV_DATA_COLLECTION_PATH + "/task-status")
+  Call<RestResponse<CVNGPerpetualTaskDTO>> getDataCollectionPerpetualTaskStatus(@Query("taskId") String taskId);
 
   @POST(CV_DATA_COLLECTION_PATH + "/get-data-collection-result")
   Call<RestResponse<String>> getDataCollectionResponse(@Query("accountId") String accountId,
@@ -92,4 +96,9 @@ public interface VerificationManagerClient {
   Call<RestResponse<List<String>>> getKubernetesWorkloads(@Query("accountId") String accountId,
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("namespace") String namespace, @Query("filter") String filter, @Body DataCollectionConnectorBundle bundle);
+
+  @POST(KUBERNETES_RESOURCE + "/events")
+  Call<RestResponse<List<String>>> checkCapabilityToGetEvents(@Query("accountId") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Body DataCollectionConnectorBundle bundle);
 }

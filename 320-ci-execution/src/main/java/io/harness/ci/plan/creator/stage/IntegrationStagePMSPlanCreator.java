@@ -22,7 +22,6 @@ import io.harness.beans.stages.IntegrationStageStepParametersPMS;
 import io.harness.ci.integrationstage.CILiteEngineIntegrationStageModifier;
 import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
 import io.harness.ngpipeline.status.BuildStatusUpdateParameter;
 import io.harness.plancreator.execution.ExecutionElementConfig;
@@ -93,8 +92,9 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       throw new InvalidRequestException("Invalid yaml", e);
     }
     YamlNode parentNode = executionField.getNode().getParentNode();
-    ExecutionElementConfig modifiedExecutionPlan = ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(
-        executionElementConfig, stageElementConfig, ctx, podName, ciCodeBase);
+    ExecutionElementConfig modifiedExecutionPlan =
+        ciLiteEngineIntegrationStageModifier.modifyExecutionPlan(executionElementConfig, stageElementConfig, ctx,
+            podName, ciCodeBase, IntegrationStageStepParametersPMS.getInfrastructure(stageElementConfig, ctx));
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
@@ -192,6 +192,11 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
 
     CodeBase codeBase = getCICodebase(ctx);
 
+    if (codeBase == null) {
+      //  code base is not mandatory in case git clone is false, Sending status won't be possible
+      return null;
+    }
+
     ExecutionSource executionSource = IntegrationStageUtils.buildExecutionSource(
         executionMetadata, stageElementConfig.getIdentifier(), codeBase.getBuild());
 
@@ -228,7 +233,8 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       YamlNode ciCodeBaseNode = properties.getField(CI).getNode().getField(CI_CODE_BASE).getNode();
       ciCodeBase = IntegrationStageUtils.getCiCodeBase(ciCodeBaseNode);
     } catch (Exception ex) {
-      throw new CIStageExecutionUserException("Failed to retrieve ciCodeBase from pipeline");
+      // Ignore exception because code base is not mandatory in case git clone is false
+      log.warn("Failed to retrieve ciCodeBase from pipeline");
     }
 
     return ciCodeBase;

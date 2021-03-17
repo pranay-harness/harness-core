@@ -8,8 +8,6 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
-import software.wings.infra.data.DummyPerson;
-
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

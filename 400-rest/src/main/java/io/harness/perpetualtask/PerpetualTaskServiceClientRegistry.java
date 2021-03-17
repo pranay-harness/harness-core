@@ -19,12 +19,4 @@ public class PerpetualTaskServiceClientRegistry {
   public PerpetualTaskServiceClient getClient(String type) {
     return clientMap.get(type);
   }
-
-  public PerpetualTaskServiceInprocClient getInprocClient(String type) {
-    PerpetualTaskServiceClient perpetualTaskServiceClient = clientMap.get(type);
-    if (perpetualTaskServiceClient instanceof PerpetualTaskServiceInprocClient) {
-      return (PerpetualTaskServiceInprocClient) perpetualTaskServiceClient;
-    }
-    return null;
-  }
 }

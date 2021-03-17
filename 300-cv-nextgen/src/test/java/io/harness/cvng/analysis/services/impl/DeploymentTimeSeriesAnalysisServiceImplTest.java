@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
@@ -48,7 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
+public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
   @Inject private VerificationTaskService verificationTaskService;
@@ -117,6 +117,22 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
         .isEqualTo("node3");
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().first().getScore())
         .isEqualTo(2.0); // checks that sorting per node works correctly
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withNoVerificationTaskMapping() {
+    verificationJobService.upsert(accountId, createCanaryVerificationJobDTO());
+    String verificationJobInstanceId = verificationJobInstanceService.create(
+        accountId, orgIdentifier, projectIdentifier, createVerificationJobInstanceDTO());
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, 0);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isEmpty();
   }
 
   @Test

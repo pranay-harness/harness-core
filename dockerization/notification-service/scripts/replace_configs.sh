@@ -104,3 +104,18 @@ fi
 if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE secrets.jwtIdentityServiceSecret "$JWT_IDENTITY_SERVICE_SECRET"
 fi
+
+if [[ "" != "$GRPC_MANAGER_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcClient.target $GRPC_MANAGER_TARGET
+fi
+
+if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcClient.authority $GRPC_MANAGER_AUTHORITY
+fi
+
+if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
+  yq delete -i $CONFIG_FILE logging.appenders[0]
+  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+else
+  yq delete -i $CONFIG_FILE logging.appenders[1]
+fi

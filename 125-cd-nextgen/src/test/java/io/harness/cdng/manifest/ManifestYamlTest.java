@@ -11,6 +11,7 @@ import io.harness.rule.Owner;
 import io.harness.yaml.utils.YamlPipelineUtils;
 
 import java.net.URL;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -18,6 +19,7 @@ public class ManifestYamlTest extends CategoryTest {
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testParseManifestsYaml() throws Exception {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/pipelineWithRuntimeInput.yml");

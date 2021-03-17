@@ -5,6 +5,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
+import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
@@ -18,6 +19,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import io.harness.beans.FileData;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.k8s.beans.K8sCanaryHandlerConfig;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -44,6 +46,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -57,7 +60,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sCanaryDeployRequest)) {
       throw new InvalidArgumentsException(
           Pair.of("k8sDeployRequest", "Must be instance of K8sCanaryDeployRequestK8sCanaryDeployRequest"));
@@ -71,27 +75,28 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, FetchFiles), timeoutInMillis,
-        k8sCanaryDeployRequest.getAccountId());
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sCanaryDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
     success = init(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
 
     success = prepareForCanary(k8sCanaryDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
 
-    success =
-        k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(), k8sCanaryHandlerConfig.getResources(),
-            k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
+    success = k8sTaskHelperBase.applyManifests(k8sCanaryHandlerConfig.getClient(),
+        k8sCanaryHandlerConfig.getResources(), k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
     if (!success) {
       k8sCanaryBaseHandler.failAndSaveKubernetesRelease(
           k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName());
@@ -99,7 +104,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     }
 
     LogCallback steadyStateLogCallback =
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress);
     KubernetesResource canaryWorkload = k8sCanaryHandlerConfig.getCanaryWorkload();
     success = k8sTaskHelperBase.doStatusCheck(k8sCanaryHandlerConfig.getClient(), canaryWorkload.getResourceId(),
         k8sDelegateTaskParams, steadyStateLogCallback);
@@ -113,7 +118,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         k8sCanaryHandlerConfig, k8sCanaryDeployRequest.getReleaseName(), timeoutInMillis);
 
     k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress));
 
     ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
     k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),
@@ -188,8 +193,8 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
   boolean prepareForCanary(K8sCanaryDeployRequest k8sCanaryDeployRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback logCallback) {
     try {
-      boolean success =
-          k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, k8sDelegateTaskParams, false, logCallback);
+      boolean success = k8sCanaryBaseHandler.prepareForCanary(k8sCanaryHandlerConfig, k8sDelegateTaskParams,
+          k8sCanaryDeployRequest.isSkipResourceVersioning(), logCallback);
       if (!success) {
         return false;
       }
@@ -236,10 +241,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       k8sCanaryDeployResponseBuilder.canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef());
     }
 
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sCanaryDeployResponseBuilder.build())
-        .build();
+    return getGenericFailureResponse(k8sCanaryDeployResponseBuilder.build());
   }
 
   @VisibleForTesting

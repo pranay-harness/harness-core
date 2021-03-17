@@ -1,12 +1,12 @@
 package io.harness.ccm.anomaly.graphql;
 
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.graphql.AnomaliesIdFilter.AnomaliesIdFilterBuilder;
 import io.harness.ccm.anomaly.graphql.AnomaliesTimeFilter.AnomaliesTimeFilterBuilder;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.graphql.CloudBillingTimeFilter;
 
-import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 import software.wings.graphql.schema.type.aggregation.Filter;
 
 import com.healthmarketscience.sqlbuilder.Condition;

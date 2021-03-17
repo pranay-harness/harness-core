@@ -1,11 +1,9 @@
 package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -29,8 +27,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 
-@CdIndex(name = "configId_label_index", fields = { @Field("cvConfigId")
-                                                   , @Field("label") })
 @Data
 @Builder
 @NoArgsConstructor
@@ -39,7 +35,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "logAnalysisClusters", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public final class LogAnalysisCluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

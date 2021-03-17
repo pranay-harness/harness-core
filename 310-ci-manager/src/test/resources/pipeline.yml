@@ -61,9 +61,9 @@ pipeline:
                   command: mvn clean install
             - step:
                 identifier: runUnitTestsIntelligently
-                type: TestIntelligence
+                type: RunTests
                 spec:
                   retry: 2
-                  goals: echo "Running test"
+                  args: echo "Running test"
                   buildTool: maven
                   language: java

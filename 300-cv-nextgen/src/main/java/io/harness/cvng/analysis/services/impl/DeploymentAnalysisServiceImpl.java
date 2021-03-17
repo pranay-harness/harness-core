@@ -3,9 +3,11 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo;
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.HostSummaryInfo;
-import io.harness.cvng.analysis.beans.CanaryDeploymentAdditionalInfo.TrafficSplitPercentage;
+import io.harness.cvng.analysis.beans.BlueGreenAdditionalInfo;
+import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
+import io.harness.cvng.analysis.beans.CanaryBlueGreenAdditionalInfo;
+import io.harness.cvng.analysis.beans.CanaryBlueGreenAdditionalInfo.HostSummaryInfo;
+import io.harness.cvng.analysis.beans.CanaryBlueGreenAdditionalInfo.TrafficSplitPercentage;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.HostSummary;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO.HostInfo;
 import io.harness.cvng.analysis.beans.Risk;
@@ -14,13 +16,14 @@ import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoBuilder;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
-import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
+import io.harness.cvng.verificationjob.entities.CanaryBlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
@@ -82,7 +85,7 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
   }
 
   @Override
-  public CanaryDeploymentAdditionalInfo getCanaryDeploymentAdditionalInfo(
+  public CanaryBlueGreenAdditionalInfo getCanaryBlueGreenAdditionalInfo(
       String accountId, VerificationJobInstance verificationJobInstance) {
     List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
@@ -95,21 +98,26 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
     Set<String> oldHosts = new HashSet<>();
     if (preDeploymentTimeRange.isPresent()) {
       Set<String> verificationTaskIds =
-          verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstance.getUuid());
+          verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstance.getUuid());
       oldHosts = hostRecordService.get(
           verificationTaskIds, preDeploymentTimeRange.get().getStartTime(), preDeploymentTimeRange.get().getEndTime());
     }
 
-    CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo =
-        getDeploymentVerificationHostInfoFromAnalyses(deploymentTimeSeriesAnalysis, deploymentLogAnalysis, oldHosts);
+    CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo =
+        verificationJobInstance.getResolvedJob().getType() == VerificationJobType.CANARY
+        ? new CanaryAdditionalInfo()
+        : new BlueGreenAdditionalInfo();
+
+    updateDeploymentVerificationHostInfoFromAnalyses(
+        deploymentTimeSeriesAnalysis, deploymentLogAnalysis, oldHosts, canaryBlueGreenAdditionalInfo);
     updateHostInfoWithAnomalousCount(
-        canaryDeploymentAdditionalInfo, deploymentTimeSeriesAnalysis, deploymentLogAnalysis);
+        canaryBlueGreenAdditionalInfo, deploymentTimeSeriesAnalysis, deploymentLogAnalysis);
 
-    canaryDeploymentAdditionalInfo.setTrafficSplitPercentage(
-        getTrafficSplitPercentage((CanaryVerificationJob) verificationJobInstance.getResolvedJob()));
-    canaryDeploymentAdditionalInfo.setFieldNames();
+    canaryBlueGreenAdditionalInfo.setTrafficSplitPercentage(
+        getTrafficSplitPercentage((CanaryBlueGreenVerificationJob) verificationJobInstance.getResolvedJob()));
+    canaryBlueGreenAdditionalInfo.setFieldNames();
 
-    return canaryDeploymentAdditionalInfo;
+    return canaryBlueGreenAdditionalInfo;
   }
 
   private void populatePrimaryAndCanaryHostInfoForTimeseries(
@@ -159,9 +167,10 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
     }
   }
 
-  private CanaryDeploymentAdditionalInfo getDeploymentVerificationHostInfoFromAnalyses(
+  private void updateDeploymentVerificationHostInfoFromAnalyses(
       List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysisList,
-      List<DeploymentLogAnalysis> deploymentLogAnalysisList, Set<String> oldHosts) {
+      List<DeploymentLogAnalysis> deploymentLogAnalysisList, Set<String> oldHosts,
+      CanaryBlueGreenAdditionalInfo additionalInfo) {
     Map<String, HostSummaryInfo> controlMap = new HashMap<>();
     Map<String, HostSummaryInfo> testMap = new HashMap<>();
 
@@ -172,16 +181,14 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
       populatePrimaryAndCanaryHostInfoForLogs(deploymentLogAnalysisList, controlMap, testMap, oldHosts);
     }
 
-    return CanaryDeploymentAdditionalInfo.builder()
-        .primary(new HashSet<>(controlMap.values()))
-        .canary(new HashSet<>(testMap.values()))
-        .build();
+    additionalInfo.setPrimary(new HashSet<>(controlMap.values()));
+    additionalInfo.setCanary(new HashSet<>(testMap.values()));
   }
 
-  private void updateHostInfoWithAnomalousCount(CanaryDeploymentAdditionalInfo canaryDeploymentAdditionalInfo,
+  private void updateHostInfoWithAnomalousCount(CanaryBlueGreenAdditionalInfo canaryBlueGreenAdditionalInfo,
       List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysisList,
       List<DeploymentLogAnalysis> deploymentLogAnalysisList) {
-    canaryDeploymentAdditionalInfo.getCanary().forEach(hostSummaryInfo -> {
+    canaryBlueGreenAdditionalInfo.getCanary().forEach(hostSummaryInfo -> {
       int anomalousMetricsCount[] = new int[] {0};
       int anomalousLogClustersCount[] = new int[] {0};
       for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalysisList) {
@@ -212,8 +219,9 @@ public class DeploymentAnalysisServiceImpl implements DeploymentAnalysisService 
     });
   }
 
-  private TrafficSplitPercentage getTrafficSplitPercentage(CanaryVerificationJob canaryVerificationJob) {
-    Integer trafficSplitPercentage = canaryVerificationJob.getTrafficSplitPercentage();
+  private TrafficSplitPercentage getTrafficSplitPercentage(
+      CanaryBlueGreenVerificationJob canaryBlueGreenVerificationJob) {
+    Integer trafficSplitPercentage = canaryBlueGreenVerificationJob.getTrafficSplitPercentage();
     if (trafficSplitPercentage != null) {
       return TrafficSplitPercentage.builder()
           .preDeploymentPercentage(trafficSplitPercentage)

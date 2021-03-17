@@ -4,7 +4,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public enum TaskType {
   BATCH_CAPABILITY_CHECK(TaskGroup.BATCH_CAPABILITY_CHECK),
   CAPABILITY_VALIDATION(TaskGroup.CAPABILITY_VALIDATION),
@@ -42,6 +42,7 @@ public enum TaskType {
   GCR_GET_BUILDS(TaskGroup.GCR),
   GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR),
   GCR_GET_PLANS(TaskGroup.GCR),
+  ECR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG),
   ACR_GET_BUILDS(TaskGroup.ACR),
   ACR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ACR),
   ACR_GET_PLANS(TaskGroup.ACR),
@@ -174,6 +175,8 @@ public enum TaskType {
   VAULT_RENEW_TOKEN(TaskGroup.KMS),
   VAULT_LIST_ENGINES(TaskGroup.KMS),
   VAULT_APPROLE_LOGIN(TaskGroup.KMS),
+  SSH_SECRET_ENGINE_AUTH(TaskGroup.KMS),
+  VAULT_SIGN_PUBLIC_KEY_SSH(TaskGroup.KMS),
   SECRET_DECRYPT(TaskGroup.KMS),
   BATCH_SECRET_DECRYPT(TaskGroup.KMS),
   SECRET_DECRYPT_REF(TaskGroup.KMS),
@@ -266,6 +269,7 @@ public enum TaskType {
   EXECUTE_COMMAND(TaskGroup.CI),
   CI_CLEANUP(TaskGroup.CI),
   AWS_S3_TASK(TaskGroup.AWS),
+  CUSTOM_MANIFEST_VALUES_FETCH_TASK(TaskGroup.CUSTOM_MANIFEST_VALUES_FETCH_TASK),
 
   // Add all NG tasks below this.
   GCP_TASK(TaskGroup.GCP),
@@ -280,6 +284,7 @@ public enum TaskType {
   JIRA_CONNECTIVITY_TASK_NG(TaskGroup.JIRA_NG),
   K8_FETCH_NAMESPACES(TaskGroup.CVNG),
   K8_FETCH_WORKLOADS(TaskGroup.CVNG),
+  K8_FETCH_EVENTS(TaskGroup.CVNG),
   NOTIFY_SLACK(TaskGroup.NOTIFICATION),
   NOTIFY_PAGERDUTY(TaskGroup.NOTIFICATION),
   NOTIFY_MAIL(TaskGroup.NOTIFICATION),
@@ -287,7 +292,11 @@ public enum TaskType {
   HTTP_TASK_NG(TaskGroup.HTTP_NG),
   SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG),
   NG_NEXUS_TASK(TaskGroup.NEXUS),
-  NG_ARTIFACTORY_TASK(TaskGroup.ARTIFACTORY);
+  NG_ARTIFACTORY_TASK(TaskGroup.ARTIFACTORY),
+  CE_VALIDATE_KUBERNETES_CONFIG(TaskGroup.CONTAINER),
+  NG_AWS_CODE_COMMIT_TASK(TaskGroup.AWS),
+  HTTP_HELM_CONNECTIVITY_TASK(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
+  NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG);
 
   private final TaskGroup taskGroup;
 

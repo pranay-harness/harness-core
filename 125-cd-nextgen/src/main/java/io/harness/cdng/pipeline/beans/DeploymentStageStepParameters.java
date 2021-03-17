@@ -1,6 +1,5 @@
 package io.harness.cdng.pipeline.beans;
 
-import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
@@ -30,7 +29,6 @@ public class DeploymentStageStepParameters implements StepParameters {
     if (config == null) {
       return DeploymentStageStepParameters.builder().childNodeID(childNodeID).build();
     }
-    DeploymentStageConfig stageType = (DeploymentStageConfig) config.getStageType();
 
     return DeploymentStageStepParameters.builder()
         .identifier(config.getIdentifier())
@@ -38,7 +36,7 @@ public class DeploymentStageStepParameters implements StepParameters {
         .description(config.getDescription())
         .failureStrategies(config.getFailureStrategies())
         .type(config.getType())
-        .skipCondition(stageType.getSkipCondition())
+        .skipCondition(config.getSkipCondition())
         .originalVariables(config.getVariables())
         .childNodeID(childNodeID)
         .build();

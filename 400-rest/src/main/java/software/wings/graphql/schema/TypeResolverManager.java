@@ -1,5 +1,8 @@
 package software.wings.graphql.schema;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.QLApprovalStageExecution;
 import software.wings.graphql.schema.type.QLDeploymentOutcome;
 import software.wings.graphql.schema.type.QLExecutedAlongPipeline;
@@ -116,6 +119,7 @@ import java.util.Set;
 import lombok.experimental.UtilityClass;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class TypeResolverManager {
   // Uniface is a short for union or interface
   @UtilityClass

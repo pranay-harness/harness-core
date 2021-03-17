@@ -9,7 +9,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.rule.Owner;
@@ -19,7 +19,7 @@ import java.time.temporal.ChronoUnit;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class HeatMapResolutionTest extends CvNextGenTest {
+public class HeatMapResolutionTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)

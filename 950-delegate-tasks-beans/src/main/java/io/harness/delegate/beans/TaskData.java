@@ -12,7 +12,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "TaskDataKeys")
-@TargetModule(Module._920_DELEGATE_AGENT_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class TaskData {
   public static final long DEFAULT_SYNC_CALL_TIMEOUT = 60 * 1000L;
   public static final long DEFAULT_ASYNC_CALL_TIMEOUT = 10 * 60 * 1000L;

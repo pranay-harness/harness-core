@@ -42,7 +42,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;

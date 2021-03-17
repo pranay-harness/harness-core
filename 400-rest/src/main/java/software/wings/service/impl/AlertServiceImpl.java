@@ -30,6 +30,8 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
@@ -60,7 +62,6 @@ import software.wings.service.impl.event.AlertEvent;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.alert.NotificationRulesStatusService;
 
@@ -75,6 +76,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -85,6 +87,7 @@ import org.mongodb.morphia.query.UpdateResults;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._955_ALERT_BEANS)
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
   private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = ImmutableList.of(NoActiveDelegates, DelegatesDown,
@@ -95,9 +98,9 @@ public class AlertServiceImpl implements AlertService {
       ImmutableList.of(CONTINUOUS_VERIFICATION_ALERT, InvalidKMS);
   private static final Iterable<AlertStatus> STATUS_ACTIVE = ImmutableSet.of(Open, Pending);
 
+  @Inject Map<AlertType, Class<? extends AlertData>> alertTypeClassMap;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject private AssignDelegateService assignDelegateService;
   @Inject private Injector injector;
   @Inject private EventPublisher eventPublisher;
   @Inject private NotificationRulesStatusService notificationStatusService;
@@ -126,6 +129,15 @@ public class AlertServiceImpl implements AlertService {
   public Future openAlertWithTTL(
       String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil) {
     return executorService.submit(() -> openInternal(accountId, appId, alertType, alertData, validUntil));
+  }
+
+  @Override
+  public Future<?> closeExistingAlertsAndOpenNew(
+      String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil) {
+    return executorService.submit(() -> {
+      findAllExistingAlerts(accountId, appId, alertType, alertData).forEach(this::close);
+      openInternal(accountId, appId, alertType, alertData, validUntil);
+    });
   }
 
   @Override
@@ -340,9 +352,10 @@ public class AlertServiceImpl implements AlertService {
   }
 
   private Query<Alert> getAlertsQuery(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    if (!alertType.getAlertDataClass().isAssignableFrom(alertData.getClass())) {
+    Class<? extends AlertData> aClass = alertTypeClassMap.get(alertType);
+    if (!aClass.isAssignableFrom(alertData.getClass())) {
       String errorMsg = format("Alert type %s requires alert data of class %s but was %s", alertType.name(),
-          alertType.getAlertDataClass().getName(), alertData.getClass().getName());
+          aClass.getName(), alertData.getClass().getName());
       log.error(errorMsg);
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", errorMsg);
     }

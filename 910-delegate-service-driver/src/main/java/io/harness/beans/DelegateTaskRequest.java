@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 public class DelegateTaskRequest {
-  @Builder.Default boolean parked = false;
+  boolean parked;
   String taskType;
   TaskParameters taskParameters;
   String accountId;

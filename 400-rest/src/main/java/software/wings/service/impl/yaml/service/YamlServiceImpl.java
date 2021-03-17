@@ -59,6 +59,7 @@ import static software.wings.beans.yaml.YamlType.INFRA_DEFINITION;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_APP_SERVICE;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.MANIFEST_FILE_CONN_STRINGS_ENV_OVERRIDE;
@@ -206,7 +207,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       YamlType.ENVIRONMENT, YamlType.PROVISIONER, YamlType.WORKFLOW, YamlType.PIPELINE);
   private static final Set<YamlType> rbacUpdateYamlTypes =
       Sets.newHashSet(YamlType.ENVIRONMENT, YamlType.WORKFLOW, YamlType.PIPELINE);
-  private static final Set<YamlType> rbacDeleteYamlTypes = Sets.newHashSet(YamlType.APPLICATION, YamlType.ENVIRONMENT);
+  private static final Set<YamlType> rbacDeleteYamlTypes = rbacCreateYamlTypes;
 
   private static final int YAML_MAX_PARALLEL_COUNT = 20;
   private static final String AMI_FILTERS = "amiFilters";
@@ -243,7 +244,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         NOTIFICATION_GROUP, GLOBAL_TEMPLATE_LIBRARY, APPLICATION, APPLICATION_DEFAULTS, APPLICATION_TEMPLATE_LIBRARY,
         SERVICE, PROVISIONER, ARTIFACT_STREAM, ARTIFACT_SERVER_ARTIFACT_STREAM_OVERRIDE,
         CLOUD_PROVIDER_ARTIFACT_STREAM_OVERRIDE, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,
-        APPLICATION_MANIFEST, APPLICATION_MANIFEST_APP_SERVICE, MANIFEST_FILE,
+        APPLICATION_MANIFEST, APPLICATION_MANIFEST_APP_SERVICE, MANIFEST_FILE, MANIFEST_FILE_APP_SERVICE,
         APPLICATION_MANIFEST_VALUES_SERVICE_OVERRIDE, APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE,
         MANIFEST_FILE_VALUES_SERVICE_OVERRIDE, ENVIRONMENT, INFRA_MAPPING, CV_CONFIGURATION, INFRA_DEFINITION,
         CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE,
@@ -256,7 +257,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         MANIFEST_FILE_VALUES_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_PCF_OVERRIDE_ENV_OVERRIDE,
         MANIFEST_FILE_PCF_OVERRIDE_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE,
         MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE, MANIFEST_FILE_CONN_STRINGS_ENV_OVERRIDE,
-        MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER);
+        MANIFEST_FILE_CONN_STRINGS_ENV_SERVICE_OVERRIDE, WORKFLOW, PIPELINE, TRIGGER, YamlType.GOVERNANCE_CONFIG);
   }
 
   @Override
@@ -492,6 +493,11 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             YamlConstants.MANIFEST_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.MANIFEST_FILE_FOLDER)) {
       changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE)
           .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE));
+      return changeContextBuilder.build();
+    } else if (yamlFilePath.contains(YamlConstants.MANIFEST_FOLDER_APP_SERVICE + YamlConstants.PATH_DELIMITER
+                   + YamlConstants.MANIFEST_FILE_FOLDER)) {
+      changeContextBuilder.withYamlType(YamlType.MANIFEST_FILE_APP_SERVICE)
+          .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE_APP_SERVICE));
       return changeContextBuilder.build();
     } else if (yamlFilePath.contains(YamlConstants.VALUES_FOLDER + YamlConstants.PATH_DELIMITER + VALUES_YAML_KEY)
         && !yamlFilePath.contains(ENVIRONMENTS_FOLDER)) {

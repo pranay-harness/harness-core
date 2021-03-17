@@ -1,7 +1,6 @@
 package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.helm.HelmCommandTemplateFactory.HelmCliCommandType;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.helm.HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER;
@@ -14,6 +13,10 @@ import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.helm.HelmCliCommandType;
+import io.harness.helm.HelmCommandFlagsUtils;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.helm.HelmConstants;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -27,7 +30,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
-import software.wings.utils.CommandFlagUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -54,6 +56,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class HelmClientImpl implements HelmClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";
@@ -390,8 +393,8 @@ public class HelmClientImpl implements HelmClient {
   private String applyCommandFlags(String command, HelmCommandRequest commandRequest, HelmCliCommandType commandType) {
     String flags = isBlank(commandRequest.getCommandFlags()) ? "" : commandRequest.getCommandFlags();
     if (null != commandRequest.getHelmCommandFlag() && isNotEmpty(commandRequest.getHelmCommandFlag().getValueMap())) {
-      return CommandFlagUtils.applyHelmCommandFlags(
-          command, commandRequest.getHelmCommandFlag(), commandType.name(), commandRequest.getHelmVersion());
+      return HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(),
+          commandRequest.getHelmCommandFlag().getValueMap(), commandRequest.getHelmVersion());
     }
     return command.replace(HELM_COMMAND_FLAG_PLACEHOLDER, flags);
   }

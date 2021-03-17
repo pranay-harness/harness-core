@@ -9,7 +9,7 @@ import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
@@ -29,7 +29,6 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.File;
-import java.net.URL;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +37,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class MetricPackServiceImplTest extends CvNextGenTest {
+public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Inject private MetricPackService metricPackService;
   @Inject private HPersistence hPersistence;
   private String accountId;
@@ -51,7 +50,6 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
     projectIdentifier = generateUuid();
     orgIdentifier = generateUuid();
     testUserProvider.setActiveUser(EmbeddedUser.builder().name("user1").build());
-    hPersistence.registerUserProvider(testUserProvider);
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 
@@ -59,8 +57,8 @@ public class MetricPackServiceImplTest extends CvNextGenTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testMetricPackFilesAdded() {
-    final URL metricPackUrl = MetricPackService.class.getResource("/appdynamics/metric-packs");
-    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl.getFile()), null, false);
+    final String metricPackUrl = getSourceResourceFile(MetricPackService.class, "/appdynamics/metric-packs");
+    final Collection<File> metricPackYamls = FileUtils.listFiles(new File(metricPackUrl), null, false);
     assertThat(metricPackYamls.size()).isEqualTo(MetricPackServiceImpl.APPDYNAMICS_METRICPACK_FILES.size() + 1);
   }
 

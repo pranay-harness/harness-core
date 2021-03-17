@@ -5,6 +5,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, G, S>
     implements DataFetcher, BaseStatsDataFetcher, CEBaseStatsDataFetcher {
   private static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;

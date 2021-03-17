@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Application;
 import software.wings.beans.Service;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Data
 @Builder
+@TargetModule(Module._470_ALERT)
 public class ManifestCollectionFailedAlert implements AlertData {
   @Inject @Transient @SchemaIgnore ApplicationManifestService applicationManifestService;
   @Inject @Transient @SchemaIgnore ServiceResourceService serviceResourceService;
@@ -37,8 +40,8 @@ public class ManifestCollectionFailedAlert implements AlertData {
 
   @Override
   public boolean matches(AlertData alertData) {
-    ArtifactCollectionFailedAlert otherAlert = (ArtifactCollectionFailedAlert) alertData;
-    return StringUtils.equals(otherAlert.getArtifactStreamId(), appManifestId);
+    ManifestCollectionFailedAlert otherAlert = (ManifestCollectionFailedAlert) alertData;
+    return StringUtils.equals(otherAlert.getAppManifestId(), appManifestId);
   }
 
   @Override

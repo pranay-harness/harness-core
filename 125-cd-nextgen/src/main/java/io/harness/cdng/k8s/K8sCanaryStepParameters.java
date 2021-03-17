@@ -1,13 +1,11 @@
 package io.harness.cdng.k8s;
 
 import io.harness.common.SwaggerConstants;
-import io.harness.executionplan.stepsdependency.StepDependencySpec;
+import io.harness.pms.sdk.core.steps.io.RollbackInfo;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.Map;
-import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,13 +13,40 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeAlias("k8sCanaryStepParameters")
-public class K8sCanaryStepParameters implements K8sStepParameters {
-  @NotNull InstanceSelectionWrapper instanceSelection;
+public class K8sCanaryStepParameters extends K8sCanaryBaseStepInfo implements K8sStepParameters {
+  String name;
+  String identifier;
+  String description;
+  ParameterField<String> skipCondition;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
-  @JsonIgnore Map<String, StepDependencySpec> stepDependencySpecs;
+  RollbackInfo rollbackInfo;
+
+  @Builder(builderMethodName = "infoBuilder")
+  public K8sCanaryStepParameters(String name, String identifier, String description,
+      ParameterField<String> skipCondition, InstanceSelectionWrapper instanceSelection, ParameterField<String> timeout,
+      ParameterField<Boolean> skipDryRun, RollbackInfo rollbackInfo) {
+    super(instanceSelection, skipDryRun);
+    this.timeout = timeout;
+    this.rollbackInfo = rollbackInfo;
+    this.name = name;
+    this.identifier = identifier;
+    this.description = description;
+    this.skipCondition = skipCondition;
+  }
+
+  @Override
+  public String toViewJson() {
+    return RecastOrchestrationUtils.toDocumentJson(K8sCanaryStepParameters.infoBuilder()
+                                                       .instanceSelection(instanceSelection)
+                                                       .skipDryRun(skipDryRun)
+                                                       .timeout(timeout)
+                                                       .name(name)
+                                                       .identifier(identifier)
+                                                       .skipCondition(skipCondition)
+                                                       .description(description)
+                                                       .build());
+  }
 }

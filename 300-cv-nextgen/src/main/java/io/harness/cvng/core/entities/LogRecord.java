@@ -36,7 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "LogRecordKeys")
 @Entity(value = "logRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
+public final class LogRecord implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

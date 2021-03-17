@@ -3,6 +3,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,8 +12,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.client.NextGenService;
@@ -30,6 +32,7 @@ import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.OnboardingService;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -47,7 +50,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class DSConfigServiceImplTest extends CvNextGenTest {
+public class DSConfigServiceImplTest extends CvNextGenTestBase {
   @Inject DSConfigService dsConfigService;
   @Mock NextGenService nextGenService;
   @Inject AppDynamicsService appDynamicsService;
@@ -79,9 +82,9 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testUpsert_withSingleConfig() {
+  public void testCreate_withSingleConfig() {
     DSConfig dsConfig = createAppDynamicsDataSourceCVConfig("appd application name", "monitoringSourceIdentifier");
-    dsConfigService.upsert(dsConfig);
+    dsConfigService.create(dsConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
         dsConfigService.list(accountId, connectorIdentifier, dsConfig.getProductName());
     assertThat(dataSourceCVConfigs).hasSize(1);
@@ -94,9 +97,9 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testList_multiple() {
     AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier1");
-    dsConfigService.upsert(dataSourceCVConfig);
+    dsConfigService.create(dataSourceCVConfig);
     dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app1", "monitoringSourceIdentifier2");
-    dsConfigService.upsert(dataSourceCVConfig);
+    dsConfigService.update(dataSourceCVConfig.getIdentifier(), dataSourceCVConfig);
     List<? extends DSConfig> dataSourceCVConfigs =
         dsConfigService.list(accountId, connectorIdentifier, dataSourceCVConfig.getProductName());
     assertThat(dataSourceCVConfigs).hasSize(2);
@@ -110,9 +113,9 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testVerifyExistingConfigs() {
     AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier1");
-    dsConfigService.upsert(dataSourceCVConfig);
+    dsConfigService.create(dataSourceCVConfig);
     AppDynamicsDSConfig dataSourceCVConfig1 = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier2");
-    assertThatThrownBy(() -> dsConfigService.upsert(dataSourceCVConfig1))
+    assertThatThrownBy(() -> dsConfigService.update(dataSourceCVConfig1.getIdentifier(), dataSourceCVConfig1))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("appdynamics app/tier app/manager")
         .hasMessageContaining("has already been onboarded for env harnessProd and service manager");
@@ -125,7 +128,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
     AppDynamicsDSConfig dataSourceCVConfig =
         createAppDynamicsDataSourceCVConfig("appd application name", "monitoringSourceIdentifier");
     dataSourceCVConfig.setIdentifier("app1");
-    dsConfigService.upsert(dataSourceCVConfig);
+    dsConfigService.create(dataSourceCVConfig);
     assertThat(dsConfigService.list(accountId, connectorIdentifier, productName)).isNotEmpty();
     dsConfigService.delete(accountId, orgIdentifier, projectIdentifier, dataSourceCVConfig.getIdentifier());
     assertThat(dsConfigService.list(accountId, orgIdentifier, projectIdentifier)).isEmpty();
@@ -144,8 +147,11 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
         AppdynamicsAppConfig.builder()
             .applicationName(appName)
             .envIdentifier("harnessProd")
-            .metricPacks(Sets.newHashSet(
-                MetricPack.builder().accountId(accountId).identifier("appd performance metric pack").build()))
+            .metricPacks(Sets.newHashSet(MetricPack.builder()
+                                             .accountId(accountId)
+                                             .category(CVMonitoringCategory.INFRASTRUCTURE)
+                                             .identifier("appd performance metric pack")
+                                             .build()))
             .serviceMappings(Sets.newHashSet(
                 ServiceMapping.builder().serviceIdentifier("harness-manager").tierName("manager").build(),
                 ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()))
@@ -160,10 +166,10 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   public void testGetMonitoringSources() {
     AppDynamicsDSConfig dataSourceCVConfig1 =
         createAppDynamicsDataSourceCVConfig("appd application name 1", "monitoringSourceIdentifier 1");
-    dsConfigService.upsert(dataSourceCVConfig1);
+    dsConfigService.create(dataSourceCVConfig1);
     AppDynamicsDSConfig dataSourceCVConfig2 =
         createAppDynamicsDataSourceCVConfig("appd application name 2", "monitoringSourceIdentifier 2");
-    dsConfigService.upsert(dataSourceCVConfig2);
+    dsConfigService.create(dataSourceCVConfig2);
     DSConfig dsConfig = dsConfigService.getMonitoringSource(
         accountId, orgIdentifier, projectIdentifier, "monitoringSourceIdentifier 1");
     assertThat(dsConfig).isNotNull();
@@ -181,16 +187,13 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   public void testListMonitoringSources_checkThatNumberOfElementsAreCorrects() {
     AppDynamicsDSConfig dataSourceCVConfig1 =
         createAppDynamicsDataSourceCVConfig("appd application name 1", "monitoringSourceIdentifier 1");
-    dsConfigService.upsert(dataSourceCVConfig1);
+    dsConfigService.create(dataSourceCVConfig1);
     AppDynamicsDSConfig dataSourceCVConfig2 =
         createAppDynamicsDataSourceCVConfig("appd application name 2", "monitoringSourceIdentifier 2");
-    dsConfigService.upsert(dataSourceCVConfig2);
+    dsConfigService.create(dataSourceCVConfig2);
     AppDynamicsDSConfig dataSourceCVConfig3 =
         createAppDynamicsDataSourceCVConfig("appd application name 3", "monitoringSourceIdentifier 3");
-    dsConfigService.upsert(dataSourceCVConfig3);
-    AppDynamicsDSConfig dataSourceCVConfig4 =
-        createAppDynamicsDataSourceCVConfig("appd application name 4", "monitoringSourceIdentifier 3");
-    dsConfigService.upsert(dataSourceCVConfig4);
+    dsConfigService.create(dataSourceCVConfig3);
     List<MonitoringSourceDTO> monitoringSourceDTOS =
         dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, 10, 0, null).getContent();
     assertThat(monitoringSourceDTOS.size()).isEqualTo(3);
@@ -212,7 +215,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
           Sets.newHashSet(ServiceMapping.builder().serviceIdentifier("harness-manager").tierName("manager").build(),
               ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()));
     });
-    dsConfigService.upsert(dataSourceCVConfig1);
+    dsConfigService.create(dataSourceCVConfig1);
 
     List<MonitoringSourceDTO> monitoringSourceDTOS =
         dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, 10, 0, null).getContent();
@@ -230,7 +233,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
           Sets.newHashSet(ServiceMapping.builder().serviceIdentifier("harness-manager-dev").tierName("manager").build(),
               ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()));
     });
-    dsConfigService.upsert(dataSourceCVConfig2);
+    dsConfigService.update(dataSourceCVConfig2.getIdentifier(), dataSourceCVConfig2);
 
     monitoringSourceDTOS =
         dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, 10, 0, null).getContent();
@@ -248,7 +251,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
           Sets.newHashSet(ServiceMapping.builder().serviceIdentifier("harness-manager").tierName("manager").build(),
               ServiceMapping.builder().serviceIdentifier("harness-qa").tierName("manager-qa").build()));
     });
-    dsConfigService.upsert(dataSourceCVConfig3);
+    dsConfigService.create(dataSourceCVConfig3);
 
     monitoringSourceDTOS =
         dsConfigService.listMonitoringSources(accountId, orgIdentifier, projectIdentifier, 10, 0, null).getContent();
@@ -262,7 +265,7 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
   public void testGetMonitoringSourceImportStatus() throws IllegalAccessException {
     AppDynamicsDSConfig dataSourceCVConfig =
         createAppDynamicsDataSourceCVConfig("appd application name", "monitoringSourceIdentifier");
-    dsConfigService.upsert(dataSourceCVConfig);
+    dsConfigService.create(dataSourceCVConfig);
     when(nextGenService.getEnvironmentCount(accountId, orgIdentifier, projectIdentifier)).thenReturn(5);
     when(onboardingService.getOnboardingResponse(anyString(), any(OnboardingRequestDTO.class)))
         .thenReturn(OnboardingResponseDTO.builder()
@@ -279,5 +282,21 @@ public class DSConfigServiceImplTest extends CvNextGenTest {
                        .totalNumberOfApplications(2)
                        .totalNumberOfEnvironments(5)
                        .build());
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testCreate_existingDSConfig() {
+    AppDynamicsDSConfig dataSourceCVConfig = createAppDynamicsDataSourceCVConfig("app", "monitoringSourceIdentifier1");
+    dsConfigService.create(dataSourceCVConfig);
+    AppDynamicsDSConfig dataSourceCVConfig1 =
+        createAppDynamicsDataSourceCVConfig("app1", dataSourceCVConfig.getIdentifier());
+    assertThatThrownBy(() -> dsConfigService.create(dataSourceCVConfig1))
+        .isInstanceOf(DuplicateFieldException.class)
+        .hasMessage(String.format(
+            "DSConfig  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
+            dataSourceCVConfig.getIdentifier(), dataSourceCVConfig.getOrgIdentifier(),
+            dataSourceCVConfig.getProjectIdentifier()));
   }
 }

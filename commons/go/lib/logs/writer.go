@@ -1,6 +1,8 @@
 package logs
 
-type nopWriter struct{}
+type nopWriter struct {
+	data []string
+}
 
 // Writer needs to implement io.Writer
 type StreamWriter interface {
@@ -10,10 +12,13 @@ type StreamWriter interface {
 	Close() error                      // Close remote stream for writing of logs
 }
 
-func (*nopWriter) Start() error                { return nil }
-func (*nopWriter) Open() error                 { return nil }
-func (*nopWriter) Close() error                { return nil }
-func (*nopWriter) Write(p []byte) (int, error) { return len(p), nil }
+func (*nopWriter) Start() error { return nil }
+func (*nopWriter) Open() error  { return nil }
+func (*nopWriter) Close() error { return nil }
+func (n *nopWriter) Write(p []byte) (int, error) {
+	n.data = append(n.data, string(p))
+	return len(p), nil
+}
 
 func NopWriter() StreamWriter {
 	return new(nopWriter)

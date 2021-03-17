@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum ActivityVerificationStatus {
+  IGNORED,
   NOT_STARTED,
   VERIFICATION_PASSED,
   VERIFICATION_FAILED,

@@ -17,4 +17,5 @@ public class QLInfraAccountConnectionData implements QLObject {
   private String linkedAccountCloudFormationTemplateLink;
   private String masterAccountLaunchTemplateLink;
   private String linkedAccountLaunchTemplateLink;
+  private String azureHarnessAppClientId;
 }

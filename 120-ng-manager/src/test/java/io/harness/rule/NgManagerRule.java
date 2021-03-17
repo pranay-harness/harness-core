@@ -3,7 +3,9 @@ package io.harness.rule;
 import io.harness.factory.ClosingFactory;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.persistence.HPersistence;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -12,8 +14,12 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -41,9 +47,16 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
   public List<Module> modules(List<Annotation> annotations) {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
     List<Module> modules = new ArrayList<>();
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(HPersistence.class).to(MongoPersistence.class);
+      }
+    });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -63,6 +76,11 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(ManagerRegistrars.morphiaConverters)
             .build();
+      }
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
       }
     });
     return modules;

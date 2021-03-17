@@ -97,16 +97,15 @@ import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
-import io.harness.delegate.beans.logstreaming.LogStreamingSanitizer;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.logging.DelegateStackdriverLogAppender;
 import io.harness.delegate.message.Message;
 import io.harness.delegate.message.MessageService;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.Cd1ApplicationAccess;
@@ -120,7 +119,9 @@ import io.harness.filesystem.FileIo;
 import io.harness.grpc.DelegateServiceGrpcAgentClient;
 import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.logging.AutoLogContext;
-import io.harness.logstreaming.DelegateAgentLogStreamingClient;
+import io.harness.logstreaming.LogStreamingClient;
+import io.harness.logstreaming.LogStreamingHelper;
+import io.harness.logstreaming.LogStreamingSanitizer;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
@@ -142,7 +143,6 @@ import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.DelegateTaskFactory;
-import software.wings.beans.LogHelper;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
@@ -247,6 +247,7 @@ import retrofit2.Response;
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_AGENT)
+@BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
 @BreakDependencyOn("io.harness.delegate.beans.Delegate")
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
@@ -265,12 +266,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+  private final String delegateGroupId = System.getenv().get("DELEGATE_GROUP_ID");
+
   private static final String START_SH = "start.sh";
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
 
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
+  private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
@@ -311,7 +315,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private EncryptionService encryptionService;
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Inject(optional = true) @Nullable private PerpetualTaskWorker perpetualTaskWorker;
-  @Inject(optional = true) @Nullable private DelegateAgentLogStreamingClient delegateAgentLogStreamingClient;
+  @Inject(optional = true) @Nullable private LogStreamingClient logStreamingClient;
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
@@ -419,8 +423,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       boolean kustomizeInstalled = installKustomize(delegateConfiguration);
 
       long start = clock.millis();
+      String descriptionFromConfigFile = isBlank(delegateDescription) ? "" : delegateDescription;
       String description = "description here".equals(delegateConfiguration.getDescription())
-          ? ""
+          ? descriptionFromConfigFile
           : delegateConfiguration.getDescription();
 
       String delegateName = System.getenv().get("DELEGATE_NAME");
@@ -445,6 +450,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             "Registering delegate with delegate Type: {}, DelegateGroupName: {}", DELEGATE_TYPE, DELEGATE_GROUP_NAME);
       }
 
+      log.info("Delegate Group Id: {}", delegateGroupId);
+
       DelegateParamsBuilder builder = DelegateParams.builder()
                                           .ip(getLocalHostAddress())
                                           .accountId(accountId)
@@ -453,6 +460,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)
+                                          .delegateGroupId(delegateGroupId)
                                           .delegateProfileId(delegateProfile)
                                           .description(description)
                                           .version(getVersion())
@@ -1920,7 +1928,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String appId = null;
     String activityId = null;
 
-    if (delegateAgentLogStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
+    if (logStreamingClient != null && !isBlank(delegateTaskPackage.getLogStreamingToken())
         && !isEmpty(delegateTaskPackage.getLogStreamingAbstractions())) {
       logStreamingConfigPresent = true;
     }
@@ -1945,12 +1953,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return null;
     }
     String logBaseKey = delegateTaskPackage.getLogStreamingAbstractions() != null
-        ? LogHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions())
+        ? LogStreamingHelper.generateLogBaseKey(delegateTaskPackage.getLogStreamingAbstractions())
         : EMPTY;
 
     LogStreamingTaskClientBuilder taskClientBuilder =
         LogStreamingTaskClient.builder()
-            .delegateAgentLogStreamingClient(delegateAgentLogStreamingClient)
+            .logStreamingClient(logStreamingClient)
             .accountId(delegateTaskPackage.getAccountId())
             .token(delegateTaskPackage.getLogStreamingToken())
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
@@ -1987,6 +1995,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     String activityId = null;
     Set<String> secrets = new HashSet<>(delegateTaskPackage.getSecrets());
 
+    // Add other system secrets
+    addSystemSecrets(secrets);
+
     // TODO: This gets secrets for Shell Script, Shell Script Provision, and Command only
     // When secret decryption is moved to delegate for each task then those secrets can be used instead.
     Object[] parameters = taskData.getParameters();
@@ -2022,6 +2033,32 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
 
     return Pair.of(activityId, secrets);
+  }
+
+  private void addSystemSecrets(Set<String> secrets) {
+    // Add config file secrets
+    secrets.add(delegateConfiguration.getAccountSecret());
+    secrets.add(delegateConfiguration.getManagerServiceSecret());
+
+    // Add environment variable secrets
+    String delegateProfileId = System.getenv().get("DELEGATE_PROFILE");
+    if (isNotBlank(delegateProfileId)) {
+      secrets.add(delegateProfileId);
+    }
+
+    if (isNotBlank(delegateSessionIdentifier)) {
+      secrets.add(delegateSessionIdentifier);
+    }
+
+    String proxyUser = System.getenv().get("PROXY_USER");
+    if (isNotBlank(proxyUser)) {
+      secrets.add(proxyUser);
+    }
+
+    String proxyPassword = System.getenv().get("PROXY_PASSWORD");
+    if (isNotBlank(proxyPassword)) {
+      secrets.add(proxyPassword);
+    }
   }
 
   /**

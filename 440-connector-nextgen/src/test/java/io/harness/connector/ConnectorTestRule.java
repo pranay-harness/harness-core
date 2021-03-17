@@ -33,6 +33,7 @@ import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -83,6 +84,9 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
             .toInstance(mock(NoOpProducer.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
+            .toInstance(mock(NoOpProducer.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
       }
@@ -125,6 +129,14 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
             .addAll(PersistenceRegistrars.morphiaConverters)
+            .build();
+      }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder()
+            .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
             .build();
       }
     });

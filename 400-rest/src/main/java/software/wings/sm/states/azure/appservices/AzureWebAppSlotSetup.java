@@ -1,12 +1,14 @@
 package software.wings.sm.states.azure.appservices;
 
 import static io.harness.azure.model.AzureConstants.SECRET_REF_FIELS_NAME;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZURE_APP_SERVICE_SLOT_SETUP;
 import static software.wings.sm.StateType.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
@@ -21,6 +23,7 @@ import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters;
 import io.harness.delegate.task.azure.appservice.webapp.request.AzureWebAppSlotSetupParameters.AzureWebAppSlotSetupParametersBuilder;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -137,7 +140,16 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
     stateExecutionData.setAppServiceName(slotSetupTaskResponse.getPreDeploymentData().getAppName());
     stateExecutionData.setDeploySlotName(slotSetupTaskResponse.getPreDeploymentData().getSlotName());
+    stateExecutionData.setWebAppUrl(getWebAppUrl(slotSetupTaskResponse));
     return stateExecutionData;
+  }
+
+  private String getWebAppUrl(AzureWebAppSlotSetupResponse slotSetupTaskResponse) {
+    if (isEmpty(slotSetupTaskResponse.getAzureAppDeploymentData())) {
+      return EMPTY;
+    }
+    AzureAppDeploymentData azureAppDeploymentData = slotSetupTaskResponse.getAzureAppDeploymentData().get(0);
+    return azureAppDeploymentData.getHostName();
   }
 
   @Override
@@ -234,6 +246,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     String appServiceName = context.renderExpression(appService);
     String deploySlotName =
         AzureResourceUtility.fixDeploymentSlotName(context.renderExpression(deploymentSlot), appServiceName);
+    String targetSlotName =
+        AzureResourceUtility.fixDeploymentSlotName(context.renderExpression(targetSlot), appServiceName);
 
     return slotSetupParametersBuilder.accountId(azureAppServiceStateData.getApplication().getAccountId())
         .appId(azureAppServiceStateData.getApplication().getAppId())
@@ -242,6 +256,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
         .subscriptionId(azureAppServiceStateData.getSubscriptionId())
         .resourceGroupName(azureAppServiceStateData.getResourceGroup())
         .slotName(deploySlotName)
+        .targetSlotName(targetSlotName)
         .webAppName(appServiceName)
         .timeoutIntervalInMin(getUserDefinedTimeOut(context))
         .build();

@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
 
@@ -21,6 +22,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -32,6 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.aws.AwsCallTracker;
+import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AwsAutoScaleException;
@@ -48,6 +51,9 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
+import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.model.Activity;
@@ -66,6 +72,7 @@ import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
 import com.amazonaws.services.cloudformation.model.UpdateStackRequest;
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ecr.AmazonECRClient;
@@ -91,20 +98,32 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({WebIdentityTokenCredentialsProvider.class})
+@PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*", "javax.crypto.*"})
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
   @Mock AwsConfig awsConfig;
   @Mock private AwsCallTracker tracker;
   @Mock private EncryptionService encryptionService;
+  @Mock private AwsApiHelperService awsApiHelperService;
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     when(awsConfig.isCertValidationRequired()).thenReturn(false);
+    when(awsConfig.getDefaultRegion()).thenReturn(Regions.US_EAST_1.getName());
   }
 
   @Test
@@ -370,6 +389,10 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AwsCallTracker mockTracker = mock(AwsCallTracker.class);
     doNothing().when(mockTracker).trackCFCall(anyString());
     on(service).set("tracker", mockTracker);
+    on(service).set("awsApiHelperService", awsApiHelperService);
+
+    doCallRealMethod().when(awsApiHelperService).handleAmazonClientException(any());
+    doCallRealMethod().when(awsApiHelperService).handleAmazonServiceException(any());
 
     try {
       service.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
@@ -511,6 +534,10 @@ public class AwsHelperServiceTest extends WingsBaseTest {
                                      .withImageIds(new ImageIdentifier().withImageTag("latest"))
                                      .withAcceptedMediaTypes("application/vnd.docker.distribution.manifest.v1+json")))
         .thenReturn(result);
+    doReturn(ecrClient).when(awsApiHelperService).getAmazonEcrClient(any(), any(String.class));
+    doCallRealMethod().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(), any());
+    doCallRealMethod().when(awsApiHelperService).fetchLabels(any(), any(), any(), any());
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
 
     assertThat(
         service.fetchLabels(AwsConfig.builder().accessKey("qwer".toCharArray()).secretKey("qwer".toCharArray()).build(),
@@ -523,8 +550,11 @@ public class AwsHelperServiceTest extends WingsBaseTest {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testValidateAwsAccountCredentialFailsInvalidCredentials() {
+    when(awsApiHelperService.getAmazonEc2Client(any())).thenCallRealMethod();
+    doCallRealMethod().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(), any());
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
     assertThatThrownBy(() -> service.validateAwsAccountCredential(ACCESS_KEY, SECRET_KEY))
         .isInstanceOf(InvalidRequestException.class);
     verify(tracker, never()).trackEC2Call("Describe Regions");
@@ -539,12 +569,14 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AmazonECRClient ecrClient = mock(AmazonECRClient.class);
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("encryptionService", encryptionService);
-    doReturn(ecrClient).when(service).getAmazonEcrClient(any(), any(String.class));
-    when(service.getAmazonEcrClient(awsConfig, region)).thenReturn(ecrClient);
+    doReturn(ecrClient).when(awsApiHelperService).getAmazonEcrClient(any(), any(String.class));
     Reflect.on(service).set("tracker", tracker);
+    Reflect.on(awsApiHelperService).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
 
     DescribeRepositoriesResult result = new DescribeRepositoriesResult();
     when(ecrClient.describeRepositories(request)).thenReturn(result);
+    when(awsApiHelperService.listRepositories(any(), any(), anyString())).thenCallRealMethod();
     DescribeRepositoriesResult actual = service.listRepositories(awsConfig, null, request, region);
     verify(tracker, times(1)).trackECRCall("List Repositories");
     assertThat(actual).isEqualTo(result);
@@ -558,15 +590,41 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     AwsHelperService service = spy(new AwsHelperService());
     Reflect.on(service).set("encryptionService", encryptionService);
     doReturn(ec2Client).when(service).getAmazonEc2Client(any());
+    doReturn(ec2Client).when(awsApiHelperService).getAmazonEc2Client(any());
     when(service.getAmazonEc2Client(awsConfig)).thenReturn(ec2Client);
     Reflect.on(service).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
+    Reflect.on(awsApiHelperService).set("tracker", tracker);
 
     DescribeRegionsResult result = new DescribeRegionsResult().withRegions(
         new Region().withRegionName("us-east-1"), new Region().withRegionName("us-east-2"));
     when(ec2Client.describeRegions()).thenReturn(result);
+    when(awsApiHelperService.listRegions(any())).thenCallRealMethod();
     List<String> actual = service.listRegions(awsConfig, null);
     verify(tracker, times(1)).trackEC2Call("List Regions");
     assertThat(actual).hasSize(2);
     assertThat(actual).containsExactly("us-east-1", "us-east-2");
+  }
+
+  @Test(expected = com.amazonaws.SdkClientException.class)
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testAttachCredentialsAndBackoffPolicyWithIRSA() {
+    PowerMockito.mockStatic(System.class);
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_ROLE_ARN_ENV_VAR)).thenReturn("abcd");
+    PowerMockito.when(System.getenv(SDKGlobalConfiguration.AWS_WEB_IDENTITY_ENV_VAR)).thenReturn("/jkj");
+    AwsInternalConfig awsInternalConfig = mock(AwsInternalConfig.class);
+    when(awsInternalConfig.isUseEc2IamCredentials()).thenReturn(false);
+    when(awsInternalConfig.isUseIRSA()).thenReturn(true);
+    when(awsInternalConfig.isAssumeCrossAccountRole()).thenReturn(false);
+    AwsClientBuilder awsClientBuilder = AmazonEC2ClientBuilder.standard().withRegion("us-east-1");
+    doCallRealMethod()
+        .when(awsApiHelperService)
+        .attachCredentialsAndBackoffPolicy(eq(awsClientBuilder), eq(awsInternalConfig));
+
+    awsApiHelperService.attachCredentialsAndBackoffPolicy(awsClientBuilder, awsInternalConfig);
+
+    assertThat(awsClientBuilder.getCredentials()).isInstanceOf(WebIdentityTokenCredentialsProvider.class);
+    awsClientBuilder.getCredentials().getCredentials().getAWSSecretKey();
   }
 }

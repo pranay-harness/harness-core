@@ -29,6 +29,7 @@ import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_EXPRESSION;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER_APP_SERVICE;
 import static software.wings.beans.yaml.YamlConstants.MULTIPLE_ANY;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FILE;
@@ -49,6 +50,10 @@ import static software.wings.beans.yaml.YamlConstants.VERIFICATION_PROVIDERS_FOL
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
 import static software.wings.utils.Utils.generatePath;
+
+import io.harness.governance.ApplicationFilter;
+import io.harness.governance.EnvironmentFilter;
+import io.harness.governance.GovernanceFreezeConfig;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
@@ -85,6 +90,7 @@ import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ManifestSelection;
@@ -168,10 +174,11 @@ public enum YamlType {
       ApplicationManifest.class),
   // Azure App Service Manifest
   APPLICATION_MANIFEST_APP_SERVICE(EntityType.APPLICATION_MANIFEST.name(),
-      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
-          INDEX_YAML),
-      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER),
-      Service.class),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE),
+      ApplicationManifest.class),
   // PCF Override All Services
   APPLICATION_MANIFEST_PCF_OVERRIDES_ALL_SERVICE(YamlConstants.VALUES,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
@@ -207,6 +214,12 @@ public enum YamlType {
           MANIFEST_FILE_FOLDER, MANIFEST_FILE_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
           MANIFEST_FILE_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_APP_SERVICE(YamlConstants.MANIFEST_FILE,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE, MANIFEST_FILE_FOLDER, ANY_EXCEPT_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          MANIFEST_FOLDER_APP_SERVICE, MANIFEST_FILE_FOLDER),
       ManifestFile.class),
   MANIFEST_FILE_VALUES_SERVICE_OVERRIDE(YamlConstants.VALUES,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, VALUES_FOLDER,
@@ -377,6 +390,18 @@ public enum YamlType {
       generatePath(
           PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, CONFIG_FILES_FOLDER, ANY),
       ConfigFile.class),
+
+  GOVERNANCE_FREEZE_CONFIG(EntityType.GOVERNANCE_FREEZE_CONFIG.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, YamlConstants.GOVERNANCE_FOLDER,
+          YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, YamlConstants.GOVERNANCE_FOLDER,
+          YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER, ANY),
+      GovernanceFreezeConfig.class),
+
+  GOVERNANCE_CONFIG(EntityType.GOVERNANCE_CONFIG.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, YamlConstants.GOVERNANCE_FOLDER, YAML_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, YamlConstants.GOVERNANCE_FOLDER, ANY), GovernanceConfig.class),
+
   ENVIRONMENT(EntityType.ENVIRONMENT.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY),
@@ -487,7 +512,9 @@ public enum YamlType {
   MANIFEST_SELECTION(ObjectType.MANIFEST_SELECTION, "", "", ManifestSelection.Yaml.class),
   TAG(EntityType.TAG.name(), generatePath(PATH_DELIMITER, false, SETUP_FOLDER, TAGS_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class),
-  CLOUD_PROVIDER_INFRASTRUCTURE(ObjectType.CLOUD_PROVIDER_INFRASTRUCTURE, "", "", CloudProviderInfrastructure.class);
+  CLOUD_PROVIDER_INFRASTRUCTURE(ObjectType.CLOUD_PROVIDER_INFRASTRUCTURE, "", "", CloudProviderInfrastructure.class),
+  APPLICATION_FILTER(ObjectType.APPLICATION_FILTER, "", "", ApplicationFilter.class),
+  ENV_FILTER(ObjectType.ENVIRONMENT_FILTER, "", "", EnvironmentFilter.class);
 
   private String entityType;
   private String pathExpression;

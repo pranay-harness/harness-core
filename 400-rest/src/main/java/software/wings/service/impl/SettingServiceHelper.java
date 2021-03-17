@@ -20,6 +20,7 @@ import static software.wings.settings.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingVariableTypes.AZURE_ARTIFACTS_PAT;
 import static software.wings.settings.SettingVariableTypes.BAMBOO;
 import static software.wings.settings.SettingVariableTypes.BUG_SNAG;
+import static software.wings.settings.SettingVariableTypes.CE_AZURE;
 import static software.wings.settings.SettingVariableTypes.CLOUD_WATCH;
 import static software.wings.settings.SettingVariableTypes.DATA_DOG;
 import static software.wings.settings.SettingVariableTypes.DATA_DOG_LOG;
@@ -88,7 +89,7 @@ public class SettingServiceHelper {
       KUBERNETES_CLUSTER, PCF, SPOT_INST, APP_DYNAMICS, NEW_RELIC, INSTANA, PROMETHEUS, DATA_DOG, DYNA_TRACE,
       CLOUD_WATCH, DATA_DOG_LOG, BUG_SNAG, ELK, SPLUNK, SUMO, LOGZ, APM_VERIFICATION, JENKINS, BAMBOO, DOCKER, NEXUS,
       ARTIFACTORY, SMB, SFTP, AMAZON_S3_HELM_REPO, GCS_HELM_REPO, HTTP_HELM_REPO, AZURE_ARTIFACTS_PAT, GIT, SMTP, JIRA,
-      SERVICENOW, WINRM_CONNECTION_ATTRIBUTES, HOST_CONNECTION_ATTRIBUTES);
+      SERVICENOW, WINRM_CONNECTION_ATTRIBUTES, HOST_CONNECTION_ATTRIBUTES, CE_AZURE);
 
   @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;

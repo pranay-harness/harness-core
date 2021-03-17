@@ -62,7 +62,7 @@ public class GcrResourceServiceImpl implements GcrResourceService {
 
   @Override
   public GcrResponseDTO getBuildDetails(IdentifierRef gcrConnectorRef, String imagePath, String registryHostname,
-      String projectIdentifier, String orgIdentifier) {
+      String orgIdentifier, String projectIdentifier) {
     GcpConnectorDTO connector = getConnector(gcrConnectorRef);
     BaseNGAccess baseNGAccess =
         getBaseNGAccess(gcrConnectorRef.getAccountIdentifier(), orgIdentifier, projectIdentifier);

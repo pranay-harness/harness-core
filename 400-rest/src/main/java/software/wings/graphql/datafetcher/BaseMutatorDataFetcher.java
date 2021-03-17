@@ -9,6 +9,8 @@ import static software.wings.graphql.datafetcher.DataFetcherUtils.GENERIC_EXCEPT
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -34,6 +36,7 @@ import org.apache.commons.collections4.ListUtils;
 import org.joor.Reflect;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class BaseMutatorDataFetcher<P, R> extends BaseDataFetcher {
   private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final LoadingCache<Class<?>, Map<String, Field>> classToFieldsMapCache =

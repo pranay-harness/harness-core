@@ -2,28 +2,18 @@ package tasks
 
 import (
 	"bufio"
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"time"
 
-	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/pkg/errors"
-	"github.com/wings-software/portal/product/ci/addon/testreports"
-	"github.com/wings-software/portal/product/ci/addon/testreports/junit"
-	"github.com/wings-software/portal/product/ci/common/external"
-	grpcclient "github.com/wings-software/portal/product/ci/engine/grpc/client"
-
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/engine/consts"
+	"github.com/wings-software/portal/product/ci/addon/resolver"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-	"mvdan.cc/sh/v3/syntax"
 )
 
 //go:generate mockgen -source run.go -package=tasks -destination mocks/run_mock.go RunTask
@@ -34,11 +24,6 @@ const (
 	outputEnvSuffix    string        = ".out"
 	cmdExitWaitTime    time.Duration = time.Duration(0)
 	batchSize                        = 100
-)
-
-var (
-	getTIClient = external.GetTiHTTPClient
-	newJunit    = junit.New
 )
 
 // RunTask represents interface to execute a run step
@@ -54,7 +39,9 @@ type runTask struct {
 	timeoutSecs       int64
 	numRetries        int32
 	tmpFilePath       string
+	prevStepOutputs   map[string]*pb.StepOutput
 	reports           []*pb.Report
+	logMetrics        bool
 	log               *zap.SugaredLogger
 	addonLogger       *zap.SugaredLogger
 	procWriter        io.Writer
@@ -63,8 +50,8 @@ type runTask struct {
 }
 
 // NewRunTask creates a run step executor
-func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w io.Writer,
-	addonLogger *zap.SugaredLogger) RunTask {
+func NewRunTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput, tmpFilePath string,
+	log *zap.SugaredLogger, w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) RunTask {
 	r := step.GetRun()
 	fs := filesystem.NewOSFileSystem(log)
 
@@ -87,6 +74,7 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
+		logMetrics:        logMetrics,
 		log:               log,
 		fs:                fs,
 		procWriter:        w,
@@ -95,21 +83,21 @@ func NewRunTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger, w
 }
 
 // Executes customer provided run step command with retries and timeout handling
-func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
+func (r *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err error
 	var o map[string]string
-	for i := int32(1); i <= e.numRetries; i++ {
-		if o, err = e.execute(ctx, i); err == nil {
+	for i := int32(1); i <= r.numRetries; i++ {
+		if o, err = r.execute(ctx, i); err == nil {
 			st := time.Now()
-			err = e.collectTestReports(ctx)
+			err = collectTestReports(ctx, r.reports, r.id, r.log)
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
-				e.log.Errorw("unable to collect test reports", zap.Error(err))
-				return nil, e.numRetries, err
+				r.log.Errorw("unable to collect test reports", zap.Error(err))
+				return nil, r.numRetries, err
 			}
-			if len(e.reports) > 0 {
-				e.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+			if len(r.reports) > 0 {
+				r.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
 			}
 			return o, i, nil
 		}
@@ -117,21 +105,21 @@ func (e *runTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect reports, ignore any errors during report collection itself
-		errc := e.collectTestReports(ctx)
+		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
-			e.log.Errorw("error while collecting test reports", zap.Error(errc))
+			r.log.Errorw("error while collecting test reports", zap.Error(errc))
 		}
-		return nil, e.numRetries, err
+		return nil, r.numRetries, err
 	}
-	return nil, e.numRetries, err
+	return nil, r.numRetries, err
 }
 
 // Fetches map of env variable and value from OutputFile. OutputFile stores all env variable and value
-func (e *runTask) fetchOutputVariables(outputFile string) (map[string]string, error) {
+func (r *runTask) fetchOutputVariables(outputFile string) (map[string]string, error) {
 	envVarMap := make(map[string]string)
-	f, err := e.fs.Open(outputFile)
+	f, err := r.fs.Open(outputFile)
 	if err != nil {
-		e.log.Errorw("Failed to open output file", zap.Error(err))
+		r.log.Errorw("Failed to open output file", zap.Error(err))
 		return nil, err
 	}
 	defer f.Close()
@@ -141,7 +129,7 @@ func (e *runTask) fetchOutputVariables(outputFile string) (map[string]string, er
 		line := s.Text()
 		sa := strings.Split(line, " ")
 		if len(sa) != 2 {
-			e.log.Warnw(
+			r.log.Warnw(
 				"output variable does not exist",
 				"variable", sa[0],
 			)
@@ -150,47 +138,50 @@ func (e *runTask) fetchOutputVariables(outputFile string) (map[string]string, er
 		}
 	}
 	if err := s.Err(); err != nil {
-		e.log.Errorw("Failed to create scanner from output file", zap.Error(err))
+		r.log.Errorw("Failed to create scanner from output file", zap.Error(err))
 		return nil, err
 	}
 	return envVarMap, nil
 }
 
-func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
+func (r *runTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
 	start := time.Now()
-	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(e.timeoutSecs))
+	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
 	defer cancel()
 
-	outputFile := fmt.Sprintf("%s/%s%s", e.tmpFilePath, e.id, outputEnvSuffix)
-	cmdToExecute := e.getScript(outputFile)
-	cmdArgs := []string{"-c", cmdToExecute}
-
-	cmd := e.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
-		WithStdout(e.procWriter).WithStderr(e.procWriter).WithEnvVarsMap(nil)
-	err := cmd.Run()
-	if ctxErr := ctx.Err(); ctxErr == context.DeadlineExceeded {
-		logCommandExecErr(e.log, "timeout while executing run step", e.id, cmdToExecute, retryCount, start, ctxErr)
-		return nil, ctxErr
+	outputFile := fmt.Sprintf("%s/%s%s", r.tmpFilePath, r.id, outputEnvSuffix)
+	cmdToExecute, err := r.getScript(ctx, outputFile)
+	if err != nil {
+		return nil, err
 	}
 
+	envVars, err := r.resolveExprInEnv(ctx)
 	if err != nil {
-		logCommandExecErr(e.log, "error encountered while executing run step", e.id, cmdToExecute, retryCount, start, err)
+		return nil, err
+	}
+
+	cmdArgs := []string{"-c", cmdToExecute}
+
+	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
+		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
+	err = runCmd(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.log, r.addonLogger)
+	if err != nil {
 		return nil, err
 	}
 
 	stepOutput := make(map[string]string)
-	if len(e.envVarOutputs) != 0 {
+	if len(r.envVarOutputs) != 0 {
 		var err error
-		outputVars, err := e.fetchOutputVariables(outputFile)
+		outputVars, err := r.fetchOutputVariables(outputFile)
 		if err != nil {
-			logCommandExecErr(e.log, "error encountered while fetching output of run step", e.id, cmdToExecute, retryCount, start, err)
+			logCommandExecErr(r.log, "error encountered while fetching output of run step", r.id, cmdToExecute, retryCount, start, err)
 			return nil, err
 		}
 
 		stepOutput = outputVars
 	}
 
-	e.addonLogger.Infow(
+	r.addonLogger.Infow(
 		"Successfully executed run step",
 		"arguments", cmdToExecute,
 		"output", stepOutput,
@@ -199,139 +190,55 @@ func (e *runTask) execute(ctx context.Context, retryCount int32) (map[string]str
 	return stepOutput, nil
 }
 
-func (e *runTask) getScript(outputVarFile string) string {
+func (r *runTask) getScript(ctx context.Context, outputVarFile string) (string, error) {
 	outputVarCmd := ""
-	for _, o := range e.envVarOutputs {
+	for _, o := range r.envVarOutputs {
 		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
 
-	command := fmt.Sprintf("set -e\n %s %s", e.command, outputVarCmd)
-	logCmd, err := getLoggableCmd(command)
+	resolvedCmd, err := r.resolveExprInCmd(ctx)
 	if err != nil {
-		e.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
-		return fmt.Sprintf("echo '---%s'\n%s", command, command)
+		return "", err
 	}
-	return logCmd
+
+	command := fmt.Sprintf("set -e\n %s %s", resolvedCmd, outputVarCmd)
+	logCmd, err := utils.GetLoggableCmd(command)
+	if err != nil {
+		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
+		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
+	}
+	return logCmd, nil
 }
 
-func getLoggableCmd(cmd string) (string, error) {
-	parser := syntax.NewParser(syntax.KeepComments(false))
-	printer := syntax.NewPrinter(syntax.Minify(false))
-
-	r := strings.NewReader(cmd)
-	prog, err := parser.Parse(r, "")
+// resolveExprInEnv resolves JEXL expressions & env var present in plugin settings environment variables
+func (r *runTask) resolveExprInEnv(ctx context.Context) (map[string]string, error) {
+	envVarMap := getEnvVars()
+	m, err := resolver.ResolveJEXLInMapValues(ctx, envVarMap, r.id, r.prevStepOutputs, r.log)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to parse command")
+		return nil, err
 	}
 
-	var stmts []*syntax.Stmt
-	for _, stmt := range prog.Stmts {
-		// convert the statement to a string and then encode special characters.
-		var buf bytes.Buffer
-		if printer.Print(&buf, stmt); err != nil {
-			return "", errors.Wrap(err, "failed to parse statement")
-		}
-
-		// create a new statement that echos the
-		// original shell statement.
-		echo := &syntax.Stmt{
-			Cmd: &syntax.CallExpr{
-				Args: []*syntax.Word{
-					{
-						Parts: []syntax.WordPart{
-							&syntax.Lit{
-								Value: "echo",
-							},
-						},
-					},
-					{
-						Parts: []syntax.WordPart{
-							&syntax.SglQuoted{
-								Dollar: false,
-								Value:  "--- " + buf.String(),
-							},
-						},
-					},
-				},
-			},
-		}
-		// append the echo statement and the statement
-		stmts = append(stmts, echo)
-		stmts = append(stmts, stmt)
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(m)
+	if err != nil {
+		return nil, err
 	}
-	// replace original statements with new statements
-	prog.Stmts = stmts
 
-	buf := new(bytes.Buffer)
-	printer.Print(buf, prog)
-	return buf.String(), nil
+	return resolver.ResolveEnvInMapValues(resolvedSecretMap), nil
 }
 
-func (r *runTask) collectTestReports(ctx context.Context) error {
-	// Test cases from reports are identified at a per-step level and won't cause overwriting/clashes
-	// at the backend.
-	if len(r.reports) == 0 {
-		return nil
-	}
-	// Create TI proxy client (lite engine)
-	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, r.log)
+// resolveExprInCmd resolves JEXL expressions & secret present in command
+func (r *runTask) resolveExprInCmd(ctx context.Context) (string, error) {
+	c, err := resolver.ResolveJEXLInString(ctx, r.command, r.id, r.prevStepOutputs, r.log)
 	if err != nil {
-		return err
+		return "", err
 	}
-	defer client.CloseConn()
-	for _, report := range r.reports {
-		var rep testreports.TestReporter
-		var err error
 
-		x := report.GetType() // pass in report type in proto when other reports are reqd
-		switch x {
-		case pb.Report_UNKNOWN:
-			return errors.New("report type is unknown")
-		case pb.Report_JUNIT:
-			rep = newJunit(report.GetPaths(), r.log)
-		}
-
-		var tests []string
-		testc, _ := rep.GetTests(ctx)
-		for t := range testc {
-			jt, _ := json.Marshal(t)
-			tests = append(tests, string(jt))
-		}
-
-		if len(tests) == 0 {
-			return nil // We're not erroring even if we can't find any tests to report
-		}
-
-		stream, err := client.Client().WriteTests(ctx, grpc_retry.Disable())
-		if err != nil {
-			return err
-		}
-		var curr []string
-		for _, t := range tests {
-			curr = append(curr, t)
-			if len(curr)%batchSize == 0 {
-				in := &pb.WriteTestsRequest{StepId: r.id, Tests: curr}
-				if serr := stream.Send(in); serr != nil {
-					r.log.Errorw("write tests RPC failed", zap.Error(serr))
-				}
-				curr = []string{} // ignore RPC failures, try to write whatever you can
-			}
-		}
-		if len(curr) > 0 {
-			in := &pb.WriteTestsRequest{StepId: r.id, Tests: curr}
-			if serr := stream.Send(in); serr != nil {
-				r.log.Errorw("write tests RPC failed", zap.Error(serr))
-			}
-			curr = []string{}
-		}
-
-		// Close the stream and receive result
-		_, err = stream.CloseAndRecv()
-		if err != nil {
-			return err
-		}
+	resolvedCmd, err := resolver.ResolveSecretInString(c)
+	if err != nil {
+		return "", err
 	}
-	return nil
+
+	return resolvedCmd, nil
 }
 
 func logCommandExecErr(log *zap.SugaredLogger, errMsg, stepID, args string, retryCount int32, startTime time.Time, err error) {

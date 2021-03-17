@@ -113,12 +113,15 @@ public class NGAggregateResource {
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
-    if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
-          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
-    }
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder harnessManagedOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.harnessManaged, SortOrder.OrderType.DESC).build();
+      SortOrder nameOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.name, SortOrder.OrderType.ASC).build();
+      organizationFilterDTO.setIgnoreCase(true);
+      pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, nameOrder));
+    }
     return ResponseDTO.newResponse(getNGPageResponse(aggregateOrganizationService.listOrganizationAggregateDTO(
         accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)));
   }

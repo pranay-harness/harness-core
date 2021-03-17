@@ -28,6 +28,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.lang.String.format;
 
 import io.harness.beans.FileData;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
@@ -63,6 +64,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -89,7 +91,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sBGDeployRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sBGDeployRequest"));
     }
@@ -100,22 +103,24 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sBGDeployRequest.getTimeoutIntervalInMin());
 
-    boolean success =
-        k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(k8sBGDeployRequest.getManifestDelegateConfig(),
-            manifestFilesDirectory, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, FetchFiles),
-            timeoutInMillis, k8sBGDeployRequest.getAccountId());
+    boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
+        k8sBGDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            CollectionUtils.isEmpty(k8sBGDeployRequest.getValuesYamlList()), commandUnitsProgress),
+        timeoutInMillis, k8sBGDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
     }
 
     success = init(k8sBGDeployRequest, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
 
-    success = prepareForBlueGreen(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Prepare));
+    success = prepareForBlueGreen(k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Prepare, true, commandUnitsProgress),
+        k8sBGDeployRequest.isSkipResourceVersioning());
     if (!success) {
       return getFailureResponse();
     }
@@ -123,7 +128,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     currentRelease.setManagedWorkload(managedWorkload.getResourceId().cloneInternal());
 
     success = k8sTaskHelperBase.applyManifests(client, resources, k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Apply), true);
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Apply, true, commandUnitsProgress), true);
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
       k8sTaskHelperBase.saveReleaseHistoryInConfigMap(
@@ -138,7 +143,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
         k8sTaskHelperBase.getLatestRevision(client, managedWorkload.getResourceId(), k8sDelegateTaskParams));
 
     success = k8sTaskHelperBase.doStatusCheck(client, managedWorkload.getResourceId(), k8sDelegateTaskParams,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress));
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
@@ -147,8 +152,8 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       return getFailureResponse();
     }
 
-    k8sBGBaseHandler.wrapUp(
-        k8sDelegateTaskParams, k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WrapUp), client);
+    k8sBGBaseHandler.wrapUp(k8sDelegateTaskParams,
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WrapUp, true, commandUnitsProgress), client);
 
     final List<K8sPod> podList = k8sBGBaseHandler.getAllPods(
         timeoutInMillis, kubernetesConfig, managedWorkload, primaryColor, stageColor, releaseName);
@@ -175,10 +180,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse getFailureResponse() {
     K8sBGDeployResponse k8sBGDeployResponse = K8sBGDeployResponse.builder().build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sBGDeployResponse)
-        .build();
+    return getGenericFailureResponse(k8sBGDeployResponse);
   }
 
   @VisibleForTesting
@@ -225,9 +227,12 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
   }
 
   @VisibleForTesting
-  boolean prepareForBlueGreen(K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
+  boolean prepareForBlueGreen(
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean skipResourceVersioning) {
     try {
-      markVersionedResources(resources);
+      if (!skipResourceVersioning) {
+        markVersionedResources(resources);
+      }
 
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"
           + k8sTaskHelperBase.getResourcesInTableFormat(resources));
@@ -312,9 +317,10 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + currentRelease.getNumber());
 
-      executionLogCallback.saveExecutionLog("\nVersioning resources.");
-
-      addRevisionNumber(resources, currentRelease.getNumber());
+      if (!skipResourceVersioning) {
+        executionLogCallback.saveExecutionLog("\nVersioning resources.");
+        addRevisionNumber(resources, currentRelease.getNumber());
+      }
       managedWorkload = getManagedWorkload(resources);
       managedWorkload.appendSuffixInName('-' + stageColor);
       managedWorkload.addLabelsInPodSpec(

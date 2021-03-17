@@ -9,7 +9,7 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.alert.services.AlertRuleAnomalyService;
@@ -34,7 +34,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class AlertRuleAnomalyServiceImplTest extends CvNextGenTest {
+public class AlertRuleAnomalyServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Mock private Clock clock;
   @Inject private AlertRuleAnomalyService alertRuleAnomalyService;

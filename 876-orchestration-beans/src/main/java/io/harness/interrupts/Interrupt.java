@@ -7,6 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.AutoLogContext;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import java.util.HashMap;
@@ -38,7 +40,8 @@ public class Interrupt implements PersistentEntity, UuidAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 
   @Wither @Id @org.mongodb.morphia.annotations.Id @NotNull String uuid;
-  @NonNull ExecutionInterruptType type;
+  @NonNull InterruptType type;
+  @NotNull InterruptConfig interruptConfig;
   @NonNull String planExecutionId;
   String nodeExecutionId;
   StepParameters parameters;

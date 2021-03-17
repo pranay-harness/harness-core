@@ -1,5 +1,7 @@
 package io.harness.pms.serializer.jackson;
 
+import io.harness.logging.UnitProgress;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -15,10 +17,12 @@ import io.harness.serializer.json.ExecutionErrorInfoSerializer;
 import io.harness.serializer.json.ExecutionMetadataSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
+import io.harness.serializer.json.InterruptConfigSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
 import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
+import io.harness.serializer.json.UnitProgressSerializer;
 import io.harness.serializer.json.YamlPropertiesSerializer;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -35,5 +39,7 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(YamlProperties.class, new YamlPropertiesSerializer());
     addSerializer(ExecutableResponse.class, new ExecutableResponseSerializer());
     addSerializer(SkipInfo.class, new SkipInfoSerializer());
+    addSerializer(UnitProgress.class, new UnitProgressSerializer());
+    addSerializer(InterruptConfig.class, new InterruptConfigSerializer());
   }
 }

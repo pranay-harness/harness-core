@@ -15,7 +15,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CIPipelineValidationsTest extends CIManagerTest {
+public class CIPipelineValidationsTest extends CIManagerTestBase {
   @Inject CIPipelineValidations ciPipelineValidations;
 
   NgPipeline ngPipeline = NgPipeline.builder().description(ParameterField.createValueField("testDescription")).build();

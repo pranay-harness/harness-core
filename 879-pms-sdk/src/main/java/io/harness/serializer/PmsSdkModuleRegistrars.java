@@ -17,7 +17,14 @@ import org.springframework.core.convert.converter.Converter;
 @OwnedBy(CDC)
 @UtilityClass
 public class PmsSdkModuleRegistrars {
-  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
-      FacilitatorResponseReadConverter.class, FacilitatorResponseWriteConverter.class, PlanNodeProtoReadConverter.class,
-      PlanNodeProtoWriteConverter.class, NodeExecutionReadConverter.class, NodeExecutionWriteConverter.class);
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .add(FacilitatorResponseReadConverter.class)
+          .add(FacilitatorResponseWriteConverter.class)
+          .add(PlanNodeProtoReadConverter.class)
+          .add(PlanNodeProtoWriteConverter.class)
+          .add(NodeExecutionReadConverter.class)
+          .add(NodeExecutionWriteConverter.class)
+          .addAll(PmsCommonsModuleRegistrars.springConverters)
+          .build();
 }

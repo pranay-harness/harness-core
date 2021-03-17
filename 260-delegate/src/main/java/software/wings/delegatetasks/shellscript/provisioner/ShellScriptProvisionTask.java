@@ -6,6 +6,8 @@ import static software.wings.beans.Log.Builder.aLog;
 
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class ShellScriptProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService logService;
   @Inject private ShellExecutorFactory shellExecutorFactory;

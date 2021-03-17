@@ -31,6 +31,7 @@ import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.PublicApi;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateStatus;
@@ -68,13 +69,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-/**
- * Created by rohitkarelia on 11/18/19.
- */
 @Api("/setup/delegates")
 @Path("/setup/delegates")
 @Produces("application/json")
@@ -95,17 +94,20 @@ public class DelegateSetupResource {
   private static final String TAR_GZ = ".tar.gz";
 
   private final DelegateService delegateService;
+  private final DelegateCache delegateCache;
   private final DelegateScopeService delegateScopeService;
   private final DownloadTokenService downloadTokenService;
   private final SubdomainUrlHelperIntfc subdomainUrlHelper;
 
   @Inject
   public DelegateSetupResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
-      DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper) {
+      DownloadTokenService downloadTokenService, SubdomainUrlHelperIntfc subdomainUrlHelper,
+      DelegateCache delegateCache) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.subdomainUrlHelper = subdomainUrlHelper;
+    this.delegateCache = delegateCache;
   }
 
   @GET
@@ -156,6 +158,16 @@ public class DelegateSetupResource {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getAvailableVersions(accountId));
     }
+  }
+
+  @GET
+  @Path("connected-ratio-with-primary")
+  @Timed
+  @ExceptionMetered
+  @PublicApi
+  public RestResponse<Double> getConnectedRatioWithPrimary(
+      @QueryParam("targetVersion") @NotEmpty String targetVersion) {
+    return new RestResponse<>(delegateService.getConnectedRatioWithPrimary(targetVersion));
   }
 
   @GET
@@ -226,7 +238,7 @@ public class DelegateSetupResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      Delegate delegate = delegateService.get(accountId, delegateId, true);
+      Delegate delegate = delegateCache.get(accountId, delegateId, true);
       if (delegateScopes == null) {
         delegate.setIncludeScopes(null);
         delegate.setExcludeScopes(null);
@@ -286,7 +298,7 @@ public class DelegateSetupResource {
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      Delegate delegate = delegateService.get(accountId, delegateId, true);
+      Delegate delegate = delegateCache.get(accountId, delegateId, true);
       delegate.setTags(delegateTags.getTags());
       return new RestResponse<>(delegateService.updateTags(delegate));
     }
@@ -352,7 +364,7 @@ public class DelegateSetupResource {
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.get(accountId, delegateId, true));
+      return new RestResponse<>(delegateCache.get(accountId, delegateId, true));
     }
   }
 
@@ -374,11 +386,20 @@ public class DelegateSetupResource {
   @ExceptionMetered
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public Response generateKubernetesYaml(@Context HttpServletRequest request,
-      @QueryParam("accountId") @NotEmpty String accountId, DelegateSetupDetails delegateSetupDetails)
-      throws IOException {
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateSetupDetails delegateSetupDetails,
+      @QueryParam("fileFormat") MediaType fileFormat) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       File delegateFile = delegateService.generateKubernetesYaml(accountId, delegateSetupDetails,
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request));
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), fileFormat);
+
+      if (fileFormat != null && fileFormat.equals(MediaType.TEXT_PLAIN_TYPE)) {
+        return Response.ok(delegateFile)
+            .header(CONTENT_TRANSFER_ENCODING, BINARY)
+            .type("text/plain; charset=UTF-8")
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + KUBERNETES_DELEGATE + YAML)
+            .build();
+      }
+
       return Response.ok(delegateFile)
           .header(CONTENT_TRANSFER_ENCODING, BINARY)
           .type(APPLICATION_ZIP_CHARSET_BINARY)
@@ -400,7 +421,7 @@ public class DelegateSetupResource {
       delegate.setAccountId(accountId);
       delegate.setUuid(delegateId);
 
-      Delegate existingDelegate = delegateService.get(accountId, delegateId, true);
+      Delegate existingDelegate = delegateCache.get(accountId, delegateId, true);
       if (existingDelegate != null) {
         delegate.setDelegateType(existingDelegate.getDelegateType());
         delegate.setDelegateGroupName(existingDelegate.getDelegateGroupName());

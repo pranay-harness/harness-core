@@ -192,8 +192,6 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
                                 return variableYamlHandler.upsertFromYaml(clonedContext.build(), previousWorkflow);
                               } catch (InvalidRequestException e) {
                                 throw new InvalidRequestException(e.getMessage(), e);
-                              } catch (WingsException e) {
-                                throw new WingsException(e);
                               }
                             })
                             .collect(toList());

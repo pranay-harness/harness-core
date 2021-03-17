@@ -7,7 +7,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.TERRAFORM_STATE;
+import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.provision.TerraformConstants.BACKEND_CONFIGS_KEY;
 import static io.harness.provision.TerraformConstants.ENCRYPTED_BACKEND_CONFIGS_KEY;
@@ -49,14 +49,14 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
-import io.harness.beans.FileMetadata;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -586,9 +586,9 @@ public abstract class TerraformProvisionState extends State {
     gitConfigHelperService.convertToRepoGitConfig(
         gitConfig, context.renderExpression(terraformProvisioner.getRepoName()));
 
-    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
-        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
-        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+    SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
+        ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
+        : null;
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
@@ -678,9 +678,9 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     GitConfig gitConfig = gitUtilsManager.getGitConfig(terraformProvisioner.getSourceRepoSettingId());
 
-    SecretManagerConfig secretManagerConfig = isEmpty(terraformProvisioner.getKmsId())
-        ? secretManagerConfigService.getDefaultSecretManager(context.getAccountId())
-        : secretManagerConfigService.getSecretManager(context.getAccountId(), terraformProvisioner.getKmsId(), false);
+    SecretManagerConfig secretManagerConfig = isSecretManagerRequired()
+        ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
+        : null;
 
     String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
     if (isNotEmpty(branch)) {
@@ -1046,5 +1046,26 @@ public abstract class TerraformProvisionState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity).getUuid();
+  }
+
+  private boolean isRunAndExportEncryptedPlan() {
+    return runPlanOnly && exportPlanToApplyStep;
+  }
+
+  private boolean isInheritingEncryptedPlan() {
+    return !runPlanOnly && inheritApprovedPlan;
+  }
+
+  boolean isExportingDestroyPlan() {
+    return runPlanOnly && TerraformCommand.DESTROY == command();
+  }
+
+  boolean isSecretManagerRequired() {
+    return isRunAndExportEncryptedPlan() || isInheritingEncryptedPlan() || isExportingDestroyPlan();
+  }
+
+  SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
+    return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
+                                    : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
   }
 }

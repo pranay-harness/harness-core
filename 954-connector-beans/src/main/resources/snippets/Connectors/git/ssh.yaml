@@ -15,7 +15,7 @@ connector:
 
     type: Ssh
     spec:
-      sshKeyReference: "secretRef:harnessAccountPassword"
+      sshKeyRef: "secretRef:harnessAccountPassword"
 
     gitSync:
       enabled: true

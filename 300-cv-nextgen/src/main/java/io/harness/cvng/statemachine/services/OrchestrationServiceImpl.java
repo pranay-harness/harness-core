@@ -73,6 +73,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     orchestrateAtRunningState(orchestrator);
   }
 
+  @Override
+  public void orchestrate(AnalysisOrchestrator orchestrator) {
+    Preconditions.checkNotNull(orchestrator, "orchestrator cannot be null when trying to orchestrate");
+    orchestrateAtRunningState(orchestrator);
+  }
+
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (orchestrator == null) {
       String errMsg = "No orchestrator available to execute currently.";
@@ -93,6 +99,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       currentlyExecutingStateMachine = orchestrator.getAnalysisStateMachineQueue().get(0);
     }
 
+    AnalysisStatus stateMachineStatus = null;
     switch (currentlyExecutingStateMachine.getStatus()) {
       case CREATED:
       case SUCCESS:
@@ -103,7 +110,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         log.info("For {}, state machine is currently RUNNING. "
                 + "We will call executeStateMachine() to handover execution to state machine.",
             orchestrator.getVerificationTaskId());
-        stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
+        stateMachineStatus = stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
         break;
       case FAILED:
       case TIMEOUT:
@@ -111,9 +118,13 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         break;
       case COMPLETED:
         log.info("Analysis for the entire duration is done. Time to close down");
+        orchestrator.setStatus(AnalysisStatus.COMPLETED);
         break;
       default:
         log.info("Unknown analysis status of the state machine under execution");
+    }
+    if (AnalysisStatus.SUCCESS == stateMachineStatus || AnalysisStatus.COMPLETED == stateMachineStatus) {
+      orchestrateNewAnalysisStateMachine(orchestrator.getVerificationTaskId());
     }
   }
 
@@ -150,7 +161,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
       Optional<AnalysisStateMachine> ignoredStateMachine = analysisStateMachine == null
           ? Optional.empty()
-          : stateMachineService.ignoreOldStatemachine(analysisStateMachine);
+          : stateMachineService.ignoreOldStateMachine(analysisStateMachine);
       if (!ignoredStateMachine.isPresent()) {
         break;
       }

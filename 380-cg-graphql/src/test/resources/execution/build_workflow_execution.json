@@ -123,6 +123,7 @@
       "lastUpdatedAt" : 1606760195616
     }
   ],
+  "rollbackArtifacts":[],
   "tags" : [
     {
       "name" : "myworkflow",

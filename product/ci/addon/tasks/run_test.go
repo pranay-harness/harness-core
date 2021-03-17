@@ -3,22 +3,21 @@ package tasks
 import (
 	"bytes"
 	"context"
-	//"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"syscall"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
-
 	mexec "github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	pb "github.com/wings-software/portal/product/ci/engine/proto"
+	"go.uber.org/zap"
 	//"github.com/wings-software/portal/product/ci/addon/testreports"
 	//mreports "github.com/wings-software/portal/product/ci/addon/testreports/mocks"
-	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	//ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
 	//mclient "github.com/wings-software/portal/product/ci/ti-service/client/mocks"
 	//"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -34,6 +33,7 @@ func TestExecuteSuccess(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := runTask{
 		id:                "step1",
@@ -41,6 +41,7 @@ func TestExecuteSuccess(t *testing.T) {
 		timeoutSecs:       5,
 		numRetries:        numRetries,
 		tmpFilePath:       "/tmp",
+		logMetrics:        true,
 		log:               log.Sugar(),
 		addonLogger:       log.Sugar(),
 		fs:                fs,
@@ -48,11 +49,21 @@ func TestExecuteSuccess(t *testing.T) {
 		procWriter:        &buf,
 	}
 
+	oldMlog := mlog
+	mlog = func(pid int32, id string, l *zap.SugaredLogger) {
+		return
+	}
+	defer func() { mlog = oldMlog }()
+
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
-	cmd.EXPECT().Run().Return(nil)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().Pid().Return(int(1))
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(nil)
 
 	o, retries, err := e.Run(ctx)
 	assert.Nil(t, err)
@@ -269,6 +280,7 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := runTask{
 		id:                "step1",
@@ -286,8 +298,11 @@ func TestExecuteNonZeroStatus(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
-	cmd.EXPECT().Run().Return(&exec.ExitError{})
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(&exec.ExitError{})
 
 	o, retries, err := e.Run(ctx)
 	assert.NotNil(t, err)
@@ -311,6 +326,7 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
 	f, err := os.Create(filePath)
@@ -339,8 +355,11 @@ func TestExecuteSuccessWithOutput(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
-	cmd.EXPECT().Run().Return(nil)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(nil)
 	fs.EXPECT().Open(gomock.Any()).Return(f1, nil)
 
 	o, retries, err := e.Run(ctx)
@@ -360,6 +379,7 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 	fs := filesystem.NewMockFileSystem(ctrl)
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 
 	f, err := os.Create(filePath)
@@ -387,8 +407,12 @@ func TestExecuteErrorWithOutput(t *testing.T) {
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, "sh", gomock.Any(), gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
-	cmd.EXPECT().WithEnvVarsMap(nil).Return(cmd)
-	cmd.EXPECT().Run().Return(nil)
+	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(nil)
+
 	fs.EXPECT().Open(gomock.Any()).Return(nil, fmt.Errorf("Error while opening file"))
 
 	o, retries, err := e.Run(ctx)
@@ -410,6 +434,6 @@ func TestRunTaskCreate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	executor := NewRunTask(step, tmpPath, log.Sugar(), &buf, log.Sugar())
+	executor := NewRunTask(step, nil, tmpPath, log.Sugar(), &buf, false, log.Sugar())
 	assert.NotNil(t, executor)
 }

@@ -23,11 +23,16 @@ public interface YamlTypes {
   String K8S_APPLY = StepSpecTypeConstants.K8S_APPLY;
   String K8S_SCALE = StepSpecTypeConstants.K8S_SCALE;
   String K8S_CANARY_DEPLOY = StepSpecTypeConstants.K8S_CANARY_DEPLOY;
+  String K8S_BG_SWAP_SERVICES = StepSpecTypeConstants.K8S_BG_SWAP_SERVICES;
+  String K8S_DELETE = StepSpecTypeConstants.K8S_DELETE;
+  String K8S_CANARY_DELETE = StepSpecTypeConstants.K8S_CANARY_DELETE;
 
   String MANIFEST_LIST_CONFIG = "manifests";
   String MANIFEST_CONFIG = "manifest";
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
   String K8S_MANIFEST = ManifestType.K8Manifest;
+  String HELM_CHART_MANIFEST = ManifestType.HelmChart;
+  String KUSTOMIZE_MANIFEST = ManifestType.Kustomize;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecTypeConstants.HTTP;
@@ -41,7 +46,7 @@ public interface YamlTypes {
   String SERVICE_USE_FROM_STAGE_OVERRIDES = "overrides";
   String STAGE_OVERRIDES_CONFIG = "stageOverrides";
   String PATH_CONNECTOR = VisitorParentPathUtils.PATH_CONNECTOR;
-  String VARIABLE_OVERRIDE_SETS = "variablesOverrideSets";
+  String VARIABLE_OVERRIDE_SETS = "variableOverrideSets";
   String CONNECTOR_REF = "connectorRef";
   String TAG = "tag";
   String TAG_REGEX = "tagRegex";
@@ -63,4 +68,8 @@ public interface YamlTypes {
   String HEADERS = "headers";
   String DELEGATE_SELECTORS = "delegateSelectors";
   String ENVIRONMENT_VARIABLES = "environmentVariables";
+
+  String COMMAND_FLAGS_WRAPPER = "commandFlags";
+  String SKIP_RESOURCE_VERSIONING = "skipResourceVersioning";
+  String PLUGIN_PATH = "pluginPath";
 }

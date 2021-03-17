@@ -14,6 +14,5 @@ import lombok.Data;
 @Singleton
 public class JobsFrequencyConfig {
   private long accountLicenseCheckJobFrequencyInMinutes;
-  private long accountBackgroundJobFrequencyInMinutes;
   private long accountDeletionJobFrequencyInMinutes;
 }

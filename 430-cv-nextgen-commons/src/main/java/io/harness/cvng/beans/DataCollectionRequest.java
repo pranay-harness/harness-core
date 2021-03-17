@@ -10,6 +10,7 @@ import io.harness.delegate.beans.connector.splunkconnector.SplunkCapabilityHelpe
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +79,9 @@ public abstract class DataCollectionRequest<T extends ConnectorConfigDTO> implem
       case SPLUNK:
         return SplunkCapabilityHelper.fetchRequiredExecutionCapabilities(
             maskingEvaluator, (SplunkConnectorDTO) connectorInfoDTO.getConnectorConfig());
+      case GCP:
+        return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+            "https://storage.cloud.google.com/", maskingEvaluator));
       default:
         throw new InvalidRequestException("Connector capability not found");
     }

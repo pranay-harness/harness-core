@@ -1,8 +1,10 @@
 package software.wings.sm.states.azure.appservice;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
 
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupContextElement.SWEEPING_OUTPUT_APP_SERVICE;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -18,11 +21,17 @@ import static org.powermock.api.mockito.PowerMockito.when;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
+import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.tasks.ResponseData;
 
 import software.wings.WingsBaseTest;
+import software.wings.api.InstanceElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
@@ -31,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContextImpl;
@@ -43,8 +53,12 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSetupExecut
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -57,7 +71,19 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Mock protected ActivityService activityService;
+  @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotRollback state = new AzureWebAppSlotRollback("Web app slot rollback state");
+
+  private final String ACTIVITY_ID = "activityId";
+  private final String INFRA_ID = "infraId";
+
+  private final String SUBSCRIPTION_ID = "subscriptionId";
+  private final String RESOURCE_GROUP = "resourceGroup";
+  private final String APP_NAME = "testWebApp";
+  private final String DEPLOYMENT_SLOT = "deploymentSlot";
+  private final String DEPLOYMENT_SLOT_ID = "testWebApp/deploymentSlot";
+  private final String APP_SERVICE_PLAN_ID = "appService-plan-id";
+  private final String HOST_NAME = "hostname";
 
   @Test
   @Owner(developers = ANIL)
@@ -75,6 +101,82 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
     ExecutionContextImpl mockContext = initializeMockSetup(true, false);
     ExecutionResponse failedResponse = state.execute(mockContext);
     assertThat(failedResponse.getExecutionStatus()).isEqualTo(SKIPPED);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testRollbackHandleAsyncResponseSuccess() {
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    doNothing().when(azureVMSSStateHelper).updateActivityStatus(anyString(), anyString(), any());
+    doReturn(SUCCESS).when(azureVMSSStateHelper).getAppServiceExecutionStatus(any());
+    List<AzureAppDeploymentData> azureAppDeploymentData = getAzureAppDeploymentData();
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = getAzureWebAppInfraMapping();
+    Map<String, ResponseData> responseMap = getResponseDataMap(azureAppDeploymentData);
+    AzureAppServiceSlotSetupExecutionData stateExecutionData = getStateExecutionData();
+    List<InstanceElement> instanceElements = Collections.singletonList(
+        anInstanceElement().uuid("uuid").hostName(HOST_NAME).displayName(HOST_NAME).newInstance(true).build());
+
+    doReturn(stateExecutionData).when(context).getStateExecutionData();
+    doReturn(azureWebAppInfrastructureMapping)
+        .when(azureVMSSStateHelper)
+        .getAzureWebAppInfrastructureMapping(any(), any());
+
+    doReturn(instanceElements)
+        .when(azureSweepingOutputServiceHelper)
+        .generateAzureAppInstanceElements(any(), any(), any());
+
+    ExecutionResponse executionResponse = state.handleAsyncResponse(context, responseMap);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
+  }
+
+  @NotNull
+  private List<AzureAppDeploymentData> getAzureAppDeploymentData() {
+    return Collections.singletonList(AzureAppDeploymentData.builder()
+                                         .subscriptionId(SUBSCRIPTION_ID)
+                                         .resourceGroup(RESOURCE_GROUP)
+                                         .appName(APP_NAME)
+                                         .deploySlot(DEPLOYMENT_SLOT)
+                                         .deploySlotId(DEPLOYMENT_SLOT_ID)
+                                         .appServicePlanId(APP_SERVICE_PLAN_ID)
+                                         .hostName(HOST_NAME)
+                                         .build());
+  }
+
+  @NotNull
+  private ImmutableMap<String, ResponseData> getResponseDataMap(List<AzureAppDeploymentData> azureAppDeploymentData) {
+    return ImmutableMap.of(ACTIVITY_ID,
+        AzureTaskExecutionResponse.builder()
+            .azureTaskResponse(AzureWebAppSlotSetupResponse.builder()
+                                   .azureAppDeploymentData(azureAppDeploymentData)
+                                   .preDeploymentData(AzureAppServicePreDeploymentData.builder()
+                                                          .appName(APP_NAME)
+                                                          .appSettingsToAdd(Collections.emptyMap())
+                                                          .connStringsToAdd(Collections.emptyMap())
+                                                          .slotName(DEPLOYMENT_SLOT)
+                                                          .build())
+                                   .build())
+            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+            .build());
+  }
+
+  private AzureAppServiceSlotSetupExecutionData getStateExecutionData() {
+    return AzureAppServiceSlotSetupExecutionData.builder()
+        .infrastructureMappingId(INFRA_ID)
+        .deploySlotName(DEPLOYMENT_SLOT)
+        .appServiceName(APP_NAME)
+        .activityId(ACTIVITY_ID)
+        .build();
+  }
+
+  private AzureWebAppInfrastructureMapping getAzureWebAppInfraMapping() {
+    AzureWebAppInfrastructureMapping azureWebAppInfrastructureMapping = AzureWebAppInfrastructureMapping.builder()
+                                                                            .resourceGroup(RESOURCE_GROUP)
+                                                                            .subscriptionId(SUBSCRIPTION_ID)
+                                                                            .build();
+    azureWebAppInfrastructureMapping.setUuid(INFRA_ID);
+    return azureWebAppInfrastructureMapping;
   }
 
   private ExecutionContextImpl initializeMockSetup(boolean isSuccess, boolean contextElement) {
@@ -121,13 +223,14 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
+          .getInfoFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
     doReturn(activity)
         .when(azureVMSSStateHelper)
         .createAndSaveActivity(any(), any(), anyString(), anyString(), any(), anyListOf(CommandUnit.class));
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
     doReturn(delegateResult).when(delegateService).queueTask(any());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
@@ -143,6 +246,10 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
   private void verifyStateExecutionData(ExecutionResponse response) {
     assertThat(state.isRollback()).isTrue();
     assertThat(state.getSlotSteadyStateTimeout()).isNull();
+    assertThat(state.getTargetSlot()).isNull();
+    assertThat(state.getDeploymentSlot()).isNull();
+    assertThat(state.getAppService()).isNull();
+    assertThat(state.validateFields()).isEmpty();
 
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);

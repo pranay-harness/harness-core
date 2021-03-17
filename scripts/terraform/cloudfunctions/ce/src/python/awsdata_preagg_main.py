@@ -4,7 +4,8 @@ import os
 from google.cloud import bigquery
 from google.cloud import storage
 import datetime
-from util import create_dataset, if_tbl_exists, createTable
+import util
+from util import create_dataset, if_tbl_exists, createTable, print_
 from calendar import monthrange
 
 """
@@ -35,7 +36,9 @@ def main(event, context):
     jsonData["projectName"] = os.environ.get('GCP_PROJECT', 'ce-prod-274307')
 
     client = bigquery.Client(jsonData["projectName"])
-    create_dataset(client, jsonData)
+    #create_dataset(client, jsonData)
+    util.ACCOUNTID_LOG = jsonData.get("accountIdOrig")
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountIdOrig"))
     dataset = client.dataset(jsonData["datasetName"])
     awsCurTableref = dataset.table(jsonData["tableName"])
     awsCurTableName =  TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountId"], jsonData["tableName"])
@@ -44,28 +47,25 @@ def main(event, context):
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = TABLE_NAME_FORMAT % (jsonData["projectName"], jsonData["accountId"], "unifiedTable")
     if not if_tbl_exists(client, awsCurTableref):
-        # send nack
-        print("table doesnt exist... send nack")
         createTable(client, awsCurTableName)
     if not if_tbl_exists(client, unifiedTableRef):
-        print("%s table does not exists, creating table..." % unifiedTableRef)
+        print_("%s table does not exists, creating table..." % unifiedTableRef)
         createTable(client, unifiedTableTableName)
     else:
-        print("%s table exists" % unifiedTableTableName)
+        print_("%s table exists" % unifiedTableTableName)
 
     if not if_tbl_exists(client, preAggragatedTableRef):
-        print("%s table does not exists, creating table..." % preAggragatedTableRef)
+        print_("%s table does not exists, creating table..." % preAggragatedTableRef)
         createTable(client, preAggragatedTableTableName)
     else:
-        print("%s table exists" % preAggragatedTableTableName)
+        print_("%s table exists" % preAggragatedTableTableName)
 
     # start streaming the data from the gcs
-    print("%s table exists. Starting to write data from gcs into it..." % jsonData["tableName"])
+    print_("%s table exists. Starting to write data from gcs into it..." % jsonData["tableName"])
     try:
         ingestDataFromCsvToAwsCurTableTable(client, jsonData)
     except Exception as e:
-        # TODO: Re raise the exception here for retry
-        print(e)
+        print_(e, "WARN")
         return
     ingestDataToAwsCurTable(client, jsonData)
     ingestDataToPreaggregatedTable(client, jsonData)
@@ -83,11 +83,11 @@ def ingestDataFromCsvToAwsCurTableTable(client, jsonData):
     )
     uris = ["gs://" + jsonData["bucket"] + "/" + "/".join(jsonData["fileName"].split("/")[:-1]) + "/*.csv",
             "gs://" + jsonData["bucket"] + "/" + "/".join(jsonData["fileName"].split("/")[:-1]) + "/*.csv.gz"]
-    print("Ingesting all CSVs from %s" % uris)
+    print_("Ingesting all CSVs from %s" % uris)
     # format: ce-prod-274307:BillingReport_wfhxhd0rrqwoo8tizt5yvw.awsCurTable_2020_04
     table_id = "%s.%s" % (jsonData["datasetName"], jsonData["tableName"])
-    print(table_id)
-    print("Loading into %s table..." % table_id)
+    print_(table_id)
+    print_("Loading into %s table..." % table_id)
     load_job = client.load_table_from_uri(
         uris,
         table_id,
@@ -97,7 +97,7 @@ def ingestDataFromCsvToAwsCurTableTable(client, jsonData):
     load_job.result()  # Wait for the job to complete.
 
     table = client.get_table(table_id)
-    print("Total {} rows in table {}".format(table.num_rows, table_id))
+    print_("Total {} rows in table {}".format(table.num_rows, table_id))
     storage_client = storage.Client(jsonData["projectId"])
     blobs = storage_client.list_blobs(
         jsonData["bucket"], prefix="/".join(jsonData["fileName"].split("/")[:-1])
@@ -105,14 +105,14 @@ def ingestDataFromCsvToAwsCurTableTable(client, jsonData):
     for blob in blobs:
         if blob.name.endswith(".csv") or blob.name.endswith(".csv.gz"):
             blob.delete()
-            print("Blob {} deleted.".format(blob.name))
+            print_("Blob {} deleted.".format(blob.name))
 
 def ingestDataToAwsCurTable(client, jsonData):
     ds = "%s.%s" % (jsonData["projectId"], jsonData["datasetName"])
     # In the new BigQuery dataset, create a reference to a new table for
     # storing the query results.
     tableName = "%s.awscur_%s" % (ds, jsonData["tableSuffix"])
-    print("Loading into %s table..." % tableName)
+    print_("Loading into %s table..." % tableName)
 
     query = """SELECT resourceid, usagestartdate, productname, productfamily, servicecode, blendedrate, blendedcost, 
                     unblendedrate, unblendedcost, region, availabilityzone, usageaccountid, instancetype, usagetype, 
@@ -141,7 +141,7 @@ def ingestDataToAwsCurTable(client, jsonData):
     job_config.write_disposition = "WRITE_TRUNCATE"
     query_job = client.query(query, job_config=job_config)
     query_job.result()
-    print("Loaded into %s table..." % tableName)
+    print_("Loaded into %s table..." % tableName)
 
 
 def ingestDataToPreaggregatedTable(client, jsonData):
@@ -150,7 +150,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     year, month = jsonData["tableSuffix"].split('_')
     date_start =  "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
-    print("Loading into %s preAggregated table..." % tableName)
+    print_("Loading into %s preAggregated table..." % tableName)
     query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s' AND cloudProvider = "AWS";
                INSERT INTO `%s.preAggregated` (startTime, awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost,
                                                awsServicecode, region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider)
@@ -172,7 +172,7 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     )
     query_job = client.query(query, job_config=job_config)
     query_job.result()
-    print("Loaded into %s table..." % tableName)
+    print_("Loaded into %s table..." % tableName)
 
 
 def ingestDataInUnifiedTableTable(client, jsonData):
@@ -181,7 +181,7 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     year, month = jsonData["tableSuffix"].split('_')
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
-    print("Loading into %s table..." % tableName)
+    print_("Loading into %s table..." % tableName)
     query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AWS";
                INSERT INTO `%s.unifiedTable` (product, startTime,
                     awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost, awsServicecode,
@@ -207,4 +207,4 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     )
     query_job = client.query(query, job_config=job_config)
     query_job.result()
-    print("Loaded into %s table..." % tableName)
+    print_("Loaded into %s table..." % tableName)

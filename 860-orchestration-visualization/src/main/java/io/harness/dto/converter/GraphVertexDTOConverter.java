@@ -27,10 +27,12 @@ public class GraphVertexDTOConverter {
              .stepParameters(graphVertex.getStepParameters())
              .mode(graphVertex.getMode())
              .executableResponses(CollectionUtils.emptyIfNull(graphVertex.getExecutableResponses()))
+             .delegateSelectionLogParams(CollectionUtils.emptyIfNull(graphVertex.getDelegateSelectionLogParams()))
              .interruptHistories(graphVertex.getInterruptHistories())
              .retryIds(graphVertex.getRetryIds())
              .skipType(graphVertex.getSkipType())
              .outcomes(graphVertex.getOutcomeDocuments())
              .progressDataMap(graphVertex.getProgressDataMap())
+             .unitProgresses(graphVertex.getUnitProgresses())
              .build();
 }

@@ -1,6 +1,10 @@
 // The number of approvals required to merge.
 let numApprovalsRequired = 1;
 
+if (review.pullRequest.title.startsWith('[CDP')) {
+  numApprovalsRequired = 2;
+}
+
 const approvals = review.pullRequest.approvals;
 const requestedTeams = _.pluck(review.pullRequest.requestedTeams, 'slug');
 

@@ -17,7 +17,7 @@ public enum CIStepInfoType {
   GIT_CLONE(CI_LITE_ENGINE, "GitClone"),
   LITE_ENGINE_TASK(CI_LITE_ENGINE, "liteEngineTask"),
   SAVE_CACHE(CI_LITE_ENGINE, "SaveCache"),
-  TEST_INTELLIGENCE(CI_LITE_ENGINE, "TestIntelligence"),
+  RUN_TESTS(CI_LITE_ENGINE, "RunTests"),
   RESTORE_CACHE(CI_LITE_ENGINE, "restoreCacheStepInfo"),
   ECR(CI_LITE_ENGINE, "BuildAndPushECR"),
   GCR(CI_LITE_ENGINE, "BuildAndPushGCR"),
@@ -26,7 +26,7 @@ public enum CIStepInfoType {
   UPLOAD_S3(CI_LITE_ENGINE, "S3Upload"),
   SAVE_CACHE_GCS(CI_LITE_ENGINE, "SaveCacheGCS"),
   RESTORE_CACHE_GCS(CI_LITE_ENGINE, "RestoreCacheGCS"),
-  SAVE_CACHE_S3(CI_LITE_ENGINE, "SaveCacheGCS"),
+  SAVE_CACHE_S3(CI_LITE_ENGINE, "SaveCacheS3"),
   RESTORE_CACHE_S3(CI_LITE_ENGINE, "RestoreCacheS3"),
   UPLOAD_ARTIFACTORY(CI_LITE_ENGINE, "ArtifactoryUpload");
 

@@ -13,8 +13,7 @@
     "spec" : {
       "artifactoryServerUrl" : "https://artifactoryurl",
       "auth" : {
-        "type" : "Anonymous",
-        "spec" : null
+        "type" : "Anonymous"
       }
     }
   }

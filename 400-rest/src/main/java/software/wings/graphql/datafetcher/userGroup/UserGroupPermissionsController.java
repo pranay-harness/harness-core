@@ -54,6 +54,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.WORKFLO
 
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 
@@ -100,6 +102,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UserGroupPermissionsController {
   @Inject AppFilterController appFilterController;
 

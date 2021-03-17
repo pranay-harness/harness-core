@@ -108,6 +108,38 @@ public interface AzureConstants {
   String UNRECOGNIZED_TASK = "Unrecognized task params while running azure vmss task: [%s]";
   String GALLERY_NAME_NULL_VALIDATION_MSG = "Parameter galleryName is required and cannot be null";
   String GALLERY_IMAGE_NAME_NULL_VALIDATION_MSG = "Parameter imageName is required and cannot be null";
+  String DEPLOYMENT_NAME_BLANK_VALIDATION_MSG = "Parameter deploymentName is required and cannot be null or empty";
+  String LOCATION_SET_AT_RESOURCE_GROUP_VALIDATION_MSG = "Location cannot be set at resource group scope";
+  String LOCATION_BLANK_VALIDATION_MSG = "Parameter location cannot be null or empty";
+  String MANAGEMENT_GROUP_ID_BLANK_VALIDATION_MSG = "Parameter groupId cannot be null or empty";
+  String DEPLOYMENT_DOES_NOT_EXIST_RESOURCE_GROUP = "The deployment - [%s] does not exist in resource group - [%s]";
+  String DEPLOYMENT_DOES_NOT_EXIST_SUBSCRIPTION = "The deployment - [%s] does not exist in subscription - [%s]";
+  String DEPLOYMENT_DOES_NOT_EXIST_MANAGEMENT_GROUP = "The deployment - [%s] does not exist in management group - [%s]";
+  String DEPLOYMENT_DOES_NOT_EXIST_TENANT = "The deployment - [%s] does not exist in tenant - [%s]";
+  String RESOURCE_SCOPE_BLANK_VALIDATION_MSG = "Parameter resourceScope cannot be empty or null";
+  String RESOURCE_SCOPE_IS_NOT_VALIDATION_MSG = "Parameter resourceScope is not valid, resourceScope: %s";
+  String BLUEPRINT_NAME_BLANK_VALIDATION_MSG = "Parameter blueprintName cannot be empty or null";
+  String BLUEPRINT_JSON_BLANK_VALIDATION_MSG = "Parameter blueprintJSON cannot be empty or null";
+  String ARTIFACT_NAME_BLANK_VALIDATION_MSG = "Parameter artifactName cannot be empty or null";
+  String ARTIFACT_JSON_BLANK_VALIDATION_MSG = "Parameter artifactJSON cannot be empty or null";
+  String VERSION_ID_BLANK_VALIDATION_MSG = "Parameter versionId cannot be empty or null";
+  String ASSIGNMENT_NAME_BLANK_VALIDATION_MSG = "Parameter assignmentName cannot be empty or null";
+  String ASSIGNMENT_JSON_BLANK_VALIDATION_MSG = "Parameter assignmentJSON cannot be empty or null";
+  String NEXT_PAGE_LINK_BLANK_VALIDATION_MSG = "Parameter nextPageLink is required and cannot be null.";
+  String BLUEPRINT_ID_BLANK_VALIDATION_MSG = "Parameter blueprintId cannot be null or empty";
+  String AZURE_CONFIG_BLANK_VALIDATION_MSG = "Parameter azureConfig cannot be null";
+  String ASSIGNMENT_IDENTITY_NULL_VALIDATION_MSG = "Assignment identity property cannot be null";
+  String ASSIGNMENT_LOCATION_BLANK_VALIDATION_MSG = "Assignment location property cannot be null or empty";
+  String PROPERTIES_BLUEPRINT_ID_VALIDATION_MSG = "Assignment properties.blueprintId cannot be null or empty";
+  String PROPERTIES_SCOPE_BLANK_VALIDATION_MSG =
+      "Assignment properties.scope cannot be null or empty for management group resource scope";
+  String OBJECT_ID_NAME_BLANK_VALIDATION_MSG = "Parameter objectId cannot be empty or null";
+  String ROLE_ASSIGNMENT_NAME_BLANK_VALIDATION_MSG = "Parameter roleAssignmentName cannot be empty or null";
+  String BLUEPRINT_ID_IS_NOT_VALIDATION_MSG = "Parameter blueprintId is not valid, blueprintId: %s";
+  String ASSIGNMENT_SUBSCRIPTION_ID_BLANK_VALIDATION_MSG = "Parameter assignmentSubscriptionId cannot be empty or null";
+  String ASSIGNMENT_BLANK_VALIDATION_MSG = "Parameter assignment cannot be empty or null";
+  String BLUEPRINT_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints blueprint json file cannot be empty or null";
+  String ASSIGN_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints assign json file cannot be empty or null";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
@@ -139,6 +171,7 @@ public interface AzureConstants {
   String DOCKER_IMAGE_AND_TAG_PATH_PATTERN = "%s:%s";
   String WEB_APP_NAME_BLANK_ERROR_MSG = "Parameter webAppName cannot be null or empty";
   String SLOT_NAME_BLANK_ERROR_MSG = "Parameter slotName cannot be null or empty";
+  String TARGET_SLOT_CANNOT_BE_IN_STOPPED_STATE = "The swap slot - [%s] must be in running state for swap to start";
   String IMAGE_AND_TAG_BLANK_ERROR_MSG = "Parameter imageAndTag cannot be null or empty";
   String SHIFT_TRAFFIC_SLOT_NAME_BLANK_ERROR_MSG = "Parameter shiftTrafficSlotName cannot be null or empty";
   String TRAFFIC_WEIGHT_IN_PERCENTAGE_INVALID_ERROR_MSG =
@@ -166,6 +199,7 @@ public interface AzureConstants {
   String SLOT_SWAP = "Swap Slots";
   long SLOT_STARTING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   long SLOT_STOPPING_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
+  long ARM_DEPLOYMENT_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
 
   // Azure Docker Registry Type
   String ACR = "ACR";
@@ -173,7 +207,7 @@ public interface AzureConstants {
   String DOCKER_HUB_PUBLIC = "DOCKER_HUB_PUBLIC";
   String ARTIFACTORY_PRIVATE_REGISTRY = "ARTIFACTORY_PRIVATE_REGISTRY";
 
-  // Web App Instance status
+  // Web App Instance STATUS
   String WEB_APP_INSTANCE_STATUS_RUNNING = "Running";
 
   // App Service Manifest Utils
@@ -181,4 +215,33 @@ public interface AzureConstants {
       Pattern.compile("^\\$\\{secrets\\.getValue\\(['\"]+(?<secretName>[^~!@#$%^&*'\"/?<>,;.]+)['\"]+\\)}$");
   String SECRET_REF_FIELS_NAME = "passwordRef";
   Pattern HTTPS_OR_HTTP_PREFIX_REGEX = Pattern.compile("^(https?)://.*$");
+
+  double INVALID_TRAFFIC = -1;
+  // Azure REST client settings
+  int REST_CLIENT_CONNECT_TIMEOUT = 5;
+  int REST_CLIENT_READ_TIMEOUT = 10;
+
+  String MANAGEMENT_GROUP_PROVIDERS_PREFIX = "/providers/Microsoft.Management/managementGroups/";
+  String DEPLOYMENT_VALIDATION_FAILED_MSG_PATTERN = "Code: %s, Message: %s, Target: %s";
+
+  String FETCH_FILES = "Download Files";
+  String BLUEPRINT_JSON_FILE_NAME = "blueprint.json";
+  String ASSIGN_JSON_FILE_NAME = "assign.json";
+  String ARTIFACTS_FOLDER_NAME = "artifacts";
+  String UNIX_SEPARATOR = "/";
+
+  // ARM & Blueprint command units
+  String EXECUTE_ARM_DEPLOYMENT = "Execute ARM Deployment";
+  String ARM_DEPLOYMENT_STEADY_STATE = "ARM Deployment Steady state";
+  String ARM_DEPLOYMENT_OUTPUTS = "ARM Deployment Outputs";
+  String BLUEPRINT_DEPLOYMENT = "Execute Blueprint Deployment";
+  String BLUEPRINT_DEPLOYMENT_STEADY_STATE = "Blueprint Deployment Steady state";
+
+  String ARM_DEPLOYMENT_NAME_PATTERN = "%s-%s";
+  String RESOURCE_SCOPE_MNG_GROUP_PATTERN = "/providers/Microsoft.Management/managementGroups/";
+  String RESOURCE_SCOPE_SUBSCRIPTION_PATTERN = "/subscriptions/";
+  String ASSIGNMENT_NAME_PATTERN = "Assignment-%s-%s";
+  Pattern BLUEPRINT_ID_REGEX = Pattern.compile(
+      "^(?<resourceScope>\\S+)(?<providerName>/providers/Microsoft.Blueprint/blueprints/)(?<blueprintName>\\S+)(?<versionsPath>/versions/)(?<versionId>\\S+)$");
+  String DEPLOYMENT_NAME_PATTERN = "harness_%s_%s";
 }

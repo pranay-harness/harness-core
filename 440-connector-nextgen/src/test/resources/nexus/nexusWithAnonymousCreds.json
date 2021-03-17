@@ -14,8 +14,7 @@
       "nexusServerUrl" : "https://nexusUrl.com",
       "version" : "3.x",
       "auth" : {
-        "type" : "Anonymous",
-        "spec": null
+        "type" : "Anonymous"
       }
     }
   }

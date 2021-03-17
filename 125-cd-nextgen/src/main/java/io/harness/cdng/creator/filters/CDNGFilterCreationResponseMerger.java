@@ -24,6 +24,10 @@ public class CDNGFilterCreationResponseMerger implements FilterCreationResponseM
       finalCdFilter.addDeploymentTypes(currentCdFilter.getDeploymentTypes());
     }
 
+    if (isNotEmpty(currentCdFilter.getInfrastructureTypes())) {
+      finalCdFilter.addInfrastructureTypes(currentCdFilter.getInfrastructureTypes());
+    }
+
     if (isNotEmpty(currentCdFilter.getEnvironmentNames())) {
       finalCdFilter.addEnvironmentNames(currentCdFilter.getEnvironmentNames());
     }

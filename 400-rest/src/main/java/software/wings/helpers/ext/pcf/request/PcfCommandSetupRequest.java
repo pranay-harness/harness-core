@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 
 import software.wings.beans.PcfConfig;
@@ -17,6 +19,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfCommandSetupRequest extends PcfCommandRequest {
   /**
    * releasePrefixName is (appId_serviceId_envId), while creating new version of app,

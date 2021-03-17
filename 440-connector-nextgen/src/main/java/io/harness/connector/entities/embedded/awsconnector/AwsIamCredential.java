@@ -1,5 +1,6 @@
 package io.harness.connector.entities.embedded.awsconnector;
 
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -13,5 +14,5 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.awsconnector.AwsIamCredential")
 public class AwsIamCredential implements AwsCredential {
-  String delegateSelector;
+  Set<String> delegateSelectors;
 }

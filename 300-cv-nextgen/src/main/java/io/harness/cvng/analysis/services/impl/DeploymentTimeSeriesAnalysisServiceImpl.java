@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
@@ -14,6 +15,7 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
@@ -22,6 +24,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,7 +59,6 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
       boolean anomalousMetricsOnly, String hostName, int pageNumber) {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
-
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId);
 
@@ -172,7 +174,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId) {
-    return hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
+    return hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class, excludeAuthority)
         .filter(DeploymentTimeSeriesAnalysisKeys.verificationTaskId, verificationTaskId)
         .asList();
   }
@@ -210,7 +212,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   public List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(
       String accountId, String verificationJobInstanceId) {
     Set<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(accountId, verificationJobInstanceId);
+        verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
     List<DeploymentTimeSeriesAnalysis> timeSeriesAnalyses = new ArrayList<>();
     verificationTaskIds.forEach(taskId -> {
       DeploymentTimeSeriesAnalysis analysis = hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
@@ -226,8 +228,13 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Nullable
   private String getConnectorName(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis) {
-    String cvConfigId = verificationTaskService.getCVConfigId(deploymentTimeSeriesAnalysis.getVerificationTaskId());
-    CVConfig cvConfig = cvConfigService.get(cvConfigId);
+    VerificationTask verificationTask =
+        verificationTaskService.get(deploymentTimeSeriesAnalysis.getVerificationTaskId());
+    Preconditions.checkNotNull(
+        verificationTask.getVerificationJobInstanceId(), "VerificationJobInstance should be present");
+    CVConfig cvConfig = verificationJobInstanceService.getEmbeddedCVConfig(
+        verificationTask.getCvConfigId(), verificationTask.getVerificationJobInstanceId());
+    Preconditions.checkNotNull(cvConfig, "CVConfig should not be null");
     Optional<ConnectorInfoDTO> connectorInfoDTO = nextGenService.get(cvConfig.getAccountId(),
         cvConfig.getConnectorIdentifier(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier());
     return connectorInfoDTO.isPresent() ? connectorInfoDTO.get().getName() : null;

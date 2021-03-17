@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.application;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.application.input.QLUpdateApplicationInput;
@@ -14,6 +17,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class DeleteApplicationDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateApplicationInput, QLDeleteApplicationPayload> {
   private AppService appService;

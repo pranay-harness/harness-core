@@ -49,6 +49,7 @@ import com.amazonaws.services.ecs.model.Attribute;
 import com.amazonaws.services.ecs.model.Cluster;
 import com.amazonaws.services.ecs.model.ContainerInstance;
 import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
+import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.Service;
@@ -122,21 +123,19 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     log.debug("cluster {} Container instances {}", containerInstances, ceCluster);
 
     updateContainerInstance(accountId, ceCluster, awsCrossAccountAttributes, containerInstances);
-
-    Map<String, String> taskArnServiceNameMap = new HashMap<>();
-    loadTaskArnServiceNameMap(
-        awsCrossAccountAttributes, ceCluster.getClusterArn(), ceCluster.getRegion(), taskArnServiceNameMap);
+    List<Service> services = listServices(awsCrossAccountAttributes, ceCluster.getClusterArn(), ceCluster.getRegion());
+    Map<String, String> deploymentIdServiceMap = getDeploymentIdsForService(services);
     List<Task> tasks = listTask(awsCrossAccountAttributes, ceCluster.getClusterArn(), ceCluster.getRegion());
     log.debug("Task list {}", tasks);
-    updateTasks(accountId, ceCluster, tasks, taskArnServiceNameMap);
-    publishUtilizationMetrics(awsCrossAccountAttributes, ceCluster);
+    updateTasks(accountId, ceCluster, tasks, deploymentIdServiceMap);
+    publishUtilizationMetrics(awsCrossAccountAttributes, ceCluster, services);
   }
 
   @VisibleForTesting
-  void publishUtilizationMetrics(AwsCrossAccountAttributes awsCrossAccountAttributes, CECluster ceCluster) {
+  void publishUtilizationMetrics(
+      AwsCrossAccountAttributes awsCrossAccountAttributes, CECluster ceCluster, List<Service> services) {
     Instant now = Instant.now().truncatedTo(ChronoUnit.HOURS);
     String clusterName = ceCluster.getClusterName();
-    List<Service> services = listServices(awsCrossAccountAttributes, clusterName, ceCluster.getRegion());
     Cluster cluster = new Cluster().withClusterName(clusterName).withClusterArn(ceCluster.getClusterArn());
 
     List<EcsUtilizationData> utilizationMetrics =
@@ -239,7 +238,8 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   }
 
   @VisibleForTesting
-  void updateTasks(String accountId, CECluster ceCluster, List<Task> tasks, Map<String, String> taskArnServiceNameMap) {
+  void updateTasks(
+      String accountId, CECluster ceCluster, List<Task> tasks, Map<String, String> deploymentIdServiceMap) {
     Instant stopTime = Instant.now();
     String clusterId = ceCluster.getUuid();
     String settingId = ceCluster.getParentAccountSettingId();
@@ -260,79 +260,81 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                                            .map(task -> getIdFromArn(task.getContainerInstanceArn()))
                                            .collect(Collectors.toSet());
     Map<String, InstanceData> instanceDataMap = getInstanceDataMap(containerInstanceArn);
-    tasks.stream().filter(task -> null != task.getPullStartedAt()).forEach(task -> {
-      String taskId = getIdFromArn(task.getTaskArn());
-      if (null != activeInstanceDataMap.get(taskId)) {
-        InstanceData instanceData = activeInstanceDataMap.get(taskId);
-        boolean updated = updateInstanceStopTimeForTask(instanceData, task);
-        if (updated) {
-          instanceDataDao.create(instanceData);
-        }
-      } else {
-        String clusterName = getIdFromArn(task.getClusterArn());
-        InstanceType instanceType = getInstanceType(task);
-        double memory = Integer.parseInt(task.getMemory());
-        double cpu = Integer.parseInt(task.getCpu());
-        Resource resource = Resource.builder().cpuUnits(cpu).memoryMb(memory).build();
-        Map<String, String> metaData = new HashMap<>();
-        InstanceData containerInstantData = null;
-        if (null != task.getContainerInstanceArn()) {
-          containerInstantData = instanceDataMap.get(getIdFromArn(task.getContainerInstanceArn()));
-        }
+    tasks.stream()
+        .filter(task -> null != task.getPullStartedAt() && listTaskDesiredStatus().contains(task.getDesiredStatus()))
+        .forEach(task -> {
+          String taskId = getIdFromArn(task.getTaskArn());
+          if (null != activeInstanceDataMap.get(taskId)) {
+            InstanceData instanceData = activeInstanceDataMap.get(taskId);
+            boolean updated = updateInstanceStopTimeForTask(instanceData, task);
+            if (updated) {
+              instanceDataDao.create(instanceData);
+            }
+          } else {
+            String clusterName = getIdFromArn(task.getClusterArn());
+            InstanceType instanceType = getInstanceType(task);
+            double memory = Integer.parseInt(task.getMemory());
+            double cpu = Integer.parseInt(task.getCpu());
+            Resource resource = Resource.builder().cpuUnits(cpu).memoryMb(memory).build();
+            Map<String, String> metaData = new HashMap<>();
+            InstanceData containerInstantData = null;
+            if (null != task.getContainerInstanceArn()) {
+              containerInstantData = instanceDataMap.get(getIdFromArn(task.getContainerInstanceArn()));
+            }
 
-        if (InstanceType.ECS_TASK_EC2 == instanceType && null == containerInstantData) {
-          return;
-        } else if (InstanceType.ECS_TASK_EC2 == instanceType && null != containerInstantData) {
-          String containerInstanceId = getIdFromArn(task.getContainerInstanceArn());
+            if (InstanceType.ECS_TASK_EC2 == instanceType && null == containerInstantData) {
+              return;
+            } else if (InstanceType.ECS_TASK_EC2 == instanceType) {
+              String containerInstanceId = getIdFromArn(task.getContainerInstanceArn());
 
-          metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY,
-              containerInstantData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_FAMILY));
-          metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY,
-              containerInstantData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
-          metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM,
-              containerInstantData.getMetaData().get(InstanceMetaDataConstants.OPERATING_SYSTEM));
-          metaData.put(InstanceMetaDataConstants.CONTAINER_INSTANCE_ARN, containerInstanceId);
-          metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_CPU,
-              String.valueOf(containerInstantData.getTotalResource().getCpuUnits()));
-          metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
-              String.valueOf(containerInstantData.getTotalResource().getMemoryMb()));
-          metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, containerInstanceId);
-          metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, containerInstanceId);
-        }
-        metaData.put(InstanceMetaDataConstants.TASK_ID, taskId);
-        metaData.put(InstanceMetaDataConstants.REGION, region);
-        metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
-        metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
-        metaData.put(InstanceMetaDataConstants.LAUNCH_TYPE, task.getLaunchType());
-        HarnessServiceInfo harnessServiceInfo = null;
-        if (null != taskArnServiceNameMap.get(task.getTaskArn())) {
-          String serviceArn = taskArnServiceNameMap.get(task.getTaskArn());
-          String serviceName = getIdFromArn(serviceArn);
-          metaData.put(InstanceMetaDataConstants.ECS_SERVICE_NAME, serviceName);
-          metaData.put(InstanceMetaDataConstants.ECS_SERVICE_ARN, serviceArn);
-          harnessServiceInfo = getHarnessServiceInfo(accountId, clusterName, serviceName);
-        }
+              metaData.put(InstanceMetaDataConstants.INSTANCE_FAMILY,
+                  containerInstantData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_FAMILY));
+              metaData.put(InstanceMetaDataConstants.INSTANCE_CATEGORY,
+                  containerInstantData.getMetaData().get(InstanceMetaDataConstants.INSTANCE_CATEGORY));
+              metaData.put(InstanceMetaDataConstants.OPERATING_SYSTEM,
+                  containerInstantData.getMetaData().get(InstanceMetaDataConstants.OPERATING_SYSTEM));
+              metaData.put(InstanceMetaDataConstants.CONTAINER_INSTANCE_ARN, containerInstanceId);
+              metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_CPU,
+                  String.valueOf(containerInstantData.getTotalResource().getCpuUnits()));
+              metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_MEMORY,
+                  String.valueOf(containerInstantData.getTotalResource().getMemoryMb()));
+              metaData.put(InstanceMetaDataConstants.PARENT_RESOURCE_ID, containerInstanceId);
+              metaData.put(InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, containerInstanceId);
+            }
+            metaData.put(InstanceMetaDataConstants.TASK_ID, taskId);
+            metaData.put(InstanceMetaDataConstants.REGION, region);
+            metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, CloudProvider.AWS.name());
+            metaData.put(InstanceMetaDataConstants.CLUSTER_TYPE, ClusterType.ECS.name());
+            metaData.put(InstanceMetaDataConstants.LAUNCH_TYPE, task.getLaunchType());
+            HarnessServiceInfo harnessServiceInfo = null;
+            if (null != task.getStartedBy() && null != deploymentIdServiceMap.get(task.getStartedBy())) {
+              String serviceArn = deploymentIdServiceMap.get(task.getStartedBy());
+              String serviceName = getIdFromArn(serviceArn);
+              metaData.put(InstanceMetaDataConstants.ECS_SERVICE_NAME, serviceName);
+              metaData.put(InstanceMetaDataConstants.ECS_SERVICE_ARN, serviceArn);
+              harnessServiceInfo = getHarnessServiceInfo(accountId, clusterName, serviceName);
+            }
 
-        InstanceData instanceData = InstanceData.builder()
-                                        .accountId(accountId)
-                                        .instanceId(taskId)
-                                        .clusterName(clusterName)
-                                        .clusterId(clusterId)
-                                        .settingId(settingId)
-                                        .instanceType(instanceType)
-                                        .usageStartTime(task.getPullStartedAt().toInstant())
-                                        .instanceState(InstanceState.RUNNING)
-                                        .totalResource(resource)
-                                        .allocatableResource(resource)
-                                        .metaData(metaData)
-                                        .harnessServiceInfo(harnessServiceInfo)
-                                        .build();
+            InstanceData instanceData = InstanceData.builder()
+                                            .accountId(accountId)
+                                            .instanceId(taskId)
+                                            .clusterName(clusterName)
+                                            .clusterId(clusterId)
+                                            .settingId(settingId)
+                                            .instanceType(instanceType)
+                                            .usageStartTime(task.getPullStartedAt().toInstant())
+                                            .instanceState(InstanceState.RUNNING)
+                                            .totalResource(resource)
+                                            .allocatableResource(resource)
+                                            .metaData(metaData)
+                                            .harnessServiceInfo(harnessServiceInfo)
+                                            .build();
 
-        updateInstanceStopTimeForTask(instanceData, task);
-        log.debug("Creating task {} ", taskId);
-        instanceDataService.create(instanceData);
-      }
-    });
+            updateInstanceStopTimeForTask(instanceData, task);
+            log.debug("Creating task {} ", taskId);
+            instanceDataService.create(instanceData);
+          }
+        });
   }
 
   private boolean updateInstanceStopTimeForTask(InstanceData instanceData, Task task) {
@@ -412,7 +414,9 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     Set<String> instanceIds = fetchEc2InstanceIds(containerInstances);
     Map<String, Instance> instanceMap = listEc2Instances(awsCrossAccountAttributes, ceCluster.getRegion(), instanceIds);
     containerInstances.stream()
-        .filter(containerInstance -> instanceMap.get(containerInstance.getEc2InstanceId()) != null)
+        .filter(containerInstance
+            -> instanceMap.get(containerInstance.getEc2InstanceId()) != null
+                && listContainerInstanceStatus().contains(containerInstance.getStatus()))
         .forEach(containerInstance -> {
           String containerInstanceId = getIdFromArn(containerInstance.getContainerInstanceArn());
           if (null == activeInstanceDataMap.get(containerInstanceId)) {
@@ -484,33 +488,20 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
   }
 
   private List<Task> listTask(AwsCrossAccountAttributes awsCrossAccountAttributes, String clusterName, String region) {
-    List<DesiredStatus> desiredStatuses = listTaskDesiredStatus();
-    List<Task> tasks = new ArrayList<>();
-    for (DesiredStatus desiredStatus : desiredStatuses) {
-      tasks.addAll(
-          awsECSHelperService.listTasksForService(awsCrossAccountAttributes, region, clusterName, null, desiredStatus));
-    }
-    return tasks;
+    return awsECSHelperService.listTasksForService(awsCrossAccountAttributes, region, clusterName, null, null);
   }
 
-  private void loadTaskArnServiceNameMap(AwsCrossAccountAttributes awsCrossAccountAttributes, String clusterName,
-      String region, Map<String, String> taskArnServiceNameMap) {
-    List<DesiredStatus> desiredStatuses = listTaskDesiredStatus();
-    for (Service service : listServices(awsCrossAccountAttributes, clusterName, region)) {
-      for (DesiredStatus desiredStatus : desiredStatuses) {
-        List<String> taskArns = awsECSHelperService.listTasksArnForService(
-            awsCrossAccountAttributes, region, clusterName, service.getServiceArn(), desiredStatus);
-        if (!CollectionUtils.isEmpty(taskArns)) {
-          for (String taskArn : taskArns) {
-            taskArnServiceNameMap.put(taskArn, service.getServiceArn());
-          }
-        }
-      }
-    }
+  private Map<String, String> getDeploymentIdsForService(List<Service> services) {
+    Map<String, List<String>> deploymentIdsForService =
+        services.stream().collect(Collectors.toMap(Service::getServiceArn,
+            service -> service.getDeployments().stream().map(Deployment::getId).collect(Collectors.toList())));
+
+    return deploymentIdsForService.entrySet().stream().collect(
+        HashMap::new, (m, v) -> v.getValue().forEach(k -> m.put(k, v.getKey())), Map::putAll);
   }
 
-  private List<DesiredStatus> listTaskDesiredStatus() {
-    return new ArrayList<>(Arrays.asList(DesiredStatus.RUNNING, DesiredStatus.STOPPED));
+  private List<String> listTaskDesiredStatus() {
+    return new ArrayList<>(Arrays.asList(DesiredStatus.RUNNING.toString(), DesiredStatus.STOPPED.toString()));
   }
 
   private List<Service> listServices(
@@ -537,17 +528,13 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
 
   private List<ContainerInstance> listContainerInstances(
       AwsCrossAccountAttributes awsCrossAccountAttributes, CECluster ceCluster) {
-    List<ContainerInstanceStatus> containerInstanceStatuses = listContainerInstanceStatus();
-    List<ContainerInstance> containerInstances = new ArrayList<>();
-    for (ContainerInstanceStatus containerInstanceStatus : containerInstanceStatuses) {
-      containerInstances.addAll(awsECSHelperService.listContainerInstancesForCluster(
-          awsCrossAccountAttributes, ceCluster.getRegion(), ceCluster.getClusterArn(), containerInstanceStatus));
-    }
-    return containerInstances;
+    return awsECSHelperService.listContainerInstancesForCluster(
+        awsCrossAccountAttributes, ceCluster.getRegion(), ceCluster.getClusterArn());
   }
 
-  private List<ContainerInstanceStatus> listContainerInstanceStatus() {
-    return new ArrayList<>(Arrays.asList(ContainerInstanceStatus.ACTIVE, ContainerInstanceStatus.DRAINING));
+  private List<String> listContainerInstanceStatus() {
+    return new ArrayList<>(
+        Arrays.asList(ContainerInstanceStatus.ACTIVE.toString(), ContainerInstanceStatus.DRAINING.toString()));
   }
 
   private Map<String, AwsCrossAccountAttributes> getCrossAccountAttributes(String accountId) {

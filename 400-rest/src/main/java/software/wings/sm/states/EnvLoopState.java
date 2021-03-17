@@ -104,10 +104,21 @@ public class EnvLoopState extends State implements WorkflowState {
     }
     forkStateExecutionData.setForkStateNames(forkStateNames);
 
+    trackDisableAssertionExpression(context);
+
     return executionResponseBuilder.stateExecutionData(forkStateExecutionData)
         .async(true)
         .correlationIds(correlationIds)
         .build();
+  }
+
+  private void trackDisableAssertionExpression(ExecutionContext context) {
+    try {
+      context.renderExpression(this.disableAssertion);
+    } catch (Exception e) {
+      log.error("Failed to render disableAssertion: accountId: {}, executionId: {}", context.getAccountId(),
+          context.getWorkflowExecutionId());
+    }
   }
 
   private LoopEnvStateParams getLoopStateParams(String loopedValue, String name) {

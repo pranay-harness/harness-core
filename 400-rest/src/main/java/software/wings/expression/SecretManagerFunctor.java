@@ -6,12 +6,15 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.expression.SecretManagerFunctorInterface.obtainConfigFileExpression;
+import static software.wings.expression.SecretManagerFunctorInterface.obtainExpression;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
+import io.harness.data.encoding.EncodingUtils;
 import io.harness.delegate.beans.SecretDetail;
 import io.harness.exception.FunctorException;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +29,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,9 +69,52 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
     }
   }
 
-  private Object returnValue(String secretName, Object value) {
+  @Override
+  public Object obtainConfigFileAsString(String path, String encryptedFileId, int token) {
+    if (token != expressionFunctorToken) {
+      throw new FunctorException("Inappropriate usage of internal functor");
+    }
+
+    String key = format("//text:/%s", path);
+    if (evaluatedSecrets.containsKey(key)) {
+      return returnConfigFileValue("obtainConfigFileAsString", path, encryptedFileId, evaluatedSecrets.get(key));
+    }
+
+    byte[] fileContent = secretManager.getFileContents(accountId, encryptedFileId);
+    String text = new String(fileContent, Charset.forName("UTF-8"));
+    evaluatedSecrets.put(key, text);
+    return returnConfigFileValue("obtainConfigFileAsString", path, encryptedFileId, text);
+  }
+
+  @Override
+  public Object obtainConfigFileAsBase64(String path, String encryptedFileId, int token) {
+    if (token != expressionFunctorToken) {
+      throw new FunctorException("Inappropriate usage of internal functor");
+    }
+
+    String key = format("//base64:/%s", path);
+    if (evaluatedSecrets.containsKey(key)) {
+      return returnConfigFileValue("obtainConfigFileAsBase64", path, encryptedFileId, evaluatedSecrets.get(key));
+    }
+
+    byte[] fileContent = secretManager.getFileContents(accountId, encryptedFileId);
+    String encodeBase64 = EncodingUtils.encodeBase64(fileContent);
+    evaluatedSecrets.put(key, encodeBase64);
+    return returnConfigFileValue("obtainConfigFileAsBase64", path, encryptedFileId, encodeBase64);
+  }
+
+  private Object returnConfigFileValue(String method, String path, String encryptedFileId, Object value) {
     if (mode == SecretManagerMode.DRY_RUN) {
-      return "${secretManager.obtain(\"" + secretName + "\", " + expressionFunctorToken + ")}";
+      return obtainConfigFileExpression(method, path, encryptedFileId, expressionFunctorToken);
+    } else if (mode == SecretManagerMode.CHECK_FOR_SECRETS) {
+      return format(SecretManagerPreviewFunctor.SECRET_NAME_FORMATTER, path);
+    }
+    return value;
+  }
+
+  private Object returnSecretValue(String secretName, Object value) {
+    if (mode == SecretManagerMode.DRY_RUN) {
+      return obtainExpression(secretName, expressionFunctorToken);
     } else if (mode == SecretManagerMode.CHECK_FOR_SECRETS) {
       return format(SecretManagerPreviewFunctor.SECRET_NAME_FORMATTER, secretName);
     }
@@ -76,10 +123,10 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
 
   private Object obtainInternal(String secretName) {
     if (evaluatedSecrets.containsKey(secretName)) {
-      return returnValue(secretName, evaluatedSecrets.get(secretName));
+      return returnSecretValue(secretName, evaluatedSecrets.get(secretName));
     }
     if (evaluatedDelegateSecrets.containsKey(secretName)) {
-      return returnValue(secretName, evaluatedDelegateSecrets.get(secretName));
+      return returnSecretValue(secretName, evaluatedDelegateSecrets.get(secretName));
     }
 
     EncryptedData encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
@@ -108,7 +155,7 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
       managerDecryptionService.decrypt(serviceVariable, localEncryptedDetails);
       String value = new String(serviceVariable.getValue());
       evaluatedSecrets.put(secretName, value);
-      return returnValue(secretName, value);
+      return returnSecretValue(secretName, value);
     }
 
     List<EncryptedDataDetail> nonLocalEncryptedDetails =
@@ -150,6 +197,6 @@ public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFun
     secretDetails.put(secretDetailsUuid, secretDetail);
     evaluatedDelegateSecrets.put(
         secretName, "${secretDelegate.obtain(\"" + secretDetailsUuid + "\", " + expressionFunctorToken + ")}");
-    return returnValue(secretName, evaluatedDelegateSecrets.get(secretName));
+    return returnSecretValue(secretName, evaluatedDelegateSecrets.get(secretName));
   }
 }

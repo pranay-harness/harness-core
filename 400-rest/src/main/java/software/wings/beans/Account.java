@@ -13,10 +13,10 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.encryption.Encrypted;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
@@ -26,6 +26,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,10 +52,17 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@CdIndex(name = "next_iteration_license_info2",
-    fields = { @Field("licenseExpiryCheckIteration")
-               , @Field("encryptedLicenseInfo") })
 public class Account extends Base implements PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("next_iteration_license_info2")
+                 .field(AccountKeys.licenseExpiryCheckIteration)
+                 .field(AccountKeys.encryptedLicenseInfo)
+                 .build())
+        .build();
+  }
+
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;
@@ -119,6 +127,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed = true;
 
+  @Getter @Setter private AccountPreferences accountPreferences;
+
   @FdIndex private Long serviceGuardDataCollectionIteration;
   @FdIndex private Long serviceGuardDataAnalysisIteration;
   @FdIndex private Long workflowDataCollectionIteration;
@@ -129,6 +139,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long gitSyncExpiryCheckIteration;
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
+  @FdIndex private Long resourceLookupSyncIteration;
 
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
@@ -327,10 +338,6 @@ public class Account extends Base implements PersistentRegularIterable {
     this.oauthEnabled = oauthEnabled;
   }
 
-  public boolean isCloudCostEnabled() {
-    return this.cloudCostEnabled;
-  }
-
   public void setCloudCostEnabled(boolean cloudCostEnabled) {
     this.cloudCostEnabled = cloudCostEnabled;
   }
@@ -420,6 +427,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
+      this.resourceLookupSyncIteration = nextIteration;
+      return;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -461,6 +473,10 @@ public class Account extends Base implements PersistentRegularIterable {
       return this.ceLicenseExpiryIteration;
     }
 
+    else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
+      return this.resourceLookupSyncIteration;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -494,6 +510,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private String subdomainUrl;
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
+    private AccountPreferences accountPreferences;
 
     private Builder() {}
 
@@ -626,6 +643,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withAccountPreferences(AccountPreferences accountPreferences) {
+      this.accountPreferences = accountPreferences;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -649,7 +671,8 @@ public class Account extends Base implements PersistentRegularIterable {
           .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
-          .withBackgroundJobsDisabled(backgroundJobsDisabled);
+          .withBackgroundJobsDisabled(backgroundJobsDisabled)
+          .withAccountPreferences(accountPreferences);
     }
 
     public Account build() {
@@ -679,6 +702,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setSubdomainUrl(subdomainUrl);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
+      account.setAccountPreferences(accountPreferences);
       return account;
     }
   }
@@ -707,13 +731,13 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String uuid = "uuid";
     public static final String name = "name";
     public static final String licenseExpiryCheckIteration = "licenseExpiryCheckIteration";
-    public static final String accountBackgroundJobCheckIteration = "accountBackgroundJobCheckIteration";
     public static final String accountDeletionIteration = "accountDeletionIteration";
     public static final String subdomainUrl = "subdomainUrl";
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
+    public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
         delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }

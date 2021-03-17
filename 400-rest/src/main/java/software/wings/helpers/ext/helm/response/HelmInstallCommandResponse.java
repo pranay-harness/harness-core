@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm.response;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -13,6 +15,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class HelmInstallCommandResponse extends HelmCommandResponse {
   private List<ContainerInfo> containerInfoList;
   private HelmChartInfo helmChartInfo;

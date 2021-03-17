@@ -86,7 +86,7 @@ import software.wings.resources.ServiceVariableResource;
 import software.wings.resources.secretsmanagement.SecretManagementResource;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.UsageRestrictionsServiceImplTest;
+import software.wings.service.impl.UsageRestrictionsServiceImplTestBase;
 import software.wings.service.impl.security.auth.ConfigFileAuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -98,6 +98,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
@@ -173,6 +174,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Mock private VaultEncryptor vaultEncryptor;
   @Mock private KmsEncryptorsRegistry kmsEncryptorsRegistry;
   @Mock private VaultEncryptorsRegistry vaultEncryptorsRegistry;
+  @Mock private SSHVaultService sshVaultService;
 
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
@@ -320,7 +322,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void saveAndUpdateSecret() throws IllegalAccessException {
     UsageRestrictions usageRestrictions =
-        UsageRestrictionsServiceImplTest.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
+        UsageRestrictionsServiceImplTestBase.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
 
     String secretName = generateUuid();
     String secretValue = generateUuid();
@@ -376,7 +378,7 @@ public class SecretTextTest extends WingsBaseTest {
                                       .environmentType(EnvironmentType.PROD)
                                       .build());
 
-    usageRestrictions = UsageRestrictionsServiceImplTest.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
+    usageRestrictions = UsageRestrictionsServiceImplTestBase.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
 
     // check only change in usage restrictions triggers change logs
     secretManagementResource.updateSecret(accountId, secretId,
@@ -1291,7 +1293,7 @@ public class SecretTextTest extends WingsBaseTest {
     Random r = new Random(seed);
 
     String secretName = generateUuid();
-    File fileToSave = new File(("400-rest/src/test/resources/encryption/file_to_encrypt.txt"));
+    File fileToSave = new File("400-rest/src/test/resources/encryption/file_to_encrypt.txt");
     SecretFile secretFile = SecretFile.builder()
                                 .name(secretName)
                                 .kmsId(kmsId)

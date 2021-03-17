@@ -2,6 +2,9 @@ package io.harness.perpetualtask.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -48,6 +51,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
  *   Now, we can do artifact collection
  */
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class ArtifactsPublishedCache<P> {
   // Max artifacts published to the manager in one call.
   public static final int ARTIFACT_ONE_TIME_PUBLISH_LIMIT = 500;

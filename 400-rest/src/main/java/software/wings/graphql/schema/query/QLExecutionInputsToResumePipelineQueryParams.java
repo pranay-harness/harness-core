@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.query;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 
 import java.util.List;
@@ -14,6 +17,7 @@ import lombok.experimental.FieldNameConstants;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "QLExecutionInputsToResumePipelineQueryParamsKeys")
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLExecutionInputsToResumePipelineQueryParams {
   private String applicationId;
   private String pipelineExecutionId;

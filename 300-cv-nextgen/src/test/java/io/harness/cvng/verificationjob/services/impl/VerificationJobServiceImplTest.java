@@ -5,6 +5,7 @@ import static io.harness.cvng.verificationjob.CVVerificationJobConstants.RUNTIME
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
@@ -17,7 +18,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
@@ -29,6 +30,7 @@ import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HPersistence;
@@ -47,7 +49,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class VerificationJobServiceImplTest extends CvNextGenTest {
+public class VerificationJobServiceImplTest extends CvNextGenTestBase {
   @Mock private NextGenService nextGenService;
   @Mock private CVEventService cvEventService;
   @Inject private HPersistence hPersistence;
@@ -57,7 +59,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;
-  private String portalUrl;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -67,16 +68,15 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     identifier = "test-verification-harness";
     accountId = generateUuid();
     FieldUtils.writeField(verificationJobService, "nextGenService", nextGenService, true);
-    portalUrl = "https://app.harness.io/";
     FieldUtils.writeField(verificationJobService, "cvEventService", cvEventService, true);
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testUpsert_newJobCreation() {
+  public void testCreate_newJobCreation() {
     VerificationJobDTO verificationJobDTO = createDTO();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJobDTO inserted = verificationJobService.getVerificationJobDTO(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
 
@@ -91,10 +91,10 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testUpsert_invalidJob() {
+  public void testCreate_invalidJob() {
     VerificationJobDTO verificationJobDTO = createDTO();
     verificationJobDTO.setEnvIdentifier(null);
-    assertThatThrownBy(() -> verificationJobService.upsert(accountId, verificationJobDTO))
+    assertThatThrownBy(() -> verificationJobService.create(accountId, verificationJobDTO))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("envIdentifier should not be null");
   }
@@ -102,9 +102,9 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testUpsert_updateExisting() {
+  public void testUpdate_updateExisting() {
     VerificationJobDTO verificationJobDTO = createDTO();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJobDTO inserted = verificationJobService.getVerificationJobDTO(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     // url will be newly generated, so wont be present.
@@ -114,13 +114,27 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     inserted.setVerificationJobUrl(null);
     assertThat(inserted).isEqualTo(verificationJobDTO);
     verificationJobDTO.setEnvIdentifier("updated_env");
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobDTO.setActivitySourceIdentifier("some-activity-source-identifier");
+    verificationJobService.update(accountId, insertedJob.getIdentifier(), verificationJobDTO);
     VerificationJobDTO updated = verificationJobService.getVerificationJobDTO(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     assertThat(updated).isNotEqualTo(inserted);
     assertThat(updated.getVerificationJobUrl()).isEqualTo(insertedJob.getVerificationJobUrl());
     updated.setVerificationJobUrl(null);
     assertThat(updated).isEqualTo(verificationJobDTO);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_notExisting() {
+    String identifier = "some-identifier";
+    VerificationJobDTO verificationJobDTO = createDTO();
+    assertThatThrownBy(() -> verificationJobService.update(accountId, identifier, verificationJobDTO))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(String.format(
+            "Verification Job with identifier [%s] and orgIdentifier [%s] and projectIdentifier [%s] not found",
+            identifier, verificationJobDTO.getOrgIdentifier(), verificationJobDTO.getProjectIdentifier()));
   }
 
   @Test
@@ -137,7 +151,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetVerificationJobDTO_validIdentifier() {
     VerificationJobDTO verificationJobDTO = createDTO();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJobDTO updated = verificationJobService.getVerificationJobDTO(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     // url will be newly generated, so wont be present. So we will validate that separately.
@@ -153,7 +167,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testDelete_validIdentifier() {
     VerificationJobDTO verificationJobDTO = createDTO();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     verificationJobService.delete(accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     assertThat(verificationJobService.getVerificationJobDTO(
                    accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier()))
@@ -172,7 +186,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJobDTO.setEnvIdentifier(RUNTIME_STRING);
     verificationJobDTO.setServiceIdentifier(RUNTIME_STRING);
 
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     verificationJobService.delete(accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     assertThat(verificationJobService.getVerificationJobDTO(
                    accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier()))
@@ -186,9 +200,9 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testUpsert_newJobCreationWithRuntimeParams() {
+  public void testCreate_newJobCreationWithRuntimeParams() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJobDTO inserted = verificationJobService.getVerificationJobDTO(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
     // url will be newly generated, so wont be present.
@@ -211,7 +225,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testList_notEmpty_FilterByVerificationJobNameOnly() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
 
     mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
 
@@ -245,7 +259,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testList_noCallNextGenWhenFilterEmpty() {
     VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
 
     verificationJobService
         .list(accountId, verificationJobDTO.getProjectIdentifier(), verificationJobDTO.getOrgIdentifier(), 0, 10, null)
@@ -259,7 +273,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testList_notEmpty_FilterByVerificationAndEnvAndServicesJobNames() {
     VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
 
     mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
 
@@ -448,7 +462,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJob.setServiceIdentifier(serviceIdentifier, false);
     verificationJob.setEnvIdentifier(generateUuid(), false);
     verificationJob.setDuration(Duration.ZERO);
-    verificationJob.setPortalUrl(portalUrl);
     return verificationJob;
   }
 
@@ -463,7 +476,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     verificationJob.setServiceIdentifier(serviceIdentifier, true);
     verificationJob.setEnvIdentifier(generateUuid(), true);
     verificationJob.setDuration(Duration.ZERO);
-    verificationJob.setPortalUrl(portalUrl);
     return verificationJob;
   }
 
@@ -517,7 +529,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetByUrl() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob inserted = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
 
@@ -532,10 +544,9 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     VerificationJobDTO verificationJobDTO = createDTOWithoutRuntimeParams();
     mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
 
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob inserted = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
-    inserted.setPortalUrl(portalUrl);
     VerificationJobDTO byUrl = verificationJobService.getDTOByUrl(accountId, inserted.getVerificationJobUrl());
     assertThat(byUrl.getServiceName()).isEqualTo(inserted.getServiceIdentifier());
     assertThat(byUrl.getServiceIdentifier()).isEqualTo(inserted.getServiceIdentifier());
@@ -550,7 +561,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
     mockFilterByEnvAndServiceResponsesDTOs(verificationJobDTO);
 
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob inserted = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
 
@@ -566,7 +577,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetByUrl_nullAccount() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob inserted = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
 
@@ -578,7 +589,7 @@ public class VerificationJobServiceImplTest extends CvNextGenTest {
   @Category(UnitTests.class)
   public void testGetByUrl_nullUrl() {
     VerificationJobDTO verificationJobDTO = createDTOWithRuntimeParams();
-    verificationJobService.upsert(accountId, verificationJobDTO);
+    verificationJobService.create(accountId, verificationJobDTO);
     VerificationJob inserted = verificationJobService.getVerificationJob(
         accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier());
 

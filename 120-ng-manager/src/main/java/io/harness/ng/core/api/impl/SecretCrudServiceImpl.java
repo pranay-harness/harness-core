@@ -1,6 +1,7 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
@@ -53,6 +54,7 @@ import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import java.io.InputStream;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -126,6 +128,13 @@ public class SecretCrudServiceImpl implements SecretCrudService {
   }
 
   @Override
+  public Boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return ngSecretService.validateTheIdentifierIsUnique(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  @Override
   public SecretResponseWrapper create(String accountIdentifier, SecretDTOV2 dto) {
     EncryptedDataDTO encryptedData = getService(dto.getType()).create(accountIdentifier, dto);
     if (Optional.ofNullable(encryptedData).isPresent()) {
@@ -164,15 +173,21 @@ public class SecretCrudServiceImpl implements SecretCrudService {
 
   @Override
   public PageResponse<SecretResponseWrapper> list(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, SecretType secretType, String searchTerm, int page, int size) {
-    Criteria criteria = Criteria.where(SecretKeys.accountIdentifier)
-                            .is(accountIdentifier)
-                            .and(SecretKeys.orgIdentifier)
-                            .is(orgIdentifier)
-                            .and(SecretKeys.projectIdentifier)
-                            .is(projectIdentifier);
-    if (secretType != null) {
-      criteria = criteria.and(SecretKeys.type).is(secretType);
+      String projectIdentifier, List<String> identifiers, List<SecretType> secretTypes,
+      boolean includeSecretsFromEverySubScope, String searchTerm, int page, int size) {
+    Criteria criteria = Criteria.where(SecretKeys.accountIdentifier).is(accountIdentifier);
+    if (!includeSecretsFromEverySubScope) {
+      criteria.and(SecretKeys.orgIdentifier).is(orgIdentifier).and(SecretKeys.projectIdentifier).is(projectIdentifier);
+    } else {
+      if (isNotBlank(orgIdentifier)) {
+        criteria.and(SecretKeys.orgIdentifier).is(orgIdentifier);
+        if (isNotBlank(projectIdentifier)) {
+          criteria.and(SecretKeys.projectIdentifier).is(projectIdentifier);
+        }
+      }
+    }
+    if (isNotEmpty(secretTypes)) {
+      criteria = criteria.and(SecretKeys.type).in(secretTypes);
     }
     if (!StringUtils.isEmpty(searchTerm)) {
       criteria = criteria.orOperator(
@@ -183,6 +198,9 @@ public class SecretCrudServiceImpl implements SecretCrudService {
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
           Criteria.where(SecretKeys.tags + "." + NGTagKeys.value)
               .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+    }
+    if (Objects.nonNull(identifiers) && !identifiers.isEmpty()) {
+      criteria.and(SecretKeys.identifier).in(identifiers);
     }
     Page<Secret> secrets = ngSecretService.list(criteria, page, size);
     return PageUtils.getNGPageResponse(
@@ -219,12 +237,39 @@ public class SecretCrudServiceImpl implements SecretCrudService {
                     .secretManager(getSecretManagerIdentifier(secretResponseWrapper.getSecret()))
                     .build()));
       }
+      publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, identifier,
+          EventsFrameworkMetadataConstants.DELETE_ACTION);
       return true;
     }
     if (!remoteDeletionSuccess) {
       throw new InvalidRequestException("Unable to delete secret remotely.", USER);
     } else {
       throw new InvalidRequestException("Unable to delete secret locally, data might be inconsistent", USER);
+    }
+  }
+
+  private void publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
+    try {
+      EntityChangeDTO.Builder secretEntityChangeDTOBuilder =
+          EntityChangeDTO.newBuilder()
+              .setAccountIdentifier(StringValue.of(accountIdentifier))
+              .setIdentifier(StringValue.of(identifier));
+      if (isNotBlank(orgIdentifier)) {
+        secretEntityChangeDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
+      }
+      if (isNotBlank(projectIdentifier)) {
+        secretEntityChangeDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
+      }
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(
+                  ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ENTITY_TYPE,
+                      EventsFrameworkMetadataConstants.SECRET_ENTITY, EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(secretEntityChangeDTOBuilder.build().toByteString())
+              .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework secret Identifier: {}", identifier, e);
     }
   }
 
@@ -299,7 +344,7 @@ public class SecretCrudServiceImpl implements SecretCrudService {
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", secret.getAccountIdentifier(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.PROJECT_ENTITY,
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.SECRET_ENTITY,
                   EventsFrameworkMetadataConstants.ACTION, action))
               .setData(secretEntityChangeDTOBuilder.build().toByteString())
               .build());

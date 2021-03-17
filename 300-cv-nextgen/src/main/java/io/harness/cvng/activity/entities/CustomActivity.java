@@ -2,7 +2,7 @@ package io.harness.cvng.activity.entities;
 
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -24,8 +24,13 @@ public class CustomActivity extends Activity {
   }
 
   @Override
-  public void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance) {}
+  public void fillInVerificationJobInstanceDetails(VerificationJobInstanceBuilder verificationJobInstance) {}
 
   @Override
   public void validateActivityParams() {}
+
+  @Override
+  public boolean deduplicateEvents() {
+    throw new UnsupportedOperationException("Custom events are not yet supported");
+  }
 }

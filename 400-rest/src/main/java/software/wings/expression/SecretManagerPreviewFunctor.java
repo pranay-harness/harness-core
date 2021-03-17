@@ -28,4 +28,14 @@ public class SecretManagerPreviewFunctor implements ExpressionFunctor, SecretMan
   public Object obtain(String secretName, int token) {
     return String.format(formatter, secretName);
   }
+
+  @Override
+  public Object obtainConfigFileAsString(String path, String encryptedFileId, int token) {
+    return String.format(formatter, path);
+  }
+
+  @Override
+  public Object obtainConfigFileAsBase64(String path, String encryptedFileId, int token) {
+    return String.format(formatter, path);
+  }
 }

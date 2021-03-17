@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import static io.harness.globalcontex.AuditGlobalContextData.AUDIT_ID;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -23,6 +22,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.GlobalContextData;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.ff.FeatureFlagService;
@@ -115,12 +115,12 @@ public class AuditServiceImpl implements AuditService {
 
   private WingsPersistence wingsPersistence;
 
-  private static Set<String> nonYamlEntities = newHashSet(EntityType.TEMPLATE_FOLDER.name(),
-      EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(), ResourceType.CONNECTION_ATTRIBUTES.name(),
-      ResourceType.DEPLOYMENT_FREEZE.name(), ResourceType.CUSTOM_DASHBOARD.name(), ResourceType.SECRET_MANAGER.name(),
-      EntityType.PIPELINE_GOVERNANCE_STANDARD.name(), ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(),
-      ResourceType.USER_INVITE.name(), ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(),
-      ResourceType.DELEGATE_PROFILE.name());
+  private static Set<String> nonYamlEntities =
+      newHashSet(EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(),
+          ResourceType.CONNECTION_ATTRIBUTES.name(), ResourceType.CUSTOM_DASHBOARD.name(),
+          ResourceType.SECRET_MANAGER.name(), EntityType.PIPELINE_GOVERNANCE_STANDARD.name(),
+          ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(), ResourceType.USER_INVITE.name(),
+          ResourceType.DELEGATE.name(), ResourceType.DELEGATE_SCOPE.name(), ResourceType.DELEGATE_PROFILE.name());
 
   /**
    * check for nonYamlEntites.
@@ -463,6 +463,7 @@ public class AuditServiceImpl implements AuditService {
         case ADD:
         case LOGIN:
         case DELEGATE_APPROVAL:
+        case NON_WHITELISTED:
         case REMOVE:
           entityToQuery = (UuidAccess) newEntity;
           break;
@@ -494,6 +495,7 @@ public class AuditServiceImpl implements AuditService {
         case REMOVE:
         case DELEGATE_APPROVAL:
         case LOGIN:
+        case NON_WHITELISTED:
         case CREATE: {
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
             saveEntityYamlForAudit(newEntity, record, accountId);
@@ -555,7 +557,7 @@ public class AuditServiceImpl implements AuditService {
   public PageResponse<AuditHeader> listUsingFilter(String accountId, String filterJson, String limit, String offset) {
     AuditPreference auditPreference = (AuditPreference) auditPreferenceHelper.parseJsonIntoPreference(filterJson);
     auditPreference.setAccountId(accountId);
-    changeAuditPreferenceForHomePage(auditPreference);
+    changeAuditPreferenceForHomePage(auditPreference, accountId);
 
     if (!auditPreference.isIncludeAppLevelResources() && !auditPreference.isIncludeAccountLevelResources()) {
       return new PageResponse<>();
@@ -566,12 +568,24 @@ public class AuditServiceImpl implements AuditService {
     return wingsPersistence.query(AuditHeader.class, pageRequest);
   }
 
-  private void changeAuditPreferenceForHomePage(AuditPreference auditPreference) {
-    if (Objects.isNull(auditPreference.getApplicationAuditFilter())
-        && Objects.isNull(auditPreference.getAccountAuditFilter())
-        && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
-      auditPreference.setOperationTypes(
-          Arrays.stream(Type.values()).filter(type -> type != Type.LOGIN).map(Type::name).collect(Collectors.toList()));
+  @VisibleForTesting
+  void changeAuditPreferenceForHomePage(AuditPreference auditPreference, String accountId) {
+    if (featureFlagService.isEnabled(FeatureName.ENABLE_LOGIN_AUDITS, accountId)) {
+      if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+          && Objects.isNull(auditPreference.getAccountAuditFilter())
+          && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+        auditPreference.setOperationTypes(Arrays.stream(Type.values()).map(Type::name).collect(Collectors.toList()));
+      }
+
+    } else {
+      if (Objects.isNull(auditPreference.getApplicationAuditFilter())
+          && Objects.isNull(auditPreference.getAccountAuditFilter())
+          && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
+        auditPreference.setOperationTypes(Arrays.stream(Type.values())
+                                              .filter(type -> type != Type.LOGIN)
+                                              .map(Type::name)
+                                              .collect(Collectors.toList()));
+      }
     }
   }
 

@@ -25,6 +25,8 @@ import static software.wings.helpers.ext.chartmuseum.ChartMuseumConstants.SIGNAT
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
@@ -53,6 +55,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class ChartMuseumClientImpl implements ChartMuseumClient {
   private static final SecureRandom random = new SecureRandom();
 

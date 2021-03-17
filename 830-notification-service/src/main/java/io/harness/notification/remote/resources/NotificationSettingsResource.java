@@ -5,6 +5,7 @@ import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.entities.NotificationSetting;
 import io.harness.notification.remote.dto.AccountNotificationSettingDTO;
 import io.harness.notification.remote.mappers.NotificationSettingMapper;
@@ -35,6 +36,7 @@ import lombok.AllArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NotificationMicroserviceAuth
 public class NotificationSettingsResource {
   private final NotificationSettingsService notificationSettingsService;
 

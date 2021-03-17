@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.utils.Utils.escapifyString;
@@ -112,10 +113,8 @@ public class InitSshCommandUnit extends SshCommandUnit {
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
       envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
     }
-    envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
-    envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
-    envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
-    envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
+
+    validateEnvVariables(envVariables, context);
 
     commandUnitHelper.addArtifactFileNameToEnv(envVariables, context);
 
@@ -163,6 +162,19 @@ public class InitSshCommandUnit extends SshCommandUnit {
     }
     context.addEnvVariables(envVariables);
     return commandExecutionStatus;
+  }
+
+  private void validateEnvVariables(Map<String, String> envVariables, ShellCommandExecutionContext context) {
+    if (!containsVariablePattern(context.getStagingPath())) {
+      envVariables.put("WINGS_STAGING_PATH", context.getStagingPath());
+    }
+    if (!containsVariablePattern(context.getRuntimePath())) {
+      envVariables.put("WINGS_RUNTIME_PATH", context.getRuntimePath());
+    }
+    if (!containsVariablePattern(context.getBackupPath())) {
+      envVariables.put("WINGS_BACKUP_PATH", context.getBackupPath());
+    }
+    envVariables.put("WINGS_SCRIPT_DIR", executionStagingDir);
   }
 
   /**
@@ -275,5 +287,9 @@ public class InitSshCommandUnit extends SshCommandUnit {
    */
   public void setCommand(Command command) {
     this.command = command;
+  }
+
+  public Map<String, String> fetchEnvVariables() {
+    return envVariables;
   }
 }

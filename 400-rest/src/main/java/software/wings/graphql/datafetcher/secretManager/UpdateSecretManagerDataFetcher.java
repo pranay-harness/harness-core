@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.secretManager;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.secretManager.QLUpdateSecretManagerInput;
@@ -12,6 +15,7 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UpdateSecretManagerDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateSecretManagerInput, QLUpsertSecretManagerPayload> {
   @Inject

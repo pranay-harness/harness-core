@@ -1,48 +1,90 @@
 package external
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	ticlient "github.com/wings-software/portal/product/ci/ti-service/client"
 	"github.com/wings-software/portal/product/log-service/client"
+	"go.uber.org/zap"
 )
 
 const (
-	accountIDEnv  = "HARNESS_ACCOUNT_ID"
-	orgIDEnv      = "HARNESS_ORG_ID"
-	projectIDEnv  = "HARNESS_PROJECT_ID"
-	buildIDEnv    = "HARNESS_BUILD_ID"
-	stageIDEnv    = "HARNESS_STAGE_ID"
-	pipelineIDEnv = "HARNESS_PIPELINE_ID"
-	tiSvcEp       = "HARNESS_TI_SERVICE_ENDPOINT"
-	tiSvcToken    = "HARNESS_TI_SERVICE_TOKEN"
-	logSvcEp      = "HARNESS_LOG_SERVICE_ENDPOINT"
-	logSvcToken   = "HARNESS_LOG_SERVICE_TOKEN"
+	accountIDEnv     = "HARNESS_ACCOUNT_ID"
+	orgIDEnv         = "HARNESS_ORG_ID"
+	projectIDEnv     = "HARNESS_PROJECT_ID"
+	buildIDEnv       = "HARNESS_BUILD_ID"
+	stageIDEnv       = "HARNESS_STAGE_ID"
+	pipelineIDEnv    = "HARNESS_PIPELINE_ID"
+	tiSvcEp          = "HARNESS_TI_SERVICE_ENDPOINT"
+	tiSvcToken       = "HARNESS_TI_SERVICE_TOKEN"
+	logSvcEp         = "HARNESS_LOG_SERVICE_ENDPOINT"
+	logSvcToken      = "HARNESS_LOG_SERVICE_TOKEN"
+	logPrefixEnv     = "HARNESS_LOG_PREFIX"
+	serviceLogKeyEnv = "HARNESS_SERVICE_LOG_KEY"
+	secretList       = "HARNESS_SECRETS_LIST"
+	dSourceBranch    = "DRONE_SOURCE_BRANCH"
+	dRemoteUrl       = "DRONE_REMOTE_URL"
+	dCommitSha       = "DRONE_COMMIT_SHA"
+	wrkspcPath       = "HARNESS_WORKSPACE"
+	gitBin           = "git"
+	diffFilesCmd     = "%s diff --name-only HEAD HEAD@{1} -1"
 )
 
-func GetHTTPRemoteLogger(stepID string) (*logs.RemoteLogger, error) {
-	key, err := GetLogKey(stepID)
+// GetChangedFiles executes a shell command and retuns list of files changed in PR
+func GetChangedFiles(ctx context.Context, workspace string, log *zap.SugaredLogger) ([]string, error) {
+	cmdContextFactory := exec.OsCommandContextGracefulWithLog(log)
+	cmd := cmdContextFactory.CmdContext(ctx, "sh", "-c", fmt.Sprintf(diffFilesCmd, gitBin)).WithDir(workspace)
+	out, err := cmd.Output()
+
 	if err != nil {
 		return nil, err
 	}
+	return strings.Split(string(out), "\n"), nil
+}
+
+func GetSecrets() []logs.Secret {
+	res := []logs.Secret{}
+	secrets := os.Getenv(secretList)
+	if secrets == "" {
+		return res
+	}
+	secretList := strings.Split(secrets, ",")
+	for _, skey := range secretList {
+		sval := os.Getenv(skey)
+		if sval == "" {
+			fmt.Printf("could not find secret env variable for: %s\n", skey)
+			continue
+		}
+		// Mask all the secrets for now
+		res = append(res, logs.NewSecret(skey, sval, true))
+	}
+	return res
+}
+
+// GetHTTPRemoteLogger returns a remote HTTP logger for a key.
+func GetHTTPRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	client, err := GetRemoteHTTPClient()
 	if err != nil {
 		return nil, err
 	}
-	writer, err := logs.NewRemoteWriter(client, key)
+	rw, err := logs.NewRemoteWriter(client, key)
 	if err != nil {
 		return nil, err
 	}
-	rl, err := logs.NewRemoteLogger(writer)
+	rws := logs.NewReplacer(rw, GetSecrets()) // Remote writer with secrets masked
+	rl, err := logs.NewRemoteLogger(rws)
 	if err != nil {
 		return nil, err
 	}
 	return rl, nil
 }
 
-// GetRemoteHttpClient returns a new HTTP client to talk to log service using information available in env.
+// GetRemoteHTTPClient returns a new HTTP client to talk to log service using information available in env.
 func GetRemoteHTTPClient() (client.Client, error) {
 	l, ok := os.LookupEnv(logSvcEp)
 	if !ok {
@@ -59,34 +101,24 @@ func GetRemoteHTTPClient() (client.Client, error) {
 	return client.NewHTTPClient(l, account, token, false), nil
 }
 
-// GetLogKey returns a stringified key for log service using various identifiers
-func GetLogKey(stepID string) (string, error) {
-	account, err := GetAccountId()
-	if err != nil {
-		return "", err
+// GetLogKey returns a key for log service
+func GetLogKey(id string) (string, error) {
+	logPrefix, ok := os.LookupEnv(logPrefixEnv)
+	if !ok {
+		return "", fmt.Errorf("log prefix variable not set %s", logPrefixEnv)
 	}
-	org, err := GetOrgId()
-	if err != nil {
-		return "", err
+
+	return fmt.Sprintf("%s/%s", logPrefix, id), nil
+}
+
+// GetServiceLogKey returns log key for service
+func GetServiceLogKey() (string, error) {
+	logKey, ok := os.LookupEnv(serviceLogKeyEnv)
+	if !ok {
+		return "", fmt.Errorf("service log key variable not set %s", serviceLogKeyEnv)
 	}
-	project, err := GetProjectId()
-	if err != nil {
-		return "", err
-	}
-	pipeline, err := GetPipelineId()
-	if err != nil {
-		return "", err
-	}
-	build, err := GetBuildId()
-	if err != nil {
-		return "", err
-	}
-	stage, err := GetStageId()
-	if err != nil {
-		return "", err
-	}
-	key := fmt.Sprintf("%s/%s/%s/%s/%s/%s/%s", account, org, project, pipeline, build, stage, stepID)
-	return key, nil
+
+	return logKey, nil
 }
 
 // GetTiHTTPClient returns a client to talk to the TI service
@@ -152,4 +184,36 @@ func GetStageId() (string, error) {
 		return "", fmt.Errorf("stage ID environment variable not set %s", stageIDEnv)
 	}
 	return stage, nil
+}
+
+func GetSourceBranch() (string, error) {
+	stage, ok := os.LookupEnv(dSourceBranch)
+	if !ok {
+		return "", fmt.Errorf("source branch variable not set %s", dSourceBranch)
+	}
+	return stage, nil
+}
+
+func GetRepo() (string, error) {
+	stage, ok := os.LookupEnv(dRemoteUrl)
+	if !ok {
+		return "", fmt.Errorf("remote url variable not set %s", dRemoteUrl)
+	}
+	return stage, nil
+}
+
+func GetSha() (string, error) {
+	stage, ok := os.LookupEnv(dCommitSha)
+	if !ok {
+		return "", fmt.Errorf("commit sha variable not set %s", dCommitSha)
+	}
+	return stage, nil
+}
+
+func GetWrkspcPath() (string, error) {
+	path, ok := os.LookupEnv(wrkspcPath)
+	if !ok {
+		return "", fmt.Errorf("workspace path variable not set %s", wrkspcPath)
+	}
+	return path, nil
 }

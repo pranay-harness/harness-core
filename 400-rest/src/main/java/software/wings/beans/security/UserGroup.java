@@ -10,9 +10,9 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.notifications.NotificationReceiverInfo;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
@@ -26,6 +26,7 @@ import software.wings.beans.sso.SSOType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
 import java.util.List;
@@ -51,17 +52,30 @@ import org.mongodb.morphia.annotations.Transient;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-
-@CdIndex(name = "accountIdAndImportedByScim", fields = { @Field("accountId")
-                                                         , @Field("importedByScim") })
-@CdIndex(name = "accountAndMemberIds", fields = { @Field("accountId")
-                                                  , @Field("memberIds") })
-@CdIndex(name = "accountIdAndName", fields = { @Field("accountId")
-                                               , @Field("name") })
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess, NameAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountIdAndImportedByScim")
+                 .field(UserGroupKeys.accountId)
+                 .field(UserGroupKeys.importedByScim)
+                 .build(),
+            CompoundMongoIndex.builder()
+                .name("accountAndMemberIds")
+                .field(UserGroupKeys.accountId)
+                .field(UserGroupKeys.memberIds)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("accountIdAndName")
+                .field(UserGroupKeys.accountId)
+                .field(UserGroupKeys.name)
+                .build())
+        .build();
+  }
+
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";
   public static final String ACCOUNT_ID_KEY = "accountId";

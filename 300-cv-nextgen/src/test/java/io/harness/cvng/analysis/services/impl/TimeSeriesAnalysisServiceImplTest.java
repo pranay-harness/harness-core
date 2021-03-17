@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Mockito.mock;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.DeploymentTimeSeriesAnalysisDTO;
@@ -80,7 +80,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
+public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private LearningEngineTaskService learningEngineTaskService;
   @Inject private CVConfigService cvConfigService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
@@ -487,11 +487,11 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(task.getAnalysisType().name()).isEqualTo(LearningEngineTaskType.TIME_SERIES_LOAD_TEST.name());
     assertThat(task.getControlDataUrl())
         .isEqualTo("/cv/api/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595846766390&endTime=1595847666390");
-    assertThat(task.getBaselineStartTime()).isEqualTo(1595846766390L);
+            + "&startTime=1595846760000&endTime=1595847660000");
+    assertThat(task.getBaselineStartTime()).isEqualTo(1595846760000L);
     assertThat(task.getTestDataUrl())
         .isEqualTo("/cv/api/timeseries-analysis/time-series-data?verificationTaskId=" + verificationTaskId
-            + "&startTime=1595846766390&endTime=1595847306390");
+            + "&startTime=1595846760000&endTime=1595847306390");
     assertThat(task.getMetricTemplateUrl())
         .isEqualTo("/cv/api/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId="
             + verificationTaskId);
@@ -527,7 +527,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
     assertThat(task.getBaselineStartTime()).isNull();
     assertThat(task.getTestDataUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL + "/timeseries-analysis/time-series-data?verificationTaskId="
-            + verificationTaskId + "&startTime=1595846766390&endTime=1595847306390");
+            + verificationTaskId + "&startTime=1595846760000&endTime=1595847306390");
     assertThat(task.getMetricTemplateUrl())
         .isEqualTo(CVConstants.SERVICE_BASE_URL
             + "/timeseries-analysis/timeseries-serviceguard-metric-template?verificationTaskId=" + verificationTaskId);
@@ -646,7 +646,7 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTest {
   }
 
   private List<TimeSeriesRecord> getTimeSeriesRecords() throws Exception {
-    File file = new File(getClass().getClassLoader().getResource("timeseries/timeseriesRecords.json").getFile());
+    File file = new File(getResourceFilePath("timeseries/timeseriesRecords.json"));
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();

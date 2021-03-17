@@ -1,11 +1,9 @@
 package io.harness.connector.validator.scmValidators;
 
-import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 
 import static software.wings.beans.TaskType.NG_GIT_COMMAND;
 
-import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
@@ -17,38 +15,29 @@ import io.harness.delegate.beans.git.GitCommandExecutionResponse;
 import io.harness.delegate.beans.git.GitCommandParams;
 import io.harness.delegate.beans.git.GitCommandType;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.encryption.SecretRefData;
-import io.harness.errorhandling.NGErrorHelper;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
-import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
-import io.harness.ng.core.dto.secrets.SecretDTOV2;
-import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
-import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public abstract class AbstractGitConnectorValidator extends AbstractConnectorValidator {
-  @Inject NGErrorHelper ngErrorHelper;
-  @Inject SecretCrudService secretCrudService;
-  @Inject SshKeySpecDTOHelper sshKeySpecDTOHelper;
+  @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
 
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     GitConfigDTO gitConfig = (GitConfigDTO) connectorConfig;
-    SSHKeySpecDTO sshKeySpecDTO = getSSHKey(gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+    SSHKeySpecDTO sshKeySpecDTO =
+        gitConfigAuthenticationInfoHelper.getSSHKey(gitConfig, accountIdentifier, orgIdentifier, projectIdentifier);
     NGAccess ngAccess = getNgAccess(accountIdentifier, orgIdentifier, projectIdentifier);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails(gitConfig, sshKeySpecDTO, ngAccess);
+    List<EncryptedDataDetail> encryptedDataDetails =
+        gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfig, sshKeySpecDTO, ngAccess);
     return GitCommandParams.builder()
         .gitConfig(gitConfig)
         .sshKeySpecDTO(sshKeySpecDTO)
@@ -63,20 +52,6 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .build();
-  }
-
-  private List<EncryptedDataDetail> getEncryptedDataDetails(
-      GitConfigDTO gitConfig, SSHKeySpecDTO sshKeySpecDTO, NGAccess ngAccess) {
-    switch (gitConfig.getGitAuthType()) {
-      case HTTP:
-        return super.getEncryptionDetail(gitConfig.getGitAuth(), ngAccess.getAccountIdentifier(),
-            ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-      case SSH:
-        return sshKeySpecDTOHelper.getSSHKeyEncryptionDetails(sshKeySpecDTO, ngAccess);
-      default:
-        throw new UnknownEnumTypeException("Git Authentication Type",
-            gitConfig.getGitAuthType() == null ? null : gitConfig.getGitAuthType().getDisplayName());
-    }
   }
 
   public abstract GitConfigDTO getGitConfigFromConnectorConfig(ConnectorConfigDTO connectorConfig);
@@ -101,24 +76,6 @@ public abstract class AbstractGitConnectorValidator extends AbstractConnectorVal
         throw new UnknownEnumTypeException("Git Authentication Type",
             gitConfig.getGitAuthType() == null ? null : gitConfig.getGitAuthType().getDisplayName());
     }
-  }
-
-  private SSHKeySpecDTO getSSHKey(
-      GitConfigDTO gitConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (gitConfig.getGitAuthType() != SSH) {
-      return null;
-    }
-    GitSSHAuthenticationDTO gitAuthenticationDTO = (GitSSHAuthenticationDTO) gitConfig.getGitAuth();
-    SecretRefData sshKeyRef = gitAuthenticationDTO.getEncryptedSshKey();
-    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-        sshKeyRef.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier);
-    Optional<SecretResponseWrapper> secretResponseWrapper = secretCrudService.get(identifierRef.getAccountIdentifier(),
-        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
-    if (!secretResponseWrapper.isPresent()) {
-      throw new InvalidRequestException("No secret configured with identifier: " + sshKeyRef);
-    }
-    SecretDTOV2 secret = secretResponseWrapper.get().getSecret();
-    return (SSHKeySpecDTO) secret.getSpec();
   }
 
   public ConnectorValidationResult buildConnectorValidationResult(

@@ -1,7 +1,6 @@
 package io.harness.serializer;
 
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.serializer.kryo.ApiServiceBeansKryoRegister;
 import io.harness.serializer.kryo.NGTriggerKryoRegistrar;
 import io.harness.serializer.kryo.ProjectAndOrgKryoRegistrar;
 import io.harness.serializer.morphia.NGTriggerMorphiaRegistrar;
@@ -16,7 +15,7 @@ public class NGTriggerRegistrars {
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .add(ProjectAndOrgKryoRegistrar.class)
           .add(NGTriggerKryoRegistrar.class)
-          .add(ApiServiceBeansKryoRegister.class)
+          .addAll(ApiServiceBeansRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .build();
 

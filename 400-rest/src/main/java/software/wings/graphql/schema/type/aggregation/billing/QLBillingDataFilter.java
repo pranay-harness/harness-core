@@ -1,10 +1,13 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.Filter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 
 import java.util.HashSet;
@@ -16,6 +19,7 @@ import lombok.Value;
 @Value
 @Builder
 @ToString
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLBillingDataFilter implements EntityFilter {
   private QLIdFilter application;
   private QLIdFilter service;
@@ -42,6 +46,8 @@ public class QLBillingDataFilter implements EntityFilter {
   // For budget alerts
   private QLTimeFilter alertTime;
   private QLIdFilter view;
+
+  private QLNumberFilter storageUtilizationValue;
 
   public static Set<QLBillingDataFilterType> getFilterTypes(QLBillingDataFilter filter) {
     Set<QLBillingDataFilterType> filterTypes = new HashSet<>();
@@ -117,6 +123,9 @@ public class QLBillingDataFilter implements EntityFilter {
     if (filter.getView() != null) {
       filterTypes.add(QLBillingDataFilterType.View);
     }
+    if (filter.getStorageUtilizationValue() != null) {
+      filterTypes.add(QLBillingDataFilterType.StorageUtilizationValue);
+    }
     return filterTypes;
   }
 
@@ -170,6 +179,8 @@ public class QLBillingDataFilter implements EntityFilter {
         return filter.getInstanceName();
       case View:
         return filter.getView();
+      case StorageUtilizationValue:
+        return filter.getStorageUtilizationValue();
       default:
         throw new InvalidRequestException("Unsupported type " + type);
     }

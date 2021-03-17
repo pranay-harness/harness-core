@@ -10,6 +10,7 @@ public enum AuthorizationServiceHeader {
   ADMIN_PORTAL("AdminPortal"),
   NOTIFICATION_SERVICE("NotificationService"),
   PIPELINE_SERVICE("PipelineService"),
+  ACCESS_CONTROL_SERVICE("accessControlService"),
   DEFAULT("Default");
 
   private final String serviceId;

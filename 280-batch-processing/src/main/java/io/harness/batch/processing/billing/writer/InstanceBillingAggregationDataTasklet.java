@@ -33,10 +33,17 @@ public class InstanceBillingAggregationDataTasklet implements Tasklet {
     BatchJobType batchJobType =
         CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
 
+    BatchJobType sourceBatchJobType = batchJobType == BatchJobType.INSTANCE_BILLING_AGGREGATION
+        ? BatchJobType.INSTANCE_BILLING
+        : BatchJobType.INSTANCE_BILLING_HOURLY;
+
     // since we have not created unique index, we have to delete existing data to handle batch job re-run for a
     // particular (starttime, endtime).
-    if (!billingDataService.cleanPreAggBillingData(accountId, startTime, endTime)
-        || !billingDataService.generatePreAggBillingData(accountId, startTime, endTime)) {
+    if (!billingDataService.cleanPreAggBillingData(accountId, startTime, endTime, batchJobType)
+        || !billingDataService.generatePreAggBillingData(
+            accountId, startTime, endTime, batchJobType, sourceBatchJobType)
+        || !billingDataService.generatePreAggBillingDataWithId(
+            accountId, startTime, endTime, batchJobType, sourceBatchJobType)) {
       log.error("BatchJobType:{} execution was un-successful for accountId:{} startTime:{} endTime:{}",
           batchJobType.name(), accountId, startTime, endTime);
       throw new Exception(format("BatchJobType:%s failed for accountId:%s startTime:%s endTime:%s", batchJobType.name(),

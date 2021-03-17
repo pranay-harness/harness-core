@@ -57,7 +57,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@Ignore("Will enable after setting up listeners")
 public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Inject private Injector injector;
   @Inject private AdviserRegistry adviserRegistry;
@@ -91,6 +90,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldStartOneNodeExecution() {
     String testNodeId = generateUuid();
     Plan oneNodePlan =
@@ -120,6 +120,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldStartSyncExecution() {
     String testStartNodeId = generateUuid();
     Plan oneNodePlan =
@@ -149,6 +150,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldStartAsyncExecution() {
     String testStartNodeId = generateUuid();
     String testWaitNodeId = generateUuid();
@@ -201,6 +203,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldThrowInvalidRequestException() {
     final String exceptionStartMessage = "No node found with Id";
     Plan oneNodePlan = Plan.builder().startingNodeId(generateUuid()).build();
@@ -213,6 +216,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
+  @Ignore("Will enable after setting up listeners")
   public void shouldRerunExecution() {
     String testNodeId = generateUuid();
     Plan oneNodePlan =

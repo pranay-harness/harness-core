@@ -15,6 +15,8 @@ public class CategoryRisksDTO {
 
   List<CategoryRisk> categoryRisks;
 
+  @Builder.Default boolean hasConfigsSetup = true;
+
   @Data
   @Builder
   public static class CategoryRisk {

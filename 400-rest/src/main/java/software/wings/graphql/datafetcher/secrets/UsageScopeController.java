@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.secrets;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.graphql.datafetcher.application.AppFilterController;
@@ -22,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UsageScopeController {
   @Inject EnvFilterController envFilterController;
   @Inject AppFilterController appFilterController;

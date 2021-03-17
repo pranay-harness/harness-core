@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -455,5 +456,23 @@ public class WorkflowExecutionServiceHelper {
 
   private static boolean isNotNewVar(String defaultValuePresent) {
     return !(matchesVariablePattern(defaultValuePresent) && !defaultValuePresent.contains("."));
+  }
+
+  public List<String> getInfraMappings(Workflow workflow, Map<String, String> workflowVariables) {
+    if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
+      return new ArrayList<>();
+    }
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
+    return orchestrationWorkflow.getWorkflowPhases()
+        .stream()
+        .map(phase
+            -> infrastructureMappingService.getInfraMappingsByServiceAndInfraDefinitionIds(workflow.getAppId(),
+                workflowService.getResolvedServiceIdFromPhase(phase, workflowVariables),
+                workflowService.getResolvedInfraDefinitionIdFromPhase(phase, workflowVariables)))
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 }

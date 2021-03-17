@@ -5,6 +5,8 @@ import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -12,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -20,12 +23,15 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("NexusConnector")
 public class NexusConnectorDTO extends ConnectorConfigDTO {
-  @NotNull String nexusServerUrl;
+  @NotNull @NotBlank String nexusServerUrl;
   @NotNull String version;
   @Valid NexusAuthenticationDTO auth;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
-    return auth.getCredentials();
+  public List<DecryptableEntity> getDecryptableEntities() {
+    if (auth.getAuthType() == NexusAuthType.ANONYMOUS) {
+      return null;
+    }
+    return Collections.singletonList(auth.getCredentials());
   }
 }

@@ -246,7 +246,11 @@ public class Event {
     /**
      * Delegate Approval type.
      */
-    DELEGATE_APPROVAL
+    DELEGATE_APPROVAL,
+    /**
+     * for non-whitelisted users login attempt
+     */
+    NON_WHITELISTED
   }
 
   /**

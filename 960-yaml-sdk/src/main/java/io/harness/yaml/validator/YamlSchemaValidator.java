@@ -1,34 +1,38 @@
 package io.harness.yaml.validator;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
-import io.harness.yaml.schema.YamlSchemaRoot;
-import io.harness.yaml.utils.YamlSchemaUtils;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
 import com.networknt.schema.ValidationMessage;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 
 @Singleton
 @Slf4j
 public class YamlSchemaValidator {
   public static Map<EntityType, JsonSchema> schemas = new HashMap<>();
-  ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+  ObjectMapper mapper;
+  List<YamlSchemaRootClass> yamlSchemaRootClasses;
+
+  @Inject
+  public YamlSchemaValidator(List<YamlSchemaRootClass> yamlSchemaRootClasses) {
+    mapper = new ObjectMapper(new YAMLFactory());
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
+  }
 
   /**
    * @param yaml       The yaml String which is to be validated against schema of entity.
@@ -58,27 +62,23 @@ public class YamlSchemaValidator {
     Set<ValidationMessage> validateMsg = schema.validate(jsonNode);
     return validateMsg.stream().map(ValidationMessage::getMessage).collect(Collectors.toSet());
   }
-  /**
-   * Finds all classes with {@link YamlSchemaRoot} in classpath and store its schema in schemas map.
-   */
-  public void populateSchemaInStaticMap(String schemaBasePath, Set<Class<?>> rootClasses) {
-    if (isNotEmpty(rootClasses)) {
-      JsonSchemaFactory factory =
-          JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();
-      rootClasses.forEach(rootClass -> {
-        final EntityType entityType = rootClass.getAnnotation(YamlSchemaRoot.class).value();
-        final String schemaPathFromEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);
-        try {
-          final String schema =
-              IOUtils.resourceToString(schemaPathFromEntityType, StandardCharsets.UTF_8, rootClass.getClassLoader());
-          if (isNotEmpty(schema)) {
-            final JsonSchema jsonSchema = factory.getSchema(schema);
-            schemas.put(entityType, jsonSchema);
-          }
-        } catch (Exception e) {
-          throw new InvalidRequestException(String.format("Couldn't load schema for entity: %s", entityType), e);
-        }
-      });
+
+  public void populateSchemaInStaticMap(JsonNode schema, EntityType entityType) {
+    JsonSchemaFactory factory =
+        JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();
+    try {
+      final JsonSchema jsonSchema = factory.getSchema(schema);
+      schemas.put(entityType, jsonSchema);
+    } catch (Exception e) {
+      throw new InvalidRequestException(String.format("Couldn't parse schema for entity: %s", entityType), e);
     }
+  }
+
+  /**
+   * Initialises a static map which will help in fast validation against a schema.
+   *
+   */
+  public void initializeValidatorWithSchema(Map<EntityType, JsonNode> schemas) {
+    schemas.forEach((entityType, jsonNode) -> populateSchemaInStaticMap(jsonNode, entityType));
   }
 }

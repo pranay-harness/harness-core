@@ -1,0 +1,898 @@
+{
+  "type": "object",
+  "properties": {
+    "pipeline": {
+      "readOnly": true,
+      "$ref": "#/definitions/PipelineInfoConfig"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AbortFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Abort"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BarrierInfoConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "name"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BranchBuildSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BuildSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "branch"
+          ],
+          "properties": {
+            "branch": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Build": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "branch",
+            "tag"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "branch"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BranchBuildSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "tag"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TagBuildSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BuildSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CIProperties": {
+      "type": "object",
+      "properties": {
+        "codebase": {
+          "$ref": "#/definitions/CodeBase"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CodeBase": {
+      "type": "object",
+      "required": [
+        "build",
+        "connectorRef"
+      ],
+      "properties": {
+        "build": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Build"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "connectorRef": {
+          "type": "string"
+        },
+        "repoName": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FailureStrategyActionConfig": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Ignore",
+            "Retry",
+            "MarkAsSuccess",
+            "Abort",
+            "StageRollback",
+            "StepGroupRollback",
+            "ManualIntervention"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FailureStrategyConfig": {
+      "type": "object",
+      "required": [
+        "onFailure"
+      ],
+      "properties": {
+        "onFailure": {
+          "$ref": "#/definitions/OnFailureConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FlowControlConfig": {
+      "type": "object",
+      "properties": {
+        "barriers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BarrierInfoConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "IgnoreFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Ignore"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManualFailureSpecConfig": {
+      "type": "object",
+      "required": [
+        "onTimeout",
+        "timeout"
+      ],
+      "properties": {
+        "onTimeout": {
+          "$ref": "#/definitions/OnTimeoutConfig"
+        },
+        "timeout": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManualInterventionFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "readOnly": true,
+              "$ref": "#/definitions/ManualFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "ManualIntervention"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "MarkAsSuccessFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "MarkAsSuccess"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGProperties": {
+      "type": "object",
+      "properties": {
+        "ci": {
+          "$ref": "#/definitions/CIProperties"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGVariable": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "String",
+            "Number",
+            "Secret"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NotificationChannelWrapper": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Email"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsEmailChannel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "MsTeams"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsMSTeamChannel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "PagerDuty"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsPagerDutyChannel"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Slack"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PmsSlackChannel"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "NotificationRules": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notificationMethod": {
+          "$ref": "#/definitions/NotificationChannelWrapper"
+        },
+        "pipelineEvents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PipelineEvent"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OnFailureConfig": {
+      "type": "object",
+      "required": [
+        "action",
+        "errors"
+      ],
+      "properties": {
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/ManualInterventionFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/MarkAsSuccessFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/RetryFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StageRollbackFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StepGroupFailureActionConfig"
+            }
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OnRetryFailureConfig": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/ManualInterventionFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/MarkAsSuccessFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/RetryFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StageRollbackFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StepGroupFailureActionConfig"
+            }
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OnTimeoutConfig": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/ManualInterventionFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/MarkAsSuccessFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/RetryFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StageRollbackFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StepGroupFailureActionConfig"
+            }
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParallelStageElementConfig": {
+      "type": "object",
+      "required": [
+        "sections"
+      ],
+      "properties": {
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StageElementWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PipelineConfig": {
+      "type": "object",
+      "properties": {
+        "pipeline": {
+          "readOnly": true,
+          "$ref": "#/definitions/PipelineInfoConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PipelineEvent": {
+      "type": "object",
+      "properties": {
+        "forStages": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "AllEvents",
+            "PipelineStart",
+            "PipelineSuccess",
+            "PipelineFailed",
+            "PipelinePaused",
+            "StageSuccess",
+            "StageFailed",
+            "StageStart",
+            "StepFailed"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PipelineInfoConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "name"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "flowControl": {
+          "$ref": "#/definitions/FlowControlConfig"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "notificationRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NotificationRules"
+          }
+        },
+        "properties": {
+          "$ref": "#/definitions/NGProperties"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/StageElementWrapperConfig"
+          }
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariable"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsEmailChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "recipients": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsMSTeamChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "msTeamKeys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsNotificationChannel": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsPagerDutyChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "integrationKey": {
+              "type": "string"
+            },
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PmsSlackChannel": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PmsNotificationChannel"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "userGroups": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "webhookUrl": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RetryFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "readOnly": true,
+              "$ref": "#/definitions/RetryFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Retry"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RetryFailureSpecConfig": {
+      "type": "object",
+      "required": [
+        "onRetryFailure",
+        "retryCount",
+        "retryIntervals"
+      ],
+      "properties": {
+        "onRetryFailure": {
+          "$ref": "#/definitions/OnRetryFailureConfig"
+        },
+        "retryCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "retryIntervals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StageElementConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "skipCondition": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/definitions/StageInfoConfig"
+        },
+        "type": {
+          "type": "string"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariable"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StageElementWrapperConfig": {
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "$ref": "#/definitions/ParallelStageElementConfig"
+        },
+        "stage": {
+          "$ref": "#/definitions/StageElementConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StageInfoConfig": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StageRollbackFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StageRollback"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepGroupFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StepGroupRollback"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TagBuildSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BuildSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "tag"
+          ],
+          "properties": {
+            "tag": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

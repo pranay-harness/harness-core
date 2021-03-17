@@ -9,7 +9,7 @@ import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.integrationstage.IntegrationPipelineExecutionModifier;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.rule.Owner;
@@ -22,7 +22,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class IntegrationPipelineExecutionModifierTest extends CIExecutionTest {
+public class IntegrationPipelineExecutionModifierTest extends CIExecutionTestBase {
   @Inject IntegrationPipelineExecutionModifier integrationPipelineExecutionModifier;
   private ExecutionPlanCreationContextImpl executionPlanCreationContext =
       ExecutionPlanCreationContextImpl.builder().build();

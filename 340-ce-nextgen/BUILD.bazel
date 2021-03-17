@@ -1,0 +1,52 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "//930-ng-core-clients:module",
+    "//940-feature-flag:module",
+    "//960-persistence:module",
+    "//970-ng-commons:module",
+    "//980-commons:module",
+    "@maven//:com_google_inject_guice",
+    "@maven//:io_swagger_swagger_annotations",
+    "@maven//:javax_ws_rs_javax_ws_rs_api",
+    "@maven//:io_dropwizard_dropwizard_core",
+    "@maven//:ru_vyarus_guice_validator",
+    "//:lombok",
+]
+
+java_binary(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    data = ["//:resource"],
+    main_class = "io.harness.ceng.CENextGenApplication",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = shared_dependencies,
+)
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies + [
+        ":module",
+        "//990-commons-test:module",
+        "@maven//:junit_junit",
+        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_mockito_mockito_core",
+    ],
+)
+
+run_tests()
+
+checkstyle()
+
+pmd()

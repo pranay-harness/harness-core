@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
@@ -26,6 +28,7 @@ import org.zeroturnaround.exec.ProcessExecutor;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._960_API_SERVICES)
 public class TerraformConfigInspectClientImpl implements TerraformConfigInspectClient {
   private static final String jsonArg = "--json";
 

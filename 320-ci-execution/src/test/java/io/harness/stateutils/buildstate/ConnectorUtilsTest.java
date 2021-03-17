@@ -24,7 +24,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -49,7 +49,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class ConnectorUtilsTest extends CIExecutionTest {
+public class ConnectorUtilsTest extends CIExecutionTestBase {
   @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 
   @Mock private ConnectorResourceClient connectorResourceClient;
@@ -57,18 +57,21 @@ public class ConnectorUtilsTest extends CIExecutionTest {
   @InjectMocks ConnectorUtils connectorUtils;
 
   private NGAccess ngAccess;
-  private ConnectorDTO gitConnectorDto;
+  private ConnectorDTO gitHubConnectorDto;
   private ConnectorDTO dockerConnectorDto;
   private ConnectorDTO k8sConnectorDto;
   private ConnectorDTO k8sConnectorFromDelegate;
+  private ConnectorDTO awsCodeCommitConnectorDto;
+
   private static final String PROJ_ID = "projectId";
   private static final String ORG_ID = "orgId";
   private static final String ACCOUNT_ID = "accountId";
 
-  private static final String connectorId01 = "gitConnector";
+  private static final String connectorId01 = "gitHubConnector";
   private static final String connectorId02 = "dockerConnector";
   private static final String connectorId03 = "k8sConnector";
   private static final String connectorId04 = "k8sConnectorFromDelegate";
+  private static final String connectorId05 = "awsCodeCommitConnector";
   private static final String unsupportedConnectorId = "k8sConnectorFromDelegate";
   private static final Set<String> connectorIdSet =
       new HashSet<>(Arrays.asList(connectorId01, connectorId02, connectorId03));
@@ -77,19 +80,19 @@ public class ConnectorUtilsTest extends CIExecutionTest {
   public void setUp() {
     ngAccess =
         BaseNGAccess.builder().projectIdentifier(PROJ_ID).orgIdentifier(ORG_ID).accountIdentifier(ACCOUNT_ID).build();
-    gitConnectorDto = ciExecutionPlanTestHelper.getGitConnectorDTO();
+    gitHubConnectorDto = ciExecutionPlanTestHelper.getGitHubConnectorDTO();
     dockerConnectorDto = ciExecutionPlanTestHelper.getDockerConnectorDTO();
     k8sConnectorDto = ciExecutionPlanTestHelper.getK8sConnectorDTO();
     k8sConnectorFromDelegate = ciExecutionPlanTestHelper.getK8sConnectorFromDelegateDTO();
+    awsCodeCommitConnectorDto = ciExecutionPlanTestHelper.getAwsCodeCommitConnectorDTO();
   }
 
   @Test
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
-  @Ignore("Recreate test object after pms integration")
-  public void testGetGitConnector() throws IOException {
+  public void testGetGitHubConnector() throws IOException {
     Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
-    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(gitConnectorDto));
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(gitHubConnectorDto));
     when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
 
     when(connectorResourceClient.get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
@@ -99,12 +102,12 @@ public class ConnectorUtilsTest extends CIExecutionTest {
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId01);
     assertThat(connectorDetails.getConnectorConfig())
-        .isEqualTo(gitConnectorDto.getConnectorInfo().getConnectorConfig());
-    assertThat(connectorDetails.getConnectorType()).isEqualTo(gitConnectorDto.getConnectorInfo().getConnectorType());
-    assertThat(connectorDetails.getIdentifier()).isEqualTo(gitConnectorDto.getConnectorInfo().getIdentifier());
-    assertThat(connectorDetails.getOrgIdentifier()).isEqualTo(gitConnectorDto.getConnectorInfo().getOrgIdentifier());
+        .isEqualTo(gitHubConnectorDto.getConnectorInfo().getConnectorConfig());
+    assertThat(connectorDetails.getConnectorType()).isEqualTo(gitHubConnectorDto.getConnectorInfo().getConnectorType());
+    assertThat(connectorDetails.getIdentifier()).isEqualTo(gitHubConnectorDto.getConnectorInfo().getIdentifier());
+    assertThat(connectorDetails.getOrgIdentifier()).isEqualTo(gitHubConnectorDto.getConnectorInfo().getOrgIdentifier());
     assertThat(connectorDetails.getProjectIdentifier())
-        .isEqualTo(gitConnectorDto.getConnectorInfo().getProjectIdentifier());
+        .isEqualTo(gitHubConnectorDto.getConnectorInfo().getProjectIdentifier());
     verify(connectorResourceClient, times(1)).get(eq(connectorId01), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
     verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
   }
@@ -201,7 +204,7 @@ public class ConnectorUtilsTest extends CIExecutionTest {
     Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall03 = mock(Call.class);
 
     when(getConnectorResourceCall01.execute())
-        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(gitConnectorDto))));
+        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(gitHubConnectorDto))));
     when(getConnectorResourceCall02.execute())
         .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(dockerConnectorDto))));
     when(getConnectorResourceCall03.execute())
@@ -267,5 +270,33 @@ public class ConnectorUtilsTest extends CIExecutionTest {
 
     assertThatThrownBy(() -> connectorUtils.getConnectorDetails(ngAccess, unsupportedConnectorId))
         .isInstanceOf(InvalidArgumentsException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEKSANDAR)
+  @Category(UnitTests.class)
+  public void testGetAwsCodeCommitConnectorDetails() throws IOException {
+    Call<ResponseDTO<Optional<ConnectorDTO>>> getConnectorResourceCall = mock(Call.class);
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(awsCodeCommitConnectorDto));
+    when(getConnectorResourceCall.execute()).thenReturn(Response.success(responseDTO));
+
+    when(connectorResourceClient.get(eq(connectorId05), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID)))
+        .thenReturn(getConnectorResourceCall);
+    when(secretManagerClientService.getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class)))
+        .thenReturn(Collections.singletonList(EncryptedDataDetail.builder().build()));
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(ngAccess, connectorId05);
+    assertThat(connectorDetails.getConnectorConfig())
+        .isEqualTo(awsCodeCommitConnectorDto.getConnectorInfo().getConnectorConfig());
+    assertThat(connectorDetails.getConnectorType())
+        .isEqualTo(awsCodeCommitConnectorDto.getConnectorInfo().getConnectorType());
+    assertThat(connectorDetails.getIdentifier())
+        .isEqualTo(awsCodeCommitConnectorDto.getConnectorInfo().getIdentifier());
+    assertThat(connectorDetails.getOrgIdentifier())
+        .isEqualTo(awsCodeCommitConnectorDto.getConnectorInfo().getOrgIdentifier());
+    assertThat(connectorDetails.getProjectIdentifier())
+        .isEqualTo(awsCodeCommitConnectorDto.getConnectorInfo().getProjectIdentifier());
+    verify(connectorResourceClient, times(1)).get(eq(connectorId05), eq(ACCOUNT_ID), eq(ORG_ID), eq(PROJ_ID));
+    verify(secretManagerClientService, times(1)).getEncryptionDetails(eq(ngAccess), any(GitAuthenticationDTO.class));
   }
 }

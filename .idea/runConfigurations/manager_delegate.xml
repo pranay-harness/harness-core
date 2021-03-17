@@ -1,7 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="manager-delegate" type="Multirun" factoryName="Multirun" separateTabs="false" startOneByOne="false" markFailedProcess="true" hideSuccessProcess="true" delayTime="0">
-    <runConfiguration name="WingsApp" type="Application" />
-    <runConfiguration name="DelegateApp" type="Application" />
-    <method v="2" />
-  </configuration>
-</component>

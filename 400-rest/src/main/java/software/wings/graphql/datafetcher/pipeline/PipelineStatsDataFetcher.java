@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.pipeline;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.EntityType;
@@ -24,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class PipelineStatsDataFetcher
     extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLPipelineFilter, QLPipelineAggregation,
         QLNoOpSortCriteria, QLPipelineTagType, QLPipelineTagAggregation, QLPipelineEntityAggregation> {

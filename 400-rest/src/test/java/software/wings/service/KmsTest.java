@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EnvironmentType;
@@ -113,7 +115,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
-import software.wings.service.impl.UsageRestrictionsServiceImplTest;
+import software.wings.service.impl.UsageRestrictionsServiceImplTestBase;
 import software.wings.service.impl.security.GlobalEncryptDecryptClient;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -276,6 +278,7 @@ public class KmsTest extends WingsBaseTest {
     FieldUtils.writeField(secretManager, "secretService", secretService, true);
     userId = wingsPersistence.save(user);
     UserThreadLocal.set(user);
+    testUserProvider.setActiveUser(EmbeddedUser.builder().uuid(user.getUuid()).name(userName).email(userEmail).build());
 
     // Add current user to harness user group so that save-global-kms operation can succeed
     HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder().memberIds(Sets.newHashSet(userId)).build();
@@ -1187,7 +1190,7 @@ public class KmsTest extends WingsBaseTest {
         SecretText.builder().name(secretName).kmsId(kmsId).value(secretValue).scopedToAccount(true).build();
     String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
-    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
+    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTestBase.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
 
     User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();
@@ -1247,7 +1250,7 @@ public class KmsTest extends WingsBaseTest {
             .build();
     String secretId = secretManager.saveSecretText(accountId, secretText, true);
 
-    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
+    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTestBase.getUserPermissionInfo(
         ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE, Action.CREATE, Action.READ));
 
     User user = User.Builder.anUser().name(USER_NAME).uuid(USER_ID).build();

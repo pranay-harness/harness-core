@@ -1,6 +1,8 @@
 package software.wings.service.intfc;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -15,6 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.Future;
 import javax.ws.rs.QueryParam;
 
+@TargetModule(Module._470_ALERT)
 public interface AlertService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 
@@ -23,6 +26,9 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
   Future openAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 
   Future openAlertWithTTL(String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil);
+
+  Future closeExistingAlertsAndOpenNew(
+      String accountId, String appId, AlertType alertType, AlertData alertData, Date validUntil);
 
   void closeAlert(String accountId, String appId, AlertType alertType, AlertData alertData);
 

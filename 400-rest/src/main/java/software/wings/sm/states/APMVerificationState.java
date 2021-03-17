@@ -399,6 +399,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .accountId(accountId)
             .strategy(getComparisonStrategy())
             .initialDelaySeconds(getDelaySeconds(initialAnalysisDelay))
+            .validateCert(accountService.isCertValidationRequired(accountId))
             .build();
 
     analysisContext.getTestNodes().put(TEST_HOST_NAME, DEFAULT_GROUP_NAME);

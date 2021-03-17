@@ -42,21 +42,30 @@ public class BillingDataServiceImpl {
   static final String UPDATE_STATEMENT =
       "UPDATE %s SET ACTUALIDLECOST = ?, CPUACTUALIDLECOST = ?, MEMORYACTUALIDLECOST = ?, UNALLOCATEDCOST = ?, CPUUNALLOCATEDCOST = ?, MEMORYUNALLOCATEDCOST = ? WHERE ACCOUNTID = ? AND CLUSTERID = ? AND INSTANCEID = ? AND STARTTIME = ?";
 
-  static final String PURGE_DATA_QUERY = "SELECT drop_chunks(interval '16 days', 'billing_data_hourly')";
-
   static final String PREAGG_QUERY_PREFIX =
       "INSERT INTO %s (MEMORYACTUALIDLECOST, CPUACTUALIDLECOST, STARTTIME, ENDTIME, BILLINGAMOUNT, ACTUALIDLECOST, UNALLOCATEDCOST, SYSTEMCOST, STORAGEACTUALIDLECOST, STORAGEUNALLOCATEDCOST, STORAGEUTILIZATIONVALUE, STORAGEREQUEST, STORAGECOST, MEMORYUNALLOCATEDCOST, CPUUNALLOCATEDCOST, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME) ";
+
+  static final String PREAGG_QUERY_PREFIX_WITH_ID =
+      "INSERT INTO %s (MEMORYACTUALIDLECOST, CPUACTUALIDLECOST, STARTTIME, ENDTIME, BILLINGAMOUNT, ACTUALIDLECOST, UNALLOCATEDCOST, SYSTEMCOST, STORAGEACTUALIDLECOST, STORAGEUNALLOCATEDCOST, STORAGEUTILIZATIONVALUE, STORAGEREQUEST, STORAGECOST, MEMORYUNALLOCATEDCOST, CPUUNALLOCATEDCOST, CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID) ";
+
   static final String PREAGG_QUERY_SUFFIX =
-      "SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, SUM(STORAGEACTUALIDLECOST) as STORAGEACTUALIDLECOST, SUM(STORAGEUNALLOCATEDCOST) as STORAGEUNALLOCATEDCOST, MAX(STORAGEUTILIZATIONVALUE) as STORAGEUTILIZATIONVALUE, MAX(STORAGEREQUEST) as STORAGEREQUEST, SUM(STORAGECOST) as STORAGECOST, SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME from %s where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?) group by ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME ;";
+      "SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, SUM(STORAGEACTUALIDLECOST) as STORAGEACTUALIDLECOST, SUM(STORAGEUNALLOCATEDCOST) as STORAGEUNALLOCATEDCOST, MAX(STORAGEUTILIZATIONVALUE) as STORAGEUTILIZATIONVALUE, MAX(STORAGEREQUEST) as STORAGEREQUEST, SUM(STORAGECOST) as STORAGECOST, SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME from %s where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?) group by ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME ";
+
+  static final String PREAGG_QUERY_SUFFIX_WITH_ID =
+      "SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, SUM(STORAGEACTUALIDLECOST) as STORAGEACTUALIDLECOST, SUM(STORAGEUNALLOCATEDCOST) as STORAGEUNALLOCATEDCOST, MAX(STORAGEUTILIZATIONVALUE) as STORAGEUTILIZATIONVALUE, MAX(STORAGEREQUEST) as STORAGEREQUEST, SUM(STORAGECOST) as STORAGECOST, SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID from %s where ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?) group by ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID ";
+
   static final String DELETE_EXISTING_PREAGG =
-      "DELETE FROM %s WHERE ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?) ;";
+      "DELETE FROM %s WHERE ACCOUNTID = ? and STARTTIME >= ? and STARTTIME < ? and INSTANCETYPE IN (?, ?, ?, ?, ?, ?, ?) ;";
 
   private static final String READER_QUERY =
       "SELECT * FROM BILLING_DATA WHERE ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' OFFSET %s LIMIT %s;";
 
   private static final List<InstanceType> PREAGG_INSTANCES =
-      ImmutableList.of(InstanceType.K8S_POD, InstanceType.K8S_NODE, InstanceType.ECS_CONTAINER_INSTANCE,
-          InstanceType.ECS_TASK_EC2, InstanceType.ECS_TASK_FARGATE, InstanceType.K8S_PV);
+      ImmutableList.of(InstanceType.K8S_POD, InstanceType.ECS_CONTAINER_INSTANCE, InstanceType.ECS_TASK_EC2,
+          InstanceType.ECS_TASK_FARGATE, InstanceType.K8S_POD_FARGATE);
+
+  private static final List<InstanceType> PREAGG_INSTANCES_WITH_ID =
+      ImmutableList.of(InstanceType.K8S_NODE, InstanceType.K8S_PV);
 
   public boolean create(List<InstanceBillingData> instanceBillingDataList, BatchJobType batchJobType) {
     boolean successfulInsert = false;
@@ -88,25 +97,6 @@ public class BillingDataServiceImpl {
       log.warn("Not processing instance billing data:[{}]", instanceBillingDataList.size());
     }
     return successfulInsert;
-  }
-
-  public boolean purgeOldHourlyBillingData() {
-    boolean purgedHourlyBillingData = false;
-    log.info("Purging old hourly billing data !!");
-    if (timeScaleDBService.isValid()) {
-      int retryCount = 0;
-      while (retryCount < MAX_RETRY_COUNT && !purgedHourlyBillingData) {
-        try (Connection connection = timeScaleDBService.getDBConnection();
-             Statement statement = connection.createStatement()) {
-          statement.execute(PURGE_DATA_QUERY);
-          purgedHourlyBillingData = true;
-        } catch (SQLException e) {
-          log.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
-          retryCount++;
-        }
-      }
-    }
-    return purgedHourlyBillingData;
   }
 
   public boolean update(ActualIdleCostWriterData actualIdleCostWriterData, BatchJobType batchJobType) {
@@ -309,27 +299,32 @@ public class BillingDataServiceImpl {
     return null;
   }
 
-  private void updateAggregationStatement(
+  private int updateAggregationStatement(
       PreparedStatement statement, String accountId, Instant startTime, Instant endTime) throws SQLException {
     int i = 0;
     statement.setString(++i, accountId);
     statement.setTimestamp(++i, new Timestamp(startTime.toEpochMilli()), utils.getDefaultCalendar());
     statement.setTimestamp(++i, new Timestamp(endTime.toEpochMilli()), utils.getDefaultCalendar());
-    for (InstanceType instanceType : PREAGG_INSTANCES) {
-      statement.setString(++i, instanceType.name());
-    }
+    return i;
   }
 
   public boolean cleanPreAggBillingData(
-      @NotNull String accountId, @NotNull Instant startTime, @NotNull Instant endTime) {
+      @NotNull String accountId, @NotNull Instant startTime, @NotNull Instant endTime, BatchJobType batchJobType) {
     boolean successfulUpdate = false;
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
       while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
-             PreparedStatement statement = dbConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
-                 DELETE_EXISTING_PREAGG, BatchJobType.INSTANCE_BILLING_AGGREGATION))) {
-          updateAggregationStatement(statement, accountId, startTime, endTime);
+             PreparedStatement statement = dbConnection.prepareStatement(
+                 BillingDataTableNameProvider.replaceTableName(DELETE_EXISTING_PREAGG, batchJobType))) {
+          int i = updateAggregationStatement(statement, accountId, startTime, endTime);
+
+          for (InstanceType instanceType : PREAGG_INSTANCES) {
+            statement.setString(++i, instanceType.name());
+          }
+          for (InstanceType instanceType : PREAGG_INSTANCES_WITH_ID) {
+            statement.setString(++i, instanceType.name());
+          }
 
           log.debug("Deleting existing aggregated data: {} ", statement);
           statement.execute();
@@ -346,19 +341,20 @@ public class BillingDataServiceImpl {
     return successfulUpdate;
   }
 
-  public boolean generatePreAggBillingData(
-      @NotNull String accountId, @NotNull Instant startTime, @NotNull Instant endTime) {
+  public boolean generatePreAggBillingData(@NotNull String accountId, @NotNull Instant startTime,
+      @NotNull Instant endTime, BatchJobType toBatchJobType, BatchJobType sourceBatchJobType) {
     boolean successfulUpdate = false;
     if (timeScaleDBService.isValid()) {
       int retryCount = 0;
-      String updateStatement =
-          BillingDataTableNameProvider.replaceTableName(PREAGG_QUERY_PREFIX, BatchJobType.INSTANCE_BILLING_AGGREGATION)
-          + BillingDataTableNameProvider.replaceTableName(PREAGG_QUERY_SUFFIX, BatchJobType.INSTANCE_BILLING);
+      String updateStatement = BillingDataTableNameProvider.replaceTableName(PREAGG_QUERY_PREFIX, toBatchJobType)
+          + BillingDataTableNameProvider.replaceTableName(PREAGG_QUERY_SUFFIX, sourceBatchJobType);
       while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
         try (Connection dbConnection = timeScaleDBService.getDBConnection();
              PreparedStatement statement = dbConnection.prepareStatement(updateStatement)) {
-          updateAggregationStatement(statement, accountId, startTime, endTime);
-
+          int i = updateAggregationStatement(statement, accountId, startTime, endTime);
+          for (InstanceType instanceType : PREAGG_INSTANCES) {
+            statement.setString(++i, instanceType.name());
+          }
           log.debug("Prepared Statement in BillingDataServiceImpl for generatePreAggBillingData: {} ", statement);
           statement.execute();
           successfulUpdate = true;
@@ -372,5 +368,60 @@ public class BillingDataServiceImpl {
       log.warn("Not processing generatePreAggBillingData({}, {}, {})", accountId, startTime, endTime);
     }
     return successfulUpdate;
+  }
+
+  public boolean generatePreAggBillingDataWithId(@NotNull String accountId, @NotNull Instant startTime,
+      @NotNull Instant endTime, BatchJobType toBatchJobType, BatchJobType sourceBatchJobType) {
+    boolean successfulUpdate = false;
+    if (timeScaleDBService.isValid()) {
+      int retryCount = 0;
+      String updateStatement =
+          BillingDataTableNameProvider.replaceTableName(PREAGG_QUERY_PREFIX_WITH_ID, toBatchJobType)
+          + BillingDataTableNameProvider.replaceTableName(PREAGG_QUERY_SUFFIX_WITH_ID, sourceBatchJobType);
+      while (!successfulUpdate && retryCount < MAX_RETRY_COUNT) {
+        try (Connection dbConnection = timeScaleDBService.getDBConnection();
+             PreparedStatement statement = dbConnection.prepareStatement(updateStatement)) {
+          int i = updateAggregationStatement(statement, accountId, startTime, endTime);
+          for (InstanceType instanceType : PREAGG_INSTANCES_WITH_ID) {
+            statement.setString(++i, instanceType.name());
+          }
+          log.debug("Prepared Statement in BillingDataServiceImpl for generatePreAggBillingData: {} ", statement);
+          statement.execute();
+          successfulUpdate = true;
+        } catch (SQLException e) {
+          log.error("Failed to update aggregated billing data for account:{}, retryCount=[{}], Exception: ", accountId,
+              retryCount, e);
+          retryCount++;
+        }
+      }
+    } else {
+      log.warn("Not processing generatePreAggBillingData({}, {}, {})", accountId, startTime, endTime);
+    }
+    return successfulUpdate;
+  }
+
+  public boolean purgeOldHourlyBillingData(BatchJobType batchJobType) {
+    final String PURGE_DATA_QUERY =
+        BillingDataTableNameProvider.replaceTableName("SELECT drop_chunks(interval '14 days', '%s')", batchJobType);
+    log.info("Purging old {} data !!", batchJobType.name());
+    return executeQuery(PURGE_DATA_QUERY);
+  }
+
+  private boolean executeQuery(String query) {
+    boolean result = false;
+    if (timeScaleDBService.isValid()) {
+      int retryCount = 0;
+      while (retryCount < MAX_RETRY_COUNT && !result) {
+        try (Connection connection = timeScaleDBService.getDBConnection();
+             Statement statement = connection.createStatement()) {
+          statement.execute(query);
+          result = true;
+        } catch (SQLException e) {
+          log.error("Failed to execute query=[{}]", query, e);
+          retryCount++;
+        }
+      }
+    }
+    return result;
   }
 }

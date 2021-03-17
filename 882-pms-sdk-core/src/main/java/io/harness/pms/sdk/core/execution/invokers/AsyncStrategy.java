@@ -42,7 +42,7 @@ public class AsyncStrategy implements ExecuteStrategy {
     AsyncExecutable asyncExecutable = extractAsyncExecutable(nodeExecution);
     AsyncExecutableResponse asyncExecutableResponse = asyncExecutable.executeAsync(ambiance,
         pmsNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, nodeExecution, asyncExecutableResponse);
+    handleResponse(nodeExecution, asyncExecutableResponse);
   }
 
   @Override
@@ -56,7 +56,7 @@ public class AsyncStrategy implements ExecuteStrategy {
         nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
-  private void handleResponse(Ambiance ambiance, NodeExecutionProto nodeExecution, AsyncExecutableResponse response) {
+  private void handleResponse(NodeExecutionProto nodeExecution, AsyncExecutableResponse response) {
     PlanNodeProto node = nodeExecution.getNode();
     if (isEmpty(response.getCallbackIdsList())) {
       log.error("StepResponse has no callbackIds - currentState : " + node.getName()

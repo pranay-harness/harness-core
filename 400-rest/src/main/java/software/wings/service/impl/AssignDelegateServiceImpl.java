@@ -6,7 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
 
+import static com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -33,8 +35,10 @@ import io.harness.delegate.task.TaskFailureReason;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.tasks.Cd1SetupFields;
 
@@ -43,7 +47,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
@@ -57,7 +60,6 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.mongodb.DuplicateKeyException;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -75,7 +77,6 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -86,7 +87,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.InfrastructureMapping")
-@BreakDependencyOn("software.wings.dl.WingsPersistence")
 @BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
 @BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
@@ -103,10 +103,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
-  @Inject private WingsPersistence persistence;
+  @Inject private HPersistence persistence;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private DelegateCache delegateCache;
 
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>
       delegateConnectionResultCache =
@@ -136,13 +137,14 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                   .project(DelegateKeys.lastHeartBeat, true)
                   .project(DelegateKeys.status, true)
                   .project(DelegateKeys.delegateGroupName, true)
+                  .project(DelegateKeys.delegateGroupId, true)
                   .asList();
             }
           });
 
   @Override
   public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task) {
-    Delegate delegate = delegateService.get(task.getAccountId(), delegateId, false);
+    Delegate delegate = delegateCache.get(task.getAccountId(), delegateId, false);
     if (delegate == null) {
       return false;
     }
@@ -191,7 +193,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, String accountId, String appId,
       String envId, String infraMappingId, TaskGroup taskGroup, List<ExecutionCapability> executionCapabilities,
       Map<String, String> taskSetupAbstractions) {
-    Delegate delegate = delegateService.get(accountId, delegateId, false);
+    Delegate delegate = delegateCache.get(accountId, delegateId, false);
     if (delegate == null) {
       return false;
     }
@@ -597,24 +599,21 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     List<DelegateConnectionResult> resultsToSave =
         results.stream().filter(result -> isNotBlank(result.getCriteria())).collect(toList());
 
-    // TODO: this needs to be rewritten with upsert
     for (DelegateConnectionResult result : resultsToSave) {
-      Key<DelegateConnectionResult> existingResultKey =
+      Query<DelegateConnectionResult> query =
           persistence.createQuery(DelegateConnectionResult.class)
               .filter(DelegateConnectionResultKeys.accountId, result.getAccountId())
               .filter(DelegateConnectionResultKeys.delegateId, result.getDelegateId())
-              .filter(DelegateConnectionResultKeys.criteria, result.getCriteria())
-              .getKey();
-      if (existingResultKey != null) {
-        persistence.updateField(
-            DelegateConnectionResult.class, existingResultKey.getId().toString(), "validated", result.isValidated());
-      } else {
-        try {
-          persistence.save(result);
-        } catch (DuplicateKeyException e) {
-          log.warn("Result has already been saved.", e);
-        }
-      }
+              .filter(DelegateConnectionResultKeys.criteria, result.getCriteria());
+      UpdateOperations<DelegateConnectionResult> updateOperations =
+          persistence.createUpdateOperations(DelegateConnectionResult.class)
+              .setOnInsert(DelegateConnectionResultKeys.accountId, result.getAccountId())
+              .setOnInsert(DelegateConnectionResultKeys.delegateId, result.getDelegateId())
+              .setOnInsert(DelegateConnectionResultKeys.criteria, result.getCriteria())
+              .setOnInsert(DelegateConnectionResultKeys.duration, result.getDuration())
+              .setOnInsert(DelegateConnectionResultKeys.validUntil, result.getValidUntil())
+              .set(DelegateConnectionResultKeys.validated, result.isValidated());
+      persistence.upsert(query, updateOperations, upsertReturnNewOptions);
     }
   }
 
@@ -663,7 +662,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       } else if (whitelistedDelegates.isEmpty()) {
         StringBuilder msg = new StringBuilder();
         for (String delegateId : activeDelegates) {
-          Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateId, false);
+          Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateId, false);
           if (delegate != null) {
             msg.append(" ===> ").append(delegate.getHostName()).append(": ");
             boolean canAssignScope = canAssignDelegateScopes(null, delegate, delegateTask);
@@ -687,7 +686,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
         errorMessage =
             "None of the active delegates were eligible to complete the task." + taskTagsMsg + "\n\n" + msg.toString();
       } else if (delegateTask.getDelegateId() != null) {
-        Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId(), false);
+        Delegate delegate = delegateCache.get(delegateTask.getAccountId(), delegateTask.getDelegateId(), false);
         errorMessage = "Delegate task timed out. Delegate: "
             + (delegate != null ? delegate.getHostName() : "not found: " + delegateTask.getDelegateId());
       } else {
@@ -706,6 +705,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     } catch (ExecutionException ex) {
       log.error("Unexpected error occurred while fetching delegates from cache.", ex);
       return true;
+    }
+  }
+
+  @Override
+  public List<Delegate> getAccountDelegates(String accountId) {
+    try {
+      return accountDelegatesCache.get(accountId);
+    } catch (ExecutionException | InvalidCacheLoadException ex) {
+      log.error("Unexpected error occurred while fetching delegates from cache.", ex);
+      return emptyList();
     }
   }
 

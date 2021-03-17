@@ -2,7 +2,6 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
 import io.harness.exception.InvalidRequestException;
@@ -16,6 +15,11 @@ import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
+import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.preflight.entity.PreFlightEntity;
+import io.harness.pms.preflight.handler.AsyncPreFlightHandler;
+import io.harness.pms.preflight.mapper.PreFlightMapper;
+import io.harness.repositories.preflight.PreFlightRepository;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -23,6 +27,8 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -36,10 +42,12 @@ public class PipelineExecuteHelper {
   private final OrchestrationService orchestrationService;
   private final PlanCreatorMergeService planCreatorMergeService;
   private final ValidateAndMergeHelper validateAndMergeHelper;
+  private final PreFlightRepository preFlightRepository;
+  private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
-      String eventPayload, ExecutionTriggerInfo triggerInfo) throws IOException {
+      ExecutionTriggerInfo triggerInfo) throws IOException {
     Optional<PipelineEntity> pipelineEntity =
         pmsPipelineService.incrementRunSequence(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
     if (!pipelineEntity.isPresent()) {
@@ -96,14 +104,44 @@ public class PipelineExecuteHelper {
         ImmutableMap.<String, String>builder()
             .put(SetupAbstractionKeys.accountId, accountId)
             .put(SetupAbstractionKeys.orgIdentifier, orgIdentifier)
-            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier)
-            .put("expressionFunctorToken", Integer.toString(HashGenerator.generateIntegerHash()));
-
-    if (executionMetadata.hasTriggerPayload()) {
-      abstractionsBuilder.put(
-          SetupAbstractionKeys.eventPayload, executionMetadata.getTriggerPayload().getJsonPayload());
-    }
+            .put(SetupAbstractionKeys.projectIdentifier, projectIdentifier);
 
     return orchestrationService.startExecution(plan, abstractionsBuilder.build(), executionMetadata);
+  }
+
+  public String startPreflightCheck(@NotNull String accountId, @NotNull String orgIdentifier,
+      @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml)
+      throws IOException {
+    Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!pipelineEntity.isPresent()) {
+      throw new InvalidRequestException(String.format("The given pipeline id [%s] does not exist", pipelineIdentifier));
+    }
+    String pipelineYaml;
+    if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
+      pipelineYaml = pipelineEntity.get().getYaml();
+    } else {
+      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, true);
+    }
+    PreFlightEntity preFlightEntity =
+        PreFlightMapper.toEmptyEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
+    PreFlightEntity preFlightEntitySaved = preFlightRepository.save(preFlightEntity);
+
+    startAsyncHandling(preFlightEntitySaved);
+    return preFlightEntitySaved.getUuid();
+  }
+
+  public PreFlightDTO getPreflightCheckResponse(String preflightCheckId) {
+    Optional<PreFlightEntity> optionalPreFlightEntity = preFlightRepository.findById(preflightCheckId);
+    if (!optionalPreFlightEntity.isPresent()) {
+      throw new InvalidRequestException("Could not find pre flight check data corresponding to id:" + preflightCheckId);
+    }
+    PreFlightEntity preFlightEntity = optionalPreFlightEntity.get();
+    return PreFlightMapper.toPreFlightDTO(preFlightEntity);
+  }
+
+  private void startAsyncHandling(PreFlightEntity entity) {
+    executorService.submit(
+        AsyncPreFlightHandler.builder().entity(entity).preFlightRepository(preFlightRepository).build());
   }
 }

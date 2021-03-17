@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 public class SaveCacheStepProtobufSerializer implements ProtobufStepSerializer<SaveCacheStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
 
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId) {
+  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
     CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
     SaveCacheStepInfo saveCacheStepInfo = (SaveCacheStepInfo) ciStepInfo;
 
@@ -39,6 +39,7 @@ public class SaveCacheStepProtobufSerializer implements ProtobufStepSerializer<S
         .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
         .setSaveCache(saveCacheBuilder.build())
         .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
+        .setLogKey(logKey)
         .build();
   }
 }

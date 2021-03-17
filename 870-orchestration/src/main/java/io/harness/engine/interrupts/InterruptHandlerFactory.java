@@ -4,13 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.handlers.AbortAllInterruptHandler;
+import io.harness.engine.interrupts.handlers.IgnoreFailedInterruptHandler;
 import io.harness.engine.interrupts.handlers.MarkExpiredInterruptHandler;
 import io.harness.engine.interrupts.handlers.MarkFailedInterruptHandler;
 import io.harness.engine.interrupts.handlers.MarkSuccessInterruptHandler;
 import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.ResumeAllInterruptHandler;
 import io.harness.engine.interrupts.handlers.RetryInterruptHandler;
-import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import com.google.inject.Inject;
 
@@ -23,8 +24,9 @@ public class InterruptHandlerFactory {
   @Inject private MarkExpiredInterruptHandler markExpiredInterruptHandler;
   @Inject private MarkSuccessInterruptHandler markSuccessInterruptHandler;
   @Inject private MarkFailedInterruptHandler markFailedInterruptHandler;
+  @Inject private IgnoreFailedInterruptHandler ignoreFailedInterruptHandler;
 
-  public InterruptHandler obtainHandler(ExecutionInterruptType interruptType) {
+  public InterruptHandler obtainHandler(InterruptType interruptType) {
     switch (interruptType) {
       case ABORT_ALL:
         return abortAllInterruptHandler;
@@ -38,6 +40,8 @@ public class InterruptHandlerFactory {
         return markExpiredInterruptHandler;
       case MARK_SUCCESS:
         return markSuccessInterruptHandler;
+      case IGNORE:
+        return ignoreFailedInterruptHandler;
       case MARK_FAILED:
         return markFailedInterruptHandler;
       default:

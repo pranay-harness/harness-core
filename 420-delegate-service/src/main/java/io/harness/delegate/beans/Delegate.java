@@ -53,6 +53,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private String ip;
   private String hostName;
   private String delegateGroupName;
+  private String delegateGroupId;
   private String delegateName;
   private String delegateProfileId;
   private long lastHeartBeat;

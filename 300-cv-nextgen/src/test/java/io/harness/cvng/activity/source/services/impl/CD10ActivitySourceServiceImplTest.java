@@ -6,14 +6,16 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.activity.beans.Cd10ValidateMappingParams;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.CD10ActivitySourceService;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10EnvMappingDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ServiceMappingDTO;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -23,7 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CD10ActivitySourceServiceImplTest extends CvNextGenTest {
+public class CD10ActivitySourceServiceImplTest extends CvNextGenTestBase {
   private String accountId;
   private String orgIdentifier;
   private String projectIdentifier;
@@ -57,6 +59,116 @@ public class CD10ActivitySourceServiceImplTest extends CvNextGenTest {
                                accountId, orgIdentifier, projectIdentifier, appId, generateUuid()))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("No envId to envIdentifier mapping exists");
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testValidateMapping_mappingMatchesServiceEnvValues() {
+    String activitySourceUUID = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    CD10ActivitySource cd10ActivitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+
+    CD10ServiceMappingDTO serviceMappingDTO = cd10ActivitySource.getServiceMappings().iterator().next();
+    CD10EnvMappingDTO envMappingDTO = cd10ActivitySource.getEnvMappings().iterator().next();
+    cd10ActivitySourceService.validateMapping(
+        Cd10ValidateMappingParams.builder()
+            .cd10AppId(appId)
+            .cd10ServiceId(serviceMappingDTO.getServiceId())
+            .cd10EnvId(envMappingDTO.getEnvId())
+            .activitySourceIdentifier(cd10ActivitySource.getIdentifier())
+            .accountId(accountId)
+            .projectIdentifier(projectIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .serviceIdentifier(VerificationJob.RuntimeParameter.builder()
+                                   .isRuntimeParam(false)
+                                   .value(serviceMappingDTO.getServiceIdentifier())
+                                   .build())
+            .environmentIdentifier(VerificationJob.RuntimeParameter.builder()
+                                       .isRuntimeParam(false)
+                                       .value(envMappingDTO.getEnvIdentifier())
+                                       .build())
+            .build());
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testValidateMapping_failWithMismatch() {
+    String activitySourceUUID = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    CD10ActivitySource cd10ActivitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+
+    CD10ServiceMappingDTO serviceMappingDTO = cd10ActivitySource.getServiceMappings().iterator().next();
+    CD10EnvMappingDTO envMappingDTO = cd10ActivitySource.getEnvMappings().iterator().next();
+    assertThatThrownBy(
+        ()
+            -> cd10ActivitySourceService.validateMapping(
+                Cd10ValidateMappingParams.builder()
+                    .cd10AppId(appId)
+                    .cd10ServiceId(serviceMappingDTO.getServiceId())
+                    .cd10EnvId(envMappingDTO.getEnvId())
+                    .activitySourceIdentifier(cd10ActivitySource.getIdentifier())
+                    .accountId(accountId)
+                    .projectIdentifier(projectIdentifier)
+                    .orgIdentifier(orgIdentifier)
+                    .serviceIdentifier(
+                        VerificationJob.RuntimeParameter.builder().isRuntimeParam(false).value(generateUuid()).build())
+                    .environmentIdentifier(VerificationJob.RuntimeParameter.builder()
+                                               .isRuntimeParam(false)
+                                               .value(envMappingDTO.getEnvIdentifier())
+                                               .build())
+                    .build()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Next gen Service identifier does not match CD 1.0 service mapping");
+
+    assertThatThrownBy(
+        ()
+            -> cd10ActivitySourceService.validateMapping(
+                Cd10ValidateMappingParams.builder()
+                    .cd10AppId(appId)
+                    .cd10ServiceId(serviceMappingDTO.getServiceId())
+                    .cd10EnvId(envMappingDTO.getEnvId())
+                    .activitySourceIdentifier(cd10ActivitySource.getIdentifier())
+                    .accountId(accountId)
+                    .projectIdentifier(projectIdentifier)
+                    .orgIdentifier(orgIdentifier)
+                    .serviceIdentifier(VerificationJob.RuntimeParameter.builder()
+                                           .isRuntimeParam(false)
+                                           .value(serviceMappingDTO.getServiceIdentifier())
+                                           .build())
+                    .environmentIdentifier(
+                        VerificationJob.RuntimeParameter.builder().isRuntimeParam(false).value(generateUuid()).build())
+                    .build()))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("Next gen env identifier does not match CD 1.0 env mappings");
+  }
+
+  @Test(expected = Test.None.class)
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testValidateMapping_serviceEnvAreRuntimeParams() {
+    String activitySourceUUID = activitySourceService.saveActivitySource(
+        accountId, orgIdentifier, projectIdentifier, createActivitySourceDTO());
+    CD10ActivitySource cd10ActivitySource =
+        (CD10ActivitySource) activitySourceService.getActivitySource(activitySourceUUID);
+
+    CD10ServiceMappingDTO serviceMappingDTO = cd10ActivitySource.getServiceMappings().iterator().next();
+    CD10EnvMappingDTO envMappingDTO = cd10ActivitySource.getEnvMappings().iterator().next();
+    cd10ActivitySourceService.validateMapping(
+        Cd10ValidateMappingParams.builder()
+            .cd10AppId(appId)
+            .cd10ServiceId(serviceMappingDTO.getServiceId())
+            .cd10EnvId(envMappingDTO.getEnvId())
+            .activitySourceIdentifier(cd10ActivitySource.getIdentifier())
+            .accountId(accountId)
+            .projectIdentifier(projectIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .serviceIdentifier(VerificationJob.RuntimeParameter.builder().isRuntimeParam(true).build())
+            .environmentIdentifier(VerificationJob.RuntimeParameter.builder().isRuntimeParam(true).build())
+            .build());
   }
 
   @Test

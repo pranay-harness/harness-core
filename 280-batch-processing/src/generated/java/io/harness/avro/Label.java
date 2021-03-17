@@ -23,9 +23,9 @@ public class Label
 
   private static SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<Label> ENCODER = new BinaryMessageEncoder<Label>(MODEL$, SCHEMA$);
+  private static final BinaryMessageEncoder<Label> ENCODER = new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
-  private static final BinaryMessageDecoder<Label> DECODER = new BinaryMessageDecoder<Label>(MODEL$, SCHEMA$);
+  private static final BinaryMessageDecoder<Label> DECODER = new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.

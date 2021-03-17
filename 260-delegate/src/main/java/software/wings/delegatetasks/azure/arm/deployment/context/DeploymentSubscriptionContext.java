@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.arm.deployment.context;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -11,6 +13,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DeploymentSubscriptionContext extends DeploymentContext {
   private AzureConfig azureConfig;
   private String subscriptionId;

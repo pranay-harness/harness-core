@@ -1,12 +1,14 @@
 package io.harness.cdng.creator.plan.execution;
 
-import io.harness.cdng.creator.plan.rollback.StepGroupsRollbackPMSPlanCreator;
+import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
 import io.harness.plancreator.execution.ExecutionElementConfig;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
+import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -27,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -50,19 +53,12 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }
 
-    // Adding StepGroup rollback steps (in-case execution rollback steps are not there)
     YamlField executionStepsField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS);
-    PlanCreationResponse stepGroupsRollbackPlanNode =
-        StepGroupsRollbackPMSPlanCreator.createStepGroupsRollbackPlanNode(executionStepsField);
-    responseMap.put(executionStepsField.getNode().getUuid() + "_rollback", stepGroupsRollbackPlanNode);
 
-    // Execution rollback node
-    YamlField rollbackStepsField = ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
-    if (rollbackStepsField != null && rollbackStepsField.getNode().asArray().size() != 0) {
-      Map<String, YamlField> rollbackDependencyMap = new HashMap<>();
-      rollbackDependencyMap.put(rollbackStepsField.getNode().getUuid(), rollbackStepsField);
-      responseMap.put(rollbackStepsField.getNode().getUuid(),
-          PlanCreationResponse.builder().dependencies(rollbackDependencyMap).build());
+    PlanCreationResponse planForRollback = RollbackPlanCreator.createPlanForRollback(ctx.getCurrentField());
+    if (EmptyPredicate.isNotEmpty(planForRollback.getNodes())) {
+      responseMap.put(
+          Objects.requireNonNull(executionStepsField).getNode().getUuid() + "_combinedRollback", planForRollback);
     }
     return responseMap;
   }
@@ -84,6 +80,7 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
         .name(PlanCreationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
         .skipExpressionChain(false)
         .build();
   }

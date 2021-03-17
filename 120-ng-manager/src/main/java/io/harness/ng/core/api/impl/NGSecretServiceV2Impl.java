@@ -55,6 +55,13 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
   private final NGSecretActivityService ngSecretActivityService;
 
   @Override
+  public boolean validateTheIdentifierIsUnique(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    return !secretRepository.existsByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+  }
+
+  @Override
   public Optional<Secret> get(
       @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, @NotNull String identifier) {
     return secretRepository.findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(

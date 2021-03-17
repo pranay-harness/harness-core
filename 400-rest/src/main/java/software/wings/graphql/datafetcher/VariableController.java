@@ -2,7 +2,9 @@ package software.wings.graphql.datafetcher;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.EntityType;
@@ -16,6 +18,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class VariableController {
   public static void populateVariables(List<Variable> userVariables, List<QLVariable> qlVariables) {
     if (userVariables == null) {

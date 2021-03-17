@@ -11,4 +11,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface SecretRepository extends PagingAndSortingRepository<Secret, String>, SecretRepositoryCustom {
   Optional<Secret> findByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+
+  boolean existsByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 }

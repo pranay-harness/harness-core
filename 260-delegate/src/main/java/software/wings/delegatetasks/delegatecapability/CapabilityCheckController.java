@@ -5,14 +5,16 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.capability.CapabilityParameters;
 import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.delegate.beans.CapabilityProtoConverter;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.executioncapability.CapabilityCheck;
-import io.harness.delegate.task.executioncapability.CapabilityProtoConverter;
 import io.harness.delegate.task.executioncapability.ProtoCapabilityCheck;
 import io.harness.delegate.task.executioncapability.ProtoCapabilityCheckFactory;
 
@@ -27,6 +29,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class CapabilityCheckController extends AbstractDelegateValidateTask {
   @Inject CapabilityCheckFactory capabilityCheckFactory;
   @Inject ProtoCapabilityCheckFactory protoCapabilityCheckFactory;

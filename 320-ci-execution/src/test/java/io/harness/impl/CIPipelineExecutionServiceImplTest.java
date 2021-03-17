@@ -15,7 +15,7 @@ import io.harness.engine.OrchestrationService;
 import io.harness.execution.PlanExecution;
 import io.harness.executionplan.CIExecutionPlanCreatorRegistrar;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.rule.Owner;
 
@@ -25,7 +25,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class CIPipelineExecutionServiceImplTest extends CIExecutionTest {
+public class CIPipelineExecutionServiceImplTest extends CIExecutionTestBase {
   @Mock private OrchestrationService orchestrationService;
   @Inject CIPipelineExecutionService ciPipelineExecutionService;
   @Inject CIExecutionPlanTestHelper executionPlanTestHelper;

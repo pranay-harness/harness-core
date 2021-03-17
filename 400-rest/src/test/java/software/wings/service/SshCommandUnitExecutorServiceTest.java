@@ -1,8 +1,9 @@
 package software.wings.service;
 
-import static io.harness.delegate.service.DelegateAgentFileService.FileBucket.ARTIFACTS;
+import static io.harness.delegate.beans.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
@@ -600,5 +601,104 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .contains("start.sh");
 
     verify(scriptSshExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
+  }
+
+  /**
+   * Should execute init command without unresolved env variables
+   *
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldExecuteInitCommandWithoutUnresolvedEnvironmentVariables() throws IOException {
+    // this path name should not be added as Env Variable
+    String badSubstitutionPathName = "/test/${service.name}/${env.name}/backup";
+
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+    InitSshCommandUnit commandUnit = new InitSshCommandUnit();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
+    Command command =
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
+            .build();
+    commandUnit.setCommand(command);
+
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(fileBasedSshScriptExecutor.copyFiles(anyString(), anyListOf(String.class)))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+
+    sshCommandUnitExecutorService.execute(commandUnit,
+        commandExecutionContextBuider.but()
+            .stagingPath(badSubstitutionPathName)
+            .runtimePath(badSubstitutionPathName)
+            .backupPath(badSubstitutionPathName)
+            .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+            .build());
+
+    assertThat(commandUnit.getExecutionStagingDir()).isEqualTo("/tmp/ACTIVITY_ID");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_RUNTIME_PATH")).isEqualTo(null);
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_STAGING_PATH")).isEqualTo(null);
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_BACKUP_PATH")).isEqualTo(null);
+  }
+
+  /**
+   * Should execute init command with resolved env variables
+   *
+   * @throws IOException the io exception
+   */
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldExecuteInitCommandWithResolvedEnvironmentVariables() throws IOException {
+    Host host = builder.withHostConnAttr(HOST_CONN_ATTR_PWD.getUuid()).build();
+
+    InitSshCommandUnit commandUnit = new InitSshCommandUnit();
+    on(commandUnit).set("commandUnitHelper", new CommandUnitHelper());
+    Command command =
+        aCommand()
+            .withCommandUnits(asList(commandUnit,
+                anExecCommandUnit().withName("dols").withCommandPath("/tmp").withCommandString("ls").build()))
+            .build();
+    commandUnit.setCommand(command);
+
+    when(sshExecutorFactory.getExecutor(any(SshSessionConfig.class))).thenReturn(scriptSshExecutor);
+    when(sshExecutorFactory.getFileBasedExecutor(any(SshSessionConfig.class))).thenReturn(fileBasedSshScriptExecutor);
+    when(scriptSshExecutor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
+    when(fileBasedSshScriptExecutor.copyFiles(anyString(), anyListOf(String.class)))
+        .thenReturn(CommandExecutionStatus.SUCCESS);
+
+    sshCommandUnitExecutorService.execute(
+        commandUnit, commandExecutionContextBuider.but().hostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
+
+    assertThat(commandUnit.getExecutionStagingDir()).isEqualTo("/tmp/ACTIVITY_ID");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_RUNTIME_PATH")).isEqualTo("/tmp/runtime");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_STAGING_PATH")).isEqualTo("/tmp/staging");
+    assertThat(commandUnit.fetchEnvVariables().get("WINGS_BACKUP_PATH")).isEqualTo("/tmp/backup");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testExecuteWithSocketTimeoutException() {
+    ShellExecutorConfig expectedSshConfig = ShellExecutorConfig.builder()
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .executeOnDelegate(true)
+                                                          .build();
+    CommandUnit commandUnit = mock(CommandUnit.class);
+
+    when(commandUnit.execute(any())).thenThrow(new UncheckedTimeoutException());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> sshCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("SOCKET_CONNECTION_TIMEOUT");
+    verify(shellExecutorFactory).getExecutor(expectedSshConfig);
   }
 }

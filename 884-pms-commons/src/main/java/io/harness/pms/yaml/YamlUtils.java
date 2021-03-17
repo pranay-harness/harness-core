@@ -23,7 +23,6 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
@@ -113,7 +112,10 @@ public class YamlUtils {
     ObjectNode objectNode = (ObjectNode) node;
     objectNode.put(YamlNode.UUID_FIELD_NAME, generateUuid());
     boolean isIdentifierPresent = false;
+
     Entry<String, JsonNode> nameField = null;
+    Entry<String, JsonNode> keyField = null;
+
     for (Iterator<Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
       Entry<String, JsonNode> field = it.next();
       if (field.getValue().isValueNode()) {
@@ -123,6 +125,9 @@ public class YamlUtils {
             break;
           case YamlNode.NAME_FIELD_NAME:
             nameField = field;
+            break;
+          case YamlNode.KEY_FIELD_NAME:
+            keyField = field;
             break;
           case YamlNode.UUID_FIELD_NAME:
           case YamlNode.TYPE_FIELD_NAME:
@@ -139,6 +144,9 @@ public class YamlUtils {
     }
     if (isIdentifierPresent && nameField != null) {
       objectNode.put(nameField.getKey(), generateUuid());
+    }
+    if (keyField != null && (isIdentifierPresent || nameField != null)) {
+      objectNode.put(keyField.getKey(), generateUuid());
     }
   }
 
@@ -210,7 +218,7 @@ public class YamlUtils {
     StringBuilder response = new StringBuilder();
     for (String qualifiedName : qualifiedNames) {
       if (qualifiedName.equals(from)) {
-        response.append(qualifiedName).append(".");
+        response.append(qualifiedName).append('.');
       }
       if (qualifiedName.equals(to)) {
         response.append(qualifiedName);
@@ -222,7 +230,9 @@ public class YamlUtils {
 
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
     if (yamlNode.getParentNode() == null) {
-      return Collections.singletonList(getQNForNode(yamlNode, null));
+      List<String> qualifiedNameList = new ArrayList<>();
+      qualifiedNameList.add(getQNForNode(yamlNode, null));
+      return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());
     if (isEmpty(qualifiedName)) {
@@ -254,6 +264,8 @@ public class YamlUtils {
         return yamlNode.getIdentifier();
       } else if (parentNode.getName() != null) {
         return parentNode.getName();
+      } else if (parentNode.getKey() != null) {
+        return parentNode.getKey();
       } else {
         return "";
       }

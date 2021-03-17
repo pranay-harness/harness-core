@@ -34,7 +34,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "deploymentLogAnalyses", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class DeploymentLogAnalysis
+public final class DeploymentLogAnalysis
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

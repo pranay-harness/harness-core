@@ -6,104 +6,92 @@ import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
-import io.harness.reflection.CodeUtils;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
 import io.harness.yaml.YamlSdkInitConstants;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.google.inject.Singleton;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
-import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
-import org.zeroturnaround.exec.stream.LogOutputStream;
 
-public interface AbstractSchemaChecker {
-  default void schemaTests(Logger logger) {
+@Slf4j
+@Singleton
+public class AbstractSchemaChecker {
+  public void schemaTests(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+      throws IOException, ClassNotFoundException {
     Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
-    ensureSchemaUpdated(reflections, logger);
-    ensureOneOfHasCorrectValues(reflections, logger);
+    ensureSchemaUpdated(yamlSchemaRootClasses, objectMapper);
+    ensureOneOfHasCorrectValues(reflections);
   }
 
-  default void ensureSchemaUpdated(Reflections reflections, Logger log) {
-    final Set<Class<?>> schemaRoots = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class, true);
-    if (isEmpty(schemaRoots)) {
+  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+      throws IOException, ClassNotFoundException {
+    if (isEmpty(yamlSchemaRootClasses)) {
       return;
     }
-    for (Class<?> schemaRoot : schemaRoots) {
-      log.info("Running schema check for {}", schemaRoot.getCanonicalName());
-      final EntityType entityType = schemaRoot.getDeclaredAnnotation(YamlSchemaRoot.class).value();
+    YamlSchemaGenerator yamlSchemaGenerator =
+        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
+    final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
+    final ObjectWriter objectWriter = yamlSchemaGenerator.getObjectWriter();
+    for (YamlSchemaRootClass schemaRoot : yamlSchemaRootClasses) {
+      log.info("Running schema check for {}", schemaRoot.getEntityType());
       final String schemaBasePath = YamlSdkInitConstants.schemaBasePath;
-      final String schemaPathForEntityType = YamlSchemaUtils.getSchemaPathForEntityType(entityType, schemaBasePath);
-      String moduleBasePath = getModulePath(schemaRoot);
-      executeCommand("git diff --exit-code -- ../" + moduleBasePath + schemaPathForEntityType);
-    }
-  }
-
-  default String getModulePath(Class<?> schemaRoot) {
-    String moduleBasePath;
-    List<String> locationList = Arrays.asList(Preconditions.checkNotNull(CodeUtils.location(schemaRoot)).split("/"));
-    // Bazel do not have target folder, so tha path is directly coming from .m2.
-    // Instead of target we are using 0.0.1-SNAPSHOT to handle bazel build modules.
-    if (locationList.contains("0.0.1-SNAPSHOT")) {
-      moduleBasePath = locationList.get(locationList.indexOf("0.0.1-SNAPSHOT") - 1) + "/src/main/resources/";
-    } else {
-      moduleBasePath = locationList.get(locationList.indexOf("target") - 1) + "/src/main/resources/";
-    }
-    return moduleBasePath;
-  }
-
-  default String executeCommand(String command) {
-    final String[] returnString = new String[1];
-    try {
-      ProcessExecutor processExecutor = new ProcessExecutor()
-                                            .timeout(30, TimeUnit.SECONDS)
-                                            .command("/bin/sh", "-c", command)
-                                            .readOutput(true)
-                                            .redirectOutput(new LogOutputStream() {
-                                              @Override
-                                              protected void processLine(String s) {
-                                                returnString[0] = s;
-                                              }
-                                            });
-
-      ProcessResult processResult = processExecutor.execute();
-      if (processResult.getExitValue() != 0) {
-        throw new InvalidRequestException(String.format("Command Execution failed for %s", command));
+      final String schemaPathForEntityType =
+          YamlSchemaUtils.getSchemaPathForEntityType(schemaRoot.getEntityType(), schemaBasePath);
+      final JsonNode jsonNode = entityTypeJsonNodeMap.get(schemaRoot.getEntityType());
+      final String s = objectWriter.writeValueAsString(jsonNode);
+      // todo(abhinav): find a better way to find caller class.
+      String callerName = Thread.currentThread().getStackTrace()[10].getClassName();
+      final Class<?> clazz = Class.forName(callerName);
+      try {
+        final String schemaInUT =
+            IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
+        if (!schemaInUT.equals(s)) {
+          log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
+          throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
+        }
+        log.info("schema check success for {}", schemaRoot.getEntityType());
+      } catch (Exception e) {
+        if (e instanceof YamlSchemaException) {
+          throw e;
+        }
+        log.info("No schema found for unit testing for {}.", schemaRoot.getEntityType());
       }
-
-    } catch (InterruptedException | TimeoutException | IOException ex) {
-      throw new InvalidRequestException("Command Execution failed");
     }
-    return Arrays.toString(returnString);
   }
 
-  default void ensureOneOfHasCorrectValues(Reflections reflections, Logger log) {
+  void ensureOneOfHasCorrectValues(Reflections reflections) {
     final Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(OneOfField.class, true);
     for (Class<?> clazz : typesAnnotatedWith) {
       final OneOfField annotation = clazz.getAnnotation(OneOfField.class);
-      validateForOneOfFields(clazz, annotation, log);
+      validateForOneOfFields(clazz, annotation);
     }
     final Set<Class<?>> typesAnnotated = reflections.getTypesAnnotatedWith(OneOfFields.class, true);
     for (Class<?> clazz : typesAnnotated) {
       final OneOfFields annotation = clazz.getAnnotation(OneOfFields.class);
       final OneOfField[] value = annotation.value();
       for (OneOfField oneOfField : value) {
-        validateForOneOfFields(clazz, oneOfField, log);
+        validateForOneOfFields(clazz, oneOfField);
       }
     }
   }
 
-  default void validateForOneOfFields(Class<?> clazz, OneOfField annotation, Logger log) {
+  void validateForOneOfFields(Class<?> clazz, OneOfField annotation) {
     final String[] fields = annotation.fields();
     final Field[] declaredFieldsInClass = clazz.getDeclaredFields();
     final Set<String> decFieldSwaggerName =

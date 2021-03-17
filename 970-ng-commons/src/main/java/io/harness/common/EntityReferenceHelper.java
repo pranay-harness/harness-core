@@ -9,12 +9,12 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class EntityReferenceHelper {
   public static String createFQN(List<String> hierarchyList) {
-    StringBuilder fqnString = new StringBuilder();
+    StringBuilder fqnString = new StringBuilder(32);
     hierarchyList.forEach(s -> {
       if (EmptyPredicate.isEmpty(s)) {
         throw new InvalidArgumentsException("Hierarchy identifier cannot be empty/null");
       }
-      fqnString.append(s).append("/");
+      fqnString.append(s).append('/');
     });
     return fqnString.toString();
   }

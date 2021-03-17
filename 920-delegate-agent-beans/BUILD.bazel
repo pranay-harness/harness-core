@@ -1,14 +1,12 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 shared_dependencies = [
     "//980-commons:module",
+    "//955-delegate-beans:module",
+    "//950-delegate-tasks-beans:module",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
@@ -32,15 +30,14 @@ java_library(
     resources = [
     ],
     visibility = ["//visibility:public"],
-    deps = shared_dependencies + [
-        "//940-delegate-beans/src/main/proto:940_delegate_beans_java_proto",
-    ],
+    deps = shared_dependencies,
 )
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:private"],
+    visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         "module",
         "//990-commons-test:module",
@@ -53,13 +50,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

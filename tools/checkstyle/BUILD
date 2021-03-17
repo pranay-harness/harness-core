@@ -16,16 +16,9 @@ java_binary(
     name = "checkstyle",
     srcs = glob(["src/main/java/io/harness/**/*.java"]),
     main_class = "com.puppycrawl.tools.checkstyle.Main",
+    resources = ["//tools/checkstyle/src/main/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
-        "checkstyle_deps",
-    ],
-)
-
-java_library(
-    name = "checkstyle_deps",
-    visibility = ["//visibility:public"],
-    exports = [
         "@maven_checkstyle//:antlr_antlr",
         "@maven_checkstyle//:com_github_sevntu_checkstyle_sevntu_checks",
         "@maven_checkstyle//:com_google_guava_guava",

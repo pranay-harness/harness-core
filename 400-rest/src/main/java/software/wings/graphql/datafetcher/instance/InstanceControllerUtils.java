@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.instance;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 
@@ -13,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class InstanceControllerUtils {
   public static final String DUMMY_ARTIFACT_SOURCE_ID = "DUMMY_ARTIFACT_SOURCE_ID";
   @Inject HPersistence persistence;

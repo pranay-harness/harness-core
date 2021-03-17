@@ -53,19 +53,20 @@ public class OwnerRule implements TestRule {
 
   public static final String GHPRB_PULL_AUTHOR_EMAIL = "ghprbPullAuthorEmail";
 
-  public static final String PLATFORM = "PL";
-  public static final String CONTINUOUS_DEPLOYMENT_PLATFORM = "CDP";
-  public static final String CONTINUOUS_DEPLOYMENT_CORE = "CDC";
-  public static final String CONTINUOUS_VERIFICATION = "CV";
-  public static final String CONTINUOUS_EFFICIENCY = "CE";
-  public static final String CONTINUOUS_INTEGRATION = "CI";
-  public static final String DEVELOPER_EXPERIENCE = "DX";
+  public static final String CDC = "CDC";
+  public static final String CDP = "CDP";
+  public static final String CE = "CE";
+  public static final String CI = "CI";
+  public static final String CV = "CV";
+  public static final String DEL = "DEL";
+  public static final String DX = "DX";
+  public static final String PL = "PL";
   public static final String SWAT = "SWAT";
-  public static final String DELEGATE = "DEL";
 
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
   public static final String ADWAIT = "adwait.bhandare";
+  public static final String ADARSH = "adarsh.agarwal";
   public static final String AKRITI = "akriti.garg";
   public static final String ALEKSANDAR = "aleksandar.radisavljevic";
   public static final String AGORODETKI = "alexandr.gorodetki";
@@ -86,6 +87,7 @@ public class OwnerRule implements TestRule {
   public static final String GEORGE = "george";
   public static final String GUNA = "guna.chandrasekaran";
   public static final String HANTANG = "hannah.tang";
+  public static final String HARI = "srihari.chidella";
   public static final String HARSH = "harsh.jain";
   public static final String HITESH = "hitesh.aringa";
   public static final String IGOR = "igor.gere";
@@ -104,6 +106,7 @@ public class OwnerRule implements TestRule {
   public static final String NIKOLA = "nikola.obucina";
   public static final String NIKUNJ = "nikunj.badjatya";
   public static final String PARNIAN = "parnian";
+  public static final String PARDHA = "sripardha.chidella";
   public static final String PIYUSH = "piyush.patel";
   public static final String POOJA = "pooja";
   public static final String PRANJAL = "pranjal";
@@ -119,6 +122,7 @@ public class OwnerRule implements TestRule {
   public static final String ROHIT_KUMAR = "rohit.kumar";
   public static final String ROHITKARELIA = "rohit.karelia";
   public static final String RUSHABH = "rushabh.shah";
+  public static final String SAMARTH = "samarth.singhal";
   public static final String SANDESH = "sandesh.katta";
   public static final String SANJA = "sanja.jokic";
   public static final String SANYASI_NAIDU = "sanyasi.naidu";
@@ -178,148 +182,131 @@ public class OwnerRule implements TestRule {
 
   private static final Map<String, UserInfo> active =
       ImmutableMap.<String, UserInfo>builder()
-          .put(AADITI, defaultUserInfo(AADITI).slack("UCFPUNRAQ").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(ABHINAV, defaultUserInfo(ABHINAV).slack("UQQPR8M6Y").team(DEVELOPER_EXPERIENCE).build())
-          .put(ALEKSANDAR, defaultUserInfo(ALEKSANDAR).slack("U012MKR5FUZ").team(CONTINUOUS_INTEGRATION).build())
-          .put(AGORODETKI, defaultUserInfo(AGORODETKI).slack("U013KM8H2NL").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(AKRITI, defaultUserInfo(AKRITI).slack("U01JCQAS84S").team(PLATFORM).build())
-          .put(ALEXEI, defaultUserInfo(ALEXEI).slack("U012VS112EN").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(AMAN, defaultUserInfo(AMAN).slack("UDJG47CHF").team(PLATFORM).build())
-          .put(ANKIT, defaultUserInfo(ANKIT).slack("UF76W0NN5").team(PLATFORM).build())
-          .put(ANKUSH, defaultUserInfo(ANKUSH).slack("U016VE8EP7X").team(PLATFORM).build())
-          .put(ANSHUL, defaultUserInfo(ANSHUL).slack("UASUA3E65").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(ANUBHAW, defaultUserInfo(ANUBHAW).slack("U0Z1U0HNW").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(ARVIND, defaultUserInfo(ARVIND).slack("U01542TQGCU").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(AVMOHAN, defaultUserInfo(AVMOHAN).slack("UK72UTBJR").team(CONTINUOUS_EFFICIENCY).build())
+          .put(AADITI, defaultUserInfo(AADITI).slack("UCFPUNRAQ").team(CDC).build())
+          .put(ABHINAV, defaultUserInfo(ABHINAV).slack("UQQPR8M6Y").team(DX).build())
+          .put(ADARSH, defaultUserInfo(ADARSH).slack("U01Q02K5LUR").team(CE).build())
+          .put(ALEKSANDAR, defaultUserInfo(ALEKSANDAR).slack("U012MKR5FUZ").team(CI).build())
+          .put(AGORODETKI, defaultUserInfo(AGORODETKI).slack("U013KM8H2NL").team(CDC).build())
+          .put(AKRITI, defaultUserInfo(AKRITI).slack("U01JCQAS84S").team(PL).build())
+          .put(ALEXEI, defaultUserInfo(ALEXEI).slack("U012VS112EN").team(CDC).build())
+          .put(AMAN, defaultUserInfo(AMAN).slack("UDJG47CHF").team(PL).build())
+          .put(ANKIT, defaultUserInfo(ANKIT).slack("UF76W0NN5").team(PL).build())
+          .put(ANKUSH, defaultUserInfo(ANKUSH).slack("U016VE8EP7X").team(PL).build())
+          .put(ANSHUL, defaultUserInfo(ANSHUL).slack("UASUA3E65").team(CDP).build())
+          .put(ANUBHAW, defaultUserInfo(ANUBHAW).slack("U0Z1U0HNW").team(CDP).build())
+          .put(ARVIND, defaultUserInfo(ARVIND).slack("U01542TQGCU").team(CDP).build())
+          .put(AVMOHAN, defaultUserInfo(AVMOHAN).slack("UK72UTBJR").team(CE).build())
           .put(BRETT, defaultUserInfo(BRETT).slack("U40VBHCGH").team(SWAT).build())
-          .put(BRIJESH, defaultUserInfo(BRIJESH).slack("U015LRWS8KV").team(PLATFORM).build())
-          .put(DEEPAK, defaultUserInfo(DEEPAK).slack("UK9EKBKQS").team(DEVELOPER_EXPERIENCE).build())
-          .put(DHRUV, defaultUserInfo(DHRUV).slack("U012WHYL7G8").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(BRIJESH, defaultUserInfo(BRIJESH).slack("U015LRWS8KV").team(PL).build())
+          .put(DEEPAK, defaultUserInfo(DEEPAK).slack("UK9EKBKQS").team(DX).build())
+          .put(DHRUV, defaultUserInfo(DHRUV).slack("U012WHYL7G8").team(CDC).build())
           .put(DINESH, UserInfo.builder().email("dinesh.garg@harness.io").slack("UQ0DMQG11").build())
-          .put(GARVIT, defaultUserInfo(GARVIT).slack("UHH98EXDK").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(GEORGE, defaultUserInfo(GEORGE).slack("U88CA877V").team(DELEGATE).build())
-          .put(GUNA, defaultUserInfo(GUNA).slack("UD45NV41W").team(DELEGATE).build())
-          .put(HANTANG, defaultUserInfo(HANTANG).slack("UK8AQJSCS").team(CONTINUOUS_EFFICIENCY).build())
-          .put(HARSH, defaultUserInfo(HARSH).slack("UJ1CDM3FY").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(HITESH, defaultUserInfo(HITESH).slack("UK41C9QJH").team(CONTINUOUS_EFFICIENCY).build())
-          .put(IGOR, defaultUserInfo(IGOR).slack("U0104P0SC03").team(DEVELOPER_EXPERIENCE).build())
-          .put(INDER, defaultUserInfo(INDER).slack("U0155TBCW7R").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(GARVIT, defaultUserInfo(GARVIT).slack("UHH98EXDK").team(CDC).build())
+          .put(GEORGE, defaultUserInfo(GEORGE).slack("U88CA877V").team(DEL).build())
+          .put(GUNA, defaultUserInfo(GUNA).slack("UD45NV41W").team(DEL).build())
+          .put(HANTANG, defaultUserInfo(HANTANG).slack("UK8AQJSCS").team(CE).build())
+          .put(HARI, defaultUserInfo(HARI).slack("U01KKD4NSUQ").team(DX).build())
+          .put(PARDHA, defaultUserInfo(PARDHA).slack("U01JVHQ61TL").team(CDP).build())
+          .put(HARSH, defaultUserInfo(HARSH).slack("UJ1CDM3FY").team(CDC).build())
+          .put(HITESH, defaultUserInfo(HITESH).slack("UK41C9QJH").team(CE).build())
+          .put(IGOR, defaultUserInfo(IGOR).slack("U0104P0SC03").team(DX).build())
+          .put(INDER, defaultUserInfo(INDER).slack("U0155TBCW7R").team(CDC).build())
           .put(JUHI, defaultUserInfo(JUHI).slack("UL1KX4K1S").build())
-          .put(KAMAL, defaultUserInfo(KAMAL).slack("UKFQ1PQBH").team(CONTINUOUS_VERIFICATION).build())
-          .put(KANHAIYA, defaultUserInfo(KANHAIYA).slack("U01HFBAT8A2").team(CONTINUOUS_VERIFICATION).build())
-          .put(KARAN, defaultUserInfo(KARAN).slack("U015LRX21FD").team(PLATFORM).build())
-          .put(LUCAS, defaultUserInfo(LUCAS).slack("U01C8MPTS2J").team(DELEGATE).build())
-          .put(MARKO, defaultUserInfo(MARKO).slack("UVDT91N9W").team(DELEGATE).build())
-          .put(MATT, defaultUserInfo(MATT).slack("U019QR7TA7M").team(DELEGATE).build())
+          .put(KAMAL, defaultUserInfo(KAMAL).slack("UKFQ1PQBH").team(CV).build())
+          .put(KANHAIYA, defaultUserInfo(KANHAIYA).slack("U01HFBAT8A2").team(CV).build())
+          .put(KARAN, defaultUserInfo(KARAN).slack("U015LRX21FD").team(PL).build())
+          .put(LUCAS, defaultUserInfo(LUCAS).slack("U01C8MPTS2J").team(DEL).build())
+          .put(MARKO, defaultUserInfo(MARKO).slack("UVDT91N9W").team(DEL).build())
+          .put(MATT, defaultUserInfo(MATT).slack("U019QR7TA7M").team(DEL).build())
           .put(MEENAKSHI, UserInfo.builder().email("meenakshi.raikwar@harness.io").slack("UKP2AEUNA").build())
-          .put(MEHUL, defaultUserInfo(MEHUL).slack("URYP18AHX").team(PLATFORM).build())
-          .put(MILOS, defaultUserInfo(MILOS).slack("U014WS8CXEV").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(MOHIT, defaultUserInfo(MOHIT).slack("USB6NTE22").team(PLATFORM).build())
-          .put(NATARAJA, defaultUserInfo(NATARAJA).slack("UDQAS9J5C").team(PLATFORM).build())
-          .put(NEMANJA, defaultUserInfo(NEMANJA).slack("U016F8DDQSC").team(CONTINUOUS_VERIFICATION).build())
-          .put(NICOLAS, defaultUserInfo(NICOLAS).slack("U01C8MPQVQE").team(DELEGATE).build())
-          .put(NIKOLA, defaultUserInfo(NIKOLA).slack("U011CFJ4YDV").team(PLATFORM).build())
-          .put(NIKUNJ, defaultUserInfo(NIKUNJ).slack("U019JUP10AF").team(CONTINUOUS_EFFICIENCY).build())
-          .put(PARNIAN, defaultUserInfo(PARNIAN).slack("U89A5MLQK").team(CONTINUOUS_VERIFICATION).build())
-          .put(POOJA, defaultUserInfo(POOJA).slack("UDDA9L0D6").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(MEHUL, defaultUserInfo(MEHUL).slack("URYP18AHX").team(PL).build())
+          .put(MILOS, defaultUserInfo(MILOS).slack("U014WS8CXEV").team(CDC).build())
+          .put(MOHIT, defaultUserInfo(MOHIT).slack("USB6NTE22").team(PL).build())
+          .put(NATARAJA, defaultUserInfo(NATARAJA).slack("UDQAS9J5C").team(PL).build())
+          .put(NEMANJA, defaultUserInfo(NEMANJA).slack("U016F8DDQSC").team(CV).build())
+          .put(NICOLAS, defaultUserInfo(NICOLAS).slack("U01C8MPQVQE").team(DEL).build())
+          .put(NIKOLA, defaultUserInfo(NIKOLA).slack("U011CFJ4YDV").team(PL).build())
+          .put(NIKUNJ, defaultUserInfo(NIKUNJ).slack("U019JUP10AF").team(CE).build())
+          .put(PARNIAN, defaultUserInfo(PARNIAN).slack("U89A5MLQK").team(CV).build())
+          .put(POOJA, defaultUserInfo(POOJA).slack("UDDA9L0D6").team(CDC).build())
           .put(PRANJAL, defaultUserInfo(PRANJAL).slack("UBV049Q5B").team(SWAT).build())
-          .put(PRASHANT, defaultUserInfo(PRASHANT).slack("UJLBB7ULT").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(PRAVEEN, defaultUserInfo(PRAVEEN).slack("UAQH9QHSB").team(CONTINUOUS_VERIFICATION).build())
-          .put(PUNEET, defaultUserInfo(PUNEET).slack("U8PMB1XKM").team(CONTINUOUS_EFFICIENCY).build())
-          .put(PRASHANTSHARMA, defaultUserInfo(PRASHANTSHARMA).slack("U015LRWKR6X").team(PLATFORM).build())
-          .put(RAGHU, defaultUserInfo(RAGHU).slack("U4Z2PG2TD").team(CONTINUOUS_VERIFICATION).build())
-          .put(RAJ, defaultUserInfo(RAJ).slack("U01CPMHBX27").team(PLATFORM).build())
-          .put(RAUNAK, defaultUserInfo(RAUNAK).slack("UU06GNQ0M").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(RAMA, defaultUserInfo(RAMA).slack("U69BLRG72").team(DEVELOPER_EXPERIENCE).build())
-          .put(ROHIT, defaultUserInfo(ROHIT).slack("UKLSUUCAC").team(CONTINUOUS_EFFICIENCY).build())
-          .put(ROHIT_KUMAR, defaultUserInfo(ROHIT_KUMAR).slack("UL92UJN4S").team(DEVELOPER_EXPERIENCE).build())
+          .put(PRASHANT, defaultUserInfo(PRASHANT).slack("UJLBB7ULT").team(CDC).build())
+          .put(PRAVEEN, defaultUserInfo(PRAVEEN).slack("UAQH9QHSB").team(CV).build())
+          .put(PUNEET, defaultUserInfo(PUNEET).slack("U8PMB1XKM").team(CE).build())
+          .put(PRASHANTSHARMA, defaultUserInfo(PRASHANTSHARMA).slack("U015LRWKR6X").team(PL).build())
+          .put(RAGHU, defaultUserInfo(RAGHU).slack("U4Z2PG2TD").team(CV).build())
+          .put(RAJ, defaultUserInfo(RAJ).slack("U01CPMHBX27").team(PL).build())
+          .put(RAUNAK, defaultUserInfo(RAUNAK).slack("UU06GNQ0M").team(CDP).build())
+          .put(RAMA, defaultUserInfo(RAMA).slack("U69BLRG72").team(DX).build())
+          .put(ROHIT, defaultUserInfo(ROHIT).slack("UKLSUUCAC").team(CE).build())
+          .put(ROHIT_KUMAR, defaultUserInfo(ROHIT_KUMAR).slack("UL92UJN4S").team(DX).build())
           .put(ROHITKARELIA, defaultUserInfo(ROHITKARELIA).slack("UP48HU3T9").team(SWAT).build())
-          .put(RUSHABH, defaultUserInfo(RUSHABH).slack("U8M736D36").team(PLATFORM).jira("rushabh").build())
-          .put(ADWAIT, defaultUserInfo(ADWAIT).slack("U8PL7JRMG").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(SATYAM, defaultUserInfo(SATYAM).slack("U9Z3R0GL8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(ANIL, defaultUserInfo(ANIL).slack("U0132ESPZ08").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(
-              RAGHVENDRA, defaultUserInfo(RAGHVENDRA).slack("U012F7A157Y").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(SANDESH, defaultUserInfo(SANDESH).slack("U015PLPSD47").team(CONTINUOUS_EFFICIENCY).build())
-          .put(SANJA, defaultUserInfo(SANJA).slack("U015Q24465T").team(DELEGATE).build())
-          .put(SANYASI_NAIDU, defaultUserInfo(SANYASI_NAIDU).slack("U012P5KH3RU").team(DEVELOPER_EXPERIENCE).build())
+          .put(RUSHABH, defaultUserInfo(RUSHABH).slack("U8M736D36").team(PL).jira("rushabh").build())
+          .put(ADWAIT, defaultUserInfo(ADWAIT).slack("U8PL7JRMG").team(CDP).build())
+          .put(SATYAM, defaultUserInfo(SATYAM).slack("U9Z3R0GL8").team(CDP).build())
+          .put(ANIL, defaultUserInfo(ANIL).slack("U0132ESPZ08").team(CDP).build())
+          .put(RAGHVENDRA, defaultUserInfo(RAGHVENDRA).slack("U012F7A157Y").team(CDP).build())
+          .put(SAMARTH, defaultUserInfo(SAMARTH).slack("U01KNQ4S20J").team(PL).build())
+          .put(SANDESH, defaultUserInfo(SANDESH).slack("U015PLPSD47").team(CE).build())
+          .put(SANJA, defaultUserInfo(SANJA).slack("U015Q24465T").team(DEL).build())
+          .put(SANYASI_NAIDU, defaultUserInfo(SANYASI_NAIDU).slack("U012P5KH3RU").team(DX).build())
           .put(SHASWAT, UserInfo.builder().email("shaswat.deep@harness.io").slack("UL9J5EH7A").build())
-          .put(SHIVAKUMAR,
-              defaultUserInfo(SHIVAKUMAR)
-                  .slack("U01124VC43C")
-                  .team(CONTINUOUS_INTEGRATION)
-                  .jira("5e875b7bcb85aa0c1471748c")
-                  .build())
-          .put(SHUBHANSHU, defaultUserInfo(SHUBHANSHU).slack("UKLTRSAN9").team(CONTINUOUS_EFFICIENCY).build())
-          .put(SOWMYA, defaultUserInfo(SOWMYA).slack("UHM19HBKM").team(CONTINUOUS_VERIFICATION).build())
-          .put(SRINIVAS, defaultUserInfo(SRINIVAS).slack("U4QC23961").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(SRIRAM, defaultUserInfo(SRIRAM).slack("U5L475PK5").team(CONTINUOUS_VERIFICATION).build())
-          .put(SUJAY, defaultUserInfo(SUJAY).slack("U01J9MF7SMT").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(UJJAWAL, defaultUserInfo(UJJAWAL).slack("UKLSV01DW").team(PLATFORM).build())
-          .put(UTKARSH, defaultUserInfo(UTKARSH).slack("UKGF0UL58").team(PLATFORM).build())
-          .put(UTSAV, defaultUserInfo(UTSAV).slack("U015DTMQRV4").team(CONTINUOUS_EFFICIENCY).build())
-          .put(VAIBHAV_SI, defaultUserInfo(VAIBHAV_SI).slack("UCK76T36U").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
+          .put(SHIVAKUMAR, defaultUserInfo(SHIVAKUMAR).slack("U01124VC43C").team(CI).build())
+          .put(SHUBHANSHU, defaultUserInfo(SHUBHANSHU).slack("UKLTRSAN9").team(CE).build())
+          .put(SOWMYA, defaultUserInfo(SOWMYA).slack("UHM19HBKM").team(CV).build())
+          .put(SRINIVAS, defaultUserInfo(SRINIVAS).slack("U4QC23961").team(CDC).build())
+          .put(SRIRAM, defaultUserInfo(SRIRAM).slack("U5L475PK5").team(CV).build())
+          .put(SUJAY, defaultUserInfo(SUJAY).slack("U01J9MF7SMT").team(CDC).build())
+          .put(UJJAWAL, defaultUserInfo(UJJAWAL).slack("UKLSV01DW").team(PL).build())
+          .put(UTKARSH, defaultUserInfo(UTKARSH).slack("UKGF0UL58").team(PL).build())
+          .put(UTSAV, defaultUserInfo(UTSAV).slack("U015DTMQRV4").team(CE).build())
+          .put(VAIBHAV_SI, defaultUserInfo(VAIBHAV_SI).slack("UCK76T36U").team(CDP).build())
           .put(VENKATESH, UserInfo.builder().email("venkatesh.kotrike@harness.io").slack("UGF55UEHF").build())
-          .put(VIKAS, defaultUserInfo(VIKAS).slack("UE7M4CNMA").team(PLATFORM).build())
-          .put(VIKAS_S, defaultUserInfo(VIKAS_S).slack("U01HMK9SY2V").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(VOJIN, defaultUserInfo(VOJIN).slack("U015TFFL83G").team(PLATFORM).build())
-          .put(VISTAAR, defaultUserInfo(VISTAAR).slack("U0138Q1JEHM").team(CONTINUOUS_INTEGRATION).build())
-          .put(VUK, defaultUserInfo(VUK).slack("U0115RT3EQL").team(DELEGATE).build())
-          .put(YOGESH, defaultUserInfo(YOGESH).slack("UJVLUUXAT").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(VARDAN_BANSAL, defaultUserInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DEVELOPER_EXPERIENCE).build())
-          .put(NANDAN, defaultUserInfo(NANDAN).slack("UKMS5KCBS").team(CONTINUOUS_VERIFICATION).build())
-          .put(RIHAZ, defaultUserInfo(RIHAZ).slack("USUP66518").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(PRABU, defaultUserInfo(PRABU).slack("UTF8GHZEK").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(PHOENIKX, defaultUserInfo(PHOENIKX).slack("URWLPPJ8Z").team(PLATFORM).build())
-          .put(SHUBHAM,
-              defaultUserInfo(SHUBHAM)
-                  .slack("UTRFKPL57")
-                  .team(CONTINUOUS_INTEGRATION)
-                  .jira("5e47234c2a59dc0c8fe4ccb8")
-                  .build())
-          .put(ABOSII, defaultUserInfo(ABOSII).slack("U01321VFH1A").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(ACASIAN, defaultUserInfo(ACASIAN).slack("U012UEVAPAR").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(VGLIJIN, defaultUserInfo(VGLIJIN).slack("U012W2S777V").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(MILAN, defaultUserInfo(MILAN).slack("U012P4GHM7Y").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(ARCHIT, defaultUserInfo(ARCHIT).slack("U012QGPR9N0").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(IVAN, defaultUserInfo(IVAN).slack("U014BFQ9PJS").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(TATHAGAT, defaultUserInfo(TATHAGAT).slack("U015DTMJLA2").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(SAHIL, defaultUserInfo(SAHIL).slack("U0141LFMEF8").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(BOJANA, defaultUserInfo(BOJANA).slack("U014GS4NFLM").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(LAZAR, defaultUserInfo(LAZAR).slack("U0150TB4LSK").team(DELEGATE).build())
-          .put(HINGER, defaultUserInfo(HINGER).slack("U015DTMV2A2").team(CONTINUOUS_DEPLOYMENT_CORE).build())
+          .put(VIKAS, defaultUserInfo(VIKAS).slack("UE7M4CNMA").team(PL).build())
+          .put(VIKAS_S, defaultUserInfo(VIKAS_S).slack("U01HMK9SY2V").team(CDC).build())
+          .put(VOJIN, defaultUserInfo(VOJIN).slack("U015TFFL83G").team(PL).build())
+          .put(VISTAAR, defaultUserInfo(VISTAAR).slack("U0138Q1JEHM").team(CI).build())
+          .put(VUK, defaultUserInfo(VUK).slack("U0115RT3EQL").team(DEL).build())
+          .put(YOGESH, defaultUserInfo(YOGESH).slack("UJVLUUXAT").team(CDP).build())
+          .put(VARDAN_BANSAL, defaultUserInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DX).build())
+          .put(NANDAN, defaultUserInfo(NANDAN).slack("UKMS5KCBS").team(CV).build())
+          .put(RIHAZ, defaultUserInfo(RIHAZ).slack("USUP66518").team(CDP).build())
+          .put(PRABU, defaultUserInfo(PRABU).slack("UTF8GHZEK").team(CDC).build())
+          .put(PHOENIKX, defaultUserInfo(PHOENIKX).slack("URWLPPJ8Z").team(PL).build())
+          .put(SHUBHAM, defaultUserInfo(SHUBHAM).slack("UTRFKPL57").team(CI).build())
+          .put(ABOSII, defaultUserInfo(ABOSII).slack("U01321VFH1A").team(CDP).build())
+          .put(ACASIAN, defaultUserInfo(ACASIAN).slack("U012UEVAPAR").team(CDP).build())
+          .put(VGLIJIN, defaultUserInfo(VGLIJIN).slack("U012W2S777V").team(CDC).build())
+          .put(MILAN, defaultUserInfo(MILAN).slack("U012P4GHM7Y").team(CDC).build())
+          .put(ARCHIT, defaultUserInfo(ARCHIT).slack("U012QGPR9N0").team(CDC).build())
+          .put(IVAN, defaultUserInfo(IVAN).slack("U014BFQ9PJS").team(CDP).build())
+          .put(TATHAGAT, defaultUserInfo(TATHAGAT).slack("U015DTMJLA2").team(CDP).build())
+          .put(SAHIL, defaultUserInfo(SAHIL).slack("U0141LFMEF8").team(CDP).build())
+          .put(BOJANA, defaultUserInfo(BOJANA).slack("U014GS4NFLM").team(CDP).build())
+          .put(LAZAR, defaultUserInfo(LAZAR).slack("U0150TB4LSK").team(DEL).build())
+          .put(HINGER, defaultUserInfo(HINGER).slack("U015DTMV2A2").team(CDC).build())
           .put(UNKNOWN, UserInfo.builder().email("n/a").slack("channel").build())
-          .put(TMACARI, defaultUserInfo(TMACARI).slack("U0172NX6SGY").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(NAMAN, defaultUserInfo(NAMAN).slack("U0173M823CN").team(CONTINUOUS_DEPLOYMENT_PLATFORM).build())
-          .put(DEEPAK_PUTHRAYA,
-              defaultUserInfo(DEEPAK_PUTHRAYA).slack("U018SBXS5M1").team(CONTINUOUS_DEPLOYMENT_CORE).build())
-          .put(SAINATH,
-              defaultUserInfo(SAINATH)
-                  .slack("U01FN5EH3PF")
-                  .jira("5fc3d0ed4a09640069512e40")
-                  .team(CONTINUOUS_DEPLOYMENT_PLATFORM)
-                  .build())
-          .put(MOHIT_GARG, defaultUserInfo(MOHIT_GARG).slack("U01F9DBKYA3").team(DEVELOPER_EXPERIENCE).build())
-          .put(
-              AKASH_NAGARAJAN, defaultUserInfo(AKASH_NAGARAJAN).slack("U01GDEF032R").team(DEVELOPER_EXPERIENCE).build())
-          .put(PIYUSH, defaultUserInfo(PIYUSH).slack("U01G9QYDMAA").team(PLATFORM).build())
+          .put(TMACARI, defaultUserInfo(TMACARI).slack("U0172NX6SGY").team(CDP).build())
+          .put(NAMAN, defaultUserInfo(NAMAN).slack("U0173M823CN").team(CDP).build())
+          .put(DEEPAK_PUTHRAYA, defaultUserInfo(DEEPAK_PUTHRAYA).slack("U018SBXS5M1").team(CDC).build())
+          .put(SAINATH, defaultUserInfo(SAINATH).slack("U01FN5EH3PF").team(CDP).build())
+          .put(MOHIT_GARG, defaultUserInfo(MOHIT_GARG).slack("U01F9DBKYA3").team(DX).build())
+          .put(AKASH_NAGARAJAN, defaultUserInfo(AKASH_NAGARAJAN).slack("U01GDEF032R").team(DX).build())
+          .put(PIYUSH, defaultUserInfo(PIYUSH).slack("U01G9QYDMAA").team(PL).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));
 
   private static final Map<String, TeamInfo> teamInfo =
       ImmutableMap.<String, TeamInfo>builder()
-          .put(CONTINUOUS_DEPLOYMENT_CORE,
-              TeamInfo.builder().team(CONTINUOUS_DEPLOYMENT_CORE).leader(PRASHANT).leader(POOJA).build())
-          .put(CONTINUOUS_DEPLOYMENT_PLATFORM,
-              TeamInfo.builder().team(CONTINUOUS_DEPLOYMENT_PLATFORM).leader(ANSHUL).build())
-          .put(CONTINUOUS_EFFICIENCY,
-              TeamInfo.builder().team(CONTINUOUS_EFFICIENCY).leader(PUNEET).leader(AVMOHAN).build())
-          .put(CONTINUOUS_INTEGRATION, TeamInfo.builder().team(CONTINUOUS_INTEGRATION).leader(SHIVAKUMAR).build())
-          .put(CONTINUOUS_VERIFICATION, TeamInfo.builder().team(CONTINUOUS_VERIFICATION).leader(RAGHU).build())
-          .put(DELEGATE, TeamInfo.builder().team(DELEGATE).leader(GEORGE).leader(MARKO).build())
-          .put(DEVELOPER_EXPERIENCE, TeamInfo.builder().team(DEVELOPER_EXPERIENCE).leader(RAMA).build())
-          .put(PLATFORM, TeamInfo.builder().team(PLATFORM).leader(ANKIT).leader(VIKAS).build())
+          .put(CDC, TeamInfo.builder().team(CDC).leader(PRASHANT).leader(POOJA).build())
+          .put(CDP, TeamInfo.builder().team(CDP).leader(ANSHUL).build())
+          .put(CE, TeamInfo.builder().team(CE).leader(PUNEET).leader(AVMOHAN).build())
+          .put(CI, TeamInfo.builder().team(CI).leader(SHIVAKUMAR).build())
+          .put(CV, TeamInfo.builder().team(CV).leader(RAGHU).build())
+          .put(DEL, TeamInfo.builder().team(DEL).leader(GEORGE).leader(MARKO).build())
+          .put(DX, TeamInfo.builder().team(DX).leader(RAMA).build())
+          .put(PL, TeamInfo.builder().team(PL).leader(ANKIT).leader(VIKAS).build())
           .put(SWAT, TeamInfo.builder().team(SWAT).leader(BRETT).build())
           .build();
 

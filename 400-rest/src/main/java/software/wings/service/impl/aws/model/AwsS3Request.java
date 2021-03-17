@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.model;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -12,6 +14,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsS3Request extends AwsRequest implements TaskParameters {
   public enum AwsS3RequestType { LIST_BUCKET_NAMES }
 

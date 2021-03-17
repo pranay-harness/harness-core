@@ -43,7 +43,7 @@ public class GithubToGitMapper {
     } else if (authType == GitAuthType.SSH) {
       final GithubSshCredentialsDTO credentials =
           (GithubSshCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
-      final SecretRefData sshKeyRef = credentials.getSpec().getSshKeyRef();
+      final SecretRefData sshKeyRef = credentials.getSshKeyRef();
       return GitConfigCreater.getGitConfigForSsh(connectionType, url, sshKeyRef);
     }
     throw new InvalidRequestException("Unknown auth type: " + authType);

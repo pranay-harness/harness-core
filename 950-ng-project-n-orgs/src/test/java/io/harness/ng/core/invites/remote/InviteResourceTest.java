@@ -8,9 +8,6 @@ import static io.harness.rule.OwnerRule.ANKUSH;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
@@ -95,7 +92,7 @@ public class InviteResourceTest extends CategoryTest {
             .getContent();
 
     List<String> inviteIds = returnInvites.stream().map(InviteDTO::getId).collect(Collectors.toList());
-    assertEquals(inviteIds, actualInviteIds);
+    assertThat(inviteIds).isEqualTo(actualInviteIds);
   }
 
   @Test
@@ -145,9 +142,9 @@ public class InviteResourceTest extends CategoryTest {
     when(invitesService.updateInvite(any())).thenReturn(Optional.of(invite), Optional.empty());
 
     Optional<InviteDTO> inviteOptional = inviteResource.updateInvite(inviteId, inviteDTO, accountIdentifier).getData();
-    assertTrue(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isTrue();
 
     inviteOptional = inviteResource.updateInvite(inviteId, inviteDTO, accountIdentifier).getData();
-    assertFalse(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isFalse();
   }
 }

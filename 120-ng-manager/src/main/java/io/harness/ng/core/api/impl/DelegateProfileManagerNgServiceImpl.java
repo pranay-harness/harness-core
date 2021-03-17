@@ -311,7 +311,8 @@ public class DelegateProfileManagerNgServiceImpl implements DelegateProfileManag
             .description(delegateProfileGrpc.getDescription())
             .primary(delegateProfileGrpc.getPrimary())
             .approvalRequired(delegateProfileGrpc.getApprovalRequired())
-            .startupScript(delegateProfileGrpc.getStartupScript());
+            .startupScript(delegateProfileGrpc.getStartupScript())
+            .numberOfDelegates(delegateProfileGrpc.getNumberOfDelegates());
 
     if (delegateProfileGrpc.hasCreatedBy()) {
       delegateProfileDetailsNgBuilder.createdBy(io.harness.delegate.beans.EmbeddedUserDetails.builder()

@@ -1,11 +1,12 @@
 package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.CancelTaskRequest;
@@ -15,14 +16,10 @@ import io.harness.delegate.CreatePerpetualTaskResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceImplBase;
 import io.harness.delegate.DeletePerpetualTaskRequest;
 import io.harness.delegate.DeletePerpetualTaskResponse;
-import io.harness.delegate.Document;
-import io.harness.delegate.Documents;
 import io.harness.delegate.ExecuteParkedTaskRequest;
 import io.harness.delegate.ExecuteParkedTaskResponse;
 import io.harness.delegate.FetchParkedTaskStatusRequest;
 import io.harness.delegate.FetchParkedTaskStatusResponse;
-import io.harness.delegate.ObtainDocumentRequest;
-import io.harness.delegate.ObtainDocumentResponse;
 import io.harness.delegate.RegisterCallbackRequest;
 import io.harness.delegate.RegisterCallbackResponse;
 import io.harness.delegate.ResetPerpetualTaskRequest;
@@ -47,14 +44,10 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.mongo.SampleEntity.SampleEntityKeys;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskClientContext.PerpetualTaskClientContextBuilder;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskService;
-import io.harness.persistence.HIterator;
-import io.harness.persistence.HPersistence;
-import io.harness.persistence.PersistentEntity;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateTaskService;
@@ -74,28 +67,26 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
-import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
+@BreakDependencyOn("io.harness.delegate.beans.DelegateTaskResponse")
 public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private DelegateCallbackRegistry delegateCallbackRegistry;
   private PerpetualTaskService perpetualTaskService;
   private DelegateService delegateService;
   private KryoSerializer kryoSerializer;
-  private HPersistence persistence;
   private DelegateTaskService delegateTaskService;
 
   @Inject
   public DelegateServiceGrpcImpl(DelegateCallbackRegistry delegateCallbackRegistry,
       PerpetualTaskService perpetualTaskService, DelegateService delegateService,
-      DelegateTaskService delegateTaskService, KryoSerializer kryoSerializer, HPersistence persistence) {
+      DelegateTaskService delegateTaskService, KryoSerializer kryoSerializer) {
     this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
-    this.persistence = persistence;
     this.delegateTaskService = delegateTaskService;
   }
 
@@ -118,27 +109,34 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       List<String> taskSelectors =
           request.getSelectorsList().stream().map(TaskSelector::getSelector).collect(Collectors.toList());
 
-      DelegateTask task = DelegateTask.builder()
-                              .uuid(taskId)
-                              .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
-                              .waitId(taskId)
-                              .accountId(request.getAccountId().getId())
-                              .setupAbstractions(setupAbstractions)
-                              .logStreamingAbstractions(logAbstractions)
-                              .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
-                              .executionCapabilities(capabilities)
-                              .tags(taskSelectors)
-                              .data(TaskData.builder()
-                                        .parked(taskDetails.getParked())
-                                        .async(taskDetails.getMode() == TaskMode.ASYNC)
-                                        .taskType(taskDetails.getType().getType())
-                                        .parameters(new Object[] {kryoSerializer.asInflatedObject(
-                                            taskDetails.getKryoParameters().toByteArray())})
-                                        .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
-                                        .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
-                                        .expressions(taskDetails.getExpressionsMap())
-                                        .build())
-                              .build();
+      DelegateTaskBuilder taskBuilder =
+          DelegateTask.builder()
+              .uuid(taskId)
+              .driverId(request.hasCallbackToken() ? request.getCallbackToken().getToken() : null)
+              .waitId(taskId)
+              .accountId(request.getAccountId().getId())
+              .setupAbstractions(setupAbstractions)
+              .logStreamingAbstractions(logAbstractions)
+              .workflowExecutionId(setupAbstractions.get(DelegateTaskKeys.workflowExecutionId))
+              .executionCapabilities(capabilities)
+              .tags(taskSelectors)
+              .selectionLogsTrackingEnabled(request.getSelectionTrackingLogEnabled())
+              .data(TaskData.builder()
+                        .parked(taskDetails.getParked())
+                        .async(taskDetails.getMode() == TaskMode.ASYNC)
+                        .taskType(taskDetails.getType().getType())
+                        .parameters(new Object[] {
+                            kryoSerializer.asInflatedObject(taskDetails.getKryoParameters().toByteArray())})
+                        .timeout(Durations.toMillis(taskDetails.getExecutionTimeout()))
+                        .expressionFunctorToken((int) taskDetails.getExpressionFunctorToken())
+                        .expressions(taskDetails.getExpressionsMap())
+                        .build());
+
+      if (request.hasQueueTimeout()) {
+        taskBuilder.expiry(System.currentTimeMillis() + Durations.toMillis(request.getQueueTimeout()));
+      }
+
+      DelegateTask task = taskBuilder.build();
 
       if (task.getData().isParked()) {
         delegateService.saveDelegateTask(task, DelegateTask.Status.PARKED);
@@ -365,27 +363,5 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       log.error("Unexpected error occurred while processing reset perpetual task request.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
-  }
-
-  @Override
-  public void obtainDocument(ObtainDocumentRequest request, StreamObserver<ObtainDocumentResponse> responseObserver) {
-    ObtainDocumentResponse.Builder builder = ObtainDocumentResponse.newBuilder();
-    for (Documents documents : request.getDocumentsList()) {
-      Query<PersistentEntity> query =
-          persistence.createQueryForCollection(documents.getCollectionName(), excludeAuthority)
-              .field(SampleEntityKeys.uuid)
-              .in(documents.getUuidList());
-
-      try (HIterator<PersistentEntity> iterator = new HIterator(query.fetch())) {
-        for (PersistentEntity entity : iterator) {
-          builder.addDocuments(Document.newBuilder()
-                                   .setCollectionName(documents.getCollectionName())
-                                   .setKryoBytes(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(entity)))
-                                   .build());
-        }
-      }
-    }
-    responseObserver.onNext(builder.build());
-    responseObserver.onCompleted();
   }
 }

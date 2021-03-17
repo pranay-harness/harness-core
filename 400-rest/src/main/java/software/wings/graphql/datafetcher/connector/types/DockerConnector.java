@@ -1,5 +1,9 @@
 package software.wings.graphql.datafetcher.connector.types;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
 
@@ -11,11 +15,14 @@ import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorI
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
+@TargetModule(Module._380_CG_GRAPHQL)
 public class DockerConnector extends Connector {
   private SecretManager secretManager;
   private ConnectorsController connectorsController;
@@ -31,6 +38,8 @@ public class DockerConnector extends Connector {
     if (dockerConnectorInput.getUserName().isPresent()) {
       dockerConnectorInput.getUserName().getValue().ifPresent(userName -> dockerConfig.setUsername(userName.trim()));
     }
+
+    handleDelegateSelectors(dockerConnectorInput.getDelegateSelectors(), dockerConfig);
 
     checkUrlExists(dockerConnectorInput, dockerConfig);
 
@@ -56,6 +65,8 @@ public class DockerConnector extends Connector {
     if (dockerConnectorInput.getUserName().isPresent()) {
       dockerConnectorInput.getUserName().getValue().ifPresent(userName -> dockerConfig.setUsername(userName.trim()));
     }
+
+    handleDelegateSelectors(dockerConnectorInput.getDelegateSelectors(), dockerConfig);
 
     checkUrlExists(dockerConnectorInput, dockerConfig);
 
@@ -120,6 +131,17 @@ public class DockerConnector extends Connector {
         throw new InvalidRequestException("URL should be specified");
       }
       dockerConfig.setDockerRegistryUrl(url);
+    }
+  }
+
+  private void handleDelegateSelectors(RequestField<List<String>> delegateSelectors, DockerConfig dockerConfig) {
+    List<String> selectors = null;
+    if (delegateSelectors.isPresent()) {
+      selectors = delegateSelectors.getValue().orElse(null);
+    }
+    if (isNotEmpty(selectors)) {
+      selectors = selectors.stream().filter(StringUtils::isNotBlank).collect(Collectors.toList());
+      dockerConfig.setDelegateSelectors(selectors);
     }
   }
 

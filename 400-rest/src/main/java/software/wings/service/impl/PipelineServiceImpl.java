@@ -271,6 +271,15 @@ public class PipelineServiceImpl implements PipelineService {
     return updatedPipeline;
   }
 
+  @Override
+  public void savePipelines(List<Pipeline> pipelines, boolean skipValidations) {
+    if (skipValidations) {
+      wingsPersistence.save(pipelines);
+    } else {
+      pipelines.forEach(this::save);
+    }
+  }
+
   @VisibleForTesting
   void handlePipelineStageDeletion(Pipeline pipeline, Pipeline savedPipeline, boolean fromYaml) {
     List<PipelineStage> newPipelineStages = pipeline.getPipelineStages();
@@ -565,11 +574,9 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, false, null);
 
     // checking pipeline for loops and replacing looped states with multiple parallel states.
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      boolean isRuntimeEnabled =
-          featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
-    }
+    boolean isRuntimeEnabled =
+        featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
     return pipeline;
   }
 
@@ -591,11 +598,9 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline =
         readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, preExecutionChecks, null);
     // checking pipeline for loops and replacing looped states with multiple parallel states.
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      boolean isRuntimeEnabled =
-          featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
-      PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
-    }
+    boolean isRuntimeEnabled =
+        featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
     return pipeline;
   }
 
@@ -621,9 +626,7 @@ public class PipelineServiceImpl implements PipelineService {
     }
 
     setSinglePipelineDetails(pipeline, false, workflowCache, true);
-    if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-      validateMultipleValuesAllowed(pipeline, pipelineVariables);
-    }
+    validateMultipleValuesAllowed(pipeline, pipelineVariables);
 
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -654,9 +657,7 @@ public class PipelineServiceImpl implements PipelineService {
                 pipelineStageElement.getWorkflowVariables(), pipelineVariables);
         pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
 
-        if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
-          PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds, isRuntimeEnabled);
-        }
+        PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds, isRuntimeEnabled);
 
         if (BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
           resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
@@ -1017,8 +1018,7 @@ public class PipelineServiceImpl implements PipelineService {
         handleNonEntityVariables(pipelineVariables, variable, value, isRuntime);
       } else {
         boolean allowMulti = false;
-        if ((featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflow.getAccountId())
-                && infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType())
+        if ((infraVarsCount == 1 && INFRASTRUCTURE_DEFINITION == variable.obtainEntityType())
             || USER_GROUP == variable.obtainEntityType()) {
           allowMulti = true;
         }

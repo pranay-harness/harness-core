@@ -4,17 +4,18 @@ import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.RemoveDuplicateAnomaliesTasklet;
 import io.harness.batch.processing.anomalydetection.SlackNotificationsTasklet;
-import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionStatsModelProcessor;
+import io.harness.batch.processing.anomalydetection.processor.AnomalyDetectionProcessor;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsAccountReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsServiceReader;
+import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionAwsUsageTypeReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpProductReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpProjectReader;
 import io.harness.batch.processing.anomalydetection.reader.cloud.AnomalyDetectionGcpSkuReader;
 import io.harness.batch.processing.anomalydetection.reader.k8s.AnomalyDetectionClusterTimescaleReader;
 import io.harness.batch.processing.anomalydetection.reader.k8s.AnomalyDetectionNamespaceTimescaleReader;
-import io.harness.batch.processing.anomalydetection.types.Anomaly;
 import io.harness.batch.processing.anomalydetection.writer.AnomalyDetectionTimeScaleWriter;
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.ccm.anomaly.entities.Anomaly;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -34,20 +35,31 @@ import org.springframework.context.annotation.Configuration;
 @Slf4j
 public class AnomalyDetectionConfiguration {
   @Bean
-  @Qualifier(value = "anomalyDetectionDailyJob")
-  public Job anomalyDetectionDailyJob(JobBuilderFactory jobBuilderFactory, Step statisticalModelClusterStep,
-      Step statisticalModelNamespaceStep, Step statisticalModelGcpProjectStep, Step statisticalModelGcpSkuStep,
-      Step statisticalModelGcpProductStep, Step statisticalModelAwsAccountStep, Step statisticalModelAwsServiceStep,
-      Step removeDuplicatesStep, Step slackNotificationStep) {
-    return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION.name())
+  @Qualifier(value = "anomalyDetectionInClusterDailyJob")
+  public Job anomalyDetectionInClusterDailyJob(JobBuilderFactory jobBuilderFactory, Step statisticalModelClusterStep,
+      Step statisticalModelNamespaceStep, Step removeDuplicatesStep) {
+    return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_K8S.name())
         .incrementer(new RunIdIncrementer())
         .start(statisticalModelClusterStep)
         .next(statisticalModelNamespaceStep)
-        .next(statisticalModelGcpProjectStep)
+        .next(removeDuplicatesStep)
+        .build();
+  }
+
+  @Bean
+  @Qualifier(value = "anomalyDetectionOutOfClusterDailyJob")
+  public Job anomalyDetectionOutOfClusterDailyJob(JobBuilderFactory jobBuilderFactory,
+      Step statisticalModelGcpProjectStep, Step statisticalModelGcpSkuStep, Step statisticalModelGcpProductStep,
+      Step statisticalModelAwsAccountStep, Step statisticalModelAwsServiceStep, Step removeDuplicatesStep,
+      Step statisticalModelAwsUsageTypeStep, Step slackNotificationStep) {
+    return jobBuilderFactory.get(BatchJobType.ANOMALY_DETECTION_CLOUD.name())
+        .incrementer(new RunIdIncrementer())
+        .start(statisticalModelGcpProjectStep)
         .next(statisticalModelGcpProductStep)
         .next(statisticalModelGcpSkuStep)
         .next(statisticalModelAwsAccountStep)
         .next(statisticalModelAwsServiceStep)
+        .next(statisticalModelAwsUsageTypeStep)
         .next(removeDuplicatesStep)
         .next(slackNotificationStep)
         .build();
@@ -58,7 +70,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelClusterDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(clusterItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -68,7 +80,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelNamespaceDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(namespaceItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -78,7 +90,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelGcpProjectDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(gcpProjectItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -88,7 +100,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelGcpProductDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(gcpProductItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -98,7 +110,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelGcpSkuDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(gcpSkuItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -108,7 +120,7 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelAwsAccountDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(awsAccountItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -118,7 +130,17 @@ public class AnomalyDetectionConfiguration {
     return stepBuilderFactory.get("statisticalModelAwsServiceDailyAnomalyDetectionStep")
         .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
         .reader(awsServiceItemReader())
-        .processor(statModelProcessor())
+        .processor(modelProcessor())
+        .writer(timescaleWriter())
+        .build();
+  }
+
+  @Bean
+  protected Step statisticalModelAwsUsageTypeStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("statisticalModelAwsUsageTypeDailyAnomalyDetectionStep")
+        .<AnomalyDetectionTimeSeries, Anomaly>chunk(AnomalyDetectionConstants.BATCH_SIZE)
+        .reader(awsUsageTypeItemReader())
+        .processor(modelProcessor())
         .writer(timescaleWriter())
         .build();
   }
@@ -179,10 +201,15 @@ public class AnomalyDetectionConfiguration {
     return new AnomalyDetectionAwsServiceReader();
   }
 
+  @Bean
+  public ItemReader<AnomalyDetectionTimeSeries> awsUsageTypeItemReader() {
+    return new AnomalyDetectionAwsUsageTypeReader();
+  }
+
   // ---------------- Item Processor ----------------------
   @Bean
-  public ItemProcessor<AnomalyDetectionTimeSeries, Anomaly> statModelProcessor() {
-    return new AnomalyDetectionStatsModelProcessor();
+  public ItemProcessor<AnomalyDetectionTimeSeries, Anomaly> modelProcessor() {
+    return new AnomalyDetectionProcessor();
   }
 
   // ---------------- Item Writer ----------------------

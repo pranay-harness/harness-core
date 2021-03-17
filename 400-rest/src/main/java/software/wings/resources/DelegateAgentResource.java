@@ -20,31 +20,36 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
-import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.managerclient.AccountPreference;
+import io.harness.managerclient.AccountPreferenceQuery;
 import io.harness.managerclient.DelegateVersions;
+import io.harness.managerclient.DelegateVersionsQuery;
 import io.harness.managerclient.GetDelegatePropertiesRequest;
 import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
+import io.harness.managerclient.HttpsCertRequirementQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.persistence.HPersistence;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.beans.Account;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.delegatetasks.buildsource.BuildSourceExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.security.annotations.Scope;
@@ -57,8 +62,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
-import com.google.protobuf.TextFormat;
-import com.google.protobuf.TextFormat.ParseException;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.swagger.annotations.Api;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -86,7 +90,7 @@ import org.jetbrains.annotations.NotNull;
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;
-  private WingsPersistence wingsPersistence;
+  private HPersistence persistence;
   private DelegateRequestRateLimiter delegateRequestRateLimiter;
   private SubdomainUrlHelperIntfc subdomainUrlHelper;
   private ArtifactCollectionResponseHandler artifactCollectionResponseHandler;
@@ -97,16 +101,16 @@ public class DelegateAgentResource {
   private ConfigurationController configurationController;
 
   @Inject
-  public DelegateAgentResource(DelegateService delegateService, AccountService accountService,
-      WingsPersistence wingsPersistence, DelegateRequestRateLimiter delegateRequestRateLimiter,
-      SubdomainUrlHelperIntfc subdomainUrlHelper, ArtifactCollectionResponseHandler artifactCollectionResponseHandler,
-      InstanceHelper instanceHelper, ManifestCollectionResponseHandler manifestCollectionResponseHandler,
+  public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
+      DelegateRequestRateLimiter delegateRequestRateLimiter, SubdomainUrlHelperIntfc subdomainUrlHelper,
+      ArtifactCollectionResponseHandler artifactCollectionResponseHandler, InstanceHelper instanceHelper,
+      ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
       ConfigurationController configurationController) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
-    this.wingsPersistence = wingsPersistence;
+    this.persistence = persistence;
     this.delegateRequestRateLimiter = delegateRequestRateLimiter;
     this.subdomainUrlHelper = subdomainUrlHelper;
     this.artifactCollectionResponseHandler = artifactCollectionResponseHandler;
@@ -136,40 +140,53 @@ public class DelegateAgentResource {
   }
 
   @DelegateAuth
-  @GET
+  @POST
   @Path("properties")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> getDelegateProperties(@QueryParam("request") @NotEmpty String request)
-      throws ParseException {
-    GetDelegatePropertiesRequest requestProto = TextFormat.parse(request, GetDelegatePropertiesRequest.class);
-    String accountId = requestProto.getAccountId();
+  public RestResponse<String> getDelegateProperties(@QueryParam("accountId") String accountId, byte[] request)
+      throws InvalidProtocolBufferException {
+    GetDelegatePropertiesRequest requestProto = GetDelegatePropertiesRequest.parseFrom(request);
+
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(
+      GetDelegatePropertiesResponse response =
           GetDelegatePropertiesResponse.newBuilder()
               .addAllResponseEntry(
                   requestProto.getRequestEntryList()
                       .stream()
                       .map(requestEntry -> {
-                        switch (requestEntry.getTypeUrl().split("/")[1]) {
-                          case "io.harness.managerclient.DelegateVersionsQuery":
-                            return Any.pack(
-                                DelegateVersions.newBuilder()
-                                    .addAllDelegateVersion(
-                                        accountService.getDelegateConfiguration(accountId).getDelegateVersions())
-                                    .build());
-                          case "io.harness.managerclient.HttpsCertRequirementQuery":
-                            return Any.pack(
-                                HttpsCertRequirement.newBuilder()
-                                    .setCertRequirement(accountService.getHttpsCertificateRequirement(accountId))
-                                    .build());
-                          default:
-                            throw new WingsException("invalid type: " + requestEntry.getTypeUrl());
+                        if (requestEntry.is(DelegateVersionsQuery.class)) {
+                          return Any.pack(
+                              DelegateVersions.newBuilder()
+                                  .addAllDelegateVersion(
+                                      accountService.getDelegateConfiguration(accountId).getDelegateVersions())
+                                  .build());
+                        } else if (requestEntry.is(HttpsCertRequirementQuery.class)) {
+                          return Any.pack(
+                              HttpsCertRequirement.newBuilder()
+                                  .setCertRequirement(accountService.getHttpsCertificateRequirement(accountId))
+                                  .build());
+                        } else if (requestEntry.is(AccountPreferenceQuery.class)) {
+                          Account account = accountService.get(accountId);
+                          if (account.getAccountPreferences() != null
+                              && account.getAccountPreferences().getDelegateSecretsCacheTTLInHours() != null) {
+                            return Any.pack(AccountPreference.newBuilder()
+                                                .setDelegateSecretsCacheTTLInHours(
+                                                    account.getAccountPreferences().getDelegateSecretsCacheTTLInHours())
+                                                .build());
+                          }
+                          return Any.newBuilder().build();
+                        } else {
+                          return Any.newBuilder().build();
                         }
                       })
                       .collect(toList()))
-              .build()
-              .toString());
+              .build();
+      return new RestResponse<>(response.toString());
+
+    } catch (Exception e) {
+      log.error("Encountered an exception while parsing proto", e);
+      return null;
     }
   }
 
@@ -324,6 +341,21 @@ public class DelegateAgentResource {
 
   @DelegateAuth
   @GET
+  @Path("delegateScriptsNg")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
+      @QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
+      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, delegateVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
+    }
+  }
+
+  @DelegateAuth
+  @GET
   @Path("delegateScripts")
   @Timed
   @ExceptionMetered
@@ -383,7 +415,7 @@ public class DelegateAgentResource {
       List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
       log.info("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
 
-      wingsPersistence.save(logs);
+      persistence.save(logs);
     }
   }
 

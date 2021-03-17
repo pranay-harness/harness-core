@@ -40,30 +40,32 @@ def sonarqube_test(
         sq_properties_template = None,
         tags = [],
         visibility = []):
-    if project_key == None:
-        project_key = native.package_name()
-    if project_name == None:
-        project_name = "Portal :: " + native.package_name()
-    if test_srcs == []:
-        test_srcs = native.glob(["src/test/**/*.java"])
-    if test_targets == []:
-        test_targets = test_targets_list()
-    if test_reports == []:
-        test_reports = ["//:test_reports"]
-    if tags == []:
-        tags = ["manual", "no-ide"]
-    if visibility == []:
-        visibility = ["//visibility:public"]
-    sq_project(
-        name = name,
-        project_key = project_key,
-        project_name = project_name,
-        srcs = srcs,
-        targets = targets,
-        test_srcs = test_srcs,
-        test_targets = test_targets,
-        test_reports = test_reports,
-        tags = tags,
-        visibility = visibility,
-        checkstyle_report_path = getCheckstyleReportPathForSonar(),
-    )
+    None
+
+#    if project_key == None:
+#        project_key = native.package_name()
+#    if project_name == None:
+#        project_name = "Portal :: " + native.package_name()
+#    if test_srcs == []:
+#        test_srcs = native.glob(["src/test/**/*.java"])
+#    if test_targets == []:
+#        test_targets = test_targets_list()
+#    if test_reports == []:
+#        test_reports = ["//:test_reports"]
+#    if tags == []:
+#        tags = ["manual", "no-ide"]
+#    if visibility == []:
+#        visibility = ["//visibility:public"]
+#    sq_project(
+#        name = name,
+#        project_key = project_key,
+#        project_name = project_name,
+#        srcs = srcs,
+#        targets = targets,
+#        test_srcs = test_srcs,
+#        test_targets = test_targets,
+#        test_reports = test_reports,
+#        tags = tags,
+#        visibility = visibility,
+#        checkstyle_report_path = getCheckstyleReportPathForSonar(),
+#    )

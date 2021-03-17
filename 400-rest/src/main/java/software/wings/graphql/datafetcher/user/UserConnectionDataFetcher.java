@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.UnexpectedException;
 
 import software.wings.beans.User;
@@ -29,6 +31,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UserConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLUserFilter, QLNoOpSortCriteria, QLUserConnection> {
   private UserGroupService userGroupService;

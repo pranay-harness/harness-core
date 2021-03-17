@@ -37,12 +37,15 @@ import io.harness.serializer.CDNGRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.yaml.YamlSdkModule;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -83,6 +86,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
 
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
+    modules.add(YamlSdkModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -113,6 +117,12 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             .addAll(ManagerRegistrars.springConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<YamlSchemaRootClass> yamlSchemaRootClass() {
+        return ImmutableList.<YamlSchemaRootClass>builder().addAll(CDNGRegistrars.yamlSchemaRegistrars).build();
+      }
     });
     modules.add(new AbstractModule() {
       @Override
@@ -123,6 +133,7 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
             .toInstance(Mockito.mock(ConnectorService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
         bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));

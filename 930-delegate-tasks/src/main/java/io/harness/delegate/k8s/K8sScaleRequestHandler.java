@@ -20,6 +20,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
@@ -56,7 +57,8 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
 
   @Override
   protected K8sDeployResponse executeTaskInternal(K8sDeployRequest k8sDeployRequest,
-      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient) throws Exception {
+      K8sDelegateTaskParams k8SDelegateTaskParams, ILogStreamingTaskClient logStreamingTaskClient,
+      CommandUnitsProgress commandUnitsProgress) throws Exception {
     if (!(k8sDeployRequest instanceof K8sScaleRequest)) {
       throw new InvalidArgumentsException(Pair.of("k8sDeployRequest", "Must be instance of K8sScaleRequest"));
     }
@@ -67,7 +69,7 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sScaleRequest.getK8sInfraDelegateConfig());
 
     boolean success = init(k8sScaleRequest, k8SDelegateTaskParams, kubernetesConfig.getNamespace(),
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Init));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Init, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
@@ -78,14 +80,14 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
         k8sScaleRequest.getReleaseName(), steadyStateTimeoutInMillis);
 
     success = k8sTaskHelperBase.scale(client, k8SDelegateTaskParams, resourceIdToScale, targetReplicaCount,
-        k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, Scale));
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, Scale, true, commandUnitsProgress));
     if (!success) {
       return getFailureResponse();
     }
 
     if (!k8sScaleRequest.isSkipSteadyStateCheck()) {
       success = k8sTaskHelperBase.doStatusCheck(client, resourceIdToScale, k8SDelegateTaskParams,
-          k8sTaskHelperBase.getExecutionLogCallback(logStreamingTaskClient, WaitForSteadyState));
+          k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, WaitForSteadyState, true, commandUnitsProgress));
 
       if (!success) {
         return getFailureResponse();
@@ -106,10 +108,7 @@ public class K8sScaleRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse getFailureResponse() {
     K8sScaleResponse k8sScaleResponse = K8sScaleResponse.builder().build();
-    return K8sDeployResponse.builder()
-        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-        .k8sNGTaskResponse(k8sScaleResponse)
-        .build();
+    return getGenericFailureResponse(k8sScaleResponse);
   }
 
   @VisibleForTesting

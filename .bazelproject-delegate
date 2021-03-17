@@ -1,0 +1,34 @@
+import .bazelproject-config
+
+directories:
+  260-delegate
+  400-rest
+  420-delegate-agent
+  420-delegate-service
+  460-capability
+  470-alert
+  882-pms-sdk-core
+  879-pms-sdk
+  910-delegate-service-driver
+  910-delegate-task-grpc-service
+  915-pms-delegate-service-driver
+  920-delegate-agent-beans
+  920-delegate-service-beans
+  930-delegate-tasks
+  955-alert-beans
+  955-delegate-beans
+  940-feature-flag
+  950-delegate-tasks-beans
+  960-api-services
+  960-expression-service
+  960-persistence
+  970-api-services-beans
+  970-grpc
+  980-commons
+  990-commons-test
+  tools/bazel
+
+import_run_configurations:
+  run-configurations/DelegateApp.xml
+  run-configurations/WingsApp.xml
+  run-configurations/DataGen_App.xml

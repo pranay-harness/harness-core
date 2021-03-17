@@ -5,9 +5,9 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_INVALID_YAML_CONTENT;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_INVALID_YAML_FILE_PATH;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_TEMPLATIZED;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_RESOURCE_PATH;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_TEMPLATIZED_RESOURCE_PATH;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT_RESOURCE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.BASIC_VALID_YAML_FILE_PATH_PREFIX;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -63,13 +63,13 @@ public class BasicWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
-    testCRUD(BASIC_VALID_YAML_CONTENT, "basic1");
-    testCRUD(BASIC_VALID_YAML_CONTENT_TEMPLATIZED, "basic2");
+    testCRUD(readYamlStringInFile(BASIC_VALID_YAML_CONTENT_RESOURCE_PATH), "basic1");
+    testCRUD(readYamlStringInFile(BASIC_VALID_YAML_CONTENT_TEMPLATIZED_RESOURCE_PATH), "basic2");
     testCRUDWithYamlWithMultilineUserInput();
   }
 
   private void testCRUDWithYamlWithMultilineUserInput() throws Exception {
-    String yamlString = BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT;
+    String yamlString = readYamlStringInFile(BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT_RESOURCE_PATH);
 
     for (int count = 0; count < 3; count++) {
       String workflowName = "basic" + Integer.toString(count + 3);
@@ -88,8 +88,8 @@ public class BasicWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
       assertThat(yaml.getType()).isEqualTo("BASIC");
 
       String yamlContent = getYamlContent(yaml);
-      yamlString = yamlContent.substring(0, yamlContent.length() - 1);
-      assertThat(yamlString).isEqualTo(BASIC_VALID_YAML_CONTENT_WITH_MULTILINE_USER_INPUT);
+      String finalYamlString = yamlContent.substring(0, yamlContent.length() - 1);
+      assertThat(finalYamlString).isEqualTo(yamlString);
     }
   }
 
@@ -140,7 +140,8 @@ public class BasicWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    testFailures(BASIC_VALID_YAML_CONTENT, BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic.yaml", BASIC_INVALID_YAML_CONTENT,
-        BASIC_INVALID_YAML_FILE_PATH, yamlHandler, BasicWorkflowYaml.class);
+    testFailures(readYamlStringInFile(BASIC_VALID_YAML_CONTENT_RESOURCE_PATH),
+        BASIC_VALID_YAML_FILE_PATH_PREFIX + "basic.yaml", BASIC_INVALID_YAML_CONTENT, BASIC_INVALID_YAML_FILE_PATH,
+        yamlHandler, BasicWorkflowYaml.class);
   }
 }

@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.interrupts;
+
+option java_multiple_files = true;
+
+enum InterruptType {
+  UNKNOWN = 0;
+  ABORT = 1;
+  ABORT_ALL = 2;
+  PAUSE = 3;
+  PAUSE_FOR_INPUTS = 4;
+  PAUSE_ALL = 5;
+  RESUME = 6;
+  RESUME_ALL = 7;
+  RETRY = 8;
+  IGNORE = 9;
+  WAITING_FOR_MANUAL_INTERVENTION = 10;
+  MARK_FAILED = 11;
+  MARK_SUCCESS = 12;
+  ROLLBACK = 13;
+  NEXT_STEP = 14;
+  END_EXECUTION = 15;
+  ROLLBACK_DONE = 16;
+  MARK_EXPIRED = 17;
+  CONTINUE_WITH_DEFAULTS = 18;
+  CONTINUE_PIPELINE_STAGE = 19;
+}

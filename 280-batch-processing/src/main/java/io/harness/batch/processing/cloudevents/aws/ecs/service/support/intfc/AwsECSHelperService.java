@@ -3,7 +3,6 @@ package io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc;
 import software.wings.beans.AwsCrossAccountAttributes;
 
 import com.amazonaws.services.ecs.model.ContainerInstance;
-import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
 import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.Task;
@@ -15,8 +14,8 @@ public interface AwsECSHelperService {
   List<Service> listServicesForCluster(
       AwsCrossAccountAttributes awsCrossAccountAttributes, String region, String cluster);
 
-  List<ContainerInstance> listContainerInstancesForCluster(AwsCrossAccountAttributes awsCrossAccountAttributes,
-      String region, String cluster, ContainerInstanceStatus containerInstanceStatus);
+  List<ContainerInstance> listContainerInstancesForCluster(
+      AwsCrossAccountAttributes awsCrossAccountAttributes, String region, String cluster);
 
   List<String> listTasksArnForService(AwsCrossAccountAttributes awsCrossAccountAttributes, String region,
       String cluster, String service, DesiredStatus desiredStatus);

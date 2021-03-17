@@ -2,6 +2,7 @@ package io.harness.pms.filter.creation;
 
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 
+import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -12,4 +13,5 @@ public class FilterCreatorMergeServiceResponse {
   Map<String, String> filters;
   Map<String, GraphLayoutNode> layoutNodeMap;
   int stageCount;
+  List<String> stageNames;
 }

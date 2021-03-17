@@ -26,9 +26,12 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBase {
   @Inject private OrchestrationEngine engine;
@@ -45,10 +48,18 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
 
   @Override
   public void queueTask(QueueTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {
-    String taskId = pmsNodeExecutionService.queueTask(
-        request.getNodeExecutionId(), request.getSetupAbstractionsMap(), request.getTaskRequest());
-    responseObserver.onNext(QueueTaskResponse.newBuilder().setTaskId(taskId).build());
-    responseObserver.onCompleted();
+    try {
+      String taskId = pmsNodeExecutionService.queueTask(
+          request.getNodeExecutionId(), request.getSetupAbstractionsMap(), request.getTaskRequest());
+      responseObserver.onNext(QueueTaskResponse.newBuilder().setTaskId(taskId).build());
+      responseObserver.onCompleted();
+    } catch (StatusRuntimeException ex) {
+      log.error("Error while queuing delegate task", ex);
+      responseObserver.onError(ex);
+    } catch (Exception ex) {
+      log.error("Error while queuing delegate task", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
   }
 
   @Override

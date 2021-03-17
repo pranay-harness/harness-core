@@ -56,7 +56,6 @@ public class EventServerExecutor {
     if (failedAlready) {
       return;
     }
-
     String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
     final File lockfile = new File(directoryPath, "event-server");
@@ -67,7 +66,8 @@ public class EventServerExecutor {
           return;
         }
         log.info("Execute the event-server from {}", directory);
-        final Path jar = Paths.get(directory.getPath(), "350-event-server", "target", "event-server-capsule.jar");
+        final Path jar = Paths.get("/home/jenkins"
+            + "/.bazel-dirs/bin/350-event-server/module_deploy.jar");
         final Path config = Paths.get(directory.getPath(), "350-event-server", "event-service-config.yml");
         String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 

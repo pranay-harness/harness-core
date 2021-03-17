@@ -118,9 +118,8 @@ public class NGGitServiceImpl implements NGGitService {
   }
 
   @Override
-  public FetchFilesResult fetchFilesByPath(
-      GitStoreDelegateConfig gitStoreDelegateConfig, String accountId, SshSessionConfig sshSessionConfig) {
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
+  public FetchFilesResult fetchFilesByPath(GitStoreDelegateConfig gitStoreDelegateConfig, String accountId,
+      SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
     FetchFilesByPathRequest fetchFilesByPathRequest = FetchFilesByPathRequest.builder()
                                                           .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                           .filePaths(gitStoreDelegateConfig.getPaths())
@@ -137,8 +136,7 @@ public class NGGitServiceImpl implements NGGitService {
 
   @Override
   public void downloadFiles(GitStoreDelegateConfig gitStoreDelegateConfig, String destinationDirectory,
-      String accountId, SshSessionConfig sshSessionConfig) {
-    GitConfigDTO gitConfigDTO = gitStoreDelegateConfig.getGitConfigDTO();
+      String accountId, SshSessionConfig sshSessionConfig, GitConfigDTO gitConfigDTO) {
     DownloadFilesRequest downloadFilesRequest = DownloadFilesRequest.builder()
                                                     .authRequest(getAuthRequest(gitConfigDTO, sshSessionConfig))
                                                     .filePaths(gitStoreDelegateConfig.getPaths())

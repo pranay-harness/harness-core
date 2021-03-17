@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.audit;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
 
@@ -28,6 +30,7 @@ import org.mongodb.morphia.query.Query;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ChangeSetQueryHelper {
   @Inject protected DataFetcherUtils utils;
 

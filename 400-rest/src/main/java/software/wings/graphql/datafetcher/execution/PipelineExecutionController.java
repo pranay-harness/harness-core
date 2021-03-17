@@ -13,11 +13,12 @@ import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABL
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -96,6 +97,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class PipelineExecutionController {
   @Inject AuthHandler authHandler;
   @Inject AuthService authService;
@@ -467,8 +469,7 @@ public class PipelineExecutionController {
             envIdForInfra = variable.obtainEnvIdField();
           }
           if (isNotEmpty(envIdForInfra)) {
-            if (value.contains(",")
-                && featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+            if (value.contains(",")) {
               return handleMultiInfra(appId, envIdForInfra, value, variable);
             }
             InfrastructureDefinition infrastructureDefinition =

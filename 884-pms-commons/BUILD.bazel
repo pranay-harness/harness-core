@@ -1,17 +1,14 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 java_library(
     name = "maven_deps",
     visibility = ["//visibility:public"],
     exports = [
         "//890-pms-contracts:module",
+        "//920-delegate-service-beans:module",
         "//950-walktree-visitor:module",
         "//960-persistence:module",
         "//960-recaster:module",
@@ -35,6 +32,7 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     resources = ["//884-pms-commons/src/test/resources:resource"],
     visibility = ["//visibility:public"],
@@ -53,14 +51,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

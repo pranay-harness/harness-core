@@ -21,6 +21,7 @@ import io.harness.yaml.core.StepElement;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -52,13 +53,11 @@ public class GenericStepPlanCreator implements SupportDefinedExecutorPlanCreator
 
     // Add Step dependencies.
     GenericStepInfo genericStepInfo = (GenericStepInfo) stepElement.getStepSpecType();
-    Map<String, StepDependencySpec> stepDependencyMap = genericStepInfo.getInputStepDependencyList(context);
+    Map<String, StepDependencySpec> stepDependencyMap = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(stepDependencyMap)) {
       stepDependencyMap.forEach(
           (key, value) -> stepDependencyService.attachDependency(value, planNodeBuilder, context));
     }
-    // Register step dependency instructors.
-    genericStepInfo.registerStepDependencyInstructors(stepDependencyService, context, nodeId);
 
     planNodeBuilder.uuid(nodeId)
         .name(nodeName)

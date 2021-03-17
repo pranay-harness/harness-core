@@ -222,8 +222,7 @@ public class ServiceNowServiceImpl implements ServiceNowService {
   private ServiceNowConfig getServiceNowConfig(String accountId, String connectorId) {
     SettingAttribute settingAttribute = settingService.getByAccountAndId(accountId, connectorId);
     notNullCheck("Service Now connector may be deleted.", settingAttribute, USER);
-    ServiceNowConfig serviceNowConfig = (ServiceNowConfig) settingAttribute.getValue();
-    return serviceNowConfig;
+    return (ServiceNowConfig) settingAttribute.getValue();
   }
 
   @Override

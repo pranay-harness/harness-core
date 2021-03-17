@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.services;
 
+import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -16,14 +17,17 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
@@ -54,7 +58,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,6 +71,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private SettingsService settingsService;
   @Mock private EnvironmentService environmentService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @InjectMocks @Inject private YamlHelper yamlHelper;
@@ -77,6 +81,8 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
   private ApplicationManifest localApplicationManifest;
   private ApplicationManifest remoteApplicationManifest;
   private ApplicationManifest kustomizeApplicationManifest;
+  private ApplicationManifest customApplicationManifest;
+  private ApplicationManifest customOpenshiftTemplateApplicationManifest;
 
   private static final String CONNECTOR_ID = "CONNECTOR_ID";
   private static final String CONNECTOR_NAME = "CONNECTOR_NAME";
@@ -93,6 +99,20 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
       + "  useBranch: true\n"
       + "  useInlineServiceDefinition: false\n"
       + "storeType: Remote";
+
+  private String customManifestYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST\n"
+      + "customSourceConfig:\n"
+      + "  path: ./local\n"
+      + "  script: echo test\n"
+      + "storeType: CUSTOM";
+
+  private String customOpenshiftTemplateYamlContent = "harnessApiVersion: '1.0'\n"
+      + "type: APPLICATION_MANIFEST\n"
+      + "customSourceConfig:\n"
+      + "  path: ./openshift/local\n"
+      + "  script: echo test\n"
+      + "storeType: CUSTOM_OPENSHIFT_TEMPLATE";
 
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Manifests/Index.yaml";
   private String invalidYamlFilePath = "Setup/Applications/APP_NAME/ServicesInvalid/SERVICE_NAME/Manifests/Index.yaml";
@@ -167,6 +187,20 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
             .kind(AppManifestKind.VALUES)
             .build();
 
+    customApplicationManifest =
+        ApplicationManifest.builder()
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.CUSTOM)
+            .customSourceConfig(CustomSourceConfig.builder().path("./local").script("echo test").build())
+            .build();
+
+    customOpenshiftTemplateApplicationManifest =
+        ApplicationManifest.builder()
+            .serviceId(SERVICE_ID)
+            .storeType(StoreType.CUSTOM_OPENSHIFT_TEMPLATE)
+            .customSourceConfig(CustomSourceConfig.builder().path("./openshift/local").script("echo test").build())
+            .build();
+
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
     when(appService.getAppByName(ACCOUNT_ID, APP_NAME))
         .thenReturn(Application.Builder.anApplication().uuid(APP_ID).name(APP_NAME).build());
@@ -183,6 +217,8 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
                                             .build();
     when(settingsService.get(CONNECTOR_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, CONNECTOR_NAME)).thenReturn(settingAttribute);
+
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID)).thenReturn(true);
   }
 
   @Test
@@ -222,6 +258,60 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
 
     ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
     compareAppManifest(remoteApplicationManifest, applicationManifestFromGet);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCRUDAndGetForCustomManifest() throws IOException {
+    testCRUDAndGetForCustomManifest(customManifestYamlContent, customApplicationManifest);
+    testCRUDAndGetForCustomManifest(customOpenshiftTemplateYamlContent, customOpenshiftTemplateApplicationManifest);
+  }
+
+  private void testCRUDAndGetForCustomManifest(String yamlContent, ApplicationManifest appManifest) throws IOException {
+    ChangeContext<ApplicationManifest.Yaml> changeContext = createChangeContext(yamlContent, validYamlFilePath);
+
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(yamlContent, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    ApplicationManifest savedApplicationManifest = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    compareAppManifest(appManifest, savedApplicationManifest);
+
+    validateYamlContent(yamlContent, appManifest);
+
+    ApplicationManifest applicationManifestFromGet = yamlHandler.get(ACCOUNT_ID, validYamlFilePath);
+    compareAppManifest(appManifest, applicationManifestFromGet);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testInvalidCustomManifestConfig() throws IOException {
+    String localManifestWithCustomManifestConfig = "harnessApiVersion: '1.0'\n"
+        + "type: APPLICATION_MANIFEST\n"
+        + "customSourceConfig:\n"
+        + "  path: ./local\n"
+        + "  script: echo test\n"
+        + "storeType: Local";
+
+    ChangeContext<ApplicationManifest.Yaml> changeContext =
+        createChangeContext(localManifestWithCustomManifestConfig, validYamlFilePath);
+    ApplicationManifest.Yaml yamlObject =
+        (ApplicationManifest.Yaml) getYaml(localManifestWithCustomManifestConfig, ApplicationManifest.Yaml.class);
+    changeContext.setYaml(yamlObject);
+
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, asList(changeContext)))
+        .isInstanceOf(InvalidArgumentsException.class)
+        .hasMessageContaining("CustomSourceConfig should only be used with Custom store type");
+
+    // Feature Flag is disabled
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID)).thenReturn(false);
+    changeContext.setYaml(
+        (ApplicationManifest.Yaml) getYaml(customManifestYamlContent, ApplicationManifest.Yaml.class));
+    assertThatThrownBy(() -> yamlHandler.upsertFromYaml(changeContext, asList(changeContext)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Manifest feature is not enabled. Please contact Harness support");
   }
 
   @Test(expected = WingsException.class)
@@ -430,7 +520,7 @@ public class ApplicationManifestYamlHandlerTest extends YamlHandlerTestBase {
 
   private String readResourceFile(String fileName) throws IOException {
     File yamlFile = null;
-    yamlFile = new File((resourcePath + PATH_DELIMITER + fileName));
+    yamlFile = new File(resourcePath + PATH_DELIMITER + fileName);
 
     return FileUtils.readFileToString(yamlFile, "UTF-8");
   }

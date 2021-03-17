@@ -24,7 +24,7 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_DEPLOY;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_VMSS_SETUP;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_RESIZE;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_DEPLOYMENT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_RESIZE;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.PCF_SETUP;
@@ -729,7 +729,7 @@ public enum ArtifactType {
 
     @Override
     public List<Command> getDefaultCommands() {
-      return asList(getAzureWebAppSlotSetupCommand(), getAzureWebAppSlotResizeCommand());
+      return asList(getAzureWebAppSlotSetupCommand());
     }
 
     /**
@@ -744,22 +744,7 @@ public enum ArtifactType {
                          .addNodes(GraphNode.builder()
                                        .origin(true)
                                        .id(graphIdGenerator("node"))
-                                       .name(AZURE_WEBAPP_SLOT_SETUP)
-                                       .type(CommandUnitType.AZURE_WEBAPP.name())
-                                       .build())
-                         .buildPipeline())
-          .build();
-    }
-
-    private Command getAzureWebAppSlotResizeCommand() {
-      return aCommand()
-          .withCommandType(CommandType.RESIZE)
-          .withGraph(aGraph()
-                         .withGraphName(AZURE_WEBAPP_SLOT_RESIZE)
-                         .addNodes(GraphNode.builder()
-                                       .origin(true)
-                                       .id(graphIdGenerator("node"))
-                                       .name(AZURE_WEBAPP_SLOT_RESIZE)
+                                       .name(AZURE_WEBAPP_SLOT_DEPLOYMENT)
                                        .type(CommandUnitType.AZURE_WEBAPP.name())
                                        .build())
                          .buildPipeline())

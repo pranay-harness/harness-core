@@ -11,6 +11,10 @@ public interface ActivitySourceService extends DeleteEntityByHandler<ActivitySou
   String saveActivitySource(
       String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO);
 
+  String create(String accountId, ActivitySourceDTO activitySourceDTO);
+
+  String update(String accountId, String identifier, ActivitySourceDTO activitySourceDTO);
+
   ActivitySource getActivitySource(@NotNull String activitySourceId);
 
   ActivitySourceDTO getActivitySource(

@@ -1,9 +1,12 @@
 package software.wings.delegatetasks.k8s.logging;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AutoLogContext;
 
 import com.google.common.collect.ImmutableMap;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class K8sVersionLogContext extends AutoLogContext {
   public static final String CLOUD_PROVIDER = "cloudProvider";
   public static final String VERSION = "version";

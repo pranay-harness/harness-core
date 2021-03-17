@@ -1,29 +1,23 @@
 package io.harness.batch.processing.anomalydetection.service.impl;
 
-import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionTimeSeries;
 import io.harness.batch.processing.anomalydetection.TimeSeriesMetaData;
 import io.harness.batch.processing.anomalydetection.helpers.AnomalyDetectionHelper;
 import io.harness.batch.processing.anomalydetection.helpers.TimeSeriesUtils;
-import io.harness.batch.processing.anomalydetection.types.Anomaly;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 import software.wings.graphql.datafetcher.billing.BillingDataTableSchema;
 import software.wings.graphql.schema.type.aggregation.billing.QLCCMEntityGroupBy;
 
 import com.google.inject.Singleton;
-import com.healthmarketscience.sqlbuilder.InsertQuery;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -127,69 +121,5 @@ public class AnomalyDetectionTimescaleDataServiceImpl {
     if (groupByList.contains(QLCCMEntityGroupBy.WorkloadType)) {
       currentTimeSeries.setWorkloadType(resultSet.getString(tableSchema.getWorkloadType().getColumnNameSQL()));
     }
-  }
-
-  //--------------- Write Anomalies to Timescale DB ---------------------------
-
-  public boolean writeAnomaliesToTimescale(List<Anomaly> anomaliesList) {
-    boolean successfulInsert = false;
-    if (dbService.isValid() && !anomaliesList.isEmpty()) {
-      String insertStatement;
-      int retryCount = 0;
-      int index = 0;
-      while (!successfulInsert && retryCount < MAX_RETRY_COUNT) {
-        try (Connection dbConnection = dbService.getDBConnection();
-             Statement statement = dbConnection.createStatement()) {
-          index = 0;
-          for (Anomaly anomaly : anomaliesList) {
-            insertStatement = getInsertQuery(anomaly);
-            statement.addBatch(insertStatement);
-            index++;
-            if (index % AnomalyDetectionConstants.BATCH_SIZE == 0 || index == anomaliesList.size()) {
-              log.debug("Prepared Statement in AnomalyDetectionTimescaleDataServiceImpl: {} ", statement);
-              int[] count = statement.executeBatch();
-              log.debug("Successfully inserted {} anomalies into timescaledb", IntStream.of(count).sum());
-            }
-          }
-          successfulInsert = true;
-        } catch (SQLException e) {
-          log.error(
-              "Failed to save anomalies data,[{}],retryCount=[{}], Exception: ", anomaliesList.size(), retryCount, e);
-          retryCount++;
-        }
-      }
-    } else {
-      log.warn("Not able to write {} anomalies to timescale db(validity:{}) for account", anomaliesList.size(),
-          dbService.isValid());
-    }
-    return successfulInsert;
-  }
-
-  private String getInsertQuery(Anomaly anomaly) {
-    return new InsertQuery(AnomaliesDataTableSchema.table)
-        .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
-        .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
-        .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
-        .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
-        .addColumn(AnomaliesDataTableSchema.anomalyTime, Timestamp.from(anomaly.getTime()))
-        .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
-        .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
-        .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
-        .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
-        .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
-        .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
-        .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
-        .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
-        .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
-        .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
-        .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
-        .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
-        .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
-        .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
-        .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
-        .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
-        .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
-        .validate()
-        .toString();
   }
 }

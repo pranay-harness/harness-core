@@ -46,6 +46,8 @@ public interface AccountService {
 
   Account get(String accountId);
 
+  List<Account> getAccounts(List<String> identifiers);
+
   Account getFromCache(String accountId);
 
   String getAccountStatus(String accountId);
@@ -203,4 +205,6 @@ public interface AccountService {
   Map<String, Long> obtainAccountDataRetentionMap();
 
   void ensureDataRetention(List<Class<? extends AccountDataRetentionEntity>> entityClasses);
+
+  boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
 }

@@ -6,6 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.beans.ARMSourceType.GIT;
+import static software.wings.beans.ARMSourceType.TEMPLATE_BODY;
+
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -25,9 +28,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -50,12 +53,14 @@ import io.harness.validation.Update;
 import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
 import software.wings.api.TerraformExecutionData;
+import software.wings.beans.ARMInfrastructureProvisioner;
 import software.wings.beans.BlueprintProperty;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.CloudFormationSourceType;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
@@ -236,6 +241,20 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       validateCloudFormationProvisioner((CloudFormationInfrastructureProvisioner) provisioner);
     } else if (provisioner instanceof ShellScriptInfrastructureProvisioner) {
       validateShellScriptProvisioner((ShellScriptInfrastructureProvisioner) provisioner);
+    } else if (provisioner instanceof ARMInfrastructureProvisioner) {
+      validateARMProvisioner((ARMInfrastructureProvisioner) provisioner);
+    }
+  }
+
+  private void validateARMProvisioner(ARMInfrastructureProvisioner provisioner) {
+    if (GIT == provisioner.getSourceType()) {
+      notNullCheck("Git File Config is NULL", provisioner.getGitFileConfig());
+    } else if (TEMPLATE_BODY == provisioner.getSourceType()) {
+      if (isEmpty(provisioner.getTemplateBody())) {
+        throw new InvalidRequestException("Template Body is empty");
+      }
+    } else {
+      throw new InvalidRequestException("Unrecognized SourceType for ARM provisioner");
     }
   }
 
@@ -329,8 +348,19 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       String sourceType =
           CloudFormationSourceType.getSourceType(cloudFormationInfrastructureProvisioner.getSourceType());
       detailsBuilder.cloudFormationSourceType(sourceType);
+    } else if (provisioner instanceof ARMInfrastructureProvisioner) {
+      ARMInfrastructureProvisioner armInfrastructureProvisioner = (ARMInfrastructureProvisioner) provisioner;
+      if (GIT == armInfrastructureProvisioner.getSourceType()) {
+        GitFileConfig gitFileConfig = armInfrastructureProvisioner.getGitFileConfig();
+        if (gitFileConfig != null) {
+          SettingAttribute settingAttribute = idToSettingAttributeMapping.get(gitFileConfig.getConnectorId());
+          if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
+            GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+            detailsBuilder.repository(gitConfigHelperService.getRepositoryUrl(gitConfig, gitFileConfig.getRepoName()));
+          }
+        }
+      }
     }
-
     return detailsBuilder.build();
   }
 
@@ -385,6 +415,10 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
       if (infrastructureProvisioner instanceof TerraformInfrastructureProvisioner) {
         settingAttributeIds.add(
             ((TerraformInfrastructureProvisioner) infrastructureProvisioner).getSourceRepoSettingId());
+      } else if (infrastructureProvisioner instanceof ARMInfrastructureProvisioner
+          && GIT == ((ARMInfrastructureProvisioner) infrastructureProvisioner).getSourceType()) {
+        settingAttributeIds.add(
+            ((ARMInfrastructureProvisioner) infrastructureProvisioner).getGitFileConfig().getConnectorId());
       }
     }
 

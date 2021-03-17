@@ -2,8 +2,10 @@ package io.harness.delegate.task.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
+import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
 import static io.harness.helm.HelmConstants.HELM_RELEASE_LABEL;
 import static io.harness.k8s.K8sConstants.KUBERNETES_CHANGE_CAUSE_ANNOTATION;
 import static io.harness.k8s.K8sConstants.SKIP_FILE_FOR_DEPLOY_PLACEHOLDER_TEXT;
@@ -30,6 +32,7 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.beans.LogWeight.Normal;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -51,20 +54,34 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGLogCallback;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.git.GitDecryptionHelper;
+import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GitOperationException;
+import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.helm.HelmCliCommandType;
+import io.harness.helm.HelmCommandFlagsUtils;
+import io.harness.helm.HelmCommandTemplateFactory;
+import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -83,6 +100,7 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
 import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
+import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sDelegateTaskParams;
@@ -94,6 +112,7 @@ import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
+import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -101,6 +120,7 @@ import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.YamlUtils;
+import io.harness.shell.SshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
@@ -116,6 +136,7 @@ import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1ServicePort;
 import java.io.File;
@@ -154,6 +175,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -174,6 +196,9 @@ public class K8sTaskHelperBase {
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private NGErrorHelper ngErrorHelper;
+  @Inject private GitDecryptionHelper gitDecryptionHelper;
+  @Inject private KustomizeTaskHelper kustomizeTaskHelper;
+  @Inject private HelmTaskHelperBase helmTaskHelperBase;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -1523,14 +1548,17 @@ public class K8sTaskHelperBase {
       String releaseName, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Fetching all resources created for release: " + releaseName);
 
-    V1ConfigMap configMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1ConfigMap releaseConfigMap = kubernetesContainerService.getConfigMap(kubernetesConfig, releaseName);
+    final V1Secret releaseSecret = kubernetesContainerService.getSecret(kubernetesConfig, releaseName);
 
-    if (configMap == null || isEmpty(configMap.getData()) || isBlank(configMap.getData().get(ReleaseHistoryKeyName))) {
+    if (!(releaseHistoryPresent(releaseConfigMap) || releaseHistoryPresent(releaseSecret))) {
       executionLogCallback.saveExecutionLog("No resource history was available");
       return emptyList();
     }
 
-    String releaseHistoryDataString = configMap.getData().get(ReleaseHistoryKeyName);
+    String releaseHistoryDataString = releaseHistoryPresent(releaseSecret)
+        ? new String(releaseSecret.getData().get(ReleaseHistoryKeyName), UTF_8)
+        : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
     if (isEmpty(releaseHistory.getReleases())) {
@@ -1545,13 +1573,34 @@ public class K8sTaskHelperBase {
       }
     }
 
-    KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
-                                                          .kind(configMap.getKind())
-                                                          .name(releaseName)
-                                                          .namespace(kubernetesConfig.getNamespace())
-                                                          .build();
-    kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    if (releaseConfigMap != null) {
+      KubernetesResourceId harnessGeneratedCMResource = KubernetesResourceId.builder()
+                                                            .kind(releaseConfigMap.getKind())
+                                                            .name(releaseName)
+                                                            .namespace(kubernetesConfig.getNamespace())
+                                                            .build();
+      kubernetesResourceIdMap.put(generateResourceIdentifier(harnessGeneratedCMResource), harnessGeneratedCMResource);
+    }
+    if (releaseSecret != null) {
+      KubernetesResourceId harnessGeneratedSecretResource = KubernetesResourceId.builder()
+                                                                .kind(releaseSecret.getKind())
+                                                                .name(releaseName)
+                                                                .namespace(kubernetesConfig.getNamespace())
+                                                                .build();
+      kubernetesResourceIdMap.put(
+          generateResourceIdentifier(harnessGeneratedSecretResource), harnessGeneratedSecretResource);
+    }
     return new ArrayList<>(kubernetesResourceIdMap.values());
+  }
+
+  private boolean releaseHistoryPresent(V1ConfigMap configMap) {
+    return configMap != null && isNotEmpty(configMap.getData())
+        && isNotBlank(configMap.getData().get(ReleaseHistoryKeyName));
+  }
+
+  private boolean releaseHistoryPresent(V1Secret secret) {
+    return secret != null && isNotEmpty(secret.getData())
+        && ArrayUtils.isNotEmpty(secret.getData().get(ReleaseHistoryKeyName));
   }
 
   public List<FileData> readFilesFromDirectory(
@@ -1787,8 +1836,9 @@ public class K8sTaskHelperBase {
     return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
-  public LogCallback getExecutionLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName) {
-    return new NGLogCallback(logStreamingTaskClient, commandUnitName);
+  public LogCallback getLogCallback(ILogStreamingTaskClient logStreamingTaskClient, String commandUnitName,
+      boolean shouldOpenStream, CommandUnitsProgress commandUnitsProgress) {
+    return new NGLogCallback(logStreamingTaskClient, commandUnitName, shouldOpenStream, commandUnitsProgress);
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
@@ -1802,6 +1852,20 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
+      case HELM_CHART:
+        HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(),
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), valuesFiles, releaseName,
+            namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            helmChartManifest.getHelmCommandFlag());
+
+      case KUSTOMIZE:
+        KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+        GitStoreDelegateConfig gitStoreDelegateConfig =
+            (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
+        return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -1821,6 +1885,18 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readFilesFromDirectory(manifestFilesDirectory, filesList, executionLogCallback);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
+      case HELM_CHART:
+        HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(),
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), filesList, valuesFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            helmChartManifest.getHelmCommandFlag());
+
+      case KUSTOMIZE:
+        KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+        return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList, executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -1846,27 +1922,29 @@ public class K8sTaskHelperBase {
 
   public boolean fetchManifestFilesAndWriteToDirectory(ManifestDelegateConfig manifestDelegateConfig,
       String manifestFilesDirectory, LogCallback executionLogCallback, long timeoutInMillis, String accountId) {
-    ManifestType manifestType = manifestDelegateConfig.getManifestType();
-    switch (manifestType) {
-      case K8S_MANIFEST:
+    StoreDelegateConfig storeDelegateConfig = manifestDelegateConfig.getStoreDelegateConfig();
+    switch (storeDelegateConfig.getType()) {
+      case GIT:
         return downloadManifestFilesFromGit(
-            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
+            storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
+
+      case HTTP_HELM:
+        return downloadFilesFromHttpChartRepo(
+            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
 
       default:
         throw new UnsupportedOperationException(
-            String.format("Manifest delegate config type: [%s]", manifestType.name()));
+            String.format("Manifest store config type: [%s]", storeDelegateConfig.getType().name()));
     }
   }
 
-  private boolean downloadManifestFilesFromGit(ManifestDelegateConfig manifestDelegateConfig,
-      String manifestFilesDirectory, LogCallback executionLogCallback, String accountId) {
-    if (!(manifestDelegateConfig instanceof K8sManifestDelegateConfig)) {
-      throw new InvalidArgumentsException(
-          Pair.of("manifestDelegateConfig", "Must be instance of K8sManifestDelegateConfig"));
+  private boolean downloadManifestFilesFromGit(StoreDelegateConfig storeDelegateConfig, String manifestFilesDirectory,
+      LogCallback executionLogCallback, String accountId) {
+    if (!(storeDelegateConfig instanceof GitStoreDelegateConfig)) {
+      throw new InvalidArgumentsException(Pair.of("storeDelegateConfig", "Must be instance of GitStoreDelegateConfig"));
     }
 
-    GitStoreDelegateConfig gitStoreDelegateConfig =
-        (GitStoreDelegateConfig) (((K8sManifestDelegateConfig) manifestDelegateConfig).getStoreDelegateConfig());
+    GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
 
     // ToDo What to set here now as we have a list now?
     //    if (isBlank(gitStoreDelegateConfig.getPaths().getFilePath())) {
@@ -1875,7 +1953,14 @@ public class K8sTaskHelperBase {
 
     try {
       printGitConfigInExecutionLogs(gitStoreDelegateConfig, executionLogCallback);
-      ngGitService.downloadFiles(gitStoreDelegateConfig, manifestFilesDirectory, accountId, null);
+
+      GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
+      gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+      SshSessionConfig sshSessionConfig = gitDecryptionHelper.getSSHSessionConfig(
+          gitStoreDelegateConfig.getSshKeySpecDTO(), gitStoreDelegateConfig.getEncryptedDataDetails());
+
+      ngGitService.downloadFiles(
+          gitStoreDelegateConfig, manifestFilesDirectory, accountId, sshSessionConfig, gitConfigDTO);
 
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(getManifestFileNamesInLogFormat(manifestFilesDirectory));
@@ -1883,18 +1968,18 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (Exception e) {
-      log.error("Failure in fetching files from git", e);
+      String errorMsg = "Failed to download manifest files from git. ";
       executionLogCallback.saveExecutionLog(
-          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
-          CommandExecutionStatus.FAILURE);
-      return false;
+          errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new GitOperationException(errorMsg, e);
     }
   }
 
   private void printGitConfigInExecutionLogs(
       GitStoreDelegateConfig gitStoreDelegateConfig, LogCallback executionLogCallback) {
+    GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
     executionLogCallback.saveExecutionLog("\n" + color("Fetching manifest files", White, Bold));
-    executionLogCallback.saveExecutionLog("Git connector Url: " + gitStoreDelegateConfig.getGitConfigDTO().getUrl());
+    executionLogCallback.saveExecutionLog("Git connector Url: " + gitConfigDTO.getUrl());
 
     if (FetchType.BRANCH == gitStoreDelegateConfig.getFetchType()) {
       executionLogCallback.saveExecutionLog("Branch: " + gitStoreDelegateConfig.getBranch());
@@ -1906,8 +1991,50 @@ public class K8sTaskHelperBase {
         Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
   }
 
+  private boolean downloadFilesFromHttpChartRepo(ManifestDelegateConfig manifestDelegateConfig,
+      String destinationDirectory, LogCallback logCallback, long timeoutInMillis) {
+    if (!(manifestDelegateConfig instanceof HelmChartManifestDelegateConfig)) {
+      throw new InvalidArgumentsException(
+          Pair.of("manifestDelegateConfig", "Must be instance of HelmChartManifestDelegateConfig"));
+    }
+
+    try {
+      HelmChartManifestDelegateConfig helmChartManifestConfig =
+          (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+      logCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
+      helmTaskHelperBase.printHelmChartInfoInExecutionLogs(helmChartManifestConfig, logCallback);
+
+      helmTaskHelperBase.downloadChartFilesFromHttpRepo(helmChartManifestConfig, destinationDirectory, timeoutInMillis);
+
+      logCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+      logCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
+      logCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
+
+    } catch (Exception e) {
+      String errorMsg = "Failed to download manifest files from helm HTTP repo. ";
+      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(errorMsg, e);
+    }
+
+    return true;
+  }
+
   public ConnectorValidationResult validate(
       ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
+    try {
+      kubernetesContainerService.validate(kubernetesConfig);
+      connectivityStatus = ConnectivityStatus.SUCCESS;
+    } catch (Exception ex) {
+      log.info("Exception while validating kubernetes credentials", ex);
+      return createConnectivityFailureValidationResult(ex);
+    }
+    return ConnectorValidationResult.builder().status(connectivityStatus).build();
+  }
+
+  private KubernetesConfig getKubernetesConfig(
+      ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connector;
     if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
         == KubernetesCredentialType.MANUAL_CREDENTIALS) {
@@ -1915,13 +2042,48 @@ public class K8sTaskHelperBase {
           (KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig());
       secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptionDetailList);
     }
-    Exception exceptionInProcessing = null;
-    ConnectivityStatus connectivityStatus = ConnectivityStatus.FAILURE;
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+    return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig);
+  }
+
+  public ConnectorValidationResult validateCEKubernetesCluster(
+      ConnectorConfigDTO connector, String accountIdentifier, List<EncryptedDataDetail> encryptionDetailList) {
+    ConnectivityStatus connectivityStatus = ConnectivityStatus.SUCCESS;
+    KubernetesConfig kubernetesConfig = getKubernetesConfig(connector, encryptionDetailList);
+    List<ErrorDetail> errorDetails = new ArrayList<>();
+    String errorSummary = "";
     try {
-      kubernetesContainerService.validate(kubernetesConfig);
-      connectivityStatus = ConnectivityStatus.SUCCESS;
+      CEK8sDelegatePrerequisite.MetricsServerCheck metricsServerCheck =
+          kubernetesContainerService.validateMetricsServer(kubernetesConfig);
+      List<CEK8sDelegatePrerequisite.Rule> ruleList =
+          kubernetesContainerService.validateCEResourcePermissions(kubernetesConfig);
+
+      if (!metricsServerCheck.getIsInstalled()) {
+        errorDetails.add(ErrorDetail.builder()
+                             .message("Please install metrics server on your cluster")
+                             .reason("couldn't access metrics server")
+                             .build());
+        errorSummary += metricsServerCheck.getMessage();
+      }
+      if (!ruleList.isEmpty()) {
+        errorDetails.addAll(ruleList.stream()
+                                .map(e
+                                    -> ErrorDetail.builder()
+                                           .reason(String.format("'%s' not granted on '%s' in apiGroup:'%s'",
+                                               e.getVerbs(), e.getResources(), e.getApiGroups()))
+                                           .message(e.getMessage())
+                                           .code(0)
+                                           .build())
+                                .collect(toList()));
+        errorSummary += "; few permissions are missing.";
+      }
+
+      if (!errorDetails.isEmpty()) {
+        return ConnectorValidationResult.builder()
+            .errorSummary(errorSummary)
+            .errors(errorDetails)
+            .status(ConnectivityStatus.FAILURE)
+            .build();
+      }
     } catch (Exception ex) {
       log.info("Exception while validating kubernetes credentials", ex);
       return createConnectivityFailureValidationResult(ex);
@@ -1955,5 +2117,123 @@ public class K8sTaskHelperBase {
       }
     });
     return allPods;
+  }
+
+  public List<FileData> renderTemplateForHelm(String helmPath, String manifestFilesDirectory, List<String> valuesFiles,
+      String releaseName, String namespace, LogCallback executionLogCallback, HelmVersion helmVersion,
+      long timeoutInMillis, HelmCommandFlag helmCommandFlag) throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    log.info("Values file options: " + valuesFileOptions);
+
+    printHelmPath(executionLogCallback, helmPath);
+
+    List<FileData> result = new ArrayList<>();
+    try (LogOutputStream logErrorStream = K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+      String helmTemplateCommand = getHelmCommandForRender(
+          helmPath, manifestFilesDirectory, releaseName, namespace, valuesFileOptions, helmVersion, helmCommandFlag);
+      printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
+      ProcessResult processResult =
+          executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
+      if (processResult.getExitValue() != 0) {
+        throw new WingsException(format("Failed to render helm chart. Error %s", processResult.getOutput().getUTF8()));
+      }
+
+      result.add(FileData.builder().fileName("manifest.yaml").fileContent(processResult.outputUTF8()).build());
+    }
+
+    return result;
+  }
+
+  public List<FileData> renderTemplateForHelmChartFiles(String helmPath, String manifestFilesDirectory,
+      List<String> chartFiles, List<String> valuesFiles, String releaseName, String namespace,
+      LogCallback executionLogCallback, HelmVersion helmVersion, long timeoutInMillis, HelmCommandFlag helmCommandFlag)
+      throws Exception {
+    String valuesFileOptions = writeValuesToFile(manifestFilesDirectory, valuesFiles);
+    log.info("Values file options: " + valuesFileOptions);
+
+    printHelmPath(executionLogCallback, helmPath);
+
+    List<FileData> result = new ArrayList<>();
+
+    for (String chartFile : chartFiles) {
+      if (K8sTaskHelperBase.isValidManifestFile(chartFile)) {
+        try (LogOutputStream logErrorStream =
+                 K8sTaskHelperBase.getExecutionLogOutputStream(executionLogCallback, ERROR)) {
+          String helmTemplateCommand = getHelmCommandForRender(helmPath, manifestFilesDirectory, releaseName, namespace,
+              valuesFileOptions, chartFile, helmVersion, helmCommandFlag);
+          printHelmTemplateCommand(executionLogCallback, helmTemplateCommand);
+
+          ProcessResult processResult =
+              executeShellCommand(manifestFilesDirectory, helmTemplateCommand, logErrorStream, timeoutInMillis);
+          if (processResult.getExitValue() != 0) {
+            throw new WingsException(format("Failed to render chart file [%s]", chartFile));
+          }
+
+          result.add(FileData.builder().fileName(chartFile).fileContent(processResult.outputUTF8()).build());
+        }
+      } else {
+        executionLogCallback.saveExecutionLog(
+            color(format("Ignoring file [%s] with unsupported extension", chartFile), Yellow, Bold));
+      }
+    }
+
+    return result;
+  }
+
+  private void printHelmPath(LogCallback executionLogCallback, final String helmPath) {
+    executionLogCallback.saveExecutionLog(color("Rendering chart files using Helm", White, Bold));
+    executionLogCallback.saveExecutionLog(color(format("Using helm binary %s", helmPath), White, Normal));
+  }
+
+  private void printHelmTemplateCommand(LogCallback executionLogCallback, final String helmTemplateCommand) {
+    executionLogCallback.saveExecutionLog(color("Running Helm command", White, Bold));
+    executionLogCallback.saveExecutionLog(color(helmTemplateCommand, White, Normal));
+  }
+
+  @VisibleForTesting
+  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
+      String valuesFileOptions, String chartFile, HelmVersion helmVersion, HelmCommandFlag helmCommandFlag) {
+    HelmCliCommandType commandType = HelmCliCommandType.RENDER_SPECIFIC_CHART_FILE;
+    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
+    String command = replacePlaceHoldersInHelmTemplateCommand(
+        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, chartFile, valuesFileOptions);
+    Map<HelmSubCommandType, String> commandFlagValueMap =
+        helmCommandFlag != null ? helmCommandFlag.getValueMap() : null;
+    command =
+        HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), commandFlagValueMap, helmVersion);
+    return command;
+  }
+
+  @VisibleForTesting
+  String getHelmCommandForRender(String helmPath, String manifestFilesDirectory, String releaseName, String namespace,
+      String valuesFileOptions, HelmVersion helmVersion, HelmCommandFlag commandFlag) {
+    HelmCliCommandType commandType = HelmCliCommandType.RENDER_CHART;
+    String helmTemplateCommand = HelmCommandTemplateFactory.getHelmCommandTemplate(commandType, helmVersion);
+    String command = replacePlaceHoldersInHelmTemplateCommand(
+        helmTemplateCommand, helmPath, manifestFilesDirectory, releaseName, namespace, EMPTY, valuesFileOptions);
+    Map<HelmSubCommandType, String> commandFlagValueMap = commandFlag != null ? commandFlag.getValueMap() : null;
+    command =
+        HelmCommandFlagsUtils.applyHelmCommandFlags(command, commandType.name(), commandFlagValueMap, helmVersion);
+    return command;
+  }
+
+  private String replacePlaceHoldersInHelmTemplateCommand(String unrenderedCommand, String helmPath,
+      String chartLocation, String releaseName, String namespace, String chartFile, String valueOverrides) {
+    return unrenderedCommand.replace(HELM_PATH_PLACEHOLDER, helmPath)
+        .replace("${CHART_LOCATION}", chartLocation)
+        .replace("${CHART_FILE}", chartFile)
+        .replace("${RELEASE_NAME}", releaseName)
+        .replace("${NAMESPACE}", namespace)
+        .replace("${OVERRIDE_VALUES}", valueOverrides);
+  }
+
+  private String getManifestDirectoryForHelmChart(
+      String baseManifestDirectory, HelmChartManifestDelegateConfig helmChartManifest) {
+    if (HTTP_HELM == helmChartManifest.getStoreDelegateConfig().getType()) {
+      return HelmTaskHelperBase.getChartDirectory(baseManifestDirectory, helmChartManifest.getChartName());
+    }
+
+    return baseManifestDirectory;
   }
 }

@@ -47,7 +47,7 @@ public class GitlabToGitMapper {
     } else if (authType == GitAuthType.SSH) {
       final GitlabSshCredentialsDTO credentials =
           (GitlabSshCredentialsDTO) gitlabConnectorDTO.getAuthentication().getCredentials();
-      final SecretRefData sshKeyRef = credentials.getSpec().getSshKeyRef();
+      final SecretRefData sshKeyRef = credentials.getSshKeyRef();
       return GitConfigCreater.getGitConfigForSsh(connectionType, url, sshKeyRef);
     }
     throw new InvalidRequestException("Unknown auth type: " + authType);

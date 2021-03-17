@@ -19,6 +19,7 @@ import io.harness.yaml.utils.YamlPipelineUtils;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -26,6 +27,7 @@ public class StepGroupYamlTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testYamlParseForStepGroupAndParallel() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("cdng/stepGroup.yml");

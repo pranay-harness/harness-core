@@ -8,7 +8,7 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
-import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -81,11 +80,12 @@ public abstract class Activity
   private long lastUpdatedAt;
 
   @NotNull private ActivityType type;
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   private String serviceIdentifier;
   @NotNull private String environmentIdentifier;
   @NotNull private String projectIdentifier;
   @NotNull private String orgIdentifier;
+  private String activitySourceId;
 
   private String activityName;
   private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
@@ -105,7 +105,8 @@ public abstract class Activity
 
   public abstract void fromDTO(ActivityDTO activityDTO);
 
-  public abstract void fillInVerificationJobInstanceDetails(VerificationJobInstance verificationJobInstance);
+  public abstract void fillInVerificationJobInstanceDetails(
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder);
 
   protected void addCommonFields(ActivityDTO activityDTO) {
     setAccountId(activityDTO.getAccountIdentifier());
@@ -134,10 +135,6 @@ public abstract class Activity
     this.validateActivityParams();
   }
 
-  public List<String> getActivityDetails() {
-    return Lists.newArrayList(activityName);
-  }
-
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (fieldName.equals(ActivityKeys.verificationIteration)) {
@@ -154,4 +151,6 @@ public abstract class Activity
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
+
+  public abstract boolean deduplicateEvents();
 }

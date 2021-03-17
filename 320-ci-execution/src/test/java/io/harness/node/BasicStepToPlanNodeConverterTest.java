@@ -6,7 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.rule.Owner;
 
@@ -17,7 +17,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BasicStepToPlanNodeConverterTest extends CIExecutionTest {
+public class BasicStepToPlanNodeConverterTest extends CIExecutionTestBase {
   @Inject private BasicStepToExecutionNodeConverter basicStepToExecutionNodeConverter;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 

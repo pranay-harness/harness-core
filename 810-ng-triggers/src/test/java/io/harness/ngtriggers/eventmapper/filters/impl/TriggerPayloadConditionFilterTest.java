@@ -1,9 +1,7 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
-import static io.harness.ngtriggers.beans.source.webhook.WebhookEvent.PULL_REQUEST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,6 +9,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.beans.PRWebhookEvent;
+import io.harness.beans.WebhookBaseAttributes;
 import io.harness.category.element.UnitTests;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
@@ -19,11 +19,8 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
-import io.harness.ngtriggers.beans.scm.PRWebhookEvent;
-import io.harness.ngtriggers.beans.scm.WebhookBaseAttributes;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
-import io.harness.ngtriggers.beans.source.NGTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GithubTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.WebhookCondition;
 import io.harness.ngtriggers.beans.source.webhook.WebhookEvent;

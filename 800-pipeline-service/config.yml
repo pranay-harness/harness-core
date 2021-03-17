@@ -53,11 +53,20 @@ grpcClientConfigs:
     target: localhost:12301
     authority: localhost
 
-ciManagerClientConfig:
-  baseUrl: http://localhost:4457/
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
-ciManagerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+yamlSchemaClientConfig:
+  yamlSchemaHttpClientMap:
+    ci:
+      serviceHttpClientConfig:
+        baseUrl: http://localhost:4457/
+        connectTimeOutSeconds: 15
+        readTimeOutSeconds: 15
+      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+    cd:
+      serviceHttpClientConfig:
+        baseUrl: http://localhost:7457/
+        connectTimeOutSeconds: 15
+        readTimeOutSeconds: 15
+      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
 
 
 managerTarget: localhost:9880
@@ -76,6 +85,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/

@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
-public class StageTypeToStageExecutionMapperRegistrarTest extends CDNGBaseTest {
+public class StageTypeToStageExecutionMapperRegistrarTest extends CDNGTestBase {
   @Inject Map<String, StageTypeToStageExecutionMapperRegistrar> stageTypeToStageExecutionMapperRegistrarMap;
 
   @Test

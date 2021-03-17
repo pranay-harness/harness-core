@@ -4,6 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.FILE;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -22,6 +23,8 @@ import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.WingsException;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
@@ -57,6 +60,15 @@ public class ConnectorEnvVariablesHelper {
             getVariableSecret(usernameEnvVarName + connectorDetails.getIdentifier(),
                 encodeBase64(usernamePasswordAuthDTO.getUsername())));
       }
+
+      if (usernamePasswordAuthDTO == null || usernamePasswordAuthDTO.getPasswordRef() == null
+          || usernamePasswordAuthDTO.getPasswordRef().getDecryptedValue() == null) {
+        throw new InvalidArgumentsException(
+            format("Artifactory connector password secret does not exist for connector with identifier %s",
+                connectorDetails.getIdentifier()),
+            WingsException.USER);
+      }
+
       if (isNotBlank(passwordEnvVarName)) {
         secretData.put(passwordEnvVarName,
             getVariableSecret(passwordEnvVarName + connectorDetails.getIdentifier(),
@@ -78,6 +90,15 @@ public class ConnectorEnvVariablesHelper {
       GcpManualDetailsDTO credentialConfig = (GcpManualDetailsDTO) secretDecryptionService.decrypt(
           (GcpManualDetailsDTO) gcpConnectorConfig.getCredential().getConfig(),
           connectorDetails.getEncryptedDataDetails());
+
+      if (credentialConfig == null || credentialConfig.getSecretKeyRef() == null
+          || credentialConfig.getSecretKeyRef().getDecryptedValue() == null) {
+        throw new InvalidArgumentsException(
+            format("GCP connector GCP_KEY secret does not exist for connector with identifier  %s",
+                connectorDetails.getIdentifier()),
+            WingsException.USER);
+      }
+
       if (connectorDetails.getEnvToSecretsMap().containsKey(EnvVariableEnum.GCP_KEY)) {
         String gcpKeyEnvVarName = connectorDetails.getEnvToSecretsMap().get(EnvVariableEnum.GCP_KEY);
         if (isNotBlank(gcpKeyEnvVarName)) {
@@ -107,6 +128,22 @@ public class ConnectorEnvVariablesHelper {
           connectorDetails.getEncryptedDataDetails());
       String accessKeyEnvVarName = connectorDetails.getEnvToSecretsMap().get(EnvVariableEnum.AWS_ACCESS_KEY);
       String secretKeyEnvVarName = connectorDetails.getEnvToSecretsMap().get(EnvVariableEnum.AWS_SECRET_KEY);
+
+      if (manualConfig == null || manualConfig.getSecretKeyRef() == null
+          || manualConfig.getSecretKeyRef().getDecryptedValue() == null) {
+        throw new InvalidArgumentsException(
+            format("AWS connector secret key does not exist for connector with identifier  %s",
+                connectorDetails.getIdentifier()),
+            WingsException.USER);
+      }
+
+      if (manualConfig == null || manualConfig.getAccessKey() == null) {
+        throw new InvalidArgumentsException(
+            format("AWS connector access key does not exist for connector with identifier %s",
+                connectorDetails.getIdentifier()),
+            WingsException.USER);
+      }
+
       if (isNotBlank(accessKeyEnvVarName)) {
         secretData.put(accessKeyEnvVarName,
             getVariableSecret(
@@ -138,6 +175,15 @@ public class ConnectorEnvVariablesHelper {
             getVariableSecret(usernameEnvVarName + connectorDetails.getIdentifier(),
                 encodeBase64(dockerUserNamePasswordDTO.getUsername())));
       }
+
+      if (dockerUserNamePasswordDTO == null || dockerUserNamePasswordDTO.getPasswordRef() == null
+          || dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue() == null) {
+        throw new InvalidArgumentsException(
+            format("Docker connector password secret does not exist for connector with identifier %s",
+                connectorDetails.getIdentifier()),
+            WingsException.USER);
+      }
+
       if (isNotBlank(passwordEnvVarName)) {
         secretData.put(passwordEnvVarName,
             getVariableSecret(passwordEnvVarName + connectorDetails.getIdentifier(),

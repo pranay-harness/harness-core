@@ -79,15 +79,19 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
   }
 
   private String getAwsBillingMetaData(String accountId) {
-    if (!ImmutableSet.of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA").contains(accountId)) {
+    if (!ImmutableSet
+             .of("zEaak-FLS425IEO7OLzMUg", "ng2HGKFpStaPsVqGr3B3gA", "R7OsqSbNQS69mq74kMNceQ", "aYXZz76ETU-_3LLQSzBt1Q")
+             .contains(accountId)) {
       return null;
     }
     List<SettingAttribute> settingAttributes = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
         accountId, SettingAttribute.SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS);
+    log.info("Setting att size {}", settingAttributes.size());
     if (!settingAttributes.isEmpty()) {
       SettingAttribute settingAttribute = settingAttributes.get(0);
       BillingDataPipelineRecord billingDataPipelineRecord =
           billingDataPipelineRecordDao.getBySettingId(accountId, settingAttribute.getUuid());
+      log.info("BDPR {}", billingDataPipelineRecord);
       return billingDataPipelineRecord.getDataSetId();
     }
     return null;

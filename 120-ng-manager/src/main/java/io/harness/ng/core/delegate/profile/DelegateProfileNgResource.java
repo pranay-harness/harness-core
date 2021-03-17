@@ -32,7 +32,7 @@ import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Path("/delegate-profiles/ng")
-@Api("/delegate-profiles/ng")
+@Api("delegate-profiles/ng")
 @Produces("application/json")
 @Scope(DELEGATE_SCOPE)
 @AuthRule(permissionType = LOGGED_IN)

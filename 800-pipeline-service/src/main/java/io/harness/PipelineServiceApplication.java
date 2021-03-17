@@ -7,6 +7,7 @@ import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
 import io.harness.govern.ProviderModule;
@@ -15,6 +16,7 @@ import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.pms.annotations.PipelineServiceAuth;
@@ -28,6 +30,7 @@ import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.webhook.scm.SCMGrpcClientModule;
@@ -35,12 +38,14 @@ import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.pms.utils.PmsConstants;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.serializer.jackson.PipelineServiceJacksonModule;
 import io.harness.service.impl.PmsDelegateAsyncServiceImpl;
 import io.harness.service.impl.PmsDelegateProgressServiceImpl;
 import io.harness.service.impl.PmsDelegateSyncServiceImpl;
+import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
@@ -168,6 +173,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
     injector.getInstance(TriggerWebhookExecutionService.class).registerIterators();
     injector.getInstance(TimeoutEngine.class).registerIterators();
+    injector.getInstance(BarrierServiceImpl.class).registerIterators();
 
     log.info("Initializing gRPC servers...");
     ServiceManager serviceManager = injector.getInstance(ServiceManager.class).startAsync();
@@ -176,9 +182,14 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     registerPmsSdk(appConfig, injector);
     registerYamlSdk(injector);
+    registerCorrelationFilter(environment, injector);
     registerNotificationTemplates(injector);
 
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerCorrelationFilter(Environment environment, Injector injector) {
+    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
   private void registerAuthFilters(PipelineServiceConfiguration config, Environment environment, Injector injector) {
@@ -218,6 +229,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .pipelineServiceInfoProviderClass(PipelineServiceInternalInfoProvider.class)
         .filterCreationResponseMerger(new PipelineServiceFilterCreationResponseMerger())
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
+        .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineEventHandlersMap(PmsOrchestrationEventRegistrar.getEngineEventHandlers())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .build();
@@ -229,6 +241,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
   }
 
   private void registerWaitEnginePublishers(Injector injector) {

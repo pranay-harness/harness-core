@@ -6,6 +6,7 @@ import io.harness.context.ContextElementType;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.ecs.EcsBGSetupData;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
@@ -58,6 +59,9 @@ public class ContainerServiceElement implements ContextElement, SweepingOutput {
   private String targetGroupForNewService;
   private String targetGroupForExistingService;
   private String ecsRegion;
+  private List<AwsElbConfig> awsElbConfigs;
+  private boolean isMultipleLoadBalancersFeatureFlagActive;
+
   // Only to be used by ECS BG
   private EcsBGSetupData ecsBGSetupData;
 

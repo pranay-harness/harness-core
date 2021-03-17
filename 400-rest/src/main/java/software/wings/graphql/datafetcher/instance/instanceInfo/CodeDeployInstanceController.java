@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.instance.instanceInfo;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.CodeDeployInstanceInfo;
 import software.wings.graphql.datafetcher.instance.InstanceControllerUtils;
@@ -8,6 +11,7 @@ import software.wings.graphql.schema.type.instance.QLInstanceType;
 
 import com.google.inject.Inject;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CodeDeployInstanceController implements InstanceController<QLCodeDeployInstance> {
   @Inject InstanceControllerUtils util;
 

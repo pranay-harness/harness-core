@@ -70,11 +70,19 @@ if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
 fi
 
 if [[ "" != "$CI_MANAGER_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE ciManagerClientConfig.baseUrl $CI_MANAGER_BASE_URL
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.serviceHttpClientConfig.baseUrl $CI_MANAGER_BASE_URL
 fi
 
 if [[ "" != "$CI_MANAGER_SERVICE_SECRET" ]]; then
-  yq write -i $CONFIG_FILE ciManagerServiceSecret $CI_MANAGER_SERVICE_SECRET
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.ci.secret $CI_MANAGER_SERVICE_SECRET
+fi
+
+if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.serviceHttpClientConfig.baseUrl $NG_MANAGER_BASE_URL
+fi
+
+if [[ "" != "$NG_MANAGER_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE yamlSchemaClientConfig.yamlSchemaHttpClientMap.cd.secret $NG_MANAGER_SERVICE_SECRET
 fi
 
 if [[ "" != "$NG_MANAGER_TARGET" ]]; then
@@ -132,12 +140,20 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_URL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.redisUrl "$EVENTS_FRAMEWORK_REDIS_URL"
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_ENV_NAMESPACE" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.envNamespace "$EVENTS_FRAMEWORK_ENV_NAMESPACE"
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_USE_SENTINEL" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.sentinel "$EVENTS_FRAMEWORK_USE_SENTINEL"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.masterName "$EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME"
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
@@ -154,7 +170,7 @@ if [[ "" != "$NOTIFICATION_BASE_URL" ]]; then
 fi
 
 if [[ "" != "$NOTIFICATION_MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "$NOTIFICATION_MONGO_URI"
+  yq write -i $CONFIG_FILE notificationClient.messageBroker.uri "${NOTIFICATION_MONGO_URI//\\&/&}"
 fi
 
 if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then

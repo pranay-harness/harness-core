@@ -39,10 +39,10 @@ import io.harness.beans.steps.stepinfo.RestoreCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheGCSStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
@@ -55,6 +55,7 @@ import io.harness.beans.steps.stepinfo.publish.artifact.connectors.NexusConnecto
 import io.harness.beans.steps.stepinfo.publish.artifact.connectors.S3Connector;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
+import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
@@ -73,7 +74,6 @@ import io.harness.ci.stdvars.GitVariables;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
-import java.util.LinkedHashSet;
 
 /**
  * Class will register all kryo classes
@@ -111,7 +111,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PodSetupInfo.PodSetupParams.class, 100027);
     kryo.register(ContainerDefinitionInfo.class, 100028);
     kryo.register(ContainerImageDetails.class, 100029);
-    kryo.register(LinkedHashSet.class, 100030);
     kryo.register(DockerFileArtifact.class, 100031);
     kryo.register(DockerhubConnector.class, 100032);
     kryo.register(EcrConnector.class, 100033);
@@ -153,7 +152,7 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DependencyOutcome.class, 100072);
     kryo.register(ServiceDependency.class, 100073);
     kryo.register(ServiceDependency.Status.class, 100074);
-    kryo.register(TestIntelligenceStepInfo.class, 100075);
+    kryo.register(RunTestsStepInfo.class, 100075);
     kryo.register(GCRStepInfo.class, 100076);
     kryo.register(ECRStepInfo.class, 100077);
     kryo.register(DockerStepInfo.class, 100078);
@@ -165,5 +164,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(UploadToGCSStepInfo.class, 100084);
     kryo.register(K8BuildJobEnvInfo.ConnectorConversionInfo.class, 100085);
     kryo.register(UploadToArtifactoryStepInfo.class, 100086);
+    kryo.register(PodCleanupDetails.class, 100087);
   }
 }

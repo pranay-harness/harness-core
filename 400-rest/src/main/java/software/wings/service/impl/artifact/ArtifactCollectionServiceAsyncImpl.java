@@ -20,13 +20,13 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
-import static software.wings.service.impl.artifact.ArtifactCollectionUtils.DELEGATE_QUEUE_TIMEOUT;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskData.TaskDataBuilder;
@@ -136,10 +136,14 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
     String waitId = generateUuid();
     final TaskDataBuilder dataBuilder = TaskData.builder().async(true).taskType(TaskType.BUILD_SOURCE_TASK.name());
-    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
-                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
-                                                  .waitId(waitId)
-                                                  .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT);
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder().waitId(waitId).expiry(
+        artifactCollectionUtils.getDelegateQueueTimeout(artifactStream.getAccountId()));
+
+    if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_DELEGATE_SCOPING, artifactStream.getAccountId())) {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, artifactStream.getAppId());
+    } else {
+      delegateTaskBuilder.setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID);
+    }
 
     if (CUSTOM.name().equals(artifactStreamType)) {
       ArtifactStreamAttributes artifactStreamAttributes =
@@ -182,7 +186,7 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
       // Set timeout.
       dataBuilder.parameters(new Object[] {buildSourceRequest}).timeout(DEFAULT_TIMEOUT);
-      delegateTaskBuilder.tags(awsCommandHelper.getAwsConfigTagsFromSettingAttribute(settingAttribute));
+      delegateTaskBuilder.tags(settingsService.getDelegateSelectors(settingAttribute));
       delegateTaskBuilder.accountId(accountId);
       delegateTaskBuilder.rank(DelegateTaskRank.OPTIONAL);
       delegateTaskBuilder.data(dataBuilder.build());

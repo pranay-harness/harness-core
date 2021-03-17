@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.appservice.webapp;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters;
@@ -9,6 +11,7 @@ import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceD
 
 import com.google.inject.Inject;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public abstract class AbstractAzureWebAppTaskHandler extends AbstractAzureAppServiceTaskHandler {
   @Inject protected AzureAppServiceDeploymentService azureAppServiceDeploymentService;
 

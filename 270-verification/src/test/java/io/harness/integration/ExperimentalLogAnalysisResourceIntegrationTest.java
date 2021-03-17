@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.PRANJAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.VerificationBaseIntegrationTest;
+import io.harness.VerificationIntegrationBase;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.resources.intfc.ExperimentalLogAnalysisResource;
 import io.harness.rest.RestResponse;
@@ -17,13 +17,15 @@ import java.util.List;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
  * Created by Pranjal on 09/26/2018
  */
-public class ExperimentalLogAnalysisResourceIntegrationTest extends VerificationBaseIntegrationTest {
+@Ignore
+public class ExperimentalLogAnalysisResourceIntegrationTest extends VerificationIntegrationBase {
   @Override
   @Before
   public void setUp() throws Exception {

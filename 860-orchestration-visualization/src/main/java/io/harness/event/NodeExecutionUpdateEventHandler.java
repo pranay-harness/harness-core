@@ -24,18 +24,15 @@ public class NodeExecutionUpdateEventHandler implements AsyncOrchestrationEventH
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
 
-  @Override
-  public void handleEvent(OrchestrationEvent event) {
+  public OrchestrationGraph handleEvent(OrchestrationEvent event, OrchestrationGraph orchestrationGraph) {
     NodeExecutionProto nodeExecutionProto = event.getNodeExecutionProto();
     String nodeExecutionId = nodeExecutionProto.getUuid();
     String planExecutionId = nodeExecutionProto.getAmbiance().getPlanExecutionId();
     if (isEmpty(nodeExecutionId)) {
-      return;
+      return orchestrationGraph;
     }
     try {
       NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-
-      OrchestrationGraph orchestrationGraph = graphGenerationService.getCachedOrchestrationGraph(planExecutionId);
       Map<String, GraphVertex> graphVertexMap = orchestrationGraph.getAdjacencyList().getGraphVertexMap();
       if (graphVertexMap.containsKey(nodeExecutionId)) {
         GraphVertex graphVertex = graphVertexMap.get(nodeExecutionId);
@@ -45,11 +42,17 @@ public class NodeExecutionUpdateEventHandler implements AsyncOrchestrationEventH
           orchestrationAdjacencyListGenerator.removeVertex(orchestrationGraph.getAdjacencyList(), nodeExecution);
         }
         graphVertex.setProgressDataMap(nodeExecution.getProgressDataMap());
+        graphVertex.setUnitProgresses(nodeExecution.getUnitProgresses());
         graphVertexMap.put(nodeExecutionId, graphVertex);
-        graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
+        return orchestrationGraph;
       }
     } catch (Exception e) {
       log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(), nodeExecutionId, planExecutionId, e);
+      throw e;
     }
+    return orchestrationGraph;
   }
+
+  @Override
+  public void handleEvent(OrchestrationEvent event) {}
 }

@@ -104,6 +104,7 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         -> GraphLayoutNode.newBuilder()
                .setNodeUUID(stageField.getNode().getUuid())
                .setNodeGroup(StepOutcomeGroup.STAGE.name())
+               .setName(stageField.getNode().getName())
                .setNodeType(stageField.getNode().getType())
                .setNodeIdentifier(stageField.getNode().getIdentifier())
                .setEdgeLayoutList(EdgeLayoutList.newBuilder().build())

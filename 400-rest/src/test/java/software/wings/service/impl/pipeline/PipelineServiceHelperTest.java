@@ -1,17 +1,21 @@
 package software.wings.service.impl.pipeline;
 
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -25,6 +29,7 @@ import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.sm.StateType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -34,6 +39,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@TargetModule(Module._800_PIPELINE_SERVICE)
 public class PipelineServiceHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = POOJA)
@@ -266,5 +272,206 @@ public class PipelineServiceHelperTest extends WingsBaseTest {
     assertThatThrownBy(() -> PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Pipeline stage marked as loop, but doesnt have looping config");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetEnvIdsForSeriesStage1() {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID))
+                                                    .name("test step")
+                                                    .type("ENV_STATE")
+                                                    .parallelIndex(1)
+                                                    .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    Pipeline pipeline = Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage)).build();
+    List<String> envIds = PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1);
+    assertThat(envIds).hasSize(1).containsExactly(ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetEnvIdsForSeriesStage2() {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID))
+                                                    .name("test step")
+                                                    .type("ENV_STATE")
+                                                    .parallelIndex(1)
+                                                    .build();
+    PipelineStageElement pipelineStage2Element = PipelineStageElement.builder()
+                                                     .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID))
+                                                     .name("test step")
+                                                     .type("ENV_STATE")
+                                                     .parallelIndex(2)
+                                                     .build();
+    PipelineStageElement pipelineStage2Element2 = PipelineStageElement.builder()
+                                                      .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID + 2))
+                                                      .name("test step")
+                                                      .type("ENV_STATE")
+                                                      .parallelIndex(2)
+                                                      .build();
+    PipelineStageElement pipelineStage3Element = PipelineStageElement.builder()
+                                                     .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID + 3))
+                                                     .name("test step")
+                                                     .type("ENV_STATE")
+                                                     .parallelIndex(3)
+                                                     .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    PipelineStage pipelineStage2 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStage2Element))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    PipelineStage pipelineStage3 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStage2Element2))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    PipelineStage pipelineStage4 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStage3Element))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    Pipeline pipeline = Pipeline.builder()
+                            .name("Test pipeline")
+                            .pipelineStages(asList(pipelineStage, pipelineStage2, pipelineStage3, pipelineStage4))
+                            .build();
+    List<String> envIds = PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 2);
+    assertThat(envIds).hasSize(2).containsExactly(ENV_ID, ENV_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyListIfEnvIdsNotPresent() {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID))
+                                                    .name("test step")
+                                                    .type("ENV_STATE")
+                                                    .parallelIndex(1)
+                                                    .build();
+    PipelineStageElement pipelineStage2Element = PipelineStageElement.builder()
+                                                     .properties(new HashMap<>())
+                                                     .name("test step")
+                                                     .type("ENV_STATE")
+                                                     .parallelIndex(2)
+                                                     .build();
+    PipelineStageElement pipelineStage2Element2 = PipelineStageElement.builder()
+                                                      .properties(new HashMap<>())
+                                                      .name("test step")
+                                                      .type("ENV_STATE")
+                                                      .parallelIndex(2)
+                                                      .build();
+    PipelineStageElement pipelineStage3Element = PipelineStageElement.builder()
+                                                     .properties(ImmutableMap.of(EnvStateKeys.envId, ENV_ID + 3))
+                                                     .name("test step")
+                                                     .type("ENV_STATE")
+                                                     .parallelIndex(3)
+                                                     .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    PipelineStage pipelineStage2 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStage2Element))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    PipelineStage pipelineStage3 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStage2Element2))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    PipelineStage pipelineStage4 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStage3Element))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    Pipeline pipeline = Pipeline.builder()
+                            .name("Test pipeline")
+                            .pipelineStages(asList(pipelineStage, pipelineStage2, pipelineStage3, pipelineStage4))
+                            .build();
+    List<String> envIds = PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 2);
+    assertThat(envIds).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveEnvIdsForParallelStage1() {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .properties(ImmutableMap.of(EnvStateKeys.envId, "${env}"))
+                                                    .name("test step")
+                                                    .type("ENV_STATE")
+                                                    .workflowVariables(ImmutableMap.of("envName", ENV_ID))
+                                                    .parallelIndex(1)
+                                                    .build();
+    PipelineStageElement pipelineStageElement2 = PipelineStageElement.builder()
+                                                     .properties(ImmutableMap.of(EnvStateKeys.envId, "${env}"))
+                                                     .name("test step")
+                                                     .type("ENV_STATE")
+                                                     .workflowVariables(ImmutableMap.of("envName", ENV_ID))
+                                                     .parallelIndex(1)
+                                                     .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    PipelineStage pipelineStage2 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStageElement2))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    Pipeline pipeline =
+        Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage, pipelineStage2)).build();
+    pipeline.getPipelineVariables().add(aVariable().name("env").value("envName").build());
+    List<String> envIds = PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1);
+    assertThat(envIds).hasSize(2).containsExactly(ENV_ID, ENV_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnEmptyListIfEnvVariableAbsentInPipeline() {
+    PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
+                                                    .properties(ImmutableMap.of(EnvStateKeys.envId, "${env}"))
+                                                    .name("test step")
+                                                    .type("ENV_STATE")
+                                                    .workflowVariables(ImmutableMap.of("envName", ENV_ID))
+                                                    .parallelIndex(1)
+                                                    .build();
+    PipelineStageElement pipelineStageElement2 = PipelineStageElement.builder()
+                                                     .properties(ImmutableMap.of(EnvStateKeys.envId, "${env}"))
+                                                     .name("test step")
+                                                     .type("ENV_STATE")
+                                                     .workflowVariables(ImmutableMap.of("envName", ENV_ID))
+                                                     .parallelIndex(1)
+                                                     .build();
+    PipelineStage pipelineStage = PipelineStage.builder()
+                                      .pipelineStageElements(asList(pipelineStageElement))
+                                      .loopedVarName("infra1")
+                                      .looped(true)
+                                      .build();
+    PipelineStage pipelineStage2 = PipelineStage.builder()
+                                       .pipelineStageElements(asList(pipelineStageElement2))
+                                       .loopedVarName("infra1")
+                                       .looped(true)
+                                       .build();
+    Pipeline pipeline =
+        Pipeline.builder().name("Test pipeline").pipelineStages(asList(pipelineStage, pipelineStage2)).build();
+    List<String> envIds = PipelineServiceHelper.getEnvironmentIdsForParallelIndex(pipeline, 1);
+    assertThat(envIds).isEmpty();
   }
 }

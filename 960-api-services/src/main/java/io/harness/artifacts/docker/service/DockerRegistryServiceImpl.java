@@ -156,7 +156,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         .stream()
         .map(tag -> {
           Map<String, String> metadata = new HashMap<>();
-          metadata.put(ArtifactMetadataKeys.IMAGE, domainName + "/" + imageName + ":" + tag);
+          metadata.put(ArtifactMetadataKeys.IMAGE,
+              (domainName == null || domainName.endsWith("/") ? domainName : domainName.concat("/")) + imageName + ":"
+                  + tag);
           metadata.put(ArtifactMetadataKeys.TAG, tag);
           return BuildDetailsInternal.builder()
               .number(tag)
@@ -283,30 +285,38 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
             response = registryRestClient.getApiVersion(BEARER + dockerRegistryToken.getToken()).execute();
           }
         }
+        if (response.code() == 404) { // https://harness.atlassian.net/browse/CDC-11979
+          return handleValidateCredentialsEndingWithSlash(registryRestClient, dockerConfig);
+        }
         return isSuccessful(response);
       } catch (IOException e) {
         log.warn("Failed to fetch apiversion with credentials" + e);
-        try {
-          // This is special case for repositories that require "/v2/" path for getting API version . Eg. Harbor docker
-          // registry We get an IO exception with '/v2' path so we are retrying with forward slash API
-          basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
-          response = registryRestClient.getApiVersionEndingWithForwardSlash(basicAuthHeader).execute();
-          if (response.code() == 401) { // unauthorized
-            authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
-            dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
-            if (dockerRegistryToken != null) {
-              response = registryRestClient.getApiVersionEndingWithForwardSlash(BEARER + dockerRegistryToken.getToken())
-                             .execute();
-            }
-          }
-          return isSuccessful(response);
-        } catch (IOException ioException) {
-          Exception exception = new Exception(ioException);
-          throw new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER);
-        }
+        return handleValidateCredentialsEndingWithSlash(registryRestClient, dockerConfig);
       }
     }
     return true;
+  }
+
+  private boolean handleValidateCredentialsEndingWithSlash(
+      DockerRegistryRestClient registryRestClient, DockerInternalConfig dockerConfig) {
+    try {
+      // This is special case for repositories that require "/v2/" path for getting API version . Eg. Harbor docker
+      // registry We get an IO exception with '/v2' path so we are retrying with forward slash API
+      String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
+      Response response = registryRestClient.getApiVersionEndingWithForwardSlash(basicAuthHeader).execute();
+      if (response.code() == 401) { // unauthorized
+        String authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
+        DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+        if (dockerRegistryToken != null) {
+          response =
+              registryRestClient.getApiVersionEndingWithForwardSlash(BEARER + dockerRegistryToken.getToken()).execute();
+        }
+      }
+      return isSuccessful(response);
+    } catch (IOException ioException) {
+      Exception exception = new Exception(ioException);
+      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER);
+    }
   }
 
   private String getToken(

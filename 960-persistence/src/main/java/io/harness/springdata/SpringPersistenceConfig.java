@@ -18,6 +18,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -55,6 +57,11 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   @Primary
   public MongoTemplate mongoTemplate() throws Exception {
     return new HMongoTemplate(mongoDbFactory(), mappingMongoConverter());
+  }
+
+  @Bean
+  MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {
+    return new MongoTransactionManager(dbFactory);
   }
 
   @Override

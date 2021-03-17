@@ -54,7 +54,7 @@ public abstract class DataCollectionTask
         .build();
   }
   @Id private String uuid;
-  @NonNull @FdIndex private String accountId;
+  @NonNull private String accountId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String dataCollectionWorkerId;
   private Type type;

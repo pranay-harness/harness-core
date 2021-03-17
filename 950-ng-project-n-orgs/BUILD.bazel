@@ -1,16 +1,14 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
         "@maven//:com_auth0_java_jwt",
@@ -28,7 +26,6 @@ java_library(
         "@maven//:javax_validation_validation_api",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
         "@maven//:net_jodah_expiringmap",
-        "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_email",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_apache_httpcomponents_httpcore",
@@ -46,18 +43,13 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
@@ -70,29 +62,8 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

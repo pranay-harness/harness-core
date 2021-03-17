@@ -46,6 +46,8 @@ import software.wings.settings.SettingValue;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.Attribute;
 import com.amazonaws.services.ecs.model.ContainerInstance;
+import com.amazonaws.services.ecs.model.ContainerInstanceStatus;
+import com.amazonaws.services.ecs.model.DesiredStatus;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.Resource;
 import com.amazonaws.services.ecs.model.Service;
@@ -107,7 +109,9 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
   private final String ROLE_ARN = "ROLE_ARN" + this.getClass().getSimpleName();
   private final String CONTAINER_INSTANCE_ARN = "arn:aws:ecs:us-east-1:132359207506:cluster/ce-ecs-ec2-test";
   private final String TASK_ARN = "arn:aws:ecs:us-east-1:132359207506:cluster/0fcd0a44-b82f-4f23-84ee-3ad8b40625a2";
-  private final String SERVICE_NAME = "serviceName";
+  private final String SERVICE_ARN = "arn:aws:ecs:us-east-1:132359207506:service/ce-fargate";
+  private final String SERVICE_NAME = "ce-fargate";
+  private final String DEPLOYMENT_ID = "ecs-svc/7379042797953014107";
   private final String EC2_INSTANCE_ID = "i-0f0afe3d9df9b095c";
 
   private static final String accountId = "accountId";
@@ -175,12 +179,10 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
                               .clusterName(CLUSTER_NAME)
                               .clusterName(CLUSTER_ARN)
                               .build();
-    given(awsECSHelperService.listServicesForCluster(awsCrossAccountAttributes, REGION, CLUSTER_ARN))
-        .willReturn(services);
     given(ecsMetricClient.getUtilizationMetrics(any(), any(), any(), any(), any(), any()))
         .willReturn(utilizationMessages);
 
-    awsECSClusterDataSyncTasklet.publishUtilizationMetrics(awsCrossAccountAttributes, ceCluster);
+    awsECSClusterDataSyncTasklet.publishUtilizationMetrics(awsCrossAccountAttributes, ceCluster, services);
 
     ArgumentCaptor<List<InstanceUtilizationData>> utilizationDataArgumentCaptor =
         ArgumentCaptor.forClass((Class) List.class);
@@ -256,18 +258,19 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testUpdateTasks() {
-    HashMap<String, String> taskArnServiceNameMap = new HashMap<>();
-    taskArnServiceNameMap.put(TASK_ARN, SERVICE_NAME);
+    HashMap<String, String> deploymentIdServiceMap = new HashMap<>();
+    deploymentIdServiceMap.put(DEPLOYMENT_ID, SERVICE_ARN);
     CECluster ceCluster = getCeCluster();
     when(cloudToHarnessMappingService.getHarnessServiceInfo(any()))
         .thenReturn(Optional.of(new HarnessServiceInfo(null, null, null, null, null, null)));
     when(instanceDataDao.fetchInstanceData(anySet())).thenReturn(singletonList(getInstanceData()));
-    awsECSClusterDataSyncTasklet.updateTasks(accountId, ceCluster, singletonList(getTask()), taskArnServiceNameMap);
+    awsECSClusterDataSyncTasklet.updateTasks(accountId, ceCluster, singletonList(getTask()), deploymentIdServiceMap);
     ArgumentCaptor<InstanceData> captor = ArgumentCaptor.forClass(InstanceData.class);
     then(instanceDataService).should().create(captor.capture());
     InstanceData instanceData = captor.getValue();
     Map<String, String> instanceDataMetaData = instanceData.getMetaData();
     assertThat(instanceData.getInstanceId()).isEqualTo("0fcd0a44-b82f-4f23-84ee-3ad8b40625a2");
+    assertThat(instanceDataMetaData.get(InstanceMetaDataConstants.ECS_SERVICE_ARN)).isEqualTo(SERVICE_ARN);
     assertThat(instanceData.getInstanceType()).isEqualTo(InstanceType.ECS_TASK_EC2);
     assertThat(instanceData.getAllocatableResource())
         .isEqualTo(io.harness.ccm.commons.beans.Resource.builder().cpuUnits(1.0).memoryMb(512.0).build());
@@ -300,6 +303,8 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
         .withLaunchType(LaunchType.EC2)
         .withMemory("512")
         .withCpu("1")
+        .withDesiredStatus(DesiredStatus.RUNNING.toString())
+        .withStartedBy(DEPLOYMENT_ID)
         .withPullStartedAt(Date.from(instant));
   }
 
@@ -324,6 +329,7 @@ public class AwsECSClusterDataSyncTaskletTest extends CategoryTest {
         .withContainerInstanceArn(CONTAINER_INSTANCE_ARN)
         .withEc2InstanceId(EC2_INSTANCE_ID)
         .withRegisteredAt(Date.from(instant))
+        .withStatus(ContainerInstanceStatus.ACTIVE.toString())
         .withRegisteredResources(Arrays.asList(getResource("CPU", 1), getResource("MEMORY", 1024)))
         .withAttributes(getAttribute("ecs.os-type", "linux"));
   }

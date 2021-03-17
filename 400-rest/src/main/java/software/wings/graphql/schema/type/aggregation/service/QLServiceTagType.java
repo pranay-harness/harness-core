@@ -1,3 +1,5 @@
 package software.wings.graphql.schema.type.aggregation.service;
 
-public enum QLServiceTagType { APPLICATION }
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+@TargetModule(Module._380_CG_GRAPHQL) public enum QLServiceTagType { APPLICATION }

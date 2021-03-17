@@ -11,6 +11,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
@@ -77,6 +78,14 @@ public class CeConnectorDataFetcher
           .infraType(QLInfraTypesEnum.AWS);
     } else if (settingAttribute.getValue() instanceof CEGcpConfig) {
       qlCEConnectorBuilder.infraType(QLInfraTypesEnum.GCP);
+    } else if (settingAttribute.getValue() instanceof CEAzureConfig) {
+      CEAzureConfig ceAzureConfig = (CEAzureConfig) settingAttribute.getValue();
+      qlCEConnectorBuilder.azureStorageAccountName(ceAzureConfig.getStorageAccountName())
+          .azureStorageContainerName(ceAzureConfig.getContainerName())
+          .azureStorageDirectoryName(ceAzureConfig.getDirectoryName())
+          .azureSubscriptionId(ceAzureConfig.getSubscriptionId())
+          .azureTenantId(ceAzureConfig.getTenantId())
+          .infraType(QLInfraTypesEnum.AZURE);
     }
     return qlCEConnectorBuilder.build();
   }

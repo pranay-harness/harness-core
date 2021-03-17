@@ -35,15 +35,21 @@ import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnomalousPatternsServiceImpl;
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.client.VerificationManagerServiceImpl;
+import io.harness.cvng.core.entities.AppDynamicsCVConfig.AppDynamicsCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
 import io.harness.cvng.core.jobs.OrganizationChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ProjectChangeEventMessageProcessor;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
@@ -53,12 +59,15 @@ import io.harness.cvng.core.services.api.CVSetupService;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
+import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
@@ -79,6 +88,8 @@ import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
+import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
@@ -103,6 +114,11 @@ import io.harness.cvng.statemachine.services.AnalysisStateMachineServiceImpl;
 import io.harness.cvng.statemachine.services.OrchestrationServiceImpl;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
+import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob.BlueGreenVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.CanaryVerificationJob.CanaryVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob.HealthVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.TestVerificationJob.TestVerificationUpdatableEntity;
+import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobUpdatableEntity;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServiceImpl;
@@ -122,6 +138,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.io.IOException;
@@ -195,6 +212,18 @@ public class CVServiceModule extends AbstractModule {
       bind(SplunkService.class).to(SplunkServiceImpl.class);
       bind(CVConfigService.class).to(CVConfigServiceImpl.class);
       bind(DeletedCVConfigService.class).to(DeletedCVConfigServiceImpl.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.HEALTH.name()))
+          .to(HealthVerificationUpdatableEntity.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.TEST.name()))
+          .to(TestVerificationUpdatableEntity.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.BLUE_GREEN.name()))
+          .to(BlueGreenVerificationUpdatableEntity.class);
+      bind(VerificationJobUpdatableEntity.class)
+          .annotatedWith(Names.named(VerificationJobType.CANARY.name()))
+          .to(CanaryVerificationUpdatableEntity.class);
       bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsCVConfigTransformer.class);
@@ -257,6 +286,7 @@ public class CVServiceModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY))
           .to(ConnectorChangeEventMessageProcessor.class);
       bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
+      bind(NewRelicService.class).to(NewRelicServiceImpl.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
@@ -267,6 +297,23 @@ public class CVServiceModule extends AbstractModule {
       bind(DeleteEntityByHandler.class).to(DefaultDeleteEntityByHandler.class);
       bind(TimeSeriesAnomalousPatternsService.class).to(TimeSeriesAnomalousPatternsServiceImpl.class);
       bind(CD10ActivitySourceService.class).to(CD10ActivitySourceServiceImpl.class);
+      bind(MonitoringSourcePerpetualTaskService.class).to(MonitoringSourcePerpetualTaskServiceImpl.class);
+
+      MapBinder<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder =
+          MapBinder.newMapBinder(binder(), DataSourceType.class, DataSourceConnectivityChecker.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.APP_DYNAMICS).to(AppDynamicsService.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkService.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.STACKDRIVER).to(StackdriverService.class);
+      dataSourceTypeToServiceMapBinder.addBinding(DataSourceType.KUBERNETES).to(KubernetesActivitySourceService.class);
+
+      MapBinder<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder =
+          MapBinder.newMapBinder(binder(), DataSourceType.class, CVConfigUpdatableEntity.class);
+      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
+          .to(AppDynamicsCVConfigUpdatableEntity.class);
+      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.STACKDRIVER)
+          .to(StackDriverCVConfigUpdatableEntity.class);
+      dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.SPLUNK).to(SplunkCVConfigUpdatableEntity.class);
+
     } catch (IOException e) {
       throw new IllegalStateException("Could not load versionInfo.yaml", e);
     }
@@ -286,11 +333,12 @@ public class CVServiceModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("cvParallelExecutor")
-  public ExecutorService cvParallelExecutor() {
-    ExecutorService cvParallelExecutor = ThreadPool.create(4, 20, 5, TimeUnit.SECONDS,
-        new ThreadFactoryBuilder().setNameFormat("cvParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvParallelExecutor.shutdownNow()));
-    return cvParallelExecutor;
+  @Named("cvngParallelExecutor")
+  public ExecutorService cvngParallelExecutor() {
+    ExecutorService cvngParallelExecutor = ThreadPool.create(4, CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS, 5,
+        TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngParallelExecutor.shutdownNow()));
+    return cvngParallelExecutor;
   }
 }

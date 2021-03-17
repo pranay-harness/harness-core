@@ -5,13 +5,13 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.winrm.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 import static software.wings.sm.StateExecutionData.SECRET_MASK;
-import static software.wings.utils.WinRmHelperUtils.buildErrorDetailsFromWinRmClientException;
 
 import static java.lang.String.format;
 

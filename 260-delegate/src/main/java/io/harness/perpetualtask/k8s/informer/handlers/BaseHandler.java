@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.informer.handlers;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
@@ -38,6 +40,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public abstract class BaseHandler<ApiType> implements ResourceEventHandler<ApiType> {
   private static final String METADATA = "metadata";
 

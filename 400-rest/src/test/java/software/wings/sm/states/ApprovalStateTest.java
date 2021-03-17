@@ -313,7 +313,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     when(workflowNotificationHelper.calculateInfraDetails(any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().message("infra").name("infra").build());
     when(workflowNotificationHelper.calculateApplicationDetails(any(), any(), any()))
-        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("app").build());
+        .thenReturn(WorkflowNotificationDetails.builder().message("app").name("nameW/Omrkdwn").build());
     when(workflowNotificationHelper.calculateEnvDetails(any(), any(), any()))
         .thenReturn(WorkflowNotificationDetails.builder().message("*Environments:* env").build());
   }
@@ -394,6 +394,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion("true");
     when(context.evaluateExpression(eq("true"), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression("true");
     verify(alertService, times(0))
         .openAlert(eq(ACCOUNT_ID), eq(APP_ID), eq(AlertType.ApprovalNeeded), any(ApprovalNeededAlert.class));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
@@ -408,6 +409,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(true);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression(disableAssertion);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -423,6 +425,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     approvalState.setDisableAssertion(disableAssertion);
     when(context.evaluateExpression(eq(disableAssertion), any())).thenThrow(JexlException.class);
     ExecutionResponse executionResponse = approvalState.execute(context);
+    verify(context).renderExpression(disableAssertion);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
             eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
@@ -442,6 +445,7 @@ public class ApprovalStateTest extends WingsBaseTest {
 
     ExecutionResponse executionResponse = approvalState.execute(context);
 
+    verify(context).renderExpression(disableAssertion);
     verify(workflowNotificationHelper, times(1))
         .calculateServiceDetailsForAllServices(ACCOUNT_ID, APP_ID, context, execution, ExecutionScope.WORKFLOW, null);
     verify(workflowNotificationHelper, times(1)).calculateInfraDetails(ACCOUNT_ID, APP_ID, execution);
@@ -1485,6 +1489,7 @@ public class ApprovalStateTest extends WingsBaseTest {
         SlackApprovalParams.builder()
             .appId(APP_ID)
             .appName("app")
+            .nonFormattedAppName("nameW/Omrkdwn")
             .routingId(ACCOUNT_ID)
             .deploymentId(PIPELINE_WORKFLOW_EXECUTION_ID)
             .workflowId(WORKFLOW_ID)
@@ -1535,6 +1540,7 @@ public class ApprovalStateTest extends WingsBaseTest {
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.APPROVAL_MESSAGE)).isEqualTo(displayText);
     assertThat(placeholderValues.get(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER))
         .isEqualTo("suppressTraditionalNotificationOnSlack");
+    assertThat(customData.get("nonFormattedAppName")).isEqualTo("nameW/Omrkdwn");
     assertPlaceholdersAddedForEmailNotification(placeholderValues);
   }
 

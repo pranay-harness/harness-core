@@ -74,9 +74,9 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
             .build();
     doReturn(singletonList(aHostValidationResponse().withHostName("host").withStatus("SUCCESS").build()))
         .when(mockHostValidationService)
-        .validateHost(anyList(), any(), anyList(), any());
+        .validateHost(anyList(), any(), anyList(), any(), any());
     task.run(new Object[] {request});
-    verify(mockHostValidationService).validateHost(anyList(), any(), anyList(), any());
+    verify(mockHostValidationService).validateHost(anyList(), any(), anyList(), any(), any());
     request = ConnectivityValidationDelegateRequest.builder()
                   .encryptedDataDetails(emptyList())
                   .settingAttribute(aSettingAttribute()
@@ -87,7 +87,7 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
                                         .build())
                   .build();
     task.run(new Object[] {request});
-    verify(mockHostValidationService, times(2)).validateHost(anyList(), any(), anyList(), any());
+    verify(mockHostValidationService, times(2)).validateHost(anyList(), any(), anyList(), any(), any());
     request =
         ConnectivityValidationDelegateRequest.builder()
             .encryptedDataDetails(emptyList())

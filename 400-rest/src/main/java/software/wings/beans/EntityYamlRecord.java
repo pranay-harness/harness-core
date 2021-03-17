@@ -20,7 +20,7 @@ import org.mongodb.morphia.annotations.Id;
 @Value
 @Builder
 @Entity(value = "entityYamlRecord", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "EntityYamlRecordKeys")
 @CdIndex(name = "index_1",
     fields =

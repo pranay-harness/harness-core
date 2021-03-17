@@ -8,9 +8,8 @@ import static io.harness.yaml.schema.beans.SchemaConstants.ENUM_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REQUIRED_NODE;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+import static org.powermock.api.mockito.PowerMockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.EntityType;
@@ -18,34 +17,59 @@ import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
-import io.harness.yaml.YamlSdkInitConstants;
-import io.harness.yaml.utils.YamlSchemaUtils;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.jackson.Jackson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.Mockito;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({YamlSchemaUtils.class, IOUtils.class})
+//
+//@RunWith(PowerMockRunner.class)
+//@PrepareForTest({YamlSchemaUtils.class, IOUtils.class})
 public class YamlSchemaProviderTest extends CategoryTest {
-  YamlSchemaHelper yamlSchemaHelper = new YamlSchemaHelper();
-  YamlSchemaProvider yamlSchemaProvider = new YamlSchemaProvider(yamlSchemaHelper);
+  YamlSchemaProvider yamlSchemaProvider;
   String schema;
 
   @Before
   public void setup() throws IOException {
-    initializeSchemaMapAndGetSchema();
+    initMocks(this);
+    // this is just for intialization
+    final List<YamlSchemaRootClass> yamlSchemaRootClasses =
+        Collections.singletonList(YamlSchemaRootClass.builder()
+                                      .entityType(EntityType.SECRETS)
+                                      .availableAtProjectLevel(true)
+                                      .availableAtOrgLevel(true)
+                                      .availableAtAccountLevel(true)
+                                      .clazz(TestClass.ClassWhichContainsInterface.class)
+                                      .build());
+    ObjectMapper objectMapper = new ObjectMapper();
+    YamlSchemaHelper yamlSchemaHelper = Mockito.spy(new YamlSchemaHelper(yamlSchemaRootClasses));
+    yamlSchemaProvider = new YamlSchemaProvider(yamlSchemaHelper);
+    schema = getResource("testSchema/sampleSchema.json");
+    YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
+        new JacksonClassHelper(), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
+    Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
+    yamlSchemaHelper.initializeSchemaMaps(entityTypeJsonNodeMap);
+    doReturn(YamlSchemaWithDetails.builder()
+                 .isAvailableAtAccountLevel(true)
+                 .isAvailableAtOrgLevel(true)
+                 .isAvailableAtProjectLevel(true)
+                 .schema(objectMapper.readTree(schema))
+                 .build())
+        .when(yamlSchemaHelper)
+        .getSchemaDetailsForEntityType(EntityType.CONNECTORS);
   }
 
   @Test
@@ -141,19 +165,6 @@ public class YamlSchemaProviderTest extends CategoryTest {
                    .get(CONST_NODE)
                    .textValue())
         .isEqualTo("id");
-  }
-
-  private void initializeSchemaMapAndGetSchema() throws IOException {
-    yamlSchemaHelper = new YamlSchemaHelper();
-    schema = getResource("testSchema/sampleSchema.json");
-    mockStatic(YamlSchemaUtils.class);
-    mockStatic(IOUtils.class);
-    Set<Class<?>> classes = new HashSet<>();
-    // Note: the schema and class used for testing are not in sync.
-    classes.add(TestClass.ClassWhichContainsInterface.class);
-    when(YamlSchemaUtils.getClasses(any())).thenReturn(classes);
-    when(IOUtils.resourceToString(any(), any(), any())).thenReturn(schema);
-    yamlSchemaHelper.initializeSchemaMaps(YamlSdkInitConstants.schemaBasePath, classes);
   }
 
   private String getResource(String resource) throws IOException {

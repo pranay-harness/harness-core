@@ -6,7 +6,9 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -41,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ExecutionInputsDataFetcher
     extends AbstractObjectDataFetcher<QLExecutionInputs, QLServiceInputsForExecutionParams> {
   @Inject WorkflowExecutionController workflowExecutionController;

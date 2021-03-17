@@ -1,8 +1,12 @@
 package io.harness.delegate.beans.connector.scm.github;
 
+import io.harness.beans.DecryptableEntity;
+import io.harness.encryption.SecretRefData;
+import io.harness.encryption.SecretReference;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
-import javax.validation.Valid;
+import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,6 +18,6 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubSshCredentials")
-public class GithubSshCredentialsDTO implements GithubCredentialsDTO {
-  @Valid @NotNull GithubSshCredentialsSpecDTO spec;
+public class GithubSshCredentialsDTO implements GithubCredentialsDTO, DecryptableEntity {
+  @NotNull @SecretReference @ApiModelProperty(dataType = "string") SecretRefData sshKeyRef;
 }

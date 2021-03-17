@@ -52,7 +52,7 @@ public class ManifestStepTest extends CategoryTest {
 
     K8sManifestOutcome k8sManifestOutcome1 = K8sManifestOutcome.builder()
                                                  .identifier(k8Manifest1.getIdentifier())
-                                                 .storeConfig(k8Manifest1.getStoreConfig())
+                                                 .store(k8Manifest1.getStoreConfig())
                                                  .build();
 
     K8sManifest k8Manifest2 =
@@ -114,7 +114,7 @@ public class ManifestStepTest extends CategoryTest {
 
     K8sManifestOutcome k8sManifestOutcome3 = K8sManifestOutcome.builder()
                                                  .identifier(k8Manifest3.getIdentifier())
-                                                 .storeConfig(k8Manifest3.getStoreConfig())
+                                                 .store(k8Manifest3.getStoreConfig())
                                                  .build();
 
     ValuesManifest valuesManifest2 =
@@ -138,12 +138,12 @@ public class ManifestStepTest extends CategoryTest {
 
     ValuesManifestOutcome valuesManifestOutcome2 = ValuesManifestOutcome.builder()
                                                        .identifier(valuesManifest2.getIdentifier())
-                                                       .storeConfig(valuesManifest2.getStoreConfig())
+                                                       .store(valuesManifest2.getStoreConfig())
                                                        .build();
 
     StepResponse.StepOutcome stepOutcome =
         manifestStep.processManifests(Arrays.asList(manifestConfig1, manifestConfig2),
-            Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5), null);
+            Collections.singletonList(manifestConfig4), Arrays.asList(manifestConfig3, manifestConfig5), null, null);
 
     ManifestsOutcome manifestsOutcome = (ManifestsOutcome) stepOutcome.getOutcome();
     assertThat(manifestsOutcome.getManifestOutcomeList()).isNotEmpty();

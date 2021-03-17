@@ -6,6 +6,6 @@ import lombok.experimental.UtilityClass;
 public class SettingsGeneratorConstants {
   // PCF Settings Constants
   public static final String PCF_KEY = "pcf_cp_password";
-  public static final String PCF_USERNAME = "raghvendra.singh@harness.io";
-  public static final String PCF_END_POINT = "api.eu-gb.cf.cloud.ibm.com";
+  public static final String PCF_USERNAME = "admin";
+  public static final String PCF_END_POINT = "api.system.pcf-harness.com";
 }

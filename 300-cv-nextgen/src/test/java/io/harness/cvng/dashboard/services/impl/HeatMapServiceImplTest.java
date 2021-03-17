@@ -15,7 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -71,7 +71,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class HeatMapServiceImplTest extends CvNextGenTest {
+public class HeatMapServiceImplTest extends CvNextGenTestBase {
   @Inject private HeatMapService heatMapService;
 
   private String projectIdentifier;
@@ -126,6 +126,9 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     when(cvConfigService.getAvailableCategories(anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(new HashSet<>(Arrays.asList(CVMonitoringCategory.PERFORMANCE)));
     when(cvConfigService.isProductionConfig(cvConfig)).thenReturn(true);
+    when(cvConfigService.getConfigsOfProductionEnvironments(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(cvConfig));
   }
 
   @Test
@@ -593,6 +596,19 @@ public class HeatMapServiceImplTest extends CvNextGenTest {
     assertThat(categoryRiskMap.get(CVMonitoringCategory.PERFORMANCE)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.ERRORS)).isNotEqualTo(-1);
     assertThat(categoryRiskMap.get(CVMonitoringCategory.INFRASTRUCTURE)).isEqualTo(-1);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testGetCategoryRiskScores_noSetup() {
+    when(cvConfigService.getConfigsOfProductionEnvironments(
+             anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(null);
+    CategoryRisksDTO categoryRisk =
+        heatMapService.getCategoryRiskScores(accountId, orgIdentifier, projectIdentifier, null, null);
+    assertThat(categoryRisk).isNotNull();
+    assertThat(categoryRisk.isHasConfigsSetup()).isFalse();
   }
 
   @Test

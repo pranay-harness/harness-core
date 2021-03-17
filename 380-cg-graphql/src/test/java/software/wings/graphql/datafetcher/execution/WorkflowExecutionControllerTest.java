@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -33,8 +34,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.DeploymentFreezeException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -78,6 +83,7 @@ import software.wings.service.intfc.WorkflowService;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -170,6 +176,31 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
         workflowExecutionController.startWorkflowExecution(qlStartExecutionInput, MutationContext.builder().build());
     assertThat(startExecutionPayload).isNotNull();
     assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowDeploymentFreezeExceptionForFrozenEnv() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    Workflow workflow = getWorkflow();
+    workflow.setEnvId(ENV_ID);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(ENV_ID), captor.capture(), eq(null)))
+        .thenThrow(new DeploymentFreezeException(ErrorCode.DEPLOYMENT_GOVERNANCE_ERROR, Level.INFO, WingsException.USER,
+            ACCOUNT_ID, Collections.singletonList(FREEZE_WINDOW_ID), "FREEZE_NAME", false));
+    when(workflowService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(workflow), any(), eq(null), any(), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    assertThatThrownBy(()
+                           -> workflowExecutionController.startWorkflowExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(DeploymentFreezeException.class)
+        .hasMessage(
+            "Deployment Freeze Window FREEZE_NAME is active for the environment. No deployments are allowed to proceed.");
   }
 
   @Test

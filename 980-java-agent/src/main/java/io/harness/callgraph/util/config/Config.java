@@ -44,6 +44,8 @@ public abstract class Config {
 
   @Option public abstract String[] instrPackages();
 
+  @Option public abstract String[] testAnnotations();
+
   /**
    * Check whether everything is set and fix options if necessary.
    */

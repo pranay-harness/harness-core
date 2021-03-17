@@ -3,6 +3,8 @@ package io.harness.interrupts;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -16,5 +18,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class InterruptEffect {
   @NotNull String interruptId;
   @NotNull long tookEffectAt;
-  @NotNull ExecutionInterruptType interruptType;
+  @NotNull InterruptType interruptType;
+  @NotNull InterruptConfig interruptConfig;
 }

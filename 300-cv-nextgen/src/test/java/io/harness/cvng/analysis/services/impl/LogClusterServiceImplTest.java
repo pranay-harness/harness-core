@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.CVConstants;
 import io.harness.cvng.analysis.beans.LogClusterDTO;
@@ -57,7 +57,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class LogClusterServiceImplTest extends CvNextGenTest {
+public class LogClusterServiceImplTest extends CvNextGenTestBase {
   private String serviceGuardVerificationTaskId;
   private String cvConfigId;
   @Mock LearningEngineTaskService learningEngineTaskService;
@@ -219,9 +219,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
                                          .asList();
     assertThat(tasks.size()).isEqualTo(1);
     LogClusterLearningEngineTask testLogClusterLearningEngineTask = (LogClusterLearningEngineTask) tasks.get(0);
-    assertThat(testLogClusterLearningEngineTask.getTestDataUrl())
-        .isEqualTo(CVConstants.SERVICE_BASE_URL + "/log-cluster/l1-test-verification-test-data?verificationTaskId="
-            + verificationTaskId + "&startTime=1595846760000&endTime=1595847540000");
+    assertThat(testLogClusterLearningEngineTask.getTestDataUrl()).isNull();
     assertThat(testLogClusterLearningEngineTask.getVerificationTaskId()).isEqualTo(verificationTaskId);
   }
   @Test
@@ -435,6 +433,7 @@ public class LogClusterServiceImplTest extends CvNextGenTest {
     testVerificationJob.setProjectIdentifier(projectIdentifier);
     testVerificationJob.setEnvIdentifier(generateUuid());
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());
+    testVerificationJob.setBaselineVerificationJobInstanceId("LAST");
     testVerificationJob.setDuration("15m");
     return testVerificationJob;
   }

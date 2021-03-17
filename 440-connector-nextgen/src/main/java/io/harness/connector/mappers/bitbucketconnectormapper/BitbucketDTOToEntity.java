@@ -53,7 +53,7 @@ public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<Bitbucke
       case SSH:
         final BitbucketSshCredentialsDTO sshCredentialsDTO = (BitbucketSshCredentialsDTO) credentialsDTO;
         return BitbucketSshAuthentication.builder()
-            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSpec().getSshKeyRef()))
+            .sshKeyRef(SecretRefHelper.getSecretConfigString(sshCredentialsDTO.getSshKeyRef()))
             .build();
       case HTTP:
         final BitbucketHttpCredentialsDTO httpCredentialsDTO = (BitbucketHttpCredentialsDTO) credentialsDTO;

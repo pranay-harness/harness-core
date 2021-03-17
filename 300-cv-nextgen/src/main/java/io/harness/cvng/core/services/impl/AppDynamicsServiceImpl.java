@@ -43,7 +43,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AppDynamicsServiceImpl implements AppDynamicsService {
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private RequestExecutor requestExecutor;
@@ -66,6 +68,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
         -> metricPackService.populatePaths(
             accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, metricPack));
     List<MetricPackDTO> metricPackDTOS = metricPacks.stream().map(MetricPack::toDTO).collect(Collectors.toList());
+
     return requestExecutor
         .execute(verificationManagerClient.getAppDynamicsMetricData(accountId, orgIdentifier, projectIdentifier,
             appName, tierName, requestGuid,
@@ -102,6 +105,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                          .collect(Collectors.toList());
     }
     Collections.sort(applications);
+
     return PageUtils.offsetAndLimit(applications, offset, pageSize);
   }
 
@@ -137,6 +141,12 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public void checkConnectivity(
+      String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
+    getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 0, 1, null);
+  }
+
+  @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
     Preconditions.checkState(
@@ -147,10 +157,12 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
     Set<String> envIdentifiersList =
         cvConfigsGroupedByMonitoringSource.stream().map(CVConfig::getEnvIdentifier).collect(Collectors.toSet());
     CVConfig firstCVConfigForReference = cvConfigsGroupedByMonitoringSource.get(0);
+
     List<AppDynamicsApplication> appDynamicsApplications = getApplications(firstCVConfigForReference.getAccountId(),
         firstCVConfigForReference.getConnectorIdentifier(), firstCVConfigForReference.getOrgIdentifier(),
         firstCVConfigForReference.getProjectIdentifier(), 0, Integer.MAX_VALUE, null)
                                                                .getContent();
+
     return AppdynamicsImportStatus.builder()
         .numberOfApplications(isNotEmpty(applicationSet) ? applicationSet.size() : 0)
         .numberOfEnvironments(isNotEmpty(envIdentifiersList) ? envIdentifiersList.size() : 0)

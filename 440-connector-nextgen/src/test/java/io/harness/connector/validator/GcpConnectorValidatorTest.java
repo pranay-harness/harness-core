@@ -24,6 +24,7 @@ import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,10 +49,11 @@ public class GcpConnectorValidatorTest extends CategoryTest {
   public void validateTestWithDelegateSelector() {
     GcpConnectorDTO gcpConnectorDTO =
         GcpConnectorDTO.builder()
-            .credential(GcpConnectorCredentialDTO.builder()
-                            .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
-                            .config(GcpDelegateDetailsDTO.builder().delegateSelector("foo").build())
-                            .build())
+            .credential(
+                GcpConnectorCredentialDTO.builder()
+                    .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
+                    .config(GcpDelegateDetailsDTO.builder().delegateSelectors(Collections.singleton("foo")).build())
+                    .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);
     when(delegateGrpcClientWrapper.executeSyncTask(any()))

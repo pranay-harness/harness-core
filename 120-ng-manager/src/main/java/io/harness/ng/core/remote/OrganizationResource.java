@@ -36,6 +36,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -54,6 +55,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Page;
+import retrofit2.http.Query;
 
 @OwnedBy(PL)
 @Api("organizations")
@@ -101,13 +103,18 @@ public class OrganizationResource {
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
   public ResponseDTO<PageResponse<OrganizationResponse>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    OrganizationFilterDTO organizationFilterDTO =
+        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
     if (isEmpty(pageRequest.getSortOrders())) {
-      SortOrder order =
-          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
-      pageRequest.setSortOrders(ImmutableList.of(order));
+      SortOrder harnessManagedOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.harnessManaged, SortOrder.OrderType.DESC).build();
+      SortOrder nameOrder =
+          SortOrder.Builder.aSortOrder().withField(OrganizationKeys.name, SortOrder.OrderType.ASC).build();
+      pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, nameOrder));
+      organizationFilterDTO.setIgnoreCase(true);
     }
-    OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     Page<OrganizationResponse> organizations =
         organizationService.list(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)
             .map(OrganizationMapper::toResponseWrapper);

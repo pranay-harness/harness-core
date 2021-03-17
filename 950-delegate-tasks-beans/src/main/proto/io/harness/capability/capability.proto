@@ -5,7 +5,18 @@ package io.harness.capability;
 option java_multiple_files = true;
 option go_package = "240_capability";
 
-// Next ID: 14
+// A check for which we dry run a delegate to see whether it is able to execute
+// a particular action or not. Checks should be small and modular, and should
+// correlate to checking properties of the delegate. Before you add a new
+// capability, please add Matt Lin on the delegate team as a required reviewer,
+// or ask beforehand if an existing capability should be extended.
+
+// Capabilities are
+// - independent (one capability should not influence each other)
+// - consistent (they are either allowed, or not)
+// - self proving (validation through use)
+
+// Next ID: 17
 message CapabilityParameters {
   oneof capability {
     AwsRegionParameters aws_region_parameters = 4;
@@ -14,6 +25,8 @@ message CapabilityParameters {
     HelmInstallationParameters helm_installation_parameters = 10;
     HttpConnectionParameters http_connection_parameters = 6;
     KustomizeParameters kustomize_parameters = 13;
+    PcfAutoScalarParameters pcf_auto_scalar_parameters = 14;
+    PcfConnectivityParameters pcf_connectivity_parameters = 15;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
@@ -21,6 +34,7 @@ message CapabilityParameters {
     SocketConnectivityParameters socket_connectivity_parameters = 8;
     SystemEnvParameters system_env_parameters = 9;
     TestingCapability testing_capability = 1;
+    WinrmHostValidationParameters winrm_host_validation_parameters = 16;
   }
 }
 
@@ -32,7 +46,8 @@ message AwsRegionParameters {
 // Whether chart museum is enabled or not
 message ChartMuseumParameters {}
 
-// additional information about git setup can be added here later
+// Whether or not git command line is installed on a delegate or not, regardless
+// of the specific java connector used for git.
 message GitInstallationParameters {}
 
 // Testing whether a delegate can connect to a given HTTP resource
@@ -40,8 +55,10 @@ message HttpConnectionParameters {
   string url = 1;
 }
 
-// Testing whether the delegate can execute a given command
+// Testing whether the delegate can execute a given command -- a quick catch all for
+// any one-off resource check
 message ProcessExecutorParameters {
+  // list of atoms for the argument
   repeated string args = 1;
 }
 
@@ -67,6 +84,7 @@ message HelmInstallationParameters {
   HelmVersion helm_version = 1;
 }
 
+// Whether a specific SMTP (email server) endpoint is reachable or not.
 message SmtpParameters {
   bool use_ssl = 1;
   bool start_tls = 2;
@@ -93,5 +111,19 @@ message KustomizeParameters {
   string plugin_root_dir = 1;
 }
 
+message PcfAutoScalarParameters {}
+
+message PcfConnectivityParameters {
+  string endpoint_url = 1;
+}
+
 // A testing method for capabilities
 message TestingCapability {}
+
+// Testing WinRM Host reachable or not
+message WinrmHostValidationParameters {
+  string hostname = 4;
+  int32 port = 2;
+  bool use_ssl = 3;
+  string domain = 1;
+}

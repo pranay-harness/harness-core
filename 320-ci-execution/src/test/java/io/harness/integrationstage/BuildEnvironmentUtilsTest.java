@@ -5,14 +5,14 @@ import static io.harness.rule.OwnerRule.SHUBHAM;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BuildEnvironmentUtilsTest extends CIExecutionTest {
+public class BuildEnvironmentUtilsTest extends CIExecutionTestBase {
   @Inject CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
 
   @Test

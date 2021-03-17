@@ -4,12 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.ABORTED;
-import static io.harness.pms.contracts.execution.Status.ERRORED;
-import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
-import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
@@ -32,6 +28,7 @@ import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.skip.SkipCheck;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -98,7 +95,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -159,6 +155,7 @@ public class OrchestrationEngine {
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())
             .previousId(previousNodeExecution == null ? null : previousNodeExecution.getUuid())
             .progressDataMap(new LinkedHashMap<>())
+            .unitProgresses(new ArrayList<>())
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
@@ -186,6 +183,9 @@ public class OrchestrationEngine {
       String skipCondition = nodeExecution.getNode().getSkipCondition();
       if (EmptyPredicate.isNotEmpty(skipCondition)) {
         SkipCheck skipCheck = shouldSkipNodeExecution(ambiance, skipCondition);
+        if (skipCheck.isSuccessful()) {
+          nodeExecution = updateSkipInfoAttribute(nodeExecution.getUuid(), skipCheck);
+        }
         if (!skipCheck.isSuccessful() || skipCheck.getEvaluatedSkipCondition()) {
           skipNodeExecution(nodeExecution.getUuid(), skipCheck);
           return;
@@ -198,11 +198,16 @@ public class OrchestrationEngine {
       String stepParameters = node.getStepParameters();
       Object resolvedStepParameters = stepParameters == null
           ? null
-          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractStepParameters(stepParameters));
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(stepParameters));
+      Object resolvedStepInputs = node.getStepInputs() == null
+          ? null
+          : pmsEngineExpressionService.resolve(ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()));
 
       NodeExecution updatedNodeExecution =
-          Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(),
-              ops -> setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters)));
+          Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+            setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
+            setUnset(ops, NodeExecutionKeys.resolvedStepInputs, resolvedStepInputs);
+          }));
 
       NodeExecutionEvent event = NodeExecutionEvent.builder()
                                      .nodeExecution(NodeExecutionMapper.toNodeExecutionProto(updatedNodeExecution))
@@ -214,6 +219,16 @@ public class OrchestrationEngine {
     } catch (Exception exception) {
       handleError(ambiance, exception);
     }
+  }
+
+  private NodeExecution updateSkipInfoAttribute(String nodeExecutionId, SkipCheck skipCheck) {
+    return nodeExecutionService.update(nodeExecutionId, ops -> {
+      setUnset(ops, NodeExecutionKeys.skipInfo,
+          SkipInfo.newBuilder()
+              .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
+              .setSkipCondition(skipCheck.getSkipCondition())
+              .build());
+    });
   }
 
   public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
@@ -299,12 +314,13 @@ public class OrchestrationEngine {
   public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
-    List<StepOutcomeRef> outcomeRefs = handleOutcomes(ambiance, stepResponse.getStepOutcomesList());
+    List<StepOutcomeRef> outcomeRefs =
+        handleOutcomes(ambiance, stepResponse.getStepOutcomesList(), stepResponse.getGraphOutcomesList());
 
     NodeExecution updatedNodeExecution = nodeExecutionService.update(nodeExecutionId, ops -> {
-      setUnset(ops, NodeExecutionKeys.skipInfo, stepResponse.getSkipInfo());
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
+      setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
     });
     concludeNodeExecution(updatedNodeExecution, stepResponse.getStatus());
   }
@@ -346,7 +362,8 @@ public class OrchestrationEngine {
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  private List<StepOutcomeRef> handleOutcomes(Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos) {
+  private List<StepOutcomeRef> handleOutcomes(
+      Ambiance ambiance, List<StepOutcomeProto> stepOutcomeProtos, List<StepOutcomeProto> graphOutcomesList) {
     List<StepOutcomeRef> outcomeRefs = new ArrayList<>();
     if (isEmpty(stepOutcomeProtos)) {
       return outcomeRefs;
@@ -356,7 +373,14 @@ public class OrchestrationEngine {
       stepOutcomeProtos.forEach(proto -> {
         if (isNotEmpty(proto.getOutcome())) {
           String instanceId =
-              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup());
+              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), false);
+          outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
+        }
+      });
+      graphOutcomesList.forEach(proto -> {
+        if (isNotEmpty(proto.getOutcome())) {
+          String instanceId =
+              pmsOutcomeService.consume(ambiance, proto.getName(), proto.getOutcome(), proto.getGroup(), true);
           outcomeRefs.add(StepOutcomeRef.newBuilder().setName(proto.getName()).setInstanceId(instanceId).build());
         }
       });
@@ -403,7 +427,9 @@ public class OrchestrationEngine {
     eventEmitter.emitEvent(OrchestrationEvent.builder()
                                .ambiance(Ambiance.newBuilder()
                                              .setPlanExecutionId(planExecution.getUuid())
-                                             .putAllSetupAbstractions(planExecution.getSetupAbstractions())
+                                             .putAllSetupAbstractions(planExecution.getSetupAbstractions() == null
+                                                     ? Collections.emptyMap()
+                                                     : planExecution.getSetupAbstractions())
                                              .build())
                                .nodeExecutionProto(NodeExecutionMapper.toNodeExecutionProto(nodeExecution))
                                .eventType(OrchestrationEventType.ORCHESTRATION_END)
@@ -413,21 +439,7 @@ public class OrchestrationEngine {
   // TODO (prashant) => Improve this with more clarity.
   private Status calculateEndStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
-    if (StatusUtils.positiveStatuses().containsAll(statuses)) {
-      return SUCCEEDED;
-    } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
-      return ABORTED;
-    } else if (statuses.stream().anyMatch(status -> status == ERRORED)) {
-      return ERRORED;
-    } else if (statuses.stream().anyMatch(status -> status == FAILED)) {
-      return FAILED;
-    } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
-      return EXPIRED;
-    } else {
-      log.error("This should not Happen. PlanExecutionId : {}", planExecutionId);
-      return ERRORED;
-    }
+    return OrchestrationUtils.calculateEndStatus(nodeExecutions, planExecutionId);
   }
 
   private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull AdviserResponse adviserResponse) {
@@ -503,8 +515,9 @@ public class OrchestrationEngine {
       return SkipCheck.builder()
           .skipCondition(skipCondition)
           .isSuccessful(false)
-          .errorMessage(String.format("SkipCondition could not be evaluated to boolean for nodeExecutionId: %s",
-              AmbianceUtils.obtainCurrentRuntimeId(ambiance)))
+          .errorMessage(String.format(
+              "The skip condition could not be evaluated because an expression [%s] is formatted incorrectly and the condition cannot be resolved true (skip) or false (do not skip).",
+              skipCondition))
           .build();
     }
   }

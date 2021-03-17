@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.k8s.metrics.client.model.common;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.KubernetesObject;
 
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -12,6 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode
 @JsonDeserialize(using = JsonDeserializer.None.class)
+@TargetModule(Module._420_DELEGATE_AGENT)
 public abstract class CustomResource implements KubernetesObject {
   @SerializedName("kind") private String kind;
   @SerializedName("apiVersion") private String apiVersion;

@@ -4,6 +4,7 @@ import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
@@ -22,6 +23,7 @@ import io.harness.selection.log.DelegateSelectionLog.DelegateSelectionLogKeys;
 import io.harness.selection.log.DelegateSelectionLogMetadata;
 import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 import io.harness.selection.log.ProfileScopingRulesMetadata;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.tasks.Cd1SetupFields;
 
 import software.wings.beans.Application;
@@ -55,10 +57,15 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 @Singleton
 @Slf4j
 @TargetModule(Module._420_DELEGATE_SERVICE)
+@BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
+@BreakDependencyOn("software.wings.beans.Application")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.Service")
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
   @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateCache delegateCache;
 
   private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
@@ -372,7 +379,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     List<DelegateSelectionLogParams> delegateSelectionLogParamsList = new ArrayList<>();
 
     for (String delegateId : selectionLog.getDelegateIds()) {
-      Delegate delegate = delegateService.get(selectionLog.getAccountId(), delegateId, false);
+      Delegate delegate = delegateCache.get(selectionLog.getAccountId(), delegateId, false);
       String delegateName = Optional.ofNullable(delegate).map(delegateService::obtainDelegateName).orElse(delegateId);
       String delegateHostName = Optional.ofNullable(delegate).map(Delegate::getHostName).orElse("");
 

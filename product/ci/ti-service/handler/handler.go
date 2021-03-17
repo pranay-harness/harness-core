@@ -1,19 +1,21 @@
 package handler
 
 import (
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 
 	"github.com/go-chi/chi"
 )
 
 // Handler returns an http.Handler that exposes the
 // service resources.
-func Handler(db db.Db, config config.Config, log *zap.SugaredLogger) http.Handler {
+func Handler(db db.Db, tidb tidb.TiDB, config config.Config, log *zap.SugaredLogger) http.Handler {
 	r := chi.NewRouter()
 
 	// Token generation endpoints
@@ -41,6 +43,18 @@ func Handler(db db.Db, config config.Config, log *zap.SugaredLogger) http.Handle
 		sr.Get("/summary", HandleSummary(db, config, log))
 		sr.Get("/test_cases", HandleTestCases(db, config, log))
 		sr.Get("/test_suites", HandleTestSuites(db, config, log))
+		return sr
+	}())
+
+	r.Mount("/tests", func() http.Handler {
+		sr := chi.NewRouter()
+		// Validate the accountId in URL with the token generated above and authorize the request
+		if !config.Secrets.DisableAuth {
+			sr.Use(AuthMiddleware(config))
+		}
+
+		sr.Post("/select", HandleSelect(tidb, db, config, log))
+		sr.Get("/overview", HandleOverview(db, config, log))
 		return sr
 	}())
 

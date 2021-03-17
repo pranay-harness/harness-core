@@ -13,7 +13,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.category.element.UnitTests;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
@@ -34,7 +34,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class CIPipelineSetupStepTest extends CIExecutionTest {
+public class CIPipelineSetupStepTest extends CIExecutionTestBase {
   @Inject private CIPipelineSetupStep ciPipelineSetupStep;
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Mock ExecutionSweepingOutputService executionSweepingOutputResolver;

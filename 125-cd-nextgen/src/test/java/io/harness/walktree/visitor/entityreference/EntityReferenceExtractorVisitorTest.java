@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.NAMAN;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
@@ -24,16 +24,18 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {
+public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
   @Inject SimpleVisitorFactory factory;
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testEntityReferenceExtractorVisitor() throws IOException {
     String ACCOUNT = "ACCOUNT";
     String ORG = "ORG";
@@ -72,7 +74,8 @@ public class EntityReferenceExtractorVisitorTest extends CDNGBaseTest {
         Resources.toString(Objects.requireNonNull(classLoader.getResource(pipelineFilename)), StandardCharsets.UTF_8);
 
     NgPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, NgPipeline.class);
-    EntityReferenceExtractorVisitor visitor = factory.obtainEntityReferenceExtractorVisitor(ACCOUNT, ORG, PROJECT);
+    EntityReferenceExtractorVisitor visitor =
+        factory.obtainEntityReferenceExtractorVisitor(ACCOUNT, ORG, PROJECT, null);
 
     visitor.walkElementTree(pipeline);
     Set<EntityDetailProtoDTO> references = visitor.getEntityReferenceSet();

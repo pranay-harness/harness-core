@@ -12,4 +12,4 @@ connector:
     credential:
       type: InheritFromDelegate
       spec:
-        delegateName: "K8s_in_cluster"
+        delegateSelectors: ["K8s_in_cluster"]

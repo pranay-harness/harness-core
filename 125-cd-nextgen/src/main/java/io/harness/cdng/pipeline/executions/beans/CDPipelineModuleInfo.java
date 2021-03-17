@@ -15,4 +15,5 @@ public class CDPipelineModuleInfo implements PipelineModuleInfo {
   @Singular private List<String> envIdentifiers;
   @Singular private List<String> serviceDefinitionTypes;
   @Singular private List<EnvironmentType> environmentTypes;
+  @Singular private List<String> infrastructureTypes;
 }

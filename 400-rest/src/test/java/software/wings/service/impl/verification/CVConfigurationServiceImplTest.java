@@ -14,12 +14,12 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
+import static software.wings.service.impl.verification.CVConfigurationServiceImplTestBase.createCustomLogsConfig;
 import static software.wings.sm.StateType.APM_VERIFICATION;
 import static software.wings.utils.StackDriverUtils.createStackDriverConfig;
 
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofSeconds;
-import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.eq;
@@ -75,10 +75,6 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
-import software.wings.sm.states.CustomLogVerificationState.LogCollectionInfo;
-import software.wings.sm.states.CustomLogVerificationState.Method;
-import software.wings.sm.states.CustomLogVerificationState.ResponseMapping;
-import software.wings.sm.states.CustomLogVerificationState.ResponseType;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DatadogState.Metric;
 import software.wings.sm.states.StackDriverState;
@@ -736,34 +732,6 @@ public class CVConfigurationServiceImplTest extends WingsBaseTest {
     DatadogCVServiceConfiguration configuration = createDatadogCVConfiguration(true, true);
     cvConfigurationService.saveConfiguration(
         configuration.getAccountId(), configuration.getAppId(), StateType.DATA_DOG, configuration);
-  }
-
-  public static CustomLogCVServiceConfiguration createCustomLogsConfig(String accountId) throws Exception {
-    CustomLogCVServiceConfiguration configuration =
-        CustomLogCVServiceConfiguration.builder()
-            .logCollectionInfo(LogCollectionInfo.builder()
-                                   .collectionUrl("testUrl ${start_time} and ${end_time}")
-                                   .method(Method.GET)
-                                   .responseType(ResponseType.JSON)
-                                   .responseMapping(ResponseMapping.builder()
-                                                        .hostJsonPath("hostname")
-                                                        .logMessageJsonPath("message")
-                                                        .timestampJsonPath("@timestamp")
-                                                        .build())
-                                   .build())
-            .build();
-
-    configuration.setAccountId(accountId);
-    configuration.setStateType(StateType.STACK_DRIVER);
-    configuration.setEnvId(generateUuid());
-    configuration.setName("StackDriver");
-    configuration.setConnectorId(generateUuid());
-    configuration.setServiceId(generateUuid());
-    configuration.setStateType(StateType.LOG_VERIFICATION);
-    configuration.setQuery(generateUUID());
-    configuration.setBaselineStartMinute(16);
-    configuration.setBaselineEndMinute(30);
-    return configuration;
   }
 
   @Test

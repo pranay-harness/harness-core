@@ -1,19 +1,23 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
 
 java_library(
-    name = "maven_deps",
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    resources = [
+        "//860-orchestration-steps/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
-    exports = [
+    deps = [
+        "//:lombok",
         "//870-orchestration:module",
         "//870-yaml-beans:module",
         "//878-pipeline-service-utilities:module",
+        "//940-notification-client:module",
+        "//955-delegate-beans:module",
+        "//960-notification-beans:module",
         "//960-yaml-sdk:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
@@ -37,21 +41,14 @@ java_library(
 )
 
 java_library(
-    name = "module",
-    srcs = glob(["src/main/**/*.java"]),
-    resources = [
-        "//860-orchestration-steps/src/main/resources:resource",
-    ],
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    resources = ["//860-orchestration-steps/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = [
-        "maven_deps",
+        ":module",
         "//:lombok",
-    ],
-)
-
-java_library(
-    name = "test_deps",
-    exports = [
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:io_fabric8_fabric8_utils",
@@ -63,30 +60,8 @@ java_library(
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    resources = ["//860-orchestration-steps/src/test/resources:resource"],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

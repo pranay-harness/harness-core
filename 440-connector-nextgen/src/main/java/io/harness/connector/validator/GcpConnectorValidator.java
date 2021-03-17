@@ -30,7 +30,7 @@ public class GcpConnectorValidator extends AbstractConnectorValidator {
             .build();
       case INHERIT_FROM_DELEGATE:
         final GcpDelegateDetailsDTO config = (GcpDelegateDetailsDTO) gcpConnector.getConfig();
-        return gcpValidationRequestBuilder.delegateSelector(config.getDelegateSelector()).build();
+        return gcpValidationRequestBuilder.delegateSelectors(config.getDelegateSelectors()).build();
       default:
         throw new InvalidRequestException("Invalid credential type: " + gcpConnector.getGcpCredentialType());
     }

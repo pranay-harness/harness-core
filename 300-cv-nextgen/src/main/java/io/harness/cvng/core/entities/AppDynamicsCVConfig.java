@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("APP_DYNAMICS")
 @Data
@@ -37,5 +38,16 @@ public class AppDynamicsCVConfig extends MetricCVConfig {
   protected void validateParams() {
     checkNotNull(applicationName, generateErrorMessageFromParam(AppDynamicsCVConfigKeys.applicationName));
     checkNotNull(tierName, generateErrorMessageFromParam(AppDynamicsCVConfigKeys.tierName));
+  }
+
+  public static class AppDynamicsCVConfigUpdatableEntity
+      extends MetricCVConfigUpdatableEntity<AppDynamicsCVConfig, AppDynamicsCVConfig> {
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<AppDynamicsCVConfig> updateOperations, AppDynamicsCVConfig appDynamicsCVConfig) {
+      setCommonOperations(updateOperations, appDynamicsCVConfig);
+      updateOperations.set(AppDynamicsCVConfigKeys.applicationName, appDynamicsCVConfig.getApplicationName())
+          .set(AppDynamicsCVConfigKeys.tierName, appDynamicsCVConfig.getTierName());
+    }
   }
 }

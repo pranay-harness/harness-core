@@ -2,10 +2,9 @@ package software.wings.yaml.errorhandling;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 
 import software.wings.beans.Base;
 import software.wings.beans.GitRepositoryInfo;
@@ -13,6 +12,8 @@ import software.wings.service.impl.yaml.GitSyncErrorStatus;
 import software.wings.yaml.errorhandling.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import software.wings.yaml.errorhandling.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.ws.rs.DefaultValue;
 import lombok.Builder;
 import lombok.Data;
@@ -28,28 +29,6 @@ import org.mongodb.morphia.annotations.Transient;
  * @author rktummala on 12/15/17
  */
 
-@NgUniqueIndex(name = "account_filepath_direction_idx",
-    fields = { @Field("accountId")
-               , @Field("yamlFilePath"), @Field("gitSyncDirection") })
-@CdIndex(name = "gitCommitId_idx",
-    fields = { @Field("accountId")
-               , @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })
-@CdIndex(name = "gitCommitId_idx_for_app_filter",
-    fields =
-    { @Field("accountId")
-      , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.gitCommitId") })
-@CdIndex(name = "previousErrors_idx",
-    fields =
-    { @Field("accountId")
-      , @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError") })
-@CdIndex(name = "previousErrors_idx_for_app_filter",
-    fields =
-    {
-      @Field("accountId")
-      , @Field("appId"), @Field("gitSyncDirection"), @Field("additionalErrorDetails.previousCommitIdsWithError")
-    })
-@CdIndex(name = "accountId_createdAt", fields = { @Field("accountId")
-                                                  , @Field("createdAt") })
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
@@ -57,6 +36,49 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "gitSyncError")
 @HarnessEntity(exportable = false)
 public class GitSyncError extends Base implements PersistentRegularIterable {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("account_filepath_direction_idx")
+                 .unique(true)
+                 .field(GitSyncErrorKeys.accountId)
+                 .field(GitSyncErrorKeys.yamlFilePath)
+                 .field(GitSyncErrorKeys.gitSyncDirection)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("gitCommitId_idx")
+                 .field(GitSyncErrorKeys.accountId)
+                 .field(GitSyncErrorKeys.gitSyncDirection)
+                 .field(GitSyncErrorKeys.gitCommitId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("gitCommitId_idx_for_app_filter")
+                 .field(GitSyncErrorKeys.accountId)
+                 .field(Base.APP_ID_KEY2)
+                 .field(GitSyncErrorKeys.gitSyncDirection)
+                 .field(GitSyncErrorKeys.gitCommitId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("previousErrors_idx")
+                 .field(GitSyncErrorKeys.accountId)
+                 .field(GitSyncErrorKeys.gitSyncDirection)
+                 .field(GitSyncErrorKeys.previousCommitIds)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("previousErrors_idx_for_app_filter")
+                 .field(GitSyncErrorKeys.accountId)
+                 .field(Base.APP_ID_KEY2)
+                 .field(GitSyncErrorKeys.gitSyncDirection)
+                 .field(GitSyncErrorKeys.previousCommitIds)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_createdAt")
+                 .field(GitSyncErrorKeys.accountId)
+                 .field(Base.CREATED_AT_KEY)
+                 .build())
+        .build();
+  }
+
   private String accountId;
   private String yamlFilePath;
   private String changeType;

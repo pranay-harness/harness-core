@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.outcome;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.inject.Singleton;
 
 /**
@@ -8,4 +11,5 @@ import com.google.inject.Singleton;
  * Ideally, we should have two separate adapters.
  */
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class OutcomeController {}

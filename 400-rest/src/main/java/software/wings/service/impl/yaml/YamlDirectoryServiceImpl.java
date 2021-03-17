@@ -34,6 +34,7 @@ import static software.wings.beans.yaml.YamlConstants.DEPLOYMENT_SPECIFICATION_F
 import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GLOBAL_TEMPLATE_LIBRARY_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.GOVERNANCE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
@@ -41,6 +42,7 @@ import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER_APP_SERVICE;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -76,6 +78,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
+import io.harness.governance.GovernanceFreezeConfig;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
@@ -110,6 +113,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
@@ -144,6 +148,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -191,6 +196,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -227,6 +233,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private AuthService authService;
   @Inject private GitSyncErrorService gitSyncErrorService;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private GovernanceConfigService governanceConfigService;
 
   @Override
   public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
@@ -403,6 +410,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             }
             yaml = yamlResourceService.getTemplateLibrary(accountId, appId, entityId).getResource().getYaml();
             break;
+          case "GovernanceConfig":
+            yaml = yamlResourceService.getGovernanceConfig(accountId).getResource().getYaml();
+            break;
 
           default:
             log.warn("No toYaml for entity[{}, {}]", dn.getShortClassName(), entityId);
@@ -574,6 +584,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       }
     }));
 
+    if (isNewDeploymentFreezeFFenabled(accountId)) {
+      // Governance Folder
+      futureList.add(executorService.submit(() -> {
+        try (UserThreadLocal.Guard guard = userGuard(user)) {
+          return doGovernance(accountId, yamlDirectoryFetchPayload.getAppId(), directoryPath.clone());
+        }
+      }));
+    }
+
     // collect results to this map so we can rebuild the correct order
     Map<String, FolderNode> map = new HashMap<>();
 
@@ -603,6 +622,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(map.get(SOURCE_REPO_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(VERIFICATION_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(NOTIFICATION_GROUPS_FOLDER));
+    if (map.containsKey(YamlConstants.GOVERNANCE_FOLDER)) {
+      configFolder.addChild(map.get(YamlConstants.GOVERNANCE_FOLDER));
+    }
+
     if (map.containsKey(GLOBAL_TEMPLATE_LIBRARY_FOLDER)) {
       configFolder.addChild(map.get(GLOBAL_TEMPLATE_LIBRARY_FOLDER));
     }
@@ -614,6 +637,30 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     log.info("********* ELAPSED_TIME: " + elapsedTime + " *********");
 
     return configFolder;
+  }
+
+  @VisibleForTesting
+  FolderNode doGovernance(String accountId, String entityId, DirectoryPath directoryPath) {
+    FolderNode governanceFolder = new FolderNode(accountId, YamlConstants.GOVERNANCE_FOLDER, GovernanceConfig.class,
+        directoryPath.add(YamlConstants.GOVERNANCE_FOLDER), yamlGitSyncService);
+
+    doGovernanceConfig(accountId, directoryPath, governanceFolder, entityId);
+    return governanceFolder;
+  }
+
+  private void doGovernanceConfig(
+      String accountId, DirectoryPath directoryPath, FolderNode parentFolder, String entityId) {
+    String yamlFileName = "Deployment Governance" + YAML_EXTENSION;
+    DirectoryPath cpPath = directoryPath.clone();
+
+    // get entityId for the YAML file
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+
+    // if governance config exists
+    if (isNotEmpty(governanceConfig.getUuid())) {
+      parentFolder.addChild(new AccountLevelYamlNode(accountId, governanceConfig.getUuid(), yamlFileName,
+          GovernanceConfig.class, cpPath.add(yamlFileName), yamlGitSyncService, Type.GOVERNANCE_CONFIG));
+    }
   }
 
   @VisibleForTesting
@@ -882,6 +929,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private boolean isTriggerYamlEnabled(String accountId) {
     return featureFlagService.isEnabled(FeatureName.TRIGGER_YAML, accountId);
+  }
+
+  private boolean isNewDeploymentFreezeFFenabled(String accountId) {
+    return featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId);
   }
 
   private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
@@ -1176,9 +1227,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateApplicationManifestNodeForService(
       String accountId, Service service, DirectoryPath servicePath) {
-    DirectoryPath applicationManifestPath = servicePath.clone().add(MANIFEST_FOLDER);
+    DirectoryPath applicationManifestPath = getApplicationManifestDirectoryPath(service, servicePath);
 
-    FolderNode applicationManifestFolder = new FolderNode(accountId, MANIFEST_FOLDER, ApplicationManifest.class,
+    String manifestFolderName = getApplicationManifestFolderName(service);
+
+    FolderNode applicationManifestFolder = new FolderNode(accountId, manifestFolderName, ApplicationManifest.class,
         applicationManifestPath, service.getAppId(), yamlGitSyncService);
 
     DirectoryPath manifestFilePath = applicationManifestPath.clone().add(MANIFEST_FILE_FOLDER);
@@ -1199,6 +1252,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     return null;
+  }
+
+  @NotNull
+  private DirectoryPath getApplicationManifestDirectoryPath(Service service, DirectoryPath servicePath) {
+    return isAzureAppServiceDeploymentType(service) ? servicePath.clone().add(MANIFEST_FOLDER_APP_SERVICE)
+                                                    : servicePath.clone().add(MANIFEST_FOLDER);
+  }
+
+  @NotNull
+  private String getApplicationManifestFolderName(Service service) {
+    return isAzureAppServiceDeploymentType(service) ? MANIFEST_FOLDER_APP_SERVICE : MANIFEST_FOLDER;
   }
 
   private ApplicationManifest getApplicationManifestByService(Service service) {
@@ -2078,6 +2142,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
   }
 
+  private String getDeploymentFreezeConfigName(GovernanceFreezeConfig governanceFreezeConfig) {
+    return governanceFreezeConfig.getName() + YAML_EXTENSION;
+  }
+
   private String getSettingAttributeYamlName(SettingAttribute settingAttribute) {
     return settingAttribute.getName() + YAML_EXTENSION;
   }
@@ -2792,6 +2860,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathForTags();
     } else if (entity instanceof Template) {
       return getRootPathByTemplate((Template) entity);
+    } else if (entity instanceof GovernanceConfig) {
+      return getRootPathForGovernanceConfig();
     }
 
     throw new InvalidRequestException(
@@ -2810,6 +2880,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private String getRootPathForTags() {
     return getRootPath() + PATH_DELIMITER;
+  }
+
+  private String getRootPathForGovernanceConfig() {
+    return getRootPath() + PATH_DELIMITER + GOVERNANCE_FOLDER + PATH_DELIMITER;
   }
 
   class DirectoryComparator implements Comparator<DirectoryNode> {

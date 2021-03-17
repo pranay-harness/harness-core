@@ -1,5 +1,10 @@
 package io.harness.delegate.beans.ci.pod;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
+import io.harness.expression.Expression;
+import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
+
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -7,18 +12,18 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public abstract class ContainerParams {
+public abstract class ContainerParams implements NestedAnnotationResolver {
   private String name;
-  private ImageDetailsWithConnector imageDetailsWithConnector;
+  @Expression(ALLOW_SECRETS) private ImageDetailsWithConnector imageDetailsWithConnector;
   private List<String> commands;
-  private List<String> args;
-  private String workingDir;
+  @Expression(ALLOW_SECRETS) private List<String> args;
+  @Expression(ALLOW_SECRETS) private String workingDir;
   private List<Integer> ports;
-  private Map<String, String> envVars;
+  @Expression(ALLOW_SECRETS) private Map<String, String> envVars;
   private Map<String, SecretVarParams> secretEnvVars;
   private Map<String, SecretVolumeParams> secretVolumes;
-  private String imageSecret;
-  private Map<String, String> volumeToMountPath;
+  @Expression(ALLOW_SECRETS) private String imageSecret;
+  @Expression(ALLOW_SECRETS) private Map<String, String> volumeToMountPath;
   private ContainerResourceParams containerResourceParams;
   private ContainerSecrets containerSecrets;
 

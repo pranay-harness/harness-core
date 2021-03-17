@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.mutation.connector.input;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.mutation.QLMutationInput;
 import software.wings.graphql.schema.mutation.connector.input.docker.QLDockerConnectorInput;
 import software.wings.graphql.schema.mutation.connector.input.git.QLGitConnectorInput;
@@ -17,6 +20,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLConnectorInput implements QLMutationInput {
   private String clientMutationId;
   private String connectorId;

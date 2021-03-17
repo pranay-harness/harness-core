@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.mutation.secrets.input;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLCreateEncryptedTextInputKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLUpdateSecretInput implements QLMutationInput {
   String clientMutationId;
   String secretId;

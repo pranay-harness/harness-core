@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.sm.states.customdeployment.InstanceFetchState.OUTPUT_PATH_KEY;
@@ -106,6 +107,7 @@ public class CustomDeploymentInstanceSyncClient implements PerpetualTaskServiceC
                   .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.name())
                   .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 

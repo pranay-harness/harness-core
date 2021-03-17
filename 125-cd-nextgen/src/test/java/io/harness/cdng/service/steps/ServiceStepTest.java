@@ -59,10 +59,8 @@ public class ServiceStepTest extends CategoryTest {
                     .build())
             .build();
 
-    K8sManifestOutcome k8sManifestOutcome = K8sManifestOutcome.builder()
-                                                .identifier(k8Manifest.getIdentifier())
-                                                .storeConfig(k8Manifest.getStoreConfig())
-                                                .build();
+    K8sManifestOutcome k8sManifestOutcome =
+        K8sManifestOutcome.builder().identifier(k8Manifest.getIdentifier()).store(k8Manifest.getStoreConfig()).build();
 
     K8sManifest k8Manifest1 =
         K8sManifest.builder()
@@ -80,7 +78,7 @@ public class ServiceStepTest extends CategoryTest {
 
     K8sManifestOutcome k8sManifestOutcome1 = K8sManifestOutcome.builder()
                                                  .identifier(k8Manifest1.getIdentifier())
-                                                 .storeConfig(k8Manifest1.getStoreConfig())
+                                                 .store(k8Manifest1.getStoreConfig())
                                                  .build();
 
     ManifestsOutcome manifestsOutcome =

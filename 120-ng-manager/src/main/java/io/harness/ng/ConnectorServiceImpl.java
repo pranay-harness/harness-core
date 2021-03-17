@@ -6,10 +6,12 @@ import static io.harness.connector.ConnectivityStatus.SUCCESS;
 import static io.harness.connector.ConnectorCategory.SECRET_MANAGER;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.ng.NextGenModule.SECRET_MANAGER_CONNECTOR_SERVICE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.NgAutoLogContext;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
@@ -22,6 +24,8 @@ import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.entities.Connector;
+import io.harness.connector.helper.ConnectorLogContext;
+import io.harness.connector.helper.HarnessManagedConnectorHelper;
 import io.harness.connector.impl.ConnectorErrorMessagesHelper;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorHeartbeatService;
@@ -34,7 +38,9 @@ import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.activityhistory.NGActivityType;
+import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 
@@ -61,13 +67,15 @@ public class ConnectorServiceImpl implements ConnectorService {
   private final Producer eventProducer;
   private final ExecutorService executorService;
   private final ConnectorErrorMessagesHelper connectorErrorMessagesHelper;
+  private final HarnessManagedConnectorHelper harnessManagedConnectorHelper;
 
   @Inject
   public ConnectorServiceImpl(@Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService defaultConnectorService,
       @Named(SECRET_MANAGER_CONNECTOR_SERVICE) ConnectorService secretManagerConnectorService,
       ConnectorActivityService connectorActivityService, ConnectorHeartbeatService connectorHeartbeatService,
       ConnectorRepository connectorRepository, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper) {
+      ExecutorService executorService, ConnectorErrorMessagesHelper connectorErrorMessagesHelper,
+      HarnessManagedConnectorHelper harnessManagedConnectorHelper) {
     this.defaultConnectorService = defaultConnectorService;
     this.secretManagerConnectorService = secretManagerConnectorService;
     this.connectorActivityService = connectorActivityService;
@@ -76,6 +84,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     this.eventProducer = eventProducer;
     this.executorService = executorService;
     this.connectorErrorMessagesHelper = connectorErrorMessagesHelper;
+    this.harnessManagedConnectorHelper = harnessManagedConnectorHelper;
   }
 
   private ConnectorService getConnectorService(ConnectorType connectorType) {
@@ -93,14 +102,44 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO create(@NotNull ConnectorDTO connector, String accountIdentifier) {
-    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    ConnectorResponseDTO connectorResponse =
-        getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
-    ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
-    createConnectorCreationActivity(accountIdentifier, savedConnector);
-    connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier, savedConnector);
-    runTestConnectionAsync(connector, accountIdentifier);
-    return connectorResponse;
+    PerpetualTaskId connectorHeartbeatTaskId = null;
+    try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
+             connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 =
+             new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
+      ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+      boolean isHarnessManagedSecretManager =
+          harnessManagedConnectorHelper.isHarnessManagedSecretManager(connectorInfo);
+      if (!isHarnessManagedSecretManager) {
+        connectorHeartbeatTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(accountIdentifier,
+            connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+      }
+      if (connectorHeartbeatTaskId != null || isHarnessManagedSecretManager) {
+        ConnectorResponseDTO connectorResponse =
+            getConnectorService(connectorInfo.getConnectorType()).create(connector, accountIdentifier);
+        if (connectorResponse != null) {
+          ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
+          createConnectorCreationActivity(accountIdentifier, savedConnector);
+          runTestConnectionAsync(connector, accountIdentifier);
+          if (connectorHeartbeatTaskId != null) {
+            defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier,
+                connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier(),
+                connectorHeartbeatTaskId.getId());
+          }
+        }
+        return connectorResponse;
+      } else {
+        throw new InvalidRequestException("Connector could not be created because we could not create the heartbeat");
+      }
+    } catch (Exception ex) {
+      if (connectorHeartbeatTaskId != null) {
+        ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+        String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(accountIdentifier,
+            connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier(), connectorInfo.getIdentifier());
+        deleteConnectorHeartbeatTask(accountIdentifier, fullyQualifiedIdentifier, connectorHeartbeatTaskId.getId());
+      }
+      throw ex;
+    }
   }
 
   private void runTestConnectionAsync(ConnectorDTO connectorRequestDTO, String accountIdentifier) {
@@ -111,7 +150,9 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   private void createConnectorCreationActivity(String accountIdentifier, ConnectorInfoDTO connector) {
-    try {
+    try (AutoLogContext ignore1 = new NgAutoLogContext(
+             connector.getProjectIdentifier(), connector.getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ConnectorLogContext(connector.getIdentifier(), OVERRIDE_ERROR);) {
       connectorActivityService.create(accountIdentifier, connector, NGActivityType.ENTITY_CREATION);
     } catch (Exception ex) {
       log.info("Error while creating connector creation activity", ex);
@@ -120,38 +161,43 @@ public class ConnectorServiceImpl implements ConnectorService {
 
   @Override
   public ConnectorResponseDTO update(@NotNull ConnectorDTO connector, String accountIdentifier) {
-    ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-    ConnectorResponseDTO connectorResponse =
-        getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
-    ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
-    createConnectorUpdateActivity(accountIdentifier, savedConnector);
-    publishEventForConnectorUpdate(accountIdentifier, savedConnector);
-    return connectorResponse;
+    try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
+             connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 =
+             new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
+      ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
+      ConnectorResponseDTO connectorResponse =
+          getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
+      ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
+      createConnectorUpdateActivity(accountIdentifier, savedConnector);
+      publishEvent(accountIdentifier, savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier(),
+          savedConnector.getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      return connectorResponse;
+    }
   }
 
-  private void publishEventForConnectorUpdate(String accountIdentifier, ConnectorInfoDTO savedConnector) {
+  private void publishEvent(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String action) {
     try {
-      EntityChangeDTO.Builder connectorUpdateDTOBuilder =
-          EntityChangeDTO.newBuilder()
-              .setAccountIdentifier(StringValue.of(accountIdentifier))
-              .setIdentifier(StringValue.of(savedConnector.getIdentifier()));
-      if (isNotBlank(savedConnector.getOrgIdentifier())) {
-        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(savedConnector.getOrgIdentifier()));
+      EntityChangeDTO.Builder connectorUpdateDTOBuilder = EntityChangeDTO.newBuilder()
+                                                              .setAccountIdentifier(StringValue.of(accountIdentifier))
+                                                              .setIdentifier(StringValue.of(identifier));
+      if (isNotBlank(orgIdentifier)) {
+        connectorUpdateDTOBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
       }
-      if (isNotBlank(savedConnector.getProjectIdentifier())) {
-        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(savedConnector.getProjectIdentifier()));
+      if (isNotBlank(projectIdentifier)) {
+        connectorUpdateDTOBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
       }
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier,
                   EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.CONNECTOR_ENTITY,
-                  EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.UPDATE_ACTION))
+                  EventsFrameworkMetadataConstants.ACTION, action))
               .setData(connectorUpdateDTOBuilder.build().toByteString())
               .build());
     } catch (Exception ex) {
       log.info("Exception while publishing the event of connector update for {}",
-          String.format(CONNECTOR_STRING, savedConnector.getIdentifier(), accountIdentifier,
-              savedConnector.getOrgIdentifier(), savedConnector.getProjectIdentifier()));
+          String.format(CONNECTOR_STRING, identifier, accountIdentifier, orgIdentifier, projectIdentifier));
     }
   }
 
@@ -166,21 +212,37 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean delete(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    Optional<Connector> connectorOptional =
-        connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
-    if (connectorOptional.isPresent()) {
-      Connector connector = connectorOptional.get();
-      boolean isConnectorDeleted =
-          getConnectorService(connector.getType())
-              .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      deleteConnectorHeartbeatTask(
-          accountIdentifier, fullyQualifiedIdentifier, connector.getHeartbeatPerpetualTaskId());
-      deleteConnectorActivities(accountIdentifier, fullyQualifiedIdentifier);
-      return isConnectorDeleted;
+    try (AutoLogContext ignore1 =
+             new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
+      String fullyQualifiedIdentifier = FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+          accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      Optional<Connector> connectorOptional =
+          connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(fullyQualifiedIdentifier, true);
+      if (connectorOptional.isPresent()) {
+        Connector connector = connectorOptional.get();
+        boolean isConnectorHeartbeatDeleted = deleteConnectorHeartbeatTask(
+            accountIdentifier, fullyQualifiedIdentifier, connector.getHeartbeatPerpetualTaskId());
+        if (isConnectorHeartbeatDeleted || connector.getHeartbeatPerpetualTaskId() == null) {
+          boolean isConnectorDeleted =
+              getConnectorService(connector.getType())
+                  .delete(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+          if (isConnectorDeleted) {
+            publishEvent(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier,
+                EventsFrameworkMetadataConstants.DELETE_ACTION);
+            return true;
+          } else {
+            PerpetualTaskId perpetualTaskId = connectorHeartbeatService.createConnectorHeatbeatTask(
+                accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+            updateConnectorEntityWithPerpetualtaskId(
+                accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier, perpetualTaskId.getId());
+            return false;
+          }
+        }
+        throw new InvalidRequestException("Could not delete connector because heartbeat could not be deleted", USER);
+      }
+      throw new InvalidRequestException("No such connector found", USER);
     }
-    throw new InvalidRequestException("No such connector found", USER);
   }
 
   private void deleteConnectorActivities(String accountIdentifier, String connectorFQN) {
@@ -191,19 +253,36 @@ public class ConnectorServiceImpl implements ConnectorService {
     }
   }
 
-  private void deleteConnectorHeartbeatTask(String accountIdentifier, String connectorFQN, String heartbeatTaskId) {
+  private boolean deleteConnectorHeartbeatTask(String accountIdentifier, String connectorFQN, String heartbeatTaskId) {
     if (isNotBlank(heartbeatTaskId)) {
-      connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+      boolean perpetualTaskIsDeleted =
+          connectorHeartbeatService.deletePerpetualTask(accountIdentifier, heartbeatTaskId, connectorFQN);
+      if (perpetualTaskIsDeleted == false) {
+        log.info("{} The perpetual task could not be deleted {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+        return false;
+      }
     } else {
       log.info("{} The perpetual task id is empty for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+      return false;
     }
     log.info(
         "{} Deleted the heartbeat perpetual task for the connector {}", CONNECTOR_HEARTBEAT_LOG_PREFIX, connectorFQN);
+    return true;
   }
 
   @Override
   public ConnectorValidationResult validate(@NotNull ConnectorDTO connector, String accountIdentifier) {
-    return defaultConnectorService.validate(connector, accountIdentifier);
+    try (AutoLogContext ignore1 = new NgAutoLogContext(connector.getConnectorInfo().getProjectIdentifier(),
+             connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 =
+             new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
+      ConnectorValidationResult validationResult = defaultConnectorService.validate(connector, accountIdentifier);
+      ConnectorInfoDTO connectorInfoDTO = connector.getConnectorInfo();
+      updateTheConnectorValidationResultInTheEntity(validationResult, accountIdentifier,
+          connectorInfoDTO.getOrgIdentifier(), connectorInfoDTO.getProjectIdentifier(),
+          connectorInfoDTO.getIdentifier());
+      return validationResult;
+    }
   }
 
   @Override
@@ -216,30 +295,40 @@ public class ConnectorServiceImpl implements ConnectorService {
   @Override
   public ConnectorValidationResult testConnection(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    Optional<ConnectorResponseDTO> connectorDTO =
-        get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    if (connectorDTO.isPresent()) {
-      ConnectorResponseDTO connectorResponse = connectorDTO.get();
-      ConnectorInfoDTO connectorInfoDTO = connectorResponse.getConnector();
-      ConnectorValidationResult connectorValidationResult =
-          getConnectorService(connectorInfoDTO.getConnectorType())
-              .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      updateTheConnectorValidationResultInTheEntity(
-          connectorValidationResult, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-      return connectorValidationResult;
-    } else {
-      throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
-                                            accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
-          USER);
+    try (AutoLogContext ignore1 =
+             new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
+      Optional<ConnectorResponseDTO> connectorDTO =
+          get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      if (connectorDTO.isPresent()) {
+        ConnectorResponseDTO connectorResponse = connectorDTO.get();
+        ConnectorInfoDTO connectorInfoDTO = connectorResponse.getConnector();
+        ConnectorValidationResult connectorValidationResult =
+            getConnectorService(connectorInfoDTO.getConnectorType())
+                .testConnection(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+        updateTheConnectorValidationResultInTheEntity(
+            connectorValidationResult, accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+        return connectorValidationResult;
+      } else {
+        throw new InvalidRequestException(connectorErrorMessagesHelper.createConnectorNotFoundMessage(
+                                              accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier),
+            USER);
+      }
     }
   }
 
   private void updateTheConnectorValidationResultInTheEntity(ConnectorValidationResult connectorValidationResult,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
-    Connector connector =
-        getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
-    connectorRepository.save(connector);
+    try {
+      Connector connector =
+          getConnectorWithIdentifier(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+      setConnectivityStatusInConnector(connector, connectorValidationResult, connector.getConnectivityDetails());
+      connectorRepository.save(connector);
+    } catch (Exception ex) {
+      log.error("Error saving the connector status for the connector {}",
+          String.format(CONNECTOR_STRING, connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
+          ex);
+    }
   }
 
   private Connector getConnectorWithIdentifier(
@@ -290,9 +379,14 @@ public class ConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectorEntityWithPerpetualtaskId(
-      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
-    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
+  public void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId) {
+    try (AutoLogContext ignore1 = new NgAutoLogContext(
+             connectorProjectIdentifier, connectorOrgIdentifier, accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR);) {
+      defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(
+          accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier, perpetualTaskId);
+    }
   }
 
   @Override

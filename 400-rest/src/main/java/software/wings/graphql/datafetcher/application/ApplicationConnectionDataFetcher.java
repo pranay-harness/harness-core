@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.application;
 
 import static software.wings.graphql.utils.nameservice.NameService.application;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Application;
@@ -27,6 +29,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ApplicationConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLApplicationFilter, QLNoOpSortCriteria, QLApplicationConnection> {
   @Inject ApplicationQueryHelper applicationQueryHelper;

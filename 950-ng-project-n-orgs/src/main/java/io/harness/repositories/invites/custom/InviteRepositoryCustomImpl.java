@@ -3,9 +3,9 @@ package io.harness.repositories.invites.custom;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.invites.RetryUtils;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
+import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;

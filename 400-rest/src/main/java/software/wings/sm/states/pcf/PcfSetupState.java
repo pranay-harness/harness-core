@@ -268,7 +268,8 @@ public class PcfSetupState extends State {
 
     boolean useCliForSetup = true;
 
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setMetadata(artifact.getMetadata());
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
@@ -772,6 +773,8 @@ public class PcfSetupState extends State {
                                 .useCurrentRunningInstanceCount(useCurrentRunningCount)
                                 .tempRoutesOnSetupState(tempRouteMap)
                                 .finalRoutesOnSetupState(finalRouteMap)
+                                .useArtifactProcessingScript(useArtifactProcessingScript)
+                                .artifactProcessingScript(artifactProcessingScript)
                                 .build())
         .delegateTaskId(delegateTaskId)
         .build();

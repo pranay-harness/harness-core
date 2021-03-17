@@ -19,4 +19,5 @@ public class ExecutionSummaryInfoDTO {
   List<Integer> deployments; // no of deployments for each of the last 7 days, most recent first
   Long lastExecutionTs;
   ExecutionStatus lastExecutionStatus;
+  String lastExecutionId;
 }

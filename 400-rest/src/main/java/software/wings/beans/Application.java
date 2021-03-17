@@ -9,19 +9,21 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.changestreamsframework.ChangeDataCapture;
 import io.harness.changestreamsframework.ChangeDataCaptureSink;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
 
-import software.wings.beans.Application.ApplicationKeys;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.yaml.BaseEntityYaml;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -53,6 +55,17 @@ import org.mongodb.morphia.annotations.Transient;
 @ChangeDataCapture(table = "ApplicationTruthTable", sink = {ChangeDataCaptureSink.TIMESCALE},
     fields = {ApplicationKeys.uuid, ApplicationKeys.appId, ApplicationKeys.name})
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .unique(true)
+                 .name("yaml")
+                 .field(ApplicationKeys.accountId)
+                 .field(ApplicationKeys.name)
+                 .build())
+        .build();
+  }
+
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   public static final String LOG_KEY_FOR_ID = LogKeyUtils.calculateLogKeyForId(Application.class);
 

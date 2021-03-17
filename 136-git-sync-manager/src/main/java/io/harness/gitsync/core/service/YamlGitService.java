@@ -6,7 +6,6 @@ import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 
 import java.util.List;
-import javax.ws.rs.core.HttpHeaders;
 
 public interface YamlGitService {
   YamlGitConfigDTO weNeedToPushChanges(
@@ -15,18 +14,12 @@ public interface YamlGitService {
   YamlGitConfigDTO getYamlGitConfigForHarnessToGitChangeSet(
       GitFileChange harnessToGitFileChange, YamlChangeSet harnessToGitChangeSet);
 
-  void handleHarnessChangeSet(YamlChangeSet yamlChangeSet, String accountId);
-
-  void removeGitSyncErrors(
-      String accountId, String orgId, String projectId, List<GitFileChange> gitFileChangeList, boolean gitToHarness);
-
   void handleGitChangeSet(YamlChangeSet yamlChangeSets, String accountId);
 
-  String validateAndQueueWebhookRequest(
-      String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
-
-  void processFailedChanges(String accountId, List<ChangeWithErrorMsg> failedChangesWithErrorMsg,
-      YamlGitConfigDTO yamlGitConfig, boolean gitToHarness, boolean fullSync);
+  void removeGitSyncErrors(String accountId, String orgId, String projectId, List<GitFileChange> gitFileChangeList);
 
   List<YamlGitConfigDTO> getYamlGitConfigsForGitToHarnessChangeSet(YamlChangeSet gitToHarnessChangeSet);
+
+  void processFailedChanges(String accountId, List<ChangeWithErrorMsg> failedChangesWithErrorMsg,
+      YamlGitConfigDTO yamlGitConfig, boolean fullSync);
 }

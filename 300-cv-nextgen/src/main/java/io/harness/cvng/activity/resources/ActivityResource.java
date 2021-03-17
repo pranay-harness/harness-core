@@ -7,10 +7,10 @@ import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
+import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityDTO;
-import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
@@ -30,7 +30,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
 @Api(ACTIVITY_RESOURCE)
@@ -80,8 +79,8 @@ public class ActivityResource {
 
   @GET
   @Path("/{activityId}/deployment-activity-summary")
-  @ApiOperation(value = "get summary of deployment activity", nickname = "getDeploymentSummary")
-  public RestResponse<DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary> getDeploymentSummary(
+  @ApiOperation(value = "get summary of deployment activity", nickname = "getDeploymentActivitySummary")
+  public RestResponse<DeploymentActivitySummaryDTO> getDeploymentSummary(
       @NotNull @QueryParam("accountId") String accountId, @NotNull @PathParam("activityId") String activityId) {
     return new RestResponse(activityService.getDeploymentSummary(activityId));
   }
@@ -109,21 +108,10 @@ public class ActivityResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @QueryParam("environmentIdentifier") String environmentIdentifier,
-      @NotNull @QueryParam("startTime") Long startTime, @NotNull @QueryParam("endTime") Long endTime) {
+      @QueryParam("serviceIdentifier") String serviceIdentifier, @NotNull @QueryParam("startTime") Long startTime,
+      @NotNull @QueryParam("endTime") Long endTime) {
     return new RestResponse(activityService.listActivitiesInTimeRange(accountId, orgIdentifier, projectIdentifier,
-        environmentIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
-  }
-
-  @GET
-  @Path("{activityId}/details")
-  @ApiOperation(value = "list all activities between a given time range for an environment, project, org",
-      nickname = "getActivityDetails")
-  public ResponseDTO<List<String>>
-  getActivityDetails(@NotNull @QueryParam("accountId") String accountId,
-      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
-      @NotNull @NotEmpty @PathParam("activityId") String activityId) {
-    return activityService.getActivityDetails(accountId, orgIdentifier, projectIdentifier, activityId);
+        environmentIdentifier, serviceIdentifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
   }
 
   @GET

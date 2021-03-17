@@ -12,13 +12,11 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.service.impl.verification.CVConfigurationServiceImplTest;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration;
 import software.wings.verification.stackdriver.StackDriverMetricCVConfiguration.StackDriverMetricCVConfigurationYaml;
 import software.wings.verification.stackdriver.StackDriverMetricDefinition;
 
 import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.File;
 import java.util.Arrays;

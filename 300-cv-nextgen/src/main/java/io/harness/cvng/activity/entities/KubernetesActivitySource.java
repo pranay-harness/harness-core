@@ -36,6 +36,8 @@ public class KubernetesActivitySource extends ActivitySource {
     return KubernetesActivitySourceDTO.builder()
         .uuid(getUuid())
         .identifier(getIdentifier())
+        .orgIdentifier(getOrgIdentifier())
+        .projectIdentifier(getProjectIdentifier())
         .name(getName())
         .connectorIdentifier(connectorIdentifier)
         .activitySourceConfigs(activitySourceConfigs)

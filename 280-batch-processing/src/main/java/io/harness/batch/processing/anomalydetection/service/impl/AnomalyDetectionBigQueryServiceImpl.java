@@ -176,8 +176,6 @@ public class AnomalyDetectionBigQueryServiceImpl {
     currentTimeSeries.setAccountId(timeSeriesMetaData.getAccountId());
     List<CloudBillingGroupBy> groupByList = timeSeriesMetaData.getCloudQueryMetaData().getGroupByList();
 
-    currentTimeSeries.setEntityType(timeSeriesMetaData.getEntityType());
-
     for (CloudBillingGroupBy groupBy : groupByList) {
       CloudEntityGroupBy type = groupBy.getEntityGroupBy();
       if (type != null) {
@@ -205,6 +203,10 @@ public class AnomalyDetectionBigQueryServiceImpl {
           case awsService:
             currentTimeSeries.setAwsService(
                 row.get(PreAggregatedTableSchema.awsServiceCode.getColumnNameSQL()).getStringValue());
+            break;
+          case awsUsageType:
+            currentTimeSeries.setAwsUsageType(
+                row.get(PreAggregatedTableSchema.awsUsageType.getColumnNameSQL()).getStringValue());
             break;
           default:
             log.error("Not valid entity type : {} ", type);

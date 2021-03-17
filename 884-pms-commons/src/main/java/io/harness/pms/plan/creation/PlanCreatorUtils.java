@@ -6,6 +6,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
+import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -68,5 +69,62 @@ public class PlanCreatorUtils {
       }
     });
     return stageFields;
+  }
+
+  public boolean checkIfStageRollbackStepsPresent(YamlNode executionNode) {
+    if (executionNode == null) {
+      return false;
+    }
+    YamlField rollbackStepsField = executionNode.getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+    return rollbackStepsField != null && rollbackStepsField.getNode().asArray().size() != 0;
+  }
+
+  /**
+   * @param executionNode execution element.
+   * @return boolean
+   */
+  public boolean checkIfAnyStepGroupRollback(YamlNode executionNode) {
+    if (executionNode == null) {
+      return false;
+    }
+    YamlField executionStepsField = executionNode.getField(YAMLFieldNameConstants.STEPS);
+    List<YamlNode> stepsArrayFields = executionStepsField.getNode().asArray();
+    for (int i = stepsArrayFields.size() - 1; i >= 0; i--) {
+      List<YamlField> yamlFields = stepsArrayFields.get(i).fields();
+      for (YamlField yamlField : yamlFields) {
+        if (yamlField.getName().equals(YAMLFieldNameConstants.STEP_GROUP)) {
+          YamlField rollbackStepsNode = yamlField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+          if (rollbackStepsNode != null) {
+            return true;
+          }
+        } else if (yamlField.getName().equals(YAMLFieldNameConstants.PARALLEL)) {
+          List<YamlField> stepGroupFields = getStepGroupInParallelSectionHavingRollback(yamlField);
+          if (EmptyPredicate.isEmpty(stepGroupFields)) {
+            return false;
+          }
+          for (YamlField stepGroupField : stepGroupFields) {
+            YamlField rollbackStepsNode = stepGroupField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+            if (rollbackStepsNode != null) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  public List<YamlField> getStepGroupInParallelSectionHavingRollback(YamlField parallelStepGroup) {
+    List<YamlNode> yamlNodes =
+        Optional.of(Preconditions.checkNotNull(parallelStepGroup).getNode().asArray()).orElse(Collections.emptyList());
+    List<YamlField> stepGroupFields = new LinkedList<>();
+    yamlNodes.forEach(yamlNode -> {
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      if (stepGroupField != null && stepGroupField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS) != null) {
+        stepGroupFields.add(stepGroupField);
+      }
+    });
+    return stepGroupFields;
   }
 }

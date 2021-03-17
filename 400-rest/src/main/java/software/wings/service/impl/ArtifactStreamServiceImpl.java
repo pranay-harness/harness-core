@@ -958,8 +958,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .stream()
             .anyMatch(type -> type.name().equals(artifactStreamType))) {
       if (artifactStream.shouldValidate()) {
-        buildSourceService.validateArtifactSource(
-            artifactStream.fetchAppId(), artifactStream.getSettingId(), artifactStream.fetchArtifactStreamAttributes());
+        buildSourceService.validateArtifactSource(artifactStream.fetchAppId(), artifactStream.getSettingId(),
+            artifactStream.fetchArtifactStreamAttributes(featureFlagService));
       }
     } else if (CUSTOM.name().equals(artifactStreamType) && artifactStream.shouldValidate()) {
       try {
@@ -970,7 +970,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           message = message + ex.getCause().getMessage();
         }
         log.warn(message, ex);
-        throw new ShellExecutionException("Error occurred during script execution. Please verify the script.");
+        throw new ShellExecutionException("Custom Artifact script execution failed with following error: "
+            + ExceptionUtils.getMessage(ex) + ", Please verify the script.");
       }
     }
   }

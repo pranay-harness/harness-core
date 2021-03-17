@@ -47,10 +47,6 @@ public class FailureStrategiesUtils {
           map.put(ngFailureType, failureStrategyConfig.getOnFailure().getAction());
         }
       }
-      if (map.containsKey(NGFailureType.ALL_ERRORS) && map.entrySet().size() > 1) {
-        throw new InvalidRequestException("If " + NGFailureType.ALL_ERRORS.getYamlName()
-            + " error is configured then no other failure strategy can be configured.");
-      }
     }
     return map;
   }
@@ -58,14 +54,10 @@ public class FailureStrategiesUtils {
   private Map<FailureStrategyActionConfig, Collection<FailureType>> convertNGFailureTypeToFailureTypesMultiMap(
       EnumMap<NGFailureType, FailureStrategyActionConfig> map) {
     Multimap<FailureStrategyActionConfig, FailureType> invertedMap = ArrayListMultimap.create();
-    if (map.containsKey(NGFailureType.ALL_ERRORS) && map.entrySet().size() > 1) {
-      throw new InvalidRequestException("If " + NGFailureType.ALL_ERRORS.getYamlName()
-          + " error is configured then no other failure strategy can be configured.");
-    }
 
     // Handle Other_Errors
-    if (map.containsKey(NGFailureType.OTHER_ERRORS)) {
-      EnumSet<FailureType> requiredFailureTypes = NGFailureType.ALL_ERRORS.getFailureTypes();
+    if (map.containsKey(NGFailureType.ANY_OTHER_ERRORS)) {
+      EnumSet<FailureType> requiredFailureTypes = NGFailureType.getAllFailureTypes();
       EnumSet<FailureType> mentionedFailureTypes = EnumSet.noneOf(FailureType.class);
       map.keySet().forEach(ngFailureType -> {
         EnumSet<FailureType> failureTypes = ngFailureType.getFailureTypes();
@@ -73,7 +65,7 @@ public class FailureStrategiesUtils {
         failureTypes.forEach(failureType -> invertedMap.put(map.get(ngFailureType), failureType));
       });
       mentionedFailureTypes.forEach(requiredFailureTypes::remove);
-      invertedMap.putAll(map.get(NGFailureType.OTHER_ERRORS), requiredFailureTypes);
+      invertedMap.putAll(map.get(NGFailureType.ANY_OTHER_ERRORS), requiredFailureTypes);
     } else {
       map.keySet().forEach(ngFailureType -> {
         EnumSet<FailureType> failureTypes = ngFailureType.getFailureTypes();

@@ -145,6 +145,8 @@ public class EcsServiceDeploy extends State {
                                           .ecsResizeParams(resizeParams)
                                           .build();
 
+    ecsStateHelper.createSweepingOutputForRollback(deployDataBag, activity, delegateService, resizeParams, context);
+
     String delegateTaskId =
         ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
 

@@ -17,6 +17,7 @@ import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.GcpConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
 import software.wings.service.intfc.security.SecretManager;
 

@@ -498,7 +498,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       log.error("validateMetricsServer:ApiException ", ex);
       return CEK8sDelegatePrerequisite.MetricsServerCheck.builder()
           .isInstalled(false)
-          .message(ex.getCode() + ":" + ex.getResponseBody())
+          .message(ex.getCode() + ":" + ex.getMessage())
           .build();
     }
   }
@@ -1133,6 +1133,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .withName(name)
           .get();
     } catch (Exception e) {
+      log.error("Failed to get ConfigMap/{}", name, e);
       return null;
     }
   }
@@ -1198,6 +1199,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .withName(name)
           .get();
     } catch (Exception e) {
+      log.error("Failed to get istio VirtualService/{}", name, e);
       return null;
     }
   }
@@ -1215,6 +1217,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           .withName(name)
           .get();
     } catch (Exception e) {
+      log.error("Failed to get istio DestinationRule/{}", name, e);
       return null;
     }
   }

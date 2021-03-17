@@ -3,6 +3,9 @@ package software.wings.service.impl.aws.model.embed;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.amazonaws.services.lambda.model.AliasConfiguration;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
@@ -22,6 +25,7 @@ import org.apache.logging.log4j.util.Strings;
 @Data
 @Builder
 @Slf4j
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsLambdaDetails {
   private String functionName;
   private String functionArn;

@@ -22,4 +22,5 @@ public interface DelegateProfileService extends OwnedByAccount {
   DelegateProfile add(DelegateProfile delegateProfile);
   void delete(String accountId, String delegateProfileId);
   DelegateProfile updateDelegateProfileSelectors(String delegateProfileId, String accountId, List<String> selectors);
+  List<String> getDelegatesForProfile(String accountId, String profileId);
 }

@@ -14,6 +14,7 @@ import io.harness.delegate.task.DelegateLogContext;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.beans.DelegateConnection;
@@ -32,6 +33,7 @@ public class DelegateDisconnectedDetector implements Runnable {
   @Inject private QueueController queueController;
   @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
+  @Inject private DelegateCache delegateCache;
 
   @Override
   public void run() {
@@ -48,7 +50,12 @@ public class DelegateDisconnectedDetector implements Runnable {
     try (HIterator<DelegateConnection> delegateConnections = new HIterator<>(delegateConnectionQuery.fetch())) {
       for (DelegateConnection delegateConnection : delegateConnections) {
         Delegate delegate =
-            delegateService.get(delegateConnection.getAccountId(), delegateConnection.getDelegateId(), false);
+            delegateCache.get(delegateConnection.getAccountId(), delegateConnection.getDelegateId(), false);
+
+        if (delegate == null) {
+          persistence.delete(delegateConnection);
+          continue;
+        }
 
         if (versionInfoManager.getVersionInfo().getVersion().equals(delegateConnection.getVersion())) {
           disconnectedDetected(delegate.isPolllingModeEnabled(), delegateConnection);

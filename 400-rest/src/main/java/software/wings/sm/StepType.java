@@ -117,6 +117,7 @@ import io.harness.beans.OrchestrationWorkflowType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
+import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
@@ -225,6 +226,7 @@ import software.wings.sm.states.pcf.PcfSetupState;
 import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ARMProvisionState;
+import software.wings.sm.states.provision.ARMRollbackState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.ApplyTerraformState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
@@ -561,43 +563,48 @@ public enum StepType {
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK)),
-  ARM_PROVISION(ARMProvisionState.class, WorkflowServiceHelper.ARM_PROVISION,
-      Collections.singletonList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
+  ARM_CREATE_RESOURCE(ARMProvisionState.class, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
+      Collections.singletonList(INFRASTRUCTURE_PROVISIONER),
+      asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, POST_DEPLOYMENT, WRAP_UP),
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
       Collections.singletonList(PhaseType.NON_ROLLBACK)),
+  ARM_ROLLBACK(ARMRollbackState.class, ProvisionerConstants.ARM_ROLLBACK, asList(INFRASTRUCTURE_PROVISIONER),
+      singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP, DeploymentType.AZURE_VMSS),
+      asList(PhaseType.ROLLBACK)),
 
   // APM
   APP_DYNAMICS(AppDynamicsState.class, APPDYNAMICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT,
-          CUSTOM_DEPLOYMENT_PHASE_STEP),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, PhaseStepType.SPOTINST_LISTENER_UPDATE, CUSTOM_DEPLOYMENT_PHASE_STEP),
       asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   NEW_RELIC(NewRelicState.class, WorkflowServiceHelper.NEW_RELIC, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   INSTANA(InstanaState.class, WorkflowServiceHelper.INSTANA, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   DYNA_TRACE(DynatraceState.class, DYNATRACE, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   PROMETHEUS(PrometheusState.class, WorkflowServiceHelper.PROMETHEUS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   DATA_DOG(DatadogState.class, DATADOG_METRICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   STACK_DRIVER(StackDriverState.class, STACKDRIVER, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
   CLOUD_WATCH(CloudWatchState.class, CLOUDWATCH, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   APM_VERIFICATION(APMVerificationState.class, CUSTOM_METRICS, asList(APM),
-      asList(VERIFY_SERVICE, K8S_PHASE_STEP, AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT, CUSTOM_DEPLOYMENT_PHASE_STEP),
-      asList(DeploymentType.values()), asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(VERIFY_SERVICE, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
 
   // Logs
   DATA_DOG_LOG(DatadogLogState.class, DATADOG_LOG, asList(LOG),

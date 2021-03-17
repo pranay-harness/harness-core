@@ -18,6 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.serializer.JsonUtils;
+import io.harness.service.intfc.DelegateCache;
 
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
@@ -48,6 +49,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
 
   @Inject private AuthService authService;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateCache delegateCache;
 
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
@@ -69,7 +71,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           String sequenceNum = req.getParameter("sequenceNum");
           String delegateToken = req.getParameter("delegateToken");
 
-          Delegate delegate = delegateService.get(accountId, delegateId, true);
+          Delegate delegate = delegateCache.get(accountId, delegateId, true);
           delegate.setStatus(DelegateInstanceStatus.ENABLED);
 
           updateIfEcsDelegate(delegate, sequenceNum, delegateToken);
@@ -86,7 +88,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
             @Override
             public void onDisconnect(AtmosphereResourceEvent event) {
               try (AccountLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-                Delegate delegate = delegateService.get(accountId, delegateId, true);
+                Delegate delegate = delegateCache.get(accountId, delegateId, true);
                 delegateService.register(delegate);
                 delegateService.delegateDisconnected(accountId, delegateId, delegateConnectionId);
               }

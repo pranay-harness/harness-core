@@ -23,6 +23,7 @@ public interface VerificationJobInstanceService {
       VerificationJobInstanceDTO verificationJobInstanceDTO);
   String create(VerificationJobInstance verificationJobInstance);
   List<String> create(List<VerificationJobInstance> verificationJobInstances);
+  List<String> dedupCreate(List<VerificationJobInstance> verificationJobInstances);
   VerificationJobInstanceDTO get(String verificationJobInstanceId);
   List<VerificationJobInstance> get(List<String> verificationJobInstanceIds);
   List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds);
@@ -30,7 +31,6 @@ public interface VerificationJobInstanceService {
   void processVerificationJobInstance(VerificationJobInstance verificationJobInstance);
   void createDataCollectionTasks(VerificationJobInstance verificationJobInstance);
   void logProgress(ProgressLog progressLog);
-  void deletePerpetualTasks(VerificationJobInstance entity);
   Optional<TimeRange> getPreDeploymentTimeRange(String verificationJobInstanceId);
   DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(List<String> verificationJobInstanceIds);
   void addResultsToDeploymentResultSummary(
@@ -47,6 +47,6 @@ public interface VerificationJobInstanceService {
       String projectIdentifier, String envIdentifier, String serviceIdentifier, VerificationJobType jobType,
       Instant endTimeBefore);
   List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob);
-  void resetVerificationJobPerpetualTasks(CVConfig cvConfig);
   void markTimedOutIfNoProgress(VerificationJobInstance verificationJobInstance);
+  CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId);
 }

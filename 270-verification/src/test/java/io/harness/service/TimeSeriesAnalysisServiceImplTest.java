@@ -21,7 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import io.harness.VerificationBaseTest;
+import io.harness.VerificationBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -66,11 +66,19 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeBasedTable;
+import com.google.gson.Gson;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,6 +92,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -96,7 +105,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
-public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
+public class TimeSeriesAnalysisServiceImplTest extends VerificationBase {
   private String cvConfigId;
   private String serviceId;
   private String accountId;
@@ -338,7 +347,7 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
                                                     .stateType(StateType.NEW_RELIC)
                                                     .dataCollectionMinute(currentEpochMinute)
                                                     .host(hostname)
-                                                    .values(TreeBasedTable.create())
+                                                    .values(HashBasedTable.create())
                                                     .build();
     timeSeriesDataRecord.getValues().put("key", "name", 1.0);
     timeSeriesDataRecord.compress();
@@ -863,8 +872,8 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
     int numOfTxns = 5;
     int numOfMetrics = 40;
 
-    TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
-    TreeBasedTable<String, String, String> deeplinkMetadata = TreeBasedTable.create();
+    HashBasedTable<String, String, Double> values = HashBasedTable.create();
+    HashBasedTable<String, String, String> deeplinkMetadata = HashBasedTable.create();
 
     List<String> txns = new ArrayList<>();
     for (int i = 0; i < numOfTxns; i++) {
@@ -1808,7 +1817,36 @@ public class TimeSeriesAnalysisServiceImplTest extends VerificationBaseTest {
   @Category(UnitTests.class)
   public void testGetKeyTransactionsNoKeyTransactionsAvailable() {
     Set<String> transactions = timeSeriesAnalysisService.getKeyTransactions(cvConfigId);
-
     assertThat(transactions).isNull();
+  }
+
+  @Test
+  @Owner(developers = RAGHU)
+  @Category(UnitTests.class)
+  public void testSaveAndGetMetrics() throws IOException {
+    File file = new File("270-verification/src/test/resources/new_relic_metric_records.json");
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson.fromJson(br, type);
+      metricDataRecords.forEach(metricDataRecord -> {
+        metricDataRecord.setAppId(appId);
+        metricDataRecord.setAccountId(accountId);
+        metricDataRecord.setStateExecutionId(stateExecutionId);
+      });
+      Collections.shuffle(metricDataRecords);
+      timeSeriesAnalysisService.saveMetricData(accountId, appId, stateExecutionId, null, metricDataRecords);
+    }
+
+    Set<NewRelicMetricDataRecord> records = timeSeriesAnalysisService.getRecords(appId, stateExecutionId, "default",
+        Sets.newHashSet("webapp-deployment-v2-canary-64b946f89c-2pmv9"), 5, 0, accountId);
+
+    AtomicBoolean hasErrors = new AtomicBoolean(false);
+    records.forEach(record -> {
+      if (record.getValues().containsKey("Errors")) {
+        hasErrors.set(true);
+      }
+    });
+    assertThat(hasErrors.get()).isTrue();
   }
 }

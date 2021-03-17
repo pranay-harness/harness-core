@@ -1,5 +1,8 @@
 package software.wings.graphql.directive;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.app.GraphQLModule;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.datafetcher.PlainObjectBaseDataFetcher;
@@ -33,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class DataFetcherDirective implements SchemaDirectiveWiring {
   public static final String DATA_FETCHER_NAME = "name";
   public static final String CONTEXT_FIELD_ARGS_MAP = "contextFieldArgsMap";

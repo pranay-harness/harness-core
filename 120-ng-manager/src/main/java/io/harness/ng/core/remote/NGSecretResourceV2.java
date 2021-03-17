@@ -2,6 +2,7 @@ package io.harness.ng.core.remote;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -19,6 +20,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -52,8 +54,21 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 public class NGSecretResourceV2 {
+  private static final String INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE = "includeSecretsFromEverySubScope";
   private final SecretCrudService ngSecretService;
   private final Validator validator;
+
+  @GET
+  @Path("/validateUniqueIdentifier/{identifier}")
+  @ApiOperation(value = "Validate Secret Identifier is unique", nickname = "validateSecretIdentifierIsUnique")
+  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(
+      @NotNull @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String identifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    return ResponseDTO.newResponse(
+        ngSecretService.validateTheIdentifierIsUnique(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+  }
 
   @POST
   @Consumes({"application/json"})
@@ -93,12 +108,18 @@ public class NGSecretResourceV2 {
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam("type") SecretType secretType,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("types") List<SecretType> secretTypes,
+      @QueryParam(INCLUDE_SECRETS_FROM_EVERY_SUB_SCOPE) @DefaultValue("false") boolean includeSecretsFromEverySubScope,
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size) {
-    return ResponseDTO.newResponse(
-        ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier, secretType, searchTerm, page, size));
+    if (secretType != null) {
+      secretTypes.add(secretType);
+    }
+    return ResponseDTO.newResponse(ngSecretService.list(accountIdentifier, orgIdentifier, projectIdentifier,
+        identifiers, secretTypes, includeSecretsFromEverySubScope, searchTerm, page, size));
   }
 
   @GET

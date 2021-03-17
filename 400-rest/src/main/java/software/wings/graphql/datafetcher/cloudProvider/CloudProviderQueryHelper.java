@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -19,6 +22,7 @@ import org.mongodb.morphia.query.Query;
  * @author rktummala on 07/12/19
  */
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CloudProviderQueryHelper {
   @Inject protected DataFetcherUtils utils;
 

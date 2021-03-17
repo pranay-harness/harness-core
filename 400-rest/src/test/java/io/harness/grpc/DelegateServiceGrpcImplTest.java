@@ -2,7 +2,6 @@ package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
-import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 
@@ -27,11 +26,8 @@ import io.harness.callback.MongoDatabase;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateServiceGrpc;
-import io.harness.delegate.Documents;
 import io.harness.delegate.ExecuteParkedTaskResponse;
 import io.harness.delegate.FetchParkedTaskStatusResponse;
-import io.harness.delegate.ObtainDocumentRequest;
-import io.harness.delegate.ObtainDocumentResponse;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskExecutionStage;
 import io.harness.delegate.TaskId;
@@ -41,7 +37,6 @@ import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.executioncapability.SystemEnvCheckerCapability;
-import io.harness.engine.interrupts.steps.TestTransportEntity;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DelegateServiceLiteException;
 import io.harness.exception.InvalidRequestException;
@@ -53,7 +48,6 @@ import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.TaskClientParams;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateAsyncService;
@@ -107,7 +101,6 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
   private DelegateService delegateService;
   @Inject private DelegateAsyncService delegateAsyncService;
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private HPersistence persistence;
   private DelegateSyncService delegateSyncService;
   private DelegateTaskService delegateTaskService;
 
@@ -136,8 +129,8 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
     perpetualTaskService = mock(PerpetualTaskService.class);
     delegateService = mock(DelegateService.class);
     delegateTaskService = mock(DelegateTaskService.class);
-    delegateServiceGrpcImpl = new DelegateServiceGrpcImpl(delegateCallbackRegistry, perpetualTaskService,
-        delegateService, delegateTaskService, kryoSerializer, persistence);
+    delegateServiceGrpcImpl = new DelegateServiceGrpcImpl(
+        delegateCallbackRegistry, perpetualTaskService, delegateService, delegateTaskService, kryoSerializer);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpcImpl).build().start();
@@ -484,18 +477,5 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
                 PerpetualTaskId.newBuilder().setId(taskId).build(), perpetualTaskExecutionBundle))
         .isInstanceOf(DelegateServiceDriverException.class)
         .hasMessage("Unexpected error occurred while resetting perpetual task.");
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void testObtainDocument() {
-    String uuid = persistence.save(TestTransportEntity.builder().uuid(generateUuid()).build());
-    ObtainDocumentResponse obtainDocumentResponse = delegateServiceGrpcClient.obtainDocument(
-        ObtainDocumentRequest.newBuilder()
-            .addDocuments(Documents.newBuilder().setCollectionName("!!!testTransport").addUuid(uuid).build())
-            .build());
-
-    assertThat(obtainDocumentResponse.getDocumentsCount()).isEqualTo(1);
   }
 }

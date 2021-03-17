@@ -139,6 +139,6 @@ public class GcpProcurementService {
   }
 
   public static String getAccountId(String name) {
-    return name.substring(name.lastIndexOf("/") + 1);
+    return name.substring(name.lastIndexOf('/') + 1);
   }
 }

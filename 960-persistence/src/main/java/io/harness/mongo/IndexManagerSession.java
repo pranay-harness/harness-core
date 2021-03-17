@@ -167,14 +167,13 @@ public class IndexManagerSession {
         return;
       }
 
-      if (store != null) {
-        StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
-        if (storeIn == null || !store.getName().equals(storeIn.value())) {
-          return;
-        }
+      DBCollection collection = datastore.getCollection(mc.getClazz());
+
+      StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
+      if (storeIn != null && (store == null || !store.getName().equals(storeIn.value()))) {
+        return;
       }
 
-      DBCollection collection = datastore.getCollection(mc.getClazz());
       try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
         if (processedCollections.contains(collection.getName())) {
           return;
@@ -192,6 +191,7 @@ public class IndexManagerSession {
         processor.process(mc, collection);
       }
     });
+
     return processedCollections;
   }
 
@@ -215,6 +215,7 @@ public class IndexManagerSession {
       String id = indexedFieldName(mc);
       for (MongoIndex mongoIndex : mongoIndexList) {
         IndexCreator creator = mongoIndex.createBuilder(id).collection(collection).build();
+        checkWithTheOthers(creators, creator);
         putCreator(creators, creator);
       }
     } catch (NoSuchMethodException exception) {
@@ -258,8 +259,9 @@ public class IndexManagerSession {
       if (fdTtlIndex != null) {
         options.put(EXPIRE_AFTER_SECONDS, fdTtlIndex.value());
       }
-
-      putCreator(creators, IndexCreator.builder().collection(collection).keys(dbObject).options(options).build());
+      IndexCreator creator = IndexCreator.builder().collection(collection).keys(dbObject).options(options).build();
+      checkWithTheOthers(creators, creator);
+      putCreator(creators, creator);
     }
   }
 
@@ -280,7 +282,7 @@ public class IndexManagerSession {
 
     Set<CdIndex> cdIndices = fetchAnnotations(mc.getClazz(), CdIndex.class);
     for (CdIndex cdIndex : cdIndices) {
-      IndexCreator newCreator = buildtCompoundIndexCreator(cdIndex.name(), id, cdIndex.fields(), NORMAL_INDEX, cdIndex)
+      IndexCreator newCreator = buildCompoundIndexCreator(cdIndex.name(), id, cdIndex.fields(), NORMAL_INDEX, cdIndex)
                                     .collection(collection)
                                     .build();
       checkWithTheOthers(creators, newCreator);
@@ -288,7 +290,7 @@ public class IndexManagerSession {
     }
     Set<NgUniqueIndex> cdUniqueIndices = fetchAnnotations(mc.getClazz(), NgUniqueIndex.class);
     for (NgUniqueIndex index : cdUniqueIndices) {
-      IndexCreator newCreator = buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX, index)
+      IndexCreator newCreator = buildCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX, index)
                                     .collection(collection)
                                     .build();
       checkWithTheOthers(creators, newCreator);
@@ -298,7 +300,7 @@ public class IndexManagerSession {
         fetchAnnotations(mc.getClazz(), CdUniqueIndexWithCollation.class);
     for (CdUniqueIndexWithCollation index : cdUniqueIndicesWithCollation) {
       IndexCreator newCreator =
-          buildtCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX_WITH_COLLATION, index)
+          buildCompoundIndexCreator(index.name(), id, index.fields(), UNIQUE_INDEX_WITH_COLLATION, index)
               .collection(collection)
               .build();
       checkWithTheOthers(creators, newCreator);
@@ -306,7 +308,7 @@ public class IndexManagerSession {
     }
     Set<CdSparseIndex> sparceIndexes = fetchAnnotations(mc.getClazz(), CdSparseIndex.class);
     for (CdSparseIndex index : sparceIndexes) {
-      IndexCreator newCreator = buildtCompoundIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX, index)
+      IndexCreator newCreator = buildCompoundIndexCreator(index.name(), id, index.fields(), SPARSE_INDEX, index)
                                     .collection(collection)
                                     .build();
       checkWithTheOthers(creators, newCreator);
@@ -314,7 +316,7 @@ public class IndexManagerSession {
     }
   }
 
-  private static IndexCreatorBuilder buildtCompoundIndexCreator(
+  private static IndexCreatorBuilder buildCompoundIndexCreator(
       String indexName, String id, Field[] fields, Type type, Annotation index) {
     BasicDBObject keys = new BasicDBObject();
 

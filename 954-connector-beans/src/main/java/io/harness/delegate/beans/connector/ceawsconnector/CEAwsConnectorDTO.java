@@ -26,7 +26,7 @@ public class CEAwsConnectorDTO extends ConnectorConfigDTO {
   @NotEmpty(message = "At least one CEAwsFeatures should be enabled") List<CEAwsFeatures> featuresEnabled;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
     return null;
   }
 }

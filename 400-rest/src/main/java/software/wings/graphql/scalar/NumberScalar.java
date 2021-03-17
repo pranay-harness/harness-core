@@ -1,5 +1,8 @@
 package software.wings.graphql.scalar;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import graphql.language.IntValue;
 import graphql.schema.Coercing;
 import graphql.schema.CoercingParseLiteralException;
@@ -12,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class NumberScalar {
   public static final GraphQLScalarType type =
       GraphQLScalarType.newScalar()

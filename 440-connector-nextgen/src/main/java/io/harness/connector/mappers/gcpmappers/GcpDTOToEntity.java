@@ -43,7 +43,7 @@ public class GcpDTOToEntity implements ConnectorDTOToEntityMapper<GcpConnectorDT
   private GcpConfig buildInheritFromDelegate(GcpConnectorCredentialDTO connector) {
     final GcpDelegateDetailsDTO gcpCredential = (GcpDelegateDetailsDTO) connector.getConfig();
     GcpDelegateDetails gcpDelegateDetails =
-        GcpDelegateDetails.builder().delegateSelector(gcpCredential.getDelegateSelector()).build();
+        GcpDelegateDetails.builder().delegateSelectors(gcpCredential.getDelegateSelectors()).build();
     return GcpConfig.builder()
         .credentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
         .credential(gcpDelegateDetails)

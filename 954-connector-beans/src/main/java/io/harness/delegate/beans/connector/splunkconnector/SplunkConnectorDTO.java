@@ -7,6 +7,8 @@ import io.harness.encryption.SecretReference;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -38,7 +40,7 @@ public class SplunkConnectorDTO extends ConnectorConfigDTO implements Decryptabl
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
-    return this;
+  public List<DecryptableEntity> getDecryptableEntities() {
+    return Collections.singletonList(this);
   }
 }

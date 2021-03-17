@@ -3,6 +3,7 @@ package io.harness.common;
 public interface EntityTypeConstants {
   String PROJECTS = "Projects";
   String PIPELINES = "Pipelines";
+  String PIPELINE_STEPS = "PipelineSteps";
   String CONNECTORS = "Connectors";
   String SECRETS = "Secrets";
   String SERVICE = "Service";
@@ -17,4 +18,5 @@ public interface EntityTypeConstants {
   String CV_KUBERNETES_ACTIVITY_SOURCE = "CvKubernetesActivitySource";
   String DEPLOYMENT_STEPS = "DeploymentSteps";
   String DEPLOYMENT_STAGE = "DeploymentStage";
+  String APPROVAL_STAGE = "ApprovalStage";
 }

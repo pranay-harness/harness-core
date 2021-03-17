@@ -35,7 +35,7 @@ public class CVNGLogTest {
     accountId = generateUuid();
     traceableId = generateUuid();
     requestTime = Instant.now();
-    responseTime = Instant.now();
+    responseTime = Instant.now().minusSeconds(5);
     startTime = Instant.now();
     endTime = Instant.now();
   }
@@ -83,7 +83,7 @@ public class CVNGLogTest {
     assertThat(((ApiCallLogRecord) cvngLogRecord).getRequests().get(0).getName()).isEqualTo(name);
     assertThat(((ApiCallLogRecord) cvngLogRecord).getRequests()).hasSize(1);
     assertThat(((ApiCallLogRecord) cvngLogRecord).getResponses()).hasSize(1);
-    assertThat(((ApiCallLogRecord) cvngLogRecord).getRequestTime()).isEqualTo(responseTime);
+    assertThat(((ApiCallLogRecord) cvngLogRecord).getResponseTime()).isEqualTo(responseTime);
     assertThat(((ApiCallLogRecord) cvngLogRecord).getRequests().get(0).getValue()).isEqualTo(value);
   }
 

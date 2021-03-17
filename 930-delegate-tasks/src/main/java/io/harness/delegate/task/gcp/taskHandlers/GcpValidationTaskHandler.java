@@ -1,21 +1,31 @@
 package io.harness.delegate.task.gcp.taskHandlers;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCause;
 
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.gcp.GcpValidationParams;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.task.ConnectorValidationHandler;
+import io.harness.delegate.task.gcp.GcpRequestMapper;
 import io.harness.delegate.task.gcp.request.GcpRequest;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gcp.client.GcpClient;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,15 +33,35 @@ import org.apache.commons.lang3.StringUtils;
 
 @NoArgsConstructor
 @Slf4j
-public class GcpValidationTaskHandler implements TaskHandler {
+public class GcpValidationTaskHandler implements TaskHandler, ConnectorValidationHandler {
   @Inject private GcpClient gcpClient;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private NGErrorHelper ngErrorHelper;
+  @Inject private GcpRequestMapper gcpRequestMapper;
 
   @Override
   public GcpResponse executeRequest(GcpRequest gcpRequest) {
+    return validateInternal(gcpRequest, gcpRequest.getEncryptionDetails());
+  }
+  @Override
+  public ConnectorValidationResult validate(
+      ConnectorValidationParams connectorValidationParams, String accountIdentifier) {
+    final GcpValidationParams gcpValidationParams = (GcpValidationParams) connectorValidationParams;
+    final GcpConnectorDTO connectorDTO = gcpValidationParams.getGcpConnectorDTO();
+    final GcpConnectorCredentialDTO credentialDTO = connectorDTO.getCredential();
+
+    final GcpRequest gcpRequest = gcpRequestMapper.toGcpRequest(gcpValidationParams);
+
+    GcpValidationTaskResponse gcpValidationTaskResponse =
+        validateInternal(gcpRequest, gcpValidationParams.getEncryptionDetails());
+
+    return gcpValidationTaskResponse.getConnectorValidationResult();
+  }
+
+  @VisibleForTesting
+  GcpValidationTaskResponse validateInternal(GcpRequest gcpRequest, List<EncryptedDataDetail> encryptionDetails) {
     try {
-      if (isNotBlank(gcpRequest.getDelegateSelector())) {
+      if (isNotEmpty(gcpRequest.getDelegateSelectors())) {
         gcpClient.validateDefaultCredentials();
         ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
                                                                   .status(ConnectivityStatus.SUCCESS)
@@ -39,14 +69,13 @@ public class GcpValidationTaskHandler implements TaskHandler {
                                                                   .build();
         return GcpValidationTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
       } else {
-        return validateGcpServiceAccountKeyCredential(gcpRequest);
+        return (GcpValidationTaskResponse) validateGcpServiceAccountKeyCredential(gcpRequest);
       }
     } catch (Exception ex) {
       log.error("Failed while validating credentials for GCP", ex);
       return getFailedGcpResponse(ex);
     }
   }
-
   private GcpResponse validateGcpServiceAccountKeyCredential(GcpRequest gcpRequest) {
     GcpManualDetailsDTO gcpManualDetailsDTO = gcpRequest.getGcpManualDetailsDTO();
     if (gcpManualDetailsDTO == null || gcpManualDetailsDTO.getSecretKeyRef() == null) {

@@ -12,7 +12,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
-import io.harness.ng.core.invites.RetryUtils;
 import io.harness.ng.core.invites.api.InvitesService;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
@@ -23,6 +22,7 @@ import io.harness.ng.core.invites.ext.mail.MailUtils;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.invites.spring.InvitesRepository;
+import io.harness.utils.RetryUtils;
 
 import com.auth0.jwt.interfaces.Claim;
 import com.google.common.collect.ImmutableList;

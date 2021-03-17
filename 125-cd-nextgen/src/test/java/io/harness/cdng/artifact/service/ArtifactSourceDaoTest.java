@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.artifact.bean.artifactsource.ArtifactSource;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.repositories.artifact.ArtifactSourceDao;
@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class ArtifactSourceDaoTest extends CDNGBaseTest {
+public class ArtifactSourceDaoTest extends CDNGTestBase {
   @Inject ArtifactSourceDao artifactSourceDao;
 
   DockerArtifactSource dockerArtifactSource = DockerArtifactSource.builder()

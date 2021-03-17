@@ -46,6 +46,7 @@ import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -130,7 +131,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       case STANDING:
         return barrierExecutionInstance;
       case DOWN:
-        log.info("The barrier [{}] was done with", barrierExecutionInstance.getUuid());
+        log.info("The barrier [{}] is down", barrierExecutionInstance.getUuid());
         waitNotifyEngine.doneWith(
             barrierExecutionInstance.getBarrierGroupId(), BarrierResponseData.builder().failed(false).build());
         break;
@@ -179,7 +180,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       try {
         planExecution = planExecutionService.get(forcerId.getValue());
       } catch (InvalidRequestException e) {
-        log.error("Plan Execution was not found. State set to APPROACHING", e);
+        log.warn("Plan Execution was not found. State set to APPROACHING", e);
         return APPROACHING;
       }
 
@@ -197,7 +198,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
           barrierExecutionInstance.getPlanExecutionId(), barrierExecutionInstance.getIdentifier());
 
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == Status.SUCCEEDED)) {
-        log.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(), nodeExecutions);
+        log.info("Barrier {} is down because the node is Succeeded {}", forcerId.getValue(),
+            nodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.joining(",")));
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(
@@ -207,8 +209,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
       }
       if (barrierExecutionInstancesSize == nodeExecutions.size()
           && nodeExecutions.stream().allMatch(node -> node.getStatus() == Status.ASYNC_WAITING)) {
-        log.info(
-            "Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(), nodeExecutions);
+        log.info("Barrier {} is down because all barriers are in the ASYNC_WAITING {}", forcerId.getValue(),
+            nodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.joining(",")));
         return ARRIVED;
       }
       if (nodeExecutions.stream().anyMatch(node -> node.getStatus() == EXPIRED)) {

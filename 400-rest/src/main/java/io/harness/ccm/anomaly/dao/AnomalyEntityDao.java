@@ -4,6 +4,7 @@ import io.harness.ccm.anomaly.entities.AnomalyDetectionModel;
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomalyEntityBuilder;
+import io.harness.ccm.anomaly.entities.TimeGranularity;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.timescaledb.DBUtils;
@@ -81,9 +82,12 @@ public class AnomalyEntityDao {
       query.addCustomSetClause(AnomaliesDataTableSchema.feedBack, anomaly.getFeedback());
     }
 
-    query.addSetClause(AnomaliesDataTableSchema.slackInstantNotification, anomaly.isSlackInstantNotification());
-    query.addSetClause(AnomaliesDataTableSchema.slackDailyNotification, anomaly.isSlackDailyNotification());
-    query.addSetClause(AnomaliesDataTableSchema.slackWeeklyNotification, anomaly.isSlackWeeklyNotification());
+    query.addSetClause(
+        AnomaliesDataTableSchema.slackInstantNotification, ((Boolean) anomaly.isSlackInstantNotification()).toString());
+    query.addCustomSetClause(
+        AnomaliesDataTableSchema.slackDailyNotification, ((Boolean) anomaly.isSlackDailyNotification()).toString());
+    query.addCustomSetClause(
+        AnomaliesDataTableSchema.slackWeeklyNotification, ((Boolean) anomaly.isSlackWeeklyNotification()).toString());
 
     return query.validate().toString();
   }
@@ -198,6 +202,11 @@ public class AnomalyEntityDao {
           case SLACK_WEEKLY_NOTIFICATION:
             anomalyBuilder.slackWeeklyNotification(resultSet.getBoolean(field.getFieldName()));
             break;
+          case REGION:
+            break;
+          case TIME_GRANULARITY:
+            anomalyBuilder.timeGranularity(TimeGranularity.valueOf(resultSet.getString(field.getFieldName())));
+            break;
           default:
             log.error("Unknown field : {} encountered while Resultset conversion in AnomalyDao", field);
         }
@@ -237,7 +246,7 @@ public class AnomalyEntityDao {
     return query.validate().toString();
   }
 
-  public void insert(List<AnomalyEntity> anomaliesList) {
+  public void insert(List<? extends AnomalyEntity> anomaliesList) {
     boolean successfulInsert = false;
     if (dbService.isValid() && !anomaliesList.isEmpty()) {
       int retryCount = 0;
@@ -269,7 +278,7 @@ public class AnomalyEntityDao {
   }
 
   private String getInsertQuery(AnomalyEntity anomaly) {
-    return new InsertQuery(software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema.table)
+    return new InsertQuery(AnomaliesDataTableSchema.table)
         .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
         .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
         .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())

@@ -18,9 +18,11 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.service.DelegateAgentFileService;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -115,6 +117,7 @@ import org.apache.logging.log4j.util.Strings;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
   String REPOSITORY_DIR_PATH = "./repository";
@@ -634,8 +637,8 @@ public class AwsLambdaHelperServiceDelegateImpl
     }
 
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
-    try (InputStream inputStream = delegateFileManager.downloadArtifactByFileId(
-             DelegateAgentFileService.FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
+    try (InputStream inputStream =
+             delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId)) {
       String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
       File artifactFile = new File(workingDirecotry.getAbsolutePath() + "/" + fileName);
 

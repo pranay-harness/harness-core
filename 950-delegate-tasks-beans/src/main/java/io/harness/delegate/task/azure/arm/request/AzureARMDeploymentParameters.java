@@ -1,8 +1,11 @@
 package io.harness.delegate.task.azure.arm.request;
 
+import static io.harness.expression.Expression.ALLOW_SECRETS;
+
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
+import io.harness.expression.Expression;
 
 import lombok.Builder;
 import lombok.Data;
@@ -18,14 +21,15 @@ public class AzureARMDeploymentParameters extends AzureARMTaskParameters {
   private String subscriptionId;
   private String resourceGroupName;
   private String deploymentDataLocation;
-  private String templateJson;
-  private String parametersJson;
+  @Expression(ALLOW_SECRETS) private String templateJson;
+  @Expression(ALLOW_SECRETS) private String parametersJson;
+  private boolean rollback;
 
   @Builder
   public AzureARMDeploymentParameters(String appId, String accountId, String activityId, ARMScopeType deploymentScope,
       AzureDeploymentMode deploymentMode, String deploymentName, String managementGroupId, String subscriptionId,
       String resourceGroupName, String deploymentDataLocation, String templateJson, String parametersJson,
-      String commandName, Integer timeoutIntervalInMin) {
+      String commandName, Integer timeoutIntervalInMin, boolean rollback) {
     super(appId, accountId, activityId, subscriptionId, commandName, timeoutIntervalInMin,
         AzureARMTaskType.ARM_DEPLOYMENT);
     this.deploymentScope = deploymentScope;
@@ -37,5 +41,6 @@ public class AzureARMDeploymentParameters extends AzureARMTaskParameters {
     this.deploymentDataLocation = deploymentDataLocation;
     this.templateJson = templateJson;
     this.parametersJson = parametersJson;
+    this.rollback = rollback;
   }
 }

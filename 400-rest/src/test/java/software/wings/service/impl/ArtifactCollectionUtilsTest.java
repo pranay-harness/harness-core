@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -67,6 +68,7 @@ import software.wings.service.intfc.SettingsService;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.junit.Before;
@@ -74,11 +76,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 
 public class ArtifactCollectionUtilsTest extends WingsBaseTest {
-  @Mock private SettingsService settingsService;
+  private final SettingsService settingsService = Mockito.mock(SettingsServiceImpl.class);
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Mock private ArtifactService artifactService;
@@ -178,6 +181,54 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category({UnitTests.class})
+  public void shouldPrepareValidateTaskForDockerArtifactStream() {
+    DockerArtifactStream amazonS3ArtifactStream = DockerArtifactStream.builder()
+                                                      .accountId(ACCOUNT_ID)
+                                                      .uuid(ARTIFACT_STREAM_ID)
+                                                      .appId(APP_ID)
+                                                      .settingId(SETTING_ID)
+                                                      .imageName("library/nginx")
+                                                      .name("Docker")
+                                                      .serviceId(SERVICE_ID)
+                                                      .build();
+
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withAccountId(ACCOUNT_ID)
+                        .withValue(DockerConfig.builder()
+                                       .delegateSelectors(Collections.singletonList("k8s"))
+                                       .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                                       .build())
+                        .build());
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
+        .thenReturn(Service.builder()
+                        .uuid(SERVICE_ID)
+                        .appId(APP_ID)
+                        .name("SERVICE_NAME")
+                        .description("SERVICE_DESC")
+                        .artifactType(JAR)
+                        .build());
+
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getTags()).contains("k8s");
+    TaskData data = delegateTask.getData();
+    assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
+    assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
+    BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
+    assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
+    assertThat(parameters.getSettingValue()).isNotNull();
+    assertThat(parameters.getEncryptedDataDetails()).isNotNull();
+    assertThat(delegateTask.getExpiry()).isNotZero();
+  }
+
+  @Test
   @Owner(developers = SRINIVAS)
   @Category({UnitTests.class})
   public void shouldPrepareValidateTaskForS3ArtifactStream() {
@@ -198,6 +249,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .withAccountId(ACCOUNT_ID)
                         .withValue(AwsConfig.builder().tag("AWS Tag").build())
                         .build());
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
     when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
         .thenReturn(Service.builder()
                         .uuid(SERVICE_ID)

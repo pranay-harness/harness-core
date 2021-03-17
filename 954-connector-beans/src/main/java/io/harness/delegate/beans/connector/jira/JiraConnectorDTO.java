@@ -8,6 +8,8 @@ import io.harness.encryption.SecretReference;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Collections;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -27,12 +29,12 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("JiraConnector")
 public class JiraConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
-  @NotNull String jiraUrl;
+  @NotNull @NotBlank String jiraUrl;
   @NotBlank String username;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
-    return this;
+  public List<DecryptableEntity> getDecryptableEntities() {
+    return Collections.singletonList(this);
   }
 }

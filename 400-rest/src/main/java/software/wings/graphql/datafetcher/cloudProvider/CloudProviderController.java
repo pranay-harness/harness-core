@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.exception.InvalidRequestException;
 
@@ -18,6 +20,7 @@ import software.wings.graphql.schema.type.cloudProvider.QLSpotInstCloudProvider;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class CloudProviderController {
   public static QLCloudProviderBuilder populateCloudProvider(SettingAttribute settingAttribute) {
     return getCloudProviderBuilder(settingAttribute)

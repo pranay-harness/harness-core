@@ -21,7 +21,7 @@ import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -45,7 +45,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class LiteEngineTaskStepTest extends CIExecutionTest {
+public class LiteEngineTaskStepTest extends CIExecutionTestBase {
   @Mock private BuildSetupUtils buildSetupUtils;
   @Mock private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputResolver;

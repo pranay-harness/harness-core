@@ -60,6 +60,20 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+    - "redis://localhost:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
 
 # [secondary-db]: Uncomment the following if you want to connect to another database
 #secondary-mongo:
@@ -109,6 +123,16 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
+
+shouldDeployWithGitSync: false
+
 shouldConfigureWithPMS: false
 
 ngManagerPublicBaseUrl: http://localhost:7457/
@@ -117,6 +141,7 @@ ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
   secretKey: ce_aws_secretKey_placeholder
   destinationBucket: ce_aws_destinationBucket_placeholder
+  templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
 
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
@@ -126,3 +151,18 @@ baseUrls:
   ngManager: http://localhost:7457/
   ui: http://localhost:8080/
   ngUi: http://localhost:8080/ng/#/
+
+ResoureGroupConfig:
+  ng-manager:
+    baseUrl: http://localhost:7457/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  manager:
+    baseUrl: http://localhost:3457/api/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+accessControlClient:
+  enableAccessControl: false
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token

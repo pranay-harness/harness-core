@@ -59,6 +59,8 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
 
     try {
       EcsServiceSetupRequest ecsServiceSetupRequest = (EcsServiceSetupRequest) ecsCommandRequest;
+      boolean isMultipleLoadBalancersFeatureFlagActive =
+          ecsServiceSetupRequest.getEcsSetupParams().isMultipleLoadBalancersFeatureFlagActive();
       EcsSetupParams setupParams = ecsServiceSetupRequest.getEcsSetupParams();
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder =
           ContainerSetupCommandUnitExecutionData.builder();
@@ -82,10 +84,11 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
         // 2. Create ECS Service
         if (!setupParams.isDaemonSchedulingStrategy()) {
           createServiceWithReplicaSchedulingStrategy(setupParams, taskDefinition, cloudProviderSetting,
-              encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
+              encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback,
+              isMultipleLoadBalancersFeatureFlagActive);
         } else {
           handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
-              encryptedDataDetails, commandExecutionDataBuilder);
+              encryptedDataDetails, commandExecutionDataBuilder, isMultipleLoadBalancersFeatureFlagActive);
         }
       }
       commandResponse.setSetupData(commandExecutionDataBuilder.build());
@@ -108,11 +111,15 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   private void createServiceWithReplicaSchedulingStrategy(EcsSetupParams setupParams, TaskDefinition taskDefinition,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, boolean isMultipleLoadBalancersFeatureFlagActive) {
     String containerServiceName = ecsSetupCommandTaskHelper.createEcsService(setupParams, taskDefinition,
-        cloudProviderSetting, encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
+        cloudProviderSetting, encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback,
+        isMultipleLoadBalancersFeatureFlagActive);
     commandExecutionDataBuilder.containerServiceName(containerServiceName);
     commandExecutionDataBuilder.targetGroupForNewService(setupParams.getTargetGroupArn());
+    commandExecutionDataBuilder.awsElbConfigs(setupParams.getAwsElbConfigs());
+    commandExecutionDataBuilder.isMultipleLoadBalancersFeatureFlagActive(
+        setupParams.isMultipleLoadBalancersFeatureFlagActive());
 
     ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(
         cloudProviderSetting, setupParams, containerServiceName, encryptedDataDetails, executionLogCallback);
@@ -129,7 +136,8 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   private void handleDaemonServiceRequest(EcsSetupParams setupParams, TaskDefinition taskDefinition,
       ExecutionLogCallback executionLogCallback, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails,
-      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder) {
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      boolean isMultipleLoadBalancersFeatureFlagActive) {
     // Get existing service. In case of Daemon service, we do not use versioning. We update existing service with new
     // task definition and some service configs mentioned in service spec
     Optional<Service> existingServiceMetadataSnapshot = ecsSetupCommandTaskHelper.getExistingServiceMetadataSnapshot(
@@ -137,9 +145,9 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
 
     // We just use mapper to deserialize service Spec.We then use this object to get configs we want to updat e with
     // service
-    CreateServiceRequest createServiceRequest =
-        ecsSetupCommandTaskHelper.getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails, setupParams,
-            taskDefinition, setupParams.getTaskFamily(), executionLogCallback, log, commandExecutionDataBuilder);
+    CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(cloudProviderSetting,
+        encryptedDataDetails, setupParams, taskDefinition, setupParams.getTaskFamily(), executionLogCallback, log,
+        commandExecutionDataBuilder, isMultipleLoadBalancersFeatureFlagActive);
 
     if (existingServiceMetadataSnapshot.isPresent()) {
       Service service = existingServiceMetadataSnapshot.get();

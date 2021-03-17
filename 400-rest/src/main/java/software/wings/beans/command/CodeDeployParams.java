@@ -1,5 +1,8 @@
 package software.wings.beans.command;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,6 +16,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class CodeDeployParams {
   private String applicationName;
   private String deploymentConfigurationName;

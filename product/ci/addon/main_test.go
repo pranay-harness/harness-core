@@ -16,6 +16,12 @@ func TestMainWithGrpc(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	oldGetLogKey := getLogKey
+	defer func() { getLogKey = oldGetLogKey }()
+	getLogKey = func(keyID string) (string, error) {
+		return "foo:bar", nil
+	}
+
 	oldLogger := newGrpcRemoteLogger
 	defer func() { newGrpcRemoteLogger = oldLogger }()
 	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
@@ -24,7 +30,7 @@ func TestMainWithGrpc(t *testing.T) {
 	}
 
 	mockServer := mgrpcserver.NewMockAddonServer(ctrl)
-	s := func(uint, *zap.SugaredLogger) (grpc.AddonServer, error) {
+	s := func(uint, bool, *zap.SugaredLogger) (grpc.AddonServer, error) {
 		return mockServer, nil
 	}
 
@@ -48,6 +54,12 @@ func TestMainWithGrpcAndIntegrationService(t *testing.T) {
 	svcID := "db"
 	image := "alpine/git"
 
+	oldGetLogKey := getLogKey
+	defer func() { getLogKey = oldGetLogKey }()
+	getLogKey = func(keyID string) (string, error) {
+		return "foo:bar", nil
+	}
+
 	oldLogger := newGrpcRemoteLogger
 	defer func() { newGrpcRemoteLogger = oldLogger }()
 	newGrpcRemoteLogger = func(key string) (rl *logs.RemoteLogger, err error) {
@@ -55,8 +67,12 @@ func TestMainWithGrpcAndIntegrationService(t *testing.T) {
 		return &logs.RemoteLogger{BaseLogger: log.Sugar(), Writer: logs.NopWriter()}, nil
 	}
 
+	k := "HARNESS_SERVICE_LOG_KEY"
+	os.Setenv(k, "key")
+	defer os.Unsetenv(k)
+
 	mockServer := mgrpcserver.NewMockAddonServer(ctrl)
-	s := func(uint, *zap.SugaredLogger) (grpc.AddonServer, error) {
+	s := func(uint, bool, *zap.SugaredLogger) (grpc.AddonServer, error) {
 		return mockServer, nil
 	}
 

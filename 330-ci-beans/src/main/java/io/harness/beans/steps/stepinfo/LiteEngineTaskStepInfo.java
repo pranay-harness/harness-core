@@ -4,6 +4,7 @@ import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.pms.contracts.steps.StepType;
@@ -33,6 +34,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 1200;
   public static final String CALLBACK_IDS = "callbackIds";
+  public static final String LOG_KEYS = "logKeys";
 
   @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.LITE_ENGINE_TASK).build();
@@ -52,13 +54,14 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
   @NotNull ExecutionElementConfig executionElementConfig;
   CodeBase ciCodebase;
   @NotNull boolean skipGitClone;
+  @NotNull Infrastructure infrastructure;
 
   @Builder
   @ConstructorProperties({"accountId", "identifier", "name", "retry", "buildJobEnvInfo", "steps",
-      "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone"})
+      "executionElementConfig", "usePVC", "ciCodebase", "skipGitClone", "infrastructure"})
   public LiteEngineTaskStepInfo(String accountId, String identifier, String name, Integer retry,
       BuildJobEnvInfo buildJobEnvInfo, ExecutionElement steps, ExecutionElementConfig executionElementConfig,
-      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone) {
+      boolean usePVC, CodeBase ciCodebase, boolean skipGitClone, Infrastructure infrastructure) {
     this.accountId = accountId;
     this.identifier = identifier;
     this.name = name;
@@ -70,6 +73,7 @@ public class LiteEngineTaskStepInfo implements CIStepInfo {
     this.steps = steps;
     this.ciCodebase = ciCodebase;
     this.skipGitClone = skipGitClone;
+    this.infrastructure = infrastructure;
   }
 
   @Override

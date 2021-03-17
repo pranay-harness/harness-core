@@ -1,12 +1,8 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sources")
-load("//:macros.bzl", "sonarqube_test")
 load("//:macros.bzl", "test_targets_list")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-
-sources()
 
 java_library(
     name = "module",
@@ -20,9 +16,25 @@ java_library(
         "//440-connector-nextgen:module",
         "//940-secret-manager-client:module",
         "//950-delegate-tasks-beans:module",
+        "//954-connector-beans:module",
+        "//955-delegate-beans:module",
+        "//965-git-sync-commons:module",
         "//970-ng-commons:module",
         "//980-commons:module",
         "@maven//:io_fabric8_fabric8_utils",
+        "@maven//:io_grpc_grpc_alts",
+        "@maven//:io_grpc_grpc_api",
+        "@maven//:io_grpc_grpc_auth",
+        "@maven//:io_grpc_grpc_context",
+        "@maven//:io_grpc_grpc_core",
+        "@maven//:io_grpc_grpc_grpclb",
+        "@maven//:io_grpc_grpc_netty",
+        "@maven//:io_grpc_grpc_netty_shaded",
+        "@maven//:io_grpc_grpc_protobuf",
+        "@maven//:io_grpc_grpc_protobuf_lite",
+        "@maven//:io_grpc_grpc_services",
+        "@maven//:io_grpc_grpc_stub",
+        "@maven//:io_grpc_grpc_testing",
         "@maven//:org_jetbrains_annotations",
         "@maven//:ru_vyarus_guice_validator",
     ],
@@ -30,11 +42,14 @@ java_library(
 
 java_library(
     name = "tests",
+    testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
         "//136-git-sync-manager/src/test/resources:resource",
+        "//136-git-sync-manager/src/test/resources/software/wings/service/impl/webhook:resource",
     ],
-    visibility = ["//visibility:private"],
+    resources = ["//136-git-sync-manager/src/test/resources:resource"],
+    visibility = ["//visibility:public"],
     deps = [
         "module",
         "//:lombok",
@@ -51,13 +66,5 @@ java_library(
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":module",
-    ],
-)
 
 pmd()

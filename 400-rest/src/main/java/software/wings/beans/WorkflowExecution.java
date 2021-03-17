@@ -71,7 +71,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
-@HarnessEntity(exportable = false)
+@HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
@@ -273,6 +273,7 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private ApiKeyInfo triggeringApiKeyInfo;
 
   private List<Artifact> artifacts;
+  private List<Artifact> rollbackArtifacts;
   private List<HelmChart> helmCharts;
 
   private Set<String> keywords;

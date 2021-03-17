@@ -1,8 +1,8 @@
 package io.harness.ng.core.api.impl;
-
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
@@ -45,6 +45,7 @@ import software.wings.app.FileUploadLimit;
 import com.amazonaws.util.StringInputStream;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -260,8 +261,8 @@ public class SecretCrudServiceImplTest extends CategoryTest {
   public void testList() {
     when(ngSecretServiceV2.list(any(), anyInt(), anyInt()))
         .thenReturn(new PageImpl<>(Lists.newArrayList(Secret.builder().build()), PageRequest.of(0, 10), 1));
-    PageResponse<SecretResponseWrapper> secretPage =
-        secretCrudService.list("account", "org", "proj", SecretType.SSHKey, "abc", 0, 100);
+    PageResponse<SecretResponseWrapper> secretPage = secretCrudService.list(
+        "account", "org", "proj", Collections.emptyList(), singletonList(SecretType.SSHKey), false, "abc", 0, 100);
     assertThat(secretPage.getContent()).isNotEmpty();
     assertThat(secretPage.getContent().size()).isEqualTo(1);
     verify(ngSecretServiceV2).list(any(), anyInt(), anyInt());

@@ -9,6 +9,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.mongo.index.migrator.Migrator;
 import io.harness.morphia.MorphiaModule;
+import io.harness.persistence.Store;
 import io.harness.serializer.KryoModule;
 
 import com.google.inject.AbstractModule;
@@ -20,6 +21,7 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -30,7 +32,7 @@ import org.mongodb.morphia.ObjectFactory;
 public class MongoModule extends AbstractModule {
   private static volatile MongoModule instance;
 
-  public static MongoModule getInstance() {
+  static MongoModule getInstance() {
     if (instance == null) {
       instance = new MongoModule();
     }
@@ -100,7 +102,12 @@ public class MongoModule extends AbstractModule {
     AdvancedDatastore primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
     primaryDatastore.setQueryFactory(new QueryFactory());
 
-    indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia, null);
+    Store store = null;
+    if (Objects.nonNull(mongoConfig.getAliasDBName())) {
+      store = Store.builder().name(mongoConfig.getAliasDBName()).build();
+    }
+
+    indexManager.ensureIndexes(mongoConfig.getIndexManagerMode(), primaryDatastore, morphia, store);
 
     HObjectFactory hObjectFactory = (HObjectFactory) objectFactory;
 

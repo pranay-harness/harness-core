@@ -1,12 +1,14 @@
 package io.harness.serializer.recaster.proto;
 
 import io.harness.beans.CastedField;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.transformers.RecastTransformer;
 import io.harness.transformers.simplevalue.CustomValueTransformer;
 import io.harness.utils.RecastReflectionUtils;
 
 import com.google.protobuf.ProtocolMessageEnum;
 import lombok.SneakyThrows;
+import org.bson.Document;
 
 public class ProtoEnumRecastTransformer extends RecastTransformer implements CustomValueTransformer {
   @SneakyThrows
@@ -17,7 +19,13 @@ public class ProtoEnumRecastTransformer extends RecastTransformer implements Cus
       return null;
     }
 
-    String enumName = (String) fromObject;
+    Object decodedObject = RecastOrchestrationUtils.getEncodedValue((Document) fromObject);
+
+    if (decodedObject == null) {
+      return null;
+    }
+
+    String enumName = (String) decodedObject;
 
     Class<? extends ProtocolMessageEnum> enumClass = (Class<? extends ProtocolMessageEnum>) targetClass;
     return enumClass.getMethod("valueOf", String.class).invoke(null, enumName);

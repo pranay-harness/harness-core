@@ -1,5 +1,6 @@
 package io.harness.engine.progress;
 
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -25,15 +26,21 @@ public class EngineProgressCallback implements ProgressCallback {
 
   @Override
   public void notify(String correlationId, ProgressData progressData) {
-    // TODO (prashant) : Do some thing better here right now to maintain backward compatibility.
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     ProgressData data = null;
+    // TODO (prashant) : For backward compatibility remove with more clarity
+
     if (progressData instanceof BinaryResponseData) {
       data = (ProgressData) kryoSerializer.asInflatedObject(((BinaryResponseData) progressData).getData());
+      if (data instanceof UnitProgressData) {
+        ProgressData finalData = data;
+        nodeExecutionService.update(nodeExecutionId,
+            ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) finalData).getUnitProgresses()));
+        return;
+      }
     } else {
       data = progressData;
     }
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-
     Map<String, List<ProgressData>> progressDataMap = nodeExecution.getProgressDataMap();
     List<ProgressData> progressDataList = progressDataMap.getOrDefault(correlationId, new LinkedList<>());
     progressDataList.add(data);

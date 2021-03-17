@@ -62,7 +62,9 @@ public class RemoveDuplicateAnomaliesTasklet implements Tasklet {
 
     for (AnomalyEntity anomaly : sorted) {
       currentAnomaly = anomaly;
-      if (getDepth(anomaly) < currentDepth && isParent(currentAnomaly, previousAnomaly)) {
+      /*Near by duplicates are also removed*/
+      if ((anomaly.getActualCost() < 0)
+          || (getDepth(anomaly) < currentDepth && isParent(currentAnomaly, previousAnomaly))) {
         idList.add(anomaly.getId());
       }
       currentDepth = getDepth(anomaly);

@@ -14,7 +14,7 @@ import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
-import io.dropwizard.testing.ResourceHelpers;
+import java.io.File;
 import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
@@ -50,7 +50,7 @@ public class NotificationServiceAppStartupTest extends CategoryTest {
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
     SUPPORT = new DropwizardTestSupport<NotificationConfiguration>(NotificationApplication.class,
-        ResourceHelpers.resourceFilePath("test-config.yml"),
+        String.valueOf(new File("830-notification-service/src/test/resources/test-config.yml")),
         ConfigOverride.config("mongo.uri", getMongoUri("notification")),
         ConfigOverride.config("notificationClient.messageBroker.uri", getMongoUri("notificationChannel")));
     SUPPORT.before();

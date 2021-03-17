@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -11,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractConnectionDataFetcher<T, P> extends AbstractObjectDataFetcher<T, P> {
   @Inject protected WingsPersistence persistence;
 

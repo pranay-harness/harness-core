@@ -49,7 +49,7 @@ public class Logger {
 
   public static void init() {
     TARGETS.clear();
-    if (Config.getInst().logLevel() > 0) {
+    if (Config.getInst() != null && Config.getInst().logLevel() > 0) {
       TARGETS.add(new FileTarget(Config.getInst().outDir(), Config.getInst().logLevel()));
       if (Config.getInst().logConsole()) {
         TARGETS.add(new ConsoleTarget());
@@ -151,37 +151,37 @@ public class Logger {
   }
 
   public void trace(String msg, Object... args) {
-    if (Config.getInst().logLevel() >= 6) {
+    if (Config.getInst() != null && Config.getInst().logLevel() >= 6) {
       log(6, msg, args);
     }
   }
 
   public void debug(String msg, Object... args) {
-    if (Config.getInst().logLevel() >= 5) {
+    if (Config.getInst() != null && Config.getInst().logLevel() >= 5) {
       log(5, msg, args);
     }
   }
 
   public void info(String msg, Object... args) {
-    if (Config.getInst().logLevel() >= 4) {
+    if (Config.getInst() != null && Config.getInst().logLevel() >= 4) {
       log(4, msg, args);
     }
   }
 
   public void warn(String msg, Object... args) {
-    if (Config.getInst().logLevel() >= 3) {
+    if (Config.getInst() != null && Config.getInst().logLevel() >= 3) {
       log(3, msg, args);
     }
   }
 
   public void error(String msg, Object... args) {
-    if (Config.getInst().logLevel() >= 2) {
+    if (Config.getInst() != null && Config.getInst().logLevel() >= 2) {
       logE(2, msg, args);
     }
   }
 
   public void fatal(String msg, Object... args) {
-    if (Config.getInst().logLevel() >= 1) {
+    if (Config.getInst() != null && Config.getInst().logLevel() >= 1) {
       logE(1, msg, args);
     }
   }

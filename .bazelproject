@@ -1,14 +1,30 @@
+import .bazelproject-config
+
 directories:
   120-ng-manager
   125-cd-nextgen
+  130-resource-group
   136-git-sync-manager
   160-model-gen-tool
+  190-deployment-functional-tests
+  160-stress-tester
+  210-command-library-server
   220-graphql-test
   230-model-test
+  250-watcher
   260-delegate
+  270-verification
+  280-batch-processing
+  300-cv-nextgen
   310-ci-manager
   320-ci-execution
   330-ci-beans
+  340-ce-nextgen
+  350-event-server
+  360-cg-manager
+  370-users-syncbridge
+  380-cg-graphql
+  390-db-migration
   400-rest
   420-delegate-agent
   420-delegate-service
@@ -16,6 +32,7 @@ directories:
   440-connector-nextgen
   450-ce-views
   460-capability
+  470-alert
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
@@ -25,8 +42,10 @@ directories:
   850-ng-pipeline-commons
   860-orchestration-steps
   860-orchestration-visualization
+  870-cg-yaml-beans
   870-orchestration
   870-yaml-beans
+  874-orchestration-delay
   876-orchestration-beans
   878-pipeline-service-utilities
   879-pms-sdk
@@ -34,7 +53,13 @@ directories:
   884-pms-commons
   890-pms-contracts
   890-sm-core
+  900-access-control-service
+  902-aggregator-module
+  903-decision-module
   905-access-control-core
+  908-access-control-admin-client
+  908-access-control-sdk
+  909-access-control-commons
   910-delegate-service-driver
   910-delegate-task-grpc-service
   915-pms-delegate-service-driver
@@ -42,11 +67,15 @@ directories:
   920-delegate-service-beans
   930-delegate-tasks
   930-ng-core-clients
-  940-delegate-beans
+  955-alert-beans
+  955-delegate-beans
   940-feature-flag
   940-notification-client
+  940-resource-group-beans
   940-secret-manager-client
+  949-git-sync-sdk
   950-command-library-common
+  950-log-client
   950-common-entities
   950-delegate-tasks-beans
   950-events-api
@@ -58,7 +87,9 @@ directories:
   950-walktree-visitor
   954-connector-beans
   955-filters-sdk
+  955-outbox-sdk
   955-setup-usage-sdk
+  955-scm-java-client
   960-api-services
   960-continuous-features
   960-expression-service
@@ -67,25 +98,32 @@ directories:
   960-persistence
   960-recaster
   960-yaml-sdk
+  965-git-sync-commons
   970-api-services-beans
   970-grpc
   970-ng-commons
   970-rbac-core
   980-commons
-  980-java-agent
   990-commons-test
-  tools/bazel
-
-# Automatically includes all relevant targets under the 'directories' above
-derive_targets_from_directories: true
-
-workspace_type: java
-java_language_level: 8
+  run-configurations
+  200-functional-test
+  tools
+  scripts
 
 import_run_configurations:
-  run-configurations/DelegateApp.xml
-  run-configurations/WingsApp.xml
-  run-configurations/Notification Microservice.xml
-  run-configurations/Notification Client.xml
-  run-configurations/EventsFrameworkTest.xml
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/CENextGenApp.xml
+  run-configurations/CIManagerApplication.xml
+  run-configurations/CommandServiceLibraryApp.xml
+  run-configurations/CVNGApp.xml
+  run-configurations/DataGen_App.xml
+  run-configurations/DelegateApp.xml
+  run-configurations/EventsFrameworkTest.xml
+  run-configurations/GitSyncTestApp.xml
+  run-configurations/NextGen_Manager.xml
+  run-configurations/Notification Client.xml
+  run-configurations/Notification Microservice.xml
+  run-configurations/Watcher.xml
+  run-configurations/WingsApp.xml
+  run-configurations/VerificationServiceApp.xml
+  run-configurations/BatchProcessinngApp.xml

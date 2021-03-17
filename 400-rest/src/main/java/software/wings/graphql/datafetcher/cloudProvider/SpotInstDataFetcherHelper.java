@@ -1,5 +1,8 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SpotInstConfig;
 import software.wings.beans.SpotInstConfig.SpotInstConfigBuilder;
@@ -11,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class SpotInstDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 

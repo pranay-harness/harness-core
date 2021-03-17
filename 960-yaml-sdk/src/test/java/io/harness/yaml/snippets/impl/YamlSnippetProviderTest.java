@@ -7,10 +7,12 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.snippets.dto.YamlSnippetsDTO;
 import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 
@@ -21,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +41,15 @@ public class YamlSnippetProviderTest extends CategoryTest {
     yamlSnippetProvider = new YamlSnippetProvider(yamlSnippetHelper);
     final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("testIndex.xml");
     String snippetMetaData = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
-    yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData, TestClass.ClassWhichContainsInterface.class);
+    final List<YamlSchemaRootClass> yamlSchemaRootClasses =
+        Collections.singletonList(YamlSchemaRootClass.builder()
+                                      .entityType(EntityType.CONNECTORS)
+                                      .clazz(TestClass.ClassWhichContainsInterface.class)
+                                      .availableAtAccountLevel(true)
+                                      .availableAtOrgLevel(true)
+                                      .availableAtProjectLevel(true)
+                                      .build());
+    yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData, yamlSchemaRootClasses.get(0));
   }
 
   @Test

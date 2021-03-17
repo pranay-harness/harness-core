@@ -67,7 +67,7 @@ public class HeatMapResource {
   @Path("/risk-summary-popover")
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "get current risk summary", nickname = "get-risk-summary-popover")
+  @ApiOperation(value = "get current risk summary", nickname = "getRiskSummaryPopover")
   public RestResponse<RiskSummaryPopoverDTO> getRiskSummaryPopover(
       @QueryParam("accountId") @NotNull final String accountId,
       @QueryParam("orgIdentifier") @NotNull final String orgIdentifier,

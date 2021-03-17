@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -95,6 +96,13 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   }
 
   @Override
+  public List<Service> getServices(String region, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceNamePrefix) {
+    return ecsContainerService.getServices(
+        region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceNamePrefix);
+  }
+
+  @Override
   public TargetGroup getTargetGroup(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String targetGroupArn) {
     return ecsContainerService.getTargetGroup(region, cloudProviderSetting, encryptedDataDetails, targetGroupArn);
@@ -125,7 +133,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
     List<Service> activeOldServices =
-        getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName)
+        getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceNamePrefix)
             .stream()
             .filter(service
                 -> getServiceNamePrefixFromServiceName(service.getServiceName()).equals(serviceNamePrefix)
@@ -143,7 +151,7 @@ public class AwsClusterServiceImpl implements AwsClusterService {
     Map<String, String> result = new HashMap<>();
     String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
     List<Service> activeOldServices =
-        getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName)
+        getServices(region, cloudProviderSetting, encryptedDataDetails, clusterName, serviceNamePrefix)
             .stream()
             .filter(service -> service.getServiceName().startsWith(serviceNamePrefix) && service.getDesiredCount() > 0)
             .sorted(comparingInt(service -> getRevisionFromServiceName(service.getServiceName())))
@@ -159,5 +167,11 @@ public class AwsClusterServiceImpl implements AwsClusterService {
                 .findFirst()
                 .orElse("none")));
     return result;
+  }
+
+  @Override
+  public Optional<Service> getService(String region, SettingAttribute settingAttribute,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName) {
+    return ecsContainerService.getService(region, settingAttribute, encryptedDataDetails, clusterName, serviceName);
   }
 }

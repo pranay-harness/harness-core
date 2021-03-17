@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"syscall"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -25,6 +26,7 @@ func TestPluginSuccess(t *testing.T) {
 	commands := []string{"git"}
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := pluginTask{
 		id:                "step1",
@@ -47,7 +49,10 @@ func TestPluginSuccess(t *testing.T) {
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
 	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-	cmd.EXPECT().Run().Return(nil)
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(nil)
 
 	retries, err := e.Run(ctx)
 	assert.Nil(t, err)
@@ -63,6 +68,7 @@ func TestPluginNonZeroStatus(t *testing.T) {
 	commands := []string{"git"}
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := pluginTask{
 		id:                "step1",
@@ -85,7 +91,10 @@ func TestPluginNonZeroStatus(t *testing.T) {
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
 	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-	cmd.EXPECT().Run().Return(&exec.ExitError{})
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(&exec.ExitError{})
 
 	retries, err := e.Run(ctx)
 	assert.NotNil(t, err)
@@ -107,7 +116,7 @@ func TestPluginTaskCreate(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, nil, log.Sugar(), &buf, log.Sugar())
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf, false, log.Sugar())
 	assert.NotNil(t, executor)
 }
 
@@ -132,7 +141,7 @@ func TestPluginEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, nil, log.Sugar(), &buf, log.Sugar())
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf, false, log.Sugar())
 	_, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -158,7 +167,7 @@ func TestPluginEmptyEntrypointErr(t *testing.T) {
 	defer func() { getImgMetadata = oldImgMetadata }()
 
 	var buf bytes.Buffer
-	executor := NewPluginTask(step, nil, log.Sugar(), &buf, log.Sugar())
+	executor := NewPluginTask(step, nil, log.Sugar(), &buf, false, log.Sugar())
 	_, err := executor.Run(ctx)
 	assert.NotNil(t, err)
 }
@@ -222,12 +231,14 @@ func TestPluginWithJEXlSuccess(t *testing.T) {
 	commands := []string{"git"}
 	cmdFactory := mexec.NewMockCmdContextFactory(ctrl)
 	cmd := mexec.NewMockCommand(ctrl)
+	pstate := mexec.NewMockProcessState(ctrl)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	e := pluginTask{
 		id:                "step1",
 		image:             "plugin/drone-git",
 		timeoutSecs:       5,
 		numRetries:        numRetries,
+		logMetrics:        true,
 		log:               log.Sugar(),
 		addonLogger:       log.Sugar(),
 		cmdContextFactory: cmdFactory,
@@ -247,11 +258,21 @@ func TestPluginWithJEXlSuccess(t *testing.T) {
 	}
 	defer func() { evaluateJEXL = oldEvaluateJEXL }()
 
+	oldMlog := mlog
+	mlog = func(pid int32, id string, l *zap.SugaredLogger) {
+		return
+	}
+	defer func() { mlog = oldMlog }()
+
 	cmdFactory.EXPECT().CmdContextWithSleep(gomock.Any(), cmdExitWaitTime, gomock.Any()).Return(cmd)
 	cmd.EXPECT().WithStdout(&buf).Return(cmd)
 	cmd.EXPECT().WithStderr(&buf).Return(cmd)
 	cmd.EXPECT().WithEnvVarsMap(gomock.Any()).Return(cmd)
-	cmd.EXPECT().Run().Return(nil)
+	cmd.EXPECT().Start().Return(nil)
+	cmd.EXPECT().Pid().Return(int(1))
+	cmd.EXPECT().ProcessState().Return(pstate)
+	pstate.EXPECT().SysUsageUnit().Return(&syscall.Rusage{Maxrss: 100}, nil)
+	cmd.EXPECT().Wait().Return(nil)
 
 	retries, err := e.Run(ctx)
 	assert.Nil(t, err)

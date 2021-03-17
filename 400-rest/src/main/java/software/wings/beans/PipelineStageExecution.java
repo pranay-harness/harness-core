@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
+import io.harness.state.inspection.StateInspection;
 
 import software.wings.sm.StateExecutionData;
 
@@ -40,6 +41,8 @@ public class PipelineStageExecution {
   private boolean waitingForInputs;
   private ParallelInfo parallelInfo;
   private EmbeddedUser triggeredBy;
+  private StateInspection disableAssertionInspection;
+  private String skipCondition;
 
   public List<WorkflowExecution> getWorkflowExecutions() {
     return Objects.isNull(workflowExecutions) ? new ArrayList<>() : workflowExecutions;

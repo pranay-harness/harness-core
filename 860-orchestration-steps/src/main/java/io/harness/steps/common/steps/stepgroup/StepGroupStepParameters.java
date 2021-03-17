@@ -3,6 +3,7 @@ package io.harness.steps.common.steps.stepgroup;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.steps.StepGroupElementConfig;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import java.util.List;
@@ -20,10 +21,10 @@ public class StepGroupStepParameters extends StepGroupElementConfig implements S
   String childNodeID;
 
   @Builder(builderMethodName = "newBuilder")
-  public StepGroupStepParameters(String uuid, String identifier, String name,
+  public StepGroupStepParameters(String uuid, String identifier, String name, ParameterField<String> skipCondition,
       List<FailureStrategyConfig> failureStrategies, List<ExecutionWrapperConfig> steps,
       List<ExecutionWrapperConfig> rollbackSteps, String childNodeID) {
-    super(uuid, identifier, name, failureStrategies, steps, rollbackSteps);
+    super(uuid, identifier, name, skipCondition, failureStrategies, steps, rollbackSteps);
     this.childNodeID = childNodeID;
   }
 
@@ -35,6 +36,7 @@ public class StepGroupStepParameters extends StepGroupElementConfig implements S
         .name(config.getName())
         .identifier(config.getIdentifier())
         .steps(config.getSteps())
+        .skipCondition(config.getSkipCondition())
         .failureStrategies(config.getFailureStrategies())
         .rollbackSteps(config.getRollbackSteps())
         .childNodeID(childNodeID)

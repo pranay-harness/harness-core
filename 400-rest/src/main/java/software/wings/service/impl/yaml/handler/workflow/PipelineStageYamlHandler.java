@@ -54,6 +54,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -170,9 +171,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         String variableValue = variable.getValue();
         String workflowVariableValueForBean = workflowYAMLHelper.getWorkflowVariableValueBean(
             change.getAccountId(), envId, appId, entityType, variableValue, skipAlways, variableOrg);
-        if (workflowVariableValueForBean != null) {
-          workflowVariablesPse.put(variableName, workflowVariableValueForBean);
-        }
+        workflowVariablesPse.put(variableName, Optional.ofNullable(workflowVariableValueForBean).orElse(""));
       }
     }
     log.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
@@ -343,10 +342,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         String entryValue = entry.getValue();
         String variableValue = workflowYAMLHelper.getWorkflowVariableValueYaml(
             appId, entryValue, entityType, stageElement.checkDisableAssertion());
-        if (variableValue != null) {
-          workflowVariable.setValue(variableValue);
-          pipelineStageVariables.add(workflowVariable);
-        }
+        workflowVariable.setValue(variableValue != null ? variableValue : "");
+        pipelineStageVariables.add(workflowVariable);
       }
     }
     return workflowName;

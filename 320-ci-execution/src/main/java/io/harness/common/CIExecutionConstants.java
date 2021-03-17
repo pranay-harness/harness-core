@@ -3,9 +3,7 @@ package io.harness.common;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import lombok.experimental.UtilityClass;
 
-@UtilityClass
 public class CIExecutionConstants {
   // Pod labels
   public static final String ACCOUNT_ID_ATTR = "accountID";
@@ -28,7 +26,9 @@ public class CIExecutionConstants {
 
   // Constants for implicit git clone step
   public static final String GIT_CLONE_STEP_ID = "harness-git-clone";
+  public static final String CLEANUP_STEP_ID = "harness-cleanup";
   public static final String GIT_CLONE_STEP_NAME = "Git clone";
+  public static final String CLEANUP_STEP_NAME = "Cleanup";
   public static final String GIT_CLONE_IMAGE = "drone/git";
   public static final Integer GIT_CLONE_DEPTH = 50;
   public static final Integer GIT_CLONE_MANUAL_DEPTH = 1;
@@ -103,6 +103,8 @@ public class CIExecutionConstants {
   public static final String HARNESS_ORG_ID_VARIABLE = "HARNESS_ORG_ID";
   public static final String HARNESS_BUILD_ID_VARIABLE = "HARNESS_BUILD_ID";
   public static final String HARNESS_STAGE_ID_VARIABLE = "HARNESS_STAGE_ID";
+  public static final String HARNESS_LOG_PREFIX_VARIABLE = "HARNESS_LOG_PREFIX";
+  public static final String HARNESS_SERVICE_LOG_KEY_VARIABLE = "HARNESS_SERVICE_LOG_KEY";
   public static final String HARNESS_PIPELINE_ID_VARIABLE = "HARNESS_PIPELINE_ID";
 
   public static final String HARNESS_SERVICE_ENTRYPOINT = "HARNESS_SERVICE_ENTRYPOINT";
@@ -111,10 +113,14 @@ public class CIExecutionConstants {
   public static final String ENDPOINT_MINIO_VARIABLE_VALUE = "35.224.85.116:9000";
   public static final String BUCKET_MINIO_VARIABLE_VALUE = "test";
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
+  public static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
 
   // Deprecated
   public static final List<String> SH_COMMAND = Collections.unmodifiableList(Arrays.asList("sh", "-c", "--"));
 
   public static final String IMAGE_PATH_SPLIT_REGEX = ":";
   public static final String PVC_DEFAULT_STORAGE_CLASS = "faster";
+
+  public static final String AWS_CODE_COMMIT_URL_REGEX =
+      "^https://git-codecommit\\.([^/.]*)\\.amazonaws\\.com/v1/repos(?:/?|/[^/.]*)$";
 }

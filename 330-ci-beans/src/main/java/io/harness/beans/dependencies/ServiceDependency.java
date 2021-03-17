@@ -1,5 +1,6 @@
 package io.harness.beans.dependencies;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -22,4 +23,5 @@ public class ServiceDependency {
   String startTime;
   String endTime;
   String errorMessage;
+  List<String> logKeys;
 }

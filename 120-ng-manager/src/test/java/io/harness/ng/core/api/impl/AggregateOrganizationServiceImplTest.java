@@ -129,8 +129,6 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
         aggregateOrganizationService.getOrganizationAggregateDTO(accountIdentifier, orgIdentifier);
 
     // organization
-    assertEquals(
-        accountIdentifier, organizationAggregateDTO.getOrganizationResponse().getOrganization().getAccountIdentifier());
     assertEquals(orgIdentifier, organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier());
     assertEquals(
         organization.getName(), organizationAggregateDTO.getOrganizationResponse().getOrganization().getName());
@@ -163,8 +161,6 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
         aggregateOrganizationService.getOrganizationAggregateDTO(accountIdentifier, orgIdentifier);
 
     // organization
-    assertEquals(
-        accountIdentifier, organizationAggregateDTO.getOrganizationResponse().getOrganization().getAccountIdentifier());
     assertEquals(orgIdentifier, organizationAggregateDTO.getOrganizationResponse().getOrganization().getIdentifier());
     assertEquals(
         organization.getName(), organizationAggregateDTO.getOrganizationResponse().getOrganization().getName());

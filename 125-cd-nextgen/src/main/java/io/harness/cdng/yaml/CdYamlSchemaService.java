@@ -1,9 +1,8 @@
 package io.harness.cdng.yaml;
 
 import io.harness.encryption.Scope;
-
-import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.yaml.schema.beans.PartialSchemaDTO;
 
 public interface CdYamlSchemaService {
-  JsonNode getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
+  PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
 }

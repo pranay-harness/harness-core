@@ -84,8 +84,7 @@ public class Setup {
 
   public static User retryLogin(String userName, String password) {
     Retry retry = new Retry(5, 5000);
-    User user = (User) retry.executeWithRetry(() -> loginUser(userName, password), new LoginMatcher(), null);
-    return user;
+    return (User) retry.executeWithRetry(() -> loginUser(userName, password), new LoginMatcher(), null);
   }
 
   // TODO: Need to update and use this method

@@ -21,5 +21,8 @@ public interface InterruptRepository extends CrudRepository<Interrupt, String> {
   List<Interrupt> findByPlanExecutionIdOrderByCreatedAtDesc(String planExecutionId);
 
   List<Interrupt> findByPlanExecutionIdAndStateInAndTypeInOrderByCreatedAtDesc(
-      String planExecutionId, EnumSet<State> registered, EnumSet<ExecutionInterruptType> planLevelInterrupts);
+      String planExecutionId, EnumSet<State> states, EnumSet<ExecutionInterruptType> planLevelInterrupts);
+
+  List<Interrupt> findByPlanExecutionIdAndNodeExecutionIdAndStateInOrderByCreatedAtDesc(
+      String planExecutionId, String nodeExecutionId, EnumSet<State> states);
 }

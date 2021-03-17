@@ -156,11 +156,27 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
         .notEqual(Boolean.TRUE);
   }
 
+  Query<SecretManagerConfig> getQueryWithIdentifiers(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
+    return wingsPersistence.createQuery(SecretManagerConfig.class)
+        .field(ACCOUNT_IDENTIFIER_KEY)
+        .equal(accountIdentifier)
+        .field(ORG_IDENTIFIER_KEY)
+        .equal(orgIdentifier)
+        .field(PROJECT_IDENTIFIER_KEY)
+        .equal(projectIdentifier)
+        .field(IDENTIFIER_KEY)
+        .in(identifiers)
+        .field(DELETED_KEY)
+        .notEqual(Boolean.TRUE);
+  }
+
   @Override
   public List<SecretManagerConfig> list(
-      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      @NotNull String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> identifiers) {
     Query<SecretManagerConfig> secretManagerConfigQuery;
-    secretManagerConfigQuery = getQuery(accountIdentifier, orgIdentifier, projectIdentifier);
+    secretManagerConfigQuery =
+        getQueryWithIdentifiers(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
     return secretManagerConfigQuery.asList();
   }
 

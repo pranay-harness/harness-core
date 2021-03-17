@@ -27,6 +27,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.EmailData;
@@ -70,6 +71,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
       SettingAttribute settingAttribute = request.getSettingAttribute();
       List<EncryptedDataDetail> encryptedDataDetails = request.getEncryptedDataDetails();
       SettingValue settingValue = settingAttribute.getValue();
+      SSHVaultConfig sshVaultConfig = request.getSshVaultConfig();
       ConnectivityValidationAttributes connectivityValidationAttributes = settingAttribute.getValidationAttributes();
       if (settingValue instanceof HostConnectionAttributes) {
         if (!(connectivityValidationAttributes instanceof SshConnectionConnectivityValidationAttributes)) {
@@ -79,8 +81,8 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
             ((SshConnectionConnectivityValidationAttributes) connectivityValidationAttributes).getHostName());
         ExecutionCredential credential =
             aSSHExecutionCredential().withExecutionType(SSH).withSshUser("").withSshPassword(new char[0]).build();
-        List<HostValidationResponse> response =
-            hostValidationService.validateHost(hostNames, settingAttribute, encryptedDataDetails, credential);
+        List<HostValidationResponse> response = hostValidationService.validateHost(
+            hostNames, settingAttribute, encryptedDataDetails, credential, sshVaultConfig);
         if (isEmpty(response)) {
           throw new InvalidRequestException("Did not get hosts validated for SSH", USER);
         }
@@ -96,7 +98,7 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
         List<String> hostNames =
             singletonList(((WinRmConnectivityValidationAttributes) connectivityValidationAttributes).getHostName());
         List<HostValidationResponse> response =
-            hostValidationService.validateHost(hostNames, settingAttribute, encryptedDataDetails, null);
+            hostValidationService.validateHost(hostNames, settingAttribute, encryptedDataDetails, null, null);
         if (isEmpty(response)) {
           throw new InvalidRequestException("Did not get hosts validated for SSH", USER);
         }

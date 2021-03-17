@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Value
 @Builder
@@ -17,7 +18,7 @@ import lombok.Value;
 @JsonTypeName(KubernetesConfigConstants.OPENID_CONNECT)
 @OneOfField(fields = {"oidcUsername", "oidcUsernameRef"})
 public class KubernetesOpenIdConnectDTO extends KubernetesAuthCredentialDTO {
-  @NotNull String oidcIssuerUrl;
+  @NotBlank String oidcIssuerUrl;
   String oidcUsername;
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData oidcUsernameRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData oidcClientIdRef;

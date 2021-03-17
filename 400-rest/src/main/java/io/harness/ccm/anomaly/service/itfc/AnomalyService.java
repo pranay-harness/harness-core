@@ -11,11 +11,14 @@ import java.time.Instant;
 import java.util.List;
 
 public interface AnomalyService {
+  /* anomalies on date */
   List<AnomalyEntity> list(String account, Instant date);
+  /* anomalies in [date1,date2] */
+  List<AnomalyEntity> list(String account, Instant from, Instant to);
   List<AnomalyEntity> listK8s(String accountId, List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy);
   List<AnomalyEntity> listCloud(String accountId, List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy);
   List<AnomalyEntity> listOverview(String accountId, List<QLBillingDataFilter> filters);
   void delete(List<String> ids, Instant date);
-  void insert(List<AnomalyEntity> anomalies);
+  void insert(List<? extends AnomalyEntity> anomalies);
   AnomalyEntity update(AnomalyEntity anomaly);
 }

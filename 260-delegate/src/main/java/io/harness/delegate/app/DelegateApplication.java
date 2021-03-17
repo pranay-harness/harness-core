@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import static io.harness.annotations.dev.Module._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
 import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;
@@ -33,7 +34,7 @@ import io.harness.grpc.delegateservice.DelegateServiceGrpcAgentClientModule;
 import io.harness.grpc.pingpong.PingPongClient;
 import io.harness.grpc.pingpong.PingPongModule;
 import io.harness.logstreaming.LogStreamingModule;
-import io.harness.managerclient.ManagerClientModule;
+import io.harness.managerclient.DelegateManagerClientModule;
 import io.harness.perpetualtask.PerpetualTaskWorkerModule;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -76,7 +77,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 @Slf4j
-@TargetModule(io.harness.annotations.dev.Module._420_DELEGATE_AGENT)
+@TargetModule(_420_DELEGATE_AGENT)
 public class DelegateApplication {
   private static String processId = String.valueOf(ProcessControl.myProcessId());
   private static DelegateConfiguration configuration;
@@ -155,8 +156,9 @@ public class DelegateApplication {
         bind(DelegateConfiguration.class).toInstance(configuration);
       }
     });
-    modules.add(new ManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
-        configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+    modules.add(
+        new DelegateManagerClientModule(configuration.getManagerUrl(), configuration.getVerificationServiceUrl(),
+            configuration.getCvNextGenUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
     modules.add(new LogStreamingModule(configuration.getLogStreamingServiceBaseUrl()));
     String managerHostAndPort = System.getenv("MANAGER_HOST_AND_PORT");
     modules.add(new ManagerGrpcClientModule(

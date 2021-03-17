@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.application;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -25,6 +27,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UpdateApplicationGitSyncConfigStatusDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateApplicationGitSyncConfigInput, QLUpdateApplicationGitSyncConfigPayload> {
   private final AppService appService;

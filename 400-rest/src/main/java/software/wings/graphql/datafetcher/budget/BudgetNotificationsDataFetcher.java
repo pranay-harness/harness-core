@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.budget;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
@@ -28,6 +30,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BudgetNotificationsDataFetcher extends AbstractStatsDataFetcher<QLCCMAggregationFunction,
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject BudgetService budgetService;

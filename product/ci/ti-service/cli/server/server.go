@@ -3,16 +3,19 @@ package server
 import (
 	"context"
 	"errors"
-	"github.com/wings-software/portal/commons/go/lib/logs"
-	"go.uber.org/zap"
 	"os"
 	"os/signal"
+
+	"github.com/wings-software/portal/commons/go/lib/logs"
+	"go.uber.org/zap"
 
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/db/timescaledb"
 	"github.com/wings-software/portal/product/ci/ti-service/handler"
 	"github.com/wings-software/portal/product/ci/ti-service/server"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb"
+	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 
 	"github.com/joho/godotenv"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
@@ -41,12 +44,14 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		log.Warn("ti service is being started without auth, SHOULD NOT BE DONE FOR PROD ENVIRONMENTS")
 	}
 
+	// TODO: (vistaar) Rename to something better
 	var db db.Db
 	if config.TimeScaleDb.DbName != "" && config.TimeScaleDb.Host != "" {
 		// Create timescaledb connection
 		log.Infow("configuring TI service to use Timescale DB",
 			"endpoint", config.TimeScaleDb.Host,
-			"db_name", config.TimeScaleDb.DbName)
+			"db_name", config.TimeScaleDb.DbName,
+			"test_table_name", config.TimeScaleDb.HyperTableName)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
 			config.TimeScaleDb.Password,
@@ -60,16 +65,39 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			return err
 		}
 	} else {
-		// TODO (Vistaar): Use in-memory DB if timescaledb is not set up
 		log.Errorw("timescale DB or host not configured properly")
 		return errors.New("timescale db name not configured")
+	}
+
+	// Test intelligence DB
+	var tidb tidb.TiDB
+	if config.MongoDb.DbName != "" && config.MongoDb.Host != "" {
+		// Create mongoDB connection
+		log.Infow("configuring TI service to use mongo DB",
+			"host", config.MongoDb.Host,
+			"db_name", config.MongoDb.DbName)
+		tidb, err = mongodb.New(
+			config.MongoDb.Username,
+			config.MongoDb.Password,
+			config.MongoDb.Host,
+			config.MongoDb.Port,
+			config.MongoDb.DbName,
+			log)
+		if err != nil {
+			log.Errorw("unable to connect to mongo DB")
+			return errors.New("unable to connect to mongo DB")
+		}
+	} else {
+		log.Errorw("mongo DB not configured properly")
+		// TODO: remove this comment once we have test intelligence dependencies running in environments.
+		// return errors.New("mongo db info not configured")
 	}
 
 	// create the http server.
 	server := server.Server{
 		Acme:    config.Server.Acme,
 		Addr:    config.Server.Bind,
-		Handler: handler.Handler(db, config, log),
+		Handler: handler.Handler(db, tidb, config, log),
 	}
 
 	// trap the os signal to gracefully shutdown the

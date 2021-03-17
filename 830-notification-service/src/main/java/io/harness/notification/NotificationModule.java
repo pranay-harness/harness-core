@@ -7,13 +7,15 @@ import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.manage.ManagedScheduledExecutorService;
+import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
-import io.harness.mongo.MongoModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.notification.modules.NotificationCoreModule;
 import io.harness.notification.modules.NotificationPersistenceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.NoopUserProvider;
+import io.harness.persistence.UserProvider;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NotificationRegistrars;
@@ -82,14 +84,6 @@ public class NotificationModule extends AbstractModule {
 
       @Provides
       @Singleton
-      @Named("notification-channel")
-      MongoBackendConfiguration getMongoBackendConfiguration(NotificationConfiguration notificationConfiguration) {
-        return (MongoBackendConfiguration) notificationConfiguration.getNotificationClientConfiguration()
-            .getNotificationClientBackendConfiguration();
-      }
-
-      @Provides
-      @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(NotificationSenderRegistrars.morphiaRegistrars)
@@ -113,7 +107,12 @@ public class NotificationModule extends AbstractModule {
         .annotatedWith(Names.named("delegate-response"))
         .toInstance(new ManagedScheduledExecutorService("delegate-response"));
     bind(NotificationConfiguration.class).toInstance(appConfig);
-    install(MongoModule.getInstance());
+    install(new AbstractMongoModule() {
+      @Override
+      public UserProvider userProvider() {
+        return new NoopUserProvider();
+      }
+    });
     bind(HPersistence.class).to(MongoPersistence.class);
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getNotificationSecrets().getManagerServiceSecret(),

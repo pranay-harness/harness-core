@@ -1,87 +1,36 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//:macros.bzl", "sonarqube_test")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
-load("//:macros.bzl", "sources")
-
-sources()
-
-java_library(
-    name = "maven_deps",
-    visibility = ["//visibility:public"],
-    exports = [
-        "//960-ng-core-beans:module",
-        "//960-persistence:module",
-        "@maven//:com_google_inject_guice",
-        "@maven//:org_slf4j_slf4j_api",
-    ],
-)
 
 java_library(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
-    resources = [
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "//:lombok",
-    ],
-)
-
-java_binary(
-    name = "accesscontrol",
-    srcs = glob(["src/main/**/*.java"]),
-    data = ["//:resource"],
-    main_class = "io.harness.accesscontrol.AccessControlApplication",
     resources = [],
     visibility = ["//visibility:public"],
-    runtime_deps = [
-        "@maven//:javax_ws_rs_javax_ws_rs_api",
-    ],
     deps = [
-        "@maven//:com_google_guava_guava",
-        # keeping guava on top of maven_deps for right version resoulution
-        "@maven//:io_netty_netty_all",
-        # keeping guava on top of maven_deps for right version resoulution
-        "maven_deps",
         "//:lombok",
+        "//909-access-control-commons:module",
+        "//960-persistence:module",
     ],
 )
 
 java_library(
-    name = "test_deps",
-    exports = [
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    visibility = ["//visibility:public"],
+    deps = [
+        ":module",
+        "//:lombok",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:junit_junit",
     ],
 )
 
-java_library(
-    name = "tests",
-    srcs = glob(["src/test/**/*.java"]),
-    visibility = ["//visibility:public"],
-    deps = [
-        "maven_deps",
-        "module",
-        "test_deps",
-        "//:lombok",
-    ],
-)
-
 run_tests()
 
 checkstyle()
-
-sonarqube_test(
-    name = "sq_mycomponent",
-    srcs = ["sources"],
-    targets = [
-        ":maven_deps",
-        ":module",
-    ],
-)
 
 pmd()

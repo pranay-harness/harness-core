@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.type.instance;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.artifact.QLArtifact;
 
 import lombok.Builder;
@@ -8,6 +11,7 @@ import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLEc2Instance extends QLAbstractEc2Instance {
   @Builder
   public QLEc2Instance(String hostId, String hostName, String hostPublicDns, String id, QLInstanceType type,

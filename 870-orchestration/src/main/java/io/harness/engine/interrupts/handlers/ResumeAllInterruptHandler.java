@@ -5,8 +5,6 @@ import static io.harness.data.structure.CollectionUtils.filterAndGetFirst;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.eraro.ErrorCode.RESUME_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.interrupts.ExecutionInterruptType.PAUSE_ALL;
-import static io.harness.interrupts.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
@@ -23,6 +21,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -45,12 +44,12 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
   private Interrupt validateAndSave(Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
     Optional<Interrupt> pauseAllOptional =
-        filterAndGetFirst(interrupts, presentInterrupt -> presentInterrupt.getType() == PAUSE_ALL);
+        filterAndGetFirst(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.PAUSE_ALL);
     if (!pauseAllOptional.isPresent()) {
       throw new InvalidRequestException("No PAUSE_ALL interrupt present", USER);
     }
 
-    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == RESUME_ALL)) {
+    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.RESUME_ALL)) {
       throw new InvalidRequestException("Interrupt RESUME_ALL already present", RESUME_ALL_ALREADY, USER);
     }
     Interrupt pauseAllInterrupt = pauseAllOptional.get();
@@ -81,6 +80,7 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
                 .interruptId(interrupt.getUuid())
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
     resumeStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()

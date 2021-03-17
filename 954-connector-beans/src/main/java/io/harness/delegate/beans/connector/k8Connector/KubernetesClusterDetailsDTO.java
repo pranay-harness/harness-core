@@ -7,12 +7,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
 @JsonTypeName(KubernetesConfigConstants.MANUAL_CREDENTIALS)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class KubernetesClusterDetailsDTO implements KubernetesCredentialSpecDTO {
-  @NotNull String masterUrl;
+  @NotBlank @NotNull String masterUrl;
   @JsonProperty("auth") @NotNull @Valid KubernetesAuthDTO auth;
 }

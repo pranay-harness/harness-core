@@ -2,10 +2,10 @@ package io.harness.cvng.dashboard.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.mongo.index.CdIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -14,6 +14,7 @@ import io.harness.persistence.UuidAware;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -29,13 +30,6 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@CdIndex(name = "insertionIdx",
-    fields =
-    {
-      @Field("serviceIdentifier")
-      , @Field("envIdentifier"), @Field("category"), @Field("heatMapResolution"), @Field("heatMapBucketStartTime"),
-          @Field("heatMapBucketEndTime")
-    })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
@@ -43,17 +37,34 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "HeatMapKeys")
 @Entity(value = "heatMaps", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
+public final class HeatMap implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("insert_idx")
+                 .field(HeatMapKeys.accountId)
+                 .field(HeatMapKeys.orgIdentifier)
+                 .field(HeatMapKeys.projectIdentifier)
+                 .field(HeatMapKeys.serviceIdentifier)
+                 .field(HeatMapKeys.envIdentifier)
+                 .field(HeatMapKeys.category)
+                 .field(HeatMapKeys.heatMapResolution)
+                 .field(HeatMapKeys.heatMapBucketStartTime)
+                 .field(HeatMapKeys.heatMapBucketEndTime)
+                 .build())
+        .build();
+  }
+
   @Id private String uuid;
   private String serviceIdentifier;
   private String envIdentifier;
   private String projectIdentifier;
   private String orgIdentifier;
-  @FdIndex private CVMonitoringCategory category;
+  private CVMonitoringCategory category;
   private HeatMapResolution heatMapResolution;
-  @FdIndex private Instant heatMapBucketStartTime;
-  @FdIndex private Instant heatMapBucketEndTime;
-  @FdIndex private String accountId;
+  private Instant heatMapBucketStartTime;
+  private Instant heatMapBucketEndTime;
+  private String accountId;
   private List<HeatMapRisk> heatMapRisks;
 
   @FdIndex private long createdAt;

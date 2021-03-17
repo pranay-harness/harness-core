@@ -1,6 +1,8 @@
 package io.harness.stateutils.buildstate;
 
 import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMETER;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveArchiveFormat;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveListParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
@@ -22,6 +24,7 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.exception.InvalidArgumentsException;
 
 import java.util.HashMap;
@@ -39,7 +42,6 @@ public class PluginSettingUtils {
   public static final String PLUGIN_TARGET = "PLUGIN_TARGET";
   public static final String PLUGIN_BUILD_ARGS = "PLUGIN_BUILD_ARGS";
   public static final String PLUGIN_CUSTOM_LABELS = "PLUGIN_CUSTOM_LABELS";
-  public static final String PLUGIN_PATH = "PLUGIN_PATH";
   public static final String PLUGIN_MOUNT = "PLUGIN_MOUNT";
   public static final String PLUGIN_BUCKET = "PLUGIN_BUCKET";
   public static final String PLUGIN_ENDPOINT = "PLUGIN_ENDPOINT";
@@ -47,13 +49,19 @@ public class PluginSettingUtils {
   public static final String PLUGIN_SOURCE = "PLUGIN_SOURCE";
   public static final String PLUGIN_RESTORE = "PLUGIN_RESTORE";
   public static final String PLUGIN_REBUILD = "PLUGIN_REBUILD";
-  public static final String PLUGIN_FILENAME = "PLUGIN_FILENAME";
-  public static final String PLUGIN_ROOT = "PLUGIN_ROOT";
+  public static final String PLUGIN_EXIT_CODE = "PLUGIN_EXIT_CODE";
+  public static final String PLUGIN_PATH_STYLE = "PLUGIN_PATH_STYLE";
+  public static final String PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT = "PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT";
+  public static final String PLUGIN_BACKEND_OPERATION_TIMEOUT = "PLUGIN_BACKEND_OPERATION_TIMEOUT";
+  public static final String PLUGIN_CACHE_KEY = "PLUGIN_CACHE_KEY";
+  public static final String PLUGIN_BACKEND = "PLUGIN_BACKEND";
+  public static final String PLUGIN_OVERRIDE = "PLUGIN_OVERRIDE";
+  public static final String PLUGIN_ARCHIVE_FORMAT = "PLUGIN_ARCHIVE_FORMAT";
 
-  public static final String TAR = ".tar";
   public static final String ECR_REGISTRY_PATTERN = "%s.dkr.ecr.%s.amazonaws.com";
 
-  public static Map<String, String> getPluginCompatibleEnvVariables(PluginCompatibleStep stepInfo, String identifier) {
+  public static Map<String, String> getPluginCompatibleEnvVariables(
+      PluginCompatibleStep stepInfo, String identifier, long timeout) {
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case ECR:
         return getECRStepInfoEnvVariables((ECRStepInfo) stepInfo, identifier);
@@ -68,13 +76,13 @@ public class PluginSettingUtils {
       case UPLOAD_S3:
         return getUploadToS3StepInfoEnvVariables((UploadToS3StepInfo) stepInfo, identifier);
       case SAVE_CACHE_GCS:
-        return getSaveCacheGCSStepInfoEnvVariables((SaveCacheGCSStepInfo) stepInfo, identifier);
+        return getSaveCacheGCSStepInfoEnvVariables((SaveCacheGCSStepInfo) stepInfo, identifier, timeout);
       case RESTORE_CACHE_GCS:
-        return getRestoreCacheGCSStepInfoEnvVariables((RestoreCacheGCSStepInfo) stepInfo, identifier);
+        return getRestoreCacheGCSStepInfoEnvVariables((RestoreCacheGCSStepInfo) stepInfo, identifier, timeout);
       case SAVE_CACHE_S3:
-        return getSaveCacheS3StepInfoEnvVariables((SaveCacheS3StepInfo) stepInfo, identifier);
+        return getSaveCacheS3StepInfoEnvVariables((SaveCacheS3StepInfo) stepInfo, identifier, timeout);
       case RESTORE_CACHE_S3:
-        return getRestoreCacheS3StepInfoEnvVariables((RestoreCacheS3StepInfo) stepInfo, identifier);
+        return getRestoreCacheS3StepInfoEnvVariables((RestoreCacheS3StepInfo) stepInfo, identifier, timeout);
       default:
         throw new IllegalStateException("Unexpected value: " + stepInfo.getNonYamlInfo().getStepInfoType());
     }
@@ -212,30 +220,34 @@ public class PluginSettingUtils {
   }
 
   private static Map<String, String> getRestoreCacheGCSStepInfoEnvVariables(
-      RestoreCacheGCSStepInfo stepInfo, String identifier) {
+      RestoreCacheGCSStepInfo stepInfo, String identifier, long timeout) {
     Map<String, String> map = new HashMap<>();
 
-    setMandatoryEnvironmentVariable(map, PLUGIN_FILENAME,
-        resolveStringParameter("key", "RestoreCacheGCS", identifier, stepInfo.getKey(), true) + TAR);
+    setMandatoryEnvironmentVariable(
+        map, PLUGIN_CACHE_KEY, resolveStringParameter("key", "RestoreCacheGCS", identifier, stepInfo.getKey(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_BUCKET,
         resolveStringParameter("bucket", "RestoreCacheGCS", identifier, stepInfo.getBucket(), true));
 
     setMandatoryEnvironmentVariable(map, PLUGIN_RESTORE, "true");
+    setMandatoryEnvironmentVariable(map, PLUGIN_EXIT_CODE, "true");
 
-    String target = resolveStringParameter("target", "RestoreCacheGCS", identifier, stepInfo.getTarget(), false);
-    if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_PATH, target);
-    }
+    ArchiveFormat archiveFormat = resolveArchiveFormat(stepInfo.getArchiveFormat());
+    setMandatoryEnvironmentVariable(map, PLUGIN_ARCHIVE_FORMAT, archiveFormat.toString());
+
+    boolean failIfKeyNotFound = resolveBooleanParameter(stepInfo.getFailIfKeyNotFound(), false);
+    setOptionalEnvironmentVariable(map, PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT, String.valueOf(failIfKeyNotFound));
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND, "gcs");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND_OPERATION_TIMEOUT, format("%ss", timeout));
 
     return map;
   }
 
   private static Map<String, String> getSaveCacheGCSStepInfoEnvVariables(
-      SaveCacheGCSStepInfo stepInfo, String identifier) {
+      SaveCacheGCSStepInfo stepInfo, String identifier, long timeout) {
     Map<String, String> map = new HashMap<>();
 
     setMandatoryEnvironmentVariable(
-        map, PLUGIN_FILENAME, resolveStringParameter("key", "SaveCacheGCS", identifier, stepInfo.getKey(), true) + TAR);
+        map, PLUGIN_CACHE_KEY, resolveStringParameter("key", "SaveCacheGCS", identifier, stepInfo.getKey(), true));
 
     setMandatoryEnvironmentVariable(
         map, PLUGIN_BUCKET, resolveStringParameter("bucket", "SaveCacheGCS", identifier, stepInfo.getBucket(), true));
@@ -243,33 +255,29 @@ public class PluginSettingUtils {
     List<String> sourcePaths =
         resolveListParameter("sourcePaths", "SaveCacheGCS", identifier, stepInfo.getSourcePaths(), true);
 
+    ArchiveFormat archiveFormat = resolveArchiveFormat(stepInfo.getArchiveFormat());
+    setMandatoryEnvironmentVariable(map, PLUGIN_ARCHIVE_FORMAT, archiveFormat.toString());
+
+    boolean override = resolveBooleanParameter(stepInfo.getOverride(), true);
+    setMandatoryEnvironmentVariable(map, PLUGIN_OVERRIDE, String.valueOf(override));
     setMandatoryEnvironmentVariable(map, PLUGIN_MOUNT, listToStringSlice(sourcePaths));
     setMandatoryEnvironmentVariable(map, PLUGIN_REBUILD, "true");
-
-    String target = resolveStringParameter("target", "SaveCacheGCS", identifier, stepInfo.getTarget(), false);
-    if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_PATH, target);
-    }
+    setMandatoryEnvironmentVariable(map, PLUGIN_EXIT_CODE, "true");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND, "gcs");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND_OPERATION_TIMEOUT, format("%ss", timeout));
 
     return map;
   }
 
   private static Map<String, String> getRestoreCacheS3StepInfoEnvVariables(
-      RestoreCacheS3StepInfo stepInfo, String identifier) {
+      RestoreCacheS3StepInfo stepInfo, String identifier, long timeout) {
     Map<String, String> map = new HashMap<>();
 
-    setMandatoryEnvironmentVariable(map, PLUGIN_FILENAME,
-        resolveStringParameter("key", "RestoreCacheS3", identifier, stepInfo.getKey(), true) + TAR);
-
     setMandatoryEnvironmentVariable(
-        map, PLUGIN_ROOT, resolveStringParameter("bucket", "RestoreCacheS3", identifier, stepInfo.getBucket(), true));
-
+        map, PLUGIN_CACHE_KEY, resolveStringParameter("key", "RestoreCacheS3", identifier, stepInfo.getKey(), true));
+    setMandatoryEnvironmentVariable(
+        map, PLUGIN_BUCKET, resolveStringParameter("bucket", "RestoreCacheS3", identifier, stepInfo.getBucket(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_RESTORE, "true");
-
-    String target = resolveStringParameter("target", "RestoreCacheS3", identifier, stepInfo.getTarget(), false);
-    if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_PATH, target);
-    }
 
     String endpoint = resolveStringParameter("endpoint", "RestoreCacheS3", identifier, stepInfo.getEndpoint(), false);
     if (endpoint != null && !endpoint.equals(UNRESOLVED_PARAMETER)) {
@@ -281,26 +289,35 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
     }
 
+    ArchiveFormat archiveFormat = resolveArchiveFormat(stepInfo.getArchiveFormat());
+    setMandatoryEnvironmentVariable(map, PLUGIN_ARCHIVE_FORMAT, archiveFormat.toString());
+
+    boolean pathStyle = resolveBooleanParameter(stepInfo.getPathStyle(), false);
+    setOptionalEnvironmentVariable(map, PLUGIN_PATH_STYLE, String.valueOf(pathStyle));
+
+    boolean failIfKeyNotFound = resolveBooleanParameter(stepInfo.getFailIfKeyNotFound(), false);
+    setOptionalEnvironmentVariable(map, PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT, String.valueOf(failIfKeyNotFound));
+
+    setMandatoryEnvironmentVariable(map, PLUGIN_EXIT_CODE, "true");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND, "s3");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND_OPERATION_TIMEOUT, format("%ss", timeout));
+
     return map;
   }
 
   private static Map<String, String> getSaveCacheS3StepInfoEnvVariables(
-      SaveCacheS3StepInfo stepInfo, String identifier) {
+      SaveCacheS3StepInfo stepInfo, String identifier, long timeout) {
     Map<String, String> map = new HashMap<>();
 
     setMandatoryEnvironmentVariable(
-        map, PLUGIN_FILENAME, resolveStringParameter("key", "SaveCacheS3", identifier, stepInfo.getKey(), true) + TAR);
+        map, PLUGIN_CACHE_KEY, resolveStringParameter("key", "SaveCacheS3", identifier, stepInfo.getKey(), true));
     setMandatoryEnvironmentVariable(
-        map, PLUGIN_ROOT, resolveStringParameter("bucket", "SaveCacheS3", identifier, stepInfo.getBucket(), true));
+        map, PLUGIN_BUCKET, resolveStringParameter("bucket", "SaveCacheS3", identifier, stepInfo.getBucket(), true));
     setMandatoryEnvironmentVariable(map, PLUGIN_MOUNT,
         listToStringSlice(
             resolveListParameter("sourcePaths", "SaveCacheS3", identifier, stepInfo.getSourcePaths(), true)));
     setMandatoryEnvironmentVariable(map, PLUGIN_REBUILD, "true");
 
-    String target = resolveStringParameter("target", "SaveCacheS3", identifier, stepInfo.getTarget(), false);
-    if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
-      setOptionalEnvironmentVariable(map, PLUGIN_PATH, target);
-    }
     String endpoint = resolveStringParameter("endpoint", "SaveCacheS3", identifier, stepInfo.getEndpoint(), false);
     if (endpoint != null && !endpoint.equals(UNRESOLVED_PARAMETER)) {
       setOptionalEnvironmentVariable(map, PLUGIN_ENDPOINT, endpoint);
@@ -311,8 +328,22 @@ public class PluginSettingUtils {
       setOptionalEnvironmentVariable(map, PLUGIN_REGION, region);
     }
 
+    ArchiveFormat archiveFormat = resolveArchiveFormat(stepInfo.getArchiveFormat());
+    setMandatoryEnvironmentVariable(map, PLUGIN_ARCHIVE_FORMAT, archiveFormat.toString());
+
+    boolean pathStyle = resolveBooleanParameter(stepInfo.getPathStyle(), false);
+    setOptionalEnvironmentVariable(map, PLUGIN_PATH_STYLE, String.valueOf(pathStyle));
+
+    boolean override = resolveBooleanParameter(stepInfo.getOverride(), true);
+    setMandatoryEnvironmentVariable(map, PLUGIN_OVERRIDE, String.valueOf(override));
+
+    setMandatoryEnvironmentVariable(map, PLUGIN_EXIT_CODE, "true");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND, "s3");
+    setMandatoryEnvironmentVariable(map, PLUGIN_BACKEND_OPERATION_TIMEOUT, format("%ss", timeout));
+
     return map;
   }
+
   private static Map<String, String> getUploadToArtifactoryStepInfoEnvVariables(
       UploadToArtifactoryStepInfo stepInfo, String identifier) {
     Map<String, String> map = new HashMap<>();
@@ -378,7 +409,7 @@ public class PluginSettingUtils {
     }
     StringBuilder mapAsString = new StringBuilder();
     for (Map.Entry<String, String> entry : map.entrySet()) {
-      mapAsString.append(entry.getKey()).append("=").append(entry.getValue()).append(",");
+      mapAsString.append(entry.getKey()).append('=').append(entry.getValue()).append(',');
     }
     mapAsString.deleteCharAt(mapAsString.length() - 1);
     return mapAsString.toString();
@@ -391,7 +422,7 @@ public class PluginSettingUtils {
     }
     StringBuilder listAsString = new StringBuilder();
     for (String value : stringList) {
-      listAsString.append(value).append(",");
+      listAsString.append(value).append(',');
     }
     listAsString.deleteCharAt(listAsString.length() - 1);
     return listAsString.toString();

@@ -61,6 +61,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
@@ -85,6 +86,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.YamlArtifactStreamService;
@@ -93,7 +95,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.verification.CVConfiguration;
-import software.wings.verification.CVConfiguration.CVConfigurationYaml;
+import software.wings.verification.CVConfigurationYaml;
 import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlPayload;
 import software.wings.yaml.command.CommandYaml;
@@ -134,6 +136,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private TemplateService templateService;
+  @Inject private GovernanceConfigService governanceConfigService;
 
   /**
    * Find by app, service and service command ids.
@@ -829,5 +832,27 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.TAG).toYaml(harnessTags, GLOBAL_APP_ID);
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, GLOBAL_APP_ID, accountId, yaml, TAGS_YAML);
+  }
+
+  /**
+   * Get YAML for Governance Config for an account
+   *
+   * @param accountId     the account id
+   * @return Governance Config yaml
+   */
+  @Override
+  public RestResponse<YamlPayload> getGovernanceConfig(@NotEmpty String accountId) {
+    notNullCheck("No account found for Id:" + accountId, accountId);
+    GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
+
+    if (governanceConfig != null) {
+      GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_CONFIG)
+                                       .toYaml(governanceConfig, accountId);
+      return YamlHelper.getYamlRestResponse(
+          yamlGitSyncService, accountId, accountId, yaml, YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER + YAML_EXTENSION);
+
+    } else {
+      throw new YamlException("The Governance Config with accountId: '" + accountId + "' was not found!", USER);
+    }
   }
 }

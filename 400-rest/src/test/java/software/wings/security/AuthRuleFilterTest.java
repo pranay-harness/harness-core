@@ -1,5 +1,6 @@
 package software.wings.security;
 
+import static io.harness.rule.OwnerRule.AKRITI;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
@@ -35,12 +36,14 @@ import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
@@ -48,12 +51,14 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.Event;
 import software.wings.beans.User;
 import software.wings.resources.AccountResource;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.resources.secretsmanagement.SecretsResourceNG;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
+import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -104,6 +109,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Mock GraphQLUtils graphQLUtils;
   @Mock ContainerRequestContext requestContext;
   @Mock UriInfo uriInfo;
+  @Mock private AuditServiceHelper auditServiceHelper;
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Inject @InjectMocks AuthRuleFilter authRuleFilter;
@@ -157,6 +163,50 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     authRuleFilter.filter(requestContext);
     assertThat(requestContext.getMethod()).isEqualTo("GET");
+  }
+
+  @Test
+  @Owner(developers = AKRITI)
+  @Category(UnitTests.class)
+  public void testAuditWhitelistedIPs() {
+    try {
+      Set<Action> actions = new HashSet<>();
+      actions.add(Action.DEFAULT);
+      when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+      when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+      when(requestContext.getMethod()).thenReturn("GET");
+      mockUriInfo(PATH, uriInfo);
+      when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+      when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+      when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+      authRuleFilter.filter(requestContext);
+    } catch (Exception e) {
+    } finally {
+      verify(auditServiceHelper, times(0))
+          .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(User.class), eq(Event.Type.NON_WHITELISTED));
+    }
+  }
+
+  @Test
+  @Owner(developers = AKRITI)
+  @Category(UnitTests.class)
+  public void testAuditNonWhitelistedIPs() {
+    try {
+      Set<Action> actions = new HashSet<>();
+      actions.add(Action.DEFAULT);
+      when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+      when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+      when(requestContext.getMethod()).thenReturn("GET");
+      mockUriInfo("whitelist/isEnabled", uriInfo);
+      when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+      when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+      when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(false);
+      authRuleFilter.filter(requestContext);
+    } catch (Exception e) {
+    } finally {
+      verify(auditServiceHelper, times(1))
+          .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(User.class), eq(Event.Type.NON_WHITELISTED));
+    }
   }
 
   @Test
@@ -261,6 +311,26 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     assertThat(isNextGenRequest).isTrue();
   }
 
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void testWhitelistForGraphqlInAuthRuleFilter() {
+    Set<Action> actions = new HashSet<>();
+    actions.add(Action.DEFAULT);
+    when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
+    when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
+    when(requestContext.getMethod()).thenReturn("GET");
+    mockUriInfo(PATH, uriInfo);
+    when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
+    when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
+    when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
+    when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
+    authRuleFilter.filter(requestContext);
+    assertThat(requestContext.getMethod()).isEqualTo("GET");
+  }
+
   private void testHarnessUserMethod(String url, String method, boolean exception) {
     Set<Action> actions = new HashSet<>();
     actions.add(Action.READ);
@@ -271,6 +341,8 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
     when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
     when(whitelistService.isValidIPAddress(anyString(), anyString())).thenReturn(true);
+    when(whitelistService.checkIfFeatureIsEnabledAndWhitelisting(anyString(), anyString(), any(FeatureName.class)))
+        .thenReturn(true);
     when(authService.getUserPermissionInfo(anyString(), any(), anyBoolean())).thenReturn(mockUserPermissionInfo());
     if (exception) {
       thrown.expect(AccessDeniedException.class);

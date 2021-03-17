@@ -15,6 +15,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -35,7 +36,7 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   public void castToKubernetesDelegateCredentialTest() {
     String delegateName = "testDeleagete";
     KubernetesDelegateDetails delegateCredential =
-        KubernetesDelegateDetails.builder().delegateName(delegateName).build();
+        KubernetesDelegateDetails.builder().delegateSelectors(Collections.singleton(delegateName)).build();
     try {
       KubernetesDelegateDetails delegateDetails =
           kubernetesConfigCastHelper.castToKubernetesDelegateCredential(delegateCredential);
@@ -92,7 +93,7 @@ public class KubernetesConfigCastHelperTest extends CategoryTest {
   public void castDelegateCredsToManualKubernetesCredentialsTest() {
     String delegateName = "testDeleagete";
     KubernetesDelegateDetails delegateCredential =
-        KubernetesDelegateDetails.builder().delegateName(delegateName).build();
+        KubernetesDelegateDetails.builder().delegateSelectors(Collections.singleton(delegateName)).build();
     KubernetesClusterDetails kubernetesClusterConfig =
         kubernetesConfigCastHelper.castToManualKubernetesCredentials(delegateCredential);
   }

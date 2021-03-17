@@ -11,7 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.logging.CommandExecutionStatus;
@@ -51,7 +51,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ArtifactPerpetualTaskExecutorTest extends DelegateTest {
+public class ArtifactPerpetualTaskExecutorTest extends DelegateTestBase {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
   private ArtifactPerpetualTaskExecutor artifactPerpetualTaskExecutor;

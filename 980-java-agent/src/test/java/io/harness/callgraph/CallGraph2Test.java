@@ -41,7 +41,7 @@ public class CallGraph2Test {
   public void testCalledNodeNotTestMethod() throws IOException {
     // first method is not test, so nothing should be pushed to the stack
     graph.called(node);
-    assertThat(graph.calls.isEmpty()).isEqualTo(true);
+    assertThat(graph.calls.isEmpty()).isTrue();
   }
 
   @Test

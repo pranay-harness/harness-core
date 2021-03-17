@@ -135,16 +135,12 @@ public class K8sWorkloadRecommendationConfig {
   @Bean
   public Step computeRecommendationStep(ItemReader<K8sWorkloadRecommendation> dirtyRecommendationReader,
       ItemProcessor<K8sWorkloadRecommendation, K8sWorkloadRecommendation> passThroughItemProcessor,
-      ComputedRecommendationWriter computedRecommendationWriter,
-      SkipListener<K8sWorkloadRecommendation, K8sWorkloadRecommendation> skipListener) {
+      ComputedRecommendationWriter computedRecommendationWriter) {
     return stepBuilderFactory.get("computeRecommendationStep")
         .<K8sWorkloadRecommendation, K8sWorkloadRecommendation>chunk(BATCH_SIZE)
         .faultTolerant()
         .retry(Exception.class)
         .retryLimit(1)
-        .skip(Exception.class)
-        .skipLimit(50)
-        .listener(skipListener)
         .reader(dirtyRecommendationReader)
         .processor(new PassThroughItemProcessor<>())
         .writer(computedRecommendationWriter)

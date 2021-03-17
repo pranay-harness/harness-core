@@ -246,6 +246,8 @@ DEPLOYMENT_TYPE:
       value: WINRM
     - name: Azure Virtual Machine Scale Set
       value: AZURE_VMSS
+    - name: Azure Web App
+      value: AZURE_WEBAPP
 
 ENVIRONMENT_TYPE:
     - name: Production
@@ -475,6 +477,8 @@ TASK_TYPES:
       value: CI
     - name: Artifact Collection In Pipeline
       value: ARTIFACT_COLLECT
+    - name: Custom Manifest Fetch Values Task
+      value: CUSTOM_MANIFEST_VALUES_FETCH_TASK
 
 EXECUTION_STATUS:
     - name: Aborted

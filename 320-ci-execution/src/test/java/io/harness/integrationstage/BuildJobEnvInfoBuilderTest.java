@@ -4,14 +4,14 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ci.integrationstage.BuildJobEnvInfoBuilder;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BuildJobEnvInfoBuilderTest extends CIExecutionTest {
+public class BuildJobEnvInfoBuilderTest extends CIExecutionTestBase {
   //@Inject BuildJobEnvInfoBuilder buildJobEnvInfoBuilder;
   @Inject BuildJobEnvInfoBuilder ciExecutionPlanTestHelper;
 

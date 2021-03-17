@@ -51,7 +51,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
       return;
     }
     updateExecutionInfoInPipelineEntity(
-        accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo());
+        accountId, orgId, projectId, pipelineId, pipelineEntity.get().getExecutionSummaryInfo(), planExecutionId);
     Map<String, GraphLayoutNode> layoutNodeMap = planExecution.getPlan().getGraphLayoutInfo().getLayoutNodesMap();
     String startingNodeId = planExecution.getPlan().getGraphLayoutInfo().getStartingNodeId();
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = new HashMap<>();
@@ -92,8 +92,8 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     pmsExecutionSummaryRespository.save(pipelineExecutionSummaryEntity);
   }
 
-  public void updateExecutionInfoInPipelineEntity(
-      String accountId, String orgId, String projectId, String pipelineId, ExecutionSummaryInfo executionSummaryInfo) {
+  public void updateExecutionInfoInPipelineEntity(String accountId, String orgId, String projectId, String pipelineId,
+      ExecutionSummaryInfo executionSummaryInfo, String planExecutionId) {
     if (executionSummaryInfo == null) {
       executionSummaryInfo = ExecutionSummaryInfo.builder().build();
     }
@@ -109,6 +109,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
     }
     executionSummaryInfo.setDeployments(deploymentsMap);
     executionSummaryInfo.setLastExecutionTs(todaysDate.getTime());
+    executionSummaryInfo.setLastExecutionId(planExecutionId);
     pmsPipelineService.saveExecutionInfo(accountId, orgId, projectId, pipelineId, executionSummaryInfo);
   }
 }

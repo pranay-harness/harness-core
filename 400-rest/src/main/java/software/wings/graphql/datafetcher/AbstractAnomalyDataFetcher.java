@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public abstract class AbstractAnomalyDataFetcher<F, G> implements DataFetcher {
   @Inject protected DataFetcherUtils utils;
   private static final String FILTERS = "filters";

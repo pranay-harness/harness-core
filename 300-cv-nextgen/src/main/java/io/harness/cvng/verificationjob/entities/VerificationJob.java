@@ -1,7 +1,6 @@
 package io.harness.cvng.verificationjob.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
-import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DEFAULT_PORTAL_URL;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.DURATION_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.ENV_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.CVVerificationJobConstants.RUNTIME_STRING;
@@ -13,6 +12,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -23,12 +23,9 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.time.Instant;
@@ -46,6 +43,7 @@ import lombok.experimental.SuperBuilder;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "VerificationJobKeys")
@@ -60,10 +58,11 @@ public abstract class VerificationJob
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("query_idx")
-                 .field(VerificationJobKeys.projectIdentifier)
-                 .field(VerificationJobKeys.orgIdentifier)
+                 .name("unique_query_idx")
                  .field(VerificationJobKeys.accountId)
+                 .field(VerificationJobKeys.orgIdentifier)
+                 .field(VerificationJobKeys.projectIdentifier)
+                 .field(VerificationJobKeys.identifier)
                  .build())
         .build();
   }
@@ -89,8 +88,6 @@ public abstract class VerificationJob
   private RuntimeParameter duration;
   private boolean isDefaultJob;
 
-  @JsonIgnore @Inject @Named("portalUrl") String portalUrl;
-
   public abstract VerificationJobType getType();
   public abstract VerificationJobDTO getVerificationJobDTO();
   public abstract boolean shouldDoDataCollection();
@@ -105,6 +102,8 @@ public abstract class VerificationJob
     Preconditions.checkNotNull(envIdentifier, generateErrorMessageFromParam(VerificationJobKeys.envIdentifier));
     Preconditions.checkNotNull(duration, generateErrorMessageFromParam(VerificationJobKeys.duration));
     Preconditions.checkNotNull(monitoringSources, generateErrorMessageFromParam(VerificationJobKeys.monitoringSources));
+    // Preconditions.checkNotNull(activitySourceIdentifier,
+    // generateErrorMessageFromParam(VerificationJobKeys.activitySourceIdentifier));
     Preconditions.checkArgument(!monitoringSources.isEmpty(), "Monitoring Sources can not be empty");
     if (!duration.isRuntimeParam()) {
       Preconditions.checkArgument(getDuration().toMinutes() >= 5,
@@ -176,11 +175,8 @@ public abstract class VerificationJob
     jobUrlBuilder.addParameter(VerificationJobKeys.orgIdentifier, orgIdentifier);
     jobUrlBuilder.addParameter(VerificationJobKeys.projectIdentifier, projectIdentifier);
     jobUrlBuilder.addParameter(VerificationJobKeys.identifier, identifier);
-
     try {
-      String baseUrl = portalUrl == null ? DEFAULT_PORTAL_URL : portalUrl;
-      baseUrl = baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
-      return baseUrl + jobUrlBuilder.build().toString();
+      return jobUrlBuilder.build().toString();
     } catch (URISyntaxException e) {
       throw new IllegalStateException(e);
     }
@@ -279,6 +275,27 @@ public abstract class VerificationJob
         return RUNTIME_STRING;
       }
       return value;
+    }
+  }
+
+  public abstract static class VerificationJobUpdatableEntity<T extends VerificationJob, D extends VerificationJobDTO>
+      implements UpdatableEntity<T, D> {
+    public void setCommonOperations(UpdateOperations<T> updateOperations, D dto) {
+      updateOperations.set(VerificationJobKeys.jobName, dto.getJobName())
+          .set(VerificationJobKeys.envIdentifier,
+              this.getRunTimeParameter(dto.getEnvIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
+          .set(VerificationJobKeys.serviceIdentifier,
+              getRunTimeParameter(dto.getServiceIdentifier(), dto.isRuntimeParam(dto.getEnvIdentifier())))
+          .set(VerificationJobKeys.duration,
+              getRunTimeParameter(dto.getDuration(), dto.isRuntimeParam(dto.getEnvIdentifier())))
+          .set(VerificationJobKeys.dataSources, dto.getDataSources())
+          .set(VerificationJobKeys.monitoringSources, dto.getMonitoringSources())
+          .set(VerificationJobKeys.isDefaultJob, dto.isDefaultJob())
+          .set(VerificationJobKeys.activitySourceIdentifier, dto.getActivitySourceIdentifier());
+    }
+
+    public RuntimeParameter getRunTimeParameter(String value, boolean isRuntimeParam) {
+      return value == null ? null : RuntimeParameter.builder().isRuntimeParam(isRuntimeParam).value(value).build();
     }
   }
 }

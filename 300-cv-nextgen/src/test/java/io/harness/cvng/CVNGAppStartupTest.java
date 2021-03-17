@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -13,7 +13,6 @@ import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
-import io.dropwizard.testing.ResourceHelpers;
 import java.net.InetSocketAddress;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
@@ -23,7 +22,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CVNGAppStartupTest extends CvNextGenTest {
+public class CVNGAppStartupTest extends CvNextGenTestBase {
   public static MongoServer MONGO_SERVER;
   public static DropwizardTestSupport<VerificationConfiguration> SUPPORT;
 
@@ -48,8 +47,8 @@ public class CVNGAppStartupTest extends CvNextGenTest {
   @BeforeClass
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
-    SUPPORT = new DropwizardTestSupport<>(VerificationApplication.class,
-        ResourceHelpers.resourceFilePath("test-config.yml"), ConfigOverride.config("mongo.uri", getMongoUri()));
+    SUPPORT = new DropwizardTestSupport<>(VerificationApplication.class, getResourceFilePath("test-config.yml"),
+        ConfigOverride.config("mongo.uri", getMongoUri()));
     SUPPORT.before();
   }
 

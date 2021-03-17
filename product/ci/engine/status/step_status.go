@@ -13,12 +13,11 @@ import (
 	pb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	callbackpb "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/callback"
 	delegateSvcpb "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/delegate"
-	delegatepb "github.com/wings-software/portal/940-delegate-beans/src/main/proto/io/harness/delegate"
+	delegatepb "github.com/wings-software/portal/955-delegate-beans/src/main/proto/io/harness/delegate"
 	"github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
@@ -103,7 +102,7 @@ func sendStatusWithRetries(ctx context.Context, request *pb.SendTaskStatusReques
 		err := sendRequest(ctx, request, log)
 		if err != nil {
 			log.Errorw(
-				"failed to send step status to delegate",
+				"failed to send step status",
 				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(err),
 			)
@@ -148,14 +147,16 @@ func sendRequest(ctx context.Context, request *pb.SendTaskStatusRequest, log *za
 		delegateSvcIDKey, serviceID,
 	)
 	ctx = metadata.NewOutgoingContext(ctx, md)
-	_, err = c.Client().SendTaskStatus(ctx, request)
+	response, err := c.Client().SendTaskStatus(ctx, request)
 	if err != nil {
-		if e, ok := status.FromError(err); ok {
-			if e.Code() == codes.Internal {
-				return err
-			}
+		if _, ok := status.FromError(err); ok {
+			return err
 		}
 		return backoff.Permanent(err)
+	}
+
+	if !response.GetSuccess() {
+		return fmt.Errorf("failed to update step status at delegate agent side")
 	}
 	return nil
 }

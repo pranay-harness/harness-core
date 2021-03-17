@@ -27,14 +27,19 @@ import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
+import io.harness.beans.WorkflowType;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 
+import software.wings.beans.Application;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
@@ -57,10 +62,15 @@ import software.wings.beans.trigger.Trigger.TriggerKeys;
 import software.wings.beans.trigger.TriggerCondition.TriggerConditionKeys;
 import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
+import software.wings.service.intfc.PipelineService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.utils.CryptoUtils;
 
 import com.cronutils.descriptor.CronDescriptor;
@@ -92,11 +102,21 @@ import org.quartz.CronScheduleBuilder;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class TriggerServiceHelper {
+  public static final String EXECUTION_TYPE = "EXECUTION_TYPE";
+  public static final String TRIGGER_NAME = "TRIGGER_NAME";
+  public static final String APP_NAME = "APP_NAME";
+  public static final String WORKFLOW_NAME = "WORKFLOW_NAME";
+  public static final String TRIGGER_URL = "TRIGGER_URL";
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private SubdomainUrlHelper subdomainUrlHelper;
+  @Inject private AppService appService;
+  @Inject private WorkflowService workflowService;
+  @Inject private PipelineService pipelineService;
 
   public void deletePipelineCompletionTriggers(String appId, String pipelineId) {
     getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList()).forEach(trigger -> delete(trigger.getUuid()));
@@ -518,5 +538,34 @@ public class TriggerServiceHelper {
       log.warn("Invalid manifest version regex {} for triggerId {}", versionRegex, triggerId, pe);
       throw new WingsException("Invalid Manifest Version Regex", USER);
     }
+  }
+
+  public String getTriggersUrl(String accountId, String appId) {
+    String baseUrl = subdomainUrlHelper.getPortalBaseUrl(accountId);
+    return NotificationMessageResolver.buildAbsoluteUrl(
+        format("/account/%s/app/%s/triggers", accountId, appId), baseUrl);
+  }
+
+  Map<String, String> getPlaceholderValues(
+      String accountId, String appId, String triggerName, String workflowId, WorkflowType workflowType) {
+    Application application = appService.get(appId);
+    notNullCheck("Application was deleted or does not exist", application, USER);
+    String workflowName;
+    if (workflowType == ORCHESTRATION) {
+      Workflow workflow = workflowService.getWorkflow(appId, workflowId);
+      notNullCheck("Workflow was deleted or does not exist", workflow, USER);
+      workflowName = workflow.getName();
+    } else {
+      Pipeline pipeline = pipelineService.getPipeline(appId, workflowId);
+      notNullCheck("Pipeline was deleted or does not exist", pipeline, USER);
+      workflowName = pipeline.getName();
+    }
+    Map<String, String> placeholderValues = new HashMap<>();
+    placeholderValues.put(TRIGGER_NAME, triggerName);
+    placeholderValues.put(APP_NAME, application.getName());
+    placeholderValues.put(WORKFLOW_NAME, workflowName);
+    placeholderValues.put(EXECUTION_TYPE, workflowType == ORCHESTRATION ? "Workflow" : "Pipeline");
+    placeholderValues.put(TRIGGER_URL, getTriggersUrl(accountId, appId));
+    return placeholderValues;
   }
 }

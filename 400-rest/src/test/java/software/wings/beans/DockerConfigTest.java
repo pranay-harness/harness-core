@@ -9,6 +9,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 
+import java.util.ArrayList;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -19,11 +20,13 @@ public class DockerConfigTest extends WingsBaseTest {
   // test with a URL that doesn't end on a / and make sure a / gets added
   public void testConstructorWithUrlWithoutSlash() {
     String urlWithoutSlash = "http://some.docker.com/v2/registry";
-    DockerConfig config = new DockerConfig(urlWithoutSlash, "vasya", "pupkin".toCharArray(), "account", "encrypted");
+    DockerConfig config =
+        new DockerConfig(urlWithoutSlash, "vasya", "pupkin".toCharArray(), new ArrayList<>(), "account", "encrypted");
     assertThat(config.getDockerRegistryUrl()).endsWith("/");
 
     // now test with a url with trailing slash
-    config = new DockerConfig(urlWithoutSlash.concat("/"), "vasya", "pupkin".toCharArray(), "account", "encrypted");
+    config = new DockerConfig(
+        urlWithoutSlash.concat("/"), "vasya", "pupkin".toCharArray(), new ArrayList<>(), "account", "encrypted");
     assertThat(config.getDockerRegistryUrl()).endsWith("/");
   }
 

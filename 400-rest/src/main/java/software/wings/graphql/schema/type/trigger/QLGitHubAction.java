@@ -1,8 +1,12 @@
 package software.wings.graphql.schema.type.trigger;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.EnumSet;
 import java.util.Set;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public enum QLGitHubAction {
   CLOSED,
   EDITED,

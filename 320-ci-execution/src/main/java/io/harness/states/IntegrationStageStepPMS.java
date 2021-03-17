@@ -52,10 +52,8 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
       K8sDirectInfraYaml k8sDirectInfraYaml = (K8sDirectInfraYaml) infrastructure;
 
       K8PodDetails k8PodDetails = K8PodDetails.builder()
-                                      .clusterName(k8sDirectInfraYaml.getSpec().getConnectorRef())
                                       .stageID(integrationStageStepParametersPMS.getIdentifier())
                                       .accountId(AmbianceHelper.getAccountId(ambiance))
-                                      .namespace(k8sDirectInfraYaml.getSpec().getNamespace())
                                       .build();
 
       executionSweepingOutputResolver.consume(
@@ -83,7 +81,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<IntegrationStage
       Ambiance ambiance, IntegrationStageStepParametersPMS stepParameters) {
     VariablesSweepingOutput variablesSweepingOutput = new VariablesSweepingOutput();
     variablesSweepingOutput.putAll(NGVariablesUtils.getMapOfVariables(
-        stepParameters.getOriginalVariables(), Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))));
+        stepParameters.getOriginalVariables(), ambiance.getExpressionFunctorToken()));
     return variablesSweepingOutput;
   }
 }

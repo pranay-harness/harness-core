@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -171,7 +171,7 @@ public class ViewsQueryBuilderTest extends CategoryTest {
         .contains("(clusterName IN ('cluster1') ) AND (namespace NOT IN ('dummyCluster') )");
     assertThat(selectQuery.toString())
         .contains(
-            "(((instancetype IS NULL) OR (instancetype IN ('K8S_POD','ECS_TASK_FARGATE','ECS_TASK_EC2') )) AND (clusterName IN ('cluster1') )");
+            "(((instancetype IS NULL) OR (instancetype IN ('K8S_POD','K8S_POD_FARGATE','ECS_TASK_FARGATE','ECS_TASK_EC2') )) AND (clusterName IN ('cluster1') )");
     assertThat(selectQuery.toString())
         .contains(
             "SELECT namespace,SUM(cost) AS cost,MIN(startTime) AS startTime_MIN,MAX(startTime) AS startTime_MAX FROM TableName");

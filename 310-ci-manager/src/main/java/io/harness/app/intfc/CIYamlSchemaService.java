@@ -1,9 +1,8 @@
 package io.harness.app.intfc;
 
 import io.harness.encryption.Scope;
-
-import com.fasterxml.jackson.databind.JsonNode;
+import io.harness.yaml.schema.beans.PartialSchemaDTO;
 
 public interface CIYamlSchemaService {
-  JsonNode getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
+  PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope);
 }

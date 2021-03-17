@@ -1,5 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import io.kubernetes.client.informer.SharedInformerFactory;
@@ -13,6 +16,7 @@ import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._420_DELEGATE_AGENT)
 public class PVCFetcher {
   private final Store<V1PersistentVolumeClaim> store;
   private final CoreV1Api coreV1Api;

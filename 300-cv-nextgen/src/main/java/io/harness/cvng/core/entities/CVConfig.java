@@ -8,6 +8,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.models.VerificationType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -31,6 +32,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "CVConfigKeys")
@@ -68,7 +70,7 @@ public abstract class CVConfig
   private long lastUpdatedAt;
   @NotNull private VerificationType verificationType;
 
-  @NotNull @FdIndex private String accountId;
+  @NotNull private String accountId;
   @NotNull @FdIndex private String connectorIdentifier;
 
   @NotNull private String serviceIdentifier;
@@ -76,12 +78,13 @@ public abstract class CVConfig
   @NotNull private String projectIdentifier;
   @NotNull private String orgIdentifier;
   @NotNull private CVMonitoringCategory category;
+  private Boolean firstTaskQueued;
   private String perpetualTaskId;
   private String productName;
   @NotNull private String identifier;
   @NotNull private String monitoringSourceName;
 
-  @FdIndex private Long analysisOrchestrationIteration;
+  @FdIndex private Long createNextTaskIteration;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -89,10 +92,12 @@ public abstract class CVConfig
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
-    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
-      this.analysisOrchestrationIteration = nextIteration;
+
+    if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
+      this.createNextTaskIteration = nextIteration;
       return;
     }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -101,9 +106,11 @@ public abstract class CVConfig
     if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
-    if (fieldName.equals(CVConfigKeys.analysisOrchestrationIteration)) {
-      return analysisOrchestrationIteration;
+
+    if (fieldName.equals(CVConfigKeys.createNextTaskIteration)) {
+      return createNextTaskIteration;
     }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -116,6 +123,7 @@ public abstract class CVConfig
     checkNotNull(projectIdentifier, generateErrorMessageFromParam(CVConfigKeys.projectIdentifier));
     checkNotNull(identifier, generateErrorMessageFromParam(CVConfigKeys.identifier));
     checkNotNull(monitoringSourceName, generateErrorMessageFromParam(CVConfigKeys.monitoringSourceName));
+    checkNotNull(category, generateErrorMessageFromParam(CVConfigKeys.category));
     validateParams();
   }
 
@@ -127,4 +135,15 @@ public abstract class CVConfig
 
   @JsonIgnore public abstract String getDataCollectionDsl();
   public abstract boolean queueAnalysisForPreDeploymentTask();
+
+  public abstract static class CVConfigUpdatableEntity<T extends CVConfig, D extends CVConfig>
+      implements UpdatableEntity<T, D> {
+    protected void setCommonOperations(UpdateOperations<T> updateOperations, D cvConfig) {
+      updateOperations.set(CVConfigKeys.verificationType, cvConfig.getVerificationType())
+          .set(CVConfigKeys.serviceIdentifier, cvConfig.getServiceIdentifier())
+          .set(CVConfigKeys.envIdentifier, cvConfig.getEnvIdentifier())
+          .set(CVConfigKeys.monitoringSourceName, cvConfig.getMonitoringSourceName())
+          .set(CVConfigKeys.category, cvConfig.getCategory());
+    }
+  }
 }

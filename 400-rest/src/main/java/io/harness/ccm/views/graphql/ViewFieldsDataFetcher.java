@@ -41,7 +41,7 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
       QLCEViewMetadataFilter metadataFilter = viewMetadataFilter.get().getViewMetadataFilter();
       isExplorerQuery = !metadataFilter.isPreview();
       viewId = metadataFilter.getViewId();
-      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId);
+      customFields = viewCustomFieldService.getCustomFieldsPerView(viewId, accountId);
     }
 
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
@@ -73,6 +73,8 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), viewFieldIdentifier));
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+          } else if (viewFieldIdentifier == ViewFieldIdentifier.AZURE) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getAzureFields(), viewFieldIdentifier));
           }
         }
 
@@ -86,6 +88,9 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
           } else if (viewFieldIdentifier == ViewFieldIdentifier.CLUSTER
               && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.CLUSTER)) {
             fieldIdentifierData.add(getViewField(ViewFieldUtils.getClusterFields(), viewFieldIdentifier));
+          } else if (viewFieldIdentifier == ViewFieldIdentifier.AZURE
+              && !viewFieldIdentifierSetFromCustomFields.contains(ViewFieldIdentifier.AZURE)) {
+            fieldIdentifierData.add(getViewField(ViewFieldUtils.getAzureFields(), viewFieldIdentifier));
           }
         }
       } else {
@@ -103,11 +108,13 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
     Boolean clusterDataConfigured = true;
     Boolean awsConnectorConfigured = true;
     Boolean gcpConnectorConfigured = true;
+    Boolean azureConnectorConfigured = true;
 
     if (ceMetadataRecord != null) {
       clusterDataConfigured = ceMetadataRecord.getClusterDataConfigured();
       awsConnectorConfigured = ceMetadataRecord.getAwsConnectorConfigured();
       gcpConnectorConfigured = ceMetadataRecord.getGcpConnectorConfigured();
+      azureConnectorConfigured = ceMetadataRecord.getAzureConnectorConfigured();
     }
 
     if (clusterDataConfigured == null || clusterDataConfigured) {
@@ -118,6 +125,9 @@ public class ViewFieldsDataFetcher extends AbstractFieldsDataFetcher<QLCEViewFie
     }
     if (gcpConnectorConfigured == null || gcpConnectorConfigured) {
       fieldIdentifierData.add(getViewField(ViewFieldUtils.getGcpFields(), ViewFieldIdentifier.GCP));
+    }
+    if (azureConnectorConfigured != null && azureConnectorConfigured) {
+      fieldIdentifierData.add(getViewField(ViewFieldUtils.getAzureFields(), ViewFieldIdentifier.AZURE));
     }
     return fieldIdentifierData;
   }

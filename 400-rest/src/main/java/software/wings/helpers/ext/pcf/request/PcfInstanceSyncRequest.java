@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.pcf.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.PcfConfig;
 
 import lombok.Builder;
@@ -8,6 +11,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfInstanceSyncRequest extends PcfCommandRequest {
   private String pcfApplicationName;
 

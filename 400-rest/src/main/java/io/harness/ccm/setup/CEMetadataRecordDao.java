@@ -46,6 +46,15 @@ public class CEMetadataRecordDao {
       updateOperations.set(CEMetadataRecordKeys.gcpDataPresent, ceMetadataRecord.getGcpDataPresent());
     }
 
+    if (null != ceMetadataRecord.getAzureConnectorConfigured()) {
+      updateOperations.set(
+          CEMetadataRecordKeys.azureConnectorConfigured, ceMetadataRecord.getAzureConnectorConfigured());
+    }
+
+    if (null != ceMetadataRecord.getAzureDataPresent()) {
+      updateOperations.set(CEMetadataRecordKeys.azureDataPresent, ceMetadataRecord.getAzureDataPresent());
+    }
+
     FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions().upsert(true).returnNew(true);
     return persistence.upsert(query, updateOperations, findAndModifyOptions);
   }

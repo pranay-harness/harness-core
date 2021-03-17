@@ -14,6 +14,7 @@ import io.harness.context.ContextElementType;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.deployment.InstanceDetails;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 
 import software.wings.api.HostElement;
@@ -71,7 +72,8 @@ public class AzureSweepingOutputServiceHelper {
                                         .build();
           final Map<String, Object> contextMap = context.asMap();
           contextMap.put(HOST, hostElement);
-          String hostName = getHostnameFromConvention(contextMap, "");
+          String hostName =
+              getHostnameFromConvention(contextMap, InfrastructureConstants.DEFAULT_AZURE_VM_HOST_NAME_CONVENTION);
           hostElement.setHostName(hostName);
           return anInstanceElement()
               .uuid(instance.getInstanceId())
@@ -105,8 +107,9 @@ public class AzureSweepingOutputServiceHelper {
 
   private String getHostnameFromConvention(Map<String, Object> context, String hostNameConvention) {
     if (isEmpty(hostNameConvention)) {
-      hostNameConvention = InfrastructureConstants.DEFAULT_AZURE_VM_HOST_NAME_CONVENTION;
+      throw new InvalidRequestException("Instance element host name convention is empty or null");
     }
+
     return expressionEvaluator.substitute(hostNameConvention, context);
   }
 
@@ -123,7 +126,7 @@ public class AzureSweepingOutputServiceHelper {
                                    .build());
   }
 
-  public void saveTrafficShiftInfoToSweepingOutput(ExecutionContext context, float trafficShift) {
+  public void saveTrafficShiftInfoToSweepingOutput(ExecutionContext context, double trafficShift) {
     sweepingOutputService.save(
         context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
             .name(context.appendStateExecutionId(InstanceInfoVariables.SWEEPING_OUTPUT_NAME))
@@ -141,7 +144,6 @@ public class AzureSweepingOutputServiceHelper {
                           .withPublicDns(webAppInstance.getHostName())
                           .withAppId(infraMapping.getAppId())
                           .withEnvId(infraMapping.getEnvId())
-                          .withHostConnAttr(infraMapping.getHostConnectionAttrs())
                           .withInfraMappingId(infraMapping.getUuid())
                           .withInfraDefinitionId(infraMapping.getInfrastructureDefinitionId())
                           .withServiceTemplateId(serviceTemplateHelper.fetchServiceTemplateId(infraMapping))
@@ -152,16 +154,17 @@ public class AzureSweepingOutputServiceHelper {
                                         .publicDns(webAppInstance.getHostName())
                                         .ip(webAppInstance.getInstanceIp())
                                         .webAppInstance(webAppInstance)
-                                        .instanceId(webAppInstance.getHostName())
+                                        .instanceId(webAppInstance.getInstanceId())
                                         .build();
           final Map<String, Object> contextMap = context.asMap();
           contextMap.put(HOST, hostElement);
-          String hostName = getHostnameFromConvention(contextMap, "");
+          String hostName =
+              getHostnameFromConvention(contextMap, InfrastructureConstants.DEFAULT_WEB_APP_HOST_NAME_CONVENTION);
           hostElement.setHostName(hostName);
           return anInstanceElement()
               .uuid(webAppInstance.getInstanceId())
               .hostName(hostName)
-              .displayName(webAppInstance.getHostName())
+              .displayName(webAppInstance.getInstanceName())
               .host(hostElement)
               .newInstance(true)
               .build();
@@ -192,7 +195,7 @@ public class AzureSweepingOutputServiceHelper {
         .collect(toList());
   }
 
-  public SweepingOutput getSetupElementFromSweepingOutput(ExecutionContext context, String prefix) {
+  public SweepingOutput getInfoFromSweepingOutput(ExecutionContext context, String prefix) {
     String sweepingOutputName = getSweepingOutputName(context, prefix);
     SweepingOutputInquiry inquiry = context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build();
     return sweepingOutputService.findSweepingOutput(inquiry);
@@ -210,5 +213,12 @@ public class AzureSweepingOutputServiceHelper {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     String suffix = phaseElement.getServiceElement().getUuid().trim();
     return prefix + suffix;
+  }
+
+  public boolean dataExist(ExecutionContext context, String prefix) {
+    String sweepingOutputName = getSweepingOutputName(context, prefix);
+    SweepingOutputInstance sweepingOutputInstance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(sweepingOutputName).build());
+    return sweepingOutputInstance != null;
   }
 }

@@ -57,7 +57,9 @@ public class KubernetesDTOToEntity
     if (k8CredentialType == INHERIT_FROM_DELEGATE) {
       KubernetesDelegateDetailsDTO kubernetesDelegateDetails =
           castToKubernetesDelegateDetails(k8ClusterDTO.getCredential().getConfig());
-      return KubernetesDelegateDetails.builder().delegateName(kubernetesDelegateDetails.getDelegateName()).build();
+      return KubernetesDelegateDetails.builder()
+          .delegateSelectors(kubernetesDelegateDetails.getDelegateSelectors())
+          .build();
     } else if (k8CredentialType == KubernetesCredentialType.MANUAL_CREDENTIALS) {
       KubernetesClusterDetailsDTO kubernetesClusterDetails =
           castToKubernetesClusterDetails(k8ClusterDTO.getCredential().getConfig());

@@ -151,9 +151,22 @@ public class TaskServiceImpl extends TaskServiceGrpc.TaskServiceImplBase {
                 .build();
         boolean success = delegateServiceGrpcAgentClient.sendTaskStatus(request.getAccountId(), request.getTaskId(),
             request.getCallbackToken(), kryoSerializer.asDeflatedBytes(responseData));
+        if (success) {
+          log.info(
+              "Successfully updated task status in sendTaskSTatus call,  accountId:{}, taskId:{}, callbackToken:{}, status: {}",
+              request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken(),
+              stepStatus);
+        } else {
+          log.error(
+              "Failed to update task status in sendTaskStatus call,  accountId:{}, taskId:{}, callbackToken:{}, status: {}",
+              request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken(),
+              stepStatus);
+        }
 
         responseObserver.onNext(SendTaskStatusResponse.newBuilder().setSuccess(success).build());
       } else {
+        log.warn("Step Status is not set in sendTaskStatus call, accountId: {}, taskId: {}, callbackToken: {}",
+            request.getAccountId().getId(), request.getTaskId().getId(), request.getCallbackToken().getToken());
         responseObserver.onNext(SendTaskStatusResponse.newBuilder().setSuccess(false).build());
       }
       responseObserver.onCompleted();

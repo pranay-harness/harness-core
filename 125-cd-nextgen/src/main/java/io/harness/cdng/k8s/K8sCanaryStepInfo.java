@@ -1,20 +1,13 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.executionplan.CDStepDependencyKey;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.cdng.stepsdependency.utils.CDStepDependencyUtils;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sCanaryStepInfoVisitorHelper;
-import io.harness.executionplan.core.ExecutionPlanCreationContext;
-import io.harness.executionplan.stepsdependency.StepDependencyService;
-import io.harness.executionplan.stepsdependency.StepDependencySpec;
-import io.harness.executionplan.stepsdependency.bean.KeyAwareStepDependencySpec;
-import io.harness.executionplan.stepsdependency.instructors.OutcomeRefStepDependencyInstructor;
-import io.harness.executionplan.utils.ParentPathInfoUtils;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -23,8 +16,6 @@ import io.harness.walktree.visitor.Visitable;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -38,7 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sCanaryStepInfoVisitorHelper.class)
 @TypeAlias("k8sCanaryStepInfo")
-public class K8sCanaryStepInfo extends K8sCanaryStepParameters implements CDStepInfo, Visitable {
+public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;
 
@@ -46,10 +37,9 @@ public class K8sCanaryStepInfo extends K8sCanaryStepParameters implements CDStep
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sCanaryStepInfo(InstanceSelectionWrapper instanceSelection, ParameterField<String> timeout,
-      ParameterField<Boolean> skipDryRun, Map<String, StepDependencySpec> stepDependencySpecs, String name,
-      String identifier) {
-    super(instanceSelection, timeout, skipDryRun, stepDependencySpecs);
+  public K8sCanaryStepInfo(
+      InstanceSelectionWrapper instanceSelection, ParameterField<Boolean> skipDryRun, String name, String identifier) {
+    super(instanceSelection, skipDryRun);
     this.name = name;
     this.identifier = identifier;
   }
@@ -75,31 +65,21 @@ public class K8sCanaryStepInfo extends K8sCanaryStepParameters implements CDStep
   }
 
   @Override
-  public Map<String, StepDependencySpec> getInputStepDependencyList(ExecutionPlanCreationContext context) {
-    KeyAwareStepDependencySpec serviceSpec =
-        KeyAwareStepDependencySpec.builder().key(CDStepDependencyUtils.getServiceKey(context)).build();
-    KeyAwareStepDependencySpec infraSpec =
-        KeyAwareStepDependencySpec.builder().key(CDStepDependencyUtils.getInfraKey(context)).build();
-    setStepDependencySpecs(new HashMap<>());
-    getStepDependencySpecs().put(CDStepDependencyKey.SERVICE.name(), serviceSpec);
-    getStepDependencySpecs().put(CDStepDependencyKey.INFRASTRUCTURE.name(), infraSpec);
-    return getStepDependencySpecs();
-  }
-
-  @Override
-  public void registerStepDependencyInstructors(
-      StepDependencyService stepDependencyService, ExecutionPlanCreationContext context, String nodeId) {
-    OutcomeRefStepDependencyInstructor instructor =
-        OutcomeRefStepDependencyInstructor.builder()
-            .key(ParentPathInfoUtils.getParentPath(context) + "." + CDStepDependencyKey.K8S_CANARY.name())
-            .providerPlanNodeId(nodeId)
-            .outcomeExpression(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)
-            .build();
-    stepDependencyService.registerStepDependencyInstructor(instructor, context);
-  }
-
-  @Override
   public LevelNode getLevelNode() {
     return LevelNode.builder().qualifierName(YamlTypes.K8S_CANARY_DEPLOY).build();
+  }
+
+  @Override
+  public StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo) {
+    return K8sCanaryStepParameters.infoBuilder()
+        .instanceSelection(instanceSelection)
+        .skipDryRun(skipDryRun)
+        .timeout(baseStepParameterInfo.getTimeout())
+        .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
+        .name(baseStepParameterInfo.getName())
+        .identifier(baseStepParameterInfo.getIdentifier())
+        .skipCondition(baseStepParameterInfo.getSkipCondition())
+        .description(baseStepParameterInfo.getDescription())
+        .build();
   }
 }

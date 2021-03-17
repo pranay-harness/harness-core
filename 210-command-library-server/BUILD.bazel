@@ -1,0 +1,63 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "//400-rest:module",
+    "//960-persistence:module",
+    "//970-rbac-core:module",
+    "//:lombok",
+]
+
+java_binary(
+    name = "module",
+    srcs = glob(["src/main/**/*.java"]),
+    data = ["//:resource"],
+    main_class = "io.harness.commandlibrary.server.app.CommandLibraryServerApplication",
+    resources = [
+        "//210-command-library-server/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = [
+        "@maven//:com_google_guava_guava",
+        # keeping guava on top of maven_deps for right version resoulution
+        "@maven//:io_netty_netty_all",
+        # keeping guava on top of maven_deps for right version resoulution
+    ] + shared_dependencies,
+)
+
+test_dependencies = shared_dependencies + [
+    "//990-commons-test:module",
+    "//400-rest:supporter-test",
+    "@maven//:io_dropwizard_dropwizard_testing",
+    "module",
+]
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    data = [
+        "//210-command-library-server/src/test/resources:resource",
+    ],
+    resources = [
+        "//:resource",
+        "//210-command-library-server/src/main/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//210-command-library-server/src/main/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = test_dependencies,
+)
+
+run_tests()
+
+checkstyle()
+
+pmd()

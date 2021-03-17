@@ -3,7 +3,7 @@
 # gazelle:exclude vendor
 # gazelle:exclude build
 # gazelle:exclude */target
-# gazelle:exclude {990-commons-test,980-commons,970-grpc,970-api-services-beans,960-notification-beans,950-delegate-tasks-beans,950-events-api,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability}
+# gazelle:exclude {990-commons-test,980-commons,970-grpc,970-api-services-beans,960-notification-beans,950-timeout-engine,950-delegate-tasks-beans,950-events-api,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability}
 
 # gazelle:exclude .git/
 # gazelle:exclude pkg/
@@ -33,8 +33,6 @@ nogo(
 
 load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
 load("//tools/bazel/sonarqube:defs.bzl", "get_sonar_targets")
-load("//tools/checkstyle:rules.bzl", "get_checkstyle_targets")
-load("//tools/bazel/pmd:defs.bzl", "get_pmd_targets")
 
 java_plugin(
     name = "lombok_plugin",
@@ -51,57 +49,77 @@ java_library(
 )
 
 modules = [
+    "//120-ng-manager",
+    "//125-cd-nextgen",
+    "//130-resource-group",
+    "//136-git-sync-manager",
+    "//190-deployment-functional-tests",
+    "//200-functional-test",
+    "//160-model-gen-tool",
+    "//160-stress-test",
+    "//210-command-library-server",
     "//220-graphql-test",
     "//230-model-test",
-    "//960-ng-core-beans",
-    "//920-delegate-agent-beans",
-    "//960-persistence",
-    "//920-delegate-service-beans",
-    "//950-ng-core",
-    "//950-ng-project-n-orgs",
-    "//940-secret-manager-client",
-    "//950-timeout-engine",
-    "//950-wait-engine",
-    "//930-ng-core-clients",
-    "//910-delegate-service-driver",
-    "//890-sm-core",
-    "//950-common-entities",
-    "//890-pms-contracts",
-    "//884-pms-commons",
-    "//882-pms-sdk-core",
-    "//876-orchestration-beans",
-    "//878-pipeline-service-utilities",
-    "//879-pms-sdk",
-    "//870-orchestration",
-    "//860-orchestration-steps",
-    "//860-orchestration-visualization",
-    "//950-walktree-visitor",
-    "//870-yaml-beans",
-    "//850-execution-plan",
-    "//850-ng-pipeline-commons",
-    "//910-delegate-task-grpc-service",
-    "//950-command-library-common",
-    "//950-events-framework",
-    "//440-connector-nextgen",
-    "//430-cv-nextgen-commons",
+    "//250-watcher",
+    "//260-delegate",
+    "//270-verification",
+    "//310-ci-manager",
+    "//320-ci-execution",
+    "//330-ci-beans",
+    "//340-ce-nextgen",
+    "//360-cg-manager",
+    "//380-cg-graphql",
+    "//400-rest",
     "//420-delegate-agent",
     "//420-delegate-service",
+    "//430-cv-nextgen-commons",
+    "//440-connector-nextgen",
     "//450-ce-views",
     "//460-capability",
     "//490-ce-commons",
-    "//400-rest",
+    "//830-notification-service",
+    "//850-execution-plan",
+    "//850-ng-pipeline-commons",
+    "//860-orchestration-steps",
+    "//860-orchestration-visualization",
+    "//870-orchestration",
+    "//870-yaml-beans",
+    "//870-yaml-beans",
+    "//876-orchestration-beans",
+    "//878-pipeline-service-utilities",
+    "//879-pms-sdk",
+    "//882-pms-sdk-core",
+    "//884-pms-commons",
+    "//890-pms-contracts",
+    "//890-sm-core",
+    "//910-delegate-service-driver",
+    "//910-delegate-task-grpc-service",
+    "//920-delegate-agent-beans",
+    "//920-delegate-service-beans",
+    "//930-ng-core-clients",
+    "//940-resource-group-beans",
+    "//940-secret-manager-client",
+    "//950-command-library-common",
+    "//950-common-entities",
     "//950-delegate-tasks-beans",
+    "//950-events-framework",
+    "//950-ng-core",
+    "//950-ng-project-n-orgs",
+    "//950-timeout-engine",
+    "//950-wait-engine",
+    "//950-walktree-visitor",
+    "//955-filters-sdk",
     "//960-api-services",
+    "//960-continuous-features",
     "//960-expression-service",
+    "//960-ng-core-beans",
+    "//960-persistence",
     "//960-recaster",
     "//970-api-services-beans",
     "//970-grpc",
     "//970-ng-commons",
     "//980-commons",
-    "//960-continuous-features",
     "//990-commons-test",
-    "//980-java-agent",
-    "//955-filters-sdk",
 ]
 
 filegroup(
@@ -136,15 +154,6 @@ sonarqube(
     scm_info = [":git"],
     tags = ["manual"],
     targets = [],
-)
-
-filegroup(
-    name = "pmd",
-    srcs = get_pmd_targets(modules),
-    tags = [
-        "manual",
-        "no-ide",
-    ],
 )
 
 filegroup(

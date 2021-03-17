@@ -9,7 +9,7 @@ import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
@@ -62,7 +62,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class TrendAnalysisServiceImplTest extends CvNextGenTest {
+public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
   private String cvConfigId;
   private String verificationTaskId;
   @Inject private HPersistence hPersistence;

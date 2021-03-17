@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -63,6 +64,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   // Resolved StepParameters stored just before invoking step.
   org.bson.Document resolvedStepParameters;
+  org.bson.Document resolvedStepInputs;
 
   // For Wait Notify
   String notifyId;
@@ -94,7 +96,12 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   Map<String, List<ProgressData>> progressDataMap;
 
+  @Singular List<UnitProgress> unitProgresses;
+
   AdviserResponse adviserResponse;
+  // Timeouts for advisers
+  List<String> adviserTimeoutInstanceIds;
+  TimeoutDetails adviserTimeoutDetails;
 
   public boolean isChildSpawningMode() {
     return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
@@ -132,6 +139,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
       this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
       return this;
     }
+
+    public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
+      this.resolvedStepInputs = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      return this;
+    }
   }
 
   public static List<MongoIndex> mongoIndexes() {
@@ -140,7 +152,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_planNodeId_idx")
                  .field(NodeExecutionKeys.planExecutionId)
-                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.planNodeId)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_planNodeIdentifier_idx")

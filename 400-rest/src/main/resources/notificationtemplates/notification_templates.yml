@@ -197,7 +197,7 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
           subject: Manual Intervention Needed for ${WORKFLOW_NAME} ${PIPELINE_NAME_EMAIL_SUBJECT}
           body: <<bottom-div>><<${VERB}-color>> ${PHASE_NAME}<b> Workflow <<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> ${VERB} <br> ${APPLICATION} <br> ${SERVICE} <br> ${ARTIFACTS} <br> ${ENVIRONMENT} <br> ${INFRA} <br>${TRIGGER} <br><i>Started ${START_DATE} and ${VERB} at ${END_DATE} <br> Expires ${EXPIRES_DATE} </i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
       pagerDuty:
-        summary: Manual Intervention Needed - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACT} in ${ENV}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
+        summary: Manual Intervention Needed - ${WORKFLOW_NAME}> requires manual intervention for ${ARTIFACTS} in ${ENVIRONMENT}, triggered by ${USER_NAME} in ${APP_NAME} application Started ${START_DATE} and ${VERB} at ${END_DATE} duration ${DURATION}
         link:
           href: ${WORKFLOW_URL}
           text: ${WORKFLOW_NAME} - Started ${START_DATE}
@@ -282,3 +282,56 @@ EXPORT_EXECUTIONS_FAILED_NOTIFICATION:
   email:
     subject: Request for deployment logs failed for request id [${REQUEST_ID}]
     body: "<<top-div>><p>Request for deployment logs failed for request id [${REQUEST_ID}]</p><p><b>Error message:</b> ${ERROR_MESSAGE}</p><p></p><p>Export triggered by <b>${USER_NAME}</b> on <b>${TRIGGERED_AT}</b></p></div>"
+
+PIPELINE_FREEZE_NOTIFICATION:
+  web: Pipeline Execution Rejected - ${WORKFLOW_NAME} in ${APP_NAME} has been rejected due to active deployment freeze ${BLACKOUT_WINDOW_NAME}.
+  slack: "Pipeline Execution Rejected\n
+  ||*Pipeline*: *<${WORKFLOW_URL}|${WORKFLOW_NAME}>*\n
+  *Application*: *${APP_NAME}*\n
+  The Pipeline Execution triggered by *${USER_NAME}* was rejected because of active Deployment Freeze Window *<${BLACKOUT_WINDOW_URL}|${BLACKOUT_WINDOW_NAME}>*. The deployment freeze ends at ${END_TIME}.||||failed"
+  email:
+    subject: Pipeline Execution Rejected for ${WORKFLOW_NAME}
+    body: "<<top-div>>Pipeline Execution Rejected\n</div>
+            <<bottom-div>><<failed-color>><b>Pipeline</b>: <b><<a>>href=\"${WORKFLOW_URL}\" target=\"_blank\">${WORKFLOW_NAME}</a></b><br>
+            <b>Application</b>: <b>${APP_NAME}</b><br>
+            The Pipeline Execution triggered by <b>${USER_NAME}</b> was rejected because of active Deployment Freeze Window <b><<a>>href=\"${BLACKOUT_WINDOW_URL}\" target=\"_blank\">${BLACKOUT_WINDOW_NAME}</a></b>. The deployment freeze ends at ${END_TIME}.</div>"
+  pagerDuty:
+    summary: Pipeline Execution Rejected - ${WORKFLOW_NAME}> triggered by ${USER_NAME} has been rejected due to active deployment freeze ${BLACKOUT_WINDOW_NAME} in ${APP_NAME} application|| ${WORKFLOW_NAME} started at ${START_DATE} and rejected due to deployment freeze at ${END_DATE}
+    link:
+      href: ${WORKFLOW_URL}
+      text: ${WORKFLOW_NAME} - Started ${START_DATE}
+
+TRIGGER_EXECUTION_REJECTED_NOTIFICATION:
+  web: Trigger Execution not triggered - ${WORKFLOW_NAME} in ${APP_NAME} was not triggered by ${TRIGGER_NAME} because of active deployment freeze ${BLACKOUT_WINDOW_NAME}. The deployment freeze ends at ${END_TIME}.
+  slack: "${EXECUTION_TYPE} Execution not triggered\n
+           ||*${EXECUTION_TYPE}*: *${WORKFLOW_NAME}*\n
+           *Application*: *${APP_NAME}*\n
+           *Trigger*: *<${TRIGGER_URL}|${TRIGGER_NAME}>*\n
+           The ${EXECUTION_TYPE} Execution was not triggered because of active Deployment Freeze Window *<${BLACKOUT_WINDOW_URL}|${BLACKOUT_WINDOW_NAME}>*. The deployment freeze ends at ${END_TIME}.||||failed"
+  email:
+    subject: Trigger Execution not triggered for ${WORKFLOW_NAME}
+    body: "<<top-div>>${EXECUTION_TYPE} Execution not triggered\n</div>
+            <<bottom-div>><<failed-color>><b>${EXECUTION_TYPE}</b>: <b>${WORKFLOW_NAME}</b><br>
+            <b>Application</b>: <b>${APP_NAME}</b><br>
+            <b>Trigger</b>: <b><<a>>href=\"${TRIGGER_URL}\" target=\"_blank\">${TRIGGER_NAME}</a></b><br>
+            The ${EXECUTION_TYPE} Execution was not triggered because of active Deployment Freeze Window <b><<a>>href=\"${BLACKOUT_WINDOW_URL}\" target=\"_blank\">${BLACKOUT_WINDOW_NAME}</a></b>. The deployment freeze ends at ${END_TIME}.</div>"
+  pagerDuty:
+    summary: Trigger Execution not triggered - ${WORKFLOW_NAME}> triggered by ${USER_NAME} was not triggered by ${TRIGGER_NAME} because of active deployment freeze ${BLACKOUT_WINDOW_NAME} in ${APP_NAME} application. The deployment freeze ends at ${END_TIME}.
+
+FREEZE_ACTIVATION_NOTIFICATION:
+  web: A deployment freeze <b>${BLACKOUT_WINDOW_NAME}</b> has been activated on ${START_TIME}. The freeze will end on ${END_TIME}.
+  slack: A deployment freeze \*<${BLACKOUT_WINDOW_URL}|${BLACKOUT_WINDOW_NAME}>\* has been activated on ${START_TIME}. The freeze will end on ${END_TIME}.
+  email:
+    subject: Deployment Freeze Window ${BLACKOUT_WINDOW_NAME} Activation
+    body: A deployment freeze <b><<a>>href="${BLACKOUT_WINDOW_URL}" target="_blank">${BLACKOUT_WINDOW_NAME}</a></b> has been activated on ${START_TIME}. The freeze will end on ${END_TIME}.
+  pagerDuty:
+    summary: A deployment freeze <b>${BLACKOUT_WINDOW_NAME}</b> has been activated on ${START_TIME}. The freeze will end on ${END_TIME}.
+
+FREEZE_DEACTIVATION_NOTIFICATION:
+  web: A deployment freeze <b>${BLACKOUT_WINDOW_NAME}</b> has been deactivated on ${END_TIME}.
+  slack: A deployment freeze \*<${BLACKOUT_WINDOW_URL}|${BLACKOUT_WINDOW_NAME}>\* has been deactivated on ${END_TIME}.
+  email:
+    subject: Deployment Freeze Window ${BLACKOUT_WINDOW_NAME} De-Activation
+    body: A deployment freeze <b><<a>>href="${BLACKOUT_WINDOW_URL}" target="_blank">${BLACKOUT_WINDOW_NAME}</a></b> has been deactivated on ${END_TIME}.
+  pagerDuty:
+    summary: A deployment freeze <b>${BLACKOUT_WINDOW_NAME}</b> has been deactivated on ${END_TIME}.

@@ -42,6 +42,7 @@ import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
+import static software.wings.common.ProvisionerConstants.ARM_ROLLBACK;
 import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
@@ -69,7 +70,7 @@ import static software.wings.sm.StateType.PCF_SETUP;
 import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
-import static software.wings.sm.StepType.ARM_PROVISION;
+import static software.wings.sm.StepType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
@@ -155,6 +156,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Pipeline.PipelineKeys;
+import software.wings.beans.PipelineStage;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceTemplate.ServiceTemplateKeys;
@@ -249,6 +251,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepType;
+import software.wings.sm.states.EnvState.EnvStateKeys;
 import software.wings.sm.states.k8s.K8sStateHelper;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.Stencil;
@@ -420,8 +423,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public Map<StateTypeScope, List<Stencil>> stencils(
       String appId, String workflowId, String phaseId, StateTypeScope... stateTypeScopes) {
-    Map<StateTypeScope, List<Stencil>> stencils = getStencils(appId, workflowId, phaseId, stateTypeScopes);
-    return stencils;
+    return getStencils(appId, workflowId, phaseId, stateTypeScopes);
   }
 
   private void removeStencil(Map<StateTypeScope, List<Stencil>> stencils, String appId, FeatureName featureName,
@@ -441,7 +443,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Map<StateTypeScope, List<Stencil>> getStencils(
       String appId, String workflowId, String phaseId, StateTypeScope[] stateTypeScopes) {
+    long startTime = System.currentTimeMillis();
     Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap = loadStateTypes();
+    log.info("Time taken to load StateTypes {}(ms)", System.currentTimeMillis() - startTime);
     return getStateTypeScopeListMap(appId, workflowId, phaseId, stateTypeScopes, stencilsMap);
   }
 
@@ -449,13 +453,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       StateTypeScope[] stateTypeScopes, Map<StateTypeScope, List<StateTypeDescriptor>> stencilsMap) {
     boolean filterForWorkflow = isNotBlank(workflowId);
     boolean filterForPhase = filterForWorkflow && isNotBlank(phaseId);
-    Workflow workflow = null;
-    Map<StateTypeScope, List<Stencil>> mapByScope = null;
+    Workflow workflow;
+    Map<StateTypeScope, List<Stencil>> mapByScope;
     WorkflowPhase workflowPhase = null;
     Map<String, String> entityMap = new HashMap<>(1);
     boolean buildWorkflow = false;
+    long startTime = System.currentTimeMillis();
     if (filterForWorkflow) {
-      workflow = readWorkflow(appId, workflowId);
+      workflow = readWorkflowWithoutOrchestrationAndWithoutServices(appId, workflowId);
+      log.info("Time taken to load Workflow Without Orchestration and without Services {}(ms)",
+          System.currentTimeMillis() - startTime);
       if (workflow == null) {
         throw new InvalidRequestException(format("Workflow %s does not exist", workflowId), USER);
       }
@@ -763,6 +770,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return null;
     }
     loadOrchestrationWorkflow(workflow, version);
+    return workflow;
+  }
+
+  public Workflow readWorkflowWithoutOrchestrationAndWithoutServices(String appId, String workflowId) {
+    Workflow workflow = readWorkflowWithoutOrchestration(appId, workflowId);
+    if (workflow == null) {
+      return null;
+    }
+    loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion(), false);
     return workflow;
   }
 
@@ -1138,6 +1154,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     }
 
+    if (envChanged) {
+      List<Pipeline> pipelinesWithWorkflowLinked = pipelineService.listPipelines(
+          aPageRequest()
+              .withLimit(PageRequest.UNLIMITED)
+              .addFilter(PipelineKeys.appId, EQ, workflow.getAppId())
+              .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
+              .build());
+      if (isNotEmpty(pipelinesWithWorkflowLinked)) {
+        updateEnvIdInLinkedPipelines(workflow, envId, pipelinesWithWorkflowLinked);
+        pipelineService.savePipelines(pipelinesWithWorkflowLinked, true);
+      }
+    }
+
     if (isEmpty(templateExpressions)) {
       templateExpressions = new ArrayList<>();
     }
@@ -1203,6 +1232,23 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
     }
     return finalWorkflow;
+  }
+
+  private void updateEnvIdInLinkedPipelines(
+      Workflow workflow, String newEnvId, List<Pipeline> pipelinesWithWorkflowLinked) {
+    if (isEmpty(pipelinesWithWorkflowLinked)) {
+      return;
+    }
+    for (Pipeline pipeline : pipelinesWithWorkflowLinked) {
+      if (isNotEmpty(pipeline.getPipelineStages())) {
+        for (PipelineStage stage : pipeline.getPipelineStages()) {
+          if (workflow.getUuid().equals(
+                  stage.getPipelineStageElements().get(0).getProperties().get(EnvStateKeys.workflowId))) {
+            stage.getPipelineStageElements().get(0).getProperties().put(EnvStateKeys.envId, newEnvId);
+          }
+        }
+      }
+    }
   }
 
   private void populateServices(Workflow workflow) {
@@ -1386,6 +1432,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private PhaseStep generateRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    if (isARMProvisionState(preDeploymentSteps)) {
+      return generateARMRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
+    }
+
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
                                            .stream()
                                            .filter(step -> {
@@ -1420,6 +1470,49 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                          .properties(propertiesMap)
                                          .build());
       }
+    });
+    rollbackProvisionerStep.setRollback(true);
+    rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
+    return rollbackProvisionerStep;
+  }
+
+  private boolean isARMProvisionState(PhaseStep preDeploymentSteps) {
+    List<GraphNode> graphNodes = preDeploymentSteps.getSteps()
+                                     .stream()
+                                     .filter(step -> StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()))
+                                     .collect(toList());
+    return isNotEmpty(graphNodes);
+  }
+
+  private PhaseStep generateARMRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    List<GraphNode> provisionerSteps =
+        preDeploymentSteps.getSteps()
+            .stream()
+            .filter(step -> { return StateType.ARM_CREATE_RESOURCE.name().equals(step.getType()); })
+            .collect(Collectors.toList());
+
+    if (isEmpty(provisionerSteps)) {
+      return null;
+    }
+    List<GraphNode> rollbackProvisionerNodes = Lists.newArrayList();
+    PhaseStep rollbackProvisionerStep = new PhaseStep(phaseStepType, phaseStepName);
+    rollbackProvisionerStep.setUuid(generateUuid());
+    provisionerSteps.forEach(step -> {
+      StateType stateType = StateType.ARM_ROLLBACK;
+      Map<String, Object> propertiesMap = new HashMap<>();
+      propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
+      propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
+      propertiesMap.put("timeoutExpression", step.getProperties().get("timeoutExpression"));
+      propertiesMap.put("cloudProviderId", step.getProperties().get("cloudProviderId"));
+      propertiesMap.put("resourceGroupExpression", step.getProperties().get("resourceGroupExpression"));
+      propertiesMap.put("subscriptionExpression", step.getProperties().get("subscriptionExpression"));
+      rollbackProvisionerNodes.add(GraphNode.builder()
+                                       .type(stateType.name())
+                                       .rollback(true)
+                                       .name(ARM_ROLLBACK)
+                                       .properties(propertiesMap)
+                                       .build());
     });
     rollbackProvisionerStep.setRollback(true);
     rollbackProvisionerStep.setSteps(rollbackProvisionerNodes);
@@ -1570,6 +1663,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<String> getResolvedInfraDefinitionIds(Workflow workflow, Map<String, String> workflowVariables) {
     return workflowServiceHelper.getResolvedInfraDefinitionIds(workflow, workflowVariables);
+  }
+
+  @Override
+  public String getResolvedServiceIdFromPhase(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedServiceIdFromPhase(workflowPhase, workflowVariables);
+  }
+
+  @Override
+  public String getResolvedInfraDefinitionIdFromPhase(
+      WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.getResolvedInfraDefinitionIdFromPhase(workflowPhase, workflowVariables);
   }
 
   @Override
@@ -2754,7 +2858,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         break;
       } else if (workflowPhase != null && HELM == workflowPhase.getDeploymentType()
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
-        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
           if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             InfrastructureDefinition infrastructureDefinition =
@@ -2779,7 +2883,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
           break;
         }
 
-        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
           if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)
               && k8sStateHelper.doManifestsUseArtifact(appId, serviceId, infraDefinitionId)) {
@@ -3249,7 +3353,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         updateDefaultArtifactVariablesNeeded(serviceArtifactVariableNames);
       } else if (workflowPhase != null && HELM == workflowPhase.getDeploymentType()
           && StateType.HELM_DEPLOY.name().equals(step.getType())) {
-        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
           if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             InfrastructureDefinition infraDefiniton = infrastructureDefinitionService.get(appId, infraDefinitionId);
@@ -3262,7 +3366,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         }
 
       } else if (workflowPhase != null && k8sV2ArtifactNeededStateTypes.contains(step.getType())) {
-        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables, accountId);
+        List<String> infraDefinitionIds = getInfraDefinitionId(workflowPhase, workflowVariables);
         for (String infraDefinitionId : infraDefinitionIds) {
           if (isNotEmpty(infraDefinitionId) && !matchesVariablePattern(infraDefinitionId)) {
             k8sStateHelper.updateManifestsArtifactVariableNamesInfraDefinition(
@@ -3273,8 +3377,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
-  private List<String> getInfraDefinitionId(
-      WorkflowPhase workflowPhase, Map<String, String> workflowVariables, String accountId) {
+  private List<String> getInfraDefinitionId(WorkflowPhase workflowPhase, Map<String, String> workflowVariables) {
     List<String> infraDefinitionIds = new ArrayList<>();
     if (workflowPhase.checkInfraDefinitionTemplatized()) {
       String infraDefinitionTemplatizedName = workflowPhase.fetchInfraDefinitionTemplatizedName();
@@ -3282,8 +3385,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         String infraDefinitionId =
             isEmpty(workflowVariables) ? null : workflowVariables.get(infraDefinitionTemplatizedName);
         if (infraDefinitionId != null) {
-          if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, accountId)
-              && infraDefinitionId.contains(",")) {
+          if (infraDefinitionId.contains(",")) {
             infraDefinitionIds = asList(infraDefinitionId.split(","));
           } else {
             infraDefinitionIds.add(infraDefinitionId);
@@ -3827,7 +3929,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (featureFlagService.isEnabled(FeatureName.AZURE_ARM, accountId)) {
       return steps;
     }
-    return steps.stream().filter(step -> step != ARM_PROVISION).collect(toList());
+    return steps.stream().filter(step -> step != ARM_CREATE_RESOURCE).collect(toList());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(String accountId, Set<String> favorites,

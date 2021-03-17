@@ -147,25 +147,6 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>software.wings</groupId>
-                <artifactId>899-yaml-schema-plugin</artifactId>
-                <version>0.0.1-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <phase>compile</phase>
-                        <configuration>
-                            <rootClasses>
-                                <rootClass>io.harness.beans.stages.IntegrationStageConfig</rootClass>
-                                <rootClass>io.harness.beans.steps.CIStepInfo</rootClass>
-                            </rootClasses>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 </project>

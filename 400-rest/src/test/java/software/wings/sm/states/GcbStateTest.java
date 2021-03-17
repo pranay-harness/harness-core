@@ -158,7 +158,10 @@ public class GcbStateTest extends CategoryTest {
     doReturn(emptyList()).when(secretManager).getEncryptionDetails(gcpConfig, "appId", "workflowExecutionId");
 
     state.executeInternal(context, ACTIVITY_ID);
-    verify(delegateService).queueTask(any(DelegateTask.class));
+    ArgumentCaptor<DelegateTask> delegateTaskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(delegateTaskArgumentCaptor.capture());
+    assertThat(delegateTaskArgumentCaptor.getValue().isSelectionLogsTrackingEnabled()).isTrue();
+    verify(stateExecutionService).appendDelegateTaskDetails(eq(null), any(DelegateTaskDetails.class));
   }
 
   @Test

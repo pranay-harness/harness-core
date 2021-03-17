@@ -1,8 +1,12 @@
 package software.wings.helpers.ext.chartmuseum;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(Module._970_API_SERVICES_BEANS)
 public class ChartMuseumConstants {
   public static final int CHART_MUSEUM_SERVER_START_RETRIES = 5;
   public static final int PORTS_START_POINT = 35000;

@@ -15,6 +15,8 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
 import io.harness.cvng.core.services.api.DSConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.PageUtils;
 
@@ -35,6 +37,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   @Inject private CVConfigService cvConfigService;
   @Inject private NextGenService nextGenService;
   @Inject private Injector injector;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   @Override
   public List<DSConfig> list(String accountId, String connectorIdentifier, String productName) {
@@ -63,11 +66,46 @@ public class DSConfigServiceImpl implements DSConfigService {
     cvConfigService.update(cvConfigUpdateResult.getUpdated());
 
     cvConfigService.save(cvConfigUpdateResult.getAdded());
+    monitoringSourcePerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+        dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
+  }
+
+  @Override
+  public void create(DSConfig dsConfig) {
+    List<CVConfig> existingMapping = cvConfigService.getExistingMappedConfigs(dsConfig.getAccountId(),
+        dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), dsConfig.getIdentifier());
+    dsConfig.validate(existingMapping);
+    List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
+        dsConfig.getProductName(), dsConfig.getIdentifier());
+    if (saved != null && saved.size() > 0) {
+      throw new DuplicateFieldException(
+          String.format("DSConfig  with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
+              dsConfig.getIdentifier(), dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier()));
+    }
+    CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
+    cvConfigService.save(cvConfigUpdateResult.getAdded());
+    monitoringSourcePerpetualTaskService.createTask(dsConfig.getAccountId(), dsConfig.getOrgIdentifier(),
+        dsConfig.getProjectIdentifier(), dsConfig.getConnectorIdentifier(), dsConfig.getIdentifier());
+  }
+
+  @Override
+  public void update(String identifier, DSConfig dsConfig) {
+    List<CVConfig> existingMapping = cvConfigService.getExistingMappedConfigs(
+        dsConfig.getAccountId(), dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), identifier);
+    dsConfig.validate(existingMapping);
+    List<CVConfig> saved = cvConfigService.list(
+        dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(), dsConfig.getProductName(), identifier);
+    CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
+    cvConfigUpdateResult.getDeleted().forEach(cvConfig -> cvConfigService.delete(cvConfig.getUuid()));
+    cvConfigService.update(cvConfigUpdateResult.getUpdated());
+    cvConfigService.save(cvConfigUpdateResult.getAdded());
   }
 
   @Override
   public void delete(
       String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier) {
+    monitoringSourcePerpetualTaskService.deleteTask(
+        accountId, orgIdentifier, projectIdentifier, monitoringSourceIdentifier);
     cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, monitoringSourceIdentifier);
   }
 

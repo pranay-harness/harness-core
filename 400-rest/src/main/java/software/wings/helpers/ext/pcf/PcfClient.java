@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.pcf;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pcf.PivotalClientApiException;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -21,6 +23,7 @@ import org.cloudfoundry.operations.routes.Route;
 import org.cloudfoundry.reactor.ConnectionContext;
 import org.zeroturnaround.exec.StartedProcess;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public interface PcfClient {
   CloudFoundryClient getCloudFoundryClient(PcfRequestConfig pcfRequestConfig, ConnectionContext connectionContext)
       throws PivotalClientApiException;

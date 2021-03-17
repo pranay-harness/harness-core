@@ -47,6 +47,7 @@ enum DataFetcherEnum {
   eventsStats
   execution
   executionConnection
+  resumeExecution
   gcpBillingAccount
   gcpBillingEntityStats
   gcpBillingTimeSeriesStats
@@ -55,7 +56,9 @@ enum DataFetcherEnum {
   gcpServiceAccount
   idleCostTrendStats
   infraAccountConnection
+  infrastructureDefinition
   instanceConnection
+  infrastructureDefinitionConnection
   instanceCount
   instanceStats
   k8sAnomalies
@@ -138,4 +141,6 @@ enum DataFetcherEnum {
   viewOverviewStats
   runtimeExecutionInputsToResumePipeline
   pipelineResumeRuntime
+  attachTag
+  detachTag
 }

@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Optional;
 import org.assertj.core.util.Files;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -92,6 +93,7 @@ public class NGPipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SANYASI_NAIDU)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testGetPipeline() {
     doReturn(Optional.of(ngPipelineEntity))
         .when(ngPipelineService)
@@ -106,6 +108,7 @@ public class NGPipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = SANYASI_NAIDU)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testCreatePipeline() {
     ClassLoader classLoader = this.getClass().getClassLoader();
     File file = new File(classLoader.getResource("k8sPipeline.yaml").getFile());
@@ -120,6 +123,7 @@ public class NGPipelineResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testGetListOfPipelines() {
     Criteria criteria = new Criteria();
     Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, PipelineNGKeys.createdAt));

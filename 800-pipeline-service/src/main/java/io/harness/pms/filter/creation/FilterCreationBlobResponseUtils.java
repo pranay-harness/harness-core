@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 
+import java.util.ArrayList;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
@@ -19,6 +20,7 @@ public class FilterCreationBlobResponseUtils {
     mergeFilters(response, filters);
     updateStageCount(builder, response.getResponse());
     mergeReferredEntities(builder, response.getResponse());
+    mergeStageNames(builder, response.getResponse());
   }
 
   public void updateStageCount(
@@ -35,6 +37,12 @@ public class FilterCreationBlobResponseUtils {
   public void mergeReferredEntities(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
     if (isNotEmpty(response.getReferredEntitiesList())) {
       builder.addAllReferredEntities(response.getReferredEntitiesList());
+    }
+  }
+
+  public void mergeStageNames(FilterCreationBlobResponse.Builder builder, FilterCreationBlobResponse response) {
+    if (response.getStageNamesList() != null) {
+      builder.addAllStageNames(new ArrayList<>(response.getStageNamesList()));
     }
   }
 

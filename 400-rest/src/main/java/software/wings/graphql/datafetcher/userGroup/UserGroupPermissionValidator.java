@@ -5,6 +5,8 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UserGroupPermissionValidator {
   @Inject EnvFilterController envFilterController;
   @Inject ServiceResourceService serviceResourceService;

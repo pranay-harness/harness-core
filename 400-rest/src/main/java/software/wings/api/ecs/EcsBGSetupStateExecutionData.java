@@ -1,5 +1,6 @@
 package software.wings.api.ecs;
 
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -8,6 +9,7 @@ import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.states.EcsSetUpDataBag;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -35,7 +37,7 @@ public class EcsBGSetupStateExecutionData extends EcsSetupStateExecutionData {
     super(activityId, accountId, appId, commandName, taskType, applicationManifestMap, ecsSetUpDataBag, roleArn,
         targetPort, maxInstances, fixedInstances, ecsServiceName, targetGroupArn, useLoadBalancer, loadBalancerName,
         targetContainerName, desiredInstanceCount, serviceSteadyStateTimeout, resizeStrategy, awsAutoScalarConfigs,
-        fetchFilesResult);
+        new ArrayList<AwsElbConfig>(), false, fetchFilesResult);
     this.prodListenerArn = prodListenerArn;
     this.stageListenerArn = stageListenerArn;
     this.stageListenerRuleArn = stageListenerRuleArn;

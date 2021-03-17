@@ -168,7 +168,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @Slf4j
 public class StateMachineExecutor implements StateInspectionListener {
-  private static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
+  public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
   public static final String PIPELINE_STEP_NAME = "PIPELINE_STEP_NAME";
   public static final String PIPELINE_STEP = "PIPELINE_STEP";
@@ -550,12 +550,15 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
     notNullCheck("currentState", currentState);
     if (currentState.getWaitInterval() != null && currentState.getWaitInterval() > 0) {
+      if (skipDelayedStepIfRequired(context, currentState)) {
+        return;
+      }
       StateExecutionData stateExecutionData =
           aStateExecutionData()
               .withWaitInterval(currentState.getWaitInterval())
               .withErrorMsg("Waiting " + currentState.getWaitInterval() + " seconds before execution")
               .build();
-      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, RUNNING, null, null, null, null,
+      updated = updateStateExecutionData(stateExecutionInstance, stateExecutionData, STARTING, null, null, null, null,
           null, evaluateExpiryTs(currentState, context));
       if (!updated) {
         throw new WingsException("updateStateExecutionData failed");
@@ -569,6 +572,19 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
 
     startStateExecution(context, stateExecutionInstance);
+  }
+
+  boolean skipDelayedStepIfRequired(ExecutionContextImpl context, State currentState) {
+    ExecutionEventAdvice executionEventAdvice = invokeAdvisors(ExecutionEvent.builder()
+                                                                   .failureTypes(EnumSet.noneOf(FailureType.class))
+                                                                   .context(context)
+                                                                   .state(currentState)
+                                                                   .build());
+    if (executionEventAdvice != null && executionEventAdvice.isSkipState()) {
+      handleResponse(context, skipStateExecutionResponse(executionEventAdvice));
+      return true;
+    }
+    return false;
   }
 
   void startStateExecution(String appId, String executionUuid, String stateExecutionInstanceId) {
@@ -603,7 +619,8 @@ public class StateMachineExecutor implements StateInspectionListener {
     }
   }
 
-  private void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
+  @VisibleForTesting
+  protected void handleResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     Map<String, Map<Object, Integer>> usage = context.getVariableResolverTracker().getUsage();
     ManagerPreviewExpressionEvaluator expressionEvaluator = new ManagerPreviewExpressionEvaluator();
 
@@ -703,6 +720,7 @@ public class StateMachineExecutor implements StateInspectionListener {
    * @param executionResponse the execution response
    * @return the state execution instance
    */
+  @SuppressWarnings("PMD")
   StateExecutionInstance handleExecuteResponse(ExecutionContextImpl context, ExecutionResponse executionResponse) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     StateMachine sm = context.getStateMachine();
@@ -2282,6 +2300,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         log.info(DEBUG_LINE + "inside run of SmExecutionDispatcher");
@@ -2319,6 +2338,7 @@ public class StateMachineExecutor implements StateInspectionListener {
      * @see java.lang.Runnable#run()
      */
     @Override
+    @SuppressWarnings("PMD")
     public void run() {
       try (AutoLogContext ignore = context.autoLogContext()) {
         stateMachineExecutor.handleExecuteResponse(

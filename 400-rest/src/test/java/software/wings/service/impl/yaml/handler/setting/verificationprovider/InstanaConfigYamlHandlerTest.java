@@ -15,7 +15,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.InstanaConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueConfigYamlHandlerTestBase;
+import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
 
 import com.google.inject.Inject;

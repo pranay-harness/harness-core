@@ -11,7 +11,10 @@ import static io.harness.rule.OwnerRule.YOGESH;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
 import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM_OPENSHIFT_TEMPLATE;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
@@ -32,6 +35,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -44,10 +48,16 @@ import static org.mockito.Mockito.when;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
+import io.harness.helm.HelmSubCommandType;
+import io.harness.manifest.CustomSourceConfig;
+import io.harness.manifest.CustomSourceFile;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -59,11 +69,14 @@ import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.HelmChartConfig;
+import software.wings.beans.HelmCommandFlagConfig;
+import software.wings.beans.HelmCommandFlagConstants.HelmSubCommand;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.ApplicationManifestBuilder;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
@@ -75,6 +88,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
+import software.wings.sm.StateExecutionContext;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -115,6 +129,9 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
         .thenReturn(GcpKubernetesInfrastructureMapping.builder().envId(ENV_ID).build());
     when(appService.get(APP_ID)).thenReturn(anApplication().uuid(APP_ID).build());
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false)).thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    when(context.renderExpression(anyString())).thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
+    when(context.renderExpression(anyString(), any(StateExecutionContext.class)))
+        .thenAnswer(invocation -> invocation.getArgumentAt(0, String.class));
   }
 
   @Test
@@ -542,6 +559,47 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     Map<K8sValuesLocation, ApplicationManifest> allManifests =
         applicationManifestUtils.getApplicationManifests(context, K8S_MANIFEST);
     assertThat(allManifests.get(K8sValuesLocation.Service)).isEqualTo(serviceManifest);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void getOverrideApplicationManifestsOcParamsCustomManifest() {
+    ApplicationManifest serviceOpenshiftManifest =
+        ApplicationManifest.builder()
+            .storeType(CUSTOM_OPENSHIFT_TEMPLATE)
+            .customSourceConfig(CustomSourceConfig.builder().script("echo test").path("template.yaml").build())
+            .kind(K8S_MANIFEST)
+            .build();
+    ApplicationManifest ocParams =
+        ApplicationManifest.builder()
+            .kind(OC_PARAMS)
+            .storeType(CUSTOM)
+            .customSourceConfig(CustomSourceConfig.builder().script("echo test").path("template.yaml").build())
+            .build();
+
+    ApplicationManifest valuesManifest = ApplicationManifest.builder().kind(VALUES).storeType(Local).build();
+
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(serviceOpenshiftManifest);
+    when(featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, ACCOUNT_ID)).thenReturn(true);
+
+    Map<K8sValuesLocation, ApplicationManifest> k8sManifestMap =
+        applicationManifestUtils.getOverrideApplicationManifests(context, OC_PARAMS);
+    // There is no any OC Paramas override so will not add service manifest
+    assertThat(k8sManifestMap).isEmpty();
+
+    when(applicationManifestService.getByServiceId(APP_ID, SERVICE_ID, OC_PARAMS)).thenReturn(ocParams);
+    k8sManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, OC_PARAMS);
+
+    assertThat(k8sManifestMap).hasSize(2);
+    assertThat(k8sManifestMap.get(K8sValuesLocation.Service)).isEqualTo(serviceOpenshiftManifest);
+    assertThat(k8sManifestMap.get(ServiceOverride)).isEqualTo(ocParams);
+
+    when(applicationManifestService.getByServiceId(APP_ID, SERVICE_ID, VALUES)).thenReturn(valuesManifest);
+
+    k8sManifestMap = applicationManifestUtils.getOverrideApplicationManifests(context, VALUES);
+    assertThat(k8sManifestMap).hasSize(1);
+    assertThat(k8sManifestMap.get(ServiceOverride)).isEqualTo(valuesManifest);
   }
 
   @Test
@@ -975,5 +1033,165 @@ public final class ApplicationManifestUtilsTest extends WingsBaseTest {
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestNullPollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestFalsePollForChanges)).isFalse();
     assertThat(applicationManifestUtils.isPollForChangesEnabled(appManifestTruePollForChanges)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetHelmCommandFlags() {
+    HelmCommandFlagConfig withNullValueMap = HelmCommandFlagConfig.builder().build();
+    HelmCommandFlagConfig withEmptyValueMap = HelmCommandFlagConfig.builder().valueMap(ImmutableMap.of()).build();
+    HelmCommandFlagConfig withValues =
+        HelmCommandFlagConfig.builder()
+            .valueMap(ImmutableMap.of(HelmSubCommand.INSTALL, "flag-1", HelmSubCommand.DELETE, "flag-2"))
+            .build();
+    assertThat(ApplicationManifestUtils.getHelmCommandFlags(null)).isNull();
+    assertThat(ApplicationManifestUtils.getHelmCommandFlags(withNullValueMap).getValueMap()).isEmpty();
+    assertThat(ApplicationManifestUtils.getHelmCommandFlags(withEmptyValueMap).getValueMap()).isEmpty();
+    Map<HelmSubCommandType, String> result = ApplicationManifestUtils.getHelmCommandFlags(withValues).getValueMap();
+    assertThat(result).containsKeys(HelmSubCommandType.INSTALL, HelmSubCommandType.DELETE);
+    assertThat(result).containsValues("flag-1", "flag-2");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateCustomManifestValuesFetchParams() {
+    String singlePath = "overrides/values.yaml";
+    String multiplePath = "overrides/values1.yaml, overrides/values2.yaml";
+    String expressionMultiplePath = "${expression-multiple}";
+    String manifestPath = "manifest";
+    String script = "echo test";
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder().adoptDelegateDecryption(true).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = ImmutableMap.of(ServiceOverride,
+        customAppManifest(singlePath, script, CUSTOM), Environment, customAppManifest(multiplePath, "", CUSTOM),
+        EnvironmentGlobal, customAppManifest(expressionMultiplePath, null, CUSTOM), K8sValuesLocation.Service,
+        customAppManifest(manifestPath, script, CUSTOM));
+
+    doReturn(multiplePath).when(context).renderExpression(expressionMultiplePath, stateExecutionContext);
+
+    CustomManifestValuesFetchParams params =
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, applicationManifestMap);
+    assertThat(params.getFetchFilesList()).isNotEmpty();
+    assertThat(params.getFetchFilesList()).hasSize(4);
+    for (CustomManifestFetchConfig fetchConfig : params.getFetchFilesList()) {
+      switch (fetchConfig.getKey()) {
+        case "ServiceOverride":
+          assertThat(fetchConfig.isRequired()).isTrue();
+          assertThat(fetchConfig.isDefaultSource()).isFalse();
+          assertThat(fetchConfig.getCustomManifestSource().getScript()).isEqualTo(script);
+          assertThat(fetchConfig.getCustomManifestSource().getFilePaths())
+              .containsExactlyInAnyOrder("overrides/values.yaml");
+          break;
+        case "Environment":
+          assertThat(fetchConfig.isRequired()).isTrue();
+          assertThat(fetchConfig.isDefaultSource()).isFalse();
+          assertThat(fetchConfig.getCustomManifestSource().getScript()).isEqualTo("");
+          assertThat(fetchConfig.getCustomManifestSource().getFilePaths())
+              .containsExactlyInAnyOrder("overrides/values1.yaml", "overrides/values2.yaml");
+          break;
+        case "EnvironmentGlobal":
+          assertThat(fetchConfig.isRequired()).isTrue();
+          assertThat(fetchConfig.isDefaultSource()).isFalse();
+          assertThat(fetchConfig.getCustomManifestSource().getScript()).isEqualTo(null);
+          assertThat(fetchConfig.getCustomManifestSource().getFilePaths())
+              .containsExactlyInAnyOrder("overrides/values1.yaml", "overrides/values2.yaml");
+          break;
+        case "Service":
+          assertThat(fetchConfig.isRequired()).isFalse();
+          assertThat(fetchConfig.isDefaultSource()).isTrue();
+          assertThat(fetchConfig.getCustomManifestSource().getScript()).isEqualTo(script);
+          assertThat(fetchConfig.getCustomManifestSource().getFilePaths())
+              .containsExactlyInAnyOrder("manifest/values.yaml");
+          break;
+
+        default:
+          fail("Unexpected fetch config key: %s", fetchConfig.getKey());
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testCreateCustomManifestValuesFetchParamsOpenshiftService() {
+    String singlePath = "overrides/values.yaml";
+    String script = "echo test";
+
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap =
+        ImmutableMap.of(ServiceOverride, customAppManifest(singlePath, script, CUSTOM), K8sValuesLocation.Service,
+            customAppManifest(singlePath, script, CUSTOM_OPENSHIFT_TEMPLATE));
+
+    CustomManifestValuesFetchParams params =
+        applicationManifestUtils.createCustomManifestValuesFetchParams(context, applicationManifestMap);
+    assertThat(params.getFetchFilesList()).isNotEmpty();
+    assertThat(params.getFetchFilesList()).hasSize(2);
+
+    for (CustomManifestFetchConfig fetchConfig : params.getFetchFilesList()) {
+      switch (fetchConfig.getKey()) {
+        case "ServiceOverride":
+          assertThat(fetchConfig.isRequired()).isTrue();
+          assertThat(fetchConfig.isDefaultSource()).isFalse();
+          assertThat(fetchConfig.getCustomManifestSource().getScript()).isEqualTo(script);
+          assertThat(fetchConfig.getCustomManifestSource().getFilePaths()).containsExactlyInAnyOrder(singlePath);
+          break;
+        case "Service":
+          assertThat(fetchConfig.isRequired()).isFalse();
+          assertThat(fetchConfig.isDefaultSource()).isTrue();
+          assertThat(fetchConfig.getCustomManifestSource().getScript()).isEqualTo(script);
+          assertThat(fetchConfig.getCustomManifestSource().getFilePaths()).isEmpty();
+          break;
+
+        default:
+          fail("Unexpected fetch config key: %s", fetchConfig.getKey());
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetValuesFilesFromCustomFetchValuesResponse() {
+    String singlePath = "overrides/values.yaml";
+    String multiplePath = "overrides/values1.yaml, overrides/values2.yaml";
+    String expressionMultiplePath = "${expression-multiple}";
+    String manifestPath = "manifest";
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder().adoptDelegateDecryption(true).build();
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = ImmutableMap.of(ServiceOverride,
+        customAppManifest(singlePath, "", CUSTOM), Environment, customAppManifest(multiplePath, "", CUSTOM),
+        EnvironmentGlobal, customAppManifest(expressionMultiplePath, "", CUSTOM), K8sValuesLocation.Service,
+        customAppManifest(manifestPath, "", CUSTOM_OPENSHIFT_TEMPLATE));
+    CustomManifestValuesFetchResponse fetchResponse =
+        CustomManifestValuesFetchResponse.builder()
+            .valuesFilesContentMap(ImmutableMap.of(ServiceOverride.name(),
+                asList(customSourceFile(singlePath, "service-override")), Environment.name(),
+                asList(customSourceFile("overrides/values1.yaml", "env-1"),
+                    customSourceFile("overrides/values2.yaml", "env-2")),
+                EnvironmentGlobal.name(),
+                asList(customSourceFile("overrides/values2.yaml", "env-global-2"),
+                    customSourceFile("overrides/values1.yaml", "env-global-1")),
+                K8sValuesLocation.Service.name(), asList(customSourceFile("manifest/values.yaml", "service-default"))))
+            .build();
+
+    doReturn(multiplePath).when(context).renderExpression(expressionMultiplePath, stateExecutionContext);
+
+    Map<K8sValuesLocation, Collection<String>> result =
+        applicationManifestUtils.getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, fetchResponse);
+    assertThat(result.get(ServiceOverride)).containsExactly("service-override");
+    assertThat(result.get(Environment)).containsExactly("env-1", "env-2");
+    assertThat(result.get(EnvironmentGlobal)).containsExactly("env-global-1", "env-global-2");
+    assertThat(result.get(K8sValuesLocation.Service)).containsExactly("service-default");
+  }
+
+  private ApplicationManifest customAppManifest(String path, String script, StoreType storeType) {
+    return ApplicationManifest.builder()
+        .storeType(storeType)
+        .customSourceConfig(CustomSourceConfig.builder().path(path).script(script).build())
+        .build();
+  }
+
+  private CustomSourceFile customSourceFile(String path, String content) {
+    return CustomSourceFile.builder().filePath(path).fileContent(content).build();
   }
 }

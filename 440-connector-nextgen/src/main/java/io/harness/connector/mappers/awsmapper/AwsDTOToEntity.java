@@ -38,7 +38,7 @@ public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDT
   private AwsConfigBuilder buildInheritFromDelegate(AwsCredentialDTO connector) {
     final AwsInheritFromDelegateSpecDTO config = (AwsInheritFromDelegateSpecDTO) connector.getConfig();
     final AwsIamCredential awsIamCredential =
-        AwsIamCredential.builder().delegateSelector(config.getDelegateSelector()).build();
+        AwsIamCredential.builder().delegateSelectors(config.getDelegateSelectors()).build();
     return AwsConfig.builder().credentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).credential(awsIamCredential);
   }
 

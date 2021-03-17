@@ -1,6 +1,7 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.STEPS;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP_GROUP;
 
 import io.harness.data.structure.EmptyPredicate;
@@ -8,8 +9,10 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
+import io.harness.pms.sdk.core.adviser.rollback.RollbackCustomAdviser;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -79,6 +82,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
         .identifier(config.getIdentifier())
         .stepType(StepGroupStep.STEP_TYPE)
         .group(StepOutcomeGroup.STEP_GROUP.name())
+        .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
@@ -99,7 +103,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (currentField != null && currentField.getNode() != null) {
-      if (currentField.checkIfParentIsParallel(STEP_GROUP)) {
+      if (currentField.checkIfParentIsParallel(STEPS)) {
         return adviserObtainments;
       }
       YamlField siblingField = currentField.getNode().nextSiblingFromParentArray(
@@ -113,6 +117,9 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
                 .build());
       }
     }
+
+    // Add custom rollback adviser
+    adviserObtainments.add(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build());
     return adviserObtainments;
   }
 

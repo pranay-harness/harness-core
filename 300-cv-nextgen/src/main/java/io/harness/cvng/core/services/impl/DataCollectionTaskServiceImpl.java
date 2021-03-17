@@ -1,17 +1,15 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.entities.DataCollectionTask.Type.SERVICE_GUARD;
+import static io.harness.cvng.core.services.CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
-import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.DataCollectionTaskKeys;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
@@ -21,22 +19,24 @@ import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.DataCollectionProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +57,8 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private CVConfigService cvConfigService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private VerificationTaskService verificationTaskService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+
   // TODO: this is creating reverse dependency. Find a way to get rid of this dependency.
   // Probabally by moving ProgressLog concept to a separate service and model.
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
@@ -72,7 +74,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
                                           .filter(DataCollectionTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId)
                                           .field(DataCollectionTaskKeys.validAfter)
                                           .lessThanOrEq(clock.instant())
-                                          .order(Sort.ascending("lastUpdatedAt"));
+                                          .order(Sort.ascending(DataCollectionTaskKeys.lastUpdatedAt));
     query.or(query.criteria(DataCollectionTaskKeys.status).equal(DataCollectionExecutionStatus.QUEUED),
         query.and(query.criteria(DataCollectionTaskKeys.status).equal(DataCollectionExecutionStatus.RUNNING),
             query.criteria(DataCollectionTaskKeys.lastUpdatedAt)
@@ -108,6 +110,19 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
+  public List<DataCollectionTaskDTO> getNextTaskDTOs(String accountId, String dataCollectionWorkerId) {
+    List<DataCollectionTaskDTO> dataCollectionTasks = new ArrayList<>();
+    Optional<DataCollectionTaskDTO> nextTaskDTO;
+    do {
+      nextTaskDTO = getNextTaskDTO(accountId, dataCollectionWorkerId);
+      if (nextTaskDTO.isPresent()) {
+        dataCollectionTasks.add(nextTaskDTO.get());
+      }
+    } while (nextTaskDTO.isPresent() && dataCollectionTasks.size() < CVNG_MAX_PARALLEL_THREADS);
+    return dataCollectionTasks;
+  }
+
+  @Override
   public DataCollectionTask getDataCollectionTask(String dataCollectionTaskId) {
     return hPersistence.get(DataCollectionTask.class, dataCollectionTaskId);
   }
@@ -136,6 +151,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       log.info("Task is not in running state. Skipping the update {}", result);
       return;
     }
+
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
       // TODO: make this an atomic operation
@@ -160,6 +176,29 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       }
     } else {
       retry(dataCollectionTask);
+    }
+  }
+
+  @Override
+  public void handleRecoverNextTask(CVConfig cvConfig) {
+    String serviceGuardVerificationTaskId =
+        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid());
+
+    DataCollectionTask dataCollectionTask =
+        hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.verificationTaskId, serviceGuardVerificationTaskId)
+            .order(Sort.descending(DataCollectionTaskKeys.startTime))
+            .get();
+
+    Preconditions.checkNotNull(dataCollectionTask, "dataCollectionTask can not be null");
+    if (Instant.ofEpochMilli(dataCollectionTask.getLastUpdatedAt())
+            .isBefore(clock.instant().minus(Duration.ofMinutes(2)))
+        && dataCollectionTask.getStatus().equals(DataCollectionExecutionStatus.SUCCESS)) {
+      createNextTask((ServiceGuardDataCollectionTask) dataCollectionTask);
+      log.warn(
+          "Recovered from next task creation issue. DataCollectionTask uuid: {}, account: {}, projectIdentifier: {}, orgIdentifier: {}, ",
+          dataCollectionTask.getUuid(), cvConfig.getAccountId(), cvConfig.getProjectIdentifier(),
+          cvConfig.getOrgIdentifier());
     }
   }
 
@@ -271,39 +310,16 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public String enqueueFirstTask(CVConfig cvConfig) {
+  public void enqueueFirstTask(CVConfig cvConfig) {
     log.info("Enqueuing cvConfigId for the first time: {}", cvConfig.getUuid());
     populateMetricPack(cvConfig);
-
     TimeRange dataCollectionRange = cvConfig.getFirstTimeDataCollectionTimeRange();
     DataCollectionTask dataCollectionTask =
         getDataCollectionTask(cvConfig, dataCollectionRange.getStartTime(), dataCollectionRange.getEndTime());
-    dataCollectionTask.setDataCollectionWorkerId(cvConfig.getUuid());
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, cvConfig.getUuid());
-    params.put(DataCollectionTaskKeys.verificationTaskId, dataCollectionTask.getVerificationTaskId());
-    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
 
-    String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(cvConfig.getAccountId(),
-        cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(),
-        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
     save(dataCollectionTask);
-    cvConfigService.setCollectionTaskId(cvConfig.getUuid(), dataCollectionTaskId);
-
+    cvConfigService.markFirstTaskCollected(cvConfig);
     log.info("Enqueued cvConfigId successfully: {}", cvConfig.getUuid());
-    return dataCollectionTaskId;
-  }
-
-  @Override
-  public void resetLiveMonitoringPerpetualTask(CVConfig cvConfig) {
-    Map<String, String> params = new HashMap<>();
-    params.put(DataCollectionTaskKeys.dataCollectionWorkerId, cvConfig.getUuid());
-    params.put(DataCollectionTaskKeys.verificationTaskId,
-        verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfig.getUuid()));
-    params.put(CVConfigKeys.connectorIdentifier, cvConfig.getConnectorIdentifier());
-    verificationManagerService.resetDataCollectionTask(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
-        cvConfig.getProjectIdentifier(), cvConfig.getPerpetualTaskId(),
-        DataCollectionConnectorBundle.builder().params(params).dataCollectionType(DataCollectionType.CV).build());
   }
 
   @Override
@@ -324,10 +340,13 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {
+    String dataCollectionWorkerId = monitoringSourcePerpetualTaskService.getLiveMonitoringWorkerId(
+        cvConfig.getAccountId(), cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(),
+        cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier());
     return ServiceGuardDataCollectionTask.builder()
         .accountId(cvConfig.getAccountId())
         .type(SERVICE_GUARD)
-        .dataCollectionWorkerId(cvConfig.getUuid())
+        .dataCollectionWorkerId(dataCollectionWorkerId)
         .status(DataCollectionExecutionStatus.QUEUED)
         .startTime(startTime)
         .endTime(endTime)

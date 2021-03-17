@@ -24,5 +24,6 @@ public class AzureAppServiceDeploymentContext {
   private Map<String, AzureAppServiceConnectionString> connSettingsToAdd;
   private Map<String, AzureAppServiceConnectionString> connSettingsToRemove;
   private String slotName;
+  private String targetSlotName;
   private int steadyStateTimeoutInMin;
 }

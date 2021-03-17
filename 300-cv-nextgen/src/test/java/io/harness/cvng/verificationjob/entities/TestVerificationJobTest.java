@@ -12,9 +12,11 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.job.Sensitivity;
+import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.rule.Owner;
 
+import java.time.Duration;
 import java.util.Optional;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -59,8 +61,33 @@ public class TestVerificationJobTest extends CategoryTest {
     assertThat(testVerificationJob.getBaselineVerificationJobInstanceId()).isEqualTo(baseline);
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_lastBaseline() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    TestVerificationJobDTO testVerificationJobDTO =
+        (TestVerificationJobDTO) testVerificationJob.getVerificationJobDTO();
+    assertThat(testVerificationJobDTO.getBaselineVerificationJobInstanceId()).isEqualTo("LAST");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_validBaseline() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    String baseline = generateUuid();
+    testVerificationJob.setBaselineVerificationJobInstanceId(baseline);
+    TestVerificationJobDTO testVerificationJobDTO =
+        (TestVerificationJobDTO) testVerificationJob.getVerificationJobDTO();
+    assertThat(testVerificationJobDTO.getBaselineVerificationJobInstanceId()).isEqualTo(baseline);
+  }
+
   private TestVerificationJob createTestVerificationJob() {
     TestVerificationJob testVerificationJob = new TestVerificationJob();
+    testVerificationJob.setDuration(Duration.ofMinutes(2));
+    testVerificationJob.setServiceIdentifier("service", false);
+    testVerificationJob.setEnvIdentifier("env", false);
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
     return testVerificationJob;
   }

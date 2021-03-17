@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.common.EntityReferenceHelper;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
@@ -56,7 +56,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @Slf4j
-public class InputSetEntityServiceImplTest extends CDNGBaseTest {
+public class InputSetEntityServiceImplTest extends CDNGTestBase {
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Inject InputSetEntityServiceImpl inputSetEntityService;
 

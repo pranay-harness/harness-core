@@ -3,7 +3,7 @@ package io.harness.connector.mappers.gitlabconnector;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.HTTP;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
@@ -24,7 +24,6 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpAuthenticationTy
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabKerberosDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
-import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
@@ -173,11 +172,8 @@ public class GitlabDTOToEntityTest extends CategoryTest {
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
             .authType(GitAuthType.SSH)
-            .credentials(GitlabSshCredentialsDTO.builder()
-                             .spec(GitlabSshCredentialsSpecDTO.builder()
-                                       .sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef))
-                                       .build())
-                             .build())
+            .credentials(
+                GitlabSshCredentialsDTO.builder().sshKeyRef(SecretRefHelper.createSecretRef(sshKeyRef)).build())
             .build();
 
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()

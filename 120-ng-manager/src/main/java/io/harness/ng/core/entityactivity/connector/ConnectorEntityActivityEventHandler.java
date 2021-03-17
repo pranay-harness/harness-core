@@ -1,12 +1,16 @@
 package io.harness.ng.core.entityactivity.connector;
 
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.ng.NextGenModule.CONNECTOR_DECORATOR_SERVICE;
 
 import io.harness.EntityType;
+import io.harness.NgAutoLogContext;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.helper.ConnectorLogContext;
 import io.harness.connector.services.ConnectorService;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.activityhistory.dto.ConnectivityCheckActivityDetailDTO;
 import io.harness.ng.core.activityhistory.dto.EntityUsageActivityDetailDTO;
@@ -38,28 +42,32 @@ public class ConnectorEntityActivityEventHandler {
     log.info("Updating the connector activity result for the connector {}", connectorMessage);
     Long activityTime = null;
     ConnectorValidationResult connectorValidationResult = null;
-    switch (ngActivityDTO.getType()) {
-      case CONNECTIVITY_CHECK:
-        ConnectivityCheckActivityDetailDTO connectivityCheckActivityDetail =
-            (ConnectivityCheckActivityDetailDTO) ngActivityDTO.getDetail();
-        connectorValidationResult = connectivityCheckActivityDetail.getConnectorValidationResult();
-        break;
-      case ENTITY_USAGE:
-        EntityUsageActivityDetailDTO entityUsageActivityDetailDTO =
-            (EntityUsageActivityDetailDTO) ngActivityDTO.getDetail();
-        activityTime = ngActivityDTO.getActivityTime();
-        connectorValidationResult =
-            createConnectorValidatonResultFromEntityUsage(entityUsageActivityDetailDTO, activityTime);
-        break;
-      case ENTITY_UPDATE:
-      case ENTITY_CREATION:
-        activityTime = ngActivityDTO.getActivityTime();
-        break;
-      default:
+    try (AutoLogContext ignore1 =
+             new NgAutoLogContext(projectIdentifier, orgIdentifier, accountIdentifier, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new ConnectorLogContext(connectorIdentifier, OVERRIDE_ERROR)) {
+      switch (ngActivityDTO.getType()) {
+        case CONNECTIVITY_CHECK:
+          ConnectivityCheckActivityDetailDTO connectivityCheckActivityDetail =
+              (ConnectivityCheckActivityDetailDTO) ngActivityDTO.getDetail();
+          connectorValidationResult = connectivityCheckActivityDetail.getConnectorValidationResult();
+          break;
+        case ENTITY_USAGE:
+          EntityUsageActivityDetailDTO entityUsageActivityDetailDTO =
+              (EntityUsageActivityDetailDTO) ngActivityDTO.getDetail();
+          activityTime = ngActivityDTO.getActivityTime();
+          connectorValidationResult =
+              createConnectorValidatonResultFromEntityUsage(entityUsageActivityDetailDTO, activityTime);
+          break;
+        case ENTITY_UPDATE:
+        case ENTITY_CREATION:
+          activityTime = ngActivityDTO.getActivityTime();
+          break;
+        default:
+      }
+      connectorService.updateActivityDetailsInTheConnector(accountIdentifier, orgIdentifier, projectIdentifier,
+          connectorIdentifier, connectorValidationResult, activityTime);
+      log.info("Completed Updating the connector heartbeat result for the connector {}", connectorMessage);
     }
-    connectorService.updateActivityDetailsInTheConnector(accountIdentifier, orgIdentifier, projectIdentifier,
-        connectorIdentifier, connectorValidationResult, activityTime);
-    log.info("Completed Updating the connector heartbeat result for the connector {}", connectorMessage);
   }
 
   private ConnectorValidationResult createConnectorValidatonResultFromEntityUsage(

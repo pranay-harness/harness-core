@@ -71,7 +71,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -229,7 +228,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     }
     return getBuildService(settingAttribute, appId, artifactStream.getArtifactStreamType())
         .getBuild(appId, artifactStreamAttributes, settingValue, encryptedDataDetails,
@@ -274,7 +273,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     }
     if (GCS.name().equals(artifactStreamType)) {
       limit = (limit != -1) ? limit : 100;
@@ -333,7 +332,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       Service service = artifactStreamServiceBindingService.getService(appId, artifactStream.getUuid(), true);
       artifactStreamAttributes = getArtifactStreamAttributes(artifactStream, service);
     } else {
-      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+      artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     }
 
     return getBuildService(settingAttribute, appId)
@@ -341,7 +340,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private ArtifactStreamAttributes getArtifactStreamAttributes(ArtifactStream artifactStream, Service service) {
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     artifactStreamAttributes.setArtifactType(service.getArtifactType());
     return artifactStreamAttributes;
   }
@@ -407,7 +407,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public void validateAndInferArtifactSource(ArtifactStream artifactStream) {
     SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
     SettingValue settingValue = getSettingValue(settingAttribute);
-    ArtifactStreamAttributes attributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes attributes = artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     ArtifactStreamAttributes newAttributes =
         getBuildService(settingAttribute, artifactStream.fetchAppId(), attributes.getArtifactStreamType())
@@ -543,13 +543,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    ArtifactStreamAttributes artifactStreamAttributes = artifactStream.fetchArtifactStreamAttributes();
+    ArtifactStreamAttributes artifactStreamAttributes =
+        artifactStream.fetchArtifactStreamAttributes(featureFlagService);
     if (AMAZON_S3.name().equals(artifactStream.getArtifactStreamType())) {
-      return getBuildService(settingAttribute, artifactStream.getArtifactStreamType())
+      return getBuildService(settingAttribute, artifactStream.getAppId(), artifactStream.getArtifactStreamType())
           .getLastSuccessfulBuild(
               artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     } else {
-      return getBuildService(settingAttribute)
+      return getBuildService(settingAttribute, artifactStream.getAppId())
           .getLastSuccessfulBuild(
               artifactStream.fetchAppId(), artifactStreamAttributes, settingValue, encryptedDataDetails);
     }
@@ -755,13 +756,17 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {
-    return settingsService.isSettingValueGcp(settingAttribute)
-        && ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+    if (settingsService.isSettingValueGcp(settingAttribute)) {
+      return ((GcpConfig) settingAttribute.getValue()).isUseDelegate();
+    }
+    return settingsService.hasDelegateSelectorProperty(settingAttribute);
   }
 
   private SyncTaskContext appendDelegateSelector(
       SettingAttribute settingAttribute, SyncTaskContextBuilder syncTaskContextBuilder) {
-    return syncTaskContextBuilder.tags(Arrays.asList(((GcpConfig) settingAttribute.getValue()).getDelegateSelector()))
-        .build();
+    List<String> tags = settingsService.getDelegateSelectors(settingAttribute);
+    log.info("[Delegate Selection] Appending delegate selectors to - {} with selectors {}", settingAttribute.getName(),
+        tags);
+    return syncTaskContextBuilder.tags(tags).build();
   }
 }

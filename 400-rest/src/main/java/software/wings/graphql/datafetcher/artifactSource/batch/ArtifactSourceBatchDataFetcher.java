@@ -2,7 +2,9 @@ package software.wings.graphql.datafetcher.artifactSource.batch;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
@@ -19,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.dataloader.DataLoader;
 
 @OwnedBy(CDC)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ArtifactSourceBatchDataFetcher
     extends AbstractBatchDataFetcher<QLArtifactSource, QLArtifactSourceQueryParam, String> {
   final ArtifactStreamService artifactStreamService;

@@ -1,10 +1,12 @@
 package io.harness.beans.steps.stepinfo;
 
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
+import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -47,37 +49,43 @@ public class RestoreCacheS3StepInfo implements PluginCompatibleStep {
   private ContainerResource resources;
 
   // plugin settings
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> endpoint;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> key;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> bucket;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
+
   @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> region;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> endpoint;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> pathStyle;
+  @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) private ParameterField<Boolean> failIfKeyNotFound;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<ArchiveFormat> archiveFormat;
 
   @Builder
-  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "endpoint",
-      "key", "bucket", "target", "region"})
+  @ConstructorProperties({"identifier", "name", "retry", "connectorRef", "containerImage", "resources", "key", "bucket",
+      "region", "endpoint", "pathStyle", "failIfKeyNotFound", "archiveFormat"})
   public RestoreCacheS3StepInfo(String identifier, String name, Integer retry, ParameterField<String> connectorRef,
-      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> endpoint,
-      ParameterField<String> key, ParameterField<String> bucket, ParameterField<String> target,
-      ParameterField<String> region) {
+      ParameterField<String> containerImage, ContainerResource resources, ParameterField<String> key,
+      ParameterField<String> bucket, ParameterField<String> region, ParameterField<String> endpoint,
+      ParameterField<Boolean> pathStyle, ParameterField<Boolean> failIfKeyNotFound,
+      ParameterField<ArchiveFormat> archiveFormat) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
 
     this.connectorRef = connectorRef;
     this.containerImage =
-        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/s3-cache:latest"));
+        Optional.ofNullable(containerImage).orElse(ParameterField.createValueField("plugins/cache:latest"));
 
     if (containerImage != null && containerImage.fetchFinalValue() == null) {
-      this.containerImage = ParameterField.createValueField("plugins/s3-cache:latest");
+      this.containerImage = ParameterField.createValueField("plugins/cache:latest");
     }
 
     this.resources = resources;
-    this.endpoint = endpoint;
     this.key = key;
     this.bucket = bucket;
-    this.target = target;
     this.region = region;
+    this.endpoint = endpoint;
+    this.pathStyle = pathStyle;
+    this.failIfKeyNotFound = failIfKeyNotFound;
+    this.archiveFormat = archiveFormat;
   }
 
   @Override

@@ -27,12 +27,22 @@ message Report {
   repeated string paths = 3;
 }
 
-message TestIntelligenceStep {
-  string goals = 1;
-  string language = 2;   // repo language for running tests. Java | Python | Go etc.
+message RunTestsStep {
+  string args = 1;
+  string language = 2;   // language used for running tests. Java | Python | Go etc.
   string buildTool = 3;  // build tool used for running tests. maven | bazel | gradle.
-  StepContext context = 4;
-  uint32 container_port = 5;  // Port of the container on which run step needs to be executed.
+  string testAnnotations = 4;
+  string packages = 5;
+  bool runOnlySelectedTests = 6;
+  StepContext context = 7;
+  uint32 container_port = 8;           // Port of the container on which run step needs to be executed.
+  repeated Report reports = 9;         // Spec for publishing junit reports
+  string preTestCommand = 10;          // Pre-commands to setup environment before running tests
+  string postTestCommand = 11;         // Post commands after running tests
+  repeated string envVarOutputs = 12;  // produced output variables
+  // This is added on by the lite engine specifically. Ideally we should just forward
+  // to addon and have it calculate this, this proxy can be added later.
+  repeated string diff_files = 13;
 }
 
 message RunStep {
@@ -68,11 +78,12 @@ message UnitStep {
     RestoreCacheStep restore_cache = 5;
     PublishArtifactsStep publish_artifacts = 6;
     PluginStep plugin = 9;
-    TestIntelligenceStep testIntelligence = 10;
+    RunTestsStep runTests = 10;
   }
   string callback_token = 7;
   string task_id = 8;
   string skip_condition = 11;
+  string log_key = 12;
 }
 
 message ParallelStep {

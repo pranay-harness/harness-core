@@ -3,7 +3,9 @@ package software.wings.graphql.datafetcher.artifact;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactKeys;
@@ -21,6 +23,7 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ArtifactQueryHelper {
   @Inject private DataFetcherUtils utils;
 

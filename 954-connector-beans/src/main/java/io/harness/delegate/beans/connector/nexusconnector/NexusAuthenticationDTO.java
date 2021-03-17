@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.nexusconnector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -15,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("NexusAuthentication")
+@JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonDeserialize(using = NexusAuthDTODeserializer.class)
 public class NexusAuthenticationDTO {
   @NotNull @JsonProperty("type") NexusAuthType authType;

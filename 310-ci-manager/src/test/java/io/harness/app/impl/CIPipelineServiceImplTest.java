@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.app.beans.dto.CIPipelineFilterDTO;
 import io.harness.beans.stages.IntegrationStage;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
@@ -40,7 +40,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
-public class CIPipelineServiceImplTest extends CIManagerTest {
+public class CIPipelineServiceImplTest extends CIManagerTestBase {
   @Mock private NgPipelineRepository ngPipelineRepository;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @Inject NGPipelineServiceImpl ngPipelineService;
@@ -106,14 +106,14 @@ public class CIPipelineServiceImplTest extends CIManagerTest {
     ExecutionElement execution = integrationStage.getExecution();
     assertThat(execution).isNotNull();
 
-    // Assert testIntelligence spec
+    // Assert runTests spec
     StepElement stepElement = (StepElement) execution.getSteps().get(3);
-    assertThat(stepElement.getType()).isEqualTo("TestIntelligence");
+    assertThat(stepElement.getType()).isEqualTo("RunTests");
     assertThat(stepElement.getIdentifier()).isEqualTo("runUnitTestsIntelligently");
-    TestIntelligenceStepInfo testIntelligenceStepInfo = (TestIntelligenceStepInfo) stepElement.getStepSpecType();
-    assertThat(testIntelligenceStepInfo.getGoals()).isEqualTo("echo \"Running test\"");
-    assertThat(testIntelligenceStepInfo.getBuildTool()).isEqualTo("maven");
-    assertThat(testIntelligenceStepInfo.getLanguage()).isEqualTo("java");
+    RunTestsStepInfo runTestsStepInfo = (RunTestsStepInfo) stepElement.getStepSpecType();
+    assertThat(runTestsStepInfo.getArgs()).isEqualTo("echo \"Running test\"");
+    assertThat(runTestsStepInfo.getBuildTool()).isEqualTo("maven");
+    assertThat(runTestsStepInfo.getLanguage()).isEqualTo("java");
 
     assertThat(execution.getSteps()).hasSize(4);
   }

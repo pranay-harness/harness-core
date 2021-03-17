@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -27,6 +28,7 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.rule.Owner;
 
 import software.wings.api.JenkinsExecutionData;
@@ -41,6 +43,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -82,6 +85,7 @@ public class JenkinsStateTest extends CategoryTest {
   @Mock private TemplateExpressionProcessor templateExpressionProcessor;
   @Mock private SettingsService settingsService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private JenkinsState jenkinsState = new JenkinsState("jenkins");
 
@@ -136,6 +140,8 @@ public class JenkinsStateTest extends CategoryTest {
     JenkinsTaskParams params = (JenkinsTaskParams) delegateTaskArgumentCaptor.getValue().getData().getParameters()[0];
 
     assertThat(params.getJenkinsConfig()).isEqualTo(jenkinsConfig);
+    assertThat(delegateTaskArgumentCaptor.getValue().isSelectionLogsTrackingEnabled()).isTrue();
+    verify(stateExecutionService).appendDelegateTaskDetails(eq(null), any(DelegateTaskDetails.class));
   }
 
   @Test

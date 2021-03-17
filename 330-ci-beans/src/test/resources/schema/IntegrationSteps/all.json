@@ -1,0 +1,899 @@
+{
+  "type": "object",
+  "discriminator": "type",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "CIStepInfo": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ContainerResource": {
+      "type": "object",
+      "required": [
+        "limits"
+      ],
+      "properties": {
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DockerStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "repo",
+            "tags"
+          ],
+          "properties": {
+            "buildArgs": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
+            "labels": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "repo": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "tags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ECRStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "account",
+            "connectorRef",
+            "imageName",
+            "region",
+            "tags"
+          ],
+          "properties": {
+            "account": {
+              "type": "string"
+            },
+            "buildArgs": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
+            "imageName": {
+              "type": "string"
+            },
+            "labels": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "tags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GCRStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "host",
+            "imageName",
+            "projectID",
+            "tags"
+          ],
+          "properties": {
+            "buildArgs": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "context": {
+              "type": "string"
+            },
+            "dockerfile": {
+              "type": "string"
+            },
+            "host": {
+              "type": "string"
+            },
+            "imageName": {
+              "type": "string"
+            },
+            "labels": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "projectID": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "tags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "JUnitTestReport": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/UnitTestReportSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "paths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "number"
+            }
+          ]
+        },
+        "memory": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldListString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldMapStringString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PluginStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "image"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "image": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "settings": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RestoreCacheGCSStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key"
+          ],
+          "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "failIfKeyNotFound": {
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RestoreCacheS3StepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key"
+          ],
+          "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "failIfKeyNotFound": {
+              "type": "boolean"
+            },
+            "key": {
+              "type": "string"
+            },
+            "pathStyle": {
+              "type": "boolean"
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RunStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "command",
+            "image"
+          ],
+          "properties": {
+            "command": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "envVariables": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "image": {
+              "type": "string"
+            },
+            "outputVariables": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "reports": {
+              "$ref": "#/definitions/UnitTestReport"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RunTestsStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "args",
+            "buildTool",
+            "image",
+            "language",
+            "packages"
+          ],
+          "properties": {
+            "args": {
+              "type": "string"
+            },
+            "buildTool": {
+              "type": "string"
+            },
+            "connector": {
+              "type": "string"
+            },
+            "envVariables": {
+              "$ref": "#/definitions/ParameterFieldMapStringString"
+            },
+            "image": {
+              "type": "string"
+            },
+            "language": {
+              "type": "string"
+            },
+            "outputVariables": {
+              "$ref": "#/definitions/ParameterFieldListString"
+            },
+            "packages": {
+              "type": "string"
+            },
+            "postCommand": {
+              "type": "string"
+            },
+            "preCommand": {
+              "type": "string"
+            },
+            "reports": {
+              "$ref": "#/definitions/UnitTestReport"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "runOnlySelectedTests": {
+              "type": "boolean"
+            },
+            "testAnnotations": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SaveCacheGCSStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key",
+            "sourcePaths"
+          ],
+          "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "override": {
+              "type": "boolean"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "sourcePaths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SaveCacheS3StepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "key",
+            "sourcePaths"
+          ],
+          "properties": {
+            "archiveFormat": {
+              "type": "string"
+            },
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "key": {
+              "type": "string"
+            },
+            "override": {
+              "type": "boolean"
+            },
+            "pathStyle": {
+              "type": "boolean"
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "sourcePaths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UnitTestReport": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "JUnit"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JUnit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JUnitTestReport"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "UnitTestReportSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UploadToArtifactoryStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "sourcePath",
+            "target"
+          ],
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "sourcePath": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UploadToGCSStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "sourcePath",
+            "target"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "sourcePath": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UploadToS3StepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CIStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "bucket",
+            "connectorRef",
+            "sourcePath"
+          ],
+          "properties": {
+            "bucket": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "endpoint": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            },
+            "resources": {
+              "$ref": "#/definitions/ContainerResource"
+            },
+            "sourcePath": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

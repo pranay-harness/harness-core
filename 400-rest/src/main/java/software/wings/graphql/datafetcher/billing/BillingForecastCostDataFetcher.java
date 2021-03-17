@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -21,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BillingForecastCostDataFetcher
     extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction, QLBillingDataFilter, QLCCMGroupBy,
         QLBillingSortCriteria> {

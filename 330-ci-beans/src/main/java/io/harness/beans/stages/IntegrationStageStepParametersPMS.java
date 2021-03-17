@@ -44,6 +44,27 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
     }
     IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
 
+    Infrastructure infrastructure = getInfrastructure(stageElementConfig, ctx);
+
+    return IntegrationStageStepParametersPMS.builder()
+        .identifier(stageElementConfig.getIdentifier())
+        .name(stageElementConfig.getName())
+        .buildStatusUpdateParameter(buildStatusUpdateParameter)
+        .description(stageElementConfig.getDescription())
+        .infrastructure(infrastructure)
+        .dependencies(integrationStageConfig.getServiceDependencies())
+        .type(stageElementConfig.getType())
+        .skipCondition(stageElementConfig.getSkipCondition())
+        .originalVariables(stageElementConfig.getVariables())
+        .childNodeID(childNodeID)
+        .sharedPaths(integrationStageConfig.getSharedPaths())
+        .enableCloneRepo(integrationStageConfig.getCloneCodebase())
+        .build();
+  }
+
+  public static Infrastructure getInfrastructure(StageElementConfig stageElementConfig, PlanCreationContext ctx) {
+    IntegrationStageConfig integrationStageConfig = (IntegrationStageConfig) stageElementConfig.getStageType();
+
     Infrastructure infrastructure = integrationStageConfig.getInfrastructure();
     if (integrationStageConfig.getInfrastructure().getType() == Type.USE_FROM_STAGE) {
       UseFromStageInfraYaml useFromStageInfraYaml = (UseFromStageInfraYaml) integrationStageConfig.getInfrastructure();
@@ -55,20 +76,7 @@ public class IntegrationStageStepParametersPMS implements StepParameters {
       }
     }
 
-    return IntegrationStageStepParametersPMS.builder()
-        .identifier(stageElementConfig.getIdentifier())
-        .name(stageElementConfig.getName())
-        .buildStatusUpdateParameter(buildStatusUpdateParameter)
-        .description(stageElementConfig.getDescription())
-        .infrastructure(infrastructure)
-        .dependencies(integrationStageConfig.getServiceDependencies())
-        .type(stageElementConfig.getType())
-        .skipCondition(integrationStageConfig.getSkipCondition())
-        .originalVariables(stageElementConfig.getVariables())
-        .childNodeID(childNodeID)
-        .sharedPaths(integrationStageConfig.getSharedPaths())
-        .enableCloneRepo(integrationStageConfig.getCloneCodebase())
-        .build();
+    return infrastructure;
   }
 
   private static IntegrationStageConfig getIntegrationStageConfig(YamlField yamlField, String identifier) {

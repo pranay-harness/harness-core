@@ -6,6 +6,8 @@ import static io.harness.azure.model.AzureConstants.DEPLOYMENT_SLOT_PRODUCTION_T
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
@@ -30,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppListWebAppDeploymentSlotNamesTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Inject private AzureWebClient azureWebClient;
 

@@ -11,6 +11,7 @@ public interface StepSpecTypeConstants {
   String K8S_BG_SWAP_SERVICES = "K8sBGSwapServices";
   String K8S_CANARY_DELETE = "K8sCanaryDelete";
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
+  String K8S_DELETE = "K8sDelete";
 
   String SHELL_SCRIPT = "ShellScript";
   String PLACEHOLDER = "Placeholder";

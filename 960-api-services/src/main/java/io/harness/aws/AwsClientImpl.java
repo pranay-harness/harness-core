@@ -1,6 +1,7 @@
 package io.harness.aws;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
@@ -14,6 +15,11 @@ import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.codecommit.AWSCodeCommitClient;
+import com.amazonaws.services.codecommit.AWSCodeCommitClientBuilder;
+import com.amazonaws.services.codecommit.model.AWSCodeCommitException;
+import com.amazonaws.services.codecommit.model.GetRepositoryRequest;
+import com.amazonaws.services.codecommit.model.ListRepositoriesRequest;
 import com.amazonaws.services.costandusagereport.AWSCostAndUsageReport;
 import com.amazonaws.services.costandusagereport.AWSCostAndUsageReportClientBuilder;
 import com.amazonaws.services.costandusagereport.model.DescribeReportDefinitionsRequest;
@@ -80,6 +86,30 @@ public class AwsClientImpl implements AwsClient {
   }
 
   @Override
+  public void validateAwsCodeCommitCredential(AwsConfig awsConfig, String region, String repo) {
+    try {
+      tracker.trackEC2Call("Get CodeCommit client");
+      AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
+      if (isNotEmpty(repo)) {
+        amazonCodeCommitClient.getRepository(new GetRepositoryRequest().withRepositoryName(repo));
+      } else {
+        amazonCodeCommitClient.listRepositories(new ListRepositoriesRequest());
+      }
+    } catch (AWSCodeCommitException awsCodeCommitException) {
+      if (awsCodeCommitException.getStatusCode() == 401) {
+        if (!awsConfig.isEc2IamCredentials()) {
+          if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
+            throw new InvalidRequestException("Access Key should not be empty");
+          } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
+            throw new InvalidRequestException("Secret Key should not be empty");
+          }
+        }
+      }
+      throw awsCodeCommitException;
+    }
+  }
+
+  @Override
   public String getAmazonEcrAuthToken(AwsConfig awsConfig, String account, String region) {
     try {
       AmazonECRClient amazonECRClient = getAmazonEcrClient(region, awsConfig);
@@ -108,6 +138,15 @@ public class AwsClientImpl implements AwsClient {
     AWSCredentialsProvider credentialsProvider = getCredentialProvider(awsConfig);
     return (AmazonEC2Client) AmazonEC2ClientBuilder.standard()
         .withRegion(DEFAULT_REGION)
+        .withCredentials(credentialsProvider)
+        .build();
+  }
+
+  @VisibleForTesting
+  AWSCodeCommitClient getAmazonCodeCommitClient(AwsConfig awsConfig, String region) {
+    AWSCredentialsProvider credentialsProvider = getCredentialProvider(awsConfig);
+    return (AWSCodeCommitClient) AWSCodeCommitClientBuilder.standard()
+        .withRegion(region)
         .withCredentials(credentialsProvider)
         .build();
   }
@@ -189,6 +228,13 @@ public class AwsClientImpl implements AwsClient {
     return Optional.empty();
   }
 
+  protected AmazonIdentityManagement getAwsIAMClient(AWSCredentialsProvider credentialsProvider) {
+    return AmazonIdentityManagementClientBuilder.standard()
+        .withCredentials(credentialsProvider)
+        .withRegion(DEFAULT_REGION)
+        .build();
+  }
+
   protected AWSCostAndUsageReport getAwsCurClient(AWSCredentialsProvider credentialsProvider) {
     return AWSCostAndUsageReportClientBuilder.standard()
         .withRegion(DEFAULT_REGION)
@@ -212,8 +258,7 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public List<String> listRolePolicyNames(
       AWSCredentialsProvider awsCredentialsProvider, @NotNull final String roleName) {
-    final AmazonIdentityManagement iam =
-        AmazonIdentityManagementClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
+    final AmazonIdentityManagement iam = getAwsIAMClient(awsCredentialsProvider);
 
     List<String> policyNames = new ArrayList<>();
 
@@ -237,8 +282,7 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public List<EvaluationResult> simulatePrincipalPolicy(final AWSCredentialsProvider credentialsProvider,
       @NotNull String policySourceArn, @NotEmpty List<String> actionNames, @Nullable List<String> resourceArns) {
-    final AmazonIdentityManagement iam =
-        AmazonIdentityManagementClientBuilder.standard().withCredentials(credentialsProvider).build();
+    final AmazonIdentityManagement iam = getAwsIAMClient(credentialsProvider);
     final SimulatePrincipalPolicyRequest request =
         new SimulatePrincipalPolicyRequest().withPolicySourceArn(policySourceArn).withActionNames(actionNames);
     if (CollectionUtil.isNotEmpty(resourceArns)) {
@@ -258,8 +302,7 @@ public class AwsClientImpl implements AwsClient {
   @Override
   public Policy getRolePolicy(
       AWSCredentialsProvider awsCredentialsProvider, @NotNull final String roleName, @NotNull final String policyName) {
-    final AmazonIdentityManagement iam =
-        AmazonIdentityManagementClientBuilder.standard().withCredentials(awsCredentialsProvider).build();
+    final AmazonIdentityManagement iam = getAwsIAMClient(awsCredentialsProvider);
     final GetRolePolicyResult result =
         iam.getRolePolicy(new GetRolePolicyRequest().withPolicyName(policyName).withRoleName(roleName));
 

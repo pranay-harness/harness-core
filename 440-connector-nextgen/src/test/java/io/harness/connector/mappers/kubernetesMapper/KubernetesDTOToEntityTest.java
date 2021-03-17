@@ -35,6 +35,7 @@ import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,7 +59,9 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
         KubernetesClusterConfigDTO.builder()
             .credential(KubernetesCredentialDTO.builder()
                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateName).build())
+                            .config(KubernetesDelegateDetailsDTO.builder()
+                                        .delegateSelectors(Collections.singleton(delegateName))
+                                        .build())
                             .build())
             .build();
     Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithDelegateCreds);
@@ -66,7 +69,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
     KubernetesDelegateDetails kubernetesCredential = (KubernetesDelegateDetails) k8Config.getCredential();
-    assertThat(kubernetesCredential.getDelegateName()).isEqualTo(delegateName);
+    assertThat(kubernetesCredential.getDelegateSelectors()).isEqualTo(Collections.singleton(delegateName));
   }
 
   @Test(expected = UnexpectedException.class)

@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.HITESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.batch.processing.BatchProcessingBaseTest;
+import io.harness.batch.processing.BatchProcessingTestBase;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
 import io.harness.category.element.UnitTests;
 import io.harness.event.grpc.PublishedMessage;
@@ -16,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.batch.item.ItemReader;
 
-public class MongoEventReaderFactoryTest extends BatchProcessingBaseTest {
+public class MongoEventReaderFactoryTest extends BatchProcessingTestBase {
   @Inject private MongoEventReaderFactory mongoEventReaderFactory;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID_" + this.getClass().getSimpleName();

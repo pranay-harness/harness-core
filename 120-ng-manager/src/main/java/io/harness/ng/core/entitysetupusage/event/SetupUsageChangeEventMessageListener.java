@@ -3,14 +3,17 @@ package io.harness.ng.core.entitysetupusage.event;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SECRETS;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.EntityType;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entitysetupusage.DeleteSetupUsageDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.entitysetupusage.entity.EntitySetupUsage;
 import io.harness.ng.core.entitysetupusage.mapper.EntitySetupUsageEventDTOMapper;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -44,26 +47,31 @@ public class SetupUsageChangeEventMessageListener implements MessageListener {
   public boolean handleMessage(Message message) {
     final String messageId = message.getId();
     log.info("Processing the setup usage crud event with the id {}", messageId);
-    Map<String, String> metadataMap = message.getMessage().getMetadataMap();
-    if (!metadataMap.containsKey(REFERRED_ENTITY_TYPE) || !handledByNgCore(metadataMap.get(REFERRED_ENTITY_TYPE))) {
+    try (AutoLogContext ignore1 = new NgEventLogContext(messageId, OVERRIDE_ERROR)) {
+      Map<String, String> metadataMap = message.getMessage().getMetadataMap();
+      if (!metadataMap.containsKey(REFERRED_ENTITY_TYPE) || !handledByNgCore(metadataMap.get(REFERRED_ENTITY_TYPE))) {
+        return false;
+      }
+      final EntityType entityTypeFromProto = EventProtoToEntityHelper.getEntityTypeFromProto(
+          EntityTypeProtoEnum.valueOf(metadataMap.get(REFERRED_ENTITY_TYPE)));
+      log.info("Event received for entityType: [{}]", entityTypeFromProto.getYamlName());
+      if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
+        switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
+          case EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION:
+            log.info("Event received for action: FLUSH_CREATE_ACTION");
+            final EntitySetupUsageCreateV2DTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
+            return processCreateAction(setupUsageCreateDTO, entityTypeFromProto);
+          case EventsFrameworkMetadataConstants.DELETE_ACTION:
+            log.info("Event received for action: DELETE_ACTION");
+            final DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
+            return processDeleteAction(deleteRequestDTO, entityTypeFromProto);
+          default:
+            log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
+        }
+      }
+      log.info("Cannot process the setup usage event with id {}", messageId);
       return false;
     }
-    final EntityType entityTypeFromProto = EventProtoToEntityHelper.getEntityTypeFromProto(
-        EntityTypeProtoEnum.valueOf(metadataMap.get(REFERRED_ENTITY_TYPE)));
-    if (metadataMap.containsKey(EventsFrameworkMetadataConstants.ACTION)) {
-      switch (metadataMap.get(EventsFrameworkMetadataConstants.ACTION)) {
-        case EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION:
-          final EntitySetupUsageCreateV2DTO setupUsageCreateDTO = getEntitySetupUsageCreateDTO(message);
-          return processCreateAction(setupUsageCreateDTO, entityTypeFromProto);
-        case EventsFrameworkMetadataConstants.DELETE_ACTION:
-          final DeleteSetupUsageDTO deleteRequestDTO = getEntitySetupUsageDeleteDTO(message);
-          return processDeleteAction(deleteRequestDTO, entityTypeFromProto);
-        default:
-          log.info("Invalid action type: {}", metadataMap.get(EventsFrameworkMetadataConstants.ACTION));
-      }
-    }
-    log.info("Cannot process the setup usage event with id {}", messageId);
-    return false;
   }
 
   private boolean handledByNgCore(String entityTypeProtoEnum) {

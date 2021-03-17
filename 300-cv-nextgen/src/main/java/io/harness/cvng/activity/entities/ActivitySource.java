@@ -7,7 +7,6 @@ import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -59,10 +58,10 @@ public abstract class ActivitySource
   long createdAt;
   long lastUpdatedAt;
 
-  @NotNull @FdIndex String accountId;
+  @NotNull String accountId;
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
-  @NotNull @FdUniqueIndex String identifier;
+  @NotNull String identifier;
   @NotNull String name;
   @NotNull ActivitySourceType type;
 

@@ -8,7 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
@@ -53,7 +53,7 @@ import retrofit2.Call;
 import retrofit2.Response;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ManifestPerpetualTaskExecutorTest extends DelegateTest {
+public class ManifestPerpetualTaskExecutorTest extends DelegateTestBase {
   private static final String APP_MANIFEST_ID = "APP_MANIFEST_ID";
   public static final String SERVICE_ID = "SERVICE_ID";
 

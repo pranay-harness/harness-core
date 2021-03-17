@@ -12,7 +12,6 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.utils.CVParallelExecutor;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO.CategoryRisk;
 import io.harness.cvng.dashboard.beans.EnvServiceRiskDTO;
@@ -27,6 +26,7 @@ import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk.HeatMapRiskKeys;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.persistence.HIterator;
@@ -43,8 +43,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -70,7 +70,7 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Inject private AnalysisService analysisService;
   @Inject private AlertRuleService alertRuleService;
   @Inject private ExecutorService defaultExecutorService;
-  @Inject private CVParallelExecutor cvParallelExecutor;
+  @Inject private CVNGParallelExecutor cvngParallelExecutor;
   @Inject private NextGenService nextGenService;
 
   @Override
@@ -100,7 +100,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       });
     }
 
-    cvParallelExecutor.executeParallel(callables);
+    cvngParallelExecutor.executeParallel(callables);
     defaultExecutorService.execute(()
                                        -> alertRuleService.processRiskScore(accountId, orgIdentifier, projectIdentifier,
                                            serviceIdentifier, envIdentifier, category, timeStamp, riskScore));
@@ -117,8 +117,9 @@ public class HeatMapServiceImpl implements HeatMapService {
       Instant heatMapEndTime = heatMapStartTime.plusMillis(heatMapResolution.getResolution().toMillis());
 
       Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class)
-                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.accountId, accountId)
                                         .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
+                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                         .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                         .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                         .filter(HeatMapKeys.category, category)
@@ -167,8 +168,8 @@ public class HeatMapServiceImpl implements HeatMapService {
     Set<CVMonitoringCategory> cvMonitoringCategories = cvConfigService.getAvailableCategories(
         accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier);
     for (CVMonitoringCategory category : cvMonitoringCategories) {
-      Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(orgIdentifier, projectIdentifier, serviceIdentifier,
-          envIdentifier, category, startTime, endTime, heatMapResolution);
+      Map<Instant, HeatMapDTO> heatMapsFromDB = getHeatMapsFromDB(accountId, orgIdentifier, projectIdentifier,
+          serviceIdentifier, envIdentifier, category, startTime, endTime, heatMapResolution);
 
       SortedSet<HeatMapDTO> heatMapDTOS = new TreeSet<>();
       for (long timeStampMs = startTimeBoundary.toEpochMilli(); timeStampMs <= endTimeBoundary.toEpochMilli();
@@ -194,37 +195,41 @@ public class HeatMapServiceImpl implements HeatMapService {
     List<EnvToServicesDTO> envToServicesDTOS =
         cvConfigService.getEnvToServicesList(accountId, orgIdentifier, projectIdentifier);
     List<Callable<List<EnvServiceRiskDTO>>> callables = new ArrayList<>();
-    envToServicesDTOS.forEach(envToServicesDTO -> callables.add(() -> {
-      Set<ServiceRisk> serviceRisks = new HashSet<>();
-      List<EnvServiceRiskDTO> riskDTOS = new ArrayList<>();
-      envToServicesDTO.getServices().forEach(service -> {
-        CategoryRisksDTO categoryRisk = getCategoryRiskScoresForSpecificServiceEnv(accountId, orgIdentifier,
-            projectIdentifier, service.getIdentifier(), envToServicesDTO.getEnvironment().getIdentifier());
+    envToServicesDTOS.stream()
+        .filter(envToServicesDTO -> envToServicesDTO.getEnvironment().getType().equals(EnvironmentType.Production))
+        .forEach(envToServicesDTO -> callables.add(() -> {
+          List<ServiceRisk> serviceRisks = new ArrayList<>();
+          List<EnvServiceRiskDTO> riskDTOS = new ArrayList<>();
+          envToServicesDTO.getServices().forEach(service -> {
+            CategoryRisksDTO categoryRisk = getCategoryRiskScoresForSpecificServiceEnv(accountId, orgIdentifier,
+                projectIdentifier, service.getIdentifier(), envToServicesDTO.getEnvironment().getIdentifier());
 
-        if (categoryRisk != null && isNotEmpty(categoryRisk.getCategoryRisks())) {
-          Integer risk = Collections.max(
-              categoryRisk.getCategoryRisks().stream().map(CategoryRisk::getRisk).collect(Collectors.toList()));
-          serviceRisks.add(ServiceRisk.builder()
-                               .serviceIdentifier(service.getIdentifier())
-                               .serviceName(service.getName())
-                               .risk(risk)
-                               .build());
-        }
-      });
-      if (isNotEmpty(serviceRisks)) {
-        riskDTOS.add(EnvServiceRiskDTO.builder()
-                         .envIdentifier(envToServicesDTO.getEnvironment().getIdentifier())
-                         .envName(envToServicesDTO.getEnvironment().getName())
-                         .orgIdentifier(orgIdentifier)
-                         .projectIdentifier(projectIdentifier)
-                         .serviceRisks(serviceRisks)
-                         .build());
-      }
-      return riskDTOS;
-    }));
-    List<List<EnvServiceRiskDTO>> envDTOsList = cvParallelExecutor.executeParallel(callables);
+            if (categoryRisk != null && isNotEmpty(categoryRisk.getCategoryRisks())) {
+              Integer risk = Collections.max(
+                  categoryRisk.getCategoryRisks().stream().map(CategoryRisk::getRisk).collect(Collectors.toList()));
+              serviceRisks.add(ServiceRisk.builder()
+                                   .serviceIdentifier(service.getIdentifier())
+                                   .serviceName(service.getName())
+                                   .risk(risk)
+                                   .build());
+            }
+          });
+          if (isNotEmpty(serviceRisks)) {
+            Collections.sort(serviceRisks, Comparator.comparing(ServiceRisk::getServiceName));
+            riskDTOS.add(EnvServiceRiskDTO.builder()
+                             .envIdentifier(envToServicesDTO.getEnvironment().getIdentifier())
+                             .envName(envToServicesDTO.getEnvironment().getName())
+                             .orgIdentifier(orgIdentifier)
+                             .projectIdentifier(projectIdentifier)
+                             .serviceRisks(serviceRisks)
+                             .build());
+          }
+          return riskDTOS;
+        }));
+    List<List<EnvServiceRiskDTO>> envDTOsList = cvngParallelExecutor.executeParallel(callables);
     List<EnvServiceRiskDTO> envServiceRiskDTOList = new ArrayList<>();
     envDTOsList.forEach(envServiceRiskDTOS -> envServiceRiskDTOList.addAll(envServiceRiskDTOS));
+    Collections.sort(envServiceRiskDTOList, Comparator.comparing(EnvServiceRiskDTO::getEnvName));
     return envServiceRiskDTOList;
   }
 
@@ -338,6 +343,10 @@ public class HeatMapServiceImpl implements HeatMapService {
   private CategoryRisksDTO getCategoryRiskScoresForSpecificServiceEnv(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier,
       @Nullable CVMonitoringCategory cvMonitoringCategory, @Nullable Instant endTime) {
+    if (isEmpty(cvConfigService.getConfigsOfProductionEnvironments(
+            accountId, orgIdentifier, projectIdentifier, envIdentifier, serviceIdentifier, cvMonitoringCategory))) {
+      return CategoryRisksDTO.builder().hasConfigsSetup(false).build();
+    }
     HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
     Map<CVMonitoringCategory, Integer> categoryScoreMap = new HashMap<>();
     Instant roundedDownTime = roundDownTo5MinBoundary(clock.instant());
@@ -353,12 +362,13 @@ public class HeatMapServiceImpl implements HeatMapService {
     Instant latestAnalysisTime = Instant.MIN;
     for (CVMonitoringCategory category : cvMonitoringCategories) {
       Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
-                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.accountId, accountId)
                                         .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
+                                        .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
+                                        .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
+                                        .filter(HeatMapKeys.envIdentifier, envIdentifier)
                                         .filter(HeatMapKeys.category, category)
                                         .filter(HeatMapKeys.heatMapResolution, heatMapResolution)
-                                        .filter(HeatMapKeys.envIdentifier, envIdentifier)
-                                        .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)
                                         .order(Sort.descending(HeatMapKeys.heatMapBucketEndTime));
       if (endTime != null) {
         heatMapQuery.field(HeatMapKeys.heatMapBucketStartTime).lessThan(endTime);
@@ -393,7 +403,7 @@ public class HeatMapServiceImpl implements HeatMapService {
         .build();
   }
 
-  private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String orgIdentifier, String projectIdentifier,
+  private Map<Instant, HeatMapDTO> getHeatMapsFromDB(String accountId, String orgIdentifier, String projectIdentifier,
       String serviceIdentifier, String envIdentifier, CVMonitoringCategory category, Instant startTime, Instant endTime,
       HeatMapResolution heatMapResolution) {
     Instant startTimeBucketBoundary = getBoundaryOfResolution(startTime, heatMapResolution.getBucketSize());
@@ -401,6 +411,7 @@ public class HeatMapServiceImpl implements HeatMapService {
     Map<Instant, HeatMapDTO> heatMapDTOS = new HashMap<>();
     try (HIterator<HeatMap> heatMapRecords =
              new HIterator<>(hPersistence.createQuery(HeatMap.class, excludeAuthority)
+                                 .filter(HeatMapKeys.accountId, accountId)
                                  .filter(HeatMapKeys.orgIdentifier, orgIdentifier)
                                  .filter(HeatMapKeys.projectIdentifier, projectIdentifier)
                                  .filter(HeatMapKeys.serviceIdentifier, serviceIdentifier)

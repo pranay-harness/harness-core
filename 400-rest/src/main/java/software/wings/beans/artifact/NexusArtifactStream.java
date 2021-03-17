@@ -13,6 +13,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
@@ -171,7 +172,7 @@ public class NexusArtifactStream extends ArtifactStream {
   }
 
   @Override
-  public ArtifactStreamAttributes fetchArtifactStreamAttributes() {
+  public ArtifactStreamAttributes fetchArtifactStreamAttributes(FeatureFlagService featureFlagService) {
     return ArtifactStreamAttributes.builder()
         .artifactStreamType(getArtifactStreamType())
         .jobName(jobname)

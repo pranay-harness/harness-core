@@ -1,3 +1,5 @@
 package software.wings.graphql.schema.type.secrets;
 
-public enum QLSSHAuthenticationScheme { SSH, KERBEROS }
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+@TargetModule(Module._380_CG_GRAPHQL) public enum QLSSHAuthenticationScheme { SSH, KERBEROS }

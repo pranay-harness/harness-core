@@ -1,5 +1,7 @@
 package io.harness.delegate.beans.connector.docker;
 
+import io.harness.exception.InvalidRequestException;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -29,6 +31,10 @@ public class DockerAuthenticationDTODeserializer extends StdDeserializer<DockerA
     ObjectMapper mapper = (ObjectMapper) jp.getCodec();
     if (type == DockerAuthType.USER_PASSWORD) {
       dockerAuthCredentials = mapper.readValue(authSpec.toString(), DockerUserNamePasswordDTO.class);
+    } else if (type == DockerAuthType.ANONYMOUS) {
+      if (authSpec != null && !authSpec.isNull()) {
+        throw new InvalidRequestException("No spec should be provided with the anonymous type");
+      }
     }
 
     return DockerAuthenticationDTO.builder().authType(type).credentials(dockerAuthCredentials).build();

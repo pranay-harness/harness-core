@@ -1,5 +1,7 @@
 package software.wings.graphql.schema.type.user;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
@@ -12,6 +14,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLCreateUserInput implements QLMutationInput {
   private String clientMutationId;
   private String name;

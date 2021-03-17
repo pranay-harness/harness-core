@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.Set;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsCodeDeployHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsCodeDeployHelperServiceDelegate {
   @Inject private AwsUtils awsUtils;

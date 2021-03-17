@@ -8,11 +8,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.interrupts.InterruptService;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
-import io.harness.interrupts.ExecutionInterruptType;
+import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.interrupts.InterruptType;
 
 import com.google.inject.Inject;
 
@@ -21,6 +23,7 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private InterruptService interruptService;
 
   @Override
   public void onStepStatusUpdate(StepStatusUpdateInfo stepStatusUpdateInfo) {
@@ -42,14 +45,15 @@ public class ResumeStepStatusUpdate implements StepStatusUpdate {
     if (parent.getStatus() != PAUSED) {
       return true;
     }
-
+    Interrupt interrupt = interruptService.get(interruptId);
     nodeExecutionService.updateStatusWithOps(nodeExecution.getParentId(), RUNNING,
         ops
         -> ops.addToSet(NodeExecutionKeys.interruptHistories,
             InterruptEffect.builder()
                 .interruptId(interruptId)
                 .tookEffectAt(System.currentTimeMillis())
-                .interruptType(ExecutionInterruptType.RESUME_ALL)
+                .interruptType(InterruptType.RESUME_ALL)
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
     return resumeParents(nodeExecution.getParentId(), interruptId);
   }

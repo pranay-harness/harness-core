@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -80,16 +81,18 @@ public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                           .build();
 
     assertThat(client.getValidationTask(getClientContext(), ACCOUNT_ID))
-        .isEqualTo(DelegateTask.builder()
-                       .accountId(ACCOUNT_ID)
-                       .tags(singletonList("tag"))
-                       .data(TaskData.builder()
-                                 .async(false)
-                                 .taskType(TaskType.AWS_LAMBDA_TASK.name())
-                                 .parameters(new Object[] {request})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
-                                 .build())
-                       .build());
+        .isEqualToIgnoringGivenFields(
+            DelegateTask.builder()
+                .accountId(ACCOUNT_ID)
+                .tags(singletonList("tag"))
+                .data(TaskData.builder()
+                          .async(false)
+                          .taskType(TaskType.AWS_LAMBDA_TASK.name())
+                          .parameters(new Object[] {request})
+                          .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                          .build())
+                .build(),
+            DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
   }
 
   private PerpetualTaskClientContext getClientContext() {

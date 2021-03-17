@@ -10,9 +10,9 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 public class SecretFunctor implements ExpressionFunctor {
-  int expressionFunctorToken;
+  long expressionFunctorToken;
 
-  public SecretFunctor(int expressionFunctorToken) {
+  public SecretFunctor(long expressionFunctorToken) {
     this.expressionFunctorToken = expressionFunctorToken;
   }
 

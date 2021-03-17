@@ -19,22 +19,26 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.pms.sdk.core.data.Outcome;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.steps.io.RollbackOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.tasks.Task;
-
-import software.wings.beans.LogHelper;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
@@ -44,6 +48,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nonnull;
 import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -63,12 +68,59 @@ public class StepUtils {
     }
 
     for (ResponseData responseData : responseDataMap.values()) {
-      Status executionStatus = ((StepResponseNotifyData) responseData).getStatus();
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
       if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
         responseBuilder.status(executionStatus);
       }
       if (StatusUtils.brokeStatuses().contains(executionStatus)) {
-        responseBuilder.failureInfo(((StepResponseNotifyData) responseData).getFailureInfo());
+        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
+      }
+    }
+    return responseBuilder.build();
+  }
+
+  public static RollbackOutcome getFailedChildRollbackOutcome(
+      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)
+          || StatusUtils.brokeStatuses().contains(executionStatus)) {
+        if (responseNotifyData.getStepOutcomeRefs() == null) {
+          return null;
+        }
+
+        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
+          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
+          if (outcome instanceof RollbackOutcome) {
+            RollbackOutcome rollbackOutcome = (RollbackOutcome) outcome;
+            if (rollbackOutcome.getRollbackInfo() == null) {
+              return null;
+            }
+            return rollbackOutcome;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  public static StepResponse createStepResponseFromChildWithChildOutcomes(
+      Map<String, ResponseData> responseDataMap, OutcomeService outcomeService) {
+    StepResponseBuilder responseBuilder = StepResponse.builder().status(Status.SUCCEEDED);
+    for (ResponseData responseData : responseDataMap.values()) {
+      StepResponseNotifyData responseNotifyData = (StepResponseNotifyData) responseData;
+      Status executionStatus = responseNotifyData.getStatus();
+      if (!StatusUtils.positiveStatuses().contains(executionStatus)) {
+        responseBuilder.status(executionStatus);
+      }
+      if (StatusUtils.brokeStatuses().contains(executionStatus)) {
+        responseBuilder.failureInfo(responseNotifyData.getFailureInfo());
+        for (StepOutcomeRef stepOutcomeRef : responseNotifyData.getStepOutcomeRefs()) {
+          Outcome outcome = outcomeService.fetchOutcome(stepOutcomeRef.getInstanceId());
+          responseBuilder.stepOutcome(StepOutcome.builder().name(stepOutcomeRef.getName()).outcome(outcome).build());
+        }
       }
     }
     return responseBuilder.build();
@@ -95,7 +147,7 @@ public class StepUtils {
   }
 
   @Nonnull
-  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+  public static LinkedHashMap<String, String> generateStageLogAbstractions(Ambiance ambiance) {
     LinkedHashMap<String, String> logAbstractions = new LinkedHashMap<>();
     logAbstractions.put("accountId", ambiance.getSetupAbstractionsMap().getOrDefault("accountId", ""));
     logAbstractions.put("orgId", ambiance.getSetupAbstractionsMap().getOrDefault("orgIdentifier", ""));
@@ -103,9 +155,15 @@ public class StepUtils {
     logAbstractions.put("pipelineExecutionId", ambiance.getPlanExecutionId());
     ambiance.getLevelsList()
         .stream()
-        .filter(level -> level.getGroup().equals("stage"))
+        .filter(level -> level.getGroup().equals("STAGE"))
         .findFirst()
         .ifPresent(stageLevel -> logAbstractions.put("stageId", stageLevel.getIdentifier()));
+    return logAbstractions;
+  }
+
+  @Nonnull
+  public static LinkedHashMap<String, String> generateLogAbstractions(Ambiance ambiance) {
+    LinkedHashMap<String, String> logAbstractions = generateStageLogAbstractions(ambiance);
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (currentLevel != null) {
       logAbstractions.put("stepRuntimeId", currentLevel.getRuntimeId());
@@ -151,9 +209,7 @@ public class StepUtils {
                             ? new byte[] {}
                             : kryoSerializer.asDeflatedBytes(taskParameters)))
                     .setExecutionTimeout(Duration.newBuilder().setSeconds(taskData.getTimeout() * 1000).build())
-                    // TODO : Change this spmehow and obtain from ambiance
-                    .setExpressionFunctorToken(
-                        Long.parseLong(ambiance.getSetupAbstractionsMap().get("expressionFunctorToken")))
+                    .setExpressionFunctorToken(ambiance.getExpressionFunctorToken())
                     .setMode(taskData.isAsync() ? TaskMode.ASYNC : TaskMode.SYNC)
                     .setParked(taskData.isParked())
                     .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
@@ -163,7 +219,8 @@ public class StepUtils {
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
                                       .putAllValues(MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap()))
-                                      .build());
+                                      .build())
+            .setSelectionTrackingLogEnabled(true);
 
     if (isNotEmpty(capabilities)) {
       requestBuilder.addAllCapabilities(
@@ -183,11 +240,16 @@ public class StepUtils {
         .build();
   }
 
+  public static List<String> generateLogKeys(Ambiance ambiance, List<String> units) {
+    LinkedHashMap<String, String> logAbstractionMap = generateLogAbstractions(ambiance);
+    return generateLogKeys(logAbstractionMap, units);
+  }
+
   private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
     if (isEmpty(logAbstractionMap)) {
       return Collections.emptyList();
     }
-    String baseLogKey = LogHelper.generateLogBaseKey(logAbstractionMap);
+    String baseLogKey = LogStreamingHelper.generateLogBaseKey(logAbstractionMap);
     if (isEmpty(units)) {
       return Collections.singletonList(baseLogKey);
     }
@@ -198,5 +260,20 @@ public class StepUtils {
       unitKeys.add(logKey);
     }
     return unitKeys;
+  }
+
+  public static boolean isStepInRollbackSection(Ambiance ambiance) {
+    List<Level> levelsList = ambiance.getLevelsList();
+    if (isEmpty(levelsList)) {
+      return false;
+    }
+
+    Optional<Level> optionalLevel =
+        ambiance.getLevelsList()
+            .stream()
+            .filter(level -> level.getStepType().getType().equals("ROLLBACK_OPTIONAL_CHILD_CHAIN"))
+            .findFirst();
+
+    return optionalLevel.isPresent();
   }
 }

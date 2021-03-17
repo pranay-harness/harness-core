@@ -10,7 +10,7 @@ import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.EventServerTest;
+import io.harness.EventServerTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.client.impl.tailer.ChronicleEventTailer;
@@ -22,7 +22,6 @@ import io.harness.rule.Owner;
 import io.harness.testlib.RealMongo;
 
 import software.wings.beans.Account;
-import software.wings.security.ThreadLocalUserProvider;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ServiceManager;
@@ -40,7 +39,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
-public class EventServiceApplicationTest extends EventServerTest {
+public class EventServiceApplicationTest extends EventServerTestBase {
   @Inject private HPersistence hPersistence;
 
   @Inject private EventPublisher eventPublisher;
@@ -53,7 +52,6 @@ public class EventServiceApplicationTest extends EventServerTest {
   public void setUp() throws Exception {
     serviceManager.startAsync().awaitHealthy();
     apiServiceRule.getClosingFactory().addServer(() -> serviceManager.stopAsync());
-    hPersistence.registerUserProvider(new ThreadLocalUserProvider());
     chronicleEventTailer.startAsync().awaitRunning();
     apiServiceRule.getClosingFactory().addServer(() -> FileUtils.deleteQuietly(new File(QUEUE_FILE_PATH)));
     apiServiceRule.getClosingFactory().addServer(() -> chronicleEventTailer.stopAsync().awaitTerminated());

@@ -25,6 +25,7 @@ import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.annotations.PublicApi;
 import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -154,6 +155,7 @@ public class InviteResource {
 
   @GET
   @Path("/verify")
+  @PublicApi
   @ApiOperation(value = "Verify user invite", nickname = "verifyInvite")
   public Response verify(
       @QueryParam("token") @NotNull String jwtToken, @QueryParam("accountIdentifier") String accountIdentifier) {

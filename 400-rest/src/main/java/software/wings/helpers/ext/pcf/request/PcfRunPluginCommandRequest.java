@@ -2,9 +2,12 @@ package software.wings.helpers.ext.pcf.request;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
@@ -13,7 +16,6 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.PcfConfig;
-import software.wings.delegatetasks.validation.capabilities.PcfConnectivityCapability;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,6 +25,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class PcfRunPluginCommandRequest
     extends PcfCommandRequest implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess {
   @Expression(ALLOW_SECRETS) private String renderedScriptString;

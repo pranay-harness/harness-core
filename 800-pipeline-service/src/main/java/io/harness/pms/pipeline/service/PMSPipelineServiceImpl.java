@@ -24,6 +24,7 @@ import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepData;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -64,7 +65,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private VariableCreatorMergeService variableCreatorMergeService;
   @Inject private FilterService filterService;
-
+  @Inject private PipelineSetupUsageHelper pipelineSetupUsageHelper;
+  @Inject private CommonStepInfo commonStepInfo;
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
   @VisibleForTesting static String LIBRARY = "Library";
@@ -84,8 +86,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
 
       updatePipelineInfo(pipelineEntity);
 
-      PipelineEntity createdEntity = pmsPipelineRepository.save(pipelineEntity);
-      return createdEntity;
+      return pmsPipelineRepository.save(pipelineEntity);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format(DUP_KEY_EXP_FORMAT_STRING, pipelineEntity.getIdentifier(),
                                             pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()),
@@ -159,15 +160,23 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public boolean delete(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, Long version) {
+  public boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier,
+      Long version) throws ProducerShutdownException {
     Criteria criteria =
         getPipelineEqualityCriteria(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false, version);
+
     UpdateResult updateResult = pmsPipelineRepository.delete(criteria);
     if (!updateResult.wasAcknowledged() || updateResult.getModifiedCount() != 1) {
       throw new InvalidRequestException(
           format("Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.", pipelineIdentifier,
               projectIdentifier, orgIdentifier));
+    }
+
+    Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (pipelineEntity.isPresent()) {
+      pipelineSetupUsageHelper.deleteSetupUsagesForGivenPipeline(pipelineEntity.get());
     }
     return true;
   }
@@ -180,6 +189,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   private void updatePipelineInfo(PipelineEntity pipelineEntity) throws IOException, ProducerShutdownException {
     FilterCreatorMergeServiceResponse filtersAndStageCount = filterCreatorMergeService.getPipelineInfo(pipelineEntity);
     pipelineEntity.setStageCount(filtersAndStageCount.getStageCount());
+    pipelineEntity.setStageNames(filtersAndStageCount.getStageNames());
     if (isNotEmpty(filtersAndStageCount.getFilters())) {
       filtersAndStageCount.getFilters().forEach(
           (key, value) -> pipelineEntity.getFilters().put(key, Document.parse(value)));
@@ -252,6 +262,9 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getName())) {
       criteria.and(PipelineEntityKeys.name).is(piplineFilter.getName());
     }
+    if (EmptyPredicate.isNotEmpty(piplineFilter.getDescription())) {
+      criteria.and(PipelineEntityKeys.description).is(piplineFilter.getDescription());
+    }
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineTags())) {
       criteria.and(PipelineEntityKeys.tags).in(piplineFilter.getPipelineTags());
     }
@@ -280,11 +293,11 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public StepCategory getSteps(String module, String category) {
+  public StepCategory getSteps(String module, String category, String accountId) {
     Map<String, List<StepInfo>> serviceInstanceNameToSupportedSteps =
         pmsSdkInstanceService.getInstanceNameToSupportedSteps();
     StepCategory stepCategory =
-        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module));
+        calculateStepsForModuleBasedOnCategory(category, serviceInstanceNameToSupportedSteps.get(module), accountId);
     for (Map.Entry<String, List<StepInfo>> entry : serviceInstanceNameToSupportedSteps.entrySet()) {
       if (entry.getKey().equals(module) || EmptyPredicate.isEmpty(entry.getValue())) {
         continue;
@@ -302,7 +315,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return stepCategory;
   }
 
-  private StepCategory calculateStepsForModuleBasedOnCategory(String category, List<StepInfo> stepInfos) {
+  private StepCategory calculateStepsForModuleBasedOnCategory(
+      String category, List<StepInfo> stepInfos, String accountId) {
     List<StepInfo> filteredStepTypes = new ArrayList<>();
     if (!stepInfos.isEmpty()) {
       filteredStepTypes =
@@ -312,7 +326,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                       || EmptyPredicate.isEmpty(stepInfo.getStepMetaData().getCategoryList()))
               .collect(Collectors.toList());
     }
-    filteredStepTypes.addAll(CommonStepInfo.getCommonSteps());
+    filteredStepTypes.addAll(commonStepInfo.getCommonSteps(accountId));
     StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
     for (StepInfo stepType : filteredStepTypes) {
       addToTopLevel(stepCategory, stepType);

@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.logging.CommandExecutionStatus;
@@ -20,6 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class HelmCommandExecutionResponse implements DelegateTaskNotifyResponseData {
   private DelegateMetaInfo delegateMetaInfo;
   private HelmCommandResponse helmCommandResponse;

@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.ecs.response;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.util.List;
@@ -9,6 +11,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class EcsRunTaskDeployResponse extends EcsCommandResponse {
   private List<String> previousRegisteredRunTaskDefinitions;
   private List<String> previousRunTaskArns;

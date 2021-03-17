@@ -11,6 +11,7 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.dtos.NotificationDTO;
 import io.harness.notification.entities.Notification;
 import io.harness.notification.service.api.NotificationService;
@@ -42,6 +43,7 @@ import org.springframework.data.domain.Page;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@NotificationMicroserviceAuth
 public class NotificationResource {
   private final NotificationService notificationService;
   @GET

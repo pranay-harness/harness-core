@@ -30,7 +30,7 @@ public class StepElementConfig implements WithSkipCondition {
   @EntityIdentifier String identifier;
   @EntityName String name;
   String description;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) Timeout timeout;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Timeout> timeout;
   List<FailureStrategyConfig> failureStrategies;
 
   String type;
@@ -44,9 +44,9 @@ public class StepElementConfig implements WithSkipCondition {
   ParameterField<List<String>> delegateSelectors;
 
   @Builder
-  public StepElementConfig(String uuid, String identifier, String name, String description, Timeout timeout,
-      List<FailureStrategyConfig> failureStrategies, String type, StepSpecType stepSpecType,
-      ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
+  public StepElementConfig(String uuid, String identifier, String name, String description,
+      ParameterField<Timeout> timeout, List<FailureStrategyConfig> failureStrategies, String type,
+      StepSpecType stepSpecType, ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;

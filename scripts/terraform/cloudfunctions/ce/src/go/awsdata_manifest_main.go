@@ -72,6 +72,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	}
 	PathSlice := strings.Split(e.Name, "/")
 	awsRoleIdWithaccountIdSlice := strings.Split(PathSlice[0], ":")
+	accountIdOrig := awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice)-1]
 	accountId := strings.ToLower(awsRoleIdWithaccountIdSlice[len(awsRoleIdWithaccountIdSlice)-1])
 	inValidRegex, _ := regexp.Compile("[^a-z0-9_]")
 	if inValidRegex.MatchString(accountId) {
@@ -142,6 +143,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	}
 	msgData := make(map[string]string)
 	msgData["accountId"] = accountId
+	msgData["accountIdOrig"] = accountIdOrig
 	msgData["bucket"] = e.Bucket
 	msgData["fileName"] = e.Name
 	msgData["datasetName"] = datasetName
@@ -185,23 +187,35 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	}
 
 	// https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
-	req1 := &schedulerpb.DeleteJobRequest{
-		Name: name,
-	}
-	err = c.DeleteJob(ctxBack, req1)
-	if err != nil {
-		fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
-	}
+	/*
+	  req1 := &schedulerpb.DeleteJobRequest{
+	    Name: name,
+	  }
+	  err = c.DeleteJob(ctxBack, req1)
+	  if err != nil {
+	    fmt.Printf("Error while trying to delete older schedules. This can be ignored. %s\n", err)
+	  }
+	*/
 
-	req := &schedulerpb.CreateJobRequest{
-		Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
-		Job:    job,
+	// https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
+	req1 := &schedulerpb.UpdateJobRequest{
+		Job: job,
 	}
-	_, err = c.CreateJob(ctxBack, req)
+	_, err = c.UpdateJob(ctxBack, req1)
 	if err != nil {
-		fmt.Printf("%s\n", err)
-		return err
+		fmt.Printf("No older schedules found to update. This can be ignored. %s\n", err)
+		req := &schedulerpb.CreateJobRequest{
+			Parent: fmt.Sprintf("projects/%s/locations/us-central1", projectId),
+			Job:    job,
+		}
+		_, err = c.CreateJob(ctxBack, req)
+		if err != nil {
+			fmt.Printf("%s\n", err)
+			return err
+		}
+		fmt.Printf("Created new schedule\n")
 	}
+	fmt.Printf("Updated older schedule\n")
 
 	// Delete manifest only when scheduler is set
 	if DeleteObjectErr := storageClient.Bucket(e.Bucket).Object(e.Name).Delete(ctxBack); DeleteObjectErr != nil {

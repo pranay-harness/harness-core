@@ -1,7 +1,7 @@
 package io.harness.batch.processing.anomalydetection.writer;
 
-import io.harness.batch.processing.anomalydetection.service.impl.AnomalyDetectionTimescaleDataServiceImpl;
-import io.harness.batch.processing.anomalydetection.types.Anomaly;
+import io.harness.ccm.anomaly.entities.Anomaly;
+import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, StepExecutionListener {
-  @Autowired private AnomalyDetectionTimescaleDataServiceImpl dataService;
+  @Autowired private AnomalyService anomalyService;
 
   @Override
   public void beforeStep(StepExecution stepExecution) {
@@ -29,11 +29,11 @@ public class AnomalyDetectionTimeScaleWriter implements ItemWriter<Anomaly>, Ste
     Anomaly currentAnomaly;
     while (iter.hasNext()) {
       currentAnomaly = iter.next();
-      if (!currentAnomaly.isAnomaly()) {
+      if (currentAnomaly == null || !currentAnomaly.isAnomaly()) {
         iter.remove();
       }
     }
-    dataService.writeAnomaliesToTimescale(anomalyArrayList);
+    anomalyService.insert(anomalyArrayList);
   }
 
   @Override

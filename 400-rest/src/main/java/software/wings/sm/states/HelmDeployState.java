@@ -38,6 +38,7 @@ import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -74,7 +75,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.HelmCommandFlag;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.Log;
@@ -341,7 +341,9 @@ public class HelmDeployState extends State {
             .commandFlags(commandFlags)
             .sourceRepoConfig(manifestConfig)
             .helmVersion(helmVersion)
-            .helmCommandFlag(helmCommandFlag);
+            .helmCommandFlag(helmCommandFlag)
+            .mergeCapabilities(
+                featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()));
 
     if (gitFileConfig != null) {
       helmInstallCommandRequestBuilder.gitFileConfig(gitFileConfig);
@@ -777,7 +779,7 @@ public class HelmDeployState extends State {
 
     HelmCommandFlag helmCommandFlag = null;
     if (appManifest != null) {
-      helmCommandFlag = appManifest.getHelmCommandFlag();
+      helmCommandFlag = ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag());
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, context.getAccountId())
           && applicationManifestUtils.isPollForChangesEnabled(appManifest)) {
         applicationManifestUtils.applyHelmChartFromExecutionContext(appManifest, context, serviceElement.getUuid());
@@ -1321,7 +1323,8 @@ public class HelmDeployState extends State {
       return helmValuesFetchTaskParameters;
     }
 
-    helmValuesFetchTaskParameters.setHelmCommandFlag(applicationManifest.getHelmCommandFlag());
+    helmValuesFetchTaskParameters.setHelmCommandFlag(
+        ApplicationManifestUtils.getHelmCommandFlags(applicationManifest.getHelmCommandFlag()));
 
     if (helmOverrideManifestMap.containsKey(K8sValuesLocation.EnvironmentGlobal)) {
       applicationManifestUtils.applyK8sValuesLocationBasedHelmChartOverride(

@@ -8,7 +8,10 @@ import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 import io.harness.EntityType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.YamlSdkInitConstants;
-import io.harness.yaml.schema.YamlSchemaRoot;
+import io.harness.yaml.schema.JacksonClassHelper;
+import io.harness.yaml.schema.SwaggerGenerator;
+import io.harness.yaml.schema.YamlSchemaGenerator;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.bean.YamlSnippetTags;
 import io.harness.yaml.snippets.bean.YamlSnippets;
@@ -18,6 +21,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion;
@@ -28,28 +33,50 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.reflections.Reflections;
-import org.slf4j.Logger;
 
-public interface AbstractSnippetChecker {
-  default void snippetTests(Logger log) throws IOException {
+@Singleton
+@Slf4j
+public class AbstractSnippetChecker {
+  List<YamlSchemaRootClass> yamlSchemaRootClasses;
+  ObjectMapper objectMapper;
+
+  @Inject
+  public AbstractSnippetChecker(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper) {
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
+    this.objectMapper = objectMapper;
+  }
+  public void snippetTests() throws IOException {
+    if (isEmpty(yamlSchemaRootClasses)) {
+      return;
+    }
     Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
-    List<Pair<String, Pair<EntityType, ClassLoader>>> snippetsIndex = getIndexResourceFileContent(log, reflections);
+    List<Pair<String, Pair<EntityType, ClassLoader>>> snippetsIndex =
+        getIndexResourceFileContent(yamlSchemaRootClasses);
+    if (isEmpty(snippetsIndex)) {
+      return;
+    }
+    YamlSchemaGenerator yamlSchemaGenerator =
+        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
+    final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final Class tagsEnum = getTagsEnum(reflections);
     for (Pair<String, Pair<EntityType, ClassLoader>> snippet : snippetsIndex) {
       testIconTagsAreInTags(snippet.getLeft());
       testSnippetHasCorrectResourceFileSpecified(snippet.getLeft(), snippet.getRight().getRight());
-      testSnippetsMatchSchema(log, snippet.getLeft(), snippet.getRight().getLeft(), snippet.getRight().getRight());
+      testSnippetsMatchSchema(
+          snippet.getLeft(), snippet.getRight().getLeft(), snippet.getRight().getRight(), entityTypeJsonNodeMap);
       testTagsEnumAndXmlInSync(snippet.getLeft(), tagsEnum);
     }
   }
 
-  default void testIconTagsAreInTags(String resource) throws IOException {
+  void testIconTagsAreInTags(String resource) {
     YamlSnippets yamlSnippets = getYamlSnippets(resource);
     for (YamlSnippetMetaData yamlSnippetMetaData : yamlSnippets.getYamlSnippetMetaDataList()) {
       final List<String> tags = yamlSnippetMetaData.getTags();
@@ -60,25 +87,23 @@ public interface AbstractSnippetChecker {
     }
   }
 
-  default List<Pair<String, Pair<EntityType, ClassLoader>>> getIndexResourceFileContent(
-      Logger log, Reflections reflections) {
-    final Set<Class<?>> classes = reflections.getTypesAnnotatedWith(YamlSchemaRoot.class, true);
-    if (isEmpty(classes)) {
+  List<Pair<String, Pair<EntityType, ClassLoader>>> getIndexResourceFileContent(
+      List<YamlSchemaRootClass> yamlSchemaRootClasses) {
+    if (isEmpty(yamlSchemaRootClasses)) {
       return Collections.emptyList();
     }
-    return classes.stream()
+    return yamlSchemaRootClasses.stream()
         .map(clazz -> {
           try {
             final String snippetIndexPathForEntityType = YamlSchemaUtils.getSnippetIndexPathForEntityType(
-                clazz, YamlSdkInitConstants.snippetBasePath, YamlSdkInitConstants.snippetIndexFile);
-            final EntityType value = clazz.getAnnotation(YamlSchemaRoot.class).value();
-            String snippetMetaData =
-                IOUtils.resourceToString(snippetIndexPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-            return Pair.of(snippetMetaData, Pair.of(value, clazz.getClassLoader()));
+                clazz.getEntityType(), YamlSdkInitConstants.snippetBasePath, YamlSdkInitConstants.snippetIndexFile);
+            final EntityType value = clazz.getEntityType();
+            String snippetMetaData = IOUtils.resourceToString(
+                snippetIndexPathForEntityType, StandardCharsets.UTF_8, clazz.getClazz().getClassLoader());
+            return Pair.of(snippetMetaData, Pair.of(value, clazz.getClazz().getClassLoader()));
 
           } catch (IOException e) {
-            log.info("No Yaml Snippets found for {}", clazz.getCanonicalName());
-            e.printStackTrace();
+            log.info("No Yaml Snippets found for {}", clazz.getEntityType());
           }
           return null;
         })
@@ -86,21 +111,19 @@ public interface AbstractSnippetChecker {
         .collect(Collectors.toList());
   }
 
-  default Class getTagsEnum(Reflections reflections) {
-    final Set<Class<? extends io.harness.yaml.snippets.bean.YamlSnippetTags>> tagsEnum =
-        reflections.getSubTypesOf(YamlSnippetTags.class);
+  Class getTagsEnum(Reflections reflections) {
+    final Set<Class<? extends YamlSnippetTags>> tagsEnum = reflections.getSubTypesOf(YamlSnippetTags.class);
+    if (isEmpty(tagsEnum)) {
+      log.info("Enum not registered in this class, should be registered in application module.");
+      return null;
+    }
     if (tagsEnum.size() != 1) {
       throw new InvalidRequestException("Tags enum incorrect");
     }
     return tagsEnum.iterator().next();
   }
 
-  default String getSchemaBasePath() {
-    return YamlSdkInitConstants.schemaBasePath;
-  }
-
-  default void testSnippetHasCorrectResourceFileSpecified(String snippetIndex, ClassLoader classloader)
-      throws IOException {
+  void testSnippetHasCorrectResourceFileSpecified(String snippetIndex, ClassLoader classloader) throws IOException {
     YamlSnippets yamlSnippets = getYamlSnippets(snippetIndex);
     for (YamlSnippetMetaData yamlSnippetMetaData : yamlSnippets.getYamlSnippetMetaDataList()) {
       final String resourcePath = yamlSnippetMetaData.getResourcePath();
@@ -112,19 +135,21 @@ public interface AbstractSnippetChecker {
     }
   }
 
-  default YamlSnippets getYamlSnippets(String indexResource) {
+  YamlSnippets getYamlSnippets(String indexResource) {
     XmlMapper xmlMapper = new XmlMapper();
     YamlSnippets yamlSnippets;
     try {
       yamlSnippets = xmlMapper.readValue(indexResource, YamlSnippets.class);
-
     } catch (Exception e) {
       throw new InvalidRequestException("Cannot parse snippet metadata");
     }
     return yamlSnippets;
   }
 
-  default void testTagsEnumAndXmlInSync(String indexResource, Class tagsEnum) throws IOException {
+  void testTagsEnumAndXmlInSync(String indexResource, Class tagsEnum) {
+    if (tagsEnum == null) {
+      return;
+    }
     YamlSnippets yamlSnippets = getYamlSnippets(indexResource);
     final Set<String> tags = yamlSnippets.getYamlSnippetMetaDataList()
                                  .stream()
@@ -136,17 +161,14 @@ public interface AbstractSnippetChecker {
     }
   }
 
-  default void testSnippetsMatchSchema(
-      Logger log, String indexResource, EntityType entityFromYamlType, ClassLoader classLoader) throws IOException {
+  void testSnippetsMatchSchema(String indexResource, EntityType entityFromYamlType, ClassLoader classLoader,
+      Map<EntityType, JsonNode> entityTypeJsonNodeMap) throws IOException {
     YamlSnippets yamlSnippets = getYamlSnippets(indexResource);
     Set<String> errorSnippets = new HashSet<>();
     for (YamlSnippetMetaData yamlSnippetMetaData : yamlSnippets.getYamlSnippetMetaDataList()) {
       final String snippet =
           IOUtils.resourceToString(yamlSnippetMetaData.getResourcePath(), StandardCharsets.UTF_8, classLoader);
-      final String schemaBasePath = getSchemaBasePath();
-      final String schemaPathForEntityType =
-          YamlSchemaUtils.getSchemaPathForEntityType(entityFromYamlType, schemaBasePath);
-      final String schema = IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, classLoader);
+      final JsonNode schema = entityTypeJsonNodeMap.get(entityFromYamlType);
       log.info("Validating snippet {} against schema for {} ", yamlSnippetMetaData.getName(), entityFromYamlType);
       JsonSchemaFactory factory =
           JsonSchemaFactory.builder(JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)).build();

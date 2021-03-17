@@ -40,6 +40,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.Alert.AlertKeys;
+import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
@@ -53,6 +54,7 @@ import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,6 +66,7 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 public class AlertServiceTest extends WingsBaseTest {
+  @Inject Map<AlertType, Class<? extends AlertData>> alertTypeClassMap;
   @Mock private ExecutorService executorService;
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
@@ -103,6 +106,13 @@ public class AlertServiceTest extends WingsBaseTest {
   public void setUp() {
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
+  }
+
+  @Test
+  @Owner(developers = BRETT)
+  @Category(UnitTests.class)
+  public void testAlertTypeClassMap() {
+    assertThat(alertTypeClassMap).hasSize(AlertType.values().length);
   }
 
   @Test

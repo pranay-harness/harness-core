@@ -8,7 +8,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
+@TargetModule(Module._980_COMMONS)
 public class LogStreamingServiceConfig {
   private String baseUrl;
   private String serviceToken;

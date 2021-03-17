@@ -9,9 +9,10 @@ import io.harness.event.handler.EventHandler;
 import io.harness.event.listener.EventListener;
 import io.harness.event.model.Event;
 import io.harness.event.timeseries.processor.DeploymentEventProcessor;
-import io.harness.event.timeseries.processor.InstanceEventProcessor;
 import io.harness.event.timeseries.processor.ServiceGuardSetupEventProcessor;
 import io.harness.event.timeseries.processor.VerificationEventProcessor;
+import io.harness.event.timeseries.processor.instanceeventprocessor.InstanceEventProcessor;
+import io.harness.logging.AutoLogContext;
 
 import software.wings.service.impl.event.timeseries.TimeSeriesBatchEventInfo;
 import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
@@ -19,6 +20,7 @@ import software.wings.service.impl.event.timeseries.TimeSeriesEventInfo;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -43,10 +45,21 @@ public class TimeSeriesHandler implements EventHandler {
   public void handleEvent(Event event) {
     switch (event.getEventType()) {
       case INSTANCE_EVENT:
-        instanceEventProcessor.processEvent((TimeSeriesBatchEventInfo) event.getEventData().getEventInfo());
+        try (AutoLogContext ignore = new TimeseriesLogContext(AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
+          TimeSeriesBatchEventInfo eventInfo = (TimeSeriesBatchEventInfo) event.getEventData().getEventInfo();
+          instanceEventProcessor.processEvent((TimeSeriesBatchEventInfo) event.getEventData().getEventInfo());
+        } catch (Exception ex) {
+          log.error(
+              "Failed to process Event : [{}] , error : [{}]", event.toString(), Arrays.toString(ex.getStackTrace()));
+        }
         break;
       case DEPLOYMENT_EVENT:
-        deploymentEventProcessor.processEvent((TimeSeriesEventInfo) event.getEventData().getEventInfo());
+        try {
+          deploymentEventProcessor.processEvent((TimeSeriesEventInfo) event.getEventData().getEventInfo());
+        } catch (Exception ex) {
+          log.error(
+              "Failed to process Event : [{}] , error : [{}]", event.toString(), Arrays.toString(ex.getStackTrace()));
+        }
         break;
       case DEPLOYMENT_VERIFIED:
         verificationEventProcessor.processEvent(event.getEventData().getProperties());

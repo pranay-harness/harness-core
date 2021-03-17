@@ -2,6 +2,9 @@ package software.wings.graphql.datafetcher.user;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.User;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -14,6 +17,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UserQueryHelper {
   private DataFetcherUtils utils;
 

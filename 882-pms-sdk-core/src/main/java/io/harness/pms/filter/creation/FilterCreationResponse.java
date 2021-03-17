@@ -24,6 +24,7 @@ public class FilterCreationResponse {
   @Default Map<String, YamlField> dependencies = new HashMap<>();
   @Default Map<String, YamlField> resolvedDependencies = new HashMap<>();
   @Default List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
+  @Default List<String> stageNames = new ArrayList<>();
 
   public void addResolvedDependencies(Map<String, YamlField> resolvedDependencies) {
     if (EmptyPredicate.isEmpty(resolvedDependencies)) {
@@ -40,6 +41,16 @@ public class FilterCreationResponse {
       this.referredEntities = new ArrayList<>();
     }
     this.referredEntities.addAll(refferedEntities);
+  }
+
+  public void addStageNames(List<String> stageNames) {
+    if (EmptyPredicate.isEmpty(stageNames)) {
+      return;
+    }
+    if (EmptyPredicate.isEmpty(this.stageNames)) {
+      this.stageNames = new ArrayList<>();
+    }
+    this.stageNames.addAll(stageNames);
   }
 
   public void addResolvedDependency(YamlField yamlField) {
@@ -96,6 +107,10 @@ public class FilterCreationResponse {
 
     if (isNotEmpty(referredEntities)) {
       finalBlobResponseBuilder.addAllReferredEntities(referredEntities);
+    }
+
+    if (isNotEmpty(stageNames)) {
+      finalBlobResponseBuilder.addAllStageNames(stageNames);
     }
 
     finalBlobResponseBuilder.setStageCount(stageCount);

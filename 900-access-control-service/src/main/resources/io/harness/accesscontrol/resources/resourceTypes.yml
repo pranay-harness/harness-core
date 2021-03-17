@@ -1,0 +1,10 @@
+- identifier: ACCOUNT
+  permissionKey: account
+- identifier: ORGANIZATION
+  permissionKey: organization
+- identifier: PROJECT
+  permissionKey: project
+- identifier: CONNECTOR
+  permissionKey: connector
+- identifier: SECRET
+  permissionKey: secret

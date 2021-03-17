@@ -1,9 +1,10 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.SETTING_API_BATCH_RBAC;
 import static io.harness.ccm.license.CeLicenseType.LIMITED_TRIAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ARVIND;
-import static io.harness.rule.OwnerRule.DELEGATE;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.HANTANG;
 import static io.harness.rule.OwnerRule.UTSAV;
 
@@ -16,15 +17,16 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anySet;
-import static org.mockito.Matchers.anySetOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.beans.SecretState;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
@@ -32,6 +34,7 @@ import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -42,6 +45,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AwsS3BucketDetails;
+import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.KubernetesClusterConfig;
@@ -52,6 +56,8 @@ import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.features.CeCloudAccountFeature;
@@ -65,12 +71,14 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -104,6 +112,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Mock private CCMSettingService ccmSettingService;
   @Mock private SettingAttributeDao settingAttributeDao;
   @Mock private SettingValidationService settingValidationService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock @Named(GitOpsFeature.FEATURE_NAME) private UsageLimitedFeature gitOpsFeature;
   @Mock @Named(CeCloudAccountFeature.FEATURE_NAME) private UsageLimitedFeature ceCloudAccountFeature;
 
@@ -155,7 +164,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(settingValidationService.validateCEK8sDelegateSetting(any()))
         .thenReturn(CEK8sDelegatePrerequisite.builder().build());
 
-    CEK8sDelegatePrerequisite response = settingsService.validateCEDelegateSetting(ACCOUNT_ID, DELEGATE);
+    CEK8sDelegatePrerequisite response = settingsService.validateCEDelegateSetting(ACCOUNT_ID, "DELEGATE");
 
     verify(settingValidationService, times(0)).validateCEK8sDelegateSetting(any());
     assertThat(response.getMetricsServer()).isNull();
@@ -342,6 +351,50 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.VIKAS_S)
+  @Category(UnitTests.class)
+  public void testIsFilteredSettingAttributeWithBatchFlagEnabled() {
+    SettingAttribute helmConnector = SettingAttribute.Builder.aSettingAttribute()
+                                         .withAccountId(ACCOUNT_ID)
+                                         .withName("http-helm")
+                                         .withUuid("id-1")
+                                         .withCategory(SettingCategory.HELM_REPO)
+                                         .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
+                                         .build();
+
+    Map<String, SecretState> secretIdsStateMap = mock(Map.class);
+    when(featureFlagService.isEnabled(eq(SETTING_API_BATCH_RBAC), eq(ACCOUNT_ID))).thenReturn(true);
+    when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(false);
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, never()).containsKey(any());
+    verify(usageRestrictionsService, times(1))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
+
+    when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(true);
+    when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(null);
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, never()).containsKey(any());
+    verify(usageRestrictionsService, times(2))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
+
+    when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.emptySet());
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, never()).containsKey(any());
+    verify(usageRestrictionsService, times(3))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
+
+    when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.singleton(PASSWORD));
+    when(secretIdsStateMap.containsKey(eq(PASSWORD))).thenReturn(true);
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, times(1)).containsKey(any());
+    verify(usageRestrictionsService, times(3))
+        .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
+  }
+  @Test
   @Owner(developers = OwnerRule.YOGESH)
   @Category(UnitTests.class)
   public void testIsFilteredSettingAttribute() {
@@ -353,28 +406,33 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                          .withValue(GCSHelmRepoConfig.builder().accountId(ACCOUNT_ID).build())
                                          .build();
 
+    Map<String, SecretState> secretIdsStateMap = mock(Map.class);
+    when(featureFlagService.isEnabled(eq(SETTING_API_BATCH_RBAC), eq(ACCOUNT_ID))).thenReturn(false);
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(false);
-    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, never()).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, never()).containsKey(any());
     verify(usageRestrictionsService, times(1))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
 
     when(settingServiceHelper.hasReferencedSecrets(eq(helmConnector))).thenReturn(true);
     when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(null);
-    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, never()).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, never()).containsKey(any());
     verify(usageRestrictionsService, times(2))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
 
     when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.emptySet());
-    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, never()).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
+    verify(secretIdsStateMap, never()).containsKey(any());
     verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
 
     when(settingServiceHelper.getUsedSecretIds(helmConnector)).thenReturn(Collections.singleton(PASSWORD));
-    settingsService.isFilteredSettingAttribute(null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector);
-    verify(secretManager, times(1)).canUseSecretsInAppAndEnv(anySetOf(String.class), eq(ACCOUNT_ID), any(), any());
+    settingsService.isFilteredSettingAttribute(
+        null, null, ACCOUNT_ID, null, null, false, null, null, helmConnector, secretIdsStateMap);
     verify(usageRestrictionsService, times(3))
         .hasAccess(eq(ACCOUNT_ID), eq(false), any(), any(), any(), any(), any(), any(), anyBoolean());
   }
@@ -416,5 +474,60 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldReturnFalseWhenSettingAttributeValueIsNotInstanceOfGcpConfig() {
     SettingAttribute settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     assertThat(settingsService.isSettingValueGcp(settingAttribute)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testHasDelegateSelectorProperty() {
+    SettingAttribute settingAttribute = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
+
+    settingAttribute =
+        aSettingAttribute()
+            .withValue(DockerConfig.builder().dockerRegistryUrl("https://registry.hub.docker.com/v2/").build())
+            .build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
+
+    settingAttribute =
+        aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+
+    settingAttribute = aSettingAttribute()
+                           .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
+                           .build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+
+    settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetDelegateSelectors() {
+    SettingAttribute settingAttribute =
+        aSettingAttribute().withValue(GcpConfig.builder().useDelegate(true).delegateSelector("gcp").build()).build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Collections.singletonList("gcp"));
+
+    settingAttribute = aSettingAttribute()
+                           .withValue(DockerConfig.builder()
+                                          .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                                          .delegateSelectors(Lists.newArrayList("docker", "k8s"))
+                                          .build())
+                           .build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Lists.newArrayList("docker", "k8s"));
+
+    settingAttribute =
+        aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+
+    settingAttribute = aSettingAttribute()
+                           .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
+                           .build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+
+    settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
   }
 }

@@ -2,6 +2,7 @@ package io.harness.engine;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.algorithm.HashGenerator;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptManager;
@@ -56,6 +57,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                             .putAllSetupAbstractions(setupAbstractions)
                             .setPlanExecutionId(savedPlanExecution.getUuid())
                             .setMetadata(metadata)
+                            .setExpressionFunctorToken(HashGenerator.generateIntegerHash())
                             .build();
     eventEmitter.emitEvent(
         OrchestrationEvent.builder().ambiance(ambiance).eventType(OrchestrationEventType.ORCHESTRATION_START).build());

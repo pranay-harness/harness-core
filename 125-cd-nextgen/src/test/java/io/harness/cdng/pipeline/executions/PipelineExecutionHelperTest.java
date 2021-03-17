@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.CDNGBaseTest;
+import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.pipeline.DeploymentStage;
@@ -48,7 +48,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.query.Update;
 
-public class PipelineExecutionHelperTest extends CDNGBaseTest {
+public class PipelineExecutionHelperTest extends CDNGTestBase {
   @Inject PipelineExecutionHelper pipelineExecutionHelper;
 
   @Test

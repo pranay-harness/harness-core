@@ -22,6 +22,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.azure.model.AzureAppServiceApplicationSetting;
+import io.harness.azure.model.AzureAppServiceConnectionString;
+import io.harness.azure.model.AzureAppServiceConnectionStringType;
+import io.harness.azure.model.AzureConstants;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
@@ -359,6 +363,94 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testRenderDoubleExpression() {
+    String expr1 = "10.5";
+    String expr2 = "${workflow.variables.trafficPercent}";
+    String expr3 = "non-integer";
+
+    ExecutionContextImpl context = mock(ExecutionContextImpl.class);
+    when(context.renderExpression(expr1)).thenReturn(expr1);
+    when(context.renderExpression(expr2)).thenReturn("20");
+    when(context.renderExpression(expr3)).thenReturn(expr3);
+
+    double renderExpr1 = azureVMSSStateHelper.renderDoubleExpression(expr1, context, AzureConstants.INVALID_TRAFFIC);
+    double renderExpr2 = azureVMSSStateHelper.renderDoubleExpression(expr2, context, AzureConstants.INVALID_TRAFFIC);
+    double renderExpr3 = azureVMSSStateHelper.renderDoubleExpression(expr3, context, AzureConstants.INVALID_TRAFFIC);
+
+    assertThat(renderExpr1).isEqualTo(10.5);
+    assertThat(renderExpr2).isEqualTo(20);
+    assertThat(renderExpr3).isEqualTo(AzureConstants.INVALID_TRAFFIC);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testValidateAppSettings() {
+    List<AzureAppServiceApplicationSetting> appSettings = new ArrayList<>();
+    azureVMSSStateHelper.validateAppSettings(appSettings);
+
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("appSetting1").value("value1").build());
+    azureVMSSStateHelper.validateAppSettings(appSettings);
+
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateAppSettings(appSettings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Application setting name cannot be empty or null");
+
+    appSettings.remove(appSettings.size() - 1);
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("appSetting2").value("").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateAppSettings(appSettings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Application setting value cannot be empty or null for [appSetting2]");
+
+    appSettings.remove(appSettings.size() - 1);
+    appSettings.add(AzureAppServiceApplicationSetting.builder().name("appSetting1").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateAppSettings(appSettings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Duplicate application string names [appSetting1]");
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ANIL)
+  @Category(UnitTests.class)
+  public void testValidateConnStrings() {
+    List<AzureAppServiceConnectionString> connectionStrings = new ArrayList<>();
+    azureVMSSStateHelper.validateConnStrings(connectionStrings);
+
+    connectionStrings.add(AzureAppServiceConnectionString.builder()
+                              .name("connString1")
+                              .value("value1")
+                              .type(AzureAppServiceConnectionStringType.SQL_AZURE)
+                              .build());
+    azureVMSSStateHelper.validateConnStrings(connectionStrings);
+
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Connection string name cannot be empty or null");
+
+    connectionStrings.remove(connectionStrings.size() - 1);
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("connString2").value("").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Connection string value cannot be empty or null for [connString2]");
+
+    connectionStrings.remove(connectionStrings.size() - 1);
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("connString2").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Connection string type cannot be null");
+
+    connectionStrings.remove(connectionStrings.size() - 1);
+    connectionStrings.add(AzureAppServiceConnectionString.builder().name("connString1").value("value2").build());
+    assertThatThrownBy(() -> azureVMSSStateHelper.validateConnStrings(connectionStrings))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Duplicate connection string names [connString1]");
+  }
+
+  @Test
   @Owner(developers = OwnerRule.IVAN)
   @Category(UnitTests.class)
   public void testRenderExpressionOrGetDefaultWithDefaultValue() {
@@ -610,7 +702,7 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
 
     doReturn(artifact).when(context).getDefaultArtifactForService("serviceId");
     doReturn(artifactStream).when(artifactStreamService).get("artifactStreamId");
-    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes();
+    doReturn(artifactStreamAttributes).when(artifactStream).fetchArtifactStreamAttributes(null);
 
     AzureMachineImageArtifactDTO azureMachineImageArtifactDTO =
         azureVMSSStateHelper.getAzureMachineImageArtifactDTO(context, "serviceId");
@@ -872,6 +964,7 @@ public class AzureVMSSStateHelperTest extends CategoryTest {
     assertThat(azureVMSSStateData.getInfrastructureMapping()).isEqualTo(azureVMSSInfrastructureMapping);
     assertThat(azureVMSSStateData.getAzureConfig()).isEqualTo(azureConfig);
     assertThat(azureVMSSStateData.getAzureEncryptedDataDetails()).isEqualTo(encryptedDataDetails);
+    assertThat(azureVMSSStateData.toString()).isNotEmpty();
   }
 
   @Test

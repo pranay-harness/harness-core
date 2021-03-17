@@ -24,6 +24,7 @@ import io.harness.rule.OwnerRule;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
 
+import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +54,9 @@ public class AwsConnectorValidatorTest extends CategoryTest {
             .credential(AwsCredentialDTO.builder()
                             .awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE)
                             .crossAccountAccess(CrossAccountAccessDTO.builder().build())
-                            .config(AwsInheritFromDelegateSpecDTO.builder().delegateSelector("delegate").build())
+                            .config(AwsInheritFromDelegateSpecDTO.builder()
+                                        .delegateSelectors(Collections.singleton("delegate"))
+                                        .build())
                             .build())
             .build();
     when(ngSecretService.getEncryptionDetails(any(), any())).thenReturn(null);

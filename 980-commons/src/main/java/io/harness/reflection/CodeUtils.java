@@ -3,6 +3,7 @@ package io.harness.reflection;
 import static java.lang.String.format;
 
 import com.google.common.base.Preconditions;
+import com.google.protobuf.ProtocolMessageEnum;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +42,11 @@ public class CodeUtils {
     if (pkg == null) {
       return false;
     }
+    // TODO(prashant) : This is a temp hack, with bazel our check is not working correctly check with @george how to fix
+    // this appropriately
+    if (checkIfProtobuf(clazz)) {
+      return false;
+    }
     if (pkg.startsWith("io.harness.")) {
       return true;
     }
@@ -48,6 +54,12 @@ public class CodeUtils {
       return true;
     }
     return false;
+  }
+
+  private static boolean checkIfProtobuf(Class clazz) {
+    return clazz.getSuperclass() != null
+        && (clazz.getSuperclass().getCanonicalName().startsWith("com.google.protobuf")
+            || ProtocolMessageEnum.class.isAssignableFrom(clazz));
   }
 
   public static boolean isTestClass(Class clazz) {

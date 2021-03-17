@@ -1,5 +1,6 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -89,6 +90,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                   .parameters(new Object[] {request})
                   .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
+        .expiry(System.currentTimeMillis() + DELEGATE_QUEUE_TIMEOUT)
         .build();
   }
 

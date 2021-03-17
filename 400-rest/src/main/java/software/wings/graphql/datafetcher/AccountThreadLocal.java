@@ -1,8 +1,12 @@
 package software.wings.graphql.datafetcher;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class AccountThreadLocal {
   public static final ThreadLocal<String> accountIdThreadLocal = new ThreadLocal<>();
 

@@ -3,6 +3,7 @@ package software.wings.api.ecs;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.api.ExecutionDataValue;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -46,6 +47,8 @@ public class EcsSetupStateExecutionData extends StateExecutionData implements De
   private int serviceSteadyStateTimeout;
   private ResizeStrategy resizeStrategy;
   private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
+  private List<AwsElbConfig> awsElbConfigs;
+  private boolean isMultipleLoadBalancersFeatureFlagActive;
   private GitFetchFilesFromMultipleRepoResult fetchFilesResult;
 
   @Override

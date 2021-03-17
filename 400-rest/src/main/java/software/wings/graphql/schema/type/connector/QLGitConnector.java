@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.type.connector;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.GitConfig.UrlType;
 import software.wings.graphql.schema.type.QLCustomCommitDetails;
 import software.wings.graphql.schema.type.QLUser;
@@ -12,6 +15,7 @@ import lombok.Value;
 @Value
 @Builder
 @Scope(ResourceType.SETTING)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLGitConnector implements QLConnector {
   private String id;
   private String name;

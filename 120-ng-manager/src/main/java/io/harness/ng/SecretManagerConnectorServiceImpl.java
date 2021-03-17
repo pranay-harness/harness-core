@@ -190,9 +190,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public void updateConnectorEntityWithPerpetualtaskId(
-      String accountIdentifier, ConnectorInfoDTO connector, String perpetualTaskId) {
-    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(accountIdentifier, connector, perpetualTaskId);
+  public void updateConnectorEntityWithPerpetualtaskId(String accountIdentifier, String connectorOrgIdentifier,
+      String connectorProjectIdentifier, String connectorIdentifier, String perpetualTaskId) {
+    defaultConnectorService.updateConnectorEntityWithPerpetualtaskId(
+        accountIdentifier, connectorOrgIdentifier, connectorProjectIdentifier, connectorIdentifier, perpetualTaskId);
   }
 
   @Override

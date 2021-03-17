@@ -2,7 +2,9 @@ package software.wings.graphql.schema.mutation.execution.payload;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.QLMutationPayload;
 import software.wings.graphql.schema.type.QLExecution;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLTriggerExecutionPayloadKeys")
 @Scope(PermissionAttribute.ResourceType.DEPLOYMENT)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLStartExecutionPayload implements QLMutationPayload {
   String clientMutationId;
   QLExecution execution;

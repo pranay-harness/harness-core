@@ -7,63 +7,60 @@ import static software.wings.alerts.AlertCategory.Setup;
 import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
-import io.harness.alert.AlertData;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.alerts.AlertCategory;
 import software.wings.alerts.AlertSeverity;
-import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
-import software.wings.beans.alert.cv.ContinuousVerificationDataCollectionAlert;
 
 import lombok.Getter;
 
+@TargetModule(Module._955_ALERT_BEANS)
+@BreakDependencyOn("software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation")
 public enum AlertType {
-  ApprovalNeeded(Approval, Warning, ApprovalNeededAlert.class),
-  ManualInterventionNeeded(ManualIntervention, Warning, AlertData.class),
-  NoActiveDelegates(Setup, Error, NoActiveDelegatesAlert.class, 2),
-  NoInstalledDelegates(Setup, Error, NoInstalledDelegatesAlert.class, 2),
-  DelegatesDown(Setup, Error, DelegatesDownAlert.class, 2),
-  DelegatesScalingGroupDownAlert(Setup, Error, io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert.class),
-  DelegateProfileError(Setup, Error, DelegateProfileErrorAlert.class),
-  NoEligibleDelegates(
-      Setup, Error, NoEligibleDelegatesAlert.class, 0, NoEligibleDelegatesAlertReconciliation.builder().build()),
-  PerpetualTaskAlert(Setup, Error, PerpetualTaskAlert.class),
-  InvalidKMS(Setup, Error, KmsSetupAlert.class),
-  GitSyncError(Setup, Error, GitSyncErrorAlert.class),
-  GitConnectionError(Setup, Error, GitConnectionErrorAlert.class),
-  INVALID_SMTP_CONFIGURATION(Setup, Error, InvalidSMTPConfigAlert.class),
-  EMAIL_NOT_SENT_ALERT(Setup, Warning, EmailSendingFailedAlert.class),
-  USERGROUP_SYNC_FAILED(Setup, Error, SSOSyncFailedAlert.class),
-  USAGE_LIMIT_EXCEEDED(Setup, Error, UsageLimitExceededAlert.class),
-  INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning, InstanceUsageLimitAlert.class),
-  RESOURCE_USAGE_APPROACHING_LIMIT(Setup, Warning, ResourceUsageApproachingLimitAlert.class),
-  DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning, DeploymentRateApproachingLimitAlert.class),
-  SETTING_ATTRIBUTE_VALIDATION_FAILED(Setup, Warning, SettingAttributeValidationFailedAlert.class),
-  ARTIFACT_COLLECTION_FAILED(Setup, Error, ArtifactCollectionFailedAlert.class),
-  CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Error, ContinuousVerificationAlertData.class),
-  CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT(
-      ContinuousVerification, Error, ContinuousVerificationDataCollectionAlert.class),
-  MANIFEST_COLLECTION_FAILED(Setup, Error, ManifestCollectionFailedAlert.class);
+  ApprovalNeeded(Approval, Warning),
+  ManualInterventionNeeded(ManualIntervention, Warning),
+  NoActiveDelegates(Setup, Error, 2),
+  NoInstalledDelegates(Setup, Error, 2),
+  DelegatesDown(Setup, Error, 2),
+  DelegatesScalingGroupDownAlert(Setup, Error),
+  DelegateProfileError(Setup, Error),
+  NoEligibleDelegates(Setup, Error, 0, NoEligibleDelegatesAlertReconciliation.builder().build()),
+  PerpetualTaskAlert(Setup, Error),
+  InvalidKMS(Setup, Error),
+  GitSyncError(Setup, Error),
+  GitConnectionError(Setup, Error),
+  INVALID_SMTP_CONFIGURATION(Setup, Error),
+  EMAIL_NOT_SENT_ALERT(Setup, Warning),
+  USERGROUP_SYNC_FAILED(Setup, Error),
+  USAGE_LIMIT_EXCEEDED(Setup, Error),
+  INSTANCE_USAGE_APPROACHING_LIMIT(Setup, Warning),
+  RESOURCE_USAGE_APPROACHING_LIMIT(Setup, Warning),
+  DEPLOYMENT_RATE_APPROACHING_LIMIT(Setup, Warning),
+  SETTING_ATTRIBUTE_VALIDATION_FAILED(Setup, Warning),
+  ARTIFACT_COLLECTION_FAILED(Setup, Error),
+  CONTINUOUS_VERIFICATION_ALERT(ContinuousVerification, Error),
+  CONTINUOUS_VERIFICATION_DATA_COLLECTION_ALERT(ContinuousVerification, Error),
+  MANIFEST_COLLECTION_FAILED(Setup, Error),
+  DEPLOYMENT_FREEZE_EVENT(Setup, Warning);
 
   @Getter private AlertCategory category;
   @Getter private AlertSeverity severity;
-  @Getter private Class<? extends AlertData> alertDataClass;
   @Getter private int pendingCount;
   @Getter private AlertReconciliation alertReconciliation;
 
-  AlertType(AlertCategory category, AlertSeverity severity, Class<? extends AlertData> alertDataClass) {
-    this(category, severity, alertDataClass, 0, AlertReconciliation.noop);
+  AlertType(AlertCategory category, AlertSeverity severity) {
+    this(category, severity, 0, AlertReconciliation.noop);
   }
 
-  AlertType(
-      AlertCategory category, AlertSeverity severity, Class<? extends AlertData> alertDataClass, int pendingCount) {
-    this(category, severity, alertDataClass, pendingCount, AlertReconciliation.noop);
+  AlertType(AlertCategory category, AlertSeverity severity, int pendingCount) {
+    this(category, severity, pendingCount, AlertReconciliation.noop);
   }
 
-  AlertType(AlertCategory category, AlertSeverity severity, Class<? extends AlertData> alertDataClass, int pendingCount,
-      AlertReconciliation alertReconciliation) {
+  AlertType(AlertCategory category, AlertSeverity severity, int pendingCount, AlertReconciliation alertReconciliation) {
     this.category = category;
     this.severity = severity;
-    this.alertDataClass = alertDataClass;
     this.pendingCount = pendingCount;
     this.alertReconciliation = alertReconciliation;
   }

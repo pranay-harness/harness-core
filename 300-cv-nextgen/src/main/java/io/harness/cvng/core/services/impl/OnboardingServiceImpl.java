@@ -1,21 +1,26 @@
 package io.harness.cvng.core.services.impl;
 
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.services.api.DataSourceConnectivityChecker;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.serializer.JsonUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class OnboardingServiceImpl implements OnboardingService {
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private NextGenService nextGenService;
+  @Inject private Map<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder;
+
   @Override
   public OnboardingResponseDTO getOnboardingResponse(String accountId, OnboardingRequestDTO onboardingRequestDTO) {
     ConnectorInfoDTO connectorInfoDTO = getConnectorConfigDTO(accountId, onboardingRequestDTO.getConnectorIdentifier(),
@@ -25,7 +30,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     String response =
         verificationManagerService.getDataCollectionResponse(accountId, onboardingRequestDTO.getOrgIdentifier(),
             onboardingRequestDTO.getProjectIdentifier(), onboardingRequestDTO.getDataCollectionRequest());
-    log.info(response);
+    log.debug(response);
     return OnboardingResponseDTO.builder()
         .accountId(accountId)
         .connectorIdentifier(onboardingRequestDTO.getConnectorIdentifier())
@@ -34,6 +39,15 @@ public class OnboardingServiceImpl implements OnboardingService {
         .tracingId(onboardingRequestDTO.getTracingId())
         .result(JsonUtils.asObject(response, Object.class))
         .build();
+  }
+
+  @Override
+  public void checkConnectivity(String accountId, String orgIdentifier, String projectIdentifier,
+      String connectorIdentifier, String tracingId, DataSourceType dataSourceType) {
+    Preconditions.checkNotNull(dataSourceType);
+    Preconditions.checkNotNull(dataSourceTypeToServiceMapBinder.containsKey(dataSourceType));
+    dataSourceTypeToServiceMapBinder.get(dataSourceType)
+        .checkConnectivity(accountId, orgIdentifier, projectIdentifier, connectorIdentifier, tracingId);
   }
 
   private ConnectorInfoDTO getConnectorConfigDTO(

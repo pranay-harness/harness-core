@@ -17,7 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.CIK8ContainerParams;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.rule.Owner;
@@ -29,7 +29,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class InternalContainerParamsProviderTest extends CIExecutionTest {
+public class InternalContainerParamsProviderTest extends CIExecutionTestBase {
   @Inject InternalContainerParamsProvider internalContainerParamsProvider;
 
   @Test
@@ -87,7 +87,7 @@ public class InternalContainerParamsProviderTest extends CIExecutionTest {
 
     CIK8ContainerParams containerParams = internalContainerParamsProvider.getLiteEngineContainerParams(connectorDetails,
         publishArtifactConnectorDetailsMap, k8PodDetails, serialisedStage, serviceToken, stageCpuRequest,
-        stageMemoryRequest, null, logEnvVars, tiEnvVars, volumeToMountPath, "/step-exec/workspace", ambiance);
+        stageMemoryRequest, null, logEnvVars, tiEnvVars, volumeToMountPath, "/step-exec/workspace", "test", ambiance);
 
     Map<String, String> expectedEnv = new HashMap<>();
     expectedEnv.put(LOG_SERVICE_ENDPOINT_VARIABLE, logEndpoint);

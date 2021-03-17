@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.billing;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.cluster.dao.K8sWorkloadDao;
 import io.harness.ccm.cluster.entities.K8sLabelFilter;
@@ -47,10 +49,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class BillingStatsFilterValuesDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<QLCCMAggregationFunction, QLBillingDataFilter,
         QLCCMGroupBy, QLBillingSortCriteria> {
@@ -374,6 +378,7 @@ public class BillingStatsFilterValuesDataFetcher
 
   private List<QLEntityData> getEntity(BillingDataMetaDataFields field, Set<String> entityIds) {
     List<QLEntityData> entityData = new ArrayList<>();
+    entityIds = entityIds.stream().filter(entityId -> !entityId.equals("")).collect(Collectors.toSet());
     for (String entityId : entityIds) {
       entityData.add(QLEntityData.builder()
                          .name(statsHelper.getEntityName(field, entityId))

@@ -2,6 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -16,15 +17,19 @@ import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
+import static com.amazonaws.regions.Regions.US_EAST_1;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -33,6 +38,10 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.ecs.EcsContainerDetails;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
+import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
 
@@ -40,9 +49,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.cloudprovider.UpdateServiceCountRequestData;
 import software.wings.service.impl.AwsHelperService;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
@@ -60,17 +69,23 @@ import com.amazonaws.services.ecs.model.Deployment;
 import com.amazonaws.services.ecs.model.DescribeClustersRequest;
 import com.amazonaws.services.ecs.model.DescribeClustersResult;
 import com.amazonaws.services.ecs.model.DescribeContainerInstancesResult;
+import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.DescribeTaskDefinitionResult;
 import com.amazonaws.services.ecs.model.DescribeTasksRequest;
 import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.LaunchType;
+import com.amazonaws.services.ecs.model.ListServicesRequest;
+import com.amazonaws.services.ecs.model.ListServicesResult;
 import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -89,6 +104,7 @@ import org.mockito.Mock;
  */
 public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Mock private AwsHelperService awsHelperService;
+  @Mock private TimeLimiter timeLimiter;
   @Inject @InjectMocks private EcsContainerService ecsContainerService;
 
   private SettingAttribute connectorConfig =
@@ -116,7 +132,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     DescribeClustersResult describeClustersResult = new DescribeClustersResult().withClusters(
         asList(new Cluster().withClusterName(CLUSTER_NAME).withRegisteredContainerInstancesCount(2)));
-    when(awsHelperService.describeAutoScalingGroups(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
+    when(awsHelperService.describeAutoScalingGroups(awsConfig, Collections.emptyList(), US_EAST_1.getName(),
              new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(AUTO_SCALING_GROUP_NAME))))
         .thenReturn(autoScalingGroupsResult);
 
@@ -126,14 +142,14 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     params.put("availabilityZones", asList("AZ1", "AZ2"));
     params.put("vpcZoneIdentifiers", "VPC_ZONE_1, VPC_ZONE_2");
 
-    when(awsHelperService.describeClusters(Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(),
+    when(awsHelperService.describeClusters(US_EAST_1.getName(), awsConfig, Collections.emptyList(),
              new DescribeClustersRequest().withClusters(CLUSTER_NAME)))
         .thenReturn(describeClustersResult);
-    ecsContainerService.provisionNodes(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),
-        DESIRED_COUNT, LAUNCHER_TEMPLATE_NAME, params, null);
+    ecsContainerService.provisionNodes(US_EAST_1.getName(), connectorConfig, Collections.emptyList(), DESIRED_COUNT,
+        LAUNCHER_TEMPLATE_NAME, params, null);
 
     verify(awsHelperService)
-        .createAutoScalingGroup(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
+        .createAutoScalingGroup(awsConfig, Collections.emptyList(), US_EAST_1.getName(),
             new CreateAutoScalingGroupRequest()
                 .withLaunchConfigurationName(LAUNCHER_TEMPLATE_NAME)
                 .withDesiredCapacity(DESIRED_COUNT)
@@ -143,9 +159,6 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
                 .withAvailabilityZones(asList("AZ1", "AZ2"))
                 .withVPCZoneIdentifier("VPC_ZONE_1, VPC_ZONE_2"),
             null);
-    verify(awsHelperService)
-        .describeAutoScalingGroups(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(),
-            new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(asList(AUTO_SCALING_GROUP_NAME)));
   }
 
   @Test
@@ -164,14 +177,13 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     when(awsHelperService.describeServices(anyString(), any(AwsConfig.class), anyObject(), any()))
         .thenReturn(new DescribeServicesResult().withServices(asList(service)));
 
-    when(awsHelperService.createService(
-             Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(), createServiceRequest))
+    when(awsHelperService.createService(US_EAST_1.getName(), awsConfig, Collections.emptyList(), createServiceRequest))
         .thenReturn(new CreateServiceResult().withService(service));
-    String serviceArn = ecsContainerService.deployService(
-        Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(), serviceJson);
+    String serviceArn =
+        ecsContainerService.deployService(US_EAST_1.getName(), connectorConfig, Collections.emptyList(), serviceJson);
 
     verify(awsHelperService)
-        .createService(Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(), createServiceRequest);
+        .createService(US_EAST_1.getName(), awsConfig, Collections.emptyList(), createServiceRequest);
     assertThat(serviceArn).isEqualTo("SERVICE_ARN");
   }
 
@@ -180,9 +192,9 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldDeleteService() {
     ecsContainerService.deleteService(
-        Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
+        US_EAST_1.getName(), connectorConfig, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
     verify(awsHelperService)
-        .deleteService(Regions.US_EAST_1.getName(), (AwsConfig) connectorConfig.getValue(), Collections.emptyList(),
+        .deleteService(US_EAST_1.getName(), (AwsConfig) connectorConfig.getValue(), Collections.emptyList(),
             new DeleteServiceRequest().withCluster(CLUSTER_NAME).withService(SERVICE_NAME));
   }
 
@@ -196,10 +208,10 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             asList(new Service().withDesiredCount(DESIRED_COUNT).withRunningCount(DESIRED_COUNT))));
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
-    ecsContainerService.provisionTasks(Regions.US_EAST_1.getName(), connectorConfig, Collections.emptyList(),
-        CLUSTER_NAME, SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
+    ecsContainerService.provisionTasks(US_EAST_1.getName(), connectorConfig, Collections.emptyList(), CLUSTER_NAME,
+        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
     verify(awsHelperService)
-        .updateService(Regions.US_EAST_1.getName(), awsConfig, Collections.emptyList(),
+        .updateService(US_EAST_1.getName(), awsConfig, Collections.emptyList(),
             new UpdateServiceRequest()
                 .withCluster(CLUSTER_NAME)
                 .withService(SERVICE_NAME)
@@ -242,6 +254,38 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
             .withEvents(new ServiceEvent().withMessage("Foo has reached a steady state.").withCreatedAt(new Date(15)));
     ret = ecsContainerServiceImpl.hasServiceReachedSteadyState(service);
     assertThat(ret).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testWaitForTasksToBeInRunningStateButDontThrowException() throws Exception {
+    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    UpdateServiceCountRequestData requestData = mock(UpdateServiceCountRequestData.class);
+    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+
+    doThrow(new TimeoutException(null, "timeout", null))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatExceptionOfType(TimeoutException.class)
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+
+    doThrow(new InvalidRequestException("timeout"))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+
+    doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+
+    doThrow(new WingsException(ErrorCode.INIT_TIMEOUT))
+        .when(timeLimiter)
+        .callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatExceptionOfType(WingsException.class)
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
   }
 
   @Test
@@ -356,6 +400,64 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
 
     assertThat(ecsContainerDetails.getContainerId()).isEqualTo("d506302e5cf6448ca67e1896b679c92e");
     assertThat(ecsContainerDetails.getDockerId()).isEqualTo("123456789abc");
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetServicesWithoutPrefix() {
+    ListServicesResult listServicesResult = new ListServicesResult().withServiceArns(Lists.newArrayList());
+    doReturn(listServicesResult)
+        .when(awsHelperService)
+        .listServices(US_EAST_1.getName(), awsConfig, new ArrayList<>(),
+            new ListServicesRequest().withMaxResults(100).withCluster(CLUSTER_NAME));
+    List<Service> services =
+        ecsContainerService.getServices(US_EAST_1.getName(), connectorConfig, new ArrayList<>(), CLUSTER_NAME);
+    assertThat(services).isEmpty();
+
+    ArrayList<String> serviceArns = Lists.newArrayList("S1", "S2", "S3");
+    ArrayList<Service> services1 = Lists.newArrayList(
+        new Service().withServiceName("S1"), new Service().withServiceName("S2"), new Service().withServiceName("S3"));
+    doReturn(new DescribeServicesResult().withServices(services1))
+        .when(awsHelperService)
+        .describeServices(US_EAST_1.getName(), awsConfig, new ArrayList<>(),
+            new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(serviceArns));
+    listServicesResult.withServiceArns(serviceArns);
+
+    services = ecsContainerService.getServices(US_EAST_1.getName(), connectorConfig, new ArrayList<>(), CLUSTER_NAME);
+    assertThat(services).hasSize(serviceArns.size());
+    assertThat(services).isEqualTo(services1);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetServicesWithPrefix() {
+    ListServicesResult listServicesResult = new ListServicesResult().withServiceArns(Lists.newArrayList());
+    doReturn(listServicesResult)
+        .when(awsHelperService)
+        .listServices(US_EAST_1.getName(), awsConfig, new ArrayList<>(),
+            new ListServicesRequest().withMaxResults(100).withCluster(CLUSTER_NAME));
+    List<Service> services =
+        ecsContainerService.getServices(US_EAST_1.getName(), connectorConfig, new ArrayList<>(), CLUSTER_NAME, "S1__");
+    assertThat(services).isEmpty();
+
+    ArrayList<String> serviceArns = Lists.newArrayList("S1__1", "S1__2", "S1__4", "S3", "S1");
+
+    ArrayList<Service> services1 = Lists.newArrayList(new Service().withServiceName("S1__1"),
+        new Service().withServiceName("S1__2"), new Service().withServiceName("S1__4"));
+    doReturn(new DescribeServicesResult().withServices(services1))
+        .when(awsHelperService)
+        .describeServices(US_EAST_1.getName(), awsConfig, new ArrayList<>(),
+            new DescribeServicesRequest()
+                .withCluster(CLUSTER_NAME)
+                .withServices(Lists.newArrayList("S1__1", "S1__2", "S1__4")));
+    listServicesResult.withServiceArns(serviceArns);
+
+    services =
+        ecsContainerService.getServices(US_EAST_1.getName(), connectorConfig, new ArrayList<>(), CLUSTER_NAME, "S1__");
+    assertThat(services).hasSize(3);
+    assertThat(services).isEqualTo(services1);
   }
 
   @Test

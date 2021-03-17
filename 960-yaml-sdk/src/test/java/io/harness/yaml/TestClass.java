@@ -1,8 +1,6 @@
 package io.harness.yaml;
 
-import io.harness.EntityType;
 import io.harness.validation.OneOfField;
-import io.harness.yaml.schema.YamlSchemaRoot;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -49,8 +47,6 @@ public class TestClass {
     String y;
   }
 
-  @YamlSchemaRoot(value = EntityType.CONNECTORS, availableAtAccountLevel = true, availableAtOrgLevel = true,
-      availableAtProjectLevel = true)
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
@@ -65,8 +61,6 @@ public class TestClass {
 
   public enum Types { ClassWithApiModelOverride, ClassWithoutApiModelOverride }
 
-  @YamlSchemaRoot(value = EntityType.CONNECTORS, availableAtAccountLevel = true, availableAtOrgLevel = true,
-      availableAtProjectLevel = true)
   @Data
   @NoArgsConstructor
   @AllArgsConstructor

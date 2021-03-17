@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @OwnedBy(CDC)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ServiceArtifactSourceConnectionDataFetcher
     extends AbstractArrayDataFetcher<QLArtifactSource, QLArtifactSourceQueryParam> {
   @Inject ArtifactStreamService artifactStreamService;

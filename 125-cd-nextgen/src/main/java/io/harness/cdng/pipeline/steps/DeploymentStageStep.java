@@ -4,7 +4,6 @@ import static io.harness.steps.StepUtils.createStepResponseFromChildResponse;
 
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.executions.steps.ExecutionNodeType;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.plancreator.beans.VariablesSweepingOutput;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
@@ -60,7 +59,7 @@ public class DeploymentStageStep implements ChildExecutable<DeploymentStageStepP
       Ambiance ambiance, DeploymentStageStepParameters stepParameters) {
     VariablesSweepingOutput variablesOutcome = new VariablesSweepingOutput();
     variablesOutcome.putAll(NGVariablesUtils.getMapOfVariables(
-        stepParameters.getOriginalVariables(), Integer.parseInt(AmbianceHelper.getExpressionFunctorToken(ambiance))));
+        stepParameters.getOriginalVariables(), ambiance.getExpressionFunctorToken()));
     return variablesOutcome;
   }
 }

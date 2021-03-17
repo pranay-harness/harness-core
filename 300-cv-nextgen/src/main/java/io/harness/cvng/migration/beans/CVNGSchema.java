@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "CVNGSchemaKeys")
 @Entity(value = "cvngSchema", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class CVNGSchema
+public final class CVNGSchema
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   public static final String SCHEMA_ID = "schema";
   public static final String VERSION = "version";

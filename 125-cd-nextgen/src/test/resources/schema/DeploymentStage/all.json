@@ -1,0 +1,996 @@
+{
+  "type": "object",
+  "properties": {
+    "execution": {
+      "$ref": "#/definitions/ExecutionElementConfig"
+    },
+    "infrastructure": {
+      "$ref": "#/definitions/PipelineInfrastructure"
+    },
+    "serviceConfig": {
+      "$ref": "#/definitions/ServiceConfig"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AbortFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Abort"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ArtifactConfig": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ArtifactListConfig": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "string"
+        },
+        "primary": {
+          "$ref": "#/definitions/ArtifactSpecWrapper"
+        },
+        "sidecars": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SidecarArtifactWrapper"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ArtifactOverrideSetWrapper": {
+      "type": "object",
+      "properties": {
+        "overrideSet": {
+          "$ref": "#/definitions/ArtifactOverrideSets"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ArtifactOverrideSets": {
+      "type": "object",
+      "properties": {
+        "artifacts": {
+          "$ref": "#/definitions/ArtifactListConfig"
+        },
+        "identifier": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ArtifactSpecWrapper": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/ArtifactConfig"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Dockerhub",
+            "Gcr",
+            "Ecr"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeploymentStageConfig": {
+      "type": "object",
+      "properties": {
+        "execution": {
+          "$ref": "#/definitions/ExecutionElementConfig"
+        },
+        "infrastructure": {
+          "$ref": "#/definitions/PipelineInfrastructure"
+        },
+        "serviceConfig": {
+          "$ref": "#/definitions/ServiceConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "EnvironmentYaml": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "PreProduction",
+            "Production"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionElementConfig": {
+      "type": "object",
+      "properties": {
+        "rollbackSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionWrapperConfig": {
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "$ref": "#/definitions/ParallelStepElementConfig"
+        },
+        "step": {
+          "$ref": "#/definitions/StepElementConfig"
+        },
+        "stepGroup": {
+          "$ref": "#/definitions/StepGroupElementConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FailureStrategyActionConfig": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Ignore",
+            "Retry",
+            "MarkAsSuccess",
+            "Abort",
+            "StageRollback",
+            "StepGroupRollback",
+            "ManualIntervention"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "FailureStrategyConfig": {
+      "type": "object",
+      "required": [
+        "onFailure"
+      ],
+      "properties": {
+        "onFailure": {
+          "$ref": "#/definitions/OnFailureConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "IgnoreFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "Ignore"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InfraOverrides": {
+      "type": "object",
+      "properties": {
+        "environment": {
+          "$ref": "#/definitions/EnvironmentYaml"
+        },
+        "infrastructureDefinition": {
+          "$ref": "#/definitions/InfrastructureDef"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InfraUseFromStage": {
+      "type": "object",
+      "required": [
+        "stage"
+      ],
+      "properties": {
+        "overrides": {
+          "$ref": "#/definitions/InfraOverrides"
+        },
+        "stage": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Infrastructure": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InfrastructureDef": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/Infrastructure"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManifestAttributes": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManifestConfig": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/definitions/ManifestAttributes"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManifestConfigWrapper": {
+      "type": "object",
+      "properties": {
+        "manifest": {
+          "$ref": "#/definitions/ManifestConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManifestOverrideSetWrapper": {
+      "type": "object",
+      "properties": {
+        "overrideSet": {
+          "$ref": "#/definitions/ManifestOverrideSets"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManifestOverrideSets": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "manifests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestConfigWrapper"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManualFailureSpecConfig": {
+      "type": "object",
+      "required": [
+        "onTimeout",
+        "timeout"
+      ],
+      "properties": {
+        "onTimeout": {
+          "$ref": "#/definitions/OnTimeoutConfig"
+        },
+        "timeout": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManualInterventionFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "readOnly": true,
+              "$ref": "#/definitions/ManualFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "ManualIntervention"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "MarkAsSuccessFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "MarkAsSuccess"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGVariable": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "String",
+            "Number",
+            "Secret"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGVariableOverrideSetWrapper": {
+      "type": "object",
+      "properties": {
+        "overrideSet": {
+          "$ref": "#/definitions/NGVariableOverrideSets"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGVariableOverrideSets": {
+      "type": "object",
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariable"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OnFailureConfig": {
+      "type": "object",
+      "required": [
+        "action",
+        "errors"
+      ],
+      "properties": {
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/ManualInterventionFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/MarkAsSuccessFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/RetryFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StageRollbackFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StepGroupFailureActionConfig"
+            }
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OnRetryFailureConfig": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/ManualInterventionFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/MarkAsSuccessFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/RetryFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StageRollbackFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StepGroupFailureActionConfig"
+            }
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OnTimeoutConfig": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/AbortFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/IgnoreFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/ManualInterventionFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/MarkAsSuccessFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/RetryFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StageRollbackFailureActionConfig"
+            },
+            {
+              "$ref": "#/definitions/StepGroupFailureActionConfig"
+            }
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParallelStepElementConfig": {
+      "type": "object",
+      "required": [
+        "sections"
+      ],
+      "properties": {
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PipelineInfrastructure": {
+      "type": "object",
+      "properties": {
+        "environment": {
+          "$ref": "#/definitions/EnvironmentYaml"
+        },
+        "environmentRef": {
+          "type": "string"
+        },
+        "infrastructureDefinition": {
+          "$ref": "#/definitions/InfrastructureDef"
+        },
+        "useFromStage": {
+          "$ref": "#/definitions/InfraUseFromStage"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "environment"
+              ]
+            },
+            {
+              "required": [
+                "environmentRef"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "RetryFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "readOnly": true,
+              "$ref": "#/definitions/RetryFailureSpecConfig"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Retry"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RetryFailureSpecConfig": {
+      "type": "object",
+      "required": [
+        "onRetryFailure",
+        "retryCount",
+        "retryIntervals"
+      ],
+      "properties": {
+        "onRetryFailure": {
+          "$ref": "#/definitions/OnRetryFailureConfig"
+        },
+        "retryCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "retryIntervals": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceConfig": {
+      "type": "object",
+      "properties": {
+        "service": {
+          "$ref": "#/definitions/ServiceYaml"
+        },
+        "serviceDefinition": {
+          "$ref": "#/definitions/ServiceDefinition"
+        },
+        "serviceRef": {
+          "type": "string"
+        },
+        "stageOverrides": {
+          "$ref": "#/definitions/StageOverridesConfig"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "useFromStage": {
+          "$ref": "#/definitions/ServiceUseFromStage"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "service"
+              ]
+            },
+            {
+              "required": [
+                "serviceRef"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ServiceDefinition": {
+      "type": "object",
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/ServiceSpec"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceOverrides": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceSpec": {
+      "type": "object",
+      "properties": {
+        "artifactOverrideSets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArtifactOverrideSetWrapper"
+          }
+        },
+        "artifacts": {
+          "$ref": "#/definitions/ArtifactListConfig"
+        },
+        "manifestOverrideSets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestOverrideSetWrapper"
+          }
+        },
+        "manifests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestConfigWrapper"
+          }
+        },
+        "variableOverrideSets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariableOverrideSetWrapper"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariable"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceUseFromStage": {
+      "type": "object",
+      "required": [
+        "stage"
+      ],
+      "properties": {
+        "metadata": {
+          "type": "string"
+        },
+        "overrides": {
+          "$ref": "#/definitions/ServiceOverrides"
+        },
+        "stage": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceYaml": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "name"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SidecarArtifact": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/definitions/ArtifactConfig"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Dockerhub",
+            "Gcr",
+            "Ecr"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SidecarArtifactWrapper": {
+      "type": "object",
+      "properties": {
+        "sidecar": {
+          "$ref": "#/definitions/SidecarArtifact"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StageOverridesConfig": {
+      "type": "object",
+      "properties": {
+        "artifacts": {
+          "$ref": "#/definitions/ArtifactListConfig"
+        },
+        "manifests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestConfigWrapper"
+          }
+        },
+        "useArtifactOverrideSets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "useManifestOverrideSets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "useVariableOverrideSets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "variables": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NGVariable"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StageRollbackFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StageRollback"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepElementConfig": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "skipCondition": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepGroupElementConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "steps"
+      ],
+      "properties": {
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rollbackSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        },
+        "skipCondition": {
+          "type": "string"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepGroupFailureActionConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/FailureStrategyActionConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "StepGroupRollback"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepSpecType": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

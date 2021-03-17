@@ -100,8 +100,6 @@ import org.mockito.Mock;
 
 /**
  * The Class HttpStateTest.
- *
- * @author Rishi
  */
 public class HttpStateTest extends WingsBaseTest {
   private static final HttpState.Builder httpStateBuilder =

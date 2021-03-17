@@ -5,9 +5,11 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.EntityType;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.snippets.bean.YamlSnippetMetaData;
 import io.harness.yaml.snippets.helper.YamlSnippetHelper;
 
@@ -28,7 +30,11 @@ public class YamlSnippetHelperTest extends CategoryTest {
     final InputStream inputStream = getClass().getClassLoader().getResourceAsStream("testIndex.xml");
     String snippetMetaData = IOUtils.toString(inputStream, StandardCharsets.UTF_8.name());
     yamlSnippetHelper = new YamlSnippetHelper();
-    yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData, TestClass.ClassWhichContainsInterface.class);
+    yamlSnippetHelper.preComputeTagsAndNameMap(snippetMetaData,
+        YamlSchemaRootClass.builder()
+            .clazz(TestClass.ClassWhichContainsInterface.class)
+            .entityType(EntityType.CONNECTORS)
+            .build());
   }
 
   @Test

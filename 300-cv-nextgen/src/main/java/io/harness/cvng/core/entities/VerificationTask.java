@@ -26,7 +26,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "VerificationTaskKeys")
 @Entity(value = "verificationTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class VerificationTask implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
+public final class VerificationTask implements UuidAware, CreatedAtAware, AccountAccess, PersistentEntity {
   public static final String VERIFICATION_TASK_ID_KEY = "verificationTaskId";
 
   public static List<MongoIndex> mongoIndexes() {

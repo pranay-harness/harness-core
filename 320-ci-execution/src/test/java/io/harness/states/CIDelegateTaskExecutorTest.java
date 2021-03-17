@@ -16,7 +16,7 @@ import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.SimpleHDelegateTask;
 import io.harness.delegate.task.stepstatus.StepStatusTaskParameters;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.rule.Owner;
 
@@ -28,7 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-public class CIDelegateTaskExecutorTest extends CIExecutionTest {
+public class CIDelegateTaskExecutorTest extends CIExecutionTestBase {
   private static final String TASK_ID = "123456";
   private static final String ACCOUNT_ID = "accountId";
   public static final String TASK_TYPE = "CI_LE_STATUS";

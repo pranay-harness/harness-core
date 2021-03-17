@@ -3,9 +3,9 @@ package io.harness.batch.processing.anomalydetection.reader.k8s;
 import io.harness.batch.processing.anomalydetection.AnomalyDetectionConstants;
 import io.harness.batch.processing.anomalydetection.K8sQueryMetaData;
 import io.harness.batch.processing.anomalydetection.TimeSeriesMetaData;
-import io.harness.batch.processing.anomalydetection.types.EntityType;
-import io.harness.batch.processing.anomalydetection.types.TimeGranularity;
 import io.harness.batch.processing.ccm.CCMJobConstants;
+import io.harness.ccm.anomaly.entities.EntityType;
+import io.harness.ccm.anomaly.entities.TimeGranularity;
 
 import software.wings.graphql.datafetcher.billing.QLCCMAggregateOperation;
 import software.wings.graphql.datafetcher.billing.QLCCMAggregationFunction;
@@ -87,6 +87,7 @@ public class AnomalyDetectionNamespaceTimescaleReader extends AnomalyDetectionTi
 
     List<String> instanceType = new ArrayList<>();
     instanceType.add("K8S_POD");
+    // TODO add fargate here
     filtersList.add(
         QLBillingDataFilter.builder()
             .instanceType(

@@ -4,16 +4,12 @@ import static io.harness.ng.core.invites.InviteOperationResponse.ACCOUNT_INVITE_
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
 import static io.harness.ng.core.invites.InviteOperationResponse.USER_INVITE_RESENT;
-import static io.harness.ng.core.invites.entities.Invite.InviteKeys.deleted;
-import static io.harness.ng.core.invites.entities.Invite.InviteKeys.id;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.entities.Invite.InviteType.USER_INITIATED_INVITE;
 import static io.harness.rule.OwnerRule.ANKUSH;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -30,6 +26,7 @@ import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.InvitesService;
 import io.harness.ng.core.invites.entities.Invite;
+import io.harness.ng.core.invites.entities.Invite.InviteKeys;
 import io.harness.ng.core.invites.entities.Role;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.invites.ext.mail.EmailData;
@@ -301,7 +298,7 @@ public class InvitesServiceImplTest extends CategoryTest {
 
     Optional<Invite> inviteOptional = invitesService.updateInvite(invite);
 
-    assertTrue(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isTrue();
     Invite returnInvite = inviteOptional.get();
     assertThat(returnInvite.getApproved()).isEqualTo(Boolean.TRUE);
     assertThat(returnInvite.getRole()).isEqualTo(invite.getRole());
@@ -328,7 +325,7 @@ public class InvitesServiceImplTest extends CategoryTest {
 
     Optional<Invite> inviteOptional = invitesService.updateInvite(invite);
 
-    assertTrue(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isTrue();
     Invite returnInvite = inviteOptional.get();
     assertThat(returnInvite.getApproved()).isEqualTo(Boolean.TRUE);
     assertThat(returnInvite.getRole()).isEqualTo(invite.getRole());
@@ -352,13 +349,13 @@ public class InvitesServiceImplTest extends CategoryTest {
     when(invitesRepository.updateInvite(eq(inviteId), any())).thenReturn(updateResult);
     Optional<Invite> inviteOptional = invitesService.deleteInvite(inviteId);
 
-    assertTrue(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isTrue();
     Invite returnInvite = inviteOptional.get();
     assertThat(returnInvite.getId()).isEqualTo(invite.getId());
     verify(invitesRepository, times(1)).updateInvite(any(), updateArgumentCaptor.capture());
     Update update = updateArgumentCaptor.getValue();
     assertThat(update.getUpdateObject().size()).isEqualTo(1);
-    assertTrue(((Document) update.getUpdateObject().get("$set")).containsKey(deleted));
+    assertThat(((Document) update.getUpdateObject().get("$set")).containsKey(InviteKeys.deleted)).isTrue();
   }
 
   @Test
@@ -369,7 +366,7 @@ public class InvitesServiceImplTest extends CategoryTest {
 
     Optional<Invite> inviteOptional = invitesService.deleteInvite(inviteId);
 
-    assertFalse(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isFalse();
   }
 
   @Test(expected = InvalidArgumentsException.class)
@@ -395,13 +392,13 @@ public class InvitesServiceImplTest extends CategoryTest {
     when(invitesRepository.save(any())).thenReturn(invite);
     when(ngUserService.getUserProjectMap(any(), any(), any(), any())).thenReturn(Optional.empty());
     when(invitesRepository.findFirstByIdAndDeletedNot(any(), any())).thenReturn(Optional.empty(), Optional.of(invite));
-    when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(ImmutableMap.of(id, idClaim));
+    when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(ImmutableMap.of(InviteKeys.id, idClaim));
 
     Optional<Invite> inviteOptional = invitesService.verify(jwtToken);
-    assertFalse(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isFalse();
 
     inviteOptional = invitesService.verify(jwtToken);
-    assertTrue(inviteOptional.isPresent());
+    assertThat(inviteOptional.isPresent()).isTrue();
     assertThat(inviteOptional.get().getId()).isEqualTo(inviteId);
   }
 }

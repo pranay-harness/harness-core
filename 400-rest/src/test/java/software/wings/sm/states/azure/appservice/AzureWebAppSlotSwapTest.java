@@ -43,6 +43,7 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.sm.ExecutionContextImpl;
@@ -72,6 +73,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected ActivityService activityService;
   @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
+  @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotSwap state = new AzureWebAppSlotSwap("Slot swap state");
 
   private final String ACTIVITY_ID = "activityId";
@@ -90,6 +92,23 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
     assertThat(state.skipMessage()).isNotEmpty();
     ExecutionResponse response = state.execute(mockContext);
     assertSuccessExecution(response);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testSwapSlotExecuteSkip() {
+    ExecutionContextImpl mockContext = initializeMockSetup(true, false, false);
+
+    assertThatThrownBy(() -> state.execute(mockContext))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Did not find Setup element of class AzureAppServiceSlotSetupContextElement");
+
+    state.setRollback(true);
+    ExecutionResponse response = state.execute(mockContext);
+    assertThat(response).isNotNull();
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
+    assertThat(state.skipMessage()).isNotEmpty();
   }
 
   @Test
@@ -211,7 +230,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
       doReturn(setupContextElement).when(mockContext).getContextElement(eq(ContextElementType.AZURE_WEBAPP_SETUP));
       doReturn(setupContextElement)
           .when(azureSweepingOutputServiceHelper)
-          .getSetupElementFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
+          .getInfoFromSweepingOutput(eq(mockContext), eq(SWEEPING_OUTPUT_APP_SERVICE));
     }
 
     if (failActivityCreation) {
@@ -226,6 +245,7 @@ public class AzureWebAppSlotSwapTest extends WingsBaseTest {
 
     doReturn(managerExecutionLogCallback).when(azureVMSSStateHelper).getExecutionLogCallback(activity);
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));
+    doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
     doReturn(delegateResult).when(delegateService).queueTask(any());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {

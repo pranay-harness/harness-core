@@ -1,6 +1,7 @@
 package software.wings.cloudprovider.aws;
 
 import static io.harness.rule.OwnerRule.ANUBHAW;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHU;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -11,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.LAUNCHER_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SERVICE_DEFINITION;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME_PREFIX;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Matchers.any;
@@ -91,5 +93,27 @@ public class AwsClusterServiceImplTest extends WingsBaseTest {
     verify(ecsContainerService)
         .deleteService(
             Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetService() {
+    awsClusterService.getService(
+        Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
+    verify(ecsContainerService)
+        .getService(
+            Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testGetServices() {
+    awsClusterService.getServices(
+        Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME, SERVICE_NAME_PREFIX);
+    verify(ecsContainerService)
+        .getServices(Regions.US_EAST_1.getName(), cloudProviderSetting, Collections.emptyList(), CLUSTER_NAME,
+            SERVICE_NAME_PREFIX);
   }
 }

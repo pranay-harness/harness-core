@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.VerificationApplication;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.reflections.Reflections;
 
-public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTest {
+public class OrganisationChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private OrganizationChangeEventMessageProcessor organizationChangeEventMessageProcessor;
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobService verificationJobService;

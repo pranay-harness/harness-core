@@ -2,12 +2,15 @@ package software.wings.delegatetasks.azure;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.LogCallback;
 
 import com.microsoft.azure.CloudException;
 import com.microsoft.rest.ServiceCallback;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureServiceCallBack implements ServiceCallback<Void> {
   private Throwable throwable;
   private final LogCallback logCallback;

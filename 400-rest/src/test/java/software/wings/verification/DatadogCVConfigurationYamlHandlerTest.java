@@ -20,15 +20,13 @@ import software.wings.metrics.MetricType;
 import software.wings.service.intfc.datadog.DatadogService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DatadogState.Metric;
+import software.wings.verification.datadog.DatadogCVConfigurationYaml;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
-import software.wings.verification.datadog.DatadogCVServiceConfiguration.DatadogCVConfigurationYaml;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
-import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.File;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

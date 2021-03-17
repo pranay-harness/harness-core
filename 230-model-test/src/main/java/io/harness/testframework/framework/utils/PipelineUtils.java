@@ -94,7 +94,6 @@ public class PipelineUtils {
     PipelineStage approvalStep = PipelineUtils.prepareApprovalStage(account, bearerToken, generateUuid());
     pipelineStages.add(approvalStep);
     pipeline.setPipelineStages(pipelineStages);
-    Pipeline approvalPipeline = PipelineRestUtils.createPipeline(appId, pipeline, account.getUuid(), bearerToken);
-    return approvalPipeline;
+    return PipelineRestUtils.createPipeline(appId, pipeline, account.getUuid(), bearerToken);
   }
 }

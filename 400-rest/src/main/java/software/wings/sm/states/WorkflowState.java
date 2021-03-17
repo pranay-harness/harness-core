@@ -78,6 +78,8 @@ public interface WorkflowState {
 
         Object resultObj = context.evaluateExpression(
             disableAssertion, StateExecutionContext.builder().stateExecutionData(skipStateExecutionData).build());
+        // rendering expression in order to have it tracked
+        context.renderExpression(disableAssertion);
         if (!(resultObj instanceof Boolean)) {
           return ExecutionResponse.builder()
               .executionStatus(FAILED)

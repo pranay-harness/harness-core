@@ -35,7 +35,7 @@ logging:
     - type: console
       threshold: TRACE
       target: STDOUT
-      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
     - type: gke-console
       threshold: TRACE
       target: STDOUT
@@ -90,4 +90,6 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
+
 portalUrl: https://localhost:8181/

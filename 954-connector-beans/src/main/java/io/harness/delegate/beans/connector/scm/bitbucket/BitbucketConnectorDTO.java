@@ -9,6 +9,8 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -17,6 +19,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @NoArgsConstructor
@@ -26,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("BitbucketConnector")
 public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConnector {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
-  @NotNull String url;
+  @NotNull @NotBlank String url;
   @Valid @NotNull BitbucketAuthenticationDTO authentication;
   @Valid BitbucketApiAccessDTO apiAccess;
 
@@ -40,11 +43,23 @@ public class BitbucketConnectorDTO extends ConnectorConfigDTO implements ScmConn
   }
 
   @Override
-  public DecryptableEntity getDecryptableEntity() {
+  public List<DecryptableEntity> getDecryptableEntities() {
+    List<DecryptableEntity> decryptableEntities = new ArrayList<>();
     if (authentication.getAuthType() == GitAuthType.HTTP) {
-      return ((BitbucketHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
+      BitbucketHttpCredentialsSpecDTO httpCredentialsSpec =
+          ((BitbucketHttpCredentialsDTO) authentication.getCredentials()).getHttpCredentialsSpec();
+      if (httpCredentialsSpec != null) {
+        decryptableEntities.add(httpCredentialsSpec);
+      }
     } else {
-      return ((BitbucketSshCredentialsDTO) authentication.getCredentials()).getSpec();
+      BitbucketSshCredentialsDTO sshCredential = (BitbucketSshCredentialsDTO) authentication.getCredentials();
+      if (sshCredential != null) {
+        decryptableEntities.add(sshCredential);
+      }
     }
+    if (apiAccess != null && apiAccess.getSpec() != null) {
+      decryptableEntities.add(apiAccess.getSpec());
+    }
+    return decryptableEntities;
   }
 }

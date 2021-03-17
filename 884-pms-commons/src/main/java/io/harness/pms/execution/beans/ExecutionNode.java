@@ -1,5 +1,6 @@
 package io.harness.pms.execution.beans;
 
+import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
@@ -29,4 +30,6 @@ public class ExecutionNode {
   SkipInfo skipInfo;
   List<ExecutableResponse> executableResponses;
   Map<String, List<ProgressData>> taskIdToProgressDataMap;
+  List<UnitProgress> unitProgresses;
+  List<DelegateInfo> delegateInfoList;
 }

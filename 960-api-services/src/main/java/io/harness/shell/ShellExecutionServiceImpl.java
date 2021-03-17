@@ -96,7 +96,8 @@ public class ShellExecutionServiceImpl implements ShellExecutionService {
       shellExecutionResponseBuilder.exitValue(processResult.getExitValue());
       if (processResult.getExitValue() == 0) {
         if (scriptOutputFile != null && scriptOutputFile.length() == 0) {
-          throw new ShellExecutionException("No artifact file was downloaded.");
+          throw new ShellExecutionException(
+              "The script executed successfully but no artifact file was downloaded in the target directory ${ARTIFACT_RESULT_PATH}.");
         }
         Map<String, String> scriptData = new HashMap<>();
         scriptData.put(ARTIFACT_RESULT_PATH, scriptOutputFile.getAbsolutePath());

@@ -17,6 +17,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.DelegateTask;
+import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -159,29 +160,32 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                .build())
             .build();
     prepareK8sTaskData(k8sClusterConfig);
-    assertThat(client.getValidationTask(getClientContext(true), ACCOUNT_ID))
-        .isEqualTo(DelegateTask.builder()
-                       .accountId(ACCOUNT_ID)
-                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                       .tags(ImmutableList.of("awsTag"))
-                       .data(TaskData.builder()
-                                 .async(false)
-                                 .taskType(TaskType.K8S_COMMAND_TASK.name())
-                                 .parameters(new Object[] {K8sInstanceSyncTaskParameters.builder()
-                                                               .accountId(ACCOUNT_ID)
-                                                               .appId(APP_ID)
-                                                               .k8sClusterConfig(k8sClusterConfig)
-                                                               .namespace("namespace")
-                                                               .releaseName("release_name")
-                                                               .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
-                                 .build())
-                       .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-                       .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
-                       .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
-                       .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
-                       .waitId("12345")
-                       .build());
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(true), ACCOUNT_ID);
+    assertThat(validationTask)
+        .isEqualToIgnoringGivenFields(
+            DelegateTask.builder()
+                .accountId(ACCOUNT_ID)
+                .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                .tags(ImmutableList.of("awsTag"))
+                .data(TaskData.builder()
+                          .async(false)
+                          .taskType(TaskType.K8S_COMMAND_TASK.name())
+                          .parameters(new Object[] {K8sInstanceSyncTaskParameters.builder()
+                                                        .accountId(ACCOUNT_ID)
+                                                        .appId(APP_ID)
+                                                        .k8sClusterConfig(k8sClusterConfig)
+                                                        .namespace("namespace")
+                                                        .releaseName("release_name")
+                                                        .build()})
+                          .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                          .build())
+                .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
+                .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
+                .waitId("12345")
+                .build(),
+            DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
   }
 
   @Test
@@ -190,8 +194,9 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   public void getAzureValidationTask() {
     AzureConfig azureConfig = AzureConfig.builder().accountId(ACCOUNT_ID).tenantId("harness").build();
     prepareAzureTaskData(azureConfig);
-    assertThat(client.getValidationTask(getClientContext(false), ACCOUNT_ID))
-        .isEqualTo(
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(false), ACCOUNT_ID);
+    assertThat(validationTask)
+        .isEqualToIgnoringGivenFields(
             DelegateTask.builder()
                 .accountId(ACCOUNT_ID)
                 .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
@@ -218,7 +223,8 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                 .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
                 .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
                 .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
-                .build());
+                .build(),
+            DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
   }
 
   @Test
@@ -227,34 +233,37 @@ public class ContainerInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
   public void getAwsValidationTask() {
     AwsConfig awsConfig = AwsConfig.builder().accountId(ACCOUNT_ID).tag("harness").build();
     prepareAwsTaskData(awsConfig);
-    assertThat(client.getValidationTask(getClientContext(false), ACCOUNT_ID))
-        .isEqualTo(DelegateTask.builder()
-                       .accountId(ACCOUNT_ID)
-                       .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                       .data(TaskData.builder()
-                                 .async(false)
-                                 .taskType(TaskType.CONTAINER_VALIDATION.name())
-                                 .parameters(new Object[] {null, null,
-                                     ContainerServiceParams.builder()
-                                         .settingAttribute(
-                                             SettingAttribute.Builder.aSettingAttribute().withValue(awsConfig).build())
-                                         .containerServiceName("container_service_name")
-                                         .encryptionDetails(new ArrayList<>())
-                                         .clusterName("cluster")
-                                         .namespace("namespace")
-                                         .region("us-east-1")
-                                         .subscriptionId("")
-                                         .resourceGroup("")
-                                         .masterUrl("")
-                                         .releaseName("release_name")
-                                         .build()})
-                                 .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
-                                 .build())
-                       .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-                       .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
-                       .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
-                       .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
-                       .build());
+    final DelegateTask validationTask = client.getValidationTask(getClientContext(false), ACCOUNT_ID);
+    assertThat(validationTask)
+        .isEqualToIgnoringGivenFields(
+            DelegateTask.builder()
+                .accountId(ACCOUNT_ID)
+                .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                .data(TaskData.builder()
+                          .async(false)
+                          .taskType(TaskType.CONTAINER_VALIDATION.name())
+                          .parameters(new Object[] {null, null,
+                              ContainerServiceParams.builder()
+                                  .settingAttribute(
+                                      SettingAttribute.Builder.aSettingAttribute().withValue(awsConfig).build())
+                                  .containerServiceName("container_service_name")
+                                  .encryptionDetails(new ArrayList<>())
+                                  .clusterName("cluster")
+                                  .namespace("namespace")
+                                  .region("us-east-1")
+                                  .subscriptionId("")
+                                  .resourceGroup("")
+                                  .masterUrl("")
+                                  .releaseName("release_name")
+                                  .build()})
+                          .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
+                          .build())
+                .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, EnvironmentType.PROD.name())
+                .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+                .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
+                .build(),
+            DelegateTaskKeys.expiry, DelegateTaskKeys.validUntil);
   }
 
   private void prepareAwsTaskData(AwsConfig awsConfig) {

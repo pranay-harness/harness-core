@@ -1,3 +1,5 @@
 package software.wings.graphql.schema.type.aggregation;
 
-public enum QLAggregationKind { SIMPLE, ARRAY, HSTORE }
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+@TargetModule(Module._380_CG_GRAPHQL) public enum QLAggregationKind { SIMPLE, ARRAY, HSTORE }

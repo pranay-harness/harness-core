@@ -29,6 +29,7 @@ import lombok.experimental.FieldDefaults;
 public class PipelineFilterProperties extends FilterProperties {
   private List<NGTag> pipelineTags;
   private String name;
+  private String description;
 
   private org.bson.Document moduleProperties;
 }

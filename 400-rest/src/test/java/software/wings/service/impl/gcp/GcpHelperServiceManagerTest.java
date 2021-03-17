@@ -78,7 +78,7 @@ public class GcpHelperServiceManagerTest extends WingsBaseTest {
     assertThat(delegateTask.getTags()).containsExactly("foo");
     assertThat(delegateTask.getData().getTimeout()).isEqualTo(TaskData.DEFAULT_SYNC_CALL_TIMEOUT);
     assertThat(delegateTask.getData().getParameters()[0])
-        .isEqualTo(GcpValidationRequest.builder().delegateSelector("foo").build());
+        .isEqualTo(GcpValidationRequest.builder().delegateSelectors(Collections.singleton("foo")).build());
   }
 
   @Test

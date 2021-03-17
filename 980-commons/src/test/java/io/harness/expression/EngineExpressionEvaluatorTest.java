@@ -3,14 +3,18 @@ package io.harness.expression;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.CriticalExpressionEvaluationException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -117,7 +121,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
                                              .put("i22", 222)
                                              .build());
 
-    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false);
+    validateSingleExpression(evaluator, "bVal1CVal1.strVal", "c11", false, false);
     validateExpression(evaluator, "bVal1.cVal1.strVal", "c11");
     validateExpression(evaluator, "bVal1.cVal2.strVal", "finalC12", true);
     validateExpression(evaluator, "bVal1.strVal1", "b11");
@@ -127,7 +131,7 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateExpression(evaluator, "bVal2.strVal2", "<+b22>");
+    validateExpression(evaluator, "bVal2.strVal2", "<+b22>", false, true);
     validateExpression(evaluator, "bVal2.intVal1", 21);
     validateExpression(evaluator, "bVal2.intVal2", 222, true);
     validateExpression(evaluator, "strVal1", "a1");
@@ -140,17 +144,30 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
 
   private void validateExpression(
       EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
-    validateSingleExpression(evaluator, expression, expected, skipEvaluate);
-    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate);
+    validateExpression(evaluator, expression, expected, skipEvaluate, false);
   }
 
-  private void validateSingleExpression(
-      EngineExpressionEvaluator evaluator, String expression, Object expected, boolean skipEvaluate) {
+  private void validateExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
+      boolean skipEvaluate, boolean evaluateThrows) {
+    validateSingleExpression(evaluator, expression, expected, skipEvaluate, evaluateThrows);
+    validateSingleExpression(evaluator, "obj." + expression, expected, skipEvaluate, evaluateThrows);
+  }
+
+  private void validateSingleExpression(EngineExpressionEvaluator evaluator, String expression, Object expected,
+      boolean skipEvaluate, boolean evaluateThrows) {
     expression = "<+" + expression + ">";
     assertThat(evaluator.renderExpression(expression)).isEqualTo(String.valueOf(expected));
-    if (!skipEvaluate) {
-      assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
+    if (skipEvaluate) {
+      return;
     }
+
+    if (evaluateThrows) {
+      String finalExpression = expression;
+      assertThatThrownBy(() -> evaluator.evaluateExpression(finalExpression))
+          .isInstanceOfAny(UnresolvedExpressionsException.class, CriticalExpressionEvaluationException.class);
+      return;
+    }
+    assertThat(evaluator.evaluateExpression(expression)).isEqualTo(expected);
   }
 
   @Test
@@ -221,6 +238,148 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc$9")).isFalse();
     assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc{9")).isFalse();
     assertThat(EngineExpressionEvaluator.validVariableFieldName("__abc}9")).isFalse();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testValidNestedExpressions() {
+    EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(new ImmutableMap.Builder<String, Object>()
+                                                                               .put("a", 5)
+                                                                               .put("b", 12)
+                                                                               .put("c", "<+a> + 2 * <+b>")
+                                                                               .put("d", "<+c> - <+a>")
+                                                                               .put("e", "<+a>")
+                                                                               .put("f", "abc")
+                                                                               .put("g", "def")
+                                                                               .build());
+    assertThat(evaluator.evaluateExpression("<+a> + <+b>")).isEqualTo(17);
+    assertThat(evaluator.evaluateExpression("<+a> + <+b> == 10")).isEqualTo(false);
+    assertThat(evaluator.evaluateExpression("<+a> + <+b> == 17")).isEqualTo(true);
+    assertThat(evaluator.evaluateExpression("<+c> - 2 * <+b> == 5")).isEqualTo(true);
+    assertThat(evaluator.evaluateExpression("<+c> - 2 * <+b> == <+a>")).isEqualTo(true);
+    assertThat(evaluator.evaluateExpression("<+<+c> - 2 * <+b>> == 5")).isEqualTo(true);
+    assertThat(evaluator.evaluateExpression("<+<+<+d>> * <+d>> == <+571 + <+<+a>>>")).isEqualTo(true);
+    assertThat(evaluator.evaluateExpression("<+e> - <+<+e>> + 1 == 1")).isEqualTo(true);
+    assertThat(evaluator.renderExpression("<+a> + <+b> = <+<+a> + <+b>>")).isEqualTo("5 + 12 = 17");
+    assertThat(evaluator.renderExpression("<+<+a> > + <+ <+b>> = <+<+a> + <+b>>")).isEqualTo("5 + 12 = 17");
+    assertThat(evaluator.renderExpression("<+f> + <+g> = <+<+f> + \" + \" + <+g>>")).isEqualTo("abc + def = abc + def");
+
+    EngineExpressionEvaluator.PartialEvaluateResult result = evaluator.partialEvaluateExpression("<+a> + <+b>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+    assertThat(result.getValue()).isEqualTo(17);
+
+    result = evaluator.partialEvaluateExpression("<+a> + <+b> == 10");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+    assertThat(result.getValue()).isEqualTo(false);
+
+    result = evaluator.partialEvaluateExpression("<+a> + <+b> == 17");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+    assertThat(result.getValue()).isEqualTo(true);
+
+    result = evaluator.partialEvaluateExpression("<+<+<+d>> * <+d>> == <+571 + <+<+a>>>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+    assertThat(result.getValue()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testInvalidNestedExpressions() {
+    EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(new ImmutableMap.Builder<String, Object>()
+                                                                               .put("a", 5)
+                                                                               .put("c", "<+a> + 2 * <+b>")
+                                                                               .put("d", "<+c> - <+a>")
+                                                                               .put("e", "<+a>")
+                                                                               .put("f", "<+b>")
+                                                                               .build());
+    assertThat(evaluator.evaluateExpression("<+a> + <+a>")).isEqualTo(10);
+    assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+b>"))
+        .isInstanceOf(UnresolvedExpressionsException.class);
+    assertThatThrownBy(() -> evaluator.evaluateExpression("<+a> + <+<+b> + <+e>>"))
+        .isInstanceOf(UnresolvedExpressionsException.class);
+    assertThat(evaluator.evaluateExpression("<+a> + <+<+a> + <+e>>")).isEqualTo(15);
+    assertThat(evaluator.renderExpression("<+<+a> + <+b>>")).endsWith("+ <+b>>");
+
+    EngineExpressionEvaluator.PartialEvaluateResult result = evaluator.partialEvaluateExpression("<+a> + <+a>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+    assertThat(result.getValue()).isEqualTo(10);
+
+    result = evaluator.partialEvaluateExpression("<+a> + <+b>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isTrue();
+
+    List<String> variables = EngineExpressionEvaluator.findVariables(result.getExpressionValue());
+    assertThat(variables.get(0)).startsWith("<+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+    assertThat(variables.get(1)).isEqualTo("<+b>");
+
+    result = evaluator.partialEvaluateExpression("<+a> + <+<+b> + <+e>>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isTrue();
+    assertThat(result.getExpressionValue()).contains("<+<+b>");
+
+    variables = EngineExpressionEvaluator.findVariables(result.getExpressionValue());
+    assertThat(variables.get(0)).startsWith("<+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+    assertThat(variables.get(1)).isEqualTo("<+b>");
+    assertThat(variables.get(2)).startsWith("<+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+
+    result = evaluator.partialEvaluateExpression("<+a> + <+<+a> + <+e>>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+    assertThat(result.getValue()).isEqualTo(15);
+
+    result = evaluator.partialRenderExpression("<+<+a> + <+<+b> + <+e>>>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isTrue();
+    assertThat(result.getExpressionValue())
+        .startsWith("<+<+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+    assertThat(result.getExpressionValue()).contains("<+<+b>");
+
+    result = evaluator.partialRenderExpression("<+<+a> + <+<+a> + <+e>>> abc <+<+a> + <+<+b> + <+e>>>");
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isTrue();
+    assertThat(result.getExpressionValue())
+        .startsWith("15 abc <+<+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+    assertThat(result.getExpressionValue()).contains("<+<+b>");
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testPartialResolve() {
+    EngineExpressionEvaluator evaluator = prepareEngineExpressionEvaluator(new ImmutableMap.Builder<String, Object>()
+                                                                               .put("a", 5)
+                                                                               .put("c", "<+a> + 2 * <+b>")
+                                                                               .put("d", "<+c> - <+a>")
+                                                                               .put("e", "<+a>")
+                                                                               .put("f", "<+b>")
+                                                                               .build());
+    Map<String, Object> m =
+        new HashMap<>(ImmutableMap.of("a", "<+a>", "b", "<+b>", "c", "<+a> < <+b> == <+<+a> < <+b>>", "d",
+            new HashMap<>(ImmutableMap.of("a", "<+a> + <+<+a> + <+e>>", "b", "<+a> + <+<+b> + <+e>>"))));
+    EngineExpressionEvaluator.PartialEvaluateResult result = evaluator.partialResolve(m);
+    assertThat(result).isNotNull();
+    assertThat(result.isPartial()).isFalse();
+
+    Map<String, Object> value = (Map<String, Object>) result.getValue();
+    assertThat(value).isNotNull();
+    assertThat(value).isNotEmpty();
+    assertThat(value.get("a")).isEqualTo("5");
+    assertThat(value.get("b")).isEqualTo("<+b>");
+    assertThat((String) value.get("c"))
+        .startsWith("5 < <+b> == <+<+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+    assertThat((String) value.get("c")).endsWith("> < <+b>>");
+
+    Map<String, Object> inner = (Map<String, Object>) value.get("d");
+    assertThat(inner.get("a")).isEqualTo("5 + 10");
+    assertThat((String) inner.get("b"))
+        .startsWith("5 + <+<+b> + <+" + EngineExpressionEvaluator.HARNESS_INTERNAL_VARIABLE_PREFIX);
+    assertThat((String) inner.get("b")).endsWith(">>");
   }
 
   @Value

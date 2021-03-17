@@ -13,6 +13,8 @@ import static software.wings.common.NotificationConstants.RESUMED_COLOR;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
@@ -55,6 +57,7 @@ import org.apache.http.client.utils.URIBuilder;
  */
 @Singleton
 @Slf4j
+@TargetModule(Module._830_NOTIFICATION_SERVICE)
 public class NotificationMessageResolver {
   private Map<String, ChannelTemplate> templateMap;
 
@@ -96,7 +99,11 @@ public class NotificationMessageResolver {
     WORKFLOW_RESUME_NOTIFICATION,
     WORKFLOW_ABORT_NOTIFICATION,
     EXPORT_EXECUTIONS_READY_NOTIFICATION,
-    EXPORT_EXECUTIONS_FAILED_NOTIFICATION
+    EXPORT_EXECUTIONS_FAILED_NOTIFICATION,
+    PIPELINE_FREEZE_NOTIFICATION,
+    TRIGGER_EXECUTION_REJECTED_NOTIFICATION,
+    FREEZE_ACTIVATION_NOTIFICATION,
+    FREEZE_DEACTIVATION_NOTIFICATION
   }
 
   private static Pattern placeHolderPattern = Pattern.compile("\\$\\{.+?}");
@@ -366,7 +373,7 @@ public class NotificationMessageResolver {
     }
   }
 
-  public static String buildAbsoluteUrl(MainConfiguration configuration, String fragment, String baseUrl) {
+  public static String buildAbsoluteUrl(String fragment, String baseUrl) {
     if (!baseUrl.endsWith("/")) {
       baseUrl += "/";
     }
@@ -382,11 +389,11 @@ public class NotificationMessageResolver {
 
   private String generateUrl(Application app, ExecutionContext context, AlertType alertType) {
     String baseUrl = subdomainUrlHelper.getPortalBaseUrl(context.getAccountId());
-    if (alertType == AlertType.ApprovalNeeded || alertType == AlertType.ManualInterventionNeeded) {
+    if (alertType == AlertType.ApprovalNeeded || alertType == AlertType.ManualInterventionNeeded
+        || alertType == AlertType.DEPLOYMENT_FREEZE_EVENT) {
       if (context.getWorkflowType() == WorkflowType.PIPELINE) {
-        return buildAbsoluteUrl(configuration,
-            format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details", app.getAccountId(),
-                app.getUuid(), context.getWorkflowExecutionId()),
+        return buildAbsoluteUrl(format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
+                                    app.getAccountId(), app.getUuid(), context.getWorkflowExecutionId()),
             baseUrl);
       } else if (context.getWorkflowType() == WorkflowType.ORCHESTRATION) {
         WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -401,13 +408,12 @@ public class NotificationMessageResolver {
           if (((ExecutionContextImpl) context).getEnv() != null) {
             envId = ((ExecutionContextImpl) context).getEnv().getUuid();
           }
-          return buildAbsoluteUrl(configuration,
-              format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(), envId,
-                  context.getWorkflowExecutionId()),
+          return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
+                                      app.getUuid(), envId, context.getWorkflowExecutionId()),
               baseUrl);
         } else {
           // WF in a Pipeline execution
-          return buildAbsoluteUrl(configuration,
+          return buildAbsoluteUrl(
               format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details", app.getAccountId(),
                   app.getUuid(), pipelineExecutionId, context.getWorkflowExecutionId()),
               baseUrl);

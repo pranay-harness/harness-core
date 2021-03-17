@@ -75,11 +75,51 @@ public class AnomalyEntity {
     if (gcpProject != null) {
       return EntityType.GCP_PROJECT;
     }
+    if (awsInstanceType != null) {
+      return EntityType.AWS_INSTANCE_TYPE;
+    }
+    if (awsUsageType != null) {
+      return EntityType.AWS_USAGE_TYPE;
+    }
     if (awsService != null) {
       return EntityType.AWS_SERVICE;
     }
     if (awsAccount != null) {
       return EntityType.AWS_ACCOUNT;
+    }
+    return null;
+  }
+
+  public String getEntityId() {
+    if (workloadName != null) {
+      return workloadName;
+    }
+    if (namespace != null) {
+      return namespace;
+    }
+    if (clusterId != null) {
+      return clusterId;
+    }
+    if (gcpSKUId != null) {
+      return gcpSKUId;
+    }
+    if (gcpProduct != null) {
+      return gcpProduct;
+    }
+    if (gcpProject != null) {
+      return gcpProject;
+    }
+    if (awsInstanceType != null) {
+      return awsInstanceType;
+    }
+    if (awsUsageType != null) {
+      return awsUsageType;
+    }
+    if (awsService != null) {
+      return awsService;
+    }
+    if (awsAccount != null) {
+      return awsAccount;
     }
     return null;
   }

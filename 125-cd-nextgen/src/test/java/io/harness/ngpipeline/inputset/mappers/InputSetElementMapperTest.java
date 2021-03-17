@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -175,6 +176,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testToCDInputSetEntity() {
     InputSetEntity mappedInputSet = InputSetElementMapper.toInputSetEntity(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, cdInputSetYaml);
@@ -192,6 +194,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testToCDInputSetEntityWithIdentifier() {
     InputSetEntity mappedInputSet = InputSetElementMapper.toInputSetEntityWithIdentifier(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, cdInputSetYaml);
@@ -209,6 +212,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testToOverlayInputSetEntity() {
     OverlayInputSetEntity mappedInputSet = InputSetElementMapper.toOverlayInputSetEntity(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, overlayInputSetYaml);
@@ -226,6 +230,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testToOverlayInputSetEntityWithIdentifier() {
     OverlayInputSetEntity mappedInputSet = InputSetElementMapper.toOverlayInputSetEntityWithIdentifier(
         ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, overlayInputSetYaml);
@@ -243,6 +248,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testWriteCDInputSetResponseDTO() {
     InputSetResponseDTO response = InputSetElementMapper.writeInputSetResponseDTO(responseInputSetEntity, null);
     assertThat(response).isNotNull();
@@ -252,6 +258,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testWriteOverlayResponseDTO() {
     OverlayInputSetResponseDTO response =
         InputSetElementMapper.writeOverlayResponseDTO(responseOverlayInputSetEntity, null);
@@ -262,6 +269,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testWriteSummaryResponseDTO() {
     InputSetSummaryResponseDTO response = InputSetElementMapper.writeSummaryResponseDTO(responseInputSetEntity);
     assertThat(response).isNotNull();
@@ -275,6 +283,7 @@ public class InputSetElementMapperTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  @Ignore("New Test in PMS will be written")
   public void testMergeInputSetResponseDTO() {
     MergeInputSetResponseDTO mergeInputSetResponseDTO =
         InputSetElementMapper.toMergeInputSetResponseDTO(requestMergeInputResponse);

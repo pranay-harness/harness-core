@@ -36,11 +36,16 @@ public interface OrganizationManagerClient {
 
   @GET(ORGANIZATIONS_API)
   Call<ResponseDTO<PageResponse<OrganizationResponse>>> listOrganization(
-      @Path(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @Query(value = NGResourceFilterConstants.PAGE_KEY) int page,
       @Query(value = NGResourceFilterConstants.SIZE_KEY) int size,
       @Query(value = NGResourceFilterConstants.SORT_KEY) List<String> sort);
+
+  @GET(ORGANIZATIONS_API)
+  Call<ResponseDTO<PageResponse<OrganizationResponse>>> listOrganizations(
+      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers);
 
   @PUT(ORGANIZATIONS_API + "/{identifier}")
   Call<ResponseDTO<Optional<OrganizationResponse>>> updateOrganization(

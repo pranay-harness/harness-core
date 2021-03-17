@@ -41,7 +41,7 @@ import com.google.cloud.datastore.Blob;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.Key;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.TreeBasedTable;
+import com.google.common.collect.HashBasedTable;
 import com.google.common.hash.Hashing;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.nio.charset.StandardCharsets;
@@ -88,13 +88,15 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = false, exclude = {"validUntil", "values", "deeplinkMetadata", "deeplinkUrl"})
+@EqualsAndHashCode(callSuper = false,
+    exclude = {"validUntil", "values", "valuesBytes", "deeplinkMetadata", "deeplinkUrl", "createdAt", "lastUpdatedAt"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "TimeSeriesMetricRecordKeys")
 @Entity(value = "timeSeriesMetricRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 public class TimeSeriesDataRecord
     implements GoogleDataStoreAware, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static final String TOP_HATTER_ACCOUNT_ID = "pxxxyjHaRGKcEHGSIoGbAQ";
   @Id private String uuid;
 
   private StateType stateType; // could be null for older values
@@ -123,11 +125,11 @@ public class TimeSeriesDataRecord
 
   private byte[] valuesBytes;
 
-  @Transient @Default private TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
+  @Transient @Default private HashBasedTable<String, String, Double> values = HashBasedTable.create();
 
-  @Transient @Default private TreeBasedTable<String, String, String> deeplinkMetadata = TreeBasedTable.create();
+  @Transient @Default private HashBasedTable<String, String, String> deeplinkMetadata = HashBasedTable.create();
 
-  private transient TreeBasedTable<String, String, String> deeplinkUrl;
+  private transient HashBasedTable<String, String, String> deeplinkUrl;
 
   private long createdAt;
 
@@ -168,8 +170,8 @@ public class TimeSeriesDataRecord
       return;
     }
 
-    values = TreeBasedTable.create();
-    deeplinkMetadata = TreeBasedTable.create();
+    values = HashBasedTable.create();
+    deeplinkMetadata = HashBasedTable.create();
 
     try {
       TxnMetricValues txnMetricValues = TxnMetricValues.parseFrom(valuesBytes);
@@ -278,6 +280,8 @@ public class TimeSeriesDataRecord
     appendIfNecessary(keyBuilder, workflowId);
     appendIfNecessary(keyBuilder, stateType.name());
     appendIfNecessary(keyBuilder, groupName);
+    appendIfNecessary(keyBuilder, String.valueOf(dataCollectionMinute));
+    appendIfNecessary(keyBuilder, tag);
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
 
@@ -309,20 +313,31 @@ public class TimeSeriesDataRecord
                                                       .lastUpdatedAt(metric.getLastUpdatedAt())
                                                       .build();
 
-      TreeBasedTable<String, String, Double> values = TreeBasedTable.create();
-      TreeBasedTable<String, String, String> deeplinkMetadata = TreeBasedTable.create();
+      HashBasedTable<String, String, Double> values = HashBasedTable.create();
+      HashBasedTable<String, String, String> deeplinkMetadata = HashBasedTable.create();
       metric.getValues().forEach((metricName, value) -> values.put(metric.getName(), metricName, value));
       if (isNotEmpty(metric.getDeeplinkMetadata())) {
         metric.getDeeplinkMetadata().forEach(
             (metricName, deepLink) -> deeplinkMetadata.put(metric.getName(), metricName, deepLink));
       }
-      if (timeSeriesDataRecords.containsKey(timeSeriesDataRecord)) {
+      // TODO: remove this once CV-5770 is fixed
+      if (TOP_HATTER_ACCOUNT_ID.equals(metric.getAccountId())) {
+        if (!timeSeriesDataRecords.containsKey(timeSeriesDataRecord)) {
+          timeSeriesDataRecord.setValues(HashBasedTable.create());
+          timeSeriesDataRecord.setDeeplinkMetadata(HashBasedTable.create());
+          timeSeriesDataRecords.put(timeSeriesDataRecord, timeSeriesDataRecord);
+        }
         timeSeriesDataRecords.get(timeSeriesDataRecord).getValues().putAll(values);
         timeSeriesDataRecords.get(timeSeriesDataRecord).getDeeplinkMetadata().putAll(deeplinkMetadata);
       } else {
-        timeSeriesDataRecord.setValues(values);
-        timeSeriesDataRecord.setDeeplinkMetadata(deeplinkMetadata);
-        timeSeriesDataRecords.put(timeSeriesDataRecord, timeSeriesDataRecord);
+        if (timeSeriesDataRecords.containsKey(timeSeriesDataRecord)) {
+          timeSeriesDataRecords.get(timeSeriesDataRecord).getValues().putAll(values);
+          timeSeriesDataRecords.get(timeSeriesDataRecord).getDeeplinkMetadata().putAll(deeplinkMetadata);
+        } else {
+          timeSeriesDataRecord.setValues(values);
+          timeSeriesDataRecord.setDeeplinkMetadata(deeplinkMetadata);
+          timeSeriesDataRecords.put(timeSeriesDataRecord, timeSeriesDataRecord);
+        }
       }
     });
     return new ArrayList<>(timeSeriesDataRecords.values());
@@ -333,8 +348,8 @@ public class TimeSeriesDataRecord
     metricData.forEach(TimeSeriesDataRecord::decompress);
     List<NewRelicMetricDataRecord> newRelicRecords = new ArrayList<>();
     metricData.forEach(metric -> {
-      TreeBasedTable<String, String, Double> values = metric.getValues();
-      TreeBasedTable<String, String, String> deeplinkMetadata = metric.getDeeplinkMetadata();
+      HashBasedTable<String, String, Double> values = metric.getValues();
+      HashBasedTable<String, String, String> deeplinkMetadata = metric.getDeeplinkMetadata();
 
       if (metric.getLevel() != null) {
         NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()

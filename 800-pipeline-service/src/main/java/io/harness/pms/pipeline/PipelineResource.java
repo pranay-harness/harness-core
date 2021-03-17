@@ -9,13 +9,14 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.notification.bean.NotificationRules;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -28,6 +29,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
+import io.harness.yaml.schema.YamlSchemaResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
@@ -73,7 +75,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
     })
 @PipelineServiceAuth
 @Slf4j
-public class PipelineResource {
+public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
   private PMSYamlSchemaService pmsYamlSchemaService;
@@ -155,7 +157,7 @@ public class PipelineResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) {
+      @PathParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineId) throws ProducerShutdownException {
     log.info("Deleting pipeline");
 
     return ResponseDTO.newResponse(pmsPipelineService.delete(
@@ -212,11 +214,11 @@ public class PipelineResource {
   @GET
   @Path("/steps")
   @ApiOperation(value = "Get Steps for given module", nickname = "getSteps")
-  public ResponseDTO<StepCategory> getSteps(
-      @NotNull @QueryParam("category") String category, @NotNull @QueryParam("module") String module) {
+  public ResponseDTO<StepCategory> getSteps(@NotNull @QueryParam("category") String category,
+      @NotNull @QueryParam("module") String module, @QueryParam("accountId") String accountId) {
     log.info("Get Steps for given module");
 
-    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category));
+    return ResponseDTO.newResponse(pmsPipelineService.getSteps(module, category, accountId));
   }
 
   @POST

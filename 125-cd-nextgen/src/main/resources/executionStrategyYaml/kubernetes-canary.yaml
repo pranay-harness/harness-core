@@ -17,6 +17,10 @@ spec:
                 type: K8sCanaryDeploy
                 timeout: 10m
                 spec:
+                  instanceSelection:
+                    type: Count
+                    spec:
+                      count: 1
                   skipDryRun: false
             - step:
                 name: "Canary Delete"

@@ -10,6 +10,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.pms.triggers.webhook.scm.ScmConnectionConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.yaml.schema.client.config.YamlSchemaClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,14 +59,13 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("pipelineServiceBaseUrl") private String pipelineServiceBaseUrl;
   @JsonProperty("enableAuth") private boolean enableAuth;
+  @JsonProperty("yamlSchemaClientConfig") private YamlSchemaClientConfig yamlSchemaClientConfig;
 
   private String managerServiceSecret;
   private String managerTarget;
   private String managerAuthority;
   private ScmConnectionConfig scmConnectionConfig;
-  private ServiceHttpClientConfig ciManagerClientConfig;
   private ServiceHttpClientConfig managerClientConfig;
-  private String ciManagerServiceSecret;
 
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

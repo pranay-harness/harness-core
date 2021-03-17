@@ -8,7 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.HealthVerificationService;
@@ -26,7 +26,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ActivityVerificationStateTest extends CvNextGenTest {
+public class ActivityVerificationStateTest extends CvNextGenTestBase {
   private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;

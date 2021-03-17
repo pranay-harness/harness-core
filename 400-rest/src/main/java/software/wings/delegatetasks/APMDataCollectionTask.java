@@ -19,6 +19,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.WingsException;
+import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 import io.harness.time.Timestamp;
@@ -170,6 +171,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
     private int dataCollectionMinute;
+    private boolean firstDataCollectionCompleted;
     private final long collectionStartMinute;
     private long lastEndTime;
     private long currentEndTime;
@@ -188,13 +190,15 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.currentElapsedTime = 0;
       this.is24x7Task = is24x7Task;
       hostStartMinuteMap = new HashMap<>();
+      this.firstDataCollectionCompleted = false;
     }
 
-    private APMRestClient getAPMRestClient(final String baseUrl) {
+    private APMRestClient getAPMRestClient(final String baseUrl, final boolean validateCert) {
       final Retrofit retrofit = new Retrofit.Builder()
                                     .baseUrl(baseUrl)
                                     .addConverterFactory(JacksonConverterFactory.create())
-                                    .client(getUnsafeHttpClient(baseUrl))
+                                    .client(validateCert ? Http.getSafeOkHttpClientBuilder(baseUrl, 15, 60).build()
+                                                         : getUnsafeHttpClient(baseUrl))
                                     .build();
       return retrofit.create(APMRestClient.class);
     }
@@ -234,7 +238,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       // TODO: Come back and clean up the time variables.
       List<String> result = new ArrayList<>();
       long startTime = lastEndTime;
-      long endTime = Timestamp.currentMinuteBoundary();
+      long possibleEndTime = !firstDataCollectionCompleted ? startTime + TimeUnit.MINUTES.toMillis(1)
+                                                           : startTime + TimeUnit.MINUTES.toMillis(collectionWindow);
+      long endTime = Math.min(possibleEndTime,
+          collectionStartMinute + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getDataCollectionTotalTime()));
       currentEndTime = endTime;
 
       if (!dataCollectionInfo.isCanaryUrlPresent() && TEST_HOST_NAME.equals(host)
@@ -311,8 +318,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return "";
     }
 
-    private List<APMResponseParser.APMResponseData> collect(String baseUrl, Map<String, String> headers,
-        Map<String, String> options, String initialUrl, List<APMMetricInfo> metricInfos,
+    private List<APMResponseParser.APMResponseData> collect(String baseUrl, boolean validateCert,
+        Map<String, String> headers, Map<String, String> options, String initialUrl, List<APMMetricInfo> metricInfos,
         AnalysisComparisonStrategy strategy) throws IOException {
       // OkHttp seems to have issues encoding backtick, so explictly encoding it.
       String[] urlAndBody = initialUrl.split(URL_BODY_APPENDER);
@@ -342,15 +349,17 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             callabels.add(
                 ()
                     -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
-                        collect(getAPMRestClient(baseUrl).collect(url, headersBiMap, optionsBiMap)), metricInfos));
+                        collect(getAPMRestClient(baseUrl, validateCert).collect(url, headersBiMap, optionsBiMap)),
+                        metricInfos));
 
           } else {
             resolvedBodies.forEach(resolvedBody -> {
               callabels.add(
                   ()
                       -> new APMResponseParser.APMResponseData(canaryMetricInfo.getHostName(), DEFAULT_GROUP_NAME,
-                          collect(getAPMRestClient(baseUrl).postCollect(
-                              url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
+                          collect(
+                              getAPMRestClient(baseUrl, validateCert)
+                                  .postCollect(url, headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
                           metricInfos));
             });
           }
@@ -363,10 +372,12 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             // host has already been resolved. So it's ok to pass null here.
             List<String> curUrls = resolveDollarReferences(url, null, strategy);
             curUrls.forEach(curUrl
-                -> callabels.add(()
-                                     -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
-                                         collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
-                                         metricInfos)));
+                -> callabels.add(
+                    ()
+                        -> new APMResponseParser.APMResponseData(null, DEFAULT_GROUP_NAME,
+                            collect(
+                                getAPMRestClient(baseUrl, validateCert).collect(curUrl, headersBiMap, optionsBiMap)),
+                            metricInfos)));
           }
         } else {
           // This is not a batch query
@@ -381,15 +392,16 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(
-                                  getAPMRestClient(baseUrl).postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap)),
+                              collect(getAPMRestClient(baseUrl, validateCert)
+                                          .postCollect(curUrl, headersBiMap, optionsBiMap, bodyMap)),
                               metricInfos)));
             } else {
               curUrls.forEach(curUrl
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(host, dataCollectionInfo.getHosts().get(host),
-                              collect(getAPMRestClient(baseUrl).collect(curUrl, headersBiMap, optionsBiMap)),
+                              collect(
+                                  getAPMRestClient(baseUrl, validateCert).collect(curUrl, headersBiMap, optionsBiMap)),
                               metricInfos)));
             }
           }
@@ -404,8 +416,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   -> callabels.add(
                       ()
                           -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                              collect(
-                                  getAPMRestClient(baseUrl).collect(curUrls.get(index), headersBiMap, optionsBiMap)),
+                              collect(getAPMRestClient(baseUrl, validateCert)
+                                          .collect(curUrls.get(index), headersBiMap, optionsBiMap)),
                               metricInfos)));
         } else {
           IntStream.range(0, curUrls.size()).forEach(index -> {
@@ -413,8 +425,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 -> callabels.add(
                     ()
                         -> new APMResponseParser.APMResponseData(getHostNameForTestControl(index), DEFAULT_GROUP_NAME,
-                            collect(getAPMRestClient(baseUrl).postCollect(
-                                curUrls.get(index), headersBiMap, optionsBiMap, new JSONObject(resolvedBody).toMap())),
+                            collect(getAPMRestClient(baseUrl, validateCert)
+                                        .postCollect(curUrls.get(index), headersBiMap, optionsBiMap,
+                                            new JSONObject(resolvedBody).toMap())),
                             metricInfos)));
           });
         }
@@ -465,15 +478,25 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
      * @return
      */
     private boolean shouldRunCollection() {
-      currentElapsedTime =
-          (int) ((Timestamp.currentMinuteBoundary() - collectionStartMinute) / TimeUnit.MINUTES.toMillis(1));
-      boolean shouldCollectData = false;
-      if (dataCollectionMinute == 0 || currentElapsedTime % collectionWindow == 0
-          || currentElapsedTime >= dataCollectionInfo.getDataCollectionTotalTime() - 1) {
-        shouldCollectData = true;
+      if (!firstDataCollectionCompleted) {
+        log.info("First data not yet collected. Returning true");
+        return true;
       }
-      log.info("ShouldCollectDataCollection is {} for minute {}", shouldCollectData, currentElapsedTime);
-      return shouldCollectData;
+      long currentTime = Timestamp.currentMinuteBoundary();
+      long lastCollectionTime = lastEndTime + TimeUnit.MINUTES.toMillis(1);
+      if ((int) TimeUnit.MILLISECONDS.toMinutes(currentTime - lastCollectionTime) % collectionWindow == 0) {
+        log.info("ShouldCollectDataCollection is {} for minute {}, lastCollectionTime {}", true, currentTime,
+            lastCollectionTime);
+        return true;
+      }
+
+      if (currentTime > collectionStartMinute
+              + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getDataCollectionTotalTime() + getInitialDelayMinutes())) {
+        log.info("ShouldCollectDataCollection is {} for minute {}, collectionStartMinute {}", true, currentTime,
+            collectionStartMinute);
+        return true;
+      }
+      return false;
     }
 
     @Override
@@ -489,16 +512,16 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
             List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
             if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
-              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.isValidateCert(),
+                  dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), dataCollectionInfo.getBaseUrl(),
                   dataCollectionInfo.getCanaryMetricInfos(), dataCollectionInfo.getStrategy()));
             }
 
             for (Map.Entry<String, List<APMMetricInfo>> metricInfoEntry :
                 dataCollectionInfo.getMetricEndpoints().entrySet()) {
-              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.getHeaders(),
-                  dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue(),
-                  dataCollectionInfo.getStrategy()));
+              apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.isValidateCert(),
+                  dataCollectionInfo.getHeaders(), dataCollectionInfo.getOptions(), metricInfoEntry.getKey(),
+                  metricInfoEntry.getValue(), dataCollectionInfo.getStrategy()));
             }
             Set<String> groupNameSet = dataCollectionInfo.getHosts() != null
                 ? new HashSet<>(dataCollectionInfo.getHosts().values())
@@ -540,7 +563,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               }
             });
 
-            dataCollectionMinute = currentElapsedTime - 1;
+            dataCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(currentEndTime - collectionStartMinute) - 1);
             addHeartbeatRecords(groupNameSet, records);
             List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
             log.info("fetched records: {}", allMetricRecords);
@@ -549,14 +572,17 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                   dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             } else {
-              log.debug(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
+              log.info(dataCollectionInfo.getStateType() + ": Sent {} metric records to the server for minute {}",
                   allMetricRecords.size(), dataCollectionMinute);
+              if (!firstDataCollectionCompleted) {
+                firstDataCollectionCompleted = true;
+              }
             }
             lastEndTime = currentEndTime;
             collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
-            if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() || is24x7Task) {
+            if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() - 1 || is24x7Task) {
               // We are done with all data collection, so setting task status to success and quitting.
-              log.debug(
+              log.info(
                   "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
                   dataCollectionInfo.getStateExecutionId());
               completed.set(true);

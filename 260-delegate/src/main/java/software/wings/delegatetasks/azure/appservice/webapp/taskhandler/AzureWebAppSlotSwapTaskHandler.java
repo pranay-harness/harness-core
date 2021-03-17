@@ -6,6 +6,8 @@ import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -19,6 +21,7 @@ import software.wings.delegatetasks.azure.appservice.deployment.context.AzureApp
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
 import software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSwapTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,

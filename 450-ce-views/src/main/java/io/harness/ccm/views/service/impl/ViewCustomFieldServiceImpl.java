@@ -67,8 +67,8 @@ public class ViewCustomFieldServiceImpl implements ViewCustomFieldService {
   }
 
   @Override
-  public List<ViewField> getCustomFieldsPerView(String viewId) {
-    List<ViewCustomField> viewCustomFields = viewCustomFieldDao.findByViewId(viewId);
+  public List<ViewField> getCustomFieldsPerView(String viewId, String accountId) {
+    List<ViewCustomField> viewCustomFields = viewCustomFieldDao.findByViewId(viewId, accountId);
     List<ViewField> viewFieldList = new ArrayList<>();
     for (ViewCustomField field : viewCustomFields) {
       viewFieldList.add(ViewField.builder()

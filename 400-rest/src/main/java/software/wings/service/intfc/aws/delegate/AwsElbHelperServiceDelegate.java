@@ -1,5 +1,7 @@
 package software.wings.service.intfc.aws.delegate;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsLoadBalancerDetails;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -22,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@TargetModule(Module._930_DELEGATE_TASKS)
 public interface AwsElbHelperServiceDelegate {
   List<AwsLoadBalancerDetails> listApplicationLoadBalancerDetails(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);

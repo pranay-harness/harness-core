@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.azure.arm.deployment.context;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -11,14 +13,17 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class DeploymentResourceGroupContext extends DeploymentContext {
   private AzureClientContext azureClientContext;
+  private boolean isRollback;
 
   @Builder
   public DeploymentResourceGroupContext(@NotNull String deploymentName, @NotNull AzureClientContext azureClientContext,
       @NotNull String templateJson, String parametersJson, AzureDeploymentMode mode,
-      ILogStreamingTaskClient logStreamingTaskClient, int steadyStateTimeoutInMin) {
+      ILogStreamingTaskClient logStreamingTaskClient, int steadyStateTimeoutInMin, boolean isRollback) {
     super(deploymentName, mode, templateJson, parametersJson, logStreamingTaskClient, steadyStateTimeoutInMin);
     this.azureClientContext = azureClientContext;
+    this.isRollback = isRollback;
   }
 }

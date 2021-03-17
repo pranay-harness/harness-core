@@ -73,12 +73,7 @@ public class GitChangeSetRunnable implements Runnable {
 
       final List<YamlChangeSet> yamlChangeSets = getYamlChangeSetsToProcess();
 
-      if (yamlChangeSets.isEmpty()) {
-        //        log.info("No changesets found for processing in this run");
-      } else {
-        //        log.info("changesets to process =[{}]",
-        //        yamlChangeSets.stream().map(YamlChangeSet::getUuid).collect(toList()));
-
+      if (!yamlChangeSets.isEmpty()) {
         yamlChangeSets.forEach(this::processChangeSet);
       }
 
@@ -108,12 +103,7 @@ public class GitChangeSetRunnable implements Runnable {
     try (AccountLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = createLogContextForChangeSet(yamlChangeSet)) {
       log.info("GIT_YAML_LOG_ENTRY: Processing  changeSetId: [{}]", yamlChangeSet.getUuid());
-
-      if (yamlChangeSet.isGitToHarness()) {
-        yamlGitSyncService.handleGitChangeSet(yamlChangeSet, accountId);
-      } else {
-        yamlGitSyncService.handleHarnessChangeSet(yamlChangeSet, accountId);
-      }
+      yamlGitSyncService.handleGitChangeSet(yamlChangeSet, accountId);
     } catch (Exception ex) {
       log.error(format("Unexpected error while processing commit for accountId: [%s], changeSetId =[%s] ", accountId,
                     yamlChangeSet.getUuid()),

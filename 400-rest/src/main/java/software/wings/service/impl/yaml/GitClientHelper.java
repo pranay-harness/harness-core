@@ -14,6 +14,8 @@ import static io.harness.govern.Switch.unhandled;
 
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GitConnectionDelegateException;
 import io.harness.exception.WingsException;
@@ -51,6 +53,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
+@TargetModule(Module._960_API_SERVICES)
 public class GitClientHelper {
   public static final String REPOSITORY = "./repository";
   public static final String REPOSITORY_GIT_FILE_DOWNLOADS = "./repository/gitFileDownloads";

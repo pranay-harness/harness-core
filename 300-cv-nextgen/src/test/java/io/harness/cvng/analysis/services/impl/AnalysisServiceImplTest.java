@@ -6,7 +6,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.LogAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
@@ -51,7 +51,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class AnalysisServiceImplTest extends CvNextGenTest {
+public class AnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private AnalysisService analysisService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LogAnalysisService logAnalysisService;

@@ -20,9 +20,9 @@ import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.rollback.StepGroupFailureActionConfig;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import javax.validation.constraints.NotNull;
 
 @JsonTypeInfo(use = NAME, property = "type", include = PROPERTY, visible = true)
 @JsonSubTypes({
@@ -32,8 +32,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
       @Type(value = MarkAsSuccessFailureActionConfig.class, name = MARK_AS_SUCCESS),
       @Type(value = RetryFailureActionConfig.class, name = RETRY),
       @Type(value = StageRollbackFailureActionConfig.class, name = STAGE_ROLLBACK),
-      @Type(value = StepGroupFailureActionConfig.class, name = STEP_GROUP_ROLLBACK),
+      @Type(value = StepGroupFailureActionConfig.class, name = STEP_GROUP_ROLLBACK)
 })
 public interface FailureStrategyActionConfig {
-  @JsonIgnore NGFailureActionType getType();
+  @NotNull NGFailureActionType getType();
 }

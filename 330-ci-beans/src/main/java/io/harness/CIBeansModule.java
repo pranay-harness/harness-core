@@ -9,15 +9,15 @@ import io.harness.beans.serializer.ProtobufStepSerializer;
 import io.harness.beans.serializer.PublishStepProtobufSerializer;
 import io.harness.beans.serializer.RestoreCacheStepProtobufSerializer;
 import io.harness.beans.serializer.RunStepProtobufSerializer;
+import io.harness.beans.serializer.RunTestsStepProtobufSerializer;
 import io.harness.beans.serializer.SaveCacheStepProtobufSerializer;
-import io.harness.beans.serializer.TestIntelligenceStepProtobufSerializer;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.PublishStepInfo;
 import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
+import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
-import io.harness.beans.steps.stepinfo.TestIntelligenceStepInfo;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 
 import com.google.inject.AbstractModule;
@@ -45,8 +45,8 @@ public class CIBeansModule extends AbstractModule {
     }).toInstance(new SaveCacheStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufStepSerializer<RestoreCacheStepInfo>>() {
     }).toInstance(new RestoreCacheStepProtobufSerializer());
-    bind(new TypeLiteral<ProtobufStepSerializer<TestIntelligenceStepInfo>>() {
-    }).toInstance(new TestIntelligenceStepProtobufSerializer());
+    bind(new TypeLiteral<ProtobufStepSerializer<RunTestsStepInfo>>() {
+    }).toInstance(new RunTestsStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufStepSerializer<PublishStepInfo>>() {}).toInstance(new PublishStepProtobufSerializer());
     bind(new TypeLiteral<ProtobufStepSerializer<PluginCompatibleStep>>() {
     }).toInstance(new PluginCompatibleStepSerializer());

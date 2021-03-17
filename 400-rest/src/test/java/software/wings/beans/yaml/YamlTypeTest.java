@@ -20,7 +20,7 @@ public class YamlTypeTest {
   @Category(UnitTests.class)
   public void testGetYamlTypes() {
     List<YamlType> yamlTypes = YamlType.getYamlTypes(ApplicationManifest.class);
-    assertThat(yamlTypes).hasSize(14);
+    assertThat(yamlTypes).hasSize(15);
     assertThat(yamlTypes).contains(YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE);
   }
 

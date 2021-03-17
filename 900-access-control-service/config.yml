@@ -1,0 +1,112 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: https
+      port: 9007
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 9006
+      maxRequestHeaderSize: 100KiB
+  rootPath: /api
+  maxThreads: 1024
+
+allowedOrigins:
+  - https://localhost:8181
+  - https://127.0.0.1:8181
+  - http://localhost:8000
+  - http://127.0.0.1:8000
+  - https://localhost:8000
+  - https://127.0.0.1:8000
+
+logging:
+  level: INFO
+  loggers:
+    org.glassfish.jersey: INFO
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+mongo:
+  uri: mongodb://127.0.0.1:27018,127.0.0.1:27019,127.0.0.1:27020/accesscontrol?replicaSet=rs0
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+  transactionsEnabled: true
+  aliasDBName: accesscontrol
+
+eventsConfig:
+  redis:
+    sentinel: false
+    masterName: "test"
+    redisUrl: "redis://localhost:6379"
+    sentinelUrls:
+      - "redis://redis1:26379"
+      - "redis://redis2:26379"
+      - "redis://redis3:26379"
+    envNamespace: ""
+    readMode: MASTER
+    nettyThreads: 16
+    useScriptCache: true
+    password: ""
+  enabled: true
+
+iteratorsConfig:
+  resourceGroupIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 600
+
+accessControlClient:
+  enableAccessControl: true
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+resourceGroupClient:
+  resourceGroupServiceConfig:
+    baseUrl: https://localhost:7090
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  resourceGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+userClient:
+  userServiceConfig:
+    baseUrl: http://localhost:3457/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  userServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+decisionModuleConfig:
+
+aggregatorModuleConfig:
+  debezium:
+    name: aggregator
+    offset.storage.file.filename: "mongodb://127.0.0.1:27018,127.0.0.1:27019,127.0.0.1:27020/accesscontrol?replicaSet=rs0"
+    key.converter.schemas.enable: false
+    value.converter.schemas.enable: false
+    offset.flush.interval.ms: 50
+    mongodb.hosts: rs0/localhost:27018
+    mongodb.name: access_control_db
+    mongodb.user: ""
+    mongodb.password: ""
+    mongodb.ssl.enabled: false
+    database.include.list: "accesscontrol"
+    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments"
+  enabled: false
+
+enableAuth: true
+defaultServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

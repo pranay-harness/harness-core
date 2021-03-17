@@ -1,6 +1,6 @@
 package io.harness.cvng.dashboard.beans;
 
-import java.util.Set;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Singular;
@@ -13,7 +13,7 @@ public class EnvServiceRiskDTO {
   String envName;
   String envIdentifier;
   Integer risk;
-  @Singular("addServiceRisk") Set<ServiceRisk> serviceRisks;
+  @Singular("addServiceRisk") List<ServiceRisk> serviceRisks;
 
   @Data
   @Builder

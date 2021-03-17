@@ -2,6 +2,8 @@ package software.wings.graphql.datafetcher.secretManager;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -15,6 +17,7 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class DeleteSecretManagerDataFetcher
     extends BaseMutatorDataFetcher<QLDeleteSecretManagerInput, QLDeleteSecretManagerPayload> {
   @Inject

@@ -11,7 +11,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class NGVariablesUtils {
-  public Map<String, Object> getMapOfVariables(List<NGVariable> variables, int expressionFunctorToken) {
+  public Map<String, Object> getMapOfVariables(List<NGVariable> variables, long expressionFunctorToken) {
     Map<String, Object> mapOfVariables = new HashMap<>();
     if (EmptyPredicate.isEmpty(variables)) {
       return mapOfVariables;

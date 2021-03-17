@@ -6,6 +6,8 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.SettingAttribute;
@@ -27,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class WinRMCredentialController {
   @Inject SettingsService settingService;
   @Inject SecretManager secretManager;

@@ -9,9 +9,11 @@ import (
 
 	"github.com/alexflint/go-arg"
 	"github.com/wings-software/portal/commons/go/lib/logs"
+	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/product/ci/addon/grpc"
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	"github.com/wings-software/portal/product/ci/addon/services"
+	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/logutil"
 	"go.uber.org/zap"
 )
@@ -25,6 +27,8 @@ var (
 	addonServer         = grpc.NewAddonServer
 	newGrpcRemoteLogger = logutil.GetGrpcRemoteLogger
 	newIntegrationSvc   = services.NewIntegrationSvc
+	getLogKey           = external.GetLogKey
+	getServiceLogKey    = external.GetServiceLogKey
 )
 
 // schema for running functional test service
@@ -40,6 +44,7 @@ var args struct {
 
 	Port                  uint   `arg:"--port, required" help:"port for running GRPC server"`
 	Verbose               bool   `arg:"--verbose" help:"enable verbose logging mode"`
+	LogMetrics            bool   `arg:"--log_metrics" help:"enable metric logging"`
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
 	DeploymentEnvironment string `arg:"env:DEPLOYMENT_ENVIRONMENT" help:"environment of the deployment"`
 }
@@ -48,6 +53,7 @@ func parseArgs() {
 	// set defaults here
 	args.DeploymentEnvironment = "prod"
 	args.Verbose = false
+	args.LogMetrics = true
 
 	arg.MustParse(&args)
 }
@@ -59,38 +65,34 @@ func init() {
 func main() {
 	parseArgs()
 
-	// Addon logs not part of a step go to addon_stage_logs-<port>
+	// Addon logs not part of a step go to addon:<port>
 	logState := addonlogs.LogState()
 	pendingLogs := logState.PendingLogs()
-	key := fmt.Sprintf("addon_stage_logs-%d", args.Port)
-	remoteLogger, err := newGrpcRemoteLogger(key)
-	if err != nil {
-		// Could not create a logger
-		panic(err)
-	}
+
+	remoteLogger := getRemoteLogger(fmt.Sprintf("addon:%d", args.Port))
 	pendingLogs <- remoteLogger
 	log := remoteLogger.BaseLogger
 
-	var serviceLogger *logs.RemoteLogger
+	if args.LogMetrics {
+		metrics.Log(int32(os.Getpid()), "addon", log)
+	}
 
+	var serviceLogger *logs.RemoteLogger
 	// Start integration test service in a separate goroutine
 	if args.Service != nil {
-		svc := args.Service
-
 		// create logger for service logs
-		serviceLogger, err = newGrpcRemoteLogger(svc.ID)
-		if err != nil {
-			panic(err) // Could not create a logger
-		}
+		serviceLogger = getSvcRemoteLogger()
 		pendingLogs <- serviceLogger
 
+		svc := args.Service
 		go func() {
-			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger, serviceLogger.Writer).Run()
+			newIntegrationSvc(svc.ID, svc.Image, svc.Entrypoint, svc.Args, serviceLogger.BaseLogger,
+				serviceLogger.Writer, args.LogMetrics, log).Run()
 		}()
 	}
 
 	log.Infow("Starting CI addon server", "port", args.Port)
-	s, err := addonServer(args.Port, log)
+	s, err := addonServer(args.Port, args.LogMetrics, log)
 	if err != nil {
 		log.Errorw("error while running CI addon server", "port", args.Port, "error_msg", zap.Error(err))
 		addonlogs.LogState().ClosePendingLogs()
@@ -103,4 +105,32 @@ func main() {
 		addonlogs.LogState().ClosePendingLogs()
 		os.Exit(1) // Exit addon with exit code 1
 	}
+}
+
+func getRemoteLogger(keyID string) *logs.RemoteLogger {
+	key, err := getLogKey(keyID)
+	if err != nil {
+		panic(err)
+	}
+	remoteLogger, err := newGrpcRemoteLogger(key)
+	if err != nil {
+		// Could not create a logger
+		panic(err)
+	}
+
+	return remoteLogger
+}
+
+func getSvcRemoteLogger() *logs.RemoteLogger {
+	key, err := getServiceLogKey()
+	if err != nil {
+		panic(err)
+	}
+
+	remoteLogger, err := newGrpcRemoteLogger(key)
+	if err != nil {
+		panic(err)
+	}
+
+	return remoteLogger
 }

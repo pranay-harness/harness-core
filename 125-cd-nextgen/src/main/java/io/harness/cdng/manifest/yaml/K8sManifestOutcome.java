@@ -14,5 +14,6 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sManifestOutcome implements ManifestOutcome {
   String identifier;
   String type = ManifestType.K8Manifest;
-  StoreConfig storeConfig;
+  StoreConfig store;
+  boolean skipResourceVersioning;
 }

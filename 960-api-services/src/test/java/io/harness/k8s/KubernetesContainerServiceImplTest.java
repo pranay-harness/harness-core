@@ -1231,7 +1231,7 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     V1Secret result =
         kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=2.0");
     assertThat(result).isNotNull();
-    assertThat(new String((result.getData().get(ReleaseHistoryKeyName)))).isEqualTo("version=2.0");
+    assertThat(new String(result.getData().get(ReleaseHistoryKeyName))).isEqualTo("version=2.0");
     assertThat(result.getMetadata().getNamespace()).isEqualTo("default");
   }
 

@@ -17,7 +17,6 @@ import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 import io.harness.gitsync.core.beans.GitCommit;
-import io.harness.gitsync.core.impl.YamlSuccessfulChangeServiceImpl;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityBuilder;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityKeys;
@@ -55,7 +54,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class GitSyncServiceImpl implements GitSyncService {
   @Inject private GitFileActivitySummaryRepository gitFileActivitySummaryRepository;
   @Inject private GitFileActivityRepository gitFileActivityRepository;
-  @Inject private YamlSuccessfulChangeServiceImpl yamlSuccessfulChangeService;
 
   @Override
   public List<GitFileActivity> saveAll(List<GitFileActivity> gitFileActivities) {
@@ -221,13 +219,6 @@ public class GitSyncServiceImpl implements GitSyncService {
       } else {
         updateStatusOfGitFileActivity(
             change.getProcessingCommitId(), singletonList(change.getFilePath()), Status.SUCCESS, null, accountId);
-      }
-
-      try {
-        yamlSuccessfulChangeService.updateOnSuccessfulGitChangeProcessing(
-            change, accountId, yamlGitConfig.getOrganizationId(), yamlGitConfig.getProjectId());
-      } catch (Exception e) {
-        log.error(format("error while updating successful change for file [%s]", change.getFilePath()), e);
       }
     }
   }

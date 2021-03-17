@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class SplunkDataCollectionInfoMapperTest extends CvNextGenTest {
+public class SplunkDataCollectionInfoMapperTest extends CvNextGenTestBase {
   @Inject private SplunkDataCollectionInfoMapper mapper;
 
   @Test

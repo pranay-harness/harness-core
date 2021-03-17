@@ -38,7 +38,7 @@ public class ManagerExecutor {
 
   public static void ensureManager(Class clazz, String alpnPath, String alpnJarPath) throws IOException {
     if (!isHealthy()) {
-      final Path config = Paths.get(Project.rootDirectory(clazz), "400-rest", "config.yml");
+      final Path config = Paths.get(Project.rootDirectory(clazz), "360-cg-manager", "config.yml");
       FileUtils.modifyConfigFile(new File(config.toString()));
       executeLocalManager("server", clazz, alpnPath, alpnJarPath);
     }
@@ -49,8 +49,7 @@ public class ManagerExecutor {
     if (failedAlready) {
       return;
     }
-
-    String directoryPath = Project.rootDirectory(clazz);
+    String directoryPath = Project.rootDirectory(ManagerExecutor.class);
     final File lockfile = new File(directoryPath, "manager");
 
     if (FileIo.acquireLock(lockfile, waiting)) {
@@ -77,11 +76,10 @@ public class ManagerExecutor {
 
     log.info("Execute the manager from {}", directory);
 
-    //    final Path jar = Paths.get(directory.getPath(), "400-rest", "target", "rest-capsule.jar");
-    final Path jar = Paths.get(System.getProperty("user.home") + "/.m2/repository/"
-        + "software/wings/400-rest/0.0.1-SNAPSHOT/400-rest-0.0.1-SNAPSHOT-capsule.jar");
+    final Path jar = Paths.get("/home/jenkins"
+        + "/.bazel-dirs/bin/360-cg-manager/module_deploy.jar");
 
-    final Path config = Paths.get(directory.getPath(), "400-rest", "modified_config.yml");
+    final Path config = Paths.get(directory.getPath(), "360-cg-manager", "modified_config.yml");
 
     String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
 
@@ -144,5 +142,10 @@ public class ManagerExecutor {
     }
     log.info("healthy");
     return true;
+  }
+
+  public static void main(String[] args) throws IOException {
+    ensureManager(ManagerExecutor.class, "/home/jenkins/maven-repositories/0/",
+        "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar");
   }
 }

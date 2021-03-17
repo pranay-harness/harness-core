@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.security.UserGroup;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UpdateUserGroupDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateUserGroupInput, QLUpdateUserGroupPayload> {
   @Inject UserGroupService userGroupService;

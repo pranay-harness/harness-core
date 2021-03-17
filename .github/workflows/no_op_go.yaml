@@ -37,6 +37,24 @@ jobs:
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 
+      - name: Complete unit-tests-3
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: unit-tests-3
+          description: 'Mark unit-tests-3 as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete unit-tests-4
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: unit-tests-4
+          description: 'Mark unit-tests-4 as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
       - name: Complete functional-tests
         uses: Sibz/github-status-action@v1
         with:

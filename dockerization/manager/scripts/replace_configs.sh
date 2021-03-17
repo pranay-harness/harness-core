@@ -337,6 +337,14 @@ if [[ "" != "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION" ]]; then
   yq write -i $CONFIG_FILE ceSetUpConfig.linkedAccountCloudFormationTemplateLink "$CE_SETUP_CONFIG_LINKED_CLOUD_FORMATION"
 fi
 
+if [[ "" != "$CE_SETUP_CONFIG_AZURE_CLIENTSECRET" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.azureAppClientSecret "$CE_SETUP_CONFIG_AZURE_CLIENTSECRET"
+fi
+
+if [[ "" != "$CE_SETUP_CONFIG_AZURE_CLIENTID" ]]; then
+  yq write -i $CONFIG_FILE ceSetUpConfig.azureAppClientId "$CE_SETUP_CONFIG_AZURE_CLIENTID"
+fi
+
 if [[ "" != "$DATADOG_ENABLED" ]]; then
   yq write -i $CONFIG_FILE datadogConfig.enabled "$DATADOG_ENABLED"
 fi
@@ -680,10 +688,6 @@ if [[ "" != "$ACCOUNT_LICENSE_CHECK_JOB_FREQUENCY" ]]; then
   yq write -i $CONFIG_FILE jobsFrequencyConfig.accountLicenseCheckJobFrequencyInMinutes "$ACCOUNT_LICENSE_CHECK_JOB_FREQUENCY"
 fi
 
-if [[ "" != "$ACCOUNT_BACKGROUND_JOB_FREQUENCY" ]]; then
-  yq write -i $CONFIG_FILE jobsFrequencyConfig.accountBackgroundJobFrequencyInMinutes "$ACCOUNT_BACKGROUND_JOB_FREQUENCY"
-fi
-
 if [[ "" != "$ACCOUNT_DELETION_JOB_FREQUENCY" ]]; then
   yq write -i $CONFIG_FILE jobsFrequencyConfig.accountDeletionJobFrequencyInMinutes "$ACCOUNT_DELETION_JOB_FREQUENCY"
 fi
@@ -753,10 +757,18 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
+fi
+
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
 fi
 
 if [[ "" != "$CVNG_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
+fi
+
+if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
+  yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
 fi

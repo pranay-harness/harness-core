@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
@@ -62,6 +64,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDC)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ArtifactSourceController {
   private ArtifactSourceController() {}
 

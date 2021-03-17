@@ -12,4 +12,5 @@ message Ambiance {
   repeated io.harness.pms.contracts.ambiance.Level levels = 2;
   string planExecutionId = 3;
   io.harness.pms.contracts.plan.ExecutionMetadata metadata = 4;
+  int64 expressionFunctorToken = 5;
 }

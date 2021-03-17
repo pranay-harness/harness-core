@@ -21,3 +21,9 @@ message HttpsCertRequirement {
   }
   CertRequirement cert_requirement = 1;
 }
+
+message AccountPreferenceQuery {}
+
+message AccountPreference {
+  int64 delegateSecretsCacheTTLInHours = 1;
+}

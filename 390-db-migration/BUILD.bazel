@@ -1,0 +1,55 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_package_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "@maven//:com_google_guava_guava",
+] + [
+    "//:lombok",
+    "//400-rest:module",
+    "//920-delegate-service-beans:module",
+    "//955-alert-beans:module",
+]
+
+java_library(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = shared_dependencies,
+)
+
+test_dependencies = shared_dependencies + [
+    ":module",
+    "//400-rest:supporter-test",
+    "//990-commons-test:module",
+    "@maven//:com_bertramlabs_plugins_hcl4j",
+    "@maven//:com_icegreen_greenmail",
+    "@maven//:com_openpojo_openpojo",
+    "@maven//:io_github_benas_random_beans",
+    "@maven//:junit_junit",
+    "@maven//:org_assertj_assertj_core",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+    "@maven//:org_mockito_mockito_core",
+    "@maven//:org_powermock_powermock_module_junit4",
+    "@maven//:pl_pragmatists_JUnitParams",
+]
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(["src/test/**/*.java"]),
+    tags = [
+        "aeriform",
+        "manual",
+    ],
+    visibility = ["//visibility:public"],
+    deps = test_dependencies,
+)

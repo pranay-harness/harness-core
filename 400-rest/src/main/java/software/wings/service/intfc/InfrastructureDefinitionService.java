@@ -41,6 +41,10 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
   List<InfrastructureDefinition> listByCustomDeploymentTypeIds(
       @NotBlank String accountId, @NotNull List<String> deploymentTemplateIds, int limit);
 
+  InfrastructureDefinition getInfraDefById(String accountId, String infraDefId);
+
+  InfrastructureDefinition getInfraByName(String accountId, String infraDefName, String envId);
+
   PageResponse<InfraDefinitionDetail> listInfraDefinitionDetail(
       PageRequest<InfrastructureDefinition> pageRequest, @NotEmpty String appId, @NotEmpty String envId);
 
@@ -152,6 +156,12 @@ public interface InfrastructureDefinitionService extends OwnedByEnvironment {
 
   List<String> listResourceGroupsNames(
       String appId, String deploymentType, String computeProviderId, String subscriptionId);
+
+  List<String> listSubscriptionLocations(String appId, String computeProviderId, String subscriptionId);
+
+  List<String> listAzureCloudProviderLocations(String appId, String computeProviderId);
+
+  Map<String, String> listManagementGroups(String appId, String computeProviderId);
 
   Map<String, String> listVirtualMachineScaleSets(
       String appId, String deploymentType, String computeProviderId, String subscriptionId, String resourceGroupName);

@@ -15,8 +15,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@Entity(value = "gitWebhookRequestAttributes", noClassnameStored = true)
-@Document("gitWebhookRequestAttributes")
+@Entity(value = "gitWebhookRequestAttributesNG", noClassnameStored = true)
+@Document("gitWebhookRequestAttributesNG")
 @TypeAlias("io.harness.gitsync.core.beans.gitWebhookRequestAttributes")
 public class GitWebhookRequestAttributes {
   private String webhookBody;

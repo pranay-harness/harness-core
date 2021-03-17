@@ -8,6 +8,7 @@ import static io.harness.generator.SettingGenerator.Settings.DEV_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.GITHUB_TEST_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.HELM_GCS_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.PHYSICAL_DATA_CENTER;
+import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AWS_EC2_USER;
 import static io.harness.generator.constants.InfraDefinitionGeneratorConstants.AZURE_VMSS_VM_USERNAME;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_END_POINT;
 import static io.harness.generator.constants.SettingsGeneratorConstants.PCF_KEY;
@@ -37,6 +38,7 @@ import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRe
 import io.harness.generator.AccountGenerator.Accounts;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
+import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import io.harness.testframework.framework.utils.SettingUtils;
@@ -50,6 +52,7 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.ServiceNowConfig;
@@ -70,6 +73,7 @@ import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
 import com.google.inject.Inject;
@@ -94,6 +98,9 @@ public class SettingGenerator {
   private static final String HARNESS_AZURE_ARTIFACTS = "Harness Azure Artifacts";
   private static final String ELK_CONNECTOR = "Elk Connector";
   private static final String HARNESS_ACCOUNT_GIT_CONNECTOR = "Harness Account Git Connector";
+  private static final String HARNESS_SSH_GIT_CONNECTOR = "Harness Ssh Git Connector with 7999 port";
+  private static final String HARNESS_SSH_GIT_CONNECTOR_KEY = "Harness Ssh Git Connector with 7999 port key";
+  private static final String OPENSHIFT_TEST_CLUSTER = "Openshift Test Cluster";
 
   private static final String HELM_CHART_REPO_URL = "http://storage.googleapis.com/kubernetes-charts/";
   private static final String HELM_CHART_REPO = "Helm Chart Repo";
@@ -104,6 +111,7 @@ public class SettingGenerator {
   private static final String HELM_S3 = "HELM S3";
   private static final String REGION_US_EAST_1 = "us-east-1";
   private static final String HARNESS_ADMIN = "harnessadmin";
+  private static final String OPENSHIFT_TEST_CLUSTER_MASTER_URL = "https://34.66.254.71:8443";
 
   @Inject AccountGenerator accountGenerator;
   @Inject ScmSecret scmSecret;
@@ -111,11 +119,13 @@ public class SettingGenerator {
 
   @Inject SettingsService settingsService;
   @Inject WingsPersistence wingsPersistence;
+  @Inject private SecretManager secretManager;
 
   public enum Settings {
     AWS_TEST_CLOUD_PROVIDER,
     AWS_DEPLOYMENT_FUNCTIONAL_TESTS_CLOUD_PROVIDER,
     AZURE_TEST_CLOUD_PROVIDER,
+    AZURE_ARM_TEST_CLOUD_PROVIDER,
     AWS_SPOTINST_TEST_CLOUD_PROVIDER,
     SPOTINST_TEST_CLOUD_PROVIDER,
     DEV_TEST_CONNECTOR,
@@ -149,7 +159,9 @@ public class SettingGenerator {
     HELM_GCS_CONNECTOR,
     ELK,
     ACCOUNT_LEVEL_GIT_CONNECTOR,
-    AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR
+    AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR,
+    OPENSHIFT_TEST_CLUSTER,
+    SSH_GIT_CONNECTOR_WITH_7999_PORT,
   }
 
   public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
@@ -164,6 +176,8 @@ public class SettingGenerator {
         return ensureAwsDeploymentFunctionalTestsCloudProvider(seed, owners);
       case AZURE_TEST_CLOUD_PROVIDER:
         return ensureAzureTestCloudProvider(seed, owners);
+      case AZURE_ARM_TEST_CLOUD_PROVIDER:
+        return ensureAzureARMTestCloudProvider(seed, owners);
       case AWS_SPOTINST_TEST_CLOUD_PROVIDER:
         return ensureAwsSpotinstTest(seed, owners);
       case SPOTINST_TEST_CLOUD_PROVIDER:
@@ -232,6 +246,10 @@ public class SettingGenerator {
         return ensureAccountLevelGitConnector(seed, owners);
       case AZURE_VMSS_SSH_PUBLIC_KEY_CONNECTOR:
         return ensureAzureVMSSSSHPublicKey(seed, owners);
+      case OPENSHIFT_TEST_CLUSTER:
+        return ensureOpenshiftTestCluster(seed, owners);
+      case SSH_GIT_CONNECTOR_WITH_7999_PORT:
+        return ensureSshGitConnector(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -369,6 +387,28 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .clientId(scmSecret.decryptToString(new SecretName("azure_client_id")))
                            .tenantId(scmSecret.decryptToString(new SecretName("azure_tenant_id")))
+                           .key(azure_key.toCharArray())
+                           .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  public SettingAttribute ensureAzureARMTestCloudProvider(Randomizer.Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String azure_key = secretGenerator.ensureStored(owners, SecretName.builder().value("azure_arm_key").build());
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName("Test ARM Azure Cloud Provider")
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withAccountId(account.getUuid())
+            .withValue(AzureConfig.builder()
+                           .accountId(account.getUuid())
+                           .clientId(scmSecret.decryptToString(new SecretName("azure_arm_client_id")))
+                           .tenantId(scmSecret.decryptToString(new SecretName("azure_arm_tenant_id")))
                            .key(azure_key.toCharArray())
                            .build())
             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
@@ -863,6 +903,52 @@ public class SettingGenerator {
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 
+  private SettingAttribute ensureSshGitConnector(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    secretGenerator.ensureStoredFile(owners, SecretName.builder().value("cdp_test_pem_key").build());
+
+    SettingAttribute sshKey =
+        aSettingAttribute()
+            .withCategory(SETTING)
+            .withAccountId(account.getUuid())
+            .withAppId(GLOBAL_APP_ID)
+            .withEnvId(GLOBAL_ENV_ID)
+            .withName(HARNESS_SSH_GIT_CONNECTOR_KEY)
+            .withValue(
+                aHostConnectionAttributes()
+                    .withConnectionType(SSH)
+                    .withAccessType(KEY)
+                    .withAccountId(account.getUuid())
+                    .withUserName(AWS_EC2_USER)
+                    .withSshPort(22)
+                    .withAuthenticationScheme(io.harness.shell.AuthenticationScheme.SSH_KEY)
+                    .withKey(
+                        secretManager.getSecretByName(account.getUuid(), "cdp_test_pem_key").getUuid().toCharArray())
+                    .build())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
+            .build();
+
+    sshKey = ensureSettingAttribute(seed, sshKey, owners);
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CONNECTOR)
+            .withName(HARNESS_SSH_GIT_CONNECTOR)
+            .withAccountId(account.getUuid())
+            .withValue(GitConfig.builder()
+                           .accountId(account.getUuid())
+                           .generateWebhookUrl(false)
+                           .keyAuth(true)
+                           .repoUrl("ssh://ec2-user@52.201.247.140:7999/home/ec2-user/harness-repo.git")
+                           .urlType(GitConfig.UrlType.REPO)
+                           .generateWebhookUrl(true)
+                           .sshSettingId(sshKey.getUuid())
+                           .build())
+            .build();
+
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
   private SettingAttribute ensureAzureVMSSSSHPublicKey(Seed seed, Owners owners) {
     final Account account = accountGenerator.ensureRandom(seed, owners);
     final String secretId =
@@ -882,6 +968,26 @@ public class SettingGenerator {
                                                                  .build())
                                                   .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                                   .build();
+    return ensureSettingAttribute(seed, settingAttribute, owners);
+  }
+
+  private SettingAttribute ensureOpenshiftTestCluster(Seed seed, Owners owners) {
+    final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
+    final String openshiftTestClusterSaToken =
+        secretGenerator.ensureStored(owners, SecretName.builder().value("openshift_test_cluster_sa_token").build());
+
+    SettingAttribute settingAttribute =
+        aSettingAttribute()
+            .withCategory(CLOUD_PROVIDER)
+            .withName(OPENSHIFT_TEST_CLUSTER)
+            .withAccountId(account.getUuid())
+            .withValue(KubernetesClusterConfig.builder()
+                           .masterUrl(OPENSHIFT_TEST_CLUSTER_MASTER_URL)
+                           .authType(KubernetesClusterAuthType.SERVICE_ACCOUNT)
+                           .serviceAccountToken(openshiftTestClusterSaToken.toCharArray())
+                           .accountId(account.getUuid())
+                           .build())
+            .build();
     return ensureSettingAttribute(seed, settingAttribute, owners);
   }
 

@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.user;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.beans.User;
@@ -9,6 +11,7 @@ import software.wings.graphql.schema.type.QLUser.QLUserBuilder;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@TargetModule(Module._380_CG_GRAPHQL)
 public class UserController {
   public static QLUser populateUser(EmbeddedUser user) {
     if (user == null) {

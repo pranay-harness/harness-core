@@ -6,8 +6,10 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredenti
 import static io.harness.rule.OwnerRule.DEEPAK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -64,6 +66,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Mock ConnectorRepository connectorRepository;
   @Mock private Map<String, ConnectionValidator> connectionValidatorMap;
   @Mock EntitySetupUsageClient entitySetupUsageClient;
+  @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
+  @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   @Inject @InjectMocks DefaultConnectorServiceImpl connectorService;
 
   String userName = "userName";
@@ -77,15 +81,20 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Rule public ExpectedException expectedEx = ExpectedException.none();
   SecretRefData passwordSecretRef;
   SecretRefData secretRefDataCACert;
+  String updatedName = "updatedName";
+  String updatedUserName = "updatedUserName";
+  String updatedMasterUrl = "updatedMasterUrl";
+  String updatedPasswordIdentifier = "updatedPasswordIdentifier";
 
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     secretRefDataCACert = SecretRefData.builder().identifier(cacertIdentifier).scope(Scope.ACCOUNT).build();
     passwordSecretRef = SecretRefData.builder().identifier(passwordIdentifier).scope(Scope.ACCOUNT).build();
+    doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());
   }
 
-  private ConnectorDTO createKubernetesConnectorRequestDTO(String connectorIdentifier) {
+  private ConnectorDTO createKubernetesConnectorRequestDTO(String connectorIdentifier, String name) {
     KubernetesAuthDTO kubernetesAuthDTO =
         KubernetesAuthDTO.builder()
             .authType(KubernetesAuthType.USER_PASSWORD)
@@ -108,8 +117,8 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
   }
 
-  private ConnectorResponseDTO createConnector(String connectorIdentifier) {
-    ConnectorDTO connectorRequestDTO = createKubernetesConnectorRequestDTO(connectorIdentifier);
+  private ConnectorResponseDTO createConnector(String connectorIdentifier, String name) {
+    ConnectorDTO connectorRequestDTO = createKubernetesConnectorRequestDTO(connectorIdentifier, name);
     return connectorService.create(connectorRequestDTO, accountIdentifier);
   }
 
@@ -117,21 +126,29 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testCreate() {
-    ConnectorResponseDTO connectorDTOOutput = createConnector(identifier);
+    ConnectorResponseDTO connectorDTOOutput = createConnector(identifier, name);
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTOOutput);
   }
 
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
-  public void testUpdate() {
-    String updatedCACert = "updatedCACert";
-    String updatedName = "updatedName";
-    String updatedUserName = "updatedUserName";
-    String updatedMasterUrl = "updatedMasterUrl";
-    String updatedPasswordIdentifier = "updatedPasswordIdentifier";
-    createConnector(identifier);
-    SecretRefData secretRefDataCACert = SecretRefData.builder().identifier(updatedCACert).scope(Scope.ACCOUNT).build();
+  public void testCreateConnectorsWithSameName() {
+    ConnectorResponseDTO connectorDTOOutput = createConnector(identifier, name);
+    assertThatThrownBy(() -> createConnector("identifier1", name)).isExactlyInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpdateConnectorsWithSameName() {
+    ConnectorResponseDTO connectorDTOOutput = createConnector(identifier, updatedName);
+    assertThatThrownBy(() -> {
+      connectorService.update(getUpdatedConnector("differentIdentifier"), accountIdentifier);
+    }).isExactlyInstanceOf(InvalidRequestException.class);
+  }
+
+  private ConnectorDTO getUpdatedConnector(String identifier) {
     SecretRefData passwordRefData =
         SecretRefData.builder().identifier(updatedPasswordIdentifier).scope(Scope.ACCOUNT).build();
     KubernetesAuthDTO kubernetesAuthDTO =
@@ -147,16 +164,25 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
             .build();
     KubernetesClusterConfigDTO k8sClusterConfig =
         KubernetesClusterConfigDTO.builder().credential(connectorDTOWithUserNamePwdCreds).build();
-    ConnectorDTO connector = ConnectorDTO.builder()
-                                 .connectorInfo(ConnectorInfoDTO.builder()
-                                                    .name(updatedName)
-                                                    .identifier(identifier)
-                                                    .connectorType(KUBERNETES_CLUSTER)
-                                                    .connectorConfig(k8sClusterConfig)
-                                                    .build())
-                                 .build();
+    return ConnectorDTO.builder()
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name(updatedName)
+                           .identifier(identifier)
+                           .connectorType(KUBERNETES_CLUSTER)
+                           .connectorConfig(k8sClusterConfig)
+                           .build())
+        .build();
+  }
 
-    ConnectorResponseDTO connectorResponse = connectorService.update(connector, accountIdentifier);
+  @Test
+  @Owner(developers = OwnerRule.DEEPAK)
+  @Category(UnitTests.class)
+  public void testUpdate() {
+    SecretRefData passwordRefData =
+        SecretRefData.builder().identifier(updatedPasswordIdentifier).scope(Scope.ACCOUNT).build();
+    createConnector(identifier, name);
+    ConnectorResponseDTO connectorResponse =
+        connectorService.update(getUpdatedConnector(identifier), accountIdentifier);
     ConnectorInfoDTO connectorInfo = connectorResponse.getConnector();
     assertThat(connectorInfo).isNotNull();
     assertThat(connectorInfo.getName()).isEqualTo(updatedName);
@@ -185,9 +211,9 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
     String connectorIdentifier1 = "connectorIdentifier1";
     String connectorIdentifier2 = "connectorIdentifier2";
     String connectorIdentifier3 = "connectorIdentifier3";
-    createConnector(connectorIdentifier1);
-    createConnector(connectorIdentifier2);
-    createConnector(connectorIdentifier3);
+    createConnector(connectorIdentifier1, name + "1");
+    createConnector(connectorIdentifier2, name + "2");
+    createConnector(connectorIdentifier3, name + "3");
     ArgumentCaptor<Page> connectorsListArgumentCaptor = ArgumentCaptor.forClass(Page.class);
     Page<ConnectorResponseDTO> connectorSummaryDTOSList =
         connectorService.list(0, 100, accountIdentifier, null, null, null, "", "", false);
@@ -205,7 +231,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testGet() {
-    createConnector(identifier);
+    createConnector(identifier, name);
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureKubernetesConnectorFieldsAreCorrect(connectorDTO);
   }
@@ -214,7 +240,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testGetWhenConnectorDoesntExists() {
-    createConnector(identifier);
+    createConnector(identifier, name);
     Optional<ConnectorResponseDTO> connectorDTO =
         connectorService.get(accountIdentifier, "orgIdentifier", "projectIdentifier", identifier);
     assertThat(connectorDTO.isPresent()).isFalse();
@@ -244,7 +270,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testDelete() {
-    createConnector(identifier);
+    createConnector(identifier, name);
     Call<ResponseDTO<Boolean>> request = mock(Call.class);
     try {
       when(request.execute()).thenReturn(Response.success(ResponseDTO.newResponse(false)));
@@ -310,7 +336,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void testConnection() {
-    createConnector(identifier);
+    createConnector(identifier, name);
     when(connectionValidatorMap.get(any())).thenReturn(kubernetesConnectionValidator);
     when(kubernetesConnectionValidator.validate(any(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(ConnectorValidationResult.builder().status(SUCCESS).build());
@@ -322,7 +348,7 @@ public class DefaultConnectorServiceImplTest extends ConnectorsTestBase {
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
   public void testValidateTheIdentifierIsUnique() {
-    createConnector(identifier);
+    createConnector(identifier, name);
     boolean isIdentifierUnique =
         connectorService.validateTheIdentifierIsUnique(accountIdentifier, null, null, identifier);
     assertThat(isIdentifierUnique).isFalse();

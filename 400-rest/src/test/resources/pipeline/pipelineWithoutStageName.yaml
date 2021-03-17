@@ -1,0 +1,9 @@
+harnessApiVersion: '1.0'
+type: PIPELINE
+pipelineStages:
+- type: ENV_STATE
+  name: K8s-roll
+  parallel: false
+  skipCondition:
+    type: DO_NOT_SKIP
+  workflowName: K8s-roll

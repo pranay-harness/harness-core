@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.DHRUV;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.Application.Builder.anApplication;
@@ -30,7 +31,6 @@ import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.TRIGGER_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.WORKFLOWS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
-import static software.wings.service.impl.artifact.ArtifactCollectionServiceTest.GLOBAL_APP_ID;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.DOCKER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -51,6 +51,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -105,8 +106,10 @@ import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.security.AppPermissionSummary;
@@ -124,6 +127,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.verification.CVConfiguration;
@@ -150,6 +154,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class YamlDirectoryServiceTest extends WingsBaseTest {
+  public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private ServiceTemplateService serviceTemplateService;
@@ -165,6 +170,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock ApplicationManifestService applicationManifestService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private GovernanceConfigService governanceConfigService;
   @Inject @InjectMocks private YamlDirectoryServiceImpl yamlDirectoryService;
 
   private DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
@@ -946,5 +952,24 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     // ENV_SERVICE_OVERRIDE local manifest file
     assertThat(serviceNodeUnderEnv.getChildren().get(1).getDirectoryPath().getPath())
         .isEqualTo("Setup/Applications/App1/Environments/env1/PCF Overrides/Services/SERVICE_NAME/a.yml");
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testDoGovernanceConfig() {
+    GovernanceConfig governanceConfig = GovernanceConfig.builder().accountId(ACCOUNT_ID).deploymentFreeze(true).build();
+    governanceConfig.setUuid(UUID);
+
+    doReturn(governanceConfig).when(governanceConfigService).get(anyString());
+    when(featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, ACCOUNT_ID)).thenReturn(true);
+
+    final FolderNode governanceConfigFolderNode = yamlDirectoryService.doGovernance(ACCOUNT_ID, UUID, directoryPath);
+    List<DirectoryNode> governanceConfigDirectoryNode =
+        getNodesOfClass(governanceConfigFolderNode, GovernanceConfig.class);
+
+    assertThat(governanceConfigDirectoryNode).hasSize(1);
+    assertThat(governanceConfigDirectoryNode.get(0).getName())
+        .isEqualTo(YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER + YAML_EXTENSION);
   }
 }

@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
+import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.TaskFailureReason;
@@ -39,6 +40,8 @@ public interface AssignDelegateService {
   void clearConnectionResults(String accountId);
 
   String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask);
+
+  List<Delegate> getAccountDelegates(String accountId);
 
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
 

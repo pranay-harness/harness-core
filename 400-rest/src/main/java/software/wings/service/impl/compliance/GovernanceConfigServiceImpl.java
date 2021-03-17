@@ -4,6 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static java.lang.String.format;
+
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
@@ -29,22 +33,27 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.User;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfig.GovernanceConfigKeys;
+import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.GovernanceFeature;
 import software.wings.features.api.AccountId;
 import software.wings.features.api.RestrictedApi;
+import software.wings.resources.stats.model.TimeRange;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.segment.analytics.messages.TrackMessage;
 import com.segment.analytics.messages.TrackMessage.Builder;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +61,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +76,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @ValidateOnExecution
 @Singleton
+@TargetModule(Module._960_API_SERVICES)
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
+  private static final long MIN_FREEZE_WINDOW_TIME = 1800000L;
+  private static final long MAX_FREEZE_WINDOW_TIME = 2592000000L;
+
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject private AuditServiceHelper auditServiceHelper;
@@ -73,6 +88,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AppService appService;
   @Inject private EnvironmentService environmentService;
+  @Inject private DeploymentFreezeActivationHandler freezeActivationHandler;
+  @Inject private DeploymentFreezeDeactivationHandler freezeDeactivationHandler;
+  @Inject private YamlPushService yamlPushService;
+  @Inject private UserGroupService userGroupService;
 
   @Override
   public GovernanceConfig get(String accountId) {
@@ -95,8 +114,15 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   @RestrictedApi(GovernanceFeature.class)
   public GovernanceConfig upsert(@AccountId String accountId, @Nonnull GovernanceConfig governanceConfig) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      boolean newDeploymentFreezeEnabled = featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId);
+
       log.info("Updating Deployment Freeze window");
       GovernanceConfig oldSetting = get(accountId);
+
+      if (newDeploymentFreezeEnabled) {
+        validateDeploymentFreezeInput(governanceConfig.getTimeRangeBasedFreezeConfigs(), accountId, oldSetting);
+        resetReadOnlyProperties(governanceConfig.getTimeRangeBasedFreezeConfigs(), accountId, oldSetting);
+      }
 
       Query<GovernanceConfig> query =
           wingsPersistence.createQuery(GovernanceConfig.class).filter(GovernanceConfigKeys.accountId, accountId);
@@ -115,13 +141,28 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         log.error("ThreadLocal User is null when trying to update governance config. accountId={}", accountId);
       }
 
-      if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
-        validateDeploymentFreezeInput(governanceConfig.getTimeRangeBasedFreezeConfigs());
+      if (newDeploymentFreezeEnabled) {
+        governanceConfig.recalculateNextIterations(GovernanceConfigKeys.nextIterations, true, 0);
+        governanceConfig.recalculateNextIterations(GovernanceConfigKeys.nextCloseIterations, true, 0);
+        updateOperations.set(GovernanceConfigKeys.nextIterations, governanceConfig.getNextIterations());
+        updateOperations.set(GovernanceConfigKeys.nextCloseIterations, governanceConfig.getNextCloseIterations());
       }
 
       GovernanceConfig updatedSetting =
           wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
-      auditDeploymentFreeze(accountId, oldSetting, updatedSetting);
+
+      // push service also adds audit trail, in case of no yaml we add the entry explicitly
+      if (newDeploymentFreezeEnabled) {
+        yamlPushService.pushYamlChangeSet(
+            accountId, oldSetting, updatedSetting, Type.UPDATE, governanceConfig.isSyncFromGit(), false);
+      } else {
+        auditDeploymentFreeze(accountId, oldSetting, updatedSetting);
+      }
+
+      if (newDeploymentFreezeEnabled) {
+        freezeDeactivationHandler.wakeup();
+        freezeActivationHandler.wakeup();
+      }
 
       if (!ListUtils.isEqualList(
               oldSetting.getTimeRangeBasedFreezeConfigs(), governanceConfig.getTimeRangeBasedFreezeConfigs())) {
@@ -137,12 +178,70 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   }
 
   @Override
+  public Map<String, Set<String>> getFrozenEnvIdsForApp(
+      String accountId, String appId, GovernanceConfig governanceConfig) {
+    if (governanceConfig == null) {
+      governanceConfig = get(accountId);
+    }
+    if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
+      if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+        Map<String, Set<String>> envIdsByWindow = new HashMap<>();
+        for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
+          if (isNotEmpty(freezeConfig.getAppSelections()) && freezeConfig.checkIfActive()) {
+            freezeConfig.getAppSelections().forEach(appSelection -> {
+              if (appSelection.getFilterType() == BlackoutWindowFilterType.ALL
+                  || (appSelection.getFilterType() == BlackoutWindowFilterType.CUSTOM
+                      && ((CustomAppFilter) appSelection).getApps().contains(appId))) {
+                envIdsByWindow.merge(freezeConfig.getUuid(),
+                    new HashSet<>(getEnvIdsFromAppSelection(appId, appSelection)), (prevEnvSet, newEnvSet) -> {
+                      prevEnvSet.addAll(newEnvSet);
+                      return prevEnvSet;
+                    });
+              }
+            });
+          }
+        }
+        return envIdsByWindow;
+      }
+    }
+    return Collections.emptyMap();
+  }
+
+  @Override
+  public List<GovernanceFreezeConfig> getGovernanceFreezeConfigs(String accountId, List<String> deploymentFreezeIds) {
+    GovernanceConfig governanceConfig = get(accountId);
+    if (governanceConfig != null && EmptyPredicate.isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
+      return governanceConfig.getTimeRangeBasedFreezeConfigs()
+          .stream()
+          .filter(freeze -> deploymentFreezeIds.contains(freeze.getUuid()))
+          .collect(Collectors.toList());
+    }
+    return new ArrayList<>();
+  }
+
+  private List<String> getEnvIdsFromAppSelection(String appId, ApplicationFilter appSelection) {
+    switch (appSelection.getEnvSelection().getFilterType()) {
+      case ALL:
+        return environmentService.getEnvIdsByApp(appId);
+      case ALL_NON_PROD:
+        return environmentService.getEnvIdsByAppsAndType(
+            Collections.singletonList(appId), EnvironmentType.NON_PROD.name());
+      case ALL_PROD:
+        return environmentService.getEnvIdsByAppsAndType(Collections.singletonList(appId), EnvironmentType.PROD.name());
+      case CUSTOM:
+        return ((CustomEnvFilter) appSelection.getEnvSelection()).getEnvironments();
+      default:
+    }
+    return new ArrayList<>();
+  }
+
+  @Override
   public DeploymentFreezeInfo getDeploymentFreezeInfo(String accountId) {
     GovernanceConfig governanceConfig = get(accountId);
     if (featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, accountId)) {
+      Set<String> allEnvFrozenApps = new HashSet<>();
+      Map<String, Set<String>> appEnvs = new HashMap<>();
       if (isNotEmpty(governanceConfig.getTimeRangeBasedFreezeConfigs())) {
-        Map<String, Set<String>> appEnvs = new HashMap<>();
-        Set<String> allEnvFrozenApps = new HashSet<>();
         for (TimeRangeBasedFreezeConfig freezeConfig : governanceConfig.getTimeRangeBasedFreezeConfigs()) {
           if (isNotEmpty(freezeConfig.getAppSelections()) && isActive(freezeConfig)) {
             freezeConfig.getAppSelections().forEach(appSelection -> {
@@ -157,15 +256,15 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
             });
           }
         }
-        return DeploymentFreezeInfo.builder()
-            .freezeAll(governanceConfig.isDeploymentFreeze())
-            .allEnvFrozenApps(allEnvFrozenApps)
-            .appEnvs(appEnvs)
-            .build();
       }
+      return DeploymentFreezeInfo.builder()
+          .freezeAll(governanceConfig.isDeploymentFreeze())
+          .allEnvFrozenApps(allEnvFrozenApps)
+          .appEnvs(appEnvs)
+          .build();
     }
     return DeploymentFreezeInfo.builder()
-        .freezeAll(governanceConfig.isDeploymentFreeze())
+        .freezeAll(false)
         .allEnvFrozenApps(Collections.emptySet())
         .appEnvs(Collections.emptyMap())
         .build();
@@ -208,7 +307,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       default:
         throw new InvalidRequestException("Invalid app selection");
     }
-    if (isEmpty(appEnvMap)) {
+    if (EmptyPredicate.isEmpty(appEnvMap)) {
       log.info("No applications and environments matching the given app selection: {}, environment selection type: {}",
           appSelection.getFilterType(), appSelection.getEnvSelection().getFilterType());
     }
@@ -226,7 +325,8 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     return currentTime <= freezeConfig.getTimeRange().getTo() && currentTime >= freezeConfig.getTimeRange().getFrom();
   }
 
-  private void validateDeploymentFreezeInput(List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs) {
+  private void validateDeploymentFreezeInput(List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs,
+      String accountId, GovernanceConfig oldGovernanceConfig) {
     if (EmptyPredicate.isEmpty(timeRangeBasedFreezeConfigs)) {
       return;
     }
@@ -234,8 +334,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     Set<String> freezeNameSet = new HashSet<>();
     timeRangeBasedFreezeConfigs.stream().map(GovernanceFreezeConfig::getName).filter(Objects::nonNull).forEach(name -> {
       if (freezeNameSet.contains(name)) {
-        throw new InvalidRequestException(
-            String.format("Duplicate Deployment Freeze name %s found.", name), WingsException.USER);
+        throw new InvalidRequestException(format("Duplicate name %s", name), WingsException.USER);
       }
       freezeNameSet.add(name);
     });
@@ -243,22 +342,98 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
     timeRangeBasedFreezeConfigs.stream()
         .filter(freeze -> EmptyPredicate.isNotEmpty(freeze.getAppSelections()))
         .forEach(deploymentFreeze -> {
-          if (deploymentFreeze.getAppSelections().stream().anyMatch(appSelection
-                  -> appSelection.getFilterType() != BlackoutWindowFilterType.CUSTOM
-                      && appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.CUSTOM)) {
-            throw new InvalidRequestException(
-                "Environment filter type can be CUSTOM only when Application Filter type is CUSTOM");
-          }
-          if (deploymentFreeze.getAppSelections()
-                  .stream()
-                  .filter(selection -> selection.getFilterType() == BlackoutWindowFilterType.CUSTOM)
-                  .anyMatch(appSelection
-                      -> appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.CUSTOM
-                          && ((CustomAppFilter) appSelection).getApps().size() != 1)) {
-            throw new InvalidRequestException(
-                "Application filter should have exactly one app when environment filter type is CUSTOM");
-          }
+          validateName(deploymentFreeze.getName());
+          validateAppEnvFilter(deploymentFreeze);
+          validateTimeRange(deploymentFreeze.getTimeRange());
         });
+  }
+
+  private void validateUserGroups(List<String> userGroups, String accountId) {
+    if (isEmpty(userGroups)) {
+      throw new InvalidRequestException("User Groups cannot be empty");
+    }
+    for (String userGroupId : userGroups) {
+      UserGroup userGroup = userGroupService.get(accountId, userGroupId);
+      if (userGroup == null) {
+        throw new InvalidRequestException(format("Invalid User Group Id: %s", userGroupId));
+      }
+    }
+  }
+
+  /**
+   * We need to set uuid for individual windows
+   * @param timeRangeBasedFreezeConfigs
+   * @param oldGovernanceConfig
+   */
+  private void resetReadOnlyProperties(List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs, String accountId,
+      GovernanceConfig oldGovernanceConfig) {
+    List<TimeRangeBasedFreezeConfig> oldTimeRangeBasedFreezeConfigs =
+        oldGovernanceConfig.getTimeRangeBasedFreezeConfigs();
+
+    Map<String, TimeRangeBasedFreezeConfig> configMap = oldTimeRangeBasedFreezeConfigs.stream().collect(
+        Collectors.toMap(TimeRangeBasedFreezeConfig::getName, Function.identity()));
+
+    for (TimeRangeBasedFreezeConfig entry : timeRangeBasedFreezeConfigs) {
+      if (configMap.get(entry.getName()) != null) {
+        TimeRangeBasedFreezeConfig oldWindow = configMap.get(entry.getName());
+        // update scenario, restore uuid and timezone
+        entry.setUuid(oldWindow.getUuid());
+
+        // if no timezone(update from YAML) then fetch from db
+        if (isEmpty(entry.getTimeRange().getTimeZone())) {
+          entry.setTimeRange(new TimeRange(
+              entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(), oldWindow.getTimeRange().getTimeZone()));
+        }
+
+        if (isEmpty(entry.getDescription())) {
+          entry.setDescription(null);
+        }
+
+        // if any updates to an active window
+        if (!entry.equals(oldWindow)) {
+          if (oldWindow.checkIfActive()) {
+            throw new InvalidRequestException("Cannot update active freeze window");
+          }
+          validateUserGroups(entry.getUserGroups(), accountId);
+        }
+      }
+    }
+  }
+
+  private void validateName(String name) {
+    if (name == null) {
+      throw new InvalidRequestException("Name cannot be empty for the freeze window");
+    }
+  }
+
+  private void validateTimeRange(TimeRange timeRange) {
+    if (timeRange.getFrom() > timeRange.getTo()) {
+      throw new InvalidRequestException("Window Start time is less than Window end Time");
+    }
+    if (timeRange.getTo() - timeRange.getFrom() < MIN_FREEZE_WINDOW_TIME) {
+      throw new InvalidRequestException("Freeze window time should be at least 30 minutes");
+    }
+    if (timeRange.getTo() - timeRange.getFrom() > MAX_FREEZE_WINDOW_TIME) {
+      throw new InvalidRequestException("Freeze window time should be less than 30 days");
+    }
+  }
+
+  private void validateAppEnvFilter(TimeRangeBasedFreezeConfig deploymentFreeze) {
+    if (deploymentFreeze.getAppSelections().stream().anyMatch(appSelection
+            -> appSelection.getFilterType() != BlackoutWindowFilterType.CUSTOM
+                && appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.CUSTOM)) {
+      throw new InvalidRequestException(
+          "Environment filter type can be CUSTOM only when Application Filter type is CUSTOM");
+    }
+    if (deploymentFreeze.getAppSelections()
+            .stream()
+            .filter(selection -> selection.getFilterType() == BlackoutWindowFilterType.CUSTOM)
+            .anyMatch(appSelection
+                -> appSelection.getEnvSelection().getFilterType() == EnvironmentFilterType.CUSTOM
+                    && ((CustomAppFilter) appSelection).getApps().size() != 1)) {
+      throw new InvalidRequestException(
+          "Application filter should have exactly one app when environment filter type is CUSTOM");
+    }
   }
 
   private void auditDeploymentFreeze(String accountId, GovernanceConfig oldConfig, GovernanceConfig updatedConfig) {

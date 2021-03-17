@@ -30,6 +30,7 @@ import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.elasticsearch.common.util.set.Sets.newHashSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -192,7 +193,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void checkForUserGroupWithEmptyName(UserGroup userGroup) {
-    if (userGroup.getName().trim().isEmpty()) {
+    if (isBlank(userGroup.getName())) {
       throw new GeneralException("User group can't be created without group name.", USER);
     }
   }
@@ -285,8 +286,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup get(String varId) {
-    UserGroup userGroup = wingsPersistence.get(UserGroup.class, varId);
-    return userGroup;
+    return wingsPersistence.get(UserGroup.class, varId);
   }
 
   @Override

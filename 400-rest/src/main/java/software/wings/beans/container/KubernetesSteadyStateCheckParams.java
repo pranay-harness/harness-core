@@ -1,5 +1,7 @@
 package software.wings.beans.container;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
@@ -15,6 +17,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class KubernetesSteadyStateCheckParams implements ExecutionCapabilityDemander {
   private String accountId;
   private String appId;

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
@@ -21,12 +22,13 @@ import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
+import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.beans.Account;
 import software.wings.beans.Event;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 
@@ -57,8 +59,9 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   public static final String PRIMARY_PROFILE_NAME = "Primary";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Getter private final Subject<DelegateProfileObserver> delegateProfileSubject = new Subject<>();
 
@@ -69,7 +72,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
           .build(new CacheLoader<ImmutablePair<String, String>, DelegateProfile>() {
             @Override
             public DelegateProfile load(ImmutablePair<String, String> delegateProfileKey) {
-              return wingsPersistence.createQuery(DelegateProfile.class)
+              return persistence.createQuery(DelegateProfile.class)
                   .filter(DelegateProfileKeys.accountId, delegateProfileKey.getLeft())
                   .filter(DelegateProfileKeys.uuid, delegateProfileKey.getRight())
                   .get();
@@ -78,7 +81,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest) {
-    return wingsPersistence.query(DelegateProfile.class, pageRequest);
+    return persistence.query(DelegateProfile.class, pageRequest);
   }
 
   @Override
@@ -97,7 +100,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile fetchPrimaryProfile(String accountId) {
     Optional<DelegateProfile> primaryProfile =
-        Optional.ofNullable(wingsPersistence.createQuery(DelegateProfile.class)
+        Optional.ofNullable(persistence.createQuery(DelegateProfile.class)
                                 .filter(DelegateProfileKeys.primary, Boolean.TRUE)
                                 .filter(DelegateProfileKeys.accountId, accountId)
                                 .get());
@@ -109,7 +112,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   public DelegateProfile update(DelegateProfile delegateProfile) {
     DelegateProfile originalProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
 
-    UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
+    UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
     setUnset(updateOperations, DelegateProfileKeys.name, delegateProfile.getName());
     setUnset(updateOperations, DelegateProfileKeys.description, delegateProfile.getDescription());
     setUnset(updateOperations, DelegateProfileKeys.startupScript, delegateProfile.getStartupScript());
@@ -117,12 +120,12 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     setUnset(updateOperations, DelegateProfileKeys.selectors, delegateProfile.getSelectors());
     setUnset(updateOperations, DelegateProfileKeys.scopingRules, delegateProfile.getScopingRules());
 
-    Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
+    Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, delegateProfile.getAccountId())
                                        .filter(ID_KEY, delegateProfile.getUuid());
 
     // Update and invalidate cache
-    wingsPersistence.update(query, updateOperations);
+    persistence.update(query, updateOperations);
     delegateProfilesCache.invalidate(ImmutablePair.of(delegateProfile.getAccountId(), delegateProfile.getUuid()));
 
     DelegateProfile updatedDelegateProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
@@ -140,33 +143,44 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
   @Override
   public DelegateProfile updateDelegateProfileSelectors(
       String delegateProfileId, String accountId, List<String> selectors) {
-    Query<DelegateProfile> delegateProfileQuery = wingsPersistence.createQuery(DelegateProfile.class)
+    Query<DelegateProfile> delegateProfileQuery = persistence.createQuery(DelegateProfile.class)
                                                       .filter(DelegateProfileKeys.accountId, accountId)
                                                       .filter(DelegateProfileKeys.uuid, delegateProfileId);
-    UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
+    UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
 
     setUnset(updateOperations, DelegateProfileKeys.selectors, selectors);
 
     // Update and invalidate cache
     DelegateProfile delegateProfileSelectorsUpdated =
-        wingsPersistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
+        persistence.findAndModify(delegateProfileQuery, updateOperations, returnNewOptions);
     delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
     log.info("Updated delegate profile selectors: {}", delegateProfileSelectorsUpdated.getSelectors());
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(
+          DelegateProfileObxxxxxxxx:onProfileSelectorsUpdated, accountId, delegateProfileId);
+    }
+
     return delegateProfileSelectorsUpdated;
   }
 
   @Override
   public DelegateProfile updateScopingRules(
       String accountId, String delegateProfileId, List<DelegateProfileScopingRule> scopingRules) {
-    UpdateOperations<DelegateProfile> updateOperations = wingsPersistence.createUpdateOperations(DelegateProfile.class);
+    UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
     setUnset(updateOperations, DelegateProfileKeys.scopingRules, scopingRules);
-    Query<DelegateProfile> query = wingsPersistence.createQuery(DelegateProfile.class)
+    Query<DelegateProfile> query = persistence.createQuery(DelegateProfile.class)
                                        .filter(DelegateProfileKeys.accountId, accountId)
                                        .filter(DelegateProfileKeys.uuid, delegateProfileId);
     // Update and invalidate cache
-    DelegateProfile updatedDelegateProfile = wingsPersistence.findAndModify(query, updateOperations, returnNewOptions);
+    DelegateProfile updatedDelegateProfile = persistence.findAndModify(query, updateOperations, returnNewOptions);
     delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
     log.info("Updated profile scoping rules for accountId={}", accountId);
+
+    if (featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, accountId)) {
+      delegateProfileSubject.fireInform(DelegateProfileObxxxxxxxx:onProfileScopesUpdated, accountId, delegateProfileId);
+    }
+
     return updatedDelegateProfile;
   }
 
@@ -177,7 +191,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       throw new InvalidRequestException("The identifier is invalid. Could not add delegate profile.");
     }
 
-    wingsPersistence.save(delegateProfile);
+    persistence.save(delegateProfile);
     log.info("Added delegate profile: {}", delegateProfile.getUuid());
     auditServiceHelper.reportForAuditingUsingAccountId(
         delegateProfile.getAccountId(), null, delegateProfile, Event.Type.CREATE);
@@ -187,7 +201,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public void delete(String accountId, String delegateProfileId) {
-    DelegateProfile delegateProfile = wingsPersistence.createQuery(DelegateProfile.class)
+    DelegateProfile delegateProfile = persistence.createQuery(DelegateProfile.class)
                                           .filter(DelegateProfileKeys.accountId, accountId)
                                           .filter(ID_KEY, delegateProfileId)
                                           .get();
@@ -195,7 +209,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       ensureProfileSafeToDelete(accountId, delegateProfile);
       log.info("Deleting delegate profile: {}", delegateProfileId);
       // Delete and invalidate cache
-      wingsPersistence.delete(delegateProfile);
+      persistence.delete(delegateProfile);
       delegateProfilesCache.invalidate(ImmutablePair.of(accountId, delegateProfileId));
 
       auditServiceHelper.reportDeleteForAuditingUsingAccountId(delegateProfile.getAccountId(), delegateProfile);
@@ -205,8 +219,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public void deleteByAccountId(String accountId) {
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(DelegateProfile.class).filter(DelegateProfileKeys.accountId, accountId));
+    persistence.delete(persistence.createQuery(DelegateProfile.class).filter(DelegateProfileKeys.accountId, accountId));
   }
 
   private void ensureProfileSafeToDelete(String accountId, DelegateProfile delegateProfile) {
@@ -216,7 +229,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
     String delegateProfileId = delegateProfile.getUuid();
     List<Delegate> delegates =
-        wingsPersistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
+        persistence.createQuery(Delegate.class).filter(DelegateKeys.accountId, accountId).asList();
     List<String> delegateNames = delegates.stream()
                                      .filter(delegate -> delegateProfileId.equals(delegate.getDelegateProfileId()))
                                      .map(Delegate::getHostName)
@@ -249,6 +262,17 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
     // Do nothing
   }
 
+  @Override
+  public List<String> getDelegatesForProfile(String accountId, String profileId) {
+    return persistence.createQuery(Delegate.class)
+        .filter(DelegateKeys.accountId, accountId)
+        .filter(DelegateKeys.delegateProfileId, profileId)
+        .asKeyList()
+        .stream()
+        .map(key -> key.getId().toString())
+        .collect(toList());
+  }
+
   private DelegateProfile buildPrimaryDelegateProfile(String accountId) {
     return DelegateProfile.builder()
         .uuid(generateUuid())
@@ -261,7 +285,7 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @VisibleForTesting
   public boolean isValidIdentifier(String accountId, String proposedIdentifier) {
-    Query<DelegateProfile> result = wingsPersistence.createQuery(DelegateProfile.class)
+    Query<DelegateProfile> result = persistence.createQuery(DelegateProfile.class)
                                         .filter(DelegateKeys.accountId, accountId)
                                         .field(DelegateProfileKeys.identifier)
                                         .equalIgnoreCase(proposedIdentifier);

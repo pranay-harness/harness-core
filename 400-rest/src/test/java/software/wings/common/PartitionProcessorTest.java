@@ -11,15 +11,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.context.ContextElementType;
 import io.harness.rule.Owner;
 
 import software.wings.api.PartitionElement;
 import software.wings.sm.ContextElement;
-import software.wings.sm.ExecutionContext;
 
 import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
@@ -241,47 +238,6 @@ public class PartitionProcessorTest extends CategoryTest {
     assertThat(partitions.get(0).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e1, e2);
     assertThat(partitions.get(1).getPartitionElements()).hasSize(3).doesNotContainNull().containsExactly(e3, e4, e5);
     assertThat(partitions.get(2).getPartitionElements()).hasSize(2).doesNotContainNull().containsExactly(e6, e7);
-  }
-
-  /**
-   * The type Sample element.
-   */
-  public static class SampleElement implements ContextElement {
-    private String uuid;
-
-    /**
-     * Instantiates a new Sample element.
-     *
-     * @param uuid the uuid
-     */
-    public SampleElement(String uuid) {
-      this.uuid = uuid;
-    }
-
-    @Override
-    public ContextElementType getElementType() {
-      return null;
-    }
-
-    @Override
-    public String getUuid() {
-      return uuid;
-    }
-
-    @Override
-    public String getName() {
-      return null;
-    }
-
-    @Override
-    public Map<String, Object> paramMap(ExecutionContext context) {
-      return null;
-    }
-
-    @Override
-    public ContextElement cloneMin() {
-      return this;
-    }
   }
 
   /**

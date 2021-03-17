@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.audit;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 @Singleton
+@TargetModule(Module._380_CG_GRAPHQL)
 public class ChangeSetController {
   @Inject YamlAuditRecordGenerationUtils yamlAuditRecordGenerationUtils;
   public QLChangeSet populateChangeSet(@NotNull AuditHeader audit) {

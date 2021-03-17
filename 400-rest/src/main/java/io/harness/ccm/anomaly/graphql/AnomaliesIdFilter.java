@@ -1,8 +1,8 @@
 package io.harness.ccm.anomaly.graphql;
 
+import io.harness.ccm.anomaly.entities.AnomalyEntity.AnomaliesDataTableSchema;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
 
-import software.wings.graphql.datafetcher.anomaly.AnomaliesDataTableSchema;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 
 import com.hazelcast.util.Preconditions;

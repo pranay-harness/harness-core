@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.type;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
@@ -12,6 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLVariableKeys")
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLVariable implements QLObject {
   String name;
   String type;

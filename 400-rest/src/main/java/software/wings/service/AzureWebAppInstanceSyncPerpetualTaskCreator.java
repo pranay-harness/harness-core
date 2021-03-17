@@ -30,6 +30,7 @@ import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -73,10 +74,13 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
 
     Set<String> existingWebAppDeploymentKeys =
         existingPerpetualTasks.stream()
-            .map(task -> task.getClientContext().getClientParams())
+            .filter(Objects::nonNull)
+            .map(PerpetualTaskRecord::getClientContext)
+            .map(PerpetualTaskClientContext::getClientParams)
             .map(params -> getWebAppDeploymentKey(params.get(APP_NAME), params.get(SLOT_NAME)))
             .filter(Optional::isPresent)
             .map(Optional::get)
+            .filter(Objects::nonNull)
             .collect(Collectors.toSet());
 
     Set<String> newWebAppDeploymentKeys = deploymentSummaries.stream()

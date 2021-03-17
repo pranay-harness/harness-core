@@ -4,6 +4,8 @@ import static io.harness.exception.WingsException.USER;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -47,6 +49,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsAppAutoScalingHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsAppAutoScalingHelperServiceDelegate {
   private AmazonCloudWatchClient getAmazonCloudWatchClient(String region, AwsConfig awsConfig) {

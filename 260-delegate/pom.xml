@@ -17,6 +17,10 @@
             <artifactId>guice</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
@@ -98,6 +102,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>930-delegate-tasks</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>950-log-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

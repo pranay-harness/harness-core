@@ -1,0 +1,27 @@
+{
+  "connector": {
+    "type": "CEAzure",
+    "name": "name_ph",
+    "identifier": "identifier_ph",
+    "orgIdentifier": "orgIdentifier_ph",
+    "description": "description_ph",
+    "projectIdentifier": "projectIdentifier_ph",
+    "tags": {
+      "company": "Harness",
+      "env": "dev"
+    },
+    "spec": {
+      "featuresEnabled": [
+        "OPTIMIZATION",
+        "BILLING"
+      ],
+      "tenantId": "tenantId",
+      "subscriptionId": "subscriptionId",
+      "billingExportSpec": {
+        "storageAccountName": "storageAccountName",
+        "containerName": "containerName",
+        "directoryName": "directoryName"
+      }
+    }
+  }
+}

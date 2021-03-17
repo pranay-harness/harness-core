@@ -24,10 +24,12 @@ import lombok.extern.slf4j.Slf4j;
 public class GrpcInProcessServer extends AbstractIdleService {
   private final Server server;
   private final HealthStatusManager healthStatusManager;
+  public static final int GRPC_MAXIMUM_MESSAGE_SIZE = 26214400;
 
   public GrpcInProcessServer(String name, Set<BindableService> services, Set<ServerInterceptor> interceptors,
       HealthStatusManager healthStatusManager) {
     ServerBuilder<?> builder = InProcessServerBuilder.forName(name);
+    builder.maxInboundMessageSize(GRPC_MAXIMUM_MESSAGE_SIZE);
     sortedInterceptors(interceptors).forEach(builder::intercept);
     services.forEach(builder::addService);
     server = builder.build();

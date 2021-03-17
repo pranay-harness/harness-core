@@ -2,7 +2,9 @@ package software.wings.graphql.schema.type.artifactSource;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLKeyValuePair;
 import software.wings.security.PermissionAttribute;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLAMIArtifactSourceKeys")
 @Scope(PermissionAttribute.ResourceType.SERVICE)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLAMIArtifactSource implements QLArtifactSource {
   String name;
   String id;

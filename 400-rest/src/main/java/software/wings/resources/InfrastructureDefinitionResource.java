@@ -422,6 +422,38 @@ public class InfrastructureDefinitionResource {
   }
 
   @GET
+  @Path("compute-providers/{computeProviderId}/subscriptions/{subscriptionId}/locations")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getSubscriptionLocations(@QueryParam("appId") String appId,
+      @PathParam("computeProviderId") String computeProviderId, @PathParam("subscriptionId") String subscriptionId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listSubscriptionLocations(appId, computeProviderId, subscriptionId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/locations")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<List<String>> getCloudProviderLocations(
+      @QueryParam("appId") String appId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureDefinitionService.listAzureCloudProviderLocations(appId, computeProviderId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/management-groups")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getManagementGroups(
+      @QueryParam("appId") String appId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureDefinitionService.listManagementGroups(appId, computeProviderId));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/vm-scale-sets")
   @Timed
   @ExceptionMetered

@@ -22,6 +22,7 @@ public class BatchMainConfig {
   @JsonProperty("batchQueryConfig") private BatchQueryConfig batchQueryConfig;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("awsS3SyncConfig") private AwsS3SyncConfig awsS3SyncConfig;
+  @JsonProperty("azureStorageSyncConfig") private AzureStorageSyncConfig azureStorageSyncConfig;
   @JsonProperty("podInfo") private PodInfoConfig podInfoConfig;
   @JsonProperty("billingDataPipelineConfig") private BillingDataPipelineConfig billingDataPipelineConfig;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
@@ -29,4 +30,7 @@ public class BatchMainConfig {
   @JsonProperty("reportScheduleConfig") private ReportScheduleConfig reportScheduleConfig;
   @JsonProperty("baseUrl") private String baseUrl;
   @JsonProperty("scheduler-jobs-config") private SchedulerJobsConfig schedulerJobsConfig;
+  @JsonProperty("cfConfig") private CfConfig cfConfig;
+  @JsonProperty("cePythonService") private CEPythonServiceConfig cePythonServiceConfig;
+  @JsonProperty("banzaiConfig") private BanzaiConfig banzaiConfig;
 }

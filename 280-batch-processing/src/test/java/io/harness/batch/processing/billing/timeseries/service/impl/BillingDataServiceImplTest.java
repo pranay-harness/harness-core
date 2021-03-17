@@ -73,7 +73,6 @@ public class BillingDataServiceImplTest extends CategoryTest {
     when(mockConnection.prepareStatement(BillingDataTableNameProvider.replaceTableName(
              billingDataService.INSERT_STATEMENT, BatchJobType.INSTANCE_BILLING_HOURLY)))
         .thenReturn(statement);
-    when(mockConnection.prepareStatement(billingDataService.PURGE_DATA_QUERY)).thenReturn(statement);
     when(mockConnection.prepareStatement(
              BillingDataTableNameProvider.replaceTableName(
                  billingDataService.PREAGG_QUERY_PREFIX, BatchJobType.INSTANCE_BILLING_AGGREGATION)
@@ -151,7 +150,7 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testPurgeOldHourlyBillingData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    boolean insert = billingDataService.purgeOldHourlyBillingData();
+    boolean insert = billingDataService.purgeOldHourlyBillingData(BatchJobType.INSTANCE_BILLING_HOURLY);
     assertThat(insert).isTrue();
   }
 
@@ -170,8 +169,9 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGeneratePreAggBillingDataDBUnavailable() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    boolean result = billingDataService.generatePreAggBillingData(
-        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    boolean result = billingDataService.generatePreAggBillingData(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION,
+        BatchJobType.INSTANCE_BILLING_HOURLY);
     assertThat(result).isFalse();
   }
 
@@ -180,8 +180,9 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGeneratePreAggBillingData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    boolean result = billingDataService.generatePreAggBillingData(
-        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    boolean result = billingDataService.generatePreAggBillingData(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING_AGGREGATION,
+        BatchJobType.INSTANCE_BILLING);
     assertThat(result).isTrue();
   }
 
@@ -190,8 +191,8 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCleanPreAggBillingDataWithError() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(false);
-    boolean result = billingDataService.cleanPreAggBillingData(
-        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    boolean result = billingDataService.cleanPreAggBillingData(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING_AGGREGATION);
     assertThat(result).isFalse();
   }
 
@@ -200,8 +201,8 @@ public class BillingDataServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCleanPreAggBillingData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
-    boolean result = billingDataService.cleanPreAggBillingData(
-        ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS), Instant.ofEpochMilli(END_TIME_MILLIS));
+    boolean result = billingDataService.cleanPreAggBillingData(ACCOUNT_ID, Instant.ofEpochMilli(START_TIME_MILLIS),
+        Instant.ofEpochMilli(END_TIME_MILLIS), BatchJobType.INSTANCE_BILLING_AGGREGATION);
     assertThat(result).isTrue();
   }
 

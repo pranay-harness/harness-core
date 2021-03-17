@@ -179,6 +179,7 @@ public class GcpHelperService {
     }
   }
 
+  @SuppressWarnings("PMD")
   public String getDefaultCredentialsAccessToken(String taskTypeName) {
     OkHttpClient client = Http.getOkHttpClientBuilder()
                               .connectTimeout(10, TimeUnit.SECONDS)
@@ -203,6 +204,7 @@ public class GcpHelperService {
     }
   }
 
+  @SuppressWarnings("PMD")
   public String getClusterProjectId(String taskTypeName) {
     OkHttpClient client = Http.getOkHttpClientBuilder()
                               .connectTimeout(10, TimeUnit.SECONDS)
@@ -218,7 +220,6 @@ public class GcpHelperService {
       log.info(taskTypeName + " - Fetched projectId from metadata xxxxxxxx " + projectId);
       return projectId;
     } catch (IOException | NullPointerException e) {
-      log.error(taskTypeName + " - Failed to get projectId due to: ", e);
       throw new InvalidRequestException("Can not retrieve project-id from from cluster meta");
     }
   }

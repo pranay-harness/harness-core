@@ -12,6 +12,8 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -35,26 +37,10 @@ public class ExpressionEvaluatorUtils {
   public final int EXPANSION_LIMIT = 6 * 1024 * 1024; // 6 MB
   public final int EXPANSION_MULTIPLIER_LIMIT = 10;
   public final int DEPTH_LIMIT = 10;
+  private final int DEBUG_LENGTH_LIMIT = 1 * 1024 * 1024; // 1 MB
 
   private final JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
   private static final String REGEX = "[0-9]+";
-
-  public String substitute(EngineExpressionEvaluator expressionEvaluator, String expression, EngineJexlContext ctx) {
-    if (expression == null) {
-      return null;
-    }
-
-    String prefix = IdentifierName.random();
-    String suffix = IdentifierName.random();
-    Pattern pattern = Pattern.compile(prefix + REGEX + suffix);
-    EngineVariableResolver variableResolver = EngineVariableResolver.builder()
-                                                  .expressionEvaluator(expressionEvaluator)
-                                                  .ctx(ctx)
-                                                  .prefix(prefix)
-                                                  .suffix(suffix)
-                                                  .build();
-    return substitute(expression, ctx, variableResolver, pattern, true);
-  }
 
   public String substitute(
       ExpressionEvaluator expressionEvaluator, String expression, JexlContext ctx, VariableResolverTracker tracker) {
@@ -100,24 +86,44 @@ public class ExpressionEvaluatorUtils {
 
     String result = expression;
     int limit = Math.max(EXPANSION_LIMIT, EXPANSION_MULTIPLIER_LIMIT * expression.length());
+    // We go maximum upto DEPTH_LIMIT depth while resolving all the variables
     for (int i = 0; i < DEPTH_LIMIT; i++) {
+      // Lets use an example, we want to replace variables (i.e, ${..}) in expression - echo "${testVar}" && echo "1234"
+      // ctx has map having (testVar, example) as one of its enteries.
+      // pattern - ABCD[0-9]+WXYZ
       String original = result;
+      // This replaces all the variables (i.e, ${...}) in original string.
+      // Each variable in original is replaced with the corresponding output of EvaluateVariableResolver#lookup
+      // After this step: result - echo "ABCD1WXYZ" && echo "1234", ctx map has one more entry now (ABCD1WXYZ, example)
       result = substitutor.replace(new StringBuffer(original));
 
+      // Now we replace each pattern of type ABCD[0-9]+WXYZ in result string with its correct value.
       for (;;) {
         final Matcher matcher = pattern.matcher(result);
+        // If we don't find ABCD[0-9]+WXYZ pattern in string, it means there is nothing left to replace and we exit the
+        // outer loop
         if (!matcher.find()) {
           break;
         }
 
         StringBuffer sb = new StringBuffer();
+        // We iterate till all the matched patterns are replaced.
         do {
+          // Extract the current matched entry with pattern. After this step: name - ABCD1WXYZ
           String name = matcher.group(0);
+          // Get the value from ctx map. After this step: value - example
           String value = String.valueOf(ctx.get(name));
+          // '\' and '$' are escaped in the value. The matched entry with pattern is replaced with value.
+          // This appends the string to sb till the replaced matched entry.
+          // After this step: sb - echo "example
           matcher.appendReplacement(sb, value.replace("\\", "\\\\").replace("$", "\\$"));
         } while (matcher.find());
+        // This appends the left over string to sb. After this step: sb - echo "example" && echo "1234"
         matcher.appendTail(sb);
         result = sb.toString();
+      }
+      if (result.length() > DEBUG_LENGTH_LIMIT) {
+        log.info("The expression length: {} has exceeded {} limit.", result.length(), DEBUG_LENGTH_LIMIT);
       }
       if (result.equals(original)) {
         return result;
@@ -157,76 +163,86 @@ public class ExpressionEvaluatorUtils {
    * NotExpression annotation, it is skipped. String fields are rendered and ParameterFields are evaluated if they have
    * an expression.
    *
-   * @param o             the object to update
+   * @param obj           the object to update
    * @param functor       the functor which provides the evaluated and rendered values
    * @return the new object with updated objects (this can be done in-place or a new object can be returned)
    */
-  public Object updateExpressions(Object o, ExpressionResolveFunctor functor) {
-    Object updatedObj = updateExpressionsInternal(o, functor, new HashSet<>());
-    return updatedObj == null ? o : updatedObj;
+  public Object updateExpressions(Object obj, ExpressionResolveFunctor functor) {
+    return updateExpressionsInternal(obj, functor, 250, new HashSet<>());
   }
 
-  private Object updateExpressionsInternal(Object obj, ExpressionResolveFunctor functor, Set<Integer> cache) {
+  private Object updateExpressionsInternal(
+      Object obj, ExpressionResolveFunctor functor, int depth, Set<Integer> cache) {
+    if (depth <= 0) {
+      throw new CriticalExpressionEvaluationException("Recursion or too deep hierarchy in property interpretation");
+    }
     if (obj == null) {
       return null;
     }
 
     Class<?> c = obj.getClass();
     if (ClassUtils.isPrimitiveOrWrapper(c)) {
-      return null;
+      return obj;
     }
 
     if (obj instanceof String) {
-      return functor.renderExpression((String) obj);
+      return functor.processString((String) obj);
     }
 
     // In case of array, update in-place and return null.
     if (c.isArray()) {
       if (c.getComponentType().isPrimitive()) {
-        return null;
+        return obj;
       }
 
       int length = Array.getLength(obj);
       for (int i = 0; i < length; i++) {
         Object arrObj = Array.get(obj, i);
-        Object newArrObj = updateExpressionsInternal(arrObj, functor, cache);
+        Object newArrObj = updateExpressionsInternal(arrObj, functor, depth - 1, cache);
         if (newArrObj != null) {
           Array.set(obj, i, newArrObj);
         }
       }
-
-      return null;
+      return obj;
     }
 
     // In case of object, iterate over fields and update them in a similar manner.
-    boolean updated = updateExpressionFields(obj, functor, cache);
-    if (!updated) {
+    return updateExpressionFields(obj, functor, depth, cache);
+  }
+
+  private Object updateExpressionFields(Object o, ExpressionResolveFunctor functor, int depth, Set<Integer> cache) {
+    if (o == null) {
       return null;
     }
 
-    return obj;
-  }
-
-  private boolean updateExpressionFields(Object obj, ExpressionResolveFunctor functor, Set<Integer> cache) {
-    if (obj == null) {
-      return false;
-    }
-
-    int hashCode = System.identityHashCode(obj);
+    int hashCode = System.identityHashCode(o);
     if (cache.contains(hashCode)) {
-      return false;
+      return o;
     } else {
       cache.add(hashCode);
     }
 
     // Check if resolveFunctor has any custom handling for this field type.
-    ResolveObjectResponse resp = functor.processObject(obj);
+    ResolveObjectResponse resp = functor.processObject(o);
     if (resp.isProcessed()) {
-      return resp.isChanged();
+      return resp.getFinalValue();
     }
 
-    Class<?> c = obj.getClass();
-    boolean updated = false;
+    if (o instanceof List) {
+      List l = (List) o;
+      for (int i = 0; i < l.size(); i++) {
+        l.set(i, updateExpressionsInternal(l.get(i), functor, depth - 1, cache));
+      }
+      return o;
+    }
+
+    if (o instanceof Map) {
+      Map m = (Map) o;
+      m.replaceAll((k, v) -> updateExpressionsInternal(v, functor, depth - 1, cache));
+      return o;
+    }
+
+    Class<?> c = o.getClass();
     while (c.getSuperclass() != null) {
       for (Field f : c.getDeclaredFields()) {
         // Ignore field if skipPredicate returns true or if the field is static.
@@ -237,9 +253,7 @@ public class ExpressionEvaluatorUtils {
         boolean isAccessible = f.isAccessible();
         f.setAccessible(true);
         try {
-          if (updateExpressionFieldsInternal(obj, f, functor, cache)) {
-            updated = true;
-          }
+          updateExpressionFieldsSingleField(o, f, functor, depth - 1, cache);
           f.setAccessible(isAccessible);
         } catch (IllegalAccessException ignored) {
           log.error("Field [{}] is not accessible", f.getName());
@@ -247,24 +261,18 @@ public class ExpressionEvaluatorUtils {
       }
       c = c.getSuperclass();
     }
-
-    return updated;
+    return o;
   }
 
-  private boolean updateExpressionFieldsInternal(
-      Object o, Field f, ExpressionResolveFunctor functor, Set<Integer> cache) throws IllegalAccessException {
+  private void updateExpressionFieldsSingleField(Object o, Field f, ExpressionResolveFunctor functor, int depth,
+      Set<Integer> cache) throws IllegalAccessException {
     if (f == null) {
-      return false;
+      return;
     }
 
     Object obj = f.get(o);
-    Object updatedObj = updateExpressionsInternal(obj, functor, cache);
-    if (updatedObj != null) {
-      f.set(o, updatedObj);
-      return true;
-    }
-
-    return false;
+    Object updatedObj = updateExpressionsInternal(obj, functor, depth, cache);
+    f.set(o, updatedObj);
   }
 
   private StrSubstitutor getSubstitutor(StrLookup<Object> variableResolver, boolean newDelimiters) {

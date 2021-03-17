@@ -16,8 +16,10 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.DockerRegistryConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -39,28 +41,27 @@ public class DockerRegistryConfigYamlHandlerTest extends SettingValueConfigYamlH
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    String bambooProviderName = "Docker" + System.currentTimeMillis();
+    String dockerProviderName = "Docker" + System.currentTimeMillis();
 
     // 1. Create Docker verification record
-    SettingAttribute settingAttributeSaved = createDockerVerificationProvider(bambooProviderName);
-    assertThat(settingAttributeSaved.getName()).isEqualTo(bambooProviderName);
+    SettingAttribute settingAttributeSaved = createDockerVerificationProvider(dockerProviderName);
+    assertThat(settingAttributeSaved.getName()).isEqualTo(dockerProviderName);
 
-    testCRUD(generateSettingValueYamlConfig(bambooProviderName, settingAttributeSaved));
+    testCRUD(generateSettingValueYamlConfig(dockerProviderName, settingAttributeSaved));
   }
 
   @Test
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    String bambooProviderName = "Docker" + System.currentTimeMillis();
+    String dockerProviderName = "Docker" + System.currentTimeMillis();
 
     // 1. Create Docker verification provider record
-    SettingAttribute settingAttributeSaved = createDockerVerificationProvider(bambooProviderName);
-    testFailureScenario(generateSettingValueYamlConfig(bambooProviderName, settingAttributeSaved));
+    SettingAttribute settingAttributeSaved = createDockerVerificationProvider(dockerProviderName);
+    testFailureScenario(generateSettingValueYamlConfig(dockerProviderName, settingAttributeSaved));
   }
 
   private SettingAttribute createDockerVerificationProvider(String docketRegistryName) {
-    // Generate appdynamics verification connector
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
     return settingsService.save(
@@ -72,6 +73,7 @@ public class DockerRegistryConfigYamlHandlerTest extends SettingValueConfigYamlH
                            .accountId(ACCOUNT_ID)
                            .dockerRegistryUrl(url)
                            .username(userName)
+                           .delegateSelectors(Collections.singletonList("K8s"))
                            .password(createSecretText(ACCOUNT_ID, "password", password).toCharArray())
                            .build())
             .build());

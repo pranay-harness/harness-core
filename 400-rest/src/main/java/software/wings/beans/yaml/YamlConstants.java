@@ -21,6 +21,7 @@ public interface YamlConstants {
   String APPLICATIONS_FOLDER = "Applications";
   String SERVICES_FOLDER = "Services";
   String MANIFEST_FOLDER = "Manifests";
+  String MANIFEST_FOLDER_APP_SERVICE = "App Service Settings";
   String MANIFEST_FILE_FOLDER = "Files";
   String MANIFEST_FILE = "MANIFEST_FILE";
   String APPLICATIONS_MANIFEST = "ApplicationManifest";
@@ -132,4 +133,8 @@ public interface YamlConstants {
 
   // ECS PARAMS
   String ECS_NOT_USED = "ECS_NOT_USED";
+
+  // Governance Folder
+  String GOVERNANCE_FOLDER = "Governance";
+  String DEPLOYMENT_GOVERNANCE_FOLDER = "Deployment Governance";
 }

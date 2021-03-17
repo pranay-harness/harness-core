@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.service;
+
+option java_multiple_files = true;
+
+service InterruptProtoService {
+  rpc handleAbort(InterruptRequest) returns (InterruptResponse);
+}
+
+message InterruptRequest {
+  string notifyId = 1;
+}
+
+message InterruptResponse {
+  string dummy = 1;
+}

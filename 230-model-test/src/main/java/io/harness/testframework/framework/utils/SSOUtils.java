@@ -51,14 +51,13 @@ public class SSOUtils {
     groupSettings.setSearchFilter("(objectClass=groupOfUniqueNames)");
     ldapGroupSettingsList.add(groupSettings);
 
-    LdapSettings ldapSettings = LdapSettings.builder()
-                                    .connectionSettings(ldapConnectionSettings)
-                                    .displayName("LDAP")
-                                    .groupSettingsList(ldapGroupSettingsList)
-                                    .userSettingsList(ldapUserSettingsList)
-                                    .accountId(accountId)
-                                    .build();
-    return ldapSettings;
+    return LdapSettings.builder()
+        .connectionSettings(ldapConnectionSettings)
+        .displayName("LDAP")
+        .groupSettingsList(ldapGroupSettingsList)
+        .userSettingsList(ldapUserSettingsList)
+        .accountId(accountId)
+        .build();
   }
 
   public static String getLdapId(Object SSOConfig) {

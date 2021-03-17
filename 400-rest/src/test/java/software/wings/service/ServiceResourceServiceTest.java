@@ -10,6 +10,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
@@ -39,6 +40,7 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
+import static software.wings.beans.command.CommandType.OTHER;
 import static software.wings.beans.command.CommandType.START;
 import static software.wings.beans.command.CommandType.STOP;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
@@ -79,6 +81,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_VARIABLE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_VERSION;
+import static software.wings.utils.WingsTestConstants.UUID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
@@ -171,6 +174,7 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.BackgroundJobScheduler;
@@ -3002,6 +3006,52 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .isThrownBy(
             () -> spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName()))
         .withMessageContaining(sc_1.getName());
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category(UnitTests.class)
+  public void testGetFlattenNestedCommandUnits() {
+    final Command nestedCommand =
+        Command.Builder.aCommand()
+            .withCommandType(CommandType.OTHER)
+            .withName("start")
+            .withTemplateReference(TemplateReference.builder().templateUuid(UUID).templateVersion(4L).build())
+            .build();
+    final Command parentCommand = Command.Builder.aCommand()
+                                      .withCommandType(OTHER)
+                                      .withName("stop")
+                                      .withCommandUnits(Collections.singletonList(nestedCommand))
+                                      .build();
+    final Map<String, EntityVersion> envIdVersionMap =
+        ImmutableMap.<String, EntityVersion>of(ENV_ID, EntityVersion.Builder.anEntityVersion().withVersion(1).build());
+    ServiceCommand sc_1 = ServiceCommand.Builder.aServiceCommand()
+                              .withUuid("uuid_1")
+                              .withAppId(APP_ID)
+                              .withServiceId(SERVICE_ID)
+                              .withName(parentCommand.getName())
+                              .withTargetToAllEnv(true)
+                              .withCommand(parentCommand)
+                              .withEnvIdVersionMap(envIdVersionMap)
+                              .build();
+
+    when(templateService.get(any(), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Collections.singletonList(
+                                                ExecCommandUnit.Builder.anExecCommandUnit().withName("exec").build()))
+                                            .build())
+                        .build());
+    List<ServiceCommand> serviceCommands = Arrays.asList(sc_1);
+    doReturn(serviceCommands).when(spyServiceResourceService).getServiceCommands(anyString(), anyString());
+    doReturn(PageResponseBuilder.aPageResponse().withResponse(serviceCommands).build())
+        .when(mockWingsPersistence)
+        .query(any(), any());
+    doReturn(parentCommand).when(commandService).getCommand(APP_ID, sc_1.getUuid(), sc_1.getVersionForEnv(ENV_ID));
+    List<CommandUnit> commandUnits =
+        spyServiceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, sc_1.getName());
+    assertThat(commandUnits).hasSize(1);
+    assertThat(commandUnits.get(0).getName()).isEqualTo("exec");
   }
 
   @Test

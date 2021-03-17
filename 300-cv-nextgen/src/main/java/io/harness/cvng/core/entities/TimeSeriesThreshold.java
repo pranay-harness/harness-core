@@ -37,7 +37,8 @@ import org.mongodb.morphia.annotations.Id;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity(value = "timeSeriesThresholds", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-public class TimeSeriesThreshold implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class TimeSeriesThreshold
+    implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

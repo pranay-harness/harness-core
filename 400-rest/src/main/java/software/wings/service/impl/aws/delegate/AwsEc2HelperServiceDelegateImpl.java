@@ -9,6 +9,8 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -58,6 +60,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Singleton
+@TargetModule(Module._930_DELEGATE_TASKS)
 public class AwsEc2HelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEc2HelperServiceDelegate {
   private static final String NAME = "Name";

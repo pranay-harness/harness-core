@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -42,6 +43,7 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.utils.RepositoryFormat;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.util.concurrent.FakeTimeLimiter;
@@ -60,7 +62,7 @@ import javax.xml.stream.XMLStreamException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.joor.Reflect;
-import org.junit.Ignore;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,10 +70,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-/**
- * Created by srinivas on 3/30/17.
- */
-@Ignore("TODO: This test is failing in bazel. Changes are required from the owner to make it work in bazel")
 public class NexusServiceTest extends WingsBaseTest {
   private static final String XML_RESPONSE = "<indexBrowserTreeViewResponse>\n"
       + "  <data>\n"
@@ -571,25 +569,38 @@ public class NexusServiceTest extends WingsBaseTest {
   /**
    * The Wire mock rule.
    */
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8881);
-  @Rule public WireMockRule wireMockRule2 = new WireMockRule(8882);
-  @Rule public WireMockRule wireMockRule3 = new WireMockRule(8883);
+  @Rule
+  public WireMockRule wireMockRule = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  @Rule
+  public WireMockRule wireMockRule2 = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  @Rule
+  public WireMockRule wireMockRule3 = new WireMockRule(
+      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
 
-  private static final String DEFAULT_NEXUS_URL = "http://localhost:8881/nexus/";
+  private String DEFAULT_NEXUS_URL;
 
   @Inject @InjectMocks private NexusService nexusService;
 
-  private NexusConfig nexusConfig =
-      NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("wings123!".toCharArray()).build();
-  private NexusConfig nexusThreeConfig = NexusConfig.builder()
-                                             .nexusUrl(DEFAULT_NEXUS_URL)
-                                             .version("3.x")
-                                             .username("admin")
-                                             .password("wings123!".toCharArray())
-                                             .build();
+  private NexusConfig nexusConfig;
+  private NexusConfig nexusThreeConfig;
 
   @Inject @InjectMocks DelegateFileManager delegateFileManager;
   @Mock private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
+
+  @Before
+  public void setup() {
+    DEFAULT_NEXUS_URL = String.format("http://localhost:%d/nexus/", wireMockRule.port());
+    nexusConfig =
+        NexusConfig.builder().nexusUrl(DEFAULT_NEXUS_URL).username("admin").password("wings123!".toCharArray()).build();
+    nexusThreeConfig = NexusConfig.builder()
+                           .nexusUrl(DEFAULT_NEXUS_URL)
+                           .version("3.x")
+                           .username("admin")
+                           .password("wings123!".toCharArray())
+                           .build();
+  }
 
   @Test
   @Owner(developers = SRINIVAS)
@@ -728,6 +739,21 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
+  public void shouldGetRepositoriesError404() {
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl(String.format("http://localhost:%d/nexus3/", wireMockRule.port()))
+                             .version("2.x")
+                             .username("admin")
+                             .password("wings123!".toCharArray())
+                             .build();
+    assertThatThrownBy(() -> nexusService.getRepositories(config, null))
+        .isInstanceOf(InvalidArtifactServerException.class)
+        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+  }
+
+  @Test
+  @Owner(developers = SRINIVAS)
+  @Category(UnitTests.class)
   public void shouldGetDockerRepositoriesNexus2xError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories"))
                              .willReturn(aResponse()
@@ -736,7 +762,7 @@ public class NexusServiceTest extends WingsBaseTest {
                                              .withHeader("Content-Type", "application/xml")));
     assertThatThrownBy(() -> nexusService.getRepositories(nexusConfig, null, RepositoryFormat.docker.name()))
         .isInstanceOf(WingsException.class)
-        .hasMessageContaining("INVALID_ARTIFACT_SERVER");
+        .hasMessageContaining(INVALID_ARTIFACT_SERVER.name());
   }
 
   @Test
@@ -784,7 +810,6 @@ public class NexusServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = SRINIVAS)
   @Category(UnitTests.class)
-  @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldGetArtifactPathsByRepoStartsWithUrlError() {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/service/local/repositories/releases/content/fakepath"))
                              .willReturn(aResponse()
@@ -965,23 +990,24 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar",
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .containsExactly("http://localhost:" + wireMockRule.port()
+                + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar",
+            "http://localhost:" + wireMockRule.port()
+                + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.0.jar");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
   }
 
   @Test
@@ -1003,15 +1029,15 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .contains("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
   }
 
   @Test
@@ -1033,15 +1059,15 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(2)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
+        .contains("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("rest-client-3.1.2-capsule.jar");
     assertThat(buildDetails.get(1).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
+        .isEqualTo("http://localhost:" + wireMockRule.port()
+            + "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&c=capsule");
   }
 
   @Test
@@ -1541,7 +1567,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNonMatchingServerAndVersionWithAuthentication() {
     NexusConfig config = NexusConfig.builder()
-                             .nexusUrl("http://localhost:8882/")
+                             .nexusUrl(String.format("http://localhost:%d/", wireMockRule2.port()))
                              .version("3.x")
                              .username("admin")
                              .password("wings123!".toCharArray())
@@ -1575,7 +1601,10 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testNonMatchingServerAndVersionWithoutAuthentication() {
-    NexusConfig config = NexusConfig.builder().nexusUrl("http://localhost:8882/").version("3.x").build();
+    NexusConfig config = NexusConfig.builder()
+                             .nexusUrl(String.format("http://localhost:%d/", wireMockRule2.port()))
+                             .version("3.x")
+                             .build();
     nexusService.isRunning(config, null);
   }
 
@@ -1584,7 +1613,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testInvalidCredentials() {
     NexusConfig config = NexusConfig.builder()
-                             .nexusUrl("http://localhost:8883/")
+                             .nexusUrl(String.format("http://localhost:%d/", wireMockRule3.port()))
                              .version("3.x")
                              .username("admin")
                              .password("wings123!".toCharArray())
@@ -1604,7 +1633,8 @@ public class NexusServiceTest extends WingsBaseTest {
     wireMockRule.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4, 5})));
     long size = nexusService.getFileSize(nexusConfig, null, "myartifact-1.0.war",
-        "http://localhost:8881/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
+        "http://localhost:" + wireMockRule.port()
+            + "/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
     assertThat(size).isEqualTo(5);
   }
 
@@ -1615,7 +1645,8 @@ public class NexusServiceTest extends WingsBaseTest {
     wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war"))
                               .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     long size = nexusService.getFileSize(nexusThreeConfig, null, "myartifact-1.0.war",
-        "http://localhost:8883/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war");
+        String.format("http://localhost:%d/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.war",
+            wireMockRule3.port()));
     assertThat(size).isEqualTo(4);
   }
 
@@ -1630,7 +1661,9 @@ public class NexusServiceTest extends WingsBaseTest {
             "/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources"))
                              .willReturn(aResponse().withBody(content.getBytes())));
     Pair<String, InputStream> pair = nexusService.downloadArtifactByUrl(nexusConfig, null, fileName,
-        "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources");
+        String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar&c=sources",
+            wireMockRule.port()));
     assertThat(pair).isNotNull();
     assertThat(pair.getKey()).isEqualTo(fileName);
     String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
@@ -1646,7 +1679,8 @@ public class NexusServiceTest extends WingsBaseTest {
     wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar"))
                               .willReturn(aResponse().withBody(content.getBytes())));
     Pair<String, InputStream> pair = nexusService.downloadArtifactByUrl(nexusThreeConfig, null, fileName,
-        "http://localhost:8883/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar");
+        String.format("http://localhost:%d/nexus/repository/maven-releases/mygroup/myartifact/1.0/myartifact-1.0.jar",
+            wireMockRule3.port()));
     assertThat(pair).isNotNull();
     assertThat(pair.getKey()).isEqualTo(fileName);
     String text = IOUtils.toString(pair.getRight(), StandardCharsets.UTF_8.name());
@@ -1667,10 +1701,33 @@ public class NexusServiceTest extends WingsBaseTest {
     artifactMetadata.put(ArtifactMetadataKeys.nexusPackageName, "npm-app1");
     artifactMetadata.put(ArtifactMetadataKeys.repositoryName, "npm-test");
     String content = "file content";
-    String fileName = "npm-app1-1.0.0.tgz";
     ListNotifyResponseData listNotifyResponseData = new ListNotifyResponseData();
     DelegateFile delegateFile = DelegateFile.Builder.aDelegateFile().withFileId("npm-app1-1.0.0.tgz").build();
     when(delegateFileManager.upload(any(), any())).thenReturn(delegateFile);
+    wireMockRule.stubFor(
+        get(urlEqualTo("/nexus/service/rest/v1/search/assets?repository=npm-test&name=npm-app1&version=1.0.0"))
+            .willReturn(
+                aResponse()
+                    .withBody("{\n"
+                        + "  \"items\": [\n"
+                        + "    {\n"
+                        + "      \"downloadUrl\": \"http://localhost:" + wireMockRule3.port()
+                        + "/nexus/repository/npm-test/npm-app1/-/npm-app1-1.0.0.tgz\",\n"
+                        + "      \"path\": \"npm-app1/-/npm-app1-1.0.0.tgz\",\n"
+                        + "      \"id\": \"bnBtLXRlc3Q6OTEyZDBmZTdiODE5MjM5MjY2MTI1MTBiOGYyMTQ0NGI\",\n"
+                        + "      \"repository\": \"npm-test\",\n"
+                        + "      \"format\": \"npm\",\n"
+                        + "      \"checksum\": {\n"
+                        + "        \"sha1\": \"1a65e4a52b3e8387bfc5e47cf0544d4d7360df31\",\n"
+                        + "        \"sha256\": \"392a08fb25d6d9ba75ef2ec104332dbc6fccee12ffa4d8da13b5070de85deea6\",\n"
+                        + "        \"sha512\": \"cb8b62a94d5d3675ea1edd9398df8ee4278b6972fcde9f117fc033c493faeb4b8e26872f6345fab34ff20ad7e926234f171e4997f4df7bfce2245846c0fc348c\",\n"
+                        + "        \"md5\": \"7fe206f8706959d8772c9c9c9cf23aba\"\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  ],\n"
+                        + "  \"continuationToken\": null\n"
+                        + "}")
+                    .withStatus(200)));
     wireMockRule3.stubFor(get(urlEqualTo("/nexus/repository/npm-test/npm-app1/-/npm-app1-1.0.0.tgz"))
                               .willReturn(aResponse().withBody(content.getBytes())));
     nexusService.downloadArtifacts(
@@ -1727,22 +1784,25 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war");
+        .containsExactly(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0.war");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=war&e=war",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(1))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources",
+            wireMockRule.port()));
   }
 
   @Test
@@ -1763,15 +1823,17 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .containsExactly(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+        .containsExactly(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip&c=sources",
+            wireMockRule.port()));
   }
 
   @Test
@@ -1792,15 +1854,17 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources");
+        .contains(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&c=sources",
+            wireMockRule.port()));
   }
 
   @Test
@@ -1821,15 +1885,17 @@ public class NexusServiceTest extends WingsBaseTest {
     assertThat(buildDetails)
         .hasSize(1)
         .extracting(BuildDetails::getBuildUrl)
-        .contains(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip");
+        .contains(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip",
+            wireMockRule.port()));
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
         .isEqualTo("todolist-4.0-sources.zip");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getUrl)
-        .isEqualTo(
-            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip");
+        .isEqualTo(String.format(
+            "http://localhost:%d/nexus/service/local/artifact/maven/content?r=releases&g=mygroup&a=todolist&v=4.0&p=zip&e=zip",
+            wireMockRule.port()));
   }
 
   @Test

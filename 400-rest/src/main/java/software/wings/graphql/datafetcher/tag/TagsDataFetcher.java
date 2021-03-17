@@ -4,6 +4,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 
 import software.wings.beans.HarnessTagLink;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@TargetModule(Module._380_CG_GRAPHQL)
 public class TagsDataFetcher extends AbstractArrayDataFetcher<QLTag, QLTagsQueryParameters> {
   @Inject HPersistence persistence;
 

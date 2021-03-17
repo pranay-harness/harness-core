@@ -18,6 +18,7 @@ public class SlackApprovalParams {
   private final String routingId;
   private final String appId;
   private final String appName;
+  private final String nonFormattedAppName;
   private final String workflowId;
   private final String deploymentId;
   private final String approvalId;
@@ -53,6 +54,7 @@ public class SlackApprovalParams {
     private String routingId;
     private String appId;
     private String appName;
+    private String nonFormattedAppName;
     private String workflowId;
     private String deploymentId;
     private String approvalId;

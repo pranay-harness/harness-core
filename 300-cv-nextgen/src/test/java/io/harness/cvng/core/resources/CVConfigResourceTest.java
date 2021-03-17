@@ -7,7 +7,7 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static javax.ws.rs.client.Entity.entity;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.entities.CVConfig;
@@ -29,7 +29,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CVConfigResourceTest extends CvNextGenTest {
+public class CVConfigResourceTest extends CvNextGenTestBase {
   @Inject private Injector injector;
   @Inject private static CVConfigResource cvConfigResource = new CVConfigResource();
 
@@ -186,6 +186,7 @@ public class CVConfigResourceTest extends CvNextGenTest {
     assertThat(saveResponse.getStatus()).isEqualTo(500);
     assertThat(
         saveResponse.readEntity(new GenericType<RestResponse<CVConfig>>() {}).getResponseMessages().get(0).getMessage())
+
         .contains("monitoringSourceName should not be null");
   }
 

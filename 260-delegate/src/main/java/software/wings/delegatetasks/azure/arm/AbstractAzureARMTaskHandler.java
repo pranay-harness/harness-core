@@ -6,21 +6,24 @@ import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
-import io.harness.azure.model.AzureConstants;
 import io.harness.azure.utility.AzureResourceUtility;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
+import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
+import io.harness.exception.AzureClientException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
-import io.harness.logging.LogLevel;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(Module._930_DELEGATE_TASKS)
 public abstract class AbstractAzureARMTaskHandler {
   AzureTaskExecutionResponse executeTask(AzureARMTaskParameters azureARMTaskParameters, AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient) {
@@ -29,6 +32,8 @@ public abstract class AbstractAzureARMTaskHandler {
           executeTaskInternal(azureARMTaskParameters, azureConfig, logStreamingTaskClient);
 
       return handleARMTaskResponse(azureARMTaskResponse);
+    } catch (AzureClientException ex) {
+      throw ex;
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       if (azureARMTaskParameters.isSyncTask()) {
@@ -63,6 +68,7 @@ public abstract class AbstractAzureARMTaskHandler {
 
   private AzureTaskExecutionResponse handleFailureARMTaskResponse(String message) {
     return AzureTaskExecutionResponse.builder()
+        .azureTaskResponse(AzureARMDeploymentResponse.builder().errorMsg(message).build())
         .errorMessage(message)
         .commandExecutionStatus(CommandExecutionStatus.FAILURE)
         .build();
@@ -75,17 +81,6 @@ public abstract class AbstractAzureARMTaskHandler {
     log.error(format("Exception: [%s] while processing Azure ARM task: [%s].", message,
                   azureARMTaskParameters.getCommandType().name()),
         ex);
-  }
-
-  protected void markDeploymentStatusAsSuccess(
-      AzureARMTaskParameters azureARMTaskParameters, ILogStreamingTaskClient logStreamingTaskClient) {
-    if (azureARMTaskParameters.isSyncTask()) {
-      return;
-    }
-    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(AzureConstants.DEPLOYMENT_STATUS);
-    logCallback.saveExecutionLog(String.format("The following task - [%s] completed successfully",
-                                     azureARMTaskParameters.getCommandType().name()),
-        LogLevel.INFO, CommandExecutionStatus.SUCCESS);
   }
 
   protected abstract AzureARMTaskResponse executeTaskInternal(AzureARMTaskParameters azureARMTaskParameters,

@@ -1,5 +1,8 @@
 package software.wings.graphql.schema.type.instance;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.graphql.schema.type.artifact.QLArtifact;
 
 import lombok.Builder;
@@ -8,6 +11,7 @@ import lombok.Value;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLAutoScalingGroupInstance extends QLAbstractEc2Instance {
   private String autoScalingGroupName;
 

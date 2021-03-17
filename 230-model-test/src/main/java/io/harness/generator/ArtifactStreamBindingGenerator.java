@@ -1,5 +1,7 @@
 package io.harness.generator;
 
+import static io.harness.govern.IgnoreThrowable.ignoredOnPurpose;
+
 import io.harness.exception.InvalidRequestException;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -44,6 +46,7 @@ public class ArtifactStreamBindingGenerator {
     try {
       return artifactStreamServiceBindingService.get(appId, serviceId, serviceVariableName);
     } catch (InvalidRequestException e) {
+      ignoredOnPurpose(e);
     }
     return null;
   }

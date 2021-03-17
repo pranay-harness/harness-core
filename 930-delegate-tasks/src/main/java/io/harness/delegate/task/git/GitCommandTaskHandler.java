@@ -31,7 +31,6 @@ public class GitCommandTaskHandler {
 
   public ConnectorValidationResult validateGitCredentials(GitConfigDTO gitConnector, String accountIdentifier,
       List<EncryptedDataDetail> encryptionDetailList, SshSessionConfig sshSessionConfig) {
-    decryptionService.decrypt(gitConnector.getGitAuth(), encryptionDetailList);
     GitCommandExecutionResponse delegateResponseData =
         (GitCommandExecutionResponse) handleValidateTask(gitConnector, accountIdentifier, sshSessionConfig);
     return ConnectorValidationResult.builder()

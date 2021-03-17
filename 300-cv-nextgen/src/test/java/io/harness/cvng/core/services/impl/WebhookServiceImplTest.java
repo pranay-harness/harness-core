@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.PRAVEEN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.core.entities.WebhookToken;
 import io.harness.cvng.core.entities.WebhookToken.WebhookTokenKeys;
@@ -20,7 +20,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class WebhookServiceImplTest extends CvNextGenTest {
+public class WebhookServiceImplTest extends CvNextGenTestBase {
   @Inject HPersistence hPersistence;
   @Inject WebhookService webhookService;
 

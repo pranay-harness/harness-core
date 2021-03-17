@@ -1,5 +1,6 @@
 package io.harness.connector.entities;
 
+import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
@@ -10,8 +11,10 @@ import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
@@ -34,6 +37,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -41,18 +45,19 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "ConnectorKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@StoreIn(DbAliases.NG_MANAGER)
 @Document("connectors")
+@Persistent
 public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;
   @NotEmpty @EntityName String name;
-  // todo deepak: Where we should keep the scope, it will be used by everyone
   @NotEmpty io.harness.encryption.Scope scope;
   String description;
-  @FdIndex @Trimmed @NotEmpty String accountIdentifier;
+  @Trimmed @NotEmpty String accountIdentifier;
   @Trimmed String orgIdentifier;
   @Trimmed String projectIdentifier;
-  @FdIndex @NotEmpty String fullyQualifiedIdentifier;
+  @FdUniqueIndex @NotEmpty String fullyQualifiedIdentifier;
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
@@ -85,18 +90,20 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_fullyQualifiedIdentifier")
-                 .unique(true)
-                 .field(ConnectorKeys.fullyQualifiedIdentifier)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_Index")
-                 .fields(Arrays.asList(
-                     ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier, ConnectorKeys.projectIdentifier))
+                 .name("accountId_orgId_projectId_name_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.name))
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("fullyQualifiedIdentifier_deleted_Index")
                  .fields(Arrays.asList(ConnectorKeys.fullyQualifiedIdentifier, ConnectorKeys.deleted))
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_orgId_projectId_type_status_deletedAt_decreasing_sort_Index")
+                 .fields(Arrays.asList(ConnectorKeys.accountIdentifier, ConnectorKeys.orgIdentifier,
+                     ConnectorKeys.projectIdentifier, ConnectorKeys.type, ConnectorKeys.connectionStatus,
+                     ConnectorKeys.deleted))
+                 .descSortField(ConnectorKeys.createdAt)
                  .build())
         .build();
   }

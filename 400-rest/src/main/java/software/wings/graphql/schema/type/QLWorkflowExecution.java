@@ -2,7 +2,9 @@ package software.wings.graphql.schema.type;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.deployment.QLDeploymentTag;
 import software.wings.graphql.schema.type.artifact.QLArtifact;
@@ -19,6 +21,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLWorkflowExecutionKeys")
 @Scope(ResourceType.APPLICATION)
+@TargetModule(Module._380_CG_GRAPHQL)
 public class QLWorkflowExecution implements QLExecution {
   private String id;
   private String workflowId;
@@ -27,6 +30,7 @@ public class QLWorkflowExecution implements QLExecution {
   private Long endedAt;
   private QLExecutionStatus status;
   private List<QLArtifact> artifacts;
+  private List<QLArtifact> rollbackArtifacts;
   private QLCause cause;
   private String notes;
   private String appId;

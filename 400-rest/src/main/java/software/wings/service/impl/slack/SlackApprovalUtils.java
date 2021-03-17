@@ -81,7 +81,7 @@ public class SlackApprovalUtils {
     Map<String, String> sessionTimeoutTemplateFillers = new HashMap<>();
     sessionTimeoutTemplateFillers.put(
         SlackApprovalMessageKeys.WORKFLOW_EXECUTION_NAME, approvalParams.getWorkflowExecutionName());
-    sessionTimeoutTemplateFillers.put(SlackApprovalMessageKeys.APP_NAME, approvalParams.getAppName());
+    sessionTimeoutTemplateFillers.put(SlackApprovalMessageKeys.APP_NAME, approvalParams.getNonFormattedAppName());
     String sessionTimedOutMessage = createMessageFromTemplate(sessionTimeoutTemplateUrl, sessionTimeoutTemplateFillers);
 
     if (!approvalParams.isConfirmation()) {

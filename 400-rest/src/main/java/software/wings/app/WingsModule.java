@@ -8,6 +8,8 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
@@ -16,6 +18,8 @@ import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
+import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingServiceImpl;
 import io.harness.ccm.billing.bigquery.BigQueryService;
@@ -45,11 +49,8 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.cf.ApiException;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.client.api.CfClient;
-import io.harness.cf.client.api.CfClientException;
-import io.harness.cf.client.api.exception.CFException;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -69,6 +70,8 @@ import io.harness.datahandler.services.AdminUserService;
 import io.harness.datahandler.services.AdminUserServiceImpl;
 import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
+import io.harness.delegate.DelegateConfigurationServiceProvider;
+import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.encryptors.CustomEncryptor;
@@ -87,6 +90,8 @@ import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobServiceImpl;
 import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
+import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
+import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.InstanceReconServiceImpl;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
@@ -143,6 +148,8 @@ import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secretmanagers.SecretsManagerRBACServiceImpl;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsAuditServiceImpl;
+import io.harness.secrets.SecretsDelegateCacheHelperService;
+import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheService;
 import io.harness.secrets.SecretsDelegateCacheServiceImpl;
 import io.harness.secrets.SecretsFileService;
@@ -160,6 +167,8 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.impl.DelegateCacheImpl;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -169,6 +178,7 @@ import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
+import software.wings.alerts.AlertModule;
 import software.wings.backgroundjobs.AccountBackgroundJobService;
 import software.wings.backgroundjobs.AccountBackgroundJobServiceImpl;
 import software.wings.beans.AwsConfig;
@@ -270,6 +280,8 @@ import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.licensing.LicenseService;
 import software.wings.licensing.LicenseServiceImpl;
+import software.wings.provider.NoopDelegateConfigurationServiceProviderImpl;
+import software.wings.provider.NoopDelegatePropertiesServiceProviderImpl;
 import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.resources.graphql.GraphQLUtils;
@@ -402,6 +414,7 @@ import software.wings.service.impl.aws.manager.AwsIamHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsLambdaHelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsRoute53HelperServiceManagerImpl;
 import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
+import software.wings.service.impl.azure.manager.AzureARMManagerImpl;
 import software.wings.service.impl.azure.manager.AzureAppServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerImpl;
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
@@ -457,7 +470,9 @@ import software.wings.service.impl.security.KmsServiceImpl;
 import software.wings.service.impl.security.LocalSecretManagerServiceImpl;
 import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
 import software.wings.service.impl.security.NGSecretManagerServiceImpl;
+import software.wings.service.impl.security.SSHVaultServiceImpl;
 import software.wings.service.impl.security.SecretDecryptionServiceImpl;
+import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerConfigServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
@@ -612,6 +627,7 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsRoute53HelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsS3HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureARMManager;
 import software.wings.service.intfc.azure.manager.AzureAppServiceManager;
 import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
@@ -661,6 +677,8 @@ import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
+import software.wings.service.intfc.security.SSHVaultService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.servicenow.ServiceNowService;
@@ -728,10 +746,9 @@ import org.jetbrains.annotations.NotNull;
 
 /**
  * Guice Module for initializing all beans.
- *
- * @author Rishi
  */
 @Slf4j
+@TargetModule(Module._360_CG_MANGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -838,6 +855,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
         configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
     install(PersistentLockModule.getInstance());
+    install(AlertModule.getInstance());
+
     install(new AbstractModule() {
       @Override
       protected void configure() {
@@ -852,6 +871,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+          bind(Producer.class)
+              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
         } else {
           bind(Producer.class)
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -865,6 +887,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
               .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
               .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
                   EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE));
+          bind(Producer.class)
+              .annotatedWith(Names.named(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP))
+              .toInstance(RedisProducer.of(EventsFrameworkConstants.USER_ACCOUNT_MEMBERSHIP, redisConfig,
+                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE));
         }
       }
     });
@@ -989,6 +1015,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AzureResourceService.class).to(AzureResourceServiceImpl.class);
     bind(AzureMachineImageBuildService.class).to(AzureMachineImageBuildServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
+    bind(DelegateCache.class).to(DelegateCacheImpl.class);
     bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(WebHookService.class).to(WebHookServiceImpl.class);
@@ -1028,6 +1055,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
     bind(AzureVMSSHelperServiceManager.class).to(AzureVMSSHelperServiceManagerImpl.class);
     bind(AzureAppServiceManager.class).to(AzureAppServiceManagerImpl.class);
+    bind(AzureARMManager.class).to(AzureARMManagerImpl.class);
     bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
     bind(DelegateProfileManagerService.class).to(DelegateProfileManagerServiceImpl.class);
     bind(AwsCFHelperServiceManager.class).to(AwsCFHelperServiceManagerImpl.class);
@@ -1265,6 +1293,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CustomDeploymentTypeService.class).to(CustomDeploymentTypeServiceImpl.class);
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
+
+    bind(AnomalyService.class).to(AnomalyServiceImpl.class);
+
     ApiBlocker apiBlocker = new ApiBlocker();
     requestInjection(apiBlocker);
     bindInterceptor(Matchers.any(), Matchers.annotatedWith(RestrictedApi.class), apiBlocker);
@@ -1306,6 +1337,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
+    bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
   }
 
   private void bindFeatures() {
@@ -1445,9 +1477,13 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
     bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
+    bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
+    bind(DelegatePropertiesServiceProvider.class).to(NoopDelegatePropertiesServiceProviderImpl.class);
+    bind(DelegateConfigurationServiceProvider.class).to(NoopDelegateConfigurationServiceProviderImpl.class);
     bind(SecretsDelegateCacheService.class).to(SecretsDelegateCacheServiceImpl.class);
     bind(SecretManagerConfigService.class).to(SecretManagerConfigServiceImpl.class);
     bind(VaultService.class).to(VaultServiceImpl.class);
+    bind(SSHVaultService.class).to(SSHVaultServiceImpl.class);
     bind(AwsSecretsManagerService.class).to(AwsSecretsManagerServiceImpl.class);
     bind(KmsService.class).to(KmsServiceImpl.class);
     bind(CyberArkService.class).to(CyberArkServiceImpl.class);
@@ -1461,6 +1497,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(SecretsAuditService.class).to(SecretsAuditServiceImpl.class);
     bind(SecretsRBACService.class).to(SecretsRBACServiceImpl.class);
     bind(SecretsManagerRBACService.class).to(SecretsManagerRBACServiceImpl.class);
+    bind(SecretManagementDelegateService.class).to(SecretManagementDelegateServiceImpl.class);
 
     binder()
         .bind(VaultEncryptor.class)
@@ -1551,12 +1588,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     log.info("Using CF API key {}", cfClientConfig.getApiKey());
     String apiKey = cfClientConfig.getApiKey();
 
-    try {
-      return new CfClient(apiKey);
-    } catch (CfClientException | ApiException | CFException e) {
-      log.error("Failed to initialize the CF client, {}", e.getMessage());
-    }
-    return null;
+    return new CfClient(apiKey);
   }
 
   @Provides

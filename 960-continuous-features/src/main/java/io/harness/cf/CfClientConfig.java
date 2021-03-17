@@ -7,4 +7,5 @@ import lombok.Data;
 @Builder
 public class CfClientConfig {
   private String apiKey;
+  private String baseUrl;
 }

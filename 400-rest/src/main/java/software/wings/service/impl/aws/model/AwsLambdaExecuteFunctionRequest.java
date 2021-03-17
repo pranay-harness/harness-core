@@ -2,6 +2,8 @@ package software.wings.service.impl.aws.model;
 
 import static software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType.EXECUTE_LAMBDA_FUNCTION;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.api.AwsLambdaExecutionData;
@@ -15,6 +17,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class AwsLambdaExecuteFunctionRequest extends AwsLambdaRequest {
   private String functionName;
   private String qualifier;

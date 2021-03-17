@@ -1,5 +1,7 @@
 package io.harness.stateutils.buildstate;
 
+import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
 import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
 import static io.harness.common.CICommonPodConstants.STEP_EXEC;
 import static io.harness.common.CIExecutionConstants.ACCESS_KEY_MINIO_VARIABLE;
@@ -40,7 +42,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.GeneralException;
 import io.harness.executionplan.CIExecutionPlanTestHelper;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -56,6 +58,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tiserviceclient.TIServiceUtils;
+import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -72,7 +75,7 @@ import org.mockito.Mock;
 import retrofit2.Call;
 import retrofit2.Response;
 @Slf4j
-public class K8BuildSetupUtilsTest extends CIExecutionTest {
+public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Inject private CIExecutionPlanTestHelper ciExecutionPlanTestHelper;
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
   @Inject private SecretUtils secretUtils;
@@ -149,7 +152,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
 
     CIK8PodParams<CIK8ContainerParams> podParams = k8BuildSetupUtils.getPodParams(ngAccess, k8PodDetails,
         ciExecutionPlanTestHelper.getExpectedLiteEngineTaskInfoOnFirstPodWithSetCallbackId(), true, null, true,
-        "workspace", null, ambiance);
+        "workspace", null, "foo", null, ambiance);
 
     List<SecretVariableDetails> secretVariableDetails =
         new ArrayList<>(ciExecutionPlanTestHelper.getSecretVariableDetails());
@@ -240,5 +243,25 @@ public class K8BuildSetupUtilsTest extends CIExecutionTest {
     //
     //    verify(logServiceUtils, times(1)).getLogServiceConfig();
     //    verify(logServiceUtils, times(1)).getLogServiceToken(accountID);
+  }
+
+  @Test
+  @Owner(developers = VISTAAR)
+  @Category(UnitTests.class)
+  public void shouldGetAwsCodeCommitGitEnvVariables() {
+    ConnectorDetails gitConnector =
+        ConnectorDetails.builder()
+            .connectorConfig(
+                ciExecutionPlanTestHelper.getAwsCodeCommitConnectorDTO().getConnectorInfo().getConnectorConfig())
+            .connectorType(
+                ciExecutionPlanTestHelper.getAwsCodeCommitConnectorDTO().getConnectorInfo().getConnectorType())
+            .build();
+
+    CodeBase codeBase = CodeBase.builder().repoName("test").build();
+    Map<String, String> gitEnvVariables = k8BuildSetupUtils.getGitEnvVariables(gitConnector, codeBase);
+    assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_AWS_REGION);
+    assertThat(gitEnvVariables.get(DRONE_REMOTE_URL))
+        .isEqualTo("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test.git");
+    assertThat(gitEnvVariables.get(DRONE_AWS_REGION)).isEqualTo("eu-central-1");
   }
 }

@@ -5,7 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.logging.AutoLogContext;
 
-@TargetModule(Module._940_DELEGATE_BEANS)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class DelegateLogContext extends AutoLogContext {
   public static final String ACCOUNT_ID = "accountId";
   public static final String DELEGATE_ID = "delegateId";

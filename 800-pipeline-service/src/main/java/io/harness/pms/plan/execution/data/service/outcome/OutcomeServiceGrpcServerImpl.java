@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution.data.service.outcome;
 
+import io.harness.engine.pms.data.OptionalOutcome;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.pms.contracts.service.OutcomeConsumeBlobRequest;
 import io.harness.pms.contracts.service.OutcomeConsumeBlobResponse;
@@ -12,6 +13,8 @@ import io.harness.pms.contracts.service.OutcomeFindAllBlobResponse;
 import io.harness.pms.contracts.service.OutcomeProtoServiceGrpc.OutcomeProtoServiceImplBase;
 import io.harness.pms.contracts.service.OutcomeResolveBlobRequest;
 import io.harness.pms.contracts.service.OutcomeResolveBlobResponse;
+import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobRequest;
+import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobResponse;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
@@ -36,8 +39,8 @@ public class OutcomeServiceGrpcServerImpl extends OutcomeProtoServiceImplBase {
 
   @Override
   public void consume(OutcomeConsumeBlobRequest request, StreamObserver<OutcomeConsumeBlobResponse> responseObserver) {
-    String consume =
-        pmsOutcomeService.consume(request.getAmbiance(), request.getName(), request.getValue(), request.getGroupName());
+    String consume = pmsOutcomeService.consume(
+        request.getAmbiance(), request.getName(), request.getValue(), request.getGroupName(), false);
     responseObserver.onNext(OutcomeConsumeBlobResponse.newBuilder().setResponse(consume).build());
     responseObserver.onCompleted();
   }
@@ -64,6 +67,19 @@ public class OutcomeServiceGrpcServerImpl extends OutcomeProtoServiceImplBase {
       OutcomeFetchOutcomeBlobRequest request, StreamObserver<OutcomeFetchOutcomeBlobResponse> responseObserver) {
     String outcomeJson = pmsOutcomeService.fetchOutcome(request.getOutcomeInstanceId());
     responseObserver.onNext(OutcomeFetchOutcomeBlobResponse.newBuilder().setOutcome(outcomeJson).build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void resolveOptional(
+      OutcomeResolveOptionalBlobRequest request, StreamObserver<OutcomeResolveOptionalBlobResponse> responseObserver) {
+    OptionalOutcome resolve = pmsOutcomeService.resolveOptional(request.getAmbiance(), request.getRefObject());
+    OutcomeResolveOptionalBlobResponse.Builder builder =
+        OutcomeResolveOptionalBlobResponse.newBuilder().setFound(resolve.isFound());
+    if (resolve.isFound() && resolve.getOutcome() != null) {
+      builder.setOutcome(resolve.getOutcome());
+    }
+    responseObserver.onNext(builder.build());
     responseObserver.onCompleted();
   }
 }

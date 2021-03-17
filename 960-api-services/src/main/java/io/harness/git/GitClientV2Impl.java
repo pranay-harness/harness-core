@@ -1188,7 +1188,6 @@ public class GitClientV2Impl implements GitClientV2 {
         sshTransport.setSshSessionFactory(authRequest.getFactory());
       });
     }
-
     return gitCommand;
   }
 }

@@ -1,6 +1,8 @@
 package software.wings.beans.alert;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder
+@TargetModule(Module._955_ALERT_BEANS)
 public class PerpetualTaskAlert implements AlertData {
   private String accountId;
   private String description;

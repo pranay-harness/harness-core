@@ -1,0 +1,107 @@
+permissions:
+  - identifier: core.account.edit
+    name: Edit Account Settings
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.account.delete
+    name: Delete Account
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.project.create
+    name: Create Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core.project.view
+    name: View Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core.project.edit
+    name: Edit Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core.project.delete
+    name: Delete Project
+    status: ACTIVE
+    allowedScopeLevels:
+      - project
+  - identifier: core.organization.create
+    name: Create Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+  - identifier: core.organization.view
+    name: View Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core.organization.edit
+    name: Edit Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core.organization.delete
+    name: Delete Organization
+    status: ACTIVE
+    allowedScopeLevels:
+      - organization
+  - identifier: core.secret.create
+    name: Create Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.secret.view
+    name: View Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.secret.edit
+    name: Edit Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.secret.delete
+    name: Delete Secret
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.create
+    name: Create Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.view
+    name: View Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.edit
+    name: Edit Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project
+  - identifier: core.connector.delete
+    name: Delete Connector
+    status: ACTIVE
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

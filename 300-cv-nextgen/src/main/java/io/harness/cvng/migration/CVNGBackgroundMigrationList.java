@@ -1,10 +1,14 @@
 
 package io.harness.cvng.migration;
 
+import io.harness.cvng.migration.list.AddDeploymentMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.AddMonitoringSourcesToVerificationJobMigration;
 import io.harness.cvng.migration.list.CVNGBaseMigration;
+import io.harness.cvng.migration.list.RecoverMonitoringSourceWorkerId;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
+import io.harness.cvng.migration.list.UpdateActivitySourceTasksMigration;
 import io.harness.cvng.migration.list.UpdateActivityStatusMigration;
+import io.harness.cvng.migration.list.UpdateCvConfigPerpetualTasksMigration;
 import io.harness.cvng.migration.list.UpdateRiskIntToRiskEnum;
 
 import com.google.common.collect.ImmutableList;
@@ -19,14 +23,18 @@ public class CVNGBackgroundMigrationList {
    * Make sure your background migration is resumable and with rate limit that does not exhaust
    * the resources.
    */
-  public static List<Pair<Integer, Class<? extends CNVGMigration>>> getMigrations() {
-    return new ImmutableList.Builder<Pair<Integer, Class<? extends CNVGMigration>>>()
+  public static List<Pair<Integer, Class<? extends CVNGMigration>>> getMigrations() {
+    return new ImmutableList.Builder<Pair<Integer, Class<? extends CVNGMigration>>>()
         .add(Pair.of(1, CVNGBaseMigration.class))
         .add(Pair.of(2, RecreateMetricPackAndThresholdMigration.class))
         .add(Pair.of(3, CVNGBaseMigration.class))
         .add(Pair.of(4, AddMonitoringSourcesToVerificationJobMigration.class))
         .add(Pair.of(5, UpdateActivityStatusMigration.class))
         .add(Pair.of(6, UpdateRiskIntToRiskEnum.class))
+        .add(Pair.of(7, UpdateCvConfigPerpetualTasksMigration.class))
+        .add(Pair.of(8, UpdateActivitySourceTasksMigration.class))
+        .add(Pair.of(9, AddDeploymentMonitoringSourcePerpetualTask.class))
+        .add(Pair.of(10, RecoverMonitoringSourceWorkerId.class))
         .build();
   }
 }

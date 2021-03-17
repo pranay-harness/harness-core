@@ -12,7 +12,6 @@ import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -22,6 +21,9 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.PipelineStage;
+import software.wings.beans.Variable;
+import software.wings.beans.Variable.VariableBuilder;
+import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
@@ -37,7 +39,6 @@ import software.wings.yaml.handler.YamlHandlerTestBase;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.io.FileUtils;
@@ -92,6 +93,24 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
             .envId(ENV_ID)
             .uuid(WORKFLOW_ID)
             .orchestrationWorkflow(aBasicOrchestrationWorkflow().withUserVariables(Collections.EMPTY_LIST).build())
+            .build();
+    when(workflowService.readWorkflowByName(any(), anyString())).thenReturn(workflow);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    testCRUD(PipelineStageYamlFiles.Stage2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testEnvStageYamlWithOneVariableWithEmptyValue() throws IOException {
+    Variable emptyVariable = VariableBuilder.aVariable().name("var1").type(VariableType.TEXT).build();
+    Workflow workflow =
+        aWorkflow()
+            .name(workflowName)
+            .envId(ENV_ID)
+            .uuid(WORKFLOW_ID)
+            .orchestrationWorkflow(
+                aBasicOrchestrationWorkflow().withUserVariables(Collections.singletonList(emptyVariable)).build())
             .build();
     when(workflowService.readWorkflowByName(any(), anyString())).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);

@@ -29,6 +29,16 @@ type Config struct {
 		Port           string `envconfig:"TI_SERVICE_TIMESCALE_PORT"`
 		DbName         string `envconfig:"TI_SERVICE_DB_NAME"`
 		HyperTableName string `envconfig:"TI_SERVICE_HYPER_TABLE"`
+		SelectionTable string `envconfig:"TI_SERVICE_SELECTION_HYPER_TABLE"`
+		CoverageTable  string `envconfig:"TI_SERVICE_COVERAGE_HYPER_TABLE"`
+	}
+
+	MongoDb struct {
+		Username string `envconfig:"TI_SERVICE_MONGODB_USERNAME"`
+		Password string `envconfig:"TI_SERVICE_MONGODB_PASSWORD"`
+		Host     string `envconfig:"TI_SERVICE_MONGODB_HOST"`
+		Port     string `envconfig:"TI_SERVICE_MONGODB_PORT"`
+		DbName   string `envconfig:"TI_SERVICE_MONGODB_DB_NAME"`
 	}
 }
 

@@ -1,6 +1,6 @@
 Portal Project Dev environment setup instructions
 ==================================================
-## On MacOS
+## On MacOS 
 
 ### Prerequisities
 1. Install Homebrew:
@@ -57,12 +57,10 @@ buf check lint
 Create a file `.bazelrc` in your portal repo root with the following content
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=<Java home path>
 ```
 Here is a sample `.bazelrc`
 ```
 import bazelrc.local
-build --define=ABSOLUTE_JAVABASE=/Library/Java/JavaVirtualMachines/jdk1.8.0_202.jdk/Contents/Home
 ```
 
 If you have regular bazel installed, please uninstall bazel and install bazelisk. It allows us to use the git repo to synchronize everyone's installation of bazel.
@@ -152,7 +150,7 @@ NOTE: the data from it is used for every git operation github does on you behave
     $ docker run -p 9200:9200 -p 9300:9300 -v ~/_elasticsearch_data:/usr/share/elasticsearch/data -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.3.0
     ```
 
-    In portal/400-rest/config.yml set `searchEnabled` to `true`.
+    In portal/360-cg-manager/config.yml set `searchEnabled` to `true`.
 
     Run mongo in replica set:
 
@@ -200,13 +198,13 @@ NOTE: the data from it is used for every git operation github does on you behave
 cd to `portal` directory
 1. Start server by running following commands :
 
-   * `mvn clean install -DskipTests`
-   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar 400-rest/target/rest-capsule.jar server 400-rest/config.yml > portal.log &`
+   * `bazel build //360-cg-manager:module_deploy.jar`
+   * `java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:~/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar -Dfile.encoding=UTF-8 -jar .bazel-dirs/bin/360-cg-manager/module_deploy.jar server 360-cg-manager/config.yml > portal.log &`
 
 2. Generate sample data required to run the services locally by running the following step only once.
    DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
 
-   * `java -Xmx1024m -jar 160-model-gen-tool/target/model-gen-tool-capsule.jar 160-model-gen-tool/config-datagen.yml`
+   * `java -Xmx1024m -jar ~/.bazel-dirs/bin/160-model-gen-tool/module_deploy.jar server  160-model-gen-tool/config-datagen.yml`
 
 3. Start Delegate
 
@@ -345,9 +343,9 @@ https://github.com/wings-software/portal/wiki/Troubleshooting-running-java-proce
 ```lang=bash
 portal/tools/go/go_setup.sh
 ```
-### Install Bazel (3.5.0+)
-4. On mac: `brew install bazel`
-   * Other platforms: Install bazel locally by following user guide [here](https://docs.bazel.build/versions/master/install.html). Note that bazel version is automatically managed since then and is guaranteed to be same across all machines for each specific revision.
+### Install Bazelisk
+4. On mac: `brew install bazelisk`
+   * Other platforms: Follow the instrictions [here](https://github.com/bazelbuild/bazelisk)
 
 
 ### IDE
@@ -490,12 +488,31 @@ bazel run //commons/go/lib/logs:go_default_test # an example
 BUILD.bazel files contain build rules. If you've added/removed packages or modified dependencies in the source code, or added new rules manually,
 then you should run `gazelle` to update and format your BUILD.bazel files.
 This tool will add any missing rules, update dependencies and format all BUILD.bazel files that you've touched.
-Run:
+Run in the root of the portal repository:
+
 ```lang=bash
 gazelle
 ```
-The above comand creates or updates `BUILD.bazel`
 
+The above comand creates or updates `BUILD.bazel` files where needed. If the above command fails, it is likely due to using an incorrect version of gazelle. Currently we are using version `0.21`.
+
+##### Building your own Gazelle
+
+The rough overview is here, if you want more complete instructions go to the bazelbuild github page `https://github.com/bazelbuild/bazel-gazelle`.
+
+```lang=bash
+git clone git@github.com:bazelbuild/bazel-gazelle.git
+cd bazel-gazelle
+git reset origin/release-0.21 --hard
+cd cmd/gazelle
+baselisk build gazelle
+$(bazelisk info bazel-bin)/cmd/gazelle/gazelle_/gazelle 
+# it expands out to something like below, giving the 0.21 binary
+/home/tp/.cache/bazel/_bazel_tp/46ccc68b31f8c833946cfcd24410eb45/execroot/bazel_gazelle/bazel-out/k8-fastbuild/bin/cmd/gazelle/gazelle_/gazelle
+``` 
+
+#### Using gazelle to fix dependencies.
+This can now be used in `portal` to fix dependencies.
 
 We need to update the dependencies in `portal/WORKSPACE`. Run the following for your new/updated `go.mod`
 ```lang=bash
@@ -540,4 +557,4 @@ AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple f
 
 We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
-* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 400-rest module resources folder and restart manager.
+* Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager.

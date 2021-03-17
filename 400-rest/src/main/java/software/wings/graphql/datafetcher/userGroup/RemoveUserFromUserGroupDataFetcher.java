@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.User;
@@ -20,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class RemoveUserFromUserGroupDataFetcher
     extends BaseMutatorDataFetcher<QLRemoveUserFromUserGroupInput, QLRemoveUserFromUserGroupPayload> {
   @Inject UserGroupService userGroupService;

@@ -10,7 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.datacollection.entity.CallDetails;
@@ -28,7 +28,7 @@ import org.mockito.ArgumentCaptor;
 import retrofit2.Call;
 import retrofit2.Response;
 
-public class ThirdPartyCallHandlerTest extends DelegateTest {
+public class ThirdPartyCallHandlerTest extends DelegateTestBase {
   private DelegateLogService delegateLogService = mock(DelegateLogService.class);
   private String accountId;
   private String requestUuid;

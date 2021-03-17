@@ -49,6 +49,10 @@ logging:
       threshold: TRACE
       target: STDOUT
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
 
 mongo:
   uri: mongodb://localhost:27017/ng-harness
@@ -57,6 +61,8 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  transactionsEnabled: false
+  aliasDBName: ng-harness
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
@@ -99,6 +105,16 @@ grpcServer:
       certFilePath: cert.pem
     - port: 9979
 
+gitSyncServerConfig:
+  connectors:
+    - port: 13001
+      secure: true
+      keyFilePath: key.pem
+      certFilePath: cert.pem
+    - port: 13002
+
+shouldDeployWithGitSync: false
+
 smtp:
   type: SMTP
   host: host_placeholder
@@ -121,6 +137,21 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    password: ""
+
+redisLockConfig:
+  sentinel: false
+  masterName: "test"
+  redisUrl: "redis://localhost:6379"
+  sentinelUrls:
+    - "redis://redis1:26379"
+    - "redis://redis2:26379"
+    - "redis://redis3:26379"
+  envNamespace: ""
+  readMode: MASTER
+  nettyThreads: 16
+  useScriptCache: true
+  password: ""
 
 pmsSdkGrpcServerConfig:
   connectors:
@@ -145,7 +176,25 @@ ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder
   secretKey: ce_aws_secretKey_placeholder
   destinationBucket: ce_aws_destinationBucket_placeholder
+  templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
 
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
+
+ResoureGroupConfig:
+  ng-manager:
+    baseUrl: http://localhost:7457/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  manager:
+    baseUrl: http://localhost:3457/api/
+    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+logStreamingServiceConfig:
+  baseUrl: http://localhost:8079
+  serviceToken: token
+
+
+
+accessControlClient:
+  enableAccessControl: false

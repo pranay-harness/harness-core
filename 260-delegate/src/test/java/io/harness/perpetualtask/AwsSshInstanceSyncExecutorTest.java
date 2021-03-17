@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.DelegateTest;
+import io.harness.DelegateTestBase;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -50,7 +50,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import retrofit2.Call;
 
 @RunWith(MockitoJUnitRunner.class)
-public class AwsSshInstanceSyncExecutorTest extends DelegateTest {
+public class AwsSshInstanceSyncExecutorTest extends DelegateTestBase {
   @Mock private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
   @Mock private DelegateAgentManagerClient delegateAgentManagerClient;
   @Mock private Call<RestResponse<Boolean>> call;

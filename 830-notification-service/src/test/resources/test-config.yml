@@ -77,14 +77,6 @@ smtp:
   username: smtp_username_placeholder
   password: "smtp_password_placeholder"
 
-notificationClient:
-  messageBroker:
-    type: MONGO
-    uri: mongodb://localhost:27017/notificationChannel
-    connectTimeout: 30000
-    serverSelectionTimeout: 90000
-    maxConnectionIdleTime: 600000
-    connectionsPerHost: 300
 
 seedDataConfiguration:
   shouldOverrideAllPredefinedTemplates: true

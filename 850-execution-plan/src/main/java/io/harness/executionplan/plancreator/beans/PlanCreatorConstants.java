@@ -4,7 +4,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class PlanCreatorConstants {
-  public final String INFRA_SECTION_NODE_IDENTIFIER = "infrastructure";
+  public final String INFRA_SECTION_NODE_IDENTIFIER = "infrastructureSection";
   public final String STAGES_NODE_IDENTIFIER = "stages";
   public final String SERVICE_NODE_IDENTIFIER = "service";
   public final String EXECUTION_NODE_IDENTIFIER = "execution";

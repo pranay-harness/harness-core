@@ -6,6 +6,7 @@ import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
+import static io.harness.pms.contracts.execution.Status.IGNORE_FAILED;
 import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import static io.harness.pms.contracts.execution.Status.PAUSED;
 import static io.harness.pms.contracts.execution.Status.PAUSING;
@@ -20,15 +21,19 @@ import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
 import io.harness.pms.contracts.execution.Status;
 
 import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class StatusUtils {
   // Status Groups
   private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
       INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
-  private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED);
+  private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
 
   private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
 
@@ -98,6 +103,8 @@ public class StatusUtils {
         return FINALIZABLE_STATUSES;
       case SUCCEEDED:
         return EnumSet.allOf(Status.class);
+      case IGNORE_FAILED:
+        return EnumSet.of(FAILED, INTERVENTION_WAITING);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }
@@ -112,5 +119,24 @@ public class StatusUtils {
 
   public boolean isFinalStatus(Status status) {
     return FINAL_STATUSES.contains(status);
+  }
+
+  public Status calculateEndStatus(List<Status> statuses, String planExecutionId) {
+    statuses =
+        statuses.stream().filter(s -> !StatusUtils.finalizableStatuses().contains(s)).collect(Collectors.toList());
+    if (StatusUtils.positiveStatuses().containsAll(statuses)) {
+      return SUCCEEDED;
+    } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
+      return ABORTED;
+    } else if (statuses.stream().anyMatch(status -> status == ERRORED)) {
+      return ERRORED;
+    } else if (statuses.stream().anyMatch(status -> status == FAILED)) {
+      return FAILED;
+    } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
+      return EXPIRED;
+    } else {
+      log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
+      return ERRORED;
+    }
   }
 }

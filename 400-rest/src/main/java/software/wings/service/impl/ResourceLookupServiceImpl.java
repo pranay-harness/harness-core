@@ -47,6 +47,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
 
 import software.wings.audit.EntityAuditRecord;
@@ -77,8 +78,10 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
@@ -150,6 +153,24 @@ public class ResourceLookupServiceImpl implements ResourceLookupService {
         .filter(ResourceLookupKeys.accountId, accountId)
         .filter(ResourceLookupKeys.resourceId, resourceId)
         .get();
+  }
+
+  @Override
+  public Map<String, ResourceLookup> getResourceLookupMapWithResourceIds(String accountId, Set<String> resourceIds) {
+    Query<ResourceLookup> query = wingsPersistence.createQuery(ResourceLookup.class)
+                                      .filter(ResourceLookupKeys.accountId, accountId)
+                                      .field(ResourceLookupKeys.resourceId)
+                                      .in(resourceIds);
+
+    Map<String, ResourceLookup> resourceLookupMap = new HashMap<>();
+
+    try (HIterator<ResourceLookup> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        ResourceLookup resourceLookup = iterator.next();
+        resourceLookupMap.put(resourceLookup.getResourceId(), resourceLookup);
+      }
+    }
+    return resourceLookupMap;
   }
 
   @Override

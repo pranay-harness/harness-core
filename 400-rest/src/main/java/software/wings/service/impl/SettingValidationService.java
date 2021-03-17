@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
+import static io.harness.beans.FeatureName.IRSA_FOR_EKS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
@@ -59,6 +60,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SettingAttribute;
@@ -73,6 +75,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.ce.CEAwsConfig;
+import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -102,6 +105,7 @@ import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
+import software.wings.service.intfc.security.SSHVaultService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
@@ -154,6 +158,7 @@ public class SettingValidationService {
   @Inject private GcpHelperServiceManager gcpHelperServiceManager;
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private AwsHelperResourceService awsHelperResourceService;
+  @Inject private SSHVaultService sshVaultService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -162,9 +167,16 @@ public class SettingValidationService {
       List<EncryptedDataDetail> encryptionDetails = null;
       encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+      SSHVaultConfig sshVaultConfig = null;
+      if (settingAttribute.getValue() instanceof HostConnectionAttributes
+          && ((HostConnectionAttributes) settingAttribute.getValue()).isVaultSSH()) {
+        sshVaultConfig = sshVaultService.getSSHVaultConfig(settingAttribute.getAccountId(),
+            ((HostConnectionAttributes) settingAttribute.getValue()).getSshVaultConfigId());
+      }
       ConnectivityValidationDelegateRequest request = ConnectivityValidationDelegateRequest.builder()
                                                           .encryptedDataDetails(encryptionDetails)
                                                           .settingAttribute(settingAttribute)
+                                                          .sshVaultConfig(sshVaultConfig)
                                                           .build();
       DelegateTask delegateTask = DelegateTask.builder()
                                       .accountId(settingAttribute.getAccountId())
@@ -326,6 +338,8 @@ public class SettingValidationService {
       validateSpotInstConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof CEAwsConfig) {
       validateCEAwsConfig(settingAttribute);
+    } else if (settingValue instanceof CEAzureConfig) {
+      validateCEAzureConfig(settingAttribute);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -355,6 +369,10 @@ public class SettingValidationService {
 
   private void validateCEAwsConfig(SettingAttribute settingAttribute) {
     awsceConfigValidationService.verifyCrossAccountAttributes(settingAttribute);
+  }
+
+  private void validateCEAzureConfig(SettingAttribute settingAttribute) {
+    // TODO: Implement validation
   }
 
   private void validateSpotInstConfig(
@@ -430,6 +448,10 @@ public class SettingValidationService {
           }
         }
       }
+
+      if (featureFlagService.isNotEnabled(IRSA_FOR_EKS, settingAttribute.getAccountId()) && value.isUseIRSA()) {
+        throw new InvalidRequestException("AWS EKS IRSA is not enabled for this harness account", USER);
+      }
       awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
@@ -463,7 +485,19 @@ public class SettingValidationService {
             throw new InvalidRequestException("Password field is mandatory in SSH Configuration", USER);
           }
         } else if (isEmpty(hostConnectionAttributes.getKey())) {
-          throw new InvalidRequestException("Private key is not specified", USER);
+          if (hostConnectionAttributes.isVaultSSH()) {
+            if (isEmpty(hostConnectionAttributes.getPublicKey())) {
+              throw new InvalidRequestException("Public key is not specified", USER);
+            }
+            if (isEmpty(hostConnectionAttributes.getRole())) {
+              throw new InvalidRequestException("SSH Secret Engine role is not specified", USER);
+            }
+            if (isEmpty(hostConnectionAttributes.getSshVaultConfigId())) {
+              throw new InvalidRequestException("SSH Secret Engine reference is not specified", USER);
+            }
+          } else {
+            throw new InvalidRequestException("Private key is not specified", USER);
+          }
         }
       }
     }

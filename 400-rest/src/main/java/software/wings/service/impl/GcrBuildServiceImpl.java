@@ -50,6 +50,8 @@ public class GcrBuildServiceImpl implements GcrBuildService {
     try {
       // Decrypt gcpConfig
       encryptionService.decrypt(gcpConfig, encryptionDetails, false);
+      log.info("[GCR Delegate Selection] Get builds for image " + artifactStreamAttributes.getImageName()
+          + " with selectors " + gcpConfig.getDelegateSelector());
       return wrapNewBuildsWithLabels(
           gcrApiService
               .getBuilds(GcrConfigToInternalMapper.toGcpInternalConfig(artifactStreamAttributes.getRegistryHostName(),
@@ -61,7 +63,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
               .collect(Collectors.toList()),
           artifactStreamAttributes, gcpConfig);
     } catch (IOException e) {
-      e.printStackTrace();
+      log.error("", e);
     }
     return null;
   }
@@ -69,6 +71,8 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public List<JobDetails> getJobs(
       GcpConfig gcpConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
+    log.info("[GCR Delegate Selection] Get Jobs " + parentJobName.orElse("NONE") + " with selectors "
+        + gcpConfig.getDelegateSelector());
     return Lists.newArrayList();
   }
 
@@ -86,6 +90,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
 
   @Override
   public Map<String, String> getPlans(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    log.info("[GCR Delegate Selection] Get Plans with selectors " + config.getDelegateSelector());
     return getJobs(config, encryptionDetails, Optional.empty())
         .stream()
         .collect(Collectors.toMap(JobDetails::getJobName, JobDetails::getJobName));
@@ -105,6 +110,8 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   @Override
   public boolean validateArtifactSource(GcpConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
+    log.info("[GCR Delegate Selection] Validate artifact source for image " + artifactStreamAttributes.getImageName()
+        + " with selectors " + config.getDelegateSelector());
     try {
       // Decrypt gcpConfig
       encryptionService.decrypt(config, encryptionDetails, false);

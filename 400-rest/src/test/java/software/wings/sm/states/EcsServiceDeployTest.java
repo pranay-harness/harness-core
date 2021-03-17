@@ -120,6 +120,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<EcsServiceDeployRequest> captor = ArgumentCaptor.forClass(EcsServiceDeployRequest.class);
     verify(mockEcsStateHelper).createAndQueueDelegateTaskForEcsServiceDeploy(any(), captor.capture(), any(), any());
+    verify(mockEcsStateHelper).createSweepingOutputForRollback(any(), any(), any(), any(), any());
     EcsServiceDeployRequest request = captor.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsResizeParams()).isNotNull();

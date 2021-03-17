@@ -1,0 +1,111 @@
+harnessApiVersion: '1.0'
+type: BLUE_GREEN
+concurrencyStrategy: INFRA
+envName: ENV_NAME
+failureStrategies:
+- executionScope: WORKFLOW
+  failureTypes:
+  - APPLICATION_ERROR
+  repairActionCode: ROLLBACK_WORKFLOW
+  retryCount: 0
+notificationRules:
+- conditions:
+  - FAILED
+  executionScope: WORKFLOW
+  notificationGroupAsExpression: false
+  userGroupAsExpression: false
+  userGroupIds:
+  - 2Z4yiRojQq2jmMx1JO05Jw
+phases:
+- type: KUBERNETES
+  computeProviderName: kubernetes_cluster
+  daemonSet: false
+  infraDefinitionName: INFRA_NAME
+  name: Blue/Green
+  phaseSteps:
+  - type: K8S_PHASE_STEP
+    name: Deploy
+    steps:
+    - type: K8S_BLUE_GREEN_DEPLOY
+      name: Stage Deployment
+    - type: SHELL_SCRIPT
+      name: Shell Script
+      properties:
+        commandPath: null
+        connectionAttributes: null
+        executeOnDelegate: true
+        host: null
+        outputVars: ''
+        publishAsVar: false
+        scriptString: exit -1
+        scriptType: BASH
+        sshKeyRef: null
+        sweepingOutputName: null
+        sweepingOutputScope: null
+        templateExpressions: null
+        templateVariables: ''
+        timeoutMillis: 60000
+    stepsInParallel: false
+  - type: K8S_PHASE_STEP
+    name: Verify
+    steps:
+    - type: SHELL_SCRIPT
+      name: Shell Script
+      properties:
+        commandPath: null
+        connectionAttributes: null
+        executeOnDelegate: true
+        host: null
+        outputVars: ''
+        publishAsVar: false
+        scriptString: exit -1
+        scriptType: BASH
+        sshKeyRef: null
+        sweepingOutputName: null
+        sweepingOutputScope: null
+        templateExpressions: null
+        templateVariables: ''
+        timeoutMillis: 60000
+    stepsInParallel: false
+  - type: K8S_PHASE_STEP
+    name: Route Update
+    steps:
+    - type: KUBERNETES_SWAP_SERVICE_SELECTORS
+      name: Swap Primary with Stage
+      properties:
+        service1: ${k8s.primaryServiceName}
+        service2: ${k8s.stageServiceName}
+    stepsInParallel: false
+  - type: K8S_PHASE_STEP
+    name: Wrap Up
+    stepsInParallel: false
+  provisionNodes: false
+  serviceName: SERVICE_NAME
+  statefulSet: false
+rollbackPhases:
+- type: KUBERNETES
+  computeProviderName: kubernetes_cluster
+  daemonSet: false
+  infraDefinitionName: INFRA_NAME
+  name: Rollback Blue/Green
+  phaseNameForRollback: Blue/Green
+  phaseSteps:
+  - type: K8S_PHASE_STEP
+    name: Route Update
+    phaseStepNameForRollback: Route Update
+    statusForRollback: SUCCESS
+    steps:
+    - type: KUBERNETES_SWAP_SERVICE_SELECTORS
+      name: Swap Primary with Stage
+      properties:
+        service1: ${k8s.primaryServiceName}
+        service2: ${k8s.stageServiceName}
+    stepsInParallel: false
+  - type: K8S_PHASE_STEP
+    name: Wrap Up
+    phaseStepNameForRollback: Wrap Up
+    stepsInParallel: false
+  provisionNodes: false
+  serviceName: SERVICE_NAME
+  statefulSet: false
+templatized: false

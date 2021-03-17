@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -64,7 +65,10 @@ import software.wings.utils.ArtifactType;
 import software.wings.yaml.handler.YamlHandlerTestBase;
 
 import com.google.inject.Inject;
+import java.io.File;
+import java.io.IOException;
 import java.util.Optional;
+import org.apache.commons.io.FileUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -99,6 +103,7 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
   @InjectMocks @Inject protected PhaseStepYamlHandler phaseStepYamlHandler;
   @InjectMocks @Inject protected StepYamlHandler stepYamlHandler;
   @InjectMocks @Inject protected FailureStrategyYamlHandler failureStrategyYamlHandler;
+  @InjectMocks @Inject protected StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler;
   @InjectMocks @Inject protected NotificationRulesYamlHandler notificationRulesYamlHandler;
   @InjectMocks @Inject protected TemplateExpressionYamlHandler templateExpressionYamlHandler;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
@@ -145,6 +150,7 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
     when(yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION)).thenReturn(templateExpressionYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.STEP)).thenReturn(stepYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY)).thenReturn(failureStrategyYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY)).thenReturn(stepSkipStrategyYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE)).thenReturn(notificationRulesYamlHandler);
 
     when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE)).thenReturn(variableYamlHandler);
@@ -244,5 +250,11 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
 
     thrown.expect(WingsException.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+  }
+
+  protected String readYamlStringInFile(String yamlContentResourcePath) throws IOException {
+    File yamlFile = new File(yamlContentResourcePath);
+    assertThat(yamlFile).isNotNull();
+    return FileUtils.readFileToString(yamlFile, "UTF-8");
   }
 }

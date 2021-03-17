@@ -62,7 +62,9 @@ public class KubernetesEntityToDTO
       KubernetesDelegateDetails delegateCredential) {
     KubernetesCredentialDTO k8sCredentials =
         KubernetesCredentialDTO.builder()
-            .config(KubernetesDelegateDetailsDTO.builder().delegateName(delegateCredential.getDelegateName()).build())
+            .config(KubernetesDelegateDetailsDTO.builder()
+                        .delegateSelectors(delegateCredential.getDelegateSelectors())
+                        .build())
             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
             .build();
     return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();

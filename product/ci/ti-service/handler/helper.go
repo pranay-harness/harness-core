@@ -22,6 +22,10 @@ const (
 	suiteNameParam   = "suite_name"
 	defaultPageSize  = "10"
 	defaultPageIndex = "0"
+	// test intelligence specific params
+	repoParam   = "repo"
+	branchParam = "branch"
+	shaParam    = "sha"
 )
 
 // writeBadRequest writes the json-encoded error message

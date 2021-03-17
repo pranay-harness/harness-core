@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
@@ -16,6 +18,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class HelmChartConfigParams implements ExecutionCapabilityDemander {
   private HelmRepoConfig helmRepoConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;

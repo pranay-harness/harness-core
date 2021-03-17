@@ -22,6 +22,7 @@ import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.DataStorageMode;
+import software.wings.alerts.AlertModule;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GoogleDataStoreServiceImpl;
@@ -81,6 +82,7 @@ public class VerificationServiceModule extends AbstractModule {
   @Override
   protected void configure() {
     install(FeatureFlagModule.getInstance());
+    install(AlertModule.getInstance());
 
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
     bind(HPersistence.class).to(WingsMongoPersistence.class);

@@ -25,4 +25,5 @@ public class K8sCanaryDeployRequest implements K8sDeployRequest {
   ManifestDelegateConfig manifestDelegateConfig;
   Integer timeoutIntervalInMin;
   String accountId;
+  boolean skipResourceVersioning;
 }

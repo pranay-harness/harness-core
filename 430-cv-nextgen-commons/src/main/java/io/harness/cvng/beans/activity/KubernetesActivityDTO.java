@@ -12,11 +12,14 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("KUBERNETES")
 public class KubernetesActivityDTO extends ActivityDTO {
+  String namespace;
+  String workloadName;
+  String reason;
   String message;
+  String kind;
   String activitySourceConfigId;
-  String eventDetails;
+  String eventJson;
   KubernetesEventType eventType;
-  ActivityType kubernetesActivityType;
 
   @Override
   public ActivityType getType() {

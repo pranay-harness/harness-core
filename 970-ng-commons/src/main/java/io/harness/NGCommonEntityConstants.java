@@ -24,4 +24,9 @@ public class NGCommonEntityConstants {
   public static final String TYPE_KEY = "type";
   public static final String REFERRED_ENTITY_TYPE = "referredEntityType";
   public static final String REFERRED_BY_ENTITY_TYPE = "referredByEntityType";
+
+  // TODO(UTSAV): Move to 340-ce-nextgen
+  public static final String IS_EVENTS_ENABLED = "eventsEnabled";
+  public static final String IS_OPTIMIZATION_ENABLED = "optimizationEnabled";
+  public static final String IS_CUR_ENABLED = "curEnabled";
 }

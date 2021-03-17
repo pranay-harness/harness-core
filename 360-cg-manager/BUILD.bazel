@@ -1,0 +1,34 @@
+load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/GenTestRules.bzl", "run_tests")
+load("//tools/checkstyle:rules.bzl", "checkstyle")
+load("//:macros.bzl", "test_targets_list")
+load("//tools/bazel/pmd:defs.bzl", "pmd")
+
+shared_dependencies = [
+    "//370-users-syncbridge:module",
+    "//400-rest:module",
+    "//:lombok",
+]
+
+filegroup(
+    name = "resource",
+    srcs = [
+        "cert.pem",
+        "key.pem",
+    ],
+    visibility = ["//visibility:private"],
+)
+
+java_binary(
+    name = "module",
+    srcs = glob([
+        "src/main/**/*.java",
+    ]),
+    data = [":resource"],
+    main_class = "software.wings.app.WingsApplication",
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//400-rest:module",
+    ],
+    deps = shared_dependencies,
+)

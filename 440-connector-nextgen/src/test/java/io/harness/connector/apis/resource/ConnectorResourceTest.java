@@ -33,6 +33,7 @@ import io.harness.rule.OwnerRule;
 import io.harness.utils.PageTestUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -62,13 +63,14 @@ public class ConnectorResourceTest extends CategoryTest {
             .name("connector")
             .identifier("identifier")
             .connectorType(KUBERNETES_CLUSTER)
-            .connectorConfig(
-                KubernetesClusterConfigDTO.builder()
-                    .credential(KubernetesCredentialDTO.builder()
-                                    .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                                    .config(KubernetesDelegateDetailsDTO.builder().delegateName("delegateName").build())
-                                    .build())
-                    .build())
+            .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                 .credential(KubernetesCredentialDTO.builder()
+                                                 .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+                                                 .config(KubernetesDelegateDetailsDTO.builder()
+                                                             .delegateSelectors(Collections.singleton("delegateName"))
+                                                             .build())
+                                                 .build())
+                                 .build())
             .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
@@ -157,14 +159,6 @@ public class ConnectorResourceTest extends CategoryTest {
         "accountIdentifier", "orgIdentifier", "projectIdentifier", "connectorIdentifier");
     Mockito.verify(connectorService, times(1)).validateTheIdentifierIsUnique(any(), any(), any(), any());
     assertThat(result.getData()).isTrue();
-  }
-
-  @Test
-  @Owner(developers = OwnerRule.DEEPAK)
-  @Category(UnitTests.class)
-  public void validateTest() {
-    ResponseDTO<ConnectorValidationResult> result = connectorResource.validate(connectorRequest, accountIdentifier);
-    Mockito.verify(connectorService, times(1)).validate(eq(connectorRequest), eq(accountIdentifier));
   }
 
   @Test

@@ -4,10 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotation.HarnessEntity;
-import io.harness.mongo.index.CdIndex;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.IndexType;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
@@ -30,9 +27,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
-@CdIndex(name = "service_gd_idx",
-    fields = { @Field("cvConfigId")
-               , @Field(value = "analysisEndTime", type = IndexType.DESC) })
 @Data
 @Builder
 @NoArgsConstructor
@@ -42,7 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "timeseriesCumulativeSums", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
+public final class TimeSeriesCumulativeSums implements PersistentEntity, UuidAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

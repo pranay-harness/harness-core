@@ -11,6 +11,7 @@ import static io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import static io.harness.delegate.beans.DelegateProfile.builder;
 import static io.harness.delegate.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static io.harness.delegate.beans.DelegateType.ECS;
+import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.message.ManagerMessageConstants.SELF_DESTRUCT;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
@@ -22,6 +23,7 @@ import static io.harness.rule.OwnerRule.DESCRIPTION;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
@@ -60,10 +62,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -72,8 +77,14 @@ import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
-import io.harness.beans.FileMetadata;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.capability.CapabilityParameters;
+import io.harness.capability.CapabilityRequirement;
+import io.harness.capability.CapabilitySubjectPermission;
+import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
+import io.harness.capability.CapabilityTaskSelectionDetails;
+import io.harness.capability.HttpConnectionParameters;
+import io.harness.capability.service.CapabilityService;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.delegate.beans.ConnectionMode;
@@ -83,6 +94,8 @@ import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateGroup;
+import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateParams;
@@ -101,19 +114,27 @@ import io.harness.delegate.beans.DelegateTaskRank;
 import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DuplicateDelegateException;
+import io.harness.delegate.beans.FileBucket;
+import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.delegate.beans.TaskSelectorMap;
+import io.harness.delegate.beans.executioncapability.CapabilityType;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
-import io.harness.delegate.service.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskParameters;
+import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTaskResponse;
+import io.harness.delegate.task.executioncapability.CapabilityCheckDetails;
 import io.harness.delegate.task.http.HttpTaskParameters;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logstreaming.LogStreamingServiceConfig;
+import io.harness.network.LocalhostUtils;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Cache;
@@ -122,7 +143,10 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.dto.RetryDelegate;
+import io.harness.service.intfc.DelegateCache;
+import io.harness.service.intfc.DelegateInsightsService;
 import io.harness.service.intfc.DelegateProfileObserver;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskRetryObserver;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.tasks.Cd1SetupFields;
@@ -139,6 +163,8 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateInsightsBarDetails;
+import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.Event.Type;
@@ -157,7 +183,10 @@ import software.wings.jre.JreConfig;
 import software.wings.licensing.LicenseService;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.DelegateConnectionDao;
+import software.wings.service.impl.DelegateObserver;
+import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
+import software.wings.service.impl.DelegateTaskStatusObserver;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -165,7 +194,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
-import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -186,15 +215,23 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
+import javax.ws.rs.core.MediaType;
 import org.apache.commons.compress.archivers.ArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -209,14 +246,19 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mongodb.morphia.query.UpdateOperations;
 
 public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
   private static final String DELEGATE_PROFILE_ID = "QFWin33JRlKWKBzpzE5A9A";
+  private static final String DELEGATE_TYPE = "dockerType";
+  private static final String PRIMARY_PROFILE_NAME = "primary";
+  private static final String GROUPED_HOSTNAME_SUFFIX = "-{n}";
 
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
@@ -237,24 +279,34 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private ConfigurationController configurationController;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private DelegateGrpcConfig delegateGrpcConfig;
+  @Mock private CapabilityService capabilityService;
+  @Mock private DelegateSyncService delegateSyncService;
+  @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private DelegateInsightsService delegateInsightsService;
 
   @Inject private FeatureTestHelper featureTestHelper;
   @Inject private DelegateConnectionDao delegateConnectionDao;
   @Inject private KryoSerializer kryoSerializer;
 
-  @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
+  private int port = LocalhostUtils.findFreePort();
+  @Rule public WireMockRule wireMockRule = new WireMockRule(port);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
+  @InjectMocks @Inject private DelegateCache delegateCache;
   @InjectMocks @Inject private DelegateTaskBroadcastHelper delegateTaskBroadcastHelper;
-  @InjectMocks @Inject private DelegateService delegateService;
+  @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateTaskService delegateTaskService;
+
   @Mock private UsageLimitedFeature delegatesFeature;
 
   @Inject private HPersistence persistence;
-  private Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
-  private Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
 
-  private Account account =
+  private final Subject<DelegateProfileObserver> delegateProfileSubject = mock(Subject.class);
+  private final Subject<DelegateTaskRetryObserver> retryObserverSubject = mock(Subject.class);
+  private final Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject = mock(Subject.class);
+  private final Subject<DelegateObserver> subject = mock(Subject.class);
+
+  private final Account account =
       anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
 
   private DelegateProfileBuilder createDelegateProfileBuilder() {
@@ -266,7 +318,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     CdnConfig cdnConfig = new CdnConfig();
     cdnConfig.setUrl("http://localhost:9500");
     when(subdomainUrlHelper.getDelegateMetadataUrl(any(), any(), any()))
-        .thenReturn("http://localhost:8888/delegateci.txt");
+        .thenReturn("http://localhost:" + port + "/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(mainConfiguration.getKubectlVersion()).thenReturn("v1.12.2");
     when(mainConfiguration.getOcVersion()).thenReturn("v4.2.16");
@@ -276,7 +328,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getCurrentJre()).thenReturn("openjdk8u242");
     when(mainConfiguration.getJreConfigs()).thenReturn(jreConfigMap);
     when(subdomainUrlHelper.getWatcherMetadataUrl(any(), any(), any()))
-        .thenReturn("http://localhost:8888/watcherci.txt");
+        .thenReturn("http://localhost:" + port + "/watcherci.txt");
     FileUploadLimit fileUploadLimit = new FileUploadLimit();
     fileUploadLimit.setProfileResultLimit(1000000000L);
     when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
@@ -295,7 +347,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(infraDownloadService.getDownloadUrlForDelegate(anyString(), any()))
-        .thenReturn("http://localhost:8888/builds/9/delegate.jar");
+        .thenReturn("http://localhost:" + port + "/builds/9/delegate.jar");
     when(infraDownloadService.getCdnWatcherBaseUrl()).thenReturn("http://localhost:9500/builds");
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
@@ -316,7 +368,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     //    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
 
     FieldUtils.writeField(delegateService, "delegateProfileSubject", delegateProfileSubject, true);
+    FieldUtils.writeField(delegateService, "subject", subject, true);
     FieldUtils.writeField(delegateTaskService, "retryObserverSubject", retryObserverSubject, true);
+    FieldUtils.writeField(
+        delegateTaskService, "delegateTaskStatusObserverSubject", delegateTaskStatusObserverSubject, true);
   }
 
   @Test
@@ -340,7 +395,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setAccountId(accountId);
     persistence.save(delegate);
-    assertThat(delegateService.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
+    assertThat(delegateCache.get(accountId, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
   @Test
@@ -377,7 +432,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2WithoutScalingGroups() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -395,6 +450,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
     assertThat(delegateStatus.getDelegates()).hasSize(1);
+    assertThat(delegateStatus.getScalingGroups()).hasSize(0);
+    assertThat(delegateStatus.getDelegateGroupDetails()).hasSize(0);
     validateDelegateInnerProperties(delegateWithoutScalingGroup.getUuid(), delegateStatus.getDelegates().get(0));
   }
 
@@ -404,7 +461,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2ScalingGroupHasCorrectItems() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -471,7 +528,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldGetDelegateStatus2ScalingGroupEmpty() {
     String accountId = generateUuid();
     when(accountService.getDelegateConfiguration(anyString()))
-        .thenReturn(DelegateConfiguration.builder().delegateVersions(asList(VERSION)).build());
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList(VERSION)).build());
 
     Delegate deletedDelegate = createDelegateBuilder().build();
     deletedDelegate.setAccountId(accountId);
@@ -482,6 +539,118 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateStatus status = delegateService.getDelegateStatusWithScalingGroups(accountId);
 
     assertThat(status.getScalingGroups()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateStatus2ScalingGroupWithDelegateGroupDetails() {
+    String accountId = generateUuid();
+    String delegateProfileId = generateUuid();
+
+    when(delegateProfileService.get(accountId, delegateProfileId))
+        .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
+
+    when(accountService.getDelegateConfiguration(anyString()))
+        .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList(VERSION)).build());
+
+    Delegate deletedDelegate =
+        createDelegateBuilder().accountId(accountId).status(DelegateInstanceStatus.DELETED).build();
+
+    DelegateGroup delegateGroup1 = DelegateGroup.builder().name("grp1").accountId(accountId).build();
+    persistence.save(delegateGroup1);
+    DelegateGroup delegateGroup2 = DelegateGroup.builder().name("grp2").accountId(accountId).build();
+    persistence.save(delegateGroup2);
+
+    // Insights
+    DelegateInsightsDetails delegateInsightsDetails =
+        DelegateInsightsDetails.builder()
+            .insights(ImmutableList.of(
+                DelegateInsightsBarDetails.builder().build(), DelegateInsightsBarDetails.builder().build()))
+            .build();
+    when(
+        delegateInsightsService.retrieveDelegateInsightsDetails(eq(accountId), eq(delegateGroup1.getUuid()), anyLong()))
+        .thenReturn(delegateInsightsDetails);
+
+    // these three delegates should be returned for group 1
+    Delegate delegate1 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateType(KUBERNETES)
+                             .delegateName("grp1")
+                             .hostName("kube-0")
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .build();
+
+    Delegate delegate2 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateType(KUBERNETES)
+                             .delegateName("grp1")
+                             .hostName("kube-1")
+                             .delegateGroupId(delegateGroup1.getUuid())
+                             .delegateProfileId(delegateProfileId)
+                             .lastHeartBeat(System.currentTimeMillis() - 60000)
+                             .build();
+
+    // this delegate should cause an empty group to be returned
+    Delegate delegate3 = createDelegateBuilder()
+                             .accountId(accountId)
+                             .delegateName("grp2")
+                             .delegateGroupId(delegateGroup2.getUuid())
+                             .build();
+
+    persistence.save(Arrays.asList(deletedDelegate, delegate1, delegate2, delegate3));
+
+    DelegateConnection delegateConnection1 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate1.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    DelegateConnection delegateConnection2 = DelegateConnection.builder()
+                                                 .accountId(accountId)
+                                                 .delegateId(delegate2.getUuid())
+                                                 .lastHeartbeat(System.currentTimeMillis())
+                                                 .disconnected(false)
+                                                 .version(VERSION)
+                                                 .build();
+    persistence.save(delegateConnection1);
+    persistence.save(delegateConnection2);
+
+    DelegateStatus delegateStatus = delegateService.getDelegateStatusWithScalingGroups(accountId);
+
+    assertThat(delegateStatus.getPublishedVersions()).hasSize(1).contains(VERSION);
+
+    assertThat(delegateStatus.getDelegates()).isEmpty();
+    assertThat(delegateStatus.getScalingGroups()).isEmpty();
+    assertThat(delegateStatus.getDelegateGroupDetails()).hasSize(2);
+    assertThat(delegateStatus.getDelegateGroupDetails())
+        .extracting(DelegateGroupDetails::getGroupName)
+        .containsOnly("grp1", "grp2");
+
+    for (DelegateGroupDetails group : delegateStatus.getDelegateGroupDetails()) {
+      if (group.getGroupName().equals("grp1")) {
+        assertThat(group.getDelegates()).hasSize(2);
+        assertThat(group.getDelegateType()).isEqualTo(KUBERNETES);
+        assertThat(group.getGroupHostName()).isEqualTo("kube-{n}");
+        assertThat(group.getGroupSelectors()).isNotNull();
+        assertThat(group.getGroupSelectors().containsKey("grp1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("kube-0")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("kube-1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("profile")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("s1")).isTrue();
+        assertThat(group.getGroupSelectors().containsKey("s2")).isTrue();
+        assertThat(group.getLastHeartBeat()).isEqualTo(delegate1.getLastHeartBeat());
+        assertThat(group.getDelegates())
+            .extracting(DelegateStatus.DelegateInner::getUuid)
+            .containsOnly(delegate1.getUuid(), delegate2.getUuid());
+        assertThat(group.getDelegateInsightsDetails()).isNotNull();
+        assertThat(group.getDelegateInsightsDetails().getInsights()).hasSize(2);
+      } else if (group.getGroupName().equals("grp2")) {
+        assertThat(group.getDelegates()).isEmpty();
+      }
+    }
   }
 
   @Test
@@ -591,6 +760,35 @@ public class DelegateServiceTest extends WingsBaseTest {
     verify(eventEmitter)
         .send(Channel.DELEGATES,
             anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+    verify(capabilityService, never()).getAllCapabilityRequirements(accountId);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldAddAndInvokeRegenerateCapabilityPermissions() {
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    String accountId = generateUuid();
+    Delegate delegate = createDelegateBuilder().build();
+    delegate.setAccountId(accountId);
+    delegate.setUuid(generateUuid());
+
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).uuid(generateUuid()).build();
+    delegate.setDelegateProfileId(delegateProfile.getUuid());
+
+    when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
+
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    delegate = delegateService.add(delegate);
+
+    assertThat(persistence.get(Delegate.class, delegate.getUuid())).isEqualTo(delegate);
+    verify(eventEmitter)
+        .send(Channel.DELEGATES,
+            anEvent().withOrgId(accountId).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+    verify(capabilityService).getAllCapabilityRequirements(accountId);
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
@@ -713,7 +911,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(delegate);
-    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
     assertThat(delegateFromDb).isEqualTo(delegate);
   }
 
@@ -729,7 +927,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                           .replicas(1)
                                           .taskLimit(50)
                                           .cpu(0.5)
-                                          .ram(500)
+                                          .ram(1650)
                                           .build();
 
     DelegateParams params = DelegateParams.builder()
@@ -741,6 +939,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE)
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
+                                .delegateGroupId(generateUuid())
                                 .version(VERSION)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -752,7 +951,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
-    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getSessionIdentifier()).isEqualTo(params.getSessionIdentifier());
@@ -762,6 +961,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
     assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getDelegateGroupId()).isEqualTo(params.getDelegateGroupId());
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
@@ -790,7 +990,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
-    Delegate delegateFromDb = delegateService.get(accountId, registerResponse.getDelegateId(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
@@ -798,6 +998,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
     assertThat(delegateFromDb.getIp()).isEqualTo(params.getIp());
     assertThat(delegateFromDb.getDelegateGroupName()).isEqualTo(params.getDelegateGroupName());
+    assertThat(delegateFromDb.getDelegateGroupId()).isNotNull();
     assertThat(delegateFromDb.getVersion()).isEqualTo(params.getVersion());
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
@@ -821,7 +1022,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegate = delegateService.add(delegate);
     delegateService.register(delegate);
-    Delegate registeredDelegate = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate registeredDelegate = delegateCache.get(accountId, delegate.getUuid(), true);
     assertThat(registeredDelegate).isEqualToIgnoringGivenFields(delegate, DelegateKeys.validUntil);
   }
 
@@ -867,7 +1068,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.register(params);
 
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, delegate.getUuid(), true);
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
@@ -923,7 +1124,8 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.register(params);
 
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, delegate.getUuid(), true);
+
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
@@ -949,6 +1151,28 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, ConnectionMode.POLLING);
     verify(mockConnectionDao).findAndDeletePreviousConnections(ACCOUNT_ID, DELEGATE_ID, delegateConnectionId, VERSION);
     FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldRegisterHeartbeatWithPreviousDisconnection() throws IllegalAccessException {
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    DelegateConnection previousDelegateConnection = mock(DelegateConnection.class);
+    when(previousDelegateConnection.isDisconnected()).thenReturn(true);
+    DelegateConnectionDao mockConnectionDao = mock(DelegateConnectionDao.class);
+    when(mockConnectionDao.upsertCurrentConnection(any(), any(), any(), any(), any()))
+        .thenReturn(previousDelegateConnection);
+    FieldUtils.writeField(delegateService, "delegateConnectionDao", mockConnectionDao, true);
+    String delegateConnectionId = generateTimeBasedUuid();
+    DelegateConnectionHeartbeat heartbeat =
+        DelegateConnectionHeartbeat.builder().version(VERSION).delegateConnectionId(delegateConnectionId).build();
+
+    delegateService.registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, heartbeat, null);
+
+    verify(subject).fireInform(any(), eq(ACCOUNT_ID), eq(DELEGATE_ID));
+    FieldUtils.writeField(delegateService, "delegateConnectionDao", delegateConnectionDao, true);
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
@@ -1098,7 +1322,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     delegateService.register(params);
 
-    Delegate delegateFromDb = delegateService.get(accountId, delegate.getUuid(), true);
+    Delegate delegateFromDb = delegateCache.get(accountId, delegate.getUuid(), true);
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
@@ -1168,6 +1392,25 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGetDelegateTaskEventsRespectingPreAssignedDelegates() {
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    String delegateId = generateUuid();
+    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
+    DelegateTask delegateTask2 = saveDelegateTask(true, emptySet(), QUEUED);
+
+    UpdateOperations<DelegateTask> updateOperations = persistence.createUpdateOperations(DelegateTask.class);
+    updateOperations.set(DelegateTaskKeys.preAssignedDelegateId, delegateId);
+    persistence.update(delegateTask2, updateOperations);
+
+    List<DelegateTaskEvent> delegateTaskEvents = delegateService.getDelegateTaskEvents(ACCOUNT_ID, delegateId, false);
+    assertThat(delegateTaskEvents).hasSize(1);
+    assertThat(delegateTaskEvents.get(0).getDelegateTaskId()).isEqualTo(delegateTask2.getUuid());
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+  }
+
+  @Test
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void shouldSaveDelegateTask() {
@@ -1195,6 +1438,40 @@ public class DelegateServiceTest extends WingsBaseTest {
     delegateService.queueTask(delegateTask);
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(delegateTask);
+    verify(assignDelegateService, never()).getAccountDelegates(delegateTask.getAccountId());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldSaveDelegateTaskAndInvokeCapabilityLogic() {
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .accountId(ACCOUNT_ID)
+            .executionCapabilities(
+                asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+                    "http://www.url.com", null)))
+            .waitId(generateUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
+            .setupAbstraction(Cd1SetupFields.SERVICE_TEMPLATE_ID_FIELD, SERVICE_TEMPLATE_ID)
+            .setupAbstraction(Cd1SetupFields.ARTIFACT_STREAM_ID_FIELD, ARTIFACT_STREAM_ID)
+            .version(VERSION)
+            .data(TaskData.builder()
+                      .async(true)
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .build();
+    delegateService.queueTask(delegateTask);
+    assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
+        .isEqualTo(delegateTask);
+    verify(assignDelegateService).getAccountDelegates(delegateTask.getAccountId());
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
   }
 
   @Test
@@ -1275,12 +1552,14 @@ public class DelegateServiceTest extends WingsBaseTest {
         DelegateTaskResponse.builder()
             .accountId(ACCOUNT_ID)
             .response(ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
+            .responseCode(ResponseCode.OK)
             .build());
     assertThat(persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()).get())
         .isEqualTo(null);
     verify(waitNotifyEngine)
         .doneWith(
             delegateTask.getWaitId(), ExecutionStatusData.builder().executionStatus(ExecutionStatus.SUCCESS).build());
+    verify(delegateTaskStatusObserverSubject).fireInform(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -1448,8 +1727,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath))));
+          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
@@ -1459,7 +1738,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
@@ -1469,7 +1749,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
@@ -1507,7 +1788,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStartOpenJdk.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStartOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
@@ -1516,8 +1798,9 @@ public class DelegateServiceTest extends WingsBaseTest {
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateOpenJdk.sh"))));
+          .isEqualTo(
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedDelegateOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
@@ -1527,7 +1810,8 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
           .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh"))));
+              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedStopOpenJdk.sh")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
@@ -1605,8 +1889,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream(expectedLaunchDelegateFilepath))));
+          .isEqualTo(
+              CharStreams
+                  .toString(new InputStreamReader(getClass().getResourceAsStream(expectedLaunchDelegateFilepath)))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(DOCKER_DELEGATE + "/README.txt");
@@ -1642,8 +1928,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml"))));
+          .isEqualTo(
+              CharStreams
+                  .toString(new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegate.yaml")))
+                  .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -1669,8 +1957,10 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateWithCiEnabled.yaml"))));
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateWithCiEnabled.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -1730,6 +2020,29 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Cache
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldAcquireTaskWithoutValidation() {
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    when(assignDelegateService.canAssign(
+             any(BatchDelegateSelectionLog.class), any(String.class), any(DelegateTask.class)))
+        .thenReturn(true);
+    Delegate delegate = createDelegateBuilder().build();
+    delegate.setUuid(DELEGATE_ID);
+    persistence.save(delegate);
+    DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
+    DelegateTaskPackage delegateTaskPackage =
+        delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid());
+    assertThat(delegateTaskPackage).isNotNull();
+    assertThat(delegateTaskPackage.getDelegateTaskId()).isEqualTo(delegateTask.getUuid());
+    assertThat(delegateTaskPackage.getDelegateId()).isEqualTo(DELEGATE_ID);
+    assertThat(delegateTaskPackage.getAccountId()).isEqualTo(ACCOUNT_ID);
+    verify(assignDelegateService, never()).isWhitelisted(any(DelegateTask.class), any(String.class));
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+  }
+
+  @Cache
+  @Test
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldAcquireTaskWhenQueued_notWhitelisted() {
@@ -1741,6 +2054,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     delegate.setUuid(DELEGATE_ID);
     persistence.save(delegate);
+    delegateCache.get(ACCOUNT_ID, DELEGATE_ID, true);
     DelegateTask delegateTask = saveDelegateTask(true, emptySet(), QUEUED);
     assertThat(delegateService.acquireDelegateTask(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid())).isNotNull();
   }
@@ -1857,8 +2171,11 @@ public class DelegateServiceTest extends WingsBaseTest {
                                             .description("desc")
                                             .build();
 
-    File gzipFile = delegateService.generateKubernetesYaml(
-        ACCOUNT_ID, setupDetails, "https://localhost:9090", "https://localhost:7070");
+    persistence.save(
+        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+
+    File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
+        "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
 
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
@@ -1870,8 +2187,49 @@ public class DelegateServiceTest extends WingsBaseTest {
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
       assertThat(new String(buffer))
-          .isEqualTo(CharStreams.toString(
-              new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml"))));
+          .isEqualTo(
+              CharStreams
+                  .toString(new InputStreamReader(getClass().getResourceAsStream("/expectedHarnessDelegateNg.yaml")))
+                  .replaceAll("8888", "" + port));
+
+      file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
+    }
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void shouldGenerateKubernetesYamlWithoutDescription() throws IOException, TemplateException {
+    when(accountService.get(ACCOUNT_ID))
+        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
+    DelegateSetupDetails setupDetails = DelegateSetupDetails.builder()
+                                            .sessionIdentifier("9S5HMP0xROugl3_QgO62rQ")
+                                            .delegateConfigurationId("delConfigId")
+                                            .name("harness-delegate")
+                                            .size(DelegateSize.LARGE)
+                                            .build();
+
+    persistence.save(
+        DelegateGroup.builder().accountId(ACCOUNT_ID).name("harness-delegate").uuid("delegateGroupId1").build());
+
+    File gzipFile = delegateService.generateKubernetesYaml(ACCOUNT_ID, setupDetails, "https://localhost:9090",
+        "https://localhost:7070", MediaType.MULTIPART_FORM_DATA_TYPE);
+
+    File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
+    uncompressGzipFile(gzipFile, tarFile);
+    try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
+      assertThat(tarArchiveInputStream.getNextEntry().getName()).isEqualTo(KUBERNETES_DELEGATE + "/");
+
+      TarArchiveEntry file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
+      assertThat(file).extracting(ArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/harness-delegate.yaml");
+      byte[] buffer = new byte[(int) file.getSize()];
+      IOUtils.read(tarArchiveInputStream, buffer);
+      assertThat(new String(buffer))
+          .isEqualTo(CharStreams
+                         .toString(new InputStreamReader(
+                             getClass().getResourceAsStream("/expectedHarnessDelegateNgWithoutDescription.yaml")))
+                         .replaceAll("8888", "" + port));
 
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
@@ -2228,7 +2586,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectors() {
     DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name(PRIMARY_PROFILE_NAME).build();
 
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
@@ -2260,7 +2618,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
     assertThat(tags.size()).isEqualTo(7);
     assertThat(tags).containsExactlyInAnyOrder(
-        "abc", "def", "testdelegatename1", "testdelegatename2", "a.b.c", "d.e.f", "primary");
+        "abc", "def", "testdelegatename1", "testdelegatename2", "a.b.c", "d.e.f", PRIMARY_PROFILE_NAME);
   }
 
   @Test
@@ -2268,7 +2626,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetAllDelegateSelectorsEmptySelectors() {
     DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("primary").build();
+        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name(PRIMARY_PROFILE_NAME).build();
 
     Delegate delegate = Delegate.builder()
                             .accountId(ACCOUNT_ID)
@@ -2285,7 +2643,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(delegateProfileService.get(delegate.getAccountId(), delegateProfile.getUuid())).thenReturn(delegateProfile);
     Set<String> tags = delegateService.getAllDelegateSelectors(ACCOUNT_ID);
     assertThat(tags.size()).isEqualTo(3);
-    assertThat(tags).containsExactlyInAnyOrder("testdelegatename1", "a.b.c", "primary");
+    assertThat(tags).containsExactlyInAnyOrder("testdelegatename1", "a.b.c", PRIMARY_PROFILE_NAME);
   }
 
   @Test
@@ -2314,7 +2672,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateProfile delegateProfile = DelegateProfile.builder()
                                           .uuid(generateUuid())
                                           .accountId(ACCOUNT_ID)
-                                          .name("primary")
+                                          .name(PRIMARY_PROFILE_NAME)
                                           .selectors(ImmutableList.of("jkl", "fgh"))
                                           .build();
 
@@ -2335,7 +2693,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(7);
-    assertThat(tags).containsExactlyInAnyOrder("abc", "bbb", "host", "primary", "test", "jkl", "fgh");
+    assertThat(tags).containsExactlyInAnyOrder("abc", "bbb", "host", PRIMARY_PROFILE_NAME, "test", "jkl", "fgh");
   }
 
   @Test
@@ -2398,6 +2756,62 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
     assertThat(tags.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateImplicitSelectorsWithoutGroupeName() {
+    // Test delegate without groupId
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+    persistence.save(delegate);
+
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isZero();
+
+    // Test delegate with invalid groupId
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .delegateGroupId(generateUuid())
+                             .build();
+    persistence.save(delegate2);
+
+    tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isZero();
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void shouldRetrieveDelegateImplicitSelectorsWithGroupName() {
+    DelegateGroup delegateGroup =
+        DelegateGroup.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("group").build();
+    persistence.save(delegateGroup);
+
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .delegateGroupId(delegateGroup.getUuid())
+                            .build();
+    persistence.save(delegate);
+
+    Set<String> tags = delegateService.retrieveDelegateSelectors(delegate);
+    assertThat(tags.size()).isEqualTo(1);
+    assertThat(tags).containsExactlyInAnyOrder("group");
   }
 
   @Test
@@ -2727,7 +3141,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                        .label("Extra Small")
                                        .taskLimit(50)
                                        .replicas(1)
-                                       .ram(500)
+                                       .ram(1650)
                                        .cpu(0.5)
                                        .build(),
             DelegateSizeDetails.builder()
@@ -2735,7 +3149,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Small")
                 .taskLimit(100)
                 .replicas(2)
-                .ram(1024)
+                .ram(3300)
                 .cpu(1)
                 .build(),
             DelegateSizeDetails.builder()
@@ -2743,7 +3157,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
-                .ram(2048)
+                .ram(6600)
                 .cpu(2)
                 .build(),
             DelegateSizeDetails.builder()
@@ -2751,9 +3165,621 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Large")
                 .taskLimit(400)
                 .replicas(8)
-                .ram(4096)
+                .ram(13200)
                 .cpu(4)
                 .build());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testBuildCapabilitiesCheckTask() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    CapabilityCheckDetails capabilityCheckDetails1 = buildCapabilityCheckDetails(accountId, delegateId, generateUuid());
+    CapabilityCheckDetails capabilityCheckDetails2 = buildCapabilityCheckDetails(accountId, delegateId, generateUuid());
+
+    DelegateTask capabilitiesCheckTask = delegateService.buildCapabilitiesCheckTask(
+        accountId, delegateId, asList(capabilityCheckDetails1, capabilityCheckDetails2));
+
+    assertThat(capabilitiesCheckTask).isNotNull();
+    assertThat(capabilitiesCheckTask.getAccountId()).isEqualTo(accountId);
+    assertThat(capabilitiesCheckTask.getRank()).isEqualTo(DelegateTaskRank.CRITICAL);
+    assertThat(capabilitiesCheckTask.getMustExecuteOnDelegateId()).isEqualTo(delegateId);
+    assertThat(capabilitiesCheckTask.getData()).isNotNull();
+    assertThat(capabilitiesCheckTask.getData().isAsync()).isFalse();
+    assertThat(capabilitiesCheckTask.getData().getTaskType()).isEqualTo(TaskType.BATCH_CAPABILITY_CHECK.name());
+    assertThat(capabilitiesCheckTask.getData().getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1L));
+    assertThat(capabilitiesCheckTask.getData().getParameters()).hasSize(1);
+    assertThat(capabilitiesCheckTask.getData().getParameters()[0])
+        .isInstanceOf(BatchCapabilityCheckTaskParameters.class);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testIsDelegateInCapabilityScope() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    CapabilityTaskSelectionDetails taskSelectionDetails = buildCapabilityTaskSelectionDetails();
+
+    when(assignDelegateService.canAssign(eq(null), eq(delegateId), eq(accountId), eq("app1"), eq("env1"), eq("infra1"),
+             eq(taskSelectionDetails.getTaskGroup()), any(List.class),
+             eq(taskSelectionDetails.getTaskSetupAbstractions())))
+        .thenReturn(true);
+
+    // Test with all arguments
+    assertThat(delegateService.isDelegateInCapabilityScope(accountId, delegateId, taskSelectionDetails)).isTrue();
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(assignDelegateService)
+        .canAssign(eq(null), eq(delegateId), eq(accountId), eq("app1"), eq("env1"), eq("infra1"),
+            eq(taskSelectionDetails.getTaskGroup()), captor.capture(),
+            eq(taskSelectionDetails.getTaskSetupAbstractions()));
+
+    List<ExecutionCapability> selectorCapabilities = captor.getValue();
+    assertThat(selectorCapabilities).hasSize(2);
+
+    // Test with partial arguments
+    taskSelectionDetails.setTaskSelectors(null);
+    taskSelectionDetails.setTaskSetupAbstractions(null);
+    taskSelectionDetails.setTaskGroup(null);
+
+    delegateService.isDelegateInCapabilityScope(accountId, delegateId, taskSelectionDetails);
+
+    captor = ArgumentCaptor.forClass(List.class);
+    verify(assignDelegateService)
+        .canAssign(eq(null), eq(delegateId), eq(accountId), eq(null), eq(null), eq(null), eq(null), captor.capture(),
+            eq(null));
+
+    selectorCapabilities = captor.getValue();
+    assertThat(selectorCapabilities).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testIsDelegateStillInScope() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String capabilityId = generateUuid();
+
+    // Test no task selection details case
+    when(capabilityService.getAllCapabilityTaskSelectionDetails(accountId, capabilityId)).thenReturn(null);
+    assertThat(delegateService.isDelegateStillInScope(accountId, delegateId, capabilityId)).isTrue();
+
+    // Test delegate in scope case
+    CapabilityTaskSelectionDetails taskSelectionDetails = buildCapabilityTaskSelectionDetails();
+    when(capabilityService.getAllCapabilityTaskSelectionDetails(accountId, capabilityId))
+        .thenReturn(Collections.singletonList(taskSelectionDetails));
+    when(assignDelegateService.canAssign(any(null), eq(delegateId), eq(accountId), eq("app1"), eq("env1"), eq("infra1"),
+             eq(taskSelectionDetails.getTaskGroup()), any(List.class),
+             eq(taskSelectionDetails.getTaskSetupAbstractions())))
+        .thenReturn(true);
+
+    assertThat(delegateService.isDelegateStillInScope(accountId, delegateId, capabilityId)).isTrue();
+
+    // Test delegate out of scope case
+    taskSelectionDetails.setAccountId(accountId);
+    taskSelectionDetails.setBlocked(false);
+    persistence.save(taskSelectionDetails);
+
+    when(assignDelegateService.canAssign(any(null), anyString(), eq(accountId), eq("app1"), eq("env1"), eq("infra1"),
+             eq(taskSelectionDetails.getTaskGroup()), any(List.class),
+             eq(taskSelectionDetails.getTaskSetupAbstractions())))
+        .thenReturn(false);
+    when(capabilityService.getNotDeniedCapabilityPermissions(accountId, capabilityId))
+        .thenReturn(Collections.singletonList(
+            buildCapabilitySubjectPermission(accountId, generateUuid(), capabilityId, PermissionResult.ALLOWED)));
+
+    assertThat(delegateService.isDelegateStillInScope(accountId, delegateId, capabilityId)).isFalse();
+
+    CapabilityTaskSelectionDetails updatedTaskSelectionDetails =
+        persistence.get(CapabilityTaskSelectionDetails.class, taskSelectionDetails.getUuid());
+    assertThat(updatedTaskSelectionDetails).isNotNull();
+    assertThat(updatedTaskSelectionDetails.isBlocked()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testRegenerateCapabilityPermissions() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    CapabilityRequirement capabilityRequirement1 = buildCapabilityRequirement();
+    capabilityRequirement1.setAccountId(accountId);
+    CapabilityRequirement capabilityRequirement2 = buildCapabilityRequirement();
+    capabilityRequirement2.setAccountId(accountId);
+
+    when(capabilityService.getAllCapabilityRequirements(accountId))
+        .thenReturn(Arrays.asList(capabilityRequirement1, capabilityRequirement2));
+
+    CapabilityTaskSelectionDetails taskSelectionDetails = buildCapabilityTaskSelectionDetails();
+    when(capabilityService.getAllCapabilityTaskSelectionDetails(accountId, capabilityRequirement2.getUuid()))
+        .thenReturn(Collections.singletonList(taskSelectionDetails));
+    when(assignDelegateService.canAssign(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        .thenReturn(false);
+    when(capabilityService.getNotDeniedCapabilityPermissions(accountId, capabilityRequirement2.getUuid()))
+        .thenReturn(Collections.emptyList());
+    when(capabilityService.getAllCapabilityPermissions(accountId, capabilityRequirement1.getUuid(), null))
+        .thenReturn(Collections.emptyList());
+
+    delegateService.regenerateCapabilityPermissions(accountId, delegateId);
+
+    verify(capabilityService)
+        .deleteCapabilitySubjectPermission(accountId, delegateId, capabilityRequirement2.getUuid());
+    verify(capabilityService)
+        .addCapabilityPermissions(
+            eq(capabilityRequirement1), any(List.class), eq(PermissionResult.UNCHECKED), eq(true));
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testCreateCapabilityRequirementInstances() {
+    String accountId = generateUuid();
+
+    HttpConnectionExecutionCapability httpCapability1 =
+        HttpConnectionExecutionCapability.builder().url("https://google.com").build();
+    HttpConnectionExecutionCapability httpCapability2 =
+        HttpConnectionExecutionCapability.builder().url("https://harness.io").build();
+
+    CapabilityRequirement expectedCapabilityRequirement = buildCapabilityRequirement();
+    when(capabilityService.buildCapabilityRequirement(accountId, httpCapability1))
+        .thenReturn(expectedCapabilityRequirement);
+    when(capabilityService.buildCapabilityRequirement(accountId, httpCapability2)).thenReturn(null);
+
+    List<CapabilityRequirement> capabilityRequirements =
+        delegateService.createCapabilityRequirementInstances(accountId, asList(httpCapability1, httpCapability2));
+    assertThat(capabilityRequirements).hasSize(1);
+    assertThat(capabilityRequirements.get(0)).isEqualTo(expectedCapabilityRequirement);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testCreateCapabilityTaskSelectionDetailsInstance() {
+    DelegateTask task = DelegateTask.builder().build();
+    CapabilityRequirement capabilityRequirement = buildCapabilityRequirement();
+
+    // Test case with partial arguments
+    delegateService.createCapabilityTaskSelectionDetailsInstance(task, capabilityRequirement, null);
+    verify(capabilityService)
+        .buildCapabilityTaskSelectionDetails(capabilityRequirement, null, task.getSetupAbstractions(), null, null);
+
+    // Test case with all arguments
+    task.setData(TaskData.builder().taskType(TaskType.HTTP.name()).build());
+
+    Map<String, String> taskSetupAbstractions = new HashMap<>();
+    taskSetupAbstractions.put("foo", "bar");
+    task.setSetupAbstractions(taskSetupAbstractions);
+
+    task.setExecutionCapabilities(Arrays.asList(
+        SelectorCapability.builder().selectorOrigin("TASK_SELECTORS").selectors(Collections.singleton("sel1")).build(),
+        HttpConnectionExecutionCapability.builder().url("https://google.com").build()));
+
+    List<String> assignableDelegateIds = Arrays.asList("del1", "del2");
+
+    delegateService.createCapabilityTaskSelectionDetailsInstance(task, capabilityRequirement, assignableDelegateIds);
+
+    ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+    verify(capabilityService)
+        .buildCapabilityTaskSelectionDetails(eq(capabilityRequirement), eq(TaskGroup.HTTP),
+            eq(task.getSetupAbstractions()), captor.capture(), eq(assignableDelegateIds));
+    List<SelectorCapability> selectorCapabilities = captor.getValue();
+    assertThat(selectorCapabilities).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testExecuteBatchCapabilityCheckTaskWithNotInScopeDelegate() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String capabilityId = generateUuid();
+
+    CapabilitySubjectPermission permission1 =
+        buildCapabilitySubjectPermission(accountId, delegateId, capabilityId, PermissionResult.ALLOWED);
+
+    CapabilityTaskSelectionDetails taskSelectionDetails = buildCapabilityTaskSelectionDetails();
+    when(capabilityService.getAllCapabilityTaskSelectionDetails(accountId, capabilityId))
+        .thenReturn(Collections.singletonList(taskSelectionDetails));
+    when(assignDelegateService.canAssign(any(null), anyString(), eq(accountId), eq("app1"), eq("env1"), eq("infra1"),
+             eq(taskSelectionDetails.getTaskGroup()), any(List.class),
+             eq(taskSelectionDetails.getTaskSetupAbstractions())))
+        .thenReturn(false);
+    when(capabilityService.getNotDeniedCapabilityPermissions(accountId, capabilityId))
+        .thenReturn(Collections.singletonList(
+            buildCapabilitySubjectPermission(accountId, generateUuid(), capabilityId, PermissionResult.ALLOWED)));
+
+    delegateService.executeBatchCapabilityCheckTask(
+        accountId, delegateId, Collections.singletonList(permission1), null);
+    verify(capabilityService).deleteCapabilitySubjectPermission(permission1.getUuid());
+    verify(delegateSyncService, never()).waitForTask(any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testExecuteBatchCapabilityCheckTaskWithNoCapabilityFound() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String capabilityId = generateUuid();
+    String blockedTaskSelectionDetailsId = generateUuid();
+
+    CapabilitySubjectPermission permission1 =
+        buildCapabilitySubjectPermission(accountId, delegateId, capabilityId, PermissionResult.ALLOWED);
+
+    delegateService.executeBatchCapabilityCheckTask(
+        accountId, delegateId, Collections.singletonList(permission1), blockedTaskSelectionDetailsId);
+    verify(capabilityService, never()).deleteCapabilitySubjectPermission(any());
+    verify(delegateSyncService, never()).waitForTask(any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testExecuteBatchCapabilityCheckTaskWithNullTaskResponse() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String capabilityId = generateUuid();
+    String blockedTaskSelectionDetailsId = generateUuid();
+
+    CapabilitySubjectPermission permission1 =
+        buildCapabilitySubjectPermission(accountId, delegateId, capabilityId, PermissionResult.ALLOWED);
+
+    CapabilityRequirement capabilityRequirement = buildCapabilityRequirement();
+    capabilityRequirement.setAccountId(accountId);
+    capabilityRequirement.setUuid(capabilityId);
+    persistence.save(capabilityRequirement);
+
+    when(assignDelegateService.retrieveActiveDelegates(any(), any())).thenReturn(Collections.singletonList(delegateId));
+    when(assignDelegateService.canAssign(any(), any(), any())).thenReturn(true);
+    when(delegateSyncService.waitForTask(any(), any(), any())).thenReturn(null);
+
+    delegateService.executeBatchCapabilityCheckTask(
+        accountId, delegateId, Collections.singletonList(permission1), blockedTaskSelectionDetailsId);
+    verify(capabilityService, never()).deleteCapabilitySubjectPermission(any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testExecuteBatchCapabilityCheckTaskWithErrorTaskResponse() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String capabilityId = generateUuid();
+    String blockedTaskSelectionDetailsId = generateUuid();
+
+    CapabilitySubjectPermission permission1 =
+        buildCapabilitySubjectPermission(accountId, delegateId, capabilityId, PermissionResult.ALLOWED);
+
+    CapabilityRequirement capabilityRequirement = buildCapabilityRequirement();
+    capabilityRequirement.setAccountId(accountId);
+    capabilityRequirement.setUuid(capabilityId);
+    persistence.save(capabilityRequirement);
+
+    when(assignDelegateService.retrieveActiveDelegates(any(), any())).thenReturn(Collections.singletonList(delegateId));
+    when(assignDelegateService.canAssign(any(), any(), any())).thenReturn(true);
+    when(delegateSyncService.waitForTask(any(), any(), any()))
+        .thenReturn(RemoteMethodReturnValueData.builder().exception(new InvalidRequestException("")).build());
+
+    delegateService.executeBatchCapabilityCheckTask(
+        accountId, delegateId, Collections.singletonList(permission1), blockedTaskSelectionDetailsId);
+    verify(capabilityService, never()).deleteCapabilitySubjectPermission(any());
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testExecuteBatchCapabilityCheckTaskWithSuccessfulTaskResponse() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String capabilityId = generateUuid();
+
+    CapabilitySubjectPermission permission1 =
+        buildCapabilitySubjectPermission(accountId, delegateId, capabilityId, PermissionResult.UNCHECKED);
+    persistence.save(permission1);
+
+    CapabilityRequirement capabilityRequirement = buildCapabilityRequirement();
+    capabilityRequirement.setAccountId(accountId);
+    capabilityRequirement.setUuid(capabilityId);
+    persistence.save(capabilityRequirement);
+
+    String blockedTaskSelectionDetailsId = generateUuid();
+    CapabilityTaskSelectionDetails taskSelectionDetails = buildCapabilityTaskSelectionDetails();
+    taskSelectionDetails.setUuid(blockedTaskSelectionDetailsId);
+    taskSelectionDetails.setAccountId(accountId);
+    taskSelectionDetails.setCapabilityId(capabilityId);
+    persistence.save(taskSelectionDetails);
+
+    CapabilityCheckDetails capabilityCheckDetails = buildCapabilityCheckDetails(accountId, delegateId, capabilityId)
+                                                        .toBuilder()
+                                                        .permissionResult(PermissionResult.ALLOWED)
+                                                        .build();
+
+    when(assignDelegateService.retrieveActiveDelegates(any(), any())).thenReturn(Collections.singletonList(delegateId));
+    when(assignDelegateService.canAssign(any(), any(), any())).thenReturn(true);
+    when(delegateSyncService.waitForTask(any(), any(), any()))
+        .thenReturn(BatchCapabilityCheckTaskResponse.builder()
+                        .capabilityCheckDetailsList(Collections.singletonList(capabilityCheckDetails))
+                        .build());
+
+    delegateService.executeBatchCapabilityCheckTask(
+        accountId, delegateId, Collections.singletonList(permission1), blockedTaskSelectionDetailsId);
+    verify(capabilityService, never()).deleteCapabilitySubjectPermission(any());
+
+    CapabilitySubjectPermission updatedPermission =
+        persistence.get(CapabilitySubjectPermission.class, permission1.getUuid());
+    assertThat(updatedPermission.getPermissionResult()).isEqualTo(PermissionResult.ALLOWED);
+    assertThat(updatedPermission.getRevalidateAfter()).isGreaterThan(System.currentTimeMillis());
+    assertThat(updatedPermission.getMaxValidUntil()).isGreaterThan(System.currentTimeMillis());
+
+    CapabilityTaskSelectionDetails updatedTaskSelectionDetails =
+        persistence.get(CapabilityTaskSelectionDetails.class, taskSelectionDetails.getUuid());
+    assertThat(updatedTaskSelectionDetails.isBlocked()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testUpsertCapabilityRequirements() {
+    String accountId = generateUuid();
+    // Test FF disabled
+    delegateService.upsertCapabilityRequirements(DelegateTask.builder().accountId(accountId).build());
+
+    // Test FF enabled, but no task capabilities
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    delegateService.upsertCapabilityRequirements(DelegateTask.builder().accountId(accountId).build());
+
+    // Test FF enabled, but no task AGENT capabilities
+    delegateService.upsertCapabilityRequirements(
+        DelegateTask.builder()
+            .accountId(accountId)
+            .executionCapabilities(Collections.singletonList(SelectorCapability.builder()
+                                                                 .selectorOrigin("TASK_SELECTORS")
+                                                                 .selectors(Collections.singleton("sel1"))
+                                                                 .build()))
+            .build());
+
+    verify(assignDelegateService, never()).getAccountDelegates(any());
+
+    // Test full scenario
+    DelegateTask task = DelegateTask.builder()
+                            .accountId(accountId)
+                            .executionCapabilities(asList(SelectorCapability.builder()
+                                                              .selectorOrigin("TASK_SELECTORS")
+                                                              .selectors(Collections.singleton("sel1"))
+                                                              .build(),
+                                HttpConnectionExecutionCapability.builder().url("https://google.com").build()))
+                            .build();
+    Delegate delegate =
+        Delegate.builder().uuid(generateUuid()).accountId(accountId).status(DelegateInstanceStatus.ENABLED).build();
+    when(assignDelegateService.getAccountDelegates(accountId)).thenReturn(Collections.singletonList(delegate));
+    when(assignDelegateService.canAssign(null, delegate.getUuid(), task)).thenReturn(true);
+    BatchDelegateSelectionLog selectionLogBatch = BatchDelegateSelectionLog.builder().build();
+    when(delegateSelectionLogsService.createBatch(task)).thenReturn(selectionLogBatch);
+    when(capabilityService.buildCapabilityRequirement(any(), any())).thenReturn(buildCapabilityRequirement());
+    when(capabilityService.buildCapabilityTaskSelectionDetails(any(), any(), any(), any(), any()))
+        .thenReturn(buildCapabilityTaskSelectionDetails());
+
+    delegateService.upsertCapabilityRequirements(task);
+
+    verify(delegateSelectionLogsService).createBatch(task);
+    verify(delegateSelectionLogsService).save(selectionLogBatch);
+    verify(capabilityService)
+        .processTaskCapabilityRequirement(
+            any(CapabilityRequirement.class), any(CapabilityTaskSelectionDetails.class), any(List.class));
+
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testPickDelegateForTaskWithoutAnyAgentCapabilities() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    DelegateTask task = DelegateTask.builder().build();
+
+    // Test no active delegates case
+    assertThat(delegateService.pickDelegateForTaskWithoutAnyAgentCapabilities(task, null)).isNull();
+
+    // Test assignable delegate with ignore already tried case
+    BatchDelegateSelectionLog selectionLogBatch = BatchDelegateSelectionLog.builder().build();
+    when(delegateSelectionLogsService.createBatch(task)).thenReturn(selectionLogBatch);
+    when(assignDelegateService.canAssign(eq(selectionLogBatch), anyString(), eq(task))).thenReturn(true);
+
+    assertThat(
+        delegateService.pickDelegateForTaskWithoutAnyAgentCapabilities(task, Collections.singletonList(delegateId)))
+        .isEqualTo(delegateId);
+    verify(delegateSelectionLogsService).createBatch(task);
+    verify(delegateSelectionLogsService).save(selectionLogBatch);
+
+    task.setAlreadyTriedDelegates(Stream.of(delegateId).collect(Collectors.toSet()));
+    assertThat(
+        delegateService.pickDelegateForTaskWithoutAnyAgentCapabilities(task, Collections.singletonList(delegateId)))
+        .isEqualTo(delegateId);
+    verify(delegateSelectionLogsService, times(2)).createBatch(task);
+    verify(delegateSelectionLogsService, times(2)).save(selectionLogBatch);
+
+    // Test assignable delegate without ignoring already tried case
+    String delegateId2 = generateUuid();
+    assertThat(
+        delegateService.pickDelegateForTaskWithoutAnyAgentCapabilities(task, Arrays.asList(delegateId, delegateId2)))
+        .isEqualTo(delegateId2);
+    verify(delegateSelectionLogsService, times(3)).createBatch(task);
+    verify(delegateSelectionLogsService, times(3)).save(selectionLogBatch);
+
+    // Test out of scope case
+    when(assignDelegateService.canAssign(eq(selectionLogBatch), anyString(), eq(task))).thenReturn(false);
+    assertThat(
+        delegateService.pickDelegateForTaskWithoutAnyAgentCapabilities(task, Arrays.asList(delegateId, delegateId2)))
+        .isNull();
+    verify(delegateSelectionLogsService, times(4)).createBatch(task);
+    verify(delegateSelectionLogsService, times(4)).save(selectionLogBatch);
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void shouldRetrieveGroupedHostnameNullValue() {
+    String hostNameForGroupedDelegate = delegateService.getHostNameForGroupedDelegate(null);
+
+    assertThat(hostNameForGroupedDelegate).isNull();
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void shouldRetrieveGroupedHostnameEmptyValue() {
+    String hostNameForGroupedDelegate = delegateService.getHostNameForGroupedDelegate("");
+
+    assertThat(hostNameForGroupedDelegate).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = NICOLAS)
+  @Category(UnitTests.class)
+  public void shouldRetrieveGroupedHostnameValidValue() {
+    String hostNameForGroupedDelegate = delegateService.getHostNameForGroupedDelegate("test-hostname-1");
+
+    assertThat(hostNameForGroupedDelegate).isEqualTo("test-hostname" + GROUPED_HOSTNAME_SUFFIX);
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testObtainCapableDelegateId() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    String delegateId2 = generateUuid();
+    DelegateTask task = DelegateTask.builder().uuid(generateUuid()).accountId(accountId).build();
+
+    // Old way with delegate whitelisting
+    when(assignDelegateService.pickFirstAttemptDelegate(task)).thenReturn(delegateId);
+    assertThat(delegateService.obtainCapableDelegateId(task, null)).isEqualTo(delegateId);
+    verify(delegateSelectionLogsService, never()).createBatch(task);
+
+    featureTestHelper.enableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+    BatchDelegateSelectionLog selectionLogBatch = BatchDelegateSelectionLog.builder().build();
+    when(delegateSelectionLogsService.createBatch(task)).thenReturn(selectionLogBatch);
+    List<String> activeDelegates = Arrays.asList(delegateId, delegateId2);
+
+    // Test no task capabilities case
+    when(assignDelegateService.retrieveActiveDelegates(task.getAccountId(), selectionLogBatch)).thenReturn(null);
+    assertThat(delegateService.obtainCapableDelegateId(task, null)).isNull();
+    verify(delegateSelectionLogsService).createBatch(task);
+    verify(delegateSelectionLogsService).save(selectionLogBatch);
+
+    // Test no AGENT capabilities case
+    task.setExecutionCapabilities(asList(SelectorCapability.builder()
+                                             .selectorOrigin("TASK_SELECTORS")
+                                             .selectors(Collections.singleton("sel1"))
+                                             .build()));
+    // HttpConnectionExecutionCapability.builder().url("https://google.com").build()))
+    assertThat(delegateService.obtainCapableDelegateId(task, null)).isNull();
+
+    // Test assignable delegate with ignoring already tried case
+    task.setExecutionCapabilities(asList(
+        SelectorCapability.builder().selectorOrigin("TASK_SELECTORS").selectors(Collections.singleton("sel1")).build(),
+        HttpConnectionExecutionCapability.builder().url("https://google.com").build()));
+    when(assignDelegateService.retrieveActiveDelegates(task.getAccountId(), selectionLogBatch))
+        .thenReturn(Arrays.asList(delegateId, delegateId2));
+    when(capabilityService.buildCapabilityRequirement(any(), any())).thenReturn(buildCapabilityRequirement());
+
+    String delegateId3 = generateUuid();
+    when(capabilityService.getCapableDelegateIds(eq(task.getAccountId()), any()))
+        .thenReturn(Collections.emptySet())
+        .thenReturn(Stream.of(delegateId2, delegateId, delegateId3).collect(Collectors.toSet()));
+    CapabilityTaskSelectionDetails taskSelectionDetails = buildCapabilityTaskSelectionDetails();
+    when(capabilityService.getAllCapabilityTaskSelectionDetails(eq(accountId), anyString()))
+        .thenReturn(Collections.singletonList(taskSelectionDetails));
+    when(assignDelegateService.canAssign(any(null), eq(delegateId), eq(accountId), eq("app1"), eq("env1"), eq("infra1"),
+             eq(taskSelectionDetails.getTaskGroup()), any(List.class),
+             eq(taskSelectionDetails.getTaskSetupAbstractions())))
+        .thenReturn(true);
+    when(assignDelegateService.canAssign(any(null), eq(delegateId2), eq(accountId), eq("app1"), eq("env1"),
+             eq("infra1"), eq(taskSelectionDetails.getTaskGroup()), any(List.class),
+             eq(taskSelectionDetails.getTaskSetupAbstractions())))
+        .thenReturn(false);
+    when(capabilityService.getNotDeniedCapabilityPermissions(eq(accountId), anyString()))
+        .thenReturn(Collections.singletonList(
+            buildCapabilitySubjectPermission(accountId, delegateId, generateUuid(), PermissionResult.ALLOWED)));
+
+    assertThat(delegateService.obtainCapableDelegateId(task, Collections.singleton(delegateId3))).isEqualTo(delegateId);
+
+    // Test case with no capable delegates
+    when(capabilityService.getCapableDelegateIds(eq(task.getAccountId()), any())).thenReturn(Collections.emptySet());
+    assertThat(delegateService.obtainCapableDelegateId(task, Collections.singleton(delegateId3))).isNull();
+
+    featureTestHelper.disableFeatureFlag(FeatureName.PER_AGENT_CAPABILITIES);
+  }
+
+  private CapabilityCheckDetails buildCapabilityCheckDetails(String accountId, String delegateId, String capabilityId) {
+    return CapabilityCheckDetails.builder()
+        .accountId(accountId)
+        .delegateId(delegateId)
+        .capabilityId(capabilityId)
+        .capabilityType(CapabilityType.HTTP)
+        .capabilityParameters(
+            CapabilityParameters.newBuilder()
+                .setHttpConnectionParameters(HttpConnectionParameters.newBuilder().setUrl("https://google.com"))
+                .build())
+        .build();
+  }
+
+  private CapabilityRequirement buildCapabilityRequirement() {
+    return CapabilityRequirement.builder()
+        .accountId(generateUuid())
+        .uuid(generateUuid())
+        .validUntil(Date.from(Instant.now().plus(Duration.ofDays(30))))
+        .capabilityType(CapabilityType.HTTP.name())
+        .capabilityParameters(
+            CapabilityParameters.newBuilder()
+                .setHttpConnectionParameters(HttpConnectionParameters.newBuilder().setUrl("https://google.com"))
+                .build())
+        .build();
+  }
+
+  private CapabilityTaskSelectionDetails buildCapabilityTaskSelectionDetails() {
+    Map<String, Set<String>> taskSelectors = new HashMap<>();
+    taskSelectors.put("TASK_SELECTORS", Collections.singleton("value1"));
+    taskSelectors.put("TASK_CATEGORY_MAP", Collections.singleton("value2"));
+
+    Map<String, String> taskSetupAbstractions = new HashMap<>();
+    taskSetupAbstractions.put("appId", "app1");
+    taskSetupAbstractions.put("envId", "env1");
+    taskSetupAbstractions.put("infrastructureMappingId", "infra1");
+    taskSetupAbstractions.put("foo", "bar");
+
+    return CapabilityTaskSelectionDetails.builder()
+        .uuid(generateUuid())
+        .accountId(generateUuid())
+        .capabilityId(generateUuid())
+        .taskGroup(TaskGroup.HTTP)
+        .taskSelectors(taskSelectors)
+        .taskSetupAbstractions(taskSetupAbstractions)
+        .blocked(true)
+        .validUntil(Date.from(Instant.now().plus(Duration.ofDays(30))))
+        .build();
+  }
+
+  private CapabilitySubjectPermission buildCapabilitySubjectPermission(
+      String accountId, String delegateId, String capabilityId, PermissionResult permissionResult) {
+    return CapabilitySubjectPermission.builder()
+        .uuid(generateUuid())
+        .accountId(accountId)
+        .delegateId(delegateId)
+        .capabilityId(capabilityId)
+        .maxValidUntil(120000)
+        .revalidateAfter(180000)
+        .validUntil(Date.from(Instant.now().plus(Duration.ofDays(30))))
+        .permissionResult(permissionResult)
+        .build();
   }
 
   private DelegateTask saveDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
@@ -2773,15 +3799,7 @@ public class DelegateServiceTest extends WingsBaseTest {
             .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
             .build();
 
-    delegateService.saveDelegateTask(delegateTask, QUEUED);
-
-    if (status != delegateTask.getStatus()) {
-      delegateTask = persistence.findAndModify(
-          persistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.uuid, delegateTask.getUuid()),
-          persistence.createUpdateOperations(DelegateTask.class).set(DelegateTaskKeys.status, status),
-          HPersistence.returnNewOptions);
-    }
-
+    delegateService.saveDelegateTask(delegateTask, status);
     return delegateTask;
   }
 
@@ -2791,7 +3809,7 @@ public class DelegateServiceTest extends WingsBaseTest {
         .ip("127.0.0.1")
         .hostName("localhost")
         .delegateName("testDelegateName")
-        .delegateType("dockerType")
+        .delegateType(DELEGATE_TYPE)
         .version(VERSION)
         .status(DelegateInstanceStatus.ENABLED)
         .lastHeartBeat(System.currentTimeMillis());

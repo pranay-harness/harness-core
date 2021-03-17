@@ -1,5 +1,8 @@
 package io.harness.cvng.client;
 
+import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
+
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -62,6 +65,8 @@ public class NextGenClientFactory implements Provider<NextGenClient> {
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(false)
           .addInterceptor(getAuthorizationInterceptor())
+          .addInterceptor(getCorrelationIdInterceptor())
+          .addInterceptor(getRequestContextInterceptor())
           .addInterceptor(chain -> {
             Request original = chain.request();
 

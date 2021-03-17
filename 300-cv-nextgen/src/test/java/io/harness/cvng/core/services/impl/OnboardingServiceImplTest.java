@@ -9,7 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
-public class OnboardingServiceImplTest extends CvNextGenTest {
+public class OnboardingServiceImplTest extends CvNextGenTestBase {
   @Inject private OnboardingService onboardingService;
   @Mock private NextGenService nextGenService;
   @Mock private VerificationManagerService verificationManagerService;

@@ -29,8 +29,11 @@ import software.wings.sm.states.azure.appservices.manifest.AzureAppServiceManife
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableList;
-import java.util.HashMap;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -48,7 +51,114 @@ public class AzureAppServiceManifestUtilsTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetAzureAppServiceConfiguration() {
     ExecutionContext mockExecutionContext = mock(ExecutionContext.class);
-    getServiceApplicationManifest(mockExecutionContext);
+    mockGetManifestFilesByAppManifestId(mockExecutionContext);
+
+    AzureAppServiceConfiguration azureAppServiceConfiguration =
+        azureAppServiceManifestUtils.getAzureAppServiceConfiguration(mockExecutionContext);
+
+    List<AzureAppServiceApplicationSetting> azureAppServiceApplicationSettings =
+        azureAppServiceConfiguration.getAppSettings();
+    Map<String, AzureAppServiceApplicationSetting> appSettings = azureAppServiceApplicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
+
+    List<AzureAppServiceConnectionString> azureAppServiceConnectionStrings =
+        azureAppServiceConfiguration.getConnStrings();
+    Map<String, AzureAppServiceConnectionString> connStrings = azureAppServiceConnectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
+
+    assertThat(appSettings.size()).isEqualTo(6);
+    assertThat(appSettings.get("SERVICE_VARIABLE").getValue()).isEqualTo("${serviceVariable.service_variable}");
+    assertThat(appSettings.get("DOCKER_REGISTRY_SERVER_PASSWORD").getValue())
+        .isEqualTo("${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}");
+    assertThat(appSettings.get("DOCKER_REGISTRY_SERVER_USERNAME").getValue()).isEqualTo("automationuser");
+    assertThat(appSettings.get("CONFIG_FILE").getValue()).isEqualTo("configFile.getAsString('fileName')");
+
+    assertThat(connStrings.size()).isEqualTo(3);
+    assertThat(connStrings.get("SECRET_CONN_STRING").getValue())
+        .isEqualTo("${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}");
+    assertThat(connStrings.get("SERVICE_VARIABLE").getValue()).isEqualTo("${serviceVariable.service_variable}");
+    assertThat(connStrings.get("CONN_STRING").getValue()).isEqualTo("value");
+  }
+
+  @NotNull
+  private ApplicationManifest mockGetManifestFilesByAppManifestId(ExecutionContext mockExecutionContext) {
+    Service mockService = mock(Service.class);
+    doReturn(mockService).when(applicationManifestUtils).fetchServiceFromContext(mockExecutionContext);
+
+    ApplicationManifest serviceAppManifest = ApplicationManifest.builder().storeType(StoreType.Local).build();
+    serviceAppManifest.setAppId("APP_ID");
+    serviceAppManifest.setUuid("SERVICE_UUID");
+    doReturn(serviceAppManifest).when(applicationManifestService).getByServiceId(anyString(), anyString(), any());
+
+    doReturn(ImmutableList.of(
+                 ManifestFile.builder().fileName("appsettings").fileContent(appSettingsServiceAppManifest).build(),
+                 ManifestFile.builder().fileName("connstrings").fileContent(connStringsServiceAppManifest).build()))
+        .when(applicationManifestService)
+        .getManifestFilesByAppManifestId(eq("APP_ID"), eq("SERVICE_UUID"));
+
+    return serviceAppManifest;
+  }
+
+  String appSettingsServiceAppManifest = "[\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_PASSWORD\",\n"
+      + "      \"value\": \"${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_URL\",\n"
+      + "      \"value\": \"https://harness.jfrog-ui.io\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_USERNAME\",\n"
+      + "      \"value\": \"automationuser\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"SERVICE_VARIABLE\",\n"
+      + "      \"value\": \"${serviceVariable.service_variable}\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"WEBSITES_ENABLE_APP_SERVICE_STORAGE\",\n"
+      + "      \"value\": \"false\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"CONFIG_FILE\",\n"
+      + "      \"value\": \"configFile.getAsString('fileName')\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    }\n"
+      + "  ]";
+
+  String connStringsServiceAppManifest = "[\n"
+      + "    {\n"
+      + "      \"name\": \"CONN_STRING\",\n"
+      + "      \"value\": \"value\",\n"
+      + "      \"type\": \"MySql\",\n"
+      + "      \"slotSetting\": true\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"SECRET_CONN_STRING\",\n"
+      + "      \"value\": \"${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}\",\n"
+      + "      \"type\": \"PostgreSQL\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "        \"name\": \"SERVICE_VARIABLE\",\n"
+      + "        \"value\": \"${serviceVariable.service_variable}\",\n"
+      + "        \"type\": \"Custom\",\n"
+      + "        \"slotSetting\": true\n"
+      + "      }\n"
+      + "  ]";
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetAzureAppServiceConfigurationEnvServiceOverrides() {
+    ExecutionContext mockExecutionContext = mock(ExecutionContext.class);
+    mockGetManifestFilesByAppManifestId(mockExecutionContext);
 
     // appsettings env service override
     Map<K8sValuesLocation, ApplicationManifest> appSettingsEnvServiceOverride = getAppSettingsEnvServiceOverride();
@@ -65,59 +175,192 @@ public class AzureAppServiceManifestUtilsTest extends WingsBaseTest {
     AzureAppServiceConfiguration azureAppServiceConfiguration =
         azureAppServiceManifestUtils.getAzureAppServiceConfiguration(mockExecutionContext);
 
-    assertThat(azureAppServiceConfiguration).isNotNull();
-    assertThat(azureAppServiceConfiguration.getAppSettingsJSON()).isEqualTo("appsettings-env-service-override");
-    assertThat(azureAppServiceConfiguration.getConnStringsJSON()).isEqualTo("connstrings-env-service-override");
-  }
+    List<AzureAppServiceApplicationSetting> azureAppServiceApplicationSettings =
+        azureAppServiceConfiguration.getAppSettings();
+    Map<String, AzureAppServiceApplicationSetting> appSettings = azureAppServiceApplicationSettings.stream().collect(
+        Collectors.toMap(AzureAppServiceApplicationSetting::getName, Function.identity()));
 
-  @NotNull
-  private ApplicationManifest getServiceApplicationManifest(ExecutionContext mockExecutionContext) {
-    Service mockService = mock(Service.class);
-    doReturn(mockService).when(applicationManifestUtils).fetchServiceFromContext(mockExecutionContext);
+    List<AzureAppServiceConnectionString> azureAppServiceConnectionStrings =
+        azureAppServiceConfiguration.getConnStrings();
+    Map<String, AzureAppServiceConnectionString> connStrings = azureAppServiceConnectionStrings.stream().collect(
+        Collectors.toMap(AzureAppServiceConnectionString::getName, Function.identity()));
 
-    ApplicationManifest serviceAppManifest = ApplicationManifest.builder().storeType(StoreType.Local).build();
-    serviceAppManifest.setAppId("APP_ID");
-    serviceAppManifest.setUuid("SERVICE_UUID");
-    doReturn(serviceAppManifest).when(applicationManifestService).getByServiceId(anyString(), anyString(), any());
+    assertThat(appSettings.size()).isEqualTo(6);
+    assertThat(appSettings.get("SERVICE_VARIABLE_SERVICE_ENV_OVERRIDE").getValue())
+        .isEqualTo("${serviceVariable.service_variable}");
+    assertThat(appSettings.get("DOCKER_REGISTRY_SERVER_PASSWORD_SERVICE_ENV_OVERRIDE").getValue())
+        .isEqualTo("${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}");
+    assertThat(appSettings.get("DOCKER_REGISTRY_SERVER_USERNAME_SERVICE_ENV_OVERRIDE").getValue())
+        .isEqualTo("automationuser");
+    assertThat(appSettings.get("CONFIG_FILE_SERVICE_ENV_OVERRIDE").getValue())
+        .isEqualTo("configFile.getAsString('fileName')");
 
-    doReturn(
-        ImmutableList.of(
-            ManifestFile.builder().fileName("appsettings").fileContent("appsettings-service-app-manifest").build(),
-            ManifestFile.builder().fileName("connstrings").fileContent("connstrings-service-app-manifest").build()))
-        .when(applicationManifestService)
-        .getManifestFilesByAppManifestId(eq("APP_ID"), eq("SERVICE_UUID"));
-
-    return serviceAppManifest;
+    assertThat(connStrings.size()).isEqualTo(3);
+    assertThat(connStrings.get("SECRET_CONN_STRING_SERVICE_ENV_OVERRIDE").getValue())
+        .isEqualTo("${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}");
+    assertThat(connStrings.get("SERVICE_VARIABLE_SERVICE_ENV_OVERRIDE").getValue())
+        .isEqualTo("${serviceVariable.service_variable}");
+    assertThat(connStrings.get("CONN_STRING_SERVICE_ENV_OVERRIDE").getValue()).isEqualTo("value");
   }
 
   private Map<K8sValuesLocation, ApplicationManifest> getAppSettingsEnvServiceOverride() {
-    Map<K8sValuesLocation, ApplicationManifest> appSettingsEnvServiceOverride = new HashMap<>();
-    ApplicationManifest appSettingsServiceOverride = ApplicationManifest.builder().storeType(StoreType.Local).build();
-    appSettingsServiceOverride.setAppId("APP_ID");
-    appSettingsServiceOverride.setUuid("APP_SETTINGS_ENV_SERVICE_OVERRIDE_UUID");
-    appSettingsEnvServiceOverride.put(K8sValuesLocation.Environment, appSettingsServiceOverride);
-    doReturn(
-        ImmutableList.of(
-            ManifestFile.builder().fileName("appsettings").fileContent("appsettings-env-service-override").build()))
+    Map<K8sValuesLocation, ApplicationManifest> appSettingsEnvServiceOverride = new EnumMap<>(K8sValuesLocation.class);
+
+    ApplicationManifest appSettingsServiceEnvOverride =
+        ApplicationManifest.builder().storeType(StoreType.Local).build();
+    appSettingsServiceEnvOverride.setAppId("APP_ID");
+    appSettingsServiceEnvOverride.setUuid("APP_SETTINGS_ENV_SERVICE_OVERRIDE_UUID");
+    appSettingsEnvServiceOverride.put(K8sValuesLocation.Environment, appSettingsServiceEnvOverride);
+    doReturn(ImmutableList.of(
+                 ManifestFile.builder().fileName("appsettings").fileContent(appSettingsEnvServiceOverrides).build()))
         .when(applicationManifestService)
         .getManifestFilesByAppManifestId(eq("APP_ID"), eq("APP_SETTINGS_ENV_SERVICE_OVERRIDE_UUID"));
+
+    ApplicationManifest appSettingsEnvOverride = ApplicationManifest.builder().storeType(StoreType.Local).build();
+    appSettingsEnvOverride.setAppId("APP_ID");
+    appSettingsEnvOverride.setUuid("APP_SETTINGS_ENV_OVERRIDE_UUID");
+    appSettingsEnvServiceOverride.put(K8sValuesLocation.EnvironmentGlobal, appSettingsEnvOverride);
+    doReturn(
+        ImmutableList.of(ManifestFile.builder().fileName("appsettings").fileContent(appSettingsEnvOverrides).build()))
+        .when(applicationManifestService)
+        .getManifestFilesByAppManifestId(eq("APP_ID"), eq("APP_SETTINGS_ENV_OVERRIDE_UUID"));
+
     return appSettingsEnvServiceOverride;
   }
 
   @NotNull
   private Map<K8sValuesLocation, ApplicationManifest> getConnStringsEnvServiceOverride() {
-    Map<K8sValuesLocation, ApplicationManifest> connStringsEnvServiceOverride = new HashMap<>();
-    ApplicationManifest connStringsServiceOverride = ApplicationManifest.builder().storeType(StoreType.Local).build();
-    connStringsServiceOverride.setAppId("APP_ID");
-    connStringsServiceOverride.setUuid("CONN_STRINGS_ENV_SERVICE_OVERRIDE_UUID");
-    connStringsEnvServiceOverride.put(K8sValuesLocation.Environment, connStringsServiceOverride);
-    doReturn(
-        ImmutableList.of(
-            ManifestFile.builder().fileName("connstrings").fileContent("connstrings-env-service-override").build()))
+    Map<K8sValuesLocation, ApplicationManifest> connStringsEnvServiceOverride = new EnumMap<>(K8sValuesLocation.class);
+
+    ApplicationManifest connStringsServiceEnvOverride =
+        ApplicationManifest.builder().storeType(StoreType.Local).build();
+    connStringsServiceEnvOverride.setAppId("APP_ID");
+    connStringsServiceEnvOverride.setUuid("CONN_STRINGS_ENV_SERVICE_OVERRIDE_UUID");
+    connStringsEnvServiceOverride.put(K8sValuesLocation.Environment, connStringsServiceEnvOverride);
+    doReturn(ImmutableList.of(
+                 ManifestFile.builder().fileName("connstrings").fileContent(connStringsEnvServiceOverrides).build()))
         .when(applicationManifestService)
         .getManifestFilesByAppManifestId(eq("APP_ID"), eq("CONN_STRINGS_ENV_SERVICE_OVERRIDE_UUID"));
+
+    ApplicationManifest connStringsEnvOverride = ApplicationManifest.builder().storeType(StoreType.Local).build();
+    connStringsEnvOverride.setAppId("APP_ID");
+    connStringsEnvOverride.setUuid("CONN_STRINGS_ENV_OVERRIDE_UUID");
+    connStringsEnvServiceOverride.put(K8sValuesLocation.EnvironmentGlobal, connStringsEnvOverride);
+    doReturn(
+        ImmutableList.of(ManifestFile.builder().fileName("connstrings").fileContent(connStringsEnvOverrides).build()))
+        .when(applicationManifestService)
+        .getManifestFilesByAppManifestId(eq("APP_ID"), eq("CONN_STRINGS_ENV_OVERRIDE_UUID"));
+
     return connStringsEnvServiceOverride;
   }
+
+  String appSettingsEnvServiceOverrides = "[\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_PASSWORD_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_URL_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"https://harness.jfrog-ui.io\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_USERNAME_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"automationuser\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"SERVICE_VARIABLE_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"${serviceVariable.service_variable}\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"WEBSITES_ENABLE_APP_SERVICE_STORAGE_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"false\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"CONFIG_FILE_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"configFile.getAsString('fileName')\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    }\n"
+      + "  ]";
+
+  String connStringsEnvServiceOverrides = "[\n"
+      + "    {\n"
+      + "      \"name\": \"CONN_STRING_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"value\",\n"
+      + "      \"type\": \"MySql\",\n"
+      + "      \"slotSetting\": true\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"SECRET_CONN_STRING_SERVICE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}\",\n"
+      + "      \"type\": \"PostgreSQL\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "        \"name\": \"SERVICE_VARIABLE_SERVICE_ENV_OVERRIDE\",\n"
+      + "        \"value\": \"${serviceVariable.service_variable}\",\n"
+      + "        \"type\": \"Custom\",\n"
+      + "        \"slotSetting\": true\n"
+      + "      }\n"
+      + "  ]";
+
+  String appSettingsEnvOverrides = "[\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_PASSWORD_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_URL_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"https://harness.jfrog-ui.io\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"DOCKER_REGISTRY_SERVER_USERNAME_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"automationuser\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"SERVICE_VARIABLE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"${serviceVariable.service_variable}\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"WEBSITES_ENABLE_APP_SERVICE_STORAGE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"false\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"CONFIG_FILE_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"configFile.getAsString('fileName')\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    }\n"
+      + "  ]";
+
+  String connStringsEnvOverrides = "[\n"
+      + "    {\n"
+      + "      \"name\": \"CONN_STRING_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"value\",\n"
+      + "      \"type\": \"MySql\",\n"
+      + "      \"slotSetting\": true\n"
+      + "    },\n"
+      + "    {\n"
+      + "      \"name\": \"SECRET_CONN_STRING_ENV_OVERRIDE\",\n"
+      + "      \"value\": \"${secrets.getValue('Artifact Azure_ARTIFACTORY_password')}\",\n"
+      + "      \"type\": \"PostgreSQL\",\n"
+      + "      \"slotSetting\": false\n"
+      + "    },\n"
+      + "    {\n"
+      + "        \"name\": \"SERVICE_VARIABLE_ENV_OVERRIDE\",\n"
+      + "        \"value\": \"${serviceVariable.service_variable}\",\n"
+      + "        \"type\": \"Custom\",\n"
+      + "        \"slotSetting\": true\n"
+      + "      }\n"
+      + "  ]";
 
   @Test
   @Owner(developers = IVAN)

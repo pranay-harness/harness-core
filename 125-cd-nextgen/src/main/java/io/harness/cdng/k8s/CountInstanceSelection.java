@@ -10,14 +10,18 @@ import lombok.Data;
 @Data
 @JsonTypeName("Count")
 public class CountInstanceSelection implements InstanceSelectionBase {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> count;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Integer> count;
   @Override
   public K8sInstanceUnitType getType() {
     return K8sInstanceUnitType.Count;
   }
 
   @Override
-  public String getInstances() {
+  public Integer getInstances() {
+    if (ParameterField.isNull(this.count)) {
+      return null;
+    }
+
     return count.getValue();
   }
 }

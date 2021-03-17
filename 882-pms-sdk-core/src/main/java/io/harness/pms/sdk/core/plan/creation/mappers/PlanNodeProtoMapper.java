@@ -39,6 +39,9 @@ public class PlanNodeProtoMapper {
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
     }
+    if (node.getStepParameters() != null && node.getStepParameters().toViewJson() != null) {
+      builder.setStepInputs(node.getStepParameters().toViewJson());
+    }
     return builder.build();
   }
 
@@ -65,6 +68,9 @@ public class PlanNodeProtoMapper {
     }
     if (node.getGroup() != null) {
       builder.setGroup(node.getGroup());
+    }
+    if (node.getStepInputs() != null) {
+      builder.setStepInputs(node.getStepInputs());
     }
     return builder.build();
   }

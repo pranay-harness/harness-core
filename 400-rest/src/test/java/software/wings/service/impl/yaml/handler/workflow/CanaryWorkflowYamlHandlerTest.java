@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.CANARY_INVALID_YAML_CONTENT;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.CANARY_INVALID_YAML_FILE_PATH;
-import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.CANARY_VALID_YAML_CONTENT;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.CANARY_VALID_YAML_CONTENT_RESOURCE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.CANARY_VALID_YAML_FILE_PATH;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -55,10 +55,11 @@ public class CanaryWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
         .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
 
+    String yamlContentFromFile = readYamlStringInFile(CANARY_VALID_YAML_CONTENT_RESOURCE_PATH);
     ChangeContext<CanaryWorkflowYaml> changeContext =
-        getChangeContext(CANARY_VALID_YAML_CONTENT, CANARY_VALID_YAML_FILE_PATH, yamlHandler);
+        getChangeContext(yamlContentFromFile, CANARY_VALID_YAML_FILE_PATH, yamlHandler);
 
-    CanaryWorkflowYaml yamlObject = (CanaryWorkflowYaml) getYaml(CANARY_VALID_YAML_CONTENT, CanaryWorkflowYaml.class);
+    CanaryWorkflowYaml yamlObject = (CanaryWorkflowYaml) getYaml(yamlContentFromFile, CanaryWorkflowYaml.class);
     changeContext.setYaml(yamlObject);
 
     Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
@@ -77,7 +78,7 @@ public class CanaryWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     String yamlContent = getYamlContent(yaml);
     assertThat(yamlContent).isNotNull();
     yamlContent = yamlContent.substring(0, yamlContent.length() - 1);
-    assertThat(yamlContent).isEqualTo(CANARY_VALID_YAML_CONTENT);
+    assertThat(yamlContent).isEqualTo(yamlContentFromFile);
 
     Workflow savedWorkflow = workflowService.readWorkflowByName(APP_ID, workflowName);
     // TODO find out why this couldn't be called
@@ -95,7 +96,7 @@ public class CanaryWorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    testFailures(CANARY_VALID_YAML_CONTENT, CANARY_VALID_YAML_FILE_PATH, CANARY_INVALID_YAML_CONTENT,
-        CANARY_INVALID_YAML_FILE_PATH, yamlHandler, CanaryWorkflowYaml.class);
+    testFailures(readYamlStringInFile(CANARY_VALID_YAML_CONTENT_RESOURCE_PATH), CANARY_VALID_YAML_FILE_PATH,
+        CANARY_INVALID_YAML_CONTENT, CANARY_INVALID_YAML_FILE_PATH, yamlHandler, CanaryWorkflowYaml.class);
   }
 }

@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.graphql.utils.nameservice.NameService.application;
 import static software.wings.graphql.utils.nameservice.NameService.workflow;
 
+import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.Workflow;
@@ -33,6 +35,7 @@ import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(Module._380_CG_GRAPHQL)
 public class WorkflowConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLWorkflowFilter, QLNoOpSortCriteria, QLWorkflowConnection> {
   @Inject WorkflowQueryHelper workflowQueryHelper;

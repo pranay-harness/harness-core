@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.CvNextGenTest;
+import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.core.services.api.HostRecordService;
@@ -18,7 +18,7 @@ import java.time.Instant;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class HostRecordServiceImplTest extends CvNextGenTest {
+public class HostRecordServiceImplTest extends CvNextGenTestBase {
   @Inject private HostRecordService hostRecordService;
 
   @Test

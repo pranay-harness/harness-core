@@ -31,8 +31,14 @@ public class WeeklyFreezeConfig extends GovernanceFreezeConfig {
       @JsonProperty("weeklyRange") WeeklyRange weeklyRange, @JsonProperty("name") String name,
       @JsonProperty("description") String description, @JsonProperty("applicable") boolean applicable,
       @JsonProperty("appSelections") List<ApplicationFilter> appSelections,
-      @JsonProperty("userGroups") List<String> userGroups) {
-    super(freezeForAllApps, appIds, environmentTypes, name, description, applicable, appSelections, userGroups);
+      @JsonProperty("userGroups") List<String> userGroups, @JsonProperty("uuid") String uuid) {
+    super(freezeForAllApps, appIds, environmentTypes, name, description, applicable, appSelections, userGroups, uuid);
     this.weeklyRange = weeklyRange;
+  }
+
+  @Override
+  public long fetchEndTime() {
+    // TODO: return correct end time
+    return 0;
   }
 }

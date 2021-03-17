@@ -239,6 +239,8 @@ public enum SettingVariableTypes {
 
   VAULT,
 
+  VAULT_SSH,
+
   AWS_SECRETS_MANAGER,
 
   CYBERARK,
@@ -266,6 +268,8 @@ public enum SettingVariableTypes {
   CE_AWS("Continuous Efficiency AWS"),
 
   CE_GCP("Continuous Efficiency GCP"),
+
+  CE_AZURE("Continuous Efficiency AZURE"),
 
   AZURE_VAULT("Azure Vault Secrets Manager"),
 

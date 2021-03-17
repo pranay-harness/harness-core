@@ -42,6 +42,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ecs.EcsSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.AwsElbConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
@@ -116,6 +117,8 @@ public class EcsServiceSetup extends State {
   @Getter @Setter private String serviceSteadyStateTimeout;
   @Getter @Setter private ResizeStrategy resizeStrategy;
   @Getter @Setter private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
+  @Getter @Setter private List<AwsElbConfig> awsElbConfigs;
+  @Getter @Setter private boolean isMultipleLoadBalancersFeatureFlagActive;
 
   @Inject private SecretManager secretManager;
   @Inject private AppService appService;
@@ -166,6 +169,8 @@ public class EcsServiceSetup extends State {
         ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN),
         artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
+    this.isMultipleLoadBalancersFeatureFlagActive =
+        featureFlagService.isEnabled(FeatureName.ECS_MULTI_LBS, context.getAccountId());
     if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
       appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
       valuesInGit = isRemoteManifest(appManifestMap);
@@ -243,6 +248,8 @@ public class EcsServiceSetup extends State {
         .loadBalancerName(loadBalancerName)
         .targetContainerName(targetContainerName)
         .desiredInstanceCount(desiredInstanceCount)
+        .isMultipleLoadBalancersFeatureFlagActive(isMultipleLoadBalancersFeatureFlagActive)
+        .awsElbConfigs(awsElbConfigs)
         .serviceSteadyStateTimeout(
             ecsStateHelper.renderTimeout(serviceSteadyStateTimeout, context, DEFAULT_AMI_ASG_TIMEOUT_MIN))
         .resizeStrategy(resizeStrategy)
@@ -295,6 +302,8 @@ public class EcsServiceSetup extends State {
             .ecsServiceSpecification(ecsSetUpDataBag.getServiceSpecification())
             .isDaemonSchedulingStrategy(false)
             .awsAutoScalarConfigs(awsAutoScalarConfigs)
+            .awsElbConfigs(awsElbConfigs)
+            .isMultipleLoadBalancersFeatureFlagActive(isMultipleLoadBalancersFeatureFlagActive)
             .build());
 
     CommandStateExecutionData stateExecutionData =
@@ -517,6 +526,8 @@ public class EcsServiceSetup extends State {
     this.loadBalancerName = stateExecutionData.getLoadBalancerName();
     this.maxInstances = stateExecutionData.getMaxInstances();
     this.serviceSteadyStateTimeout = String.valueOf(stateExecutionData.getServiceSteadyStateTimeout());
+    this.awsElbConfigs = stateExecutionData.getAwsElbConfigs();
+    this.isMultipleLoadBalancersFeatureFlagActive = stateExecutionData.isMultipleLoadBalancersFeatureFlagActive();
     this.targetContainerName = stateExecutionData.getTargetContainerName();
     this.targetGroupArn = stateExecutionData.getTargetGroupArn();
     this.targetPort = stateExecutionData.getTargetPort();

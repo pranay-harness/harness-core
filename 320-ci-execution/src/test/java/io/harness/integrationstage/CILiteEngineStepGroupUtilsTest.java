@@ -4,14 +4,14 @@ import static io.harness.rule.OwnerRule.ALEKSANDAR;
 
 import io.harness.category.element.UnitTests;
 import io.harness.ci.integrationstage.CILiteEngineStepGroupUtils;
-import io.harness.executionplan.CIExecutionTest;
+import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CILiteEngineStepGroupUtilsTest extends CIExecutionTest {
+public class CILiteEngineStepGroupUtilsTest extends CIExecutionTestBase {
   //@Inject CILiteEngineStepGroupUtils ciLiteEngineStepGroupUtils;
   @Inject CILiteEngineStepGroupUtils ciExecutionPlanTestHelper;
 

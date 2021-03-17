@@ -3,15 +3,17 @@ package logs
 import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"time"
 )
 
 // defaultLimit is the default maximum log size in bytes.
 const (
-	defaultLimit = 5242880 // 5MB
-	messageKey   = "msg"
-	levelKey     = "level"
-	nameKey      = "logger"
-	defaultLevel = "info"
+	defaultLimit    = 5242880 // 5MB
+	defaultInterval = 1 * time.Second
+	messageKey      = "msg"
+	levelKey        = "level"
+	nameKey         = "logger"
+	defaultLevel    = "info"
 )
 
 type RemoteLogger struct {

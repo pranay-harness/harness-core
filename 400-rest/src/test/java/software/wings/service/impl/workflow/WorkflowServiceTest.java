@@ -370,7 +370,7 @@ import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
-import software.wings.sm.StateMachineTest.StateSync;
+import software.wings.sm.StateMachineTestBase.StateSync;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
 import software.wings.sm.StepType;
