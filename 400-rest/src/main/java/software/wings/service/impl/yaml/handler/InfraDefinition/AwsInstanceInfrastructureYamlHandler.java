@@ -8,7 +8,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AwsInstanceInfrastructure;
-import software.wings.infra.AwsInstanceInfrastructure.Yaml;
+import software.wings.infra.AwsInstanceInfrastructureYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -18,13 +18,13 @@ import java.util.List;
 
 @Singleton
 public class AwsInstanceInfrastructureYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, AwsInstanceInfrastructure> {
+    extends CloudProviderInfrastructureYamlHandler<AwsInstanceInfrastructureYaml, AwsInstanceInfrastructure> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(AwsInstanceInfrastructure bean, String appId) {
+  public AwsInstanceInfrastructureYaml toYaml(AwsInstanceInfrastructure bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     SettingAttribute hostNameConnectionAttr = settingsService.get(bean.getHostConnectionAttrs());
-    return Yaml.builder()
+    return AwsInstanceInfrastructureYaml.builder()
         .autoScalingGroupName(bean.getAutoScalingGroupName())
         .awsInstanceFilter(bean.getAwsInstanceFilter())
         .desiredCapacity(bean.getDesiredCapacity())
@@ -42,14 +42,14 @@ public class AwsInstanceInfrastructureYamlHandler
 
   @Override
   public AwsInstanceInfrastructure upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<AwsInstanceInfrastructureYaml> changeContext, List<ChangeContext> changeSetContext) {
     AwsInstanceInfrastructure bean = AwsInstanceInfrastructure.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(AwsInstanceInfrastructure bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AwsInstanceInfrastructure bean, ChangeContext<AwsInstanceInfrastructureYaml> changeContext) {
+    AwsInstanceInfrastructureYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     SettingAttribute hostConnectionAttr =
@@ -73,6 +73,6 @@ public class AwsInstanceInfrastructureYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsInstanceInfrastructureYaml.class;
   }
 }

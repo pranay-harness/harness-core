@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 
@@ -115,30 +114,6 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
     }
     if (StringUtils.isEmpty(role)) {
       throw new InvalidRequestException("Role Mapping is Required");
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private String region;
-    private String vpcId;
-    private List<String> subnetIds = new ArrayList<>();
-    private List<String> securityGroupIds = new ArrayList<>();
-    private String role;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String region, String vpcId,
-        List<String> subnetIds, List<String> securityGroupIds, String role, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.region = region;
-      this.vpcId = vpcId;
-      this.subnetIds = subnetIds;
-      this.securityGroupIds = securityGroupIds;
-      this.role = role;
     }
   }
 

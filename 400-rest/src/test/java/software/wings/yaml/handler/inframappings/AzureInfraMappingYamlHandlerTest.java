@@ -24,6 +24,7 @@ import io.harness.yaml.BaseYaml;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
+import software.wings.beans.AzureInfrastructureMappingYaml;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -141,18 +142,18 @@ public class AzureInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<AzureInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<AzureInfrastructureMappingYaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    AzureInfrastructureMapping.Yaml yamlObject =
-        (AzureInfrastructureMapping.Yaml) getYaml(validYamlContent, AzureInfrastructureMapping.Yaml.class);
+    AzureInfrastructureMappingYaml yamlObject =
+        (AzureInfrastructureMappingYaml) getYaml(validYamlContent, AzureInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     AzureInfrastructureMapping azureInfraMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(azureInfraMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(azureInfraMapping.getName());
 
-    AzureInfrastructureMapping.Yaml yaml = yamlHandler.toYaml(azureInfraMapping, APP_ID);
+    AzureInfrastructureMappingYaml yaml = yamlHandler.toYaml(azureInfraMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo("AZURE_INFRA");
 
@@ -175,14 +176,14 @@ public class AzureInfraMappingYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    ChangeContext<AzureInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<AzureInfrastructureMappingYaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    AzureInfrastructureMapping.Yaml yamlObject =
-        (AzureInfrastructureMapping.Yaml) getYaml(validYamlContent, AzureInfrastructureMapping.Yaml.class);
+    AzureInfrastructureMappingYaml yamlObject =
+        (AzureInfrastructureMappingYaml) getYaml(validYamlContent, AzureInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
-    yamlObject = (AzureInfrastructureMapping.Yaml) getYaml(invalidYamlContent, AzureInfrastructureMapping.Yaml.class);
+    yamlObject = (AzureInfrastructureMappingYaml) getYaml(invalidYamlContent, AzureInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
     thrown.expect(Exception.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

@@ -22,7 +22,6 @@ import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterKeys;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableSet;
@@ -32,7 +31,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -161,50 +159,6 @@ public class AwsInstanceInfrastructure
               "Map<String,String> or Comma-separated string with Semi-colon separated key-value expected. Found [%s]",
               input.getClass()),
           WingsException.USER);
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AWS_INSTANCE)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String region;
-    private String hostConnectionAttrsName;
-    private String loadBalancerName;
-    private boolean usePublicDns;
-    private String hostConnectionType;
-    private boolean useAutoScalingGroup;
-    private AwsInstanceFilter awsInstanceFilter;
-    private String autoScalingGroupName;
-    private boolean setDesiredCapacity;
-    private int desiredCapacity;
-    private String hostNameConvention;
-    private Map<String, String> expressions;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String region, String hostConnectionAttrsName,
-        String loadBalancerName, boolean usePublicDns, String hostConnectionType, boolean useAutoScalingGroup,
-        AwsInstanceFilter awsInstanceFilter, String autoScalingGroupName, boolean setDesiredCapacity,
-        int desiredCapacity, String hostNameConvention, Map<String, String> expressions) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setRegion(region);
-      setHostConnectionAttrsName(hostConnectionAttrsName);
-      setLoadBalancerName(loadBalancerName);
-      setUsePublicDns(usePublicDns);
-      setHostConnectionType(hostConnectionType);
-      setUseAutoScalingGroup(useAutoScalingGroup);
-      setAutoScalingGroupName(autoScalingGroupName);
-      setAwsInstanceFilter(awsInstanceFilter);
-      setSetDesiredCapacity(setDesiredCapacity);
-      setDesiredCapacity(desiredCapacity);
-      setHostNameConvention(hostNameConvention);
-      setExpressions(expressions);
-    }
-
-    public Yaml() {
-      super(AWS_INSTANCE);
     }
   }
 }

@@ -8,7 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping.Yaml;
+import software.wings.beans.AwsInfrastructureMappingYaml;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
@@ -27,9 +27,9 @@ import java.util.List;
  */
 @Singleton
 public class AwsInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<AwsInfrastructureMappingYaml, AwsInfrastructureMapping> {
   @Override
-  public Yaml toYaml(AwsInfrastructureMapping bean, String appId) {
+  public AwsInfrastructureMappingYaml toYaml(AwsInfrastructureMapping bean, String appId) {
     AwsInstanceFilter awsInstanceFilter = bean.getAwsInstanceFilter();
     List<String> vpcIds = Lists.newArrayList();
     List<Tag> tagList = Lists.newArrayList();
@@ -38,7 +38,7 @@ public class AwsInfraMappingYamlHandler
       tagList = awsInstanceFilter.getTags();
     }
 
-    Yaml yaml = Yaml.builder().build();
+    AwsInfrastructureMappingYaml yaml = AwsInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
 
     String hostConnectionAttrsSettingId = bean.getHostConnectionAttrs();
@@ -78,8 +78,8 @@ public class AwsInfraMappingYamlHandler
 
   @Override
   public AwsInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<AwsInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    AwsInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -118,9 +118,9 @@ public class AwsInfraMappingYamlHandler
         .collect(toList());
   }
 
-  private void toBean(AwsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId, String provisionerId) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AwsInfrastructureMapping bean, ChangeContext<AwsInfrastructureMappingYaml> changeContext,
+      String appId, String envId, String computeProviderId, String serviceId, String provisionerId) {
+    AwsInfrastructureMappingYaml yaml = changeContext.getYaml();
 
     AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder().vpcIds(yaml.getVpcs());
     if (yaml.getAwsTags() != null) {
@@ -158,14 +158,14 @@ public class AwsInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsInfrastructureMappingYaml.class;
   }
 
   private boolean avoidSettingHostConnAttributesToYaml(AwsInfrastructureMapping bean) {
     return isNotEmpty(bean.getProvisionerId()) && isEmpty(bean.getHostConnectionAttrs());
   }
 
-  private boolean avoidSettingHostConnAttributesFromYaml(Yaml yaml) {
+  private boolean avoidSettingHostConnAttributesFromYaml(AwsInfrastructureMappingYaml yaml) {
     return isEmpty(yaml.getConnectionType()) && isNotEmpty(yaml.getProvisionerName());
   }
 }

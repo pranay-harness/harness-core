@@ -16,7 +16,6 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -27,7 +26,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
 
@@ -145,43 +143,6 @@ public class AwsEcsInfrastructure
     }
     if (fields.stream().anyMatch(EmptyPredicate::isEmpty)) {
       throw new InvalidRequestException(errorMessage);
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AWS_ECS)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String region;
-    private String vpcId;
-    private List<String> subnetIds;
-    private List<String> securityGroupIds;
-    private boolean assignPublicIp;
-    private String executionRole;
-    private String launchType;
-    private Map<String, String> expressions;
-    private String clusterName;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String region, String vpcId, List<String> subnetIds,
-        List<String> securityGroupIds, boolean assignPublicIp, String executionRole, String launchType,
-        Map<String, String> expressions, String clusterName) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setRegion(region);
-      setVpcId(vpcId);
-      setSubnetIds(subnetIds);
-      setSecurityGroupIds(securityGroupIds);
-      setAssignPublicIp(assignPublicIp);
-      setExecutionRole(executionRole);
-      setLaunchType(launchType);
-      setExpressions(expressions);
-      setClusterName(clusterName);
-    }
-
-    public Yaml() {
-      super(AWS_ECS);
     }
   }
 }

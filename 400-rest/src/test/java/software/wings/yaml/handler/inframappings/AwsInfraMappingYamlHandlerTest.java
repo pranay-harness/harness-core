@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.AwsInfrastructureMapping.Yaml;
+import software.wings.beans.AwsInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
@@ -71,16 +71,18 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
   }
 
   public void testCRUDAndGet(String validYamlContent) throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
+    ChangeContext<AwsInfrastructureMappingYaml> changeContext =
+        getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    AwsInfrastructureMappingYaml yamlObject =
+        (AwsInfrastructureMappingYaml) getYaml(validYamlContent, AwsInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     AwsInfrastructureMapping infrastructureMapping = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     assertThat(infrastructureMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(infrastructureMapping.getName());
 
-    Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
+    AwsInfrastructureMappingYaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_SSH.name());
 

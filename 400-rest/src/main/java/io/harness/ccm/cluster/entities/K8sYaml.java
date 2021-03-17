@@ -3,7 +3,6 @@ package io.harness.ccm.cluster.entities;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.annotation.StoreIn;
-import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;

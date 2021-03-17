@@ -11,10 +11,8 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.CloudProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -27,7 +25,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -78,25 +75,5 @@ public class AzureConfig extends SettingValue implements EncryptableSetting, Clo
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AZURE_URL, maskingEvaluator));
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CloudProviderYaml {
-    private String clientId;
-    private String tenantId;
-    private String key;
-    private AzureEnvironmentType azureEnvironmentType;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String clientId, String tenantId, String key,
-        UsageRestrictions.Yaml usageRestrictions, AzureEnvironmentType azureEnvironmentType) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.clientId = clientId;
-      this.tenantId = tenantId;
-      this.key = key;
-      this.azureEnvironmentType = azureEnvironmentType;
-    }
   }
 }

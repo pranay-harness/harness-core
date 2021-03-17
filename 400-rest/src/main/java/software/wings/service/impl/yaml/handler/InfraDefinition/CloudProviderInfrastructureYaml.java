@@ -17,9 +17,9 @@ import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.infra.AwsAmiInfrastructureYaml;
-import software.wings.infra.AwsEcsInfrastructure;
-import software.wings.infra.AwsInstanceInfrastructure;
-import software.wings.infra.AwsLambdaInfrastructure;
+import software.wings.infra.AwsEcsInfrastructureYaml;
+import software.wings.infra.AwsInstanceInfrastructureYaml;
+import software.wings.infra.AwsLambdaInfrastructureYaml;
 import software.wings.infra.AzureInstanceInfrastructure;
 import software.wings.infra.AzureKubernetesService;
 import software.wings.infra.AzureVMSSInfra;
@@ -43,9 +43,9 @@ import lombok.NoArgsConstructor;
 @JsonTypeInfo(use = Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = AwsAmiInfrastructureYaml.class, name = AWS_AMI)
-  , @JsonSubTypes.Type(value = AwsEcsInfrastructure.Yaml.class, name = AWS_ECS),
-      @JsonSubTypes.Type(value = AwsInstanceInfrastructure.Yaml.class, name = AWS_INSTANCE),
-      @JsonSubTypes.Type(value = AwsLambdaInfrastructure.Yaml.class, name = AWS_LAMBDA),
+  , @JsonSubTypes.Type(value = AwsEcsInfrastructureYaml.class, name = AWS_ECS),
+      @JsonSubTypes.Type(value = AwsInstanceInfrastructureYaml.class, name = AWS_INSTANCE),
+      @JsonSubTypes.Type(value = AwsLambdaInfrastructureYaml.class, name = AWS_LAMBDA),
       @JsonSubTypes.Type(value = AzureKubernetesService.Yaml.class, name = AZURE_KUBERNETES),
       @JsonSubTypes.Type(value = AzureInstanceInfrastructure.Yaml.class, name = AZURE_SSH),
       @JsonSubTypes.Type(value = CodeDeployInfrastructure.Yaml.class, name = CODE_DEPLOY),
