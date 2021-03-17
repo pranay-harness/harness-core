@@ -31,6 +31,7 @@ public class WingsExceptionMapperV2 implements ExceptionMapper<WingsException> {
     List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(exception, REST_API);
     ErrorCode errorCode = exception.getCode() != null ? exception.getCode() : ErrorCode.UNKNOWN_ERROR;
     ErrorDTO errorBody = ErrorDTO.newError(Status.ERROR, errorCode, null);
+    errorBody.setResponseMessages(responseMessages);
 
     if (!responseMessages.isEmpty()) {
       errorBody.setMessage(responseMessages.get(0).getMessage());

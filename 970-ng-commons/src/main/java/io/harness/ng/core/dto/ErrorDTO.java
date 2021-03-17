@@ -1,10 +1,13 @@
 package io.harness.ng.core.dto;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.ResponseMessage;
 import io.harness.ng.core.CorrelationContext;
 import io.harness.ng.core.Status;
 
 import io.swagger.annotations.ApiModel;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +23,7 @@ public class ErrorDTO {
   String message; // Short message, something which UI can display directly
   String correlationId; // for distributed tracing
   String detailedMessage; // used to send detailed message in case of an error from Harness end for debugging
+  List<ResponseMessage> responseMessages; // for sending detailed list of response messages
 
   private ErrorDTO() {}
 
@@ -30,6 +34,7 @@ public class ErrorDTO {
     errorDto.setMessage(message);
     errorDto.setDetailedMessage(detailedMessage);
     errorDto.setCorrelationId(CorrelationContext.getCorrelationId());
+    errorDto.setResponseMessages(new ArrayList<>());
     return errorDto;
   }
 
