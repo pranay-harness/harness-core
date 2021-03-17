@@ -130,6 +130,7 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-ng-signup:module \
   //950-log-client:module \
   //950-timeout-engine:module \
   //950-wait-engine:module \
