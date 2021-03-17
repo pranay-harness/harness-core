@@ -1,4 +1,4 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.beans;
 
 import io.harness.EntitySubtype;
 

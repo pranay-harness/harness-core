@@ -4,10 +4,11 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.approval.beans.ApprovalInstanceAuthorizationDTO;
-import io.harness.pms.approval.beans.ApprovalInstanceResponseDTO;
-import io.harness.pms.approval.beans.ApprovalType;
-import io.harness.pms.approval.beans.HarnessApprovalActivityRequestDTO;
+import io.harness.pms.approval.ApprovalResourceService;
+import io.harness.steps.approval.step.beans.ApprovalInstanceResponseDTO;
+import io.harness.steps.approval.step.beans.ApprovalType;
+import io.harness.steps.approval.step.harness.beans.HarnessApprovalActivityRequestDTO;
+import io.harness.steps.approval.step.harness.beans.HarnessApprovalInstanceAuthorizationDTO;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -27,8 +28,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -36,7 +35,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Path("approvals")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
-@AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
@@ -45,29 +43,37 @@ import org.hibernate.validator.constraints.NotEmpty;
 @PipelineServiceAuth
 @Slf4j
 public class ApprovalResource {
+  private final ApprovalResourceService approvalResourceService;
+
+  @Inject
+  public ApprovalResource(ApprovalResourceService approvalResourceService) {
+    this.approvalResourceService = approvalResourceService;
+  }
+
   @GET
   @Path("/{approvalInstanceId}")
   @ApiOperation(value = "Gets an approval instance by id", nickname = "getApprovalInstance")
   public ResponseDTO<ApprovalInstanceResponseDTO> getApprovalInstance(
       @NotEmpty @PathParam("approvalInstanceId") String approvalInstanceId) {
-    return ResponseDTO.newResponse(null);
+    return ResponseDTO.newResponse(approvalResourceService.get(approvalInstanceId));
   }
 
   @POST
   @Path("/{approvalInstanceId}/harness/activity")
   @ApiOperation(value = "Add a new Harness approval activity", nickname = "addHarnessApprovalActivity")
   public ResponseDTO<ApprovalInstanceResponseDTO> addHarnessApprovalActivity(
+      @NotEmpty @PathParam("approvalInstanceId") String approvalInstanceId,
       @NotNull @Valid HarnessApprovalActivityRequestDTO request) {
-    return ResponseDTO.newResponse(null);
+    return ResponseDTO.newResponse(approvalResourceService.addHarnessApprovalActivity(approvalInstanceId, request));
   }
 
   @GET
   @Path("/{approvalInstanceId}/harness/authorization")
   @ApiOperation(value = "Gets a Harness approval instance authorization for the current user",
       nickname = "getHarnessApprovalInstanceAuthorization")
-  public ResponseDTO<ApprovalInstanceAuthorizationDTO>
+  public ResponseDTO<HarnessApprovalInstanceAuthorizationDTO>
   getHarnessApprovalInstanceAuthorization(@NotEmpty @PathParam("approvalInstanceId") String approvalInstanceId) {
-    return ResponseDTO.newResponse(ApprovalInstanceAuthorizationDTO.builder().authorized(true).build());
+    return ResponseDTO.newResponse(approvalResourceService.getHarnessApprovalInstanceAuthorization(approvalInstanceId));
   }
 
   @GET

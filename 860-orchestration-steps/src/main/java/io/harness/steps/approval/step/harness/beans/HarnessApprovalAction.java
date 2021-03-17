@@ -1,3 +1,3 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.harness.beans;
 
 public enum HarnessApprovalAction { APPROVE, REJECT }

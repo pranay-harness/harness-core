@@ -1,12 +1,11 @@
-package io.harness.steps.approval.harness;
+package io.harness.steps.approval.step;
 
 import io.harness.common.SwaggerConstants;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.approval.harness.beans.ApproverInputInfo;
-import io.harness.steps.approval.harness.beans.Approvers;
+import io.harness.steps.approval.step.beans.ApprovalType;
 
 import io.swagger.annotations.ApiModelProperty;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,12 +15,16 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@TypeAlias("HarnessApprovalBaseStepInfo")
-public class HarnessApprovalBaseStepInfo {
+@TypeAlias("approvalStepParameters")
+public abstract class ApprovalStepParameters implements StepParameters {
+  String name;
+  String identifier;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
+
+  ApprovalType approvalType;
+
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> approvalMessage;
   @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   ParameterField<Boolean> includePipelineExecutionHistory;
-  @NotNull Approvers approvers;
-  List<ApproverInputInfo> approverInputs;
 }
