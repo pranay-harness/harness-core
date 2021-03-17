@@ -6,6 +6,7 @@ import io.harness.pms.approval.entities.HarnessApprovalInstance;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.preflight.entity.PreFlightEntity;
 import io.harness.pms.sdk.PmsSdkInstance;
 
 import java.util.Set;
@@ -18,6 +19,7 @@ public class PMSPipelineMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InputSetEntity.class);
     set.add(PipelineExecutionSummaryEntity.class);
     set.add(HarnessApprovalInstance.class);
+    set.add(PreFlightEntity.class);
   }
 
   @Override

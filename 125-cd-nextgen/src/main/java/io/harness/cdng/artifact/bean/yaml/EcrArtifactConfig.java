@@ -3,6 +3,7 @@ package io.harness.cdng.artifact.bean.yaml;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.ECR_NAME;
 
 import io.harness.cdng.artifact.bean.ArtifactConfig;
+import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.common.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
@@ -10,6 +11,8 @@ import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Arrays;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -63,27 +66,34 @@ public class EcrArtifactConfig implements ArtifactConfig {
 
   @Override
   public String getUniqueHash() {
-    return null;
+    List<String> valuesList = Arrays.asList(connectorRef.getValue(), imagePath.getValue(), region.getValue());
+    return ArtifactUtils.generateUniqueHashFromStringList(valuesList);
   }
 
   @Override
   public boolean isPrimaryArtifact() {
-    return false;
-  }
-
-  @Override
-  public void setPrimaryArtifact(boolean primaryArtifact) {}
-
-  @Override
-  public void setIdentifier(String identifier) {}
-
-  @Override
-  public String getIdentifier() {
-    return null;
+    return isPrimaryArtifact;
   }
 
   @Override
   public ArtifactConfig applyOverrides(ArtifactConfig overrideConfig) {
-    return null;
+    EcrArtifactConfig ecrArtifactSpecConfig = (EcrArtifactConfig) overrideConfig;
+    EcrArtifactConfig resultantConfig = this;
+    if (!ParameterField.isNull(ecrArtifactSpecConfig.getConnectorRef())) {
+      resultantConfig = resultantConfig.withConnectorRef(ecrArtifactSpecConfig.getConnectorRef());
+    }
+    if (!ParameterField.isNull(ecrArtifactSpecConfig.getImagePath())) {
+      resultantConfig = resultantConfig.withImagePath(ecrArtifactSpecConfig.getImagePath());
+    }
+    if (!ParameterField.isNull(ecrArtifactSpecConfig.getRegion())) {
+      resultantConfig = resultantConfig.withRegion(ecrArtifactSpecConfig.getRegion());
+    }
+    if (!ParameterField.isNull(ecrArtifactSpecConfig.getTag())) {
+      resultantConfig = resultantConfig.withTag(ecrArtifactSpecConfig.getTag());
+    }
+    if (!ParameterField.isNull(ecrArtifactSpecConfig.getTagRegex())) {
+      resultantConfig = resultantConfig.withTagRegex(ecrArtifactSpecConfig.getTagRegex());
+    }
+    return resultantConfig;
   }
 }

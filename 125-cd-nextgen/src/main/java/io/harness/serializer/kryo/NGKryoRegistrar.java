@@ -6,6 +6,7 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
@@ -171,5 +172,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpStoreConfig.class, 12530);
     kryo.register(KustomizeManifest.class, 12531);
     kryo.register(KustomizeManifestOutcome.class, 12532);
+    kryo.register(EcrArtifactConfig.class, 12533);
   }
 }
