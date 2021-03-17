@@ -1,7 +1,5 @@
 package io.harness.delegate.beans;
 
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
-
 import java.io.IOException;
 import java.io.InputStream;
 import javax.validation.constraints.NotNull;

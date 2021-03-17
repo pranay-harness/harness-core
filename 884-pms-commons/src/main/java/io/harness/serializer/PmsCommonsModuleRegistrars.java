@@ -3,6 +3,8 @@ package io.harness.serializer;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.PmsCommonsKryoRegistrar;
 import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
+import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
+import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeWriteConverter;
 
@@ -20,5 +22,6 @@ public class PmsCommonsModuleRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder().add(PmsCommonsMorphiaRegistrar.class).build();
 
   public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class);
+      ImmutableList.of(StepTypeReadConverter.class, StepTypeWriteConverter.class,
+          SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class);
 }

@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(Module._955_ALERT_BEANS)
 public class PerpetualTaskAlert implements AlertData {
   private String accountId;
   private String description;

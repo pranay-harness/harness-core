@@ -58,6 +58,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
+import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthenticationDTO;
@@ -73,11 +74,15 @@ import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsA
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitUrlType;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessSpecDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketApiAccessType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.CustomCommitAttributes;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -233,5 +238,10 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpHelmAuthType.class, 19657);
     kryo.register(HttpHelmConnectorDTO.class, 19658);
     kryo.register(HttpHelmUsernamePasswordDTO.class, 19659);
+    kryo.register(BitbucketApiAccessDTO.class, 19660);
+    kryo.register(BitbucketUsernameTokenApiAccessDTO.class, 19661);
+    kryo.register(BitbucketApiAccessType.class, 19662);
+    kryo.register(BitbucketApiAccessSpecDTO.class, 19663);
+    kryo.register(NewRelicConnectorDTO.class, 19664);
   }
 }

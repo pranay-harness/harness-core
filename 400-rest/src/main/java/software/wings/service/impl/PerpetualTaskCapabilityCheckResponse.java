@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(Module._955_DELEGATE_BEANS)
 public class PerpetualTaskCapabilityCheckResponse implements CapabilityCheckResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private boolean ableToExecutePerpetualTask;

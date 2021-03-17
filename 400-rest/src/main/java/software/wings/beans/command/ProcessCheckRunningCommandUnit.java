@@ -49,7 +49,7 @@ public class ProcessCheckRunningCommandUnit extends ExecCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("PROCESS_CHECK_RUNNING")
-  public static class Yaml extends ExecCommandUnit.AbstractYaml {
+  public static class Yaml extends ExecCommandUnitAbstractYaml {
     public Yaml() {
       super(CommandUnitType.PROCESS_CHECK_RUNNING.name());
     }

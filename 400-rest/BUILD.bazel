@@ -13,7 +13,6 @@ shared_dependencies = [
     "//450-ce-views:module",
     "//460-capability:module",
     "//470-alert:module",
-    "//480-alert-beans:module",
     "//490-ce-commons:module",
     "//835-notification-senders:module",
     "//860-orchestration-steps:module",
@@ -21,6 +20,7 @@ shared_dependencies = [
     "//870-cg-yaml-beans:module",
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
+    "//874-orchestration-delay:module",
     "//878-pipeline-service-utilities:module",
     "//882-pms-sdk-core:module",
     "//890-sm-core:module",
@@ -45,6 +45,7 @@ shared_dependencies = [
     "//950-timeout-engine:module",
     "//950-wait-engine:module",
     "//954-connector-beans:module",
+    "//955-alert-beans:module",
     "//960-api-services:module",
     "//960-continuous-features:module",
     "//960-ng-core-beans:module",
@@ -672,7 +673,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+    "@maven_harness//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 

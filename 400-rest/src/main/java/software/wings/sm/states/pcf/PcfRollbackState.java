@@ -22,6 +22,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
@@ -146,17 +147,23 @@ public class PcfRollbackState extends PcfDeployState {
   }
 
   @Override
-  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  public Integer getUpsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     return -1;
   }
 
   @Override
-  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  public Integer getDownsizeUpdateCount(SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     return -1;
   }
 
   @Override
   public Map<String, String> validateFields() {
     return emptyMap();
+  }
+
+  @Override
+  @SchemaIgnore
+  public boolean isUseAppResizeV2() {
+    return super.isUseAppResizeV2();
   }
 }

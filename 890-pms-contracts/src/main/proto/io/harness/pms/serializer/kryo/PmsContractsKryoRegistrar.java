@@ -3,6 +3,7 @@ package io.harness.pms.serializer.kryo;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.commons.RepairActionCode;
@@ -10,6 +11,7 @@ import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.events.SdkResponseEventRequest;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
@@ -23,8 +25,10 @@ import io.harness.pms.serializer.kryo.serializers.AdviserResponseKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.AmbianceKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.ExecutableResponseSerializer;
 import io.harness.pms.serializer.kryo.serializers.FailureInfoKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.InterruptConfigKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.LevelKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.RefTypeKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.SdkResponseEventRequestKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.SkipInfoKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.StepOutcomeRefKryoSerializer;
 import io.harness.pms.serializer.kryo.serializers.StepTypeKryoSerializer;
@@ -54,5 +58,7 @@ public class PmsContractsKryoRegistrar implements KryoRegistrar {
     kryo.register(SkipInfo.class, SkipInfoKryoSerializer.getInstance(), 2617);
     kryo.register(AdviserResponse.class, AdviserResponseKryoSerializer.getInstance(), 2618);
     kryo.register(InterruptType.class, 2619);
+    kryo.register(InterruptConfig.class, InterruptConfigKryoSerializer.getInstance(), 2620);
+    kryo.register(SdkResponseEventRequest.class, SdkResponseEventRequestKryoSerializer.getInstance(), 2621);
   }
 }

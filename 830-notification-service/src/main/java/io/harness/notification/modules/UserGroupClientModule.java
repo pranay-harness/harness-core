@@ -13,16 +13,18 @@ import com.google.inject.Scopes;
 public class UserGroupClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
+  private final String clientId;
 
-  public UserGroupClientModule(ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret) {
+  public UserGroupClientModule(ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
   }
 
   @Provides
   private UserGroupHttpClientFactory userClientFactory(KryoConverterFactory kryoConverterFactory) {
     return new UserGroupHttpClientFactory(
-        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory);
+        serviceHttpClientConfig, serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
   }
 
   @Override

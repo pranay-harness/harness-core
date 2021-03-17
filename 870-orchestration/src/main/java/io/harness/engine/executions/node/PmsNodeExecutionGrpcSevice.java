@@ -14,8 +14,6 @@ import io.harness.pms.contracts.plan.FacilitatorResponseResponse;
 import io.harness.pms.contracts.plan.HandleStepResponseRequest;
 import io.harness.pms.contracts.plan.HandleStepResponseResponse;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceImplBase;
-import io.harness.pms.contracts.plan.QueueNodeExecutionRequest;
-import io.harness.pms.contracts.plan.QueueNodeExecutionResponse;
 import io.harness.pms.contracts.plan.QueueTaskRequest;
 import io.harness.pms.contracts.plan.QueueTaskResponse;
 import io.harness.pms.contracts.plan.ResumeNodeExecutionRequest;
@@ -37,14 +35,6 @@ public class PmsNodeExecutionGrpcSevice extends NodeExecutionProtoServiceImplBas
   @Inject private OrchestrationEngine engine;
   @Inject private PmsNodeExecutionServiceImpl pmsNodeExecutionService;
   @Inject private ResponseDataMapper responseDataMapper;
-
-  @Override
-  public void queueNodeExecution(
-      QueueNodeExecutionRequest request, StreamObserver<QueueNodeExecutionResponse> responseObserver) {
-    pmsNodeExecutionService.queueNodeExecution(request.getNodeExecution());
-    responseObserver.onNext(QueueNodeExecutionResponse.newBuilder().build());
-    responseObserver.onCompleted();
-  }
 
   @Override
   public void queueTask(QueueTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {

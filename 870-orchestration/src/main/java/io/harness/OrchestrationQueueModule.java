@@ -2,14 +2,13 @@ package io.harness;
 
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import io.harness.config.PublisherConfiguration;
-import io.harness.delay.DelayEvent;
-import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
+import io.harness.execution.SdkResponseEventListener;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.pms.execution.NodeExecutionEvent;
+import io.harness.pms.execution.SdkResponseEvent;
 import io.harness.pms.interrupts.InterruptEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
@@ -17,7 +16,6 @@ import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueuePublisher;
-import io.harness.version.VersionInfoManager;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -43,29 +41,23 @@ public class OrchestrationQueueModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
-    bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
-    bind(new TypeLiteral<QueueListener<InterruptEvent>>() {}).to(InterruptEventListener.class);
-
     if (!config.isWithPMS()) {
       bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(OrchestrationEventListener.class);
+      bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
+      bind(new TypeLiteral<QueueListener<InterruptEvent>>() {}).to(InterruptEventListener.class);
     }
+    bind(new TypeLiteral<QueueListener<SdkResponseEvent>>() {}).to(SdkResponseEventListener.class);
   }
 
   @Provides
   @Singleton
-  QueuePublisher<DelayEvent> delayQueuePublisher(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueuePublisher(
-        injector, DelayEvent.class, singletonList(versionInfoManager.getVersionInfo().getVersion()), config);
-  }
-
-  @Provides
-  @Singleton
-  QueueConsumer<DelayEvent> delayQueueConsumer(
-      Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
-    return QueueFactory.createQueueConsumer(injector, DelayEvent.class, ofSeconds(5),
-        singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config);
+  QueueConsumer<SdkResponseEvent> sdkResponseEventQueueConsumer(
+      Injector injector, PublisherConfiguration config, MongoTemplate mongoTemplate) {
+    if (this.config.isPipelineService()) {
+      return QueueFactory.createNgQueueConsumer(
+          injector, SdkResponseEvent.class, ofSeconds(5), emptyList(), config, mongoTemplate);
+    }
+    return null;
   }
 
   @Provides

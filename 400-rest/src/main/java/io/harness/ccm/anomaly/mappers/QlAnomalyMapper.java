@@ -28,7 +28,9 @@ public class QlAnomalyMapper {
     returnDTO.setExpectedAmount(source.getExpectedCost());
     returnDTO.setAnomalyScore(source.getAnomalyScore());
     returnDTO.setId(source.getId());
-    returnDTO.setTime(source.getAnomalyTime().toEpochMilli());
+    if (source.getAnomalyTime() != null) {
+      returnDTO.setTime(source.getAnomalyTime().toEpochMilli());
+    }
     returnDTO.setUserFeedback(source.getFeedback());
     return returnDTO;
   }

@@ -103,6 +103,7 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
   @InjectMocks @Inject protected PhaseStepYamlHandler phaseStepYamlHandler;
   @InjectMocks @Inject protected StepYamlHandler stepYamlHandler;
   @InjectMocks @Inject protected FailureStrategyYamlHandler failureStrategyYamlHandler;
+  @InjectMocks @Inject protected StepSkipStrategyYamlHandler stepSkipStrategyYamlHandler;
   @InjectMocks @Inject protected NotificationRulesYamlHandler notificationRulesYamlHandler;
   @InjectMocks @Inject protected TemplateExpressionYamlHandler templateExpressionYamlHandler;
   @InjectMocks @Inject protected VariableYamlHandler variableYamlHandler;
@@ -149,6 +150,7 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
     when(yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION)).thenReturn(templateExpressionYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.STEP)).thenReturn(stepYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY)).thenReturn(failureStrategyYamlHandler);
+    when(yamlHandlerFactory.getYamlHandler(YamlType.STEP_SKIP_STRATEGY)).thenReturn(stepSkipStrategyYamlHandler);
     when(yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE)).thenReturn(notificationRulesYamlHandler);
 
     when(yamlHandlerFactory.getYamlHandler(YamlType.VARIABLE)).thenReturn(variableYamlHandler);

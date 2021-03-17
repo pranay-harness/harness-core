@@ -1,5 +1,6 @@
 package io.harness.service;
 
+import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.NICOLAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,16 +10,23 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.DelegateServiceTestBase;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
 
+import software.wings.beans.DelegateInsightsBarDetails;
+import software.wings.beans.DelegateInsightsDetails;
+import software.wings.beans.DelegateInsightsSummary;
+import software.wings.beans.DelegateInsightsType;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -173,6 +181,109 @@ public class DelegateInsightsServiceTest extends DelegateServiceTestBase {
         getDefaultDelegateTaskUsageInsightsFromDB(DelegateTaskUsageInsightsEventType.FAILED);
 
     assertThat(delegateTaskUsageInsightsFailedEvent).isNull();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testRetrieveDelegateInsightsDetailsWithFFDisabled() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateGroupId = UUIDGenerator.generateUuid();
+    long timestamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)).thenReturn(false);
+
+    DelegateInsightsSummary insightsSummary1 =
+        DelegateInsightsSummary.builder()
+            .accountId(accountId)
+            .insightsType(DelegateInsightsType.SUCCESSFUL)
+            .delegateGroupId(delegateGroupId)
+            .periodStartTime(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(8))
+            .count(1)
+            .build();
+    persistence.save(insightsSummary1);
+
+    DelegateInsightsDetails delegateInsightsDetails =
+        delegateInsightsService.retrieveDelegateInsightsDetails(accountId, delegateGroupId, timestamp);
+    assertThat(delegateInsightsDetails).isNotNull();
+    assertThat(delegateInsightsDetails.getInsights()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testRetrieveDelegateInsightsDetailsWithFFEnabled() {
+    String accountId = UUIDGenerator.generateUuid();
+    String delegateGroupId = UUIDGenerator.generateUuid();
+    long timestamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+
+    when(featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)).thenReturn(true);
+
+    // Insights Bar 1
+    long bar1Timestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(8);
+    DelegateInsightsSummary insightsSummary1 = DelegateInsightsSummary.builder()
+                                                   .accountId(accountId)
+                                                   .insightsType(DelegateInsightsType.SUCCESSFUL)
+                                                   .delegateGroupId(delegateGroupId)
+                                                   .periodStartTime(bar1Timestamp)
+                                                   .count(1)
+                                                   .build();
+    persistence.save(insightsSummary1);
+
+    DelegateInsightsSummary insightsSummary2 = DelegateInsightsSummary.builder()
+                                                   .accountId(accountId)
+                                                   .insightsType(DelegateInsightsType.FAILED)
+                                                   .delegateGroupId(delegateGroupId)
+                                                   .periodStartTime(bar1Timestamp)
+                                                   .count(2)
+                                                   .build();
+    persistence.save(insightsSummary2);
+
+    // Insights Bar 2
+    long bar2Timestamp = System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(30);
+    DelegateInsightsSummary insightsSummary3 = DelegateInsightsSummary.builder()
+                                                   .accountId(accountId)
+                                                   .insightsType(DelegateInsightsType.IN_PROGRESS)
+                                                   .delegateGroupId(delegateGroupId)
+                                                   .periodStartTime(bar2Timestamp)
+                                                   .count(3)
+                                                   .build();
+    persistence.save(insightsSummary3);
+
+    // Summary that should not be fetched
+    DelegateInsightsSummary insightsSummary4 =
+        DelegateInsightsSummary.builder()
+            .accountId(accountId)
+            .insightsType(DelegateInsightsType.IN_PROGRESS)
+            .delegateGroupId(delegateGroupId)
+            .periodStartTime(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(61))
+            .count(4)
+            .build();
+    persistence.save(insightsSummary4);
+
+    DelegateInsightsDetails delegateInsightsDetails =
+        delegateInsightsService.retrieveDelegateInsightsDetails(accountId, delegateGroupId, timestamp);
+    assertThat(delegateInsightsDetails).isNotNull();
+    assertThat(delegateInsightsDetails.getInsights()).hasSize(2);
+    assertThat(delegateInsightsDetails.getInsights().stream().allMatch(
+                   barInfo -> ImmutableList.of(bar1Timestamp, bar2Timestamp).contains(barInfo.getTimeStamp())))
+        .isTrue();
+
+    for (DelegateInsightsBarDetails barDetails : delegateInsightsDetails.getInsights()) {
+      if (barDetails.getTimeStamp() == bar1Timestamp) {
+        assertThat(barDetails.getCounts()).hasSize(2);
+        assertThat(barDetails.getCounts().get(0).getLeft())
+            .isIn(DelegateInsightsType.SUCCESSFUL, DelegateInsightsType.FAILED);
+        assertThat(barDetails.getCounts().get(0).getRight()).isIn(1L, 2L);
+        assertThat(barDetails.getCounts().get(1).getLeft())
+            .isIn(DelegateInsightsType.SUCCESSFUL, DelegateInsightsType.FAILED);
+        assertThat(barDetails.getCounts().get(1).getRight()).isIn(1L, 2L);
+      } else {
+        assertThat(barDetails.getCounts()).hasSize(1);
+        assertThat(barDetails.getCounts().get(0).getLeft()).isEqualTo(DelegateInsightsType.IN_PROGRESS);
+        assertThat(barDetails.getCounts().get(0).getRight()).isEqualTo(3L);
+      }
+    }
   }
 
   private DelegateTaskUsageInsights getDefaultDelegateTaskUsageInsightsFromDB(

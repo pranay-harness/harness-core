@@ -14,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.aws.AwsCallTracker;
 import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.AwsCrossAccountAttributes;
@@ -26,6 +27,7 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.retry.PredefinedBackoffStrategies;
 import com.amazonaws.retry.PredefinedRetryPolicies;
@@ -54,6 +56,11 @@ public class AwsEcrApiHelperServiceDelegateBase {
     if (awsConfig.isUseEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
+    } else if (awsConfig.isUseIRSA()) {
+      WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
+      providerBuilder.roleSessionName(awsConfig.getAccountId() + UUIDGenerator.generateUuid());
+
+      credentialsProvider = providerBuilder.build();
     } else {
       credentialsProvider = new AWSStaticCredentialsProvider(
           new BasicAWSCredentials(defaultString(String.valueOf(awsConfig.getAccessKey()), ""),

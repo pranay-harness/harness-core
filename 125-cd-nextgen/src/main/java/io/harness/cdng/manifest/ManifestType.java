@@ -5,4 +5,6 @@ public interface ManifestType {
   String VALUES = "Values";
   String CONFIG_FILE = "configFiles";
   String HelmChart = "HelmChart";
+  String Kustomize = "Kustomize";
+  String OpenshiftTemplate = "OpenshiftTemplate";
 }

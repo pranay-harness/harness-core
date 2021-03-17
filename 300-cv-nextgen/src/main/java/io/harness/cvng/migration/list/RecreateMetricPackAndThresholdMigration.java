@@ -2,7 +2,8 @@ package io.harness.cvng.migration.list;
 
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -10,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 
 @Slf4j
-public class RecreateMetricPackAndThresholdMigration implements CNVGMigration {
+public class RecreateMetricPackAndThresholdMigration implements CVNGMigration {
   @Inject private HPersistence hPersistence;
 
   @Override
@@ -20,5 +21,14 @@ public class RecreateMetricPackAndThresholdMigration implements CNVGMigration {
     log.info("dropping collection {}", TimeSeriesThreshold.class.getAnnotation(Entity.class).value());
     hPersistence.getCollection(TimeSeriesThreshold.class).drop();
     log.info("migration done");
+  }
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 }

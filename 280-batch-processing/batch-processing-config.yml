@@ -87,3 +87,7 @@ scheduler-jobs-config:
 cePythonService:
   pythonServiceUrl: "http://0.0.0.0:8081"
   useProphet: false
+
+banzaiConfig:
+  host: "http://35.232.8.217"
+  port: 80

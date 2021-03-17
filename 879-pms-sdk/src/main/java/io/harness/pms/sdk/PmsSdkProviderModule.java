@@ -1,6 +1,7 @@
 package io.harness.pms.sdk;
 
 import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE;
+import static io.harness.pms.sdk.PmsSdkConfiguration.DeployMode.REMOTE_IN_PROCESS;
 
 import io.harness.mongo.MongoConfig;
 import io.harness.pms.expression.EngineExpressionService;
@@ -41,12 +42,16 @@ class PmsSdkProviderModule extends AbstractModule {
   @Override
   protected void configure() {
     if (config.getDeploymentMode() == REMOTE) {
-      bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
-      bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
       bind(EngineExpressionService.class).to(EngineGrpcExpressionService.class).in(Singleton.class);
-      bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
-      bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
     }
+
+    if (config.getDeploymentMode() == REMOTE || config.getDeploymentMode() == REMOTE_IN_PROCESS) {
+      bind(PMSInterruptService.class).to(PMSInterruptServiceGrpcImpl.class).in(Singleton.class);
+      bind(PmsNodeExecutionService.class).to(PmsNodeExecutionServiceGrpcImpl.class).in(Singleton.class);
+      bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
+      bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
+    }
+
     if (config.getExecutionSummaryModuleInfoProviderClass() != null) {
       bind(ExecutionSummaryModuleInfoProvider.class)
           .to(config.getExecutionSummaryModuleInfoProviderClass())

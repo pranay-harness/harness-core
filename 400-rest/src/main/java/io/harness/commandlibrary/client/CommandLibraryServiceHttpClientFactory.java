@@ -1,6 +1,8 @@
 package io.harness.commandlibrary.client;
 
 import static io.harness.commandlibrary.common.CommandLibraryConstants.MANAGER_CLIENT_ID;
+import static io.harness.ng.core.CorrelationContext.getCorrelationIdInterceptor;
+import static io.harness.request.RequestContextFilter.getRequestContextInterceptor;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -79,6 +81,8 @@ public class CommandLibraryServiceHttpClientFactory implements Provider<CommandL
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
           .addInterceptor(getAuthorizationInterceptor())
+          .addInterceptor(getCorrelationIdInterceptor())
+          .addInterceptor(getRequestContextInterceptor())
           .build();
 
     } catch (Exception e) {

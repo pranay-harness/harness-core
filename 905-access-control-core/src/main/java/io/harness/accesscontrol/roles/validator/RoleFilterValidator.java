@@ -2,7 +2,7 @@ package io.harness.accesscontrol.roles.validator;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.accesscontrol.roles.filter.ManagedFilter;
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.filter.RoleFilter;
 
 import javax.validation.ConstraintValidator;
