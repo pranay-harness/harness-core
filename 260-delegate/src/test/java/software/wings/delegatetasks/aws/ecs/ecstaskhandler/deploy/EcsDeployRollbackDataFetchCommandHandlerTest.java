@@ -125,7 +125,7 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
 
     verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).restoreAutoScalarConfigs(any(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }
@@ -168,7 +168,7 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
     assertThat(ecsCommandResponse.getOldInstanceData()).containsExactly(oldInstanceData);
 
     verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).deregisterAutoScalarsIfExists(any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }

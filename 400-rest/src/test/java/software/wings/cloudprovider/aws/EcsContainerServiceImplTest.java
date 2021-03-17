@@ -209,7 +209,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(US_EAST_1.getName(), connectorConfig, Collections.emptyList(), CLUSTER_NAME,
-        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
+        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback(), false);
     verify(awsHelperService)
         .updateService(US_EAST_1.getName(), awsConfig, Collections.emptyList(),
             new UpdateServiceRequest()
