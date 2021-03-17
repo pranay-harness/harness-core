@@ -186,10 +186,11 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
     AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
     try {
+      System.out.println("Test");
       log.info("Validating AWS SecretManager configuration Start: {}", secretsManagerConfig);
       AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
-      GetSecretValueRequest request =
-          new GetSecretValueRequest().withSecretId(AWS_SECRETS_MANAGER_VALIDATION_URL + System.currentTimeMillis());
+      GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(getFullPath(
+          secretsManagerConfig.getSecretNamePrefix(), AWS_SECRETS_MANAGER_VALIDATION_URL + System.currentTimeMillis()));
       client.getSecretValue(request);
     } catch (ResourceNotFoundException e) {
       // this exception is expected. It means the credentials are correct, but can't find the resource
