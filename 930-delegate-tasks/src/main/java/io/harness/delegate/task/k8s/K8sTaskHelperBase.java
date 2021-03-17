@@ -65,6 +65,7 @@ import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -198,6 +199,7 @@ public class K8sTaskHelperBase {
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
+  @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private HelmTaskHelperBase helmTaskHelperBase;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
@@ -1866,6 +1868,15 @@ public class K8sTaskHelperBase {
             (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
             kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
+
+      case OPENSHIFT_TEMPLATE:
+        final List<String> paramFilesContent = valuesFiles;
+        OpenshiftManifestDelegateConfig openshiftManifestConfig =
+            (OpenshiftManifestDelegateConfig) manifestDelegateConfig;
+        GitStoreDelegateConfig otGitStoreDelegateConfig =
+            (GitStoreDelegateConfig) openshiftManifestConfig.getStoreDelegateConfig();
+        return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
+            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, paramFilesContent);
 
       default:
         throw new UnsupportedOperationException(

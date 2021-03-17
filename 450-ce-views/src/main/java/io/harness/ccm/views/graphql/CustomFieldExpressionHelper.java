@@ -72,58 +72,64 @@ public class CustomFieldExpressionHelper {
             .build());
 
     List<QLCEViewField> azureFields = ViewFieldUtils.getAzureFields();
-    viewFieldHashMap.put("AZURE.Resource group name",
+    viewFieldHashMap.put("AZURE.Subscription Id",
         ViewField.builder()
             .fieldId(azureFields.get(0).getFieldId())
             .fieldName(azureFields.get(0).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Meter category",
+    viewFieldHashMap.put("AZURE.Meter",
         ViewField.builder()
             .fieldId(azureFields.get(1).getFieldId())
             .fieldName(azureFields.get(1).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Meter subcategory",
+    viewFieldHashMap.put("AZURE.Meter category",
         ViewField.builder()
             .fieldId(azureFields.get(2).getFieldId())
             .fieldName(azureFields.get(2).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Resource guid",
+    viewFieldHashMap.put("AZURE.Meter subcategory",
         ViewField.builder()
             .fieldId(azureFields.get(3).getFieldId())
             .fieldName(azureFields.get(3).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Meter",
+    viewFieldHashMap.put("AZURE.Resource guid",
         ViewField.builder()
             .fieldId(azureFields.get(4).getFieldId())
             .fieldName(azureFields.get(4).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Resource type",
+    viewFieldHashMap.put("AZURE.Resource group name",
         ViewField.builder()
             .fieldId(azureFields.get(5).getFieldId())
             .fieldName(azureFields.get(5).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Service name",
+    viewFieldHashMap.put("AZURE.Resource type",
         ViewField.builder()
             .fieldId(azureFields.get(6).getFieldId())
             .fieldName(azureFields.get(6).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Service tier",
+    viewFieldHashMap.put("AZURE.Resource",
         ViewField.builder()
             .fieldId(azureFields.get(7).getFieldId())
             .fieldName(azureFields.get(7).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
-    viewFieldHashMap.put("AZURE.Resource",
+    viewFieldHashMap.put("AZURE.Service name",
         ViewField.builder()
             .fieldId(azureFields.get(8).getFieldId())
             .fieldName(azureFields.get(8).getFieldId())
+            .identifier(ViewFieldIdentifier.AZURE)
+            .build());
+    viewFieldHashMap.put("AZURE.Service tier",
+        ViewField.builder()
+            .fieldId(azureFields.get(9).getFieldId())
+            .fieldName(azureFields.get(9).getFieldId())
             .identifier(ViewFieldIdentifier.AZURE)
             .build());
 

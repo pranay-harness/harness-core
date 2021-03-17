@@ -6,7 +6,7 @@ public enum PrincipalType {
   API_KEY,
   SERVICE;
 
-  public static PrincipalType fromPrincipalTypeOfContext(io.harness.security.dto.PrincipalType principalType) {
+  public static PrincipalType fromSecurityPrincipalType(io.harness.security.dto.PrincipalType principalType) {
     switch (principalType) {
       case SERVICE:
         return SERVICE;

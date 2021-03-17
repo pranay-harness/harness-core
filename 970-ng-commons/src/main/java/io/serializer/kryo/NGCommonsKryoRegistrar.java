@@ -11,6 +11,7 @@ import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
 import io.harness.ng.core.Status;
+import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -34,6 +35,7 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(Status.class, 19460);
     kryo.register(ErrorDTO.class, 19461);
 
+    kryo.register(KeyValuePair.class, 22004);
     kryo.register(ResourceScope.class, 22005);
     kryo.register(AccountScope.class, 22006);
     kryo.register(OrgScope.class, 22007);

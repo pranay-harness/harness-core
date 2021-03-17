@@ -3,6 +3,7 @@ package io.harness.cdng.manifest.mappers;
 import static io.harness.cdng.manifest.ManifestType.HelmChart;
 import static io.harness.cdng.manifest.ManifestType.K8Manifest;
 import static io.harness.cdng.manifest.ManifestType.Kustomize;
+import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
 
 import static java.lang.String.format;
@@ -14,6 +15,8 @@ import io.harness.cdng.manifest.yaml.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifest;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -45,6 +48,8 @@ public class ManifestOutcomeMapper {
         return getHelmChartOutcome(manifestAttributes);
       case Kustomize:
         return getKustomizeOutcome(manifestAttributes);
+      case OpenshiftTemplate:
+        return getOpenshiftOutcome(manifestAttributes);
       default:
         throw new UnsupportedOperationException(
             format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
@@ -124,6 +129,17 @@ public class ManifestOutcomeMapper {
         .store(kustomizeManifest.getStoreConfig())
         .skipResourceVersioning(skipResourceVersioning)
         .pluginPath(pluginPath)
+        .build();
+  }
+
+  private OpenshiftManifestOutcome getOpenshiftOutcome(ManifestAttributes manifestAttributes) {
+    OpenshiftManifest openshiftManifest = (OpenshiftManifest) manifestAttributes;
+    boolean skipResourceVersioning = !ParameterField.isNull(openshiftManifest.getSkipResourceVersioning())
+        && openshiftManifest.getSkipResourceVersioning().getValue();
+    return OpenshiftManifestOutcome.builder()
+        .identifier(openshiftManifest.getIdentifier())
+        .store(openshiftManifest.getStoreConfig())
+        .skipResourceVersioning(skipResourceVersioning)
         .build();
   }
 }

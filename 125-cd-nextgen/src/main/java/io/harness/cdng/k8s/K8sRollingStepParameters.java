@@ -46,6 +46,7 @@ public class K8sRollingStepParameters extends K8sRollingBaseStepInfo implements 
                                                        .timeout(timeout)
                                                        .name(name)
                                                        .identifier(identifier)
+                                                       .skipDryRun(skipDryRun)
                                                        .skipCondition(skipCondition)
                                                        .description(description)
                                                        .build());
