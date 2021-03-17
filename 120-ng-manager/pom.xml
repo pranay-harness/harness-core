@@ -107,6 +107,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>950-ng-signup</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>955-filters-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
