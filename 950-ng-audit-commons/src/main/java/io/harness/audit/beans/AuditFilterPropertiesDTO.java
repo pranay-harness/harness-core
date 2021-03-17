@@ -37,6 +37,8 @@ public class AuditFilterPropertiesDTO extends FilterPropertiesDTO {
   List<String> actions;
   List<String> environmentIdentifiers;
 
+  List<Principal> principals;
+
   Long startTime;
   Long endTime;
 

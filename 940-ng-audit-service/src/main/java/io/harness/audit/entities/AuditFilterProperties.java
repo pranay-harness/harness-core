@@ -1,6 +1,7 @@
 package io.harness.audit.entities;
 
 import io.harness.ModuleType;
+import io.harness.audit.beans.Principal;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.ResourceScope;
@@ -29,6 +30,8 @@ public class AuditFilterProperties extends FilterProperties {
   List<ModuleType> moduleTypes;
   List<String> actions;
   List<String> environmentIdentifiers;
+
+  List<Principal> principals;
 
   Long startTime;
   Long endTime;
