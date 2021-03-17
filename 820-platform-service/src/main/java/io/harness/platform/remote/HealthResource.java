@@ -1,4 +1,4 @@
-package io.harness.notification.remote.resources;
+package io.harness.platform.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
@@ -43,7 +43,7 @@ public class HealthResource {
   @GET
   @Timed
   @ExceptionMetered
-  @ApiOperation(value = "get health for Notification service", nickname = "getNotificationHealthStatus")
+  @ApiOperation(value = "get health for Platform service", nickname = "getPlatformHealthStatus")
   public ResponseDTO<String> get() throws Exception {
     if (getMaintenanceFlag()) {
       log.info("In maintenance mode. Throwing exception to prevent traffic.");

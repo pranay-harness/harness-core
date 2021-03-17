@@ -233,17 +233,17 @@ fi
 
 cd ../..
 
-mkdir -p dist/notification-service
-cd dist/notification-service
+mkdir -p dist/platform-service
+cd dist/platform-service
 
-cp ${HOME}/.bazel-dirs/bin/830-notification-service/module_deploy.jar notification-service-capsule.jar
-cp ../../830-notification-service/config.yml .
-cp ../../830-notification-service/keystore.jks .
-cp ../../830-notification-service/key.pem .
-cp ../../830-notification-service/cert.pem .
-cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-openjdk ./Dockerfile
-cp ../../dockerization/notification-service/Dockerfile-notification-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
-cp -r ../../dockerization/notification-service/scripts/ .
+cp ${HOME}/.bazel-dirs/bin/820-platform-service/module_deploy.jar platform-service-capsule.jar
+cp ../../820-platform-service/config.yml .
+cp ../../820-platform-service/keystore.jks .
+cp ../../820-platform-service/key.pem .
+cp ../../820-platform-service/cert.pem .
+cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/platform-service/Dockerfile-platform-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/platform-service/scripts/ .
 
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt

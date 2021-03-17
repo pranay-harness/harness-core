@@ -1,4 +1,4 @@
-package io.harness.notification;
+package io.harness.platform;
 
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -11,15 +11,13 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.notification.modules.NotificationCoreModule;
-import io.harness.notification.modules.NotificationPersistenceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.platform.notification.NotificationCoreModule;
 import io.harness.queue.QueueController;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.NotificationRegistrars;
-import io.harness.serializer.NotificationSenderRegistrars;
+import io.harness.serializer.PlatformRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ExecutorModule;
 import io.harness.version.VersionModule;
@@ -43,10 +41,10 @@ import org.mongodb.morphia.converters.TypeConverter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
-public class NotificationModule extends AbstractModule {
-  private final NotificationConfiguration appConfig;
+public class PlatformModule extends AbstractModule {
+  private final PlatformConfiguration appConfig;
 
-  public NotificationModule(NotificationConfiguration appConfig) {
+  public PlatformModule(PlatformConfiguration appConfig) {
     this.appConfig = appConfig;
   }
 
@@ -58,7 +56,7 @@ public class NotificationModule extends AbstractModule {
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(
-      DelegateServiceGrpcClient delegateServiceClient, NotificationConfiguration appConfig) {
+      DelegateServiceGrpcClient delegateServiceClient, PlatformConfiguration appConfig) {
     log.info("Generating Delegate callback token");
     final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
         DelegateCallback.newBuilder()
@@ -77,16 +75,14 @@ public class NotificationModule extends AbstractModule {
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
-        return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(NotificationRegistrars.kryoRegistrars)
-            .build();
+        return ImmutableSet.<Class<? extends KryoRegistrar>>builder().addAll(PlatformRegistrars.kryoRegistrars).build();
       }
 
       @Provides
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(NotificationSenderRegistrars.morphiaRegistrars)
+            .addAll(PlatformRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -106,7 +102,7 @@ public class NotificationModule extends AbstractModule {
     bind(ManagedScheduledExecutorService.class)
         .annotatedWith(Names.named("delegate-response"))
         .toInstance(new ManagedScheduledExecutorService("delegate-response"));
-    bind(NotificationConfiguration.class).toInstance(appConfig);
+    bind(PlatformConfiguration.class).toInstance(appConfig);
     install(new AbstractMongoModule() {
       @Override
       public UserProvider userProvider() {
@@ -115,12 +111,12 @@ public class NotificationModule extends AbstractModule {
     });
     bind(HPersistence.class).to(MongoPersistence.class);
     install(DelegateServiceDriverModule.getInstance());
-    install(new DelegateServiceDriverGrpcClientModule(appConfig.getNotificationSecrets().getManagerServiceSecret(),
+    install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
 
     install(VersionModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));
-    install(new NotificationPersistenceModule());
+    install(new PlatformPersistenceModule());
     install(new NotificationCoreModule(appConfig));
     install(new AbstractModule() {
       @Override

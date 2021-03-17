@@ -1,9 +1,9 @@
-package io.harness.notification.modules;
+package io.harness.platform;
 
-import io.harness.notification.NotificationPersistenceConfig;
+import io.harness.platform.notification.NotificationPersistenceConfig;
 import io.harness.springdata.PersistenceModule;
 
-public class NotificationPersistenceModule extends PersistenceModule {
+public class PlatformPersistenceModule extends PersistenceModule {
   @Override
   protected Class<?>[] getConfigClasses() {
     return new Class[] {NotificationPersistenceConfig.class};
