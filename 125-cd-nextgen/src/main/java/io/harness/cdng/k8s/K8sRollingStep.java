@@ -64,7 +64,7 @@ public class K8sRollingStep implements TaskChainExecutable<K8sRollingStepParamet
             .taskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .localOverrideFeatureFlag(false)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
-            .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
+            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
