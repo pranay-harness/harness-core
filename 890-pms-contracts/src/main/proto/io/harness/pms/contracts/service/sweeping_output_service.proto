@@ -9,6 +9,7 @@ import "io/harness/pms/contracts/refobjects/ref_objects.proto";
 
 service SweepingOutputService {
   rpc resolve(SweepingOutputResolveBlobRequest) returns (SweepingOutputResolveBlobResponse);
+  rpc resolveOptional(SweepingOutputResolveBlobRequest) returns (SweepingOutputResolveBlobResponse);
   rpc consume(SweepingOutputConsumeBlobRequest) returns (SweepingOutputConsumeBlobResponse);
 }
 
