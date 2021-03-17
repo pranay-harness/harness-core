@@ -17,7 +17,7 @@ import io.harness.filter.entity.Filter.FilterKeys;
 import io.harness.filter.mapper.FilterMapper;
 import io.harness.filter.service.FilterService;
 import io.harness.repositories.FilterRepository;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -111,9 +111,9 @@ public class FilterServiceImpl implements FilterService {
   }
 
   private String getUserId() {
-    if (SecurityContextBuilder.getPrincipal() != null
-        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
-      UserPrincipal userPrincipal = (UserPrincipal) SecurityContextBuilder.getPrincipal();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
       return userPrincipal.getName();
     }
     return null;

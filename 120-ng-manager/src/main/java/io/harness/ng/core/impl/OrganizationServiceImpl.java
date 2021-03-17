@@ -27,7 +27,7 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.core.spring.OrganizationRepository;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.utils.RetryUtils;
 
@@ -114,9 +114,9 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   private void createUserProjectMap(Organization organization) {
-    if (SecurityContextBuilder.getPrincipal() != null
-        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
-      String userId = SecurityContextBuilder.getPrincipal().getName();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
       Role role = Role.builder()
                       .accountIdentifier(organization.getAccountIdentifier())
                       .orgIdentifier(organization.getIdentifier())

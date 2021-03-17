@@ -9,7 +9,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.UserPrincipal;
 
 import com.google.inject.Inject;
@@ -29,12 +29,12 @@ public class CurrentUserHelper {
     if (!configuration.isEnableAuth()) {
       return DEFAULT_EMBEDDED_USER;
     }
-    if (SecurityContextBuilder.getPrincipal() == null
-        || !USER.equals(SecurityContextBuilder.getPrincipal().getType())) {
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() == null
+        || !USER.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())) {
       throw new InvalidRequestException("Unable to fetch current user");
     }
 
-    UserPrincipal userPrincipal = (UserPrincipal) SecurityContextBuilder.getPrincipal();
+    UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
     String userId = userPrincipal.getName();
     List<User> users = RestClientUtils.getResponse(userClient.getUsersByIds(Collections.singletonList(userId)));
     if (EmptyPredicate.isEmpty(users)) {
