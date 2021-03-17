@@ -19,7 +19,7 @@ public interface ACLDAO {
 
   void deleteByRoleAssignmentId(String roleAssignmentId);
 
-  List<ACL> getByRole(String scopeIdentifier, String identifier);
+  List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed);
 
-  List<ACL> getByResourceGroup(String scopeIdentifier, String identifier);
+  List<ACL> getByResourceGroup(String scopeIdentifier, String identifier, boolean managed);
 }

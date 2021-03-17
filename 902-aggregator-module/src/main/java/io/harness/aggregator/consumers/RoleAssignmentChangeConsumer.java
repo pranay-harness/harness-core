@@ -18,16 +18,18 @@ public class RoleAssignmentChangeConsumer implements ChangeConsumer {
   @Override
   public void consumeUpdateEvent(String id, AccessControlEntity persistentEntity) {
     List<ACL> aclList = aggregatorService.processRoleAssignmentUpdation((RoleAssignmentDBO) persistentEntity);
-    log.info("Number of new ACLs created: {}", aclList.size());
+    log.info("Processed updation of role assignment with id: {}, number of new ACLs created: {}", id, aclList.size());
   }
 
   @Override
   public void consumeDeleteEvent(String id) {
     aggregatorService.processRoleAssignmentDeletion(id);
+    log.info("Processed deletion of role assignment with id: {}", id);
   }
 
   @Override
   public void consumeCreateEvent(String id, AccessControlEntity accessControlEntity) {
-    aggregatorService.processRoleAssignmentCreation((RoleAssignmentDBO) accessControlEntity);
+    List<ACL> acls = aggregatorService.processRoleAssignmentCreation((RoleAssignmentDBO) accessControlEntity);
+    log.info("Processed role assignment creation for id: {}, number of new ACLs created: {}", id, acls.size());
   }
 }

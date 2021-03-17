@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -61,14 +62,17 @@ public class AggregatorServiceImpl implements AggregatorService {
                                        .resourceGroupIdentifier(roleAssignmentDBO.getResourceGroupIdentifier())
                                        .userGroupIdentifier(null)
                                        .build())
-                   .resource(resourceGroup.getIdentifier())
+                   .resource(resourceSelector)
                    .principalType(principalType)
                    .principalIdentifier(roleAssignmentDBO.getPrincipalIdentifier())
                    .aclQueryString(ACL.getAclQueryString(roleAssignmentDBO.getScopeIdentifier(), resourceSelector,
                        principalType, roleAssignmentDBO.getPrincipalIdentifier(), permission))
                    .build());
     }));
-    return acldao.saveAll(acls);
+    if (!acls.isEmpty()) {
+      return acldao.saveAll(acls);
+    }
+    return new ArrayList<>();
   }
 
   @Override
@@ -86,7 +90,7 @@ public class AggregatorServiceImpl implements AggregatorService {
   public List<ACL> processRoleUpdation(RoleDBO roleDBO) {
     if (Optional.ofNullable(roleDBO.getPermissions()).filter(x -> !x.isEmpty()).isPresent()) {
       Set<String> currentPermissionsInRole = roleDBO.getPermissions();
-      List<ACL> acls = acldao.getByRole(roleDBO.getScopeIdentifier(), roleDBO.getIdentifier());
+      List<ACL> acls = acldao.getByRole(roleDBO.getScopeIdentifier(), roleDBO.getIdentifier(), roleDBO.isManaged());
 
       Set<String> oldPermissionsFromThisRole =
           acls.stream().map(ACL::getPermissionIdentifier).collect(Collectors.toSet());
@@ -98,14 +102,26 @@ public class AggregatorServiceImpl implements AggregatorService {
       List<ACL> aclsToDelete = acls.stream()
                                    .filter(x -> permissionsToDelete.contains(x.getPermissionIdentifier()))
                                    .collect(Collectors.toList());
-      acldao.deleteAll(aclsToDelete);
+      if (!aclsToDelete.isEmpty()) {
+        acldao.deleteAll(aclsToDelete);
+      }
 
       // add new ACLs for new permissions
+      List<ACL> aclsToCreate = new ArrayList<>();
       acls.forEach(acl -> permissionsToAdd.forEach(permission -> {
-        acl.setPermissionIdentifier(permission);
-        acl.setAclQueryString(ACL.getAclQueryString(acl));
+        ACL aclToCreate = ACL.copyOf(acl);
+        aclToCreate.setPermissionIdentifier(permission);
+        aclToCreate.setAclQueryString(ACL.getAclQueryString(aclToCreate));
+        aclsToCreate.add(aclToCreate);
       }));
-      return acldao.saveAll(acls);
+      for (ACL acl : aclsToCreate) {
+        try {
+          acldao.save(acl);
+        } catch (DuplicateKeyException duplicateKeyException) {
+          log.debug("Entry already exists, ignoring");
+        }
+      }
+      return aclsToCreate;
     }
     return new ArrayList<>();
   }
@@ -113,26 +129,37 @@ public class AggregatorServiceImpl implements AggregatorService {
   @Override
   public List<ACL> processResourceGroupUpdation(ResourceGroupDBO resourceGroupDBO) {
     if (Optional.ofNullable(resourceGroupDBO.getResourceSelectors()).filter(x -> !x.isEmpty()).isPresent()) {
-      Set<String> currentResourceSelectorsInRole = resourceGroupDBO.getResourceSelectors();
-      List<ACL> acls =
-          acldao.getByResourceGroup(resourceGroupDBO.getScopeIdentifier(), resourceGroupDBO.getIdentifier());
+      Set<String> currentResourceSelectorsInResourceGroup = resourceGroupDBO.getResourceSelectors();
+      List<ACL> acls = acldao.getByResourceGroup(resourceGroupDBO.getScopeIdentifier(),
+          resourceGroupDBO.getIdentifier(), Boolean.TRUE.equals(resourceGroupDBO.getManaged()));
 
       Set<String> oldResourcesFromThisResourceGroup = acls.stream().map(ACL::getResource).collect(Collectors.toSet());
 
       Set<String> resourcesToDelete =
-          Sets.difference(oldResourcesFromThisResourceGroup, currentResourceSelectorsInRole);
-      Set<String> resourcesToAdd = Sets.difference(currentResourceSelectorsInRole, oldResourcesFromThisResourceGroup);
+          Sets.difference(oldResourcesFromThisResourceGroup, currentResourceSelectorsInResourceGroup);
+      Set<String> resourcesToAdd =
+          Sets.difference(currentResourceSelectorsInResourceGroup, oldResourcesFromThisResourceGroup);
 
       // delete ACLs which contain old resources
       List<ACL> aclsToDelete =
           acls.stream().filter(x -> resourcesToDelete.contains(x.getResource())).collect(Collectors.toList());
       acldao.deleteAll(aclsToDelete);
 
+      List<ACL> aclsToCreate = new ArrayList<>();
       acls.forEach(acl -> resourcesToAdd.forEach(resource -> {
-        acl.setResource(resource);
-        acl.setAclQueryString(ACL.getAclQueryString(acl));
+        ACL aclToCreate = ACL.copyOf(acl);
+        aclToCreate.setResource(resource);
+        aclToCreate.setAclQueryString(ACL.getAclQueryString(aclToCreate));
+        aclsToCreate.add(aclToCreate);
       }));
-      return acldao.saveAll(acls);
+      for (ACL acl : aclsToCreate) {
+        try {
+          acldao.save(acl);
+        } catch (DuplicateKeyException duplicateKeyException) {
+          log.debug("Entry already exists, ignoring");
+        }
+      }
+      return aclsToCreate;
     }
     return new ArrayList<>();
   }

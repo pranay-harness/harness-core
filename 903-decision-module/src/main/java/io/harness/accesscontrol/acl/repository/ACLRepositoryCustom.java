@@ -6,9 +6,9 @@ import java.util.List;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 public interface ACLRepositoryCustom {
-  List<ACL> findByRole(String scopeIdentifier, String identifier);
+  List<ACL> findByRole(String scopeIdentifier, String identifier, boolean managed);
 
   void deleteAll(Criteria criteria);
 
-  List<ACL> findByResourceGroup(String scopeIdentifier, String identifier);
+  List<ACL> findByResourceGroup(String scopeIdentifier, String identifier, boolean managed);
 }

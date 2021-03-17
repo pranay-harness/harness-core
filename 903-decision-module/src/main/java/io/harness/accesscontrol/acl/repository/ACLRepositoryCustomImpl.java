@@ -24,11 +24,12 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
       ACL.ACLKeys.sourceMetadata + "." + SourceMetadata.SourceMetadataKeys.resourceGroupIdentifier;
 
   @Override
-  public List<ACL> findByRole(String scopeIdentifier, String identifier) {
-    return mongoTemplate.find(
-        new Query(
-            Criteria.where(ACL.ACLKeys.scopeIdentifier).is(scopeIdentifier).and(ROLE_IDENTIFIER_KEY).is(identifier)),
-        ACL.class);
+  public List<ACL> findByRole(String scopeIdentifier, String identifier, boolean managed) {
+    Criteria criteria = Criteria.where(ROLE_IDENTIFIER_KEY).is(identifier);
+    if (!managed) {
+      criteria.and(ACL.ACLKeys.scopeIdentifier).is(scopeIdentifier);
+    }
+    return mongoTemplate.find(new Query(criteria), ACL.class);
   }
 
   @Override
@@ -37,11 +38,11 @@ public class ACLRepositoryCustomImpl implements ACLRepositoryCustom {
   }
 
   @Override
-  public List<ACL> findByResourceGroup(String scopeIdentifier, String identifier) {
-    return mongoTemplate.find(new Query(Criteria.where(ACL.ACLKeys.scopeIdentifier)
-                                            .is(scopeIdentifier)
-                                            .and(RESOURCE_GROUP_IDENTIFIER_KEY)
-                                            .is(identifier)),
-        ACL.class);
+  public List<ACL> findByResourceGroup(String scopeIdentifier, String identifier, boolean managed) {
+    Criteria criteria = Criteria.where(RESOURCE_GROUP_IDENTIFIER_KEY).is(identifier);
+    if (!managed) {
+      criteria.and(ACL.ACLKeys.scopeIdentifier).is(scopeIdentifier);
+    }
+    return mongoTemplate.find(new Query(criteria), ACL.class);
   }
 }

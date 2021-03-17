@@ -128,12 +128,12 @@ public class ACLDAOImpl implements ACLDAO {
   }
 
   @Override
-  public List<ACL> getByRole(String scopeIdentifier, String identifier) {
-    return aclRepository.findByRole(scopeIdentifier, identifier);
+  public List<ACL> getByRole(String scopeIdentifier, String identifier, boolean managed) {
+    return aclRepository.findByRole(scopeIdentifier, identifier, managed);
   }
 
   @Override
-  public List<ACL> getByResourceGroup(String scopeIdentifier, String identifier) {
-    return aclRepository.findByResourceGroup(scopeIdentifier, identifier);
+  public List<ACL> getByResourceGroup(String scopeIdentifier, String identifier, boolean managed) {
+    return aclRepository.findByResourceGroup(scopeIdentifier, identifier, managed);
   }
 }

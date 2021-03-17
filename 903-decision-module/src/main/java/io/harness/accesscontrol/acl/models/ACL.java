@@ -55,6 +55,19 @@ public class ACL implements PersistentEntity {
   String principalIdentifier;
   @FdIndex String aclQueryString;
 
+  public static ACL copyOf(ACL acl) {
+    return ACL.builder()
+        .roleAssignmentId(acl.getRoleAssignmentId())
+        .scopeIdentifier(acl.getScopeIdentifier())
+        .permissionIdentifier(acl.getPermissionIdentifier())
+        .sourceMetadata(acl.getSourceMetadata())
+        .resource(acl.getResource())
+        .principalType(acl.getPrincipalType())
+        .principalIdentifier(acl.getPrincipalIdentifier())
+        .aclQueryString(acl.getAclQueryString())
+        .build();
+  }
+
   public static String getAclQueryString(String scopeIdentifier, String resource, String principalType,
       String principalIdentifier, String permissionIdentifier) {
     return scopeIdentifier + DELIMITER + permissionIdentifier + DELIMITER + resource + DELIMITER + principalType
@@ -75,6 +88,7 @@ public class ACL implements PersistentEntity {
                  .field(SourceMetadataKeys.userGroupIdentifier)
                  .field(SourceMetadataKeys.roleIdentifier)
                  .field(SourceMetadataKeys.resourceGroupIdentifier)
+                 .field(ACLKeys.resource)
                  .field(ACLKeys.permissionIdentifier)
                  .field(ACLKeys.principalIdentifier)
                  .field(ACLKeys.principalType)
@@ -82,13 +96,13 @@ public class ACL implements PersistentEntity {
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("roleIdx")
-                 .field(ACLKeys.scopeIdentifier)
                  .field(SourceMetadataKeys.roleIdentifier)
+                 .field(ACLKeys.scopeIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("resourceGroupIdx")
-                 .field(ACLKeys.scopeIdentifier)
                  .field(SourceMetadataKeys.resourceGroupIdentifier)
+                 .field(ACLKeys.scopeIdentifier)
                  .build())
         .build();
   }

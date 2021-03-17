@@ -3,12 +3,10 @@ package io.harness.aggregator.consumers;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
-import io.harness.aggregator.MongoOffsetBackingStore;
 import io.harness.aggregator.OpType;
+import io.harness.aggregator.models.MongoReconciliationOffset;
 import io.harness.aggregator.services.apis.AggregatorService;
-import io.harness.utils.RetryUtils;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -18,13 +16,11 @@ import io.debezium.embedded.EmbeddedEngineChangeEvent;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.serde.DebeziumSerdes;
-import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.RetryPolicy;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.connect.source.SourceRecord;
@@ -43,7 +39,6 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
   private final Deserializer<RoleDBO> roleDeserializer;
   private final Deserializer<ResourceGroupDBO> resourceGroupDeserializer;
   private final Deserializer<String> idDeserializer;
-  private final RetryPolicy<Object> retryPolicy;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private AggregatorService aggregatorService;
   @Inject @Named("roleAssignment") private ChangeConsumer roleAssignmentChangeConsumer;
@@ -70,12 +65,8 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
 
     // configuring resource group deserializer
     Serde<ResourceGroupDBO> resourceGroupSerde = DebeziumSerdes.payloadJson(ResourceGroupDBO.class);
-    roleSerde.configure(valueDeserializerConfig, false);
+    resourceGroupSerde.configure(valueDeserializerConfig, false);
     resourceGroupDeserializer = resourceGroupSerde.deserializer();
-
-    // configuring retry policy
-    retryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}", "[Failed] attempt: {}",
-        ImmutableList.of(Exception.class), Duration.ofSeconds(1), 3, log);
   }
 
   @SneakyThrows
@@ -117,7 +108,7 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
       } catch (Exception exception) {
         log.error(
             "[FATAL ERROR] Exception while processing event: {}, cannot recover from this, preparing to full sync now.",
-            changeEvent);
+            changeEvent, exception);
         prepareForFullSync();
       }
     }
@@ -130,7 +121,7 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
   }
 
   private void prepareForFullSync() {
-    mongoTemplate.findAllAndRemove(new Query(), MongoOffsetBackingStore.class);
+    mongoTemplate.findAllAndRemove(new Query(), MongoReconciliationOffset.class);
   }
 
   private Optional<String> getCollectionName(String sourceRecordTopic) {
