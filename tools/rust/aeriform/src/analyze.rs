@@ -4,16 +4,36 @@ use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
+use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM};
 use crate::java_module::{modules, JavaModule};
+use std::process::exit;
+
+#[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
+enum Kind {
+    Critical,
+    Error,
+    AutoAction,
+    DevAction,
+    Blocked,
+    ToDo,
+}
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
 pub struct Analyze {
+    /// Return error exit code if issues are found.
+    #[clap(short, long)]
+    exit_code: bool,
+
     /// Filter the reports by affected class class_filter.
     #[clap(short, long)]
-    class_filter: Option<String>,
+    class_filter: Vec<String>,
+
+    /// Filter the reports by affected class specified by its location class_filter.
+    #[clap(short, long)]
+    location_class_filter: Vec<String>,
 
     /// Filter the reports by affected module module_filter.
     #[clap(short, long)]
@@ -32,20 +52,13 @@ pub struct Analyze {
     only_team_filter: bool,
 
     #[clap(short, long)]
+    kind_filter: Option<Kind>,
+
+    #[clap(short, long)]
     auto_actionable_filter: bool,
 
     #[clap(long)]
     auto_actionable_command: bool,
-}
-
-#[derive(Debug, Copy, Clone, EnumIter)]
-enum Kind {
-    Critical,
-    Error,
-    AutoAction,
-    DevAction,
-    Blocked,
-    ToDo,
 }
 
 #[derive(Debug)]
@@ -105,8 +118,21 @@ pub fn analyze(opts: Analyze) {
         .map(|&class| (class.name.clone(), class))
         .collect::<HashMap<String, &JavaClass>>();
 
-    if opts.class_filter.is_some() && !classes.contains_key(opts.class_filter.as_ref().unwrap()) {
-        panic!("There is no class {}", opts.class_filter.unwrap());
+    for class in opts.class_filter.iter() {
+        if !classes.contains_key(class) {
+            panic!("There is no class {}", class);
+        }
+    }
+
+    let class_locations = class_modules
+        .keys()
+        .map(|&class| (class.location.clone(), class))
+        .collect::<HashMap<String, &JavaClass>>();
+
+    for class_location in opts.location_class_filter.iter() {
+        if !class_locations.contains_key(class_location) {
+            panic!("There is no class with location {}", class_location);
+        }
     }
 
     if opts.module_filter.is_some() {
@@ -164,7 +190,7 @@ pub fn analyze(opts: Analyze) {
 
         results
             .iter()
-            .filter(|&report| filter_report(&opts, report) || original.contains(&report.for_class))
+            .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
             .for_each(|report| {
                 indirect_classes.extend(&report.indirect_classes);
             });
@@ -176,7 +202,10 @@ pub fn analyze(opts: Analyze) {
 
     results
         .iter()
-        .filter(|&report| filter_report(&opts, report) || indirect_classes.contains(&report.for_class))
+        .filter(|&report| {
+            filter_report(&opts, report, &class_locations) || indirect_classes.contains(&report.for_class)
+        })
+        .filter(|&report| filter_by_kind(&opts, report))
         .filter(|&report| filter_by_auto_actionable(&opts, report))
         .filter(|&report| filter_by_team(&opts, report))
         .for_each(|report| {
@@ -194,18 +223,43 @@ pub fn analyze(opts: Analyze) {
             println!("{:?} -> {}", kind, total[kind as usize]);
         }
     }
+
+    if results.is_empty() {
+        println!("aeriform did not find any issues");
+    } else {
+        if opts.exit_code {
+            exit(1);
+        }
+    }
 }
 
-fn filter_report(opts: &Analyze, report: &Report) -> bool {
-    filter_by_class(&opts, report) && filter_by_module(&opts, report) && filter_by_root(&opts, report)
+fn filter_report(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
+    filter_by_class(&opts, report, class_locations)
+        && filter_by_module(&opts, report)
+        && filter_by_root(&opts, report)
 }
 
-fn filter_by_class(opts: &Analyze, report: &Report) -> bool {
-    opts.class_filter.is_none() || report.for_class.contains(opts.class_filter.as_ref().unwrap())
+fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
+    filter_by_class_name(opts, report) | filter_by_class_location(opts, report, class_locations)
+}
+
+fn filter_by_class_name(opts: &Analyze, report: &Report) -> bool {
+    opts.class_filter.iter().any(|class| report.for_class.eq(class))
+}
+
+fn filter_by_class_location(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
+    opts.location_class_filter.iter().any(|class_location| {
+        let class = &class_locations.get(class_location).unwrap().name;
+        report.for_class.eq(class)
+    })
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
     opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
+}
+
+fn filter_by_kind(opts: &Analyze, report: &Report) -> bool {
+    opts.kind_filter.is_none() || report.kind == opts.kind_filter.unwrap()
 }
 
 fn filter_by_team(opts: &Analyze, report: &Report) -> bool {
