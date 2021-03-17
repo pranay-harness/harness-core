@@ -1,4 +1,6 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.harness.beans;
+
+import io.harness.steps.approval.step.beans.ApproverInput;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;

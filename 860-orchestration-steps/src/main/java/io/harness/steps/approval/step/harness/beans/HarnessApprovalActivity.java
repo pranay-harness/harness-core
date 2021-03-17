@@ -1,6 +1,7 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.harness.beans;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.steps.approval.step.beans.ApproverInput;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -23,4 +24,15 @@ public class HarnessApprovalActivity {
   List<ApproverInput> approverInputs;
   String comments;
   long approvedAt;
+
+  public static HarnessApprovalActivity fromHarnessApprovalActivityRequestDTO(
+      EmbeddedUser user, HarnessApprovalActivityRequestDTO request) {
+    return HarnessApprovalActivity.builder()
+        .user(user)
+        .action(request.getAction())
+        .approverInputs(request.getApproverInputs())
+        .comments(request.getComments())
+        .approvedAt(System.currentTimeMillis())
+        .build();
+  }
 }

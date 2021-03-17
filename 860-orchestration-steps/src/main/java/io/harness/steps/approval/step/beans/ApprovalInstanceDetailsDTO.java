@@ -1,4 +1,6 @@
-package io.harness.pms.approval.beans;
+package io.harness.steps.approval.step.beans;
+
+import io.harness.steps.approval.step.harness.beans.HarnessApprovalInstanceDetailsDTO;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 

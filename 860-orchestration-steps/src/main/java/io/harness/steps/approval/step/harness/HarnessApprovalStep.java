@@ -1,4 +1,4 @@
-package io.harness.steps.approval.harness;
+package io.harness.steps.approval.step.harness;
 
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;

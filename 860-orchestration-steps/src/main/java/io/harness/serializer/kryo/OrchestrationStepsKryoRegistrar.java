@@ -4,8 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.steps.approval.harness.HarnessApprovalStepParameters;
 import io.harness.steps.approval.stage.ApprovalStageStepParameters;
+import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
