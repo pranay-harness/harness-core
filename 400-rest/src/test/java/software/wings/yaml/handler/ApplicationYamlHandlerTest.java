@@ -194,7 +194,7 @@ public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @Test
   @Owner(developers = INDER)
   @Category(UnitTests.class)
-  public void testCRUDAndGetWithFFOn() throws IOException {
+  public void testCRUDAndGetWithoutManualTriggerAuthorizedField() throws IOException {
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, ACCOUNT_ID)).thenReturn(true);
 
