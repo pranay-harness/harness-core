@@ -1,9 +1,12 @@
-package io.harness.plancreator.steps.approval;
+package io.harness.steps.approval.harness;
 
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.approval.HarnessApprovalStep;
+import io.harness.steps.approval.harness.beans.ApproverInputInfo;
+import io.harness.steps.approval.harness.beans.Approvers;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -20,10 +23,9 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("HarnessApproval")
-@TypeAlias("HarnessApprovalStepInfo")
+@TypeAlias("harnessApprovalStepInfo")
 public class HarnessApprovalStepInfo extends HarnessApprovalBaseStepInfo implements PMSStepInfo {
   @JsonIgnore String name;
-
   @JsonIgnore String identifier;
 
   @Builder(builderMethodName = "infoBuilder")
@@ -42,6 +44,18 @@ public class HarnessApprovalStepInfo extends HarnessApprovalBaseStepInfo impleme
 
   @Override
   public String getFacilitatorType() {
-    return null;
+    return OrchestrationFacilitatorType.SYNC;
+  }
+
+  @Override
+  public StepParameters getStepParameters() {
+    return HarnessApprovalStepParameters.infoBuilder()
+        .name(name)
+        .identifier(identifier)
+        .approvalMessage(approvalMessage)
+        .includePipelineExecutionHistory(includePipelineExecutionHistory)
+        .approvers(approvers)
+        .approverInputs(approverInputs)
+        .build();
   }
 }

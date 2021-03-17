@@ -15,6 +15,7 @@ import io.harness.serializer.morphia.converters.ExecutionTriggerInfoMorphiaConve
 import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
+import io.harness.serializer.morphia.converters.InterruptConfigMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
@@ -94,6 +95,7 @@ public class OrchestrationRegistrars {
           .addAll(DelegateTasksRegistrars.kryoRegistrars)
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
+          .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
           .add(OrchestrationKryoRegister.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
@@ -105,6 +107,7 @@ public class OrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceDriverRegistrars.morphiaRegistrars)
           .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationDelayRegistrars.morphiaRegistrars)
           .add(OrchestrationMorphiaRegistrar.class)
           .build();
 
@@ -126,6 +129,7 @@ public class OrchestrationRegistrars {
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
           .add(TriggerPayloadMorphiaConverter.class)
+          .add(InterruptConfigMorphiaConverter.class)
           .build();
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(

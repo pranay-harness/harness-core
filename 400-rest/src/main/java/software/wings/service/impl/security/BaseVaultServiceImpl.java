@@ -132,41 +132,42 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
     }
   }
 
-  public void renewToken(BaseVaultConfig vaultConfig) {
-    String accountId = vaultConfig.getAccountId();
-    VaultConfig decryptedVaultConfig = getVaultConfig(accountId, vaultConfig.getUuid());
+  public void renewToken(BaseVaultConfig baseVaultConfig) {
+    String accountId = baseVaultConfig.getAccountId();
+    BaseVaultConfig decryptedVaultConfig = getBaseVaultConfig(accountId, baseVaultConfig.getUuid());
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder().accountId(accountId).appId(GLOBAL_APP_ID).timeout(DEFAULT_SYNC_CALL_TIMEOUT).build();
     boolean isCertValidationRequired = accountService.isCertValidationRequired(accountId);
-    vaultConfig.setCertValidationRequired(isCertValidationRequired);
+    baseVaultConfig.setCertValidationRequired(isCertValidationRequired);
     delegateProxyFactory.get(SecretManagementDelegateService.class, syncTaskContext)
         .renewVaultToken(decryptedVaultConfig);
-    wingsPersistence.updateField(
-        SecretManagerConfig.class, vaultConfig.getUuid(), BaseVaultConfigKeys.renewedAt, System.currentTimeMillis());
+    wingsPersistence.updateField(SecretManagerConfig.class, baseVaultConfig.getUuid(), BaseVaultConfigKeys.renewedAt,
+        System.currentTimeMillis());
   }
 
-  public VaultConfig getVaultConfig(String accountId, String entityId) {
+  public BaseVaultConfig getBaseVaultConfig(String accountId, String entityId) {
     if (isEmpty(accountId) || isEmpty(entityId)) {
       return new VaultConfig();
     }
     Query<BaseVaultConfig> query = wingsPersistence.createQuery(BaseVaultConfig.class)
                                        .filter(SecretManagerConfigKeys.accountId, accountId)
                                        .filter(ID_KEY, entityId);
-    return (VaultConfig) getVaultConfigInternal(query);
+    return getVaultConfigInternal(query);
   }
 
-  public void renewAppRoleClientToken(BaseVaultConfig vaultConfig) {
-    log.info("Renewing Vault AppRole client token for vault id {}", vaultConfig.getUuid());
-    Preconditions.checkNotNull(vaultConfig.getAuthToken());
-    VaultConfig decryptedVaultConfig = getVaultConfig(vaultConfig.getAccountId(), vaultConfig.getUuid());
+  public void renewAppRoleClientToken(BaseVaultConfig baseVaultConfig) {
+    log.info("Renewing Vault AppRole client token for vault id {}", baseVaultConfig.getUuid());
+    Preconditions.checkNotNull(baseVaultConfig.getAuthToken());
+    BaseVaultConfig decryptedVaultConfig =
+        getBaseVaultConfig(baseVaultConfig.getAccountId(), baseVaultConfig.getUuid());
     VaultAppRoleLoginResult loginResult = appRoleLogin(decryptedVaultConfig);
     checkNotNull(loginResult, "Login result during vault appRole login should not be null");
     checkNotNull(loginResult.getClientToken(), "Client token should not be empty");
     log.info("Login result is {} {}", loginResult.getLeaseDuration(), loginResult.getPolicies());
-    updateSecretField(vaultConfig.getAuthToken(), vaultConfig.getAccountId(), vaultConfig.getUuid(),
+    updateSecretField(baseVaultConfig.getAuthToken(), baseVaultConfig.getAccountId(), baseVaultConfig.getUuid(),
         loginResult.getClientToken(), TOKEN_SECRET_NAME_SUFFIX, BaseVaultConfigKeys.authToken, VAULT);
-    wingsPersistence.updateField(
-        SecretManagerConfig.class, vaultConfig.getUuid(), BaseVaultConfigKeys.renewedAt, System.currentTimeMillis());
+    wingsPersistence.updateField(SecretManagerConfig.class, baseVaultConfig.getUuid(), BaseVaultConfigKeys.renewedAt,
+        System.currentTimeMillis());
   }
 
   private String saveSecretField(String accountId, String vaultConfigId, String secretValue, String secretNameSuffix,

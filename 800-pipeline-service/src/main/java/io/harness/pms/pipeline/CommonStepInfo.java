@@ -1,10 +1,9 @@
 package io.harness.pms.pipeline;
 
 import io.harness.beans.FeatureName;
-import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
-import io.harness.remote.client.RestClientUtils;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class CommonStepInfo {
-  @Inject AccountClient accountClient;
+  @Inject PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   StepInfo shellScriptStepInfo =
       StepInfo.newBuilder()
@@ -39,8 +38,7 @@ public class CommonStepInfo {
     List<StepInfo> stepInfos = new ArrayList<>();
     stepInfos.add(shellScriptStepInfo);
     try {
-      if (RestClientUtils.getResponse(
-              accountClient.isFeatureFlagEnabled(FeatureName.NG_HARNESS_APPROVAL.name(), accountId))) {
+      if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_HARNESS_APPROVAL)) {
         stepInfos.add(harnessApprovalStepInfo);
       }
     } catch (Exception ex) {

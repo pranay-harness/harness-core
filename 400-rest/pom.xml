@@ -788,6 +788,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>874-orchestration-delay</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>878-pipeline-service-utilities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>

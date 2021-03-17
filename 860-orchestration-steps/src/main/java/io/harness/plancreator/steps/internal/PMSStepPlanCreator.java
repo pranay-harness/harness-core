@@ -5,9 +5,9 @@ import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import com.google.common.collect.Sets;
 import java.util.Set;
 
-public class BarrierPMSPlanCreator extends GenericStepPMSPlanCreator {
+public class PMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("Barrier");
+    return Sets.newHashSet("Barrier", "HarnessApproval");
   }
 }
