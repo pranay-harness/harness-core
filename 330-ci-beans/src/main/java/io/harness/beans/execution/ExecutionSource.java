@@ -8,9 +8,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = ManualExecutionSource.class, name = "MANUAL")
   , @JsonSubTypes.Type(value = WebhookExecutionSource.class, name = "WEBHOOK")
+  , @JsonSubTypes.Type(value = CustomExecutionSource.class, name = "CUSTOM")
 })
 
 public interface ExecutionSource {
-  enum Type { WEBHOOK, MANUAL }
+  enum Type { WEBHOOK, MANUAL, CUSTOM }
   ExecutionSource.Type getType();
 }
