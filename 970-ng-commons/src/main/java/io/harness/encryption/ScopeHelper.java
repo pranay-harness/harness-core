@@ -14,7 +14,7 @@ public class ScopeHelper {
     } else if (isNotEmpty(accountId)) {
       return Scope.ACCOUNT;
     }
-    return null;
+    return Scope.UNKNOWN;
   }
 
   public static String getScopeMessageForLogs(

@@ -84,8 +84,6 @@ public abstract class CVConfig
   @NotNull private String identifier;
   @NotNull private String monitoringSourceName;
 
-  @FdIndex private Long analysisOrchestrationIteration;
-
   @FdIndex private Long createNextTaskIteration;
 
   @Override

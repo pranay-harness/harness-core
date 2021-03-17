@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -54,17 +55,19 @@ public class RunTestsStepInfo implements CIStepInfo {
   private String connector;
   private ContainerResource resources;
   private ParameterField<List<String>> outputVariables;
+  private ParameterField<Map<String, String>> envVariables;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> preCommand;
   @ApiModelProperty(dataType = STRING_CLASSPATH) private io.harness.pms.yaml.ParameterField<String> postCommand;
 
   @Builder
-  @ConstructorProperties(
-      {"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector", "resources", "reports",
-          "testAnnotations", "packages", "runOnlySelectedTests", "preCommand", "postCommand", "outputVariables"})
+  @ConstructorProperties({"identifier", "name", "retry", "args", "language", "buildTool", "image", "connector",
+      "resources", "reports", "testAnnotations", "packages", "runOnlySelectedTests", "preCommand", "postCommand",
+      "outputVariables", "envVariables"})
   public RunTestsStepInfo(String identifier, String name, Integer retry, String args, String language, String buildTool,
       String image, String connector, ContainerResource resources, UnitTestReport reports, String testAnnotations,
       String packages, boolean runOnlySelectedTests, io.harness.pms.yaml.ParameterField<String> preCommand,
-      io.harness.pms.yaml.ParameterField<String> postCommand, ParameterField<List<String>> outputVariables) {
+      io.harness.pms.yaml.ParameterField<String> postCommand, ParameterField<List<String>> outputVariables,
+      ParameterField<Map<String, String>> envVariables) {
     this.identifier = identifier;
     this.name = name;
     this.retry = Optional.ofNullable(retry).orElse(DEFAULT_RETRY);
@@ -81,6 +84,7 @@ public class RunTestsStepInfo implements CIStepInfo {
     this.preCommand = preCommand;
     this.postCommand = postCommand;
     this.outputVariables = outputVariables;
+    this.envVariables = envVariables;
   }
 
   @Override

@@ -8,6 +8,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.serializer.KryoSerializer;
+import io.harness.tasks.ResponseData;
 
 import software.wings.service.intfc.DelegateService;
 
@@ -37,6 +38,13 @@ public class DelegateTaskExecutor implements TaskExecutor {
     String accountId = setupAbstractions.get("accountId");
     DelegateTask task = delegateService.abortTask(accountId, taskId);
     return task != null;
+  }
+
+  @Override
+  public <T extends ResponseData> T executeTask(Map<String, String> setupAbstractions, TaskRequest taskRequest)
+      throws InterruptedException {
+    DelegateTask task = convertRequestToTask(taskRequest);
+    return delegateService.executeTask(task);
   }
 
   private DelegateTask convertRequestToTask(TaskRequest taskRequest) {

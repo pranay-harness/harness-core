@@ -13,14 +13,17 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(PL)
 @Getter
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("API_KEY")
 public class ApiKeyPrincipal extends Principal {
-  public ApiKeyPrincipal(String principal) {
-    super(API_KEY, principal);
+  public ApiKeyPrincipal(String name) {
+    this.type = API_KEY;
+    this.name = name;
   }
 
   @Override

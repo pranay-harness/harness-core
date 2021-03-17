@@ -1,8 +1,8 @@
 package io.harness.delegate.beans.connector.gcpconnector;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.swagger.annotations.ApiModel;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -17,12 +17,12 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GcpConnectorCredential")
+@JsonDeserialize(using = GcpCredentialDTODeserializer.class)
 public class GcpConnectorCredentialDTO {
   @NotNull @JsonProperty("type") GcpCredentialType gcpCredentialType;
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-  @NotNull
   @Valid
   GcpCredentialSpecDTO config;
 

@@ -115,14 +115,16 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
       if (contextData.getResizeParams().isEcsAutoscalarRedesignEnabled()) {
         handleAutoScalarBeforeResize(contextData, executionLogCallback);
-        resizeInstancesRedesigned(
-            contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
-        resizeInstancesRedesigned(
-            contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+        resizeInstancesRedesigned(contextData, firstDataList, executionDataBuilder, executionLogCallback,
+            resizeNewFirst, ecsCommandRequest.isTimeoutErrorSupported());
+        resizeInstancesRedesigned(contextData, secondDataList, executionDataBuilder, executionLogCallback,
+            !resizeNewFirst, ecsCommandRequest.isTimeoutErrorSupported());
         handleAutoScalarAfterResize(contextData, executionLogCallback, newInstanceDataList);
       } else {
-        resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
-        resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+        resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst,
+            ecsCommandRequest.isTimeoutErrorSupported());
+        resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst,
+            ecsCommandRequest.isTimeoutErrorSupported());
       }
     } catch (TimeoutException ex) {
       log.error(ex.getMessage());
@@ -184,11 +186,11 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
   private void resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
-      boolean isUpsize) {
+      boolean isUpsize, boolean timeoutErrorSupported) {
     if (isNotEmpty(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
-              .flatMap(data -> executeResize(contextData, data, executionLogCallback).stream())
+              .flatMap(data -> executeResize(contextData, data, executionLogCallback, timeoutErrorSupported).stream())
               .collect(toList());
       if (isUpsize) {
         executionDataBuilder.containerInfos(
@@ -205,11 +207,12 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
   private void resizeInstancesRedesigned(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
-      boolean isUpsize) {
+      boolean isUpsize, boolean timeoutErrorSupported) {
     if (isNotEmpty(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
-              .flatMap(data -> executeResizeRedesigned(contextData, data, executionLogCallback).stream())
+              .flatMap(data
+                  -> executeResizeRedesigned(contextData, data, executionLogCallback, timeoutErrorSupported).stream())
               .collect(toList());
       if (isUpsize) {
         executionDataBuilder.containerInfos(
@@ -224,17 +227,18 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     }
   }
 
-  private List<ContainerInfo> executeResizeRedesigned(
-      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+  private List<ContainerInfo> executeResizeRedesigned(ContextData contextData,
+      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
     return awsClusterService.resizeCluster(resizeParams.getRegion(), contextData.getSettingAttribute(),
         contextData.getEncryptedDataDetails(), resizeParams.getClusterName(), containerServiceData.getName(),
         containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
-        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback, timeoutErrorSupported);
   }
 
-  public List<ContainerInfo> executeResize(
-      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+  public List<ContainerInfo> executeResize(ContextData contextData, ContainerServiceData containerServiceData,
+      ExecutionLogCallback executionLogCallback, boolean timeoutErrorSupported) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
 
     // As a part of Rollback, restore AutoScalingConfig if required
@@ -247,7 +251,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     List<ContainerInfo> containerInfos = awsClusterService.resizeCluster(resizeParams.getRegion(),
         contextData.getSettingAttribute(), contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
         containerServiceData.getName(), containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
-        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback, timeoutErrorSupported);
 
     ecsDeployCommandTaskHelper.createAutoScalarConfigIfServiceReachedMaxSize(
         contextData, containerServiceData, executionLogCallback);

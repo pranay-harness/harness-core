@@ -6,6 +6,7 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
@@ -52,10 +53,8 @@ public class Project implements PersistentEntity, NGAccountAccess {
                  .field(ProjectKeys.orgIdentifier)
                  .field(ProjectKeys.identifier)
                  .unique(true)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("acctModulesOrgIdx")

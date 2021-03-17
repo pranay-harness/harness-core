@@ -82,9 +82,12 @@ public class AnomalyEntityDao {
       query.addCustomSetClause(AnomaliesDataTableSchema.feedBack, anomaly.getFeedback());
     }
 
-    query.addSetClause(AnomaliesDataTableSchema.slackInstantNotification, anomaly.isSlackInstantNotification());
-    query.addSetClause(AnomaliesDataTableSchema.slackDailyNotification, anomaly.isSlackDailyNotification());
-    query.addSetClause(AnomaliesDataTableSchema.slackWeeklyNotification, anomaly.isSlackWeeklyNotification());
+    query.addSetClause(
+        AnomaliesDataTableSchema.slackInstantNotification, ((Boolean) anomaly.isSlackInstantNotification()).toString());
+    query.addCustomSetClause(
+        AnomaliesDataTableSchema.slackDailyNotification, ((Boolean) anomaly.isSlackDailyNotification()).toString());
+    query.addCustomSetClause(
+        AnomaliesDataTableSchema.slackWeeklyNotification, ((Boolean) anomaly.isSlackWeeklyNotification()).toString());
 
     return query.validate().toString();
   }

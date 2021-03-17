@@ -306,6 +306,7 @@ public class EngineFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = ALEXEI)
   @Category(FunctionalTests.class)
+  @Ignore("Ignore as barrier require yaml right now")
   public void shouldExecuteMultipleBarriersPlan() {
     PlanExecution multipleBarriersResponse = testSetupHelper.executePlan(
         bearerToken, application.getAccountId(), application.getAppId(), "multiple-barriers");

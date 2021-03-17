@@ -8,6 +8,7 @@ import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -44,11 +45,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
   public List<String> getNameSpaces(
       DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails, String filter) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
-    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
-    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    KubernetesConfig kubernetesConfig = getDecryptedKubernetesConfig(kubernetesClusterConfig, encryptedDataDetails);
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
@@ -74,11 +71,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
   public List<String> getWorkloads(String namespace, DataCollectionConnectorBundle bundle,
       List<EncryptedDataDetail> encryptedDataDetails, String filter) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
-    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
-    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    KubernetesConfig kubernetesConfig = getDecryptedKubernetesConfig(kubernetesClusterConfig, encryptedDataDetails);
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
@@ -115,11 +108,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
   public List<String> checkCapabilityToGetEvents(
       DataCollectionConnectorBundle bundle, List<EncryptedDataDetail> encryptedDataDetails) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) bundle.getConnectorConfigDTO();
-    KubernetesAuthCredentialDTO kubernetesCredentialAuth =
-        ((KubernetesClusterDetailsDTO) kubernetesClusterConfig.getCredential().getConfig()).getAuth().getCredentials();
-    secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
-    KubernetesConfig kubernetesConfig =
-        k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
+    KubernetesConfig kubernetesConfig = getDecryptedKubernetesConfig(kubernetesClusterConfig, encryptedDataDetails);
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
@@ -132,5 +121,18 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
       log.error("failed to fetch events", apiException);
       throw new DataCollectionException(apiException.getResponseBody());
     }
+  }
+
+  @Override
+  public KubernetesConfig getDecryptedKubernetesConfig(
+      KubernetesClusterConfigDTO kubernetesClusterConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    KubernetesCredentialDTO credential = kubernetesClusterConfig.getCredential();
+    if (credential.getKubernetesCredentialType().isDecryptable()) {
+      KubernetesAuthCredentialDTO kubernetesCredentialAuth =
+          ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials();
+      secretDecryptionService.decrypt(kubernetesCredentialAuth, encryptedDataDetails);
+    }
+
+    return k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(kubernetesClusterConfig, null);
   }
 }

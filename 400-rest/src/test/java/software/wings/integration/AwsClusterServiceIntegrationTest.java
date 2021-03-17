@@ -99,7 +99,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldResizeCluster() {
     awsClusterService.resizeCluster(Regions.US_EAST_1.getName(), awsConnectorSetting, Collections.emptyList(),
-        "demo_v1", "Account_v1", 0, 3, 10, null);
+        "demo_v1", "Account_v1", 0, 3, 10, null, false);
   }
 
   @Test

@@ -52,4 +52,11 @@ public class AccountResourceNG {
     List<Account> accounts = accountService.getAccounts(accountIds);
     return new RestResponse<>(accounts.stream().map(AccountMapper::toAccountDTO).collect(Collectors.toList()));
   }
+
+  @GET
+  @Path("/feature-flag-enabled")
+  public RestResponse<Boolean> isFeatureFlagEnabled(
+      @QueryParam("featureName") String featureName, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
+  }
 }

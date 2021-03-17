@@ -67,7 +67,7 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
                                                             .build();
     doReturn(ecsServiceDeployResponse).when(mockEcsDeployCommandTaskHelper).getEmptyEcsServiceDeployResponse();
 
-    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null);
+    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null, false);
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid request Type, expected EcsServiceDeployRequest");
@@ -118,7 +118,7 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
 
     verify(mockAwsClusterService, times(2))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).restoreAutoScalarConfigs(any(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }
@@ -154,7 +154,7 @@ public class EcsDeployCommandHandlerTest extends WingsBaseTest {
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
 
     verify(mockAwsClusterService, times(2))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any());
+        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).deregisterAutoScalarsIfExists(any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(2)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }

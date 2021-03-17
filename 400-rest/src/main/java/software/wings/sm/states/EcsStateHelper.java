@@ -21,7 +21,6 @@ import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_STATE_T
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_ALL_PHASE_ROLLBACK_DONE;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_DEPLOY_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
-import static software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import static software.wings.sm.states.ContainerServiceSetup.DEFAULT_MAX;
 import static software.wings.sm.states.EcsRunTaskDeploy.ECS_RUN_TASK_COMMAND;
 import static software.wings.sm.states.EcsRunTaskDeploy.GIT_FETCH_FILES_TASK_NAME;
@@ -129,6 +128,7 @@ import software.wings.settings.SettingValue;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ContainerServiceSetup.ContainerServiceSetupKeys;

@@ -22,8 +22,8 @@ public class EcsDeployRollbackDataFetchResponse extends EcsCommandResponse {
   @Builder
   public EcsDeployRollbackDataFetchResponse(CommandExecutionStatus commandExecutionStatus, String output,
       List<ContainerInfo> containerInfos, List<ContainerServiceData> newInstanceData,
-      List<ContainerServiceData> oldInstanceData, List<ContainerInfo> previousContainerInfos) {
-    super(commandExecutionStatus, output);
+      List<ContainerServiceData> oldInstanceData, List<ContainerInfo> previousContainerInfos, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.newInstanceData = newInstanceData;
     this.oldInstanceData = oldInstanceData;
   }

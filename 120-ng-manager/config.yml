@@ -194,7 +194,12 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
-
+outboxIteratorConfig:
+  threadPoolSize: 2
+  intervalInSeconds: 90
+  targetIntervalInSeconds: 60
+  acceptableNoAlertDelayInSeconds: 60
+  maximumOutboxEventHandlingAttempts: 10
 
 accessControlClient:
   enableAccessControl: false

@@ -7,6 +7,10 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateInsightsService;
 
+import software.wings.beans.DelegateInsightsBarDetails;
+import software.wings.beans.DelegateInsightsDetails;
+import software.wings.beans.DelegateInsightsSummary;
+import software.wings.beans.DelegateInsightsSummary.DelegateInsightsSummaryKeys;
 import software.wings.beans.DelegateTaskUsageInsights;
 import software.wings.beans.DelegateTaskUsageInsights.DelegateTaskUsageInsightsKeys;
 import software.wings.beans.DelegateTaskUsageInsightsEventType;
@@ -14,7 +18,12 @@ import software.wings.service.impl.DelegateTaskStatusObserver;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -70,5 +79,34 @@ public class DelegateInsightsServiceImpl implements DelegateInsightsService, Del
         .delegateId(delegateId)
         .delegateGroupId(delegateGroupId)
         .build();
+  }
+
+  @Override
+  public DelegateInsightsDetails retrieveDelegateInsightsDetails(
+      String accountId, String delegateGroupId, long startTimestamp) {
+    List<DelegateInsightsBarDetails> insightsBarDetails = new ArrayList<>();
+
+    if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
+      Map<Long, List<DelegateInsightsSummary>> delegateGroupInsights =
+          persistence.createQuery(DelegateInsightsSummary.class)
+              .filter(DelegateInsightsSummaryKeys.accountId, accountId)
+              .filter(DelegateInsightsSummaryKeys.delegateGroupId, delegateGroupId)
+              .field(DelegateInsightsSummaryKeys.periodStartTime)
+              .greaterThan(startTimestamp)
+              .asList()
+              .stream()
+              .collect(Collectors.groupingBy(DelegateInsightsSummary::getPeriodStartTime));
+
+      for (Map.Entry<Long, List<DelegateInsightsSummary>> mapEntry : delegateGroupInsights.entrySet()) {
+        DelegateInsightsBarDetails barInsights =
+            DelegateInsightsBarDetails.builder().timeStamp(mapEntry.getKey()).build();
+        mapEntry.getValue().forEach(
+            event -> barInsights.getCounts().add(Pair.of(event.getInsightsType(), event.getCount())));
+
+        insightsBarDetails.add(barInsights);
+      }
+    }
+
+    return DelegateInsightsDetails.builder().insights(insightsBarDetails).build();
   }
 }
