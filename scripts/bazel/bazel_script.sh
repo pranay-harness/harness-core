@@ -43,6 +43,7 @@ if [ "${RUN_PMDS}" == "true" ]; then
 fi
 
 BAZEL_MODULES="\
+  //110-change-data-capture:module \
   //120-ng-manager:module \
   //125-cd-nextgen:module \
   //130-resource-group:module \
@@ -322,6 +323,7 @@ build_proto_module() {
 
 build_bazel_application 260-delegate
 
+build_bazel_application_module 110-change-data-capture
 build_bazel_application_module 120-ng-manager
 build_bazel_application_module 160-model-gen-tool
 build_bazel_application_module 210-command-library-server
