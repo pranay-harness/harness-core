@@ -31,6 +31,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManagementDelegateService;
 
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -48,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 public class HostValidationServiceImpl implements HostValidationService {
   @Inject private EncryptionService encryptionService;
   @Inject private HTimeLimiter timeLimiter;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
   public List<HostValidationResponse> validateHost(List<String> hostNames, SettingAttribute connectionSetting,

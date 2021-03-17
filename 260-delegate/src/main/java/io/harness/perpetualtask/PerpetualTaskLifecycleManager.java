@@ -6,7 +6,6 @@ import static java.time.Duration.ofMillis;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.concurrent.HTimeLimiter;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AutoLogContext;
@@ -14,6 +13,7 @@ import io.harness.perpetualtask.grpc.PerpetualTaskServiceGrpcClient;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.protobuf.util.Durations;
 import java.time.Instant;
@@ -28,7 +28,7 @@ import org.apache.commons.lang3.StringUtils;
 public class PerpetualTaskLifecycleManager {
   private final long timeoutMillis;
   private final PerpetualTaskId taskId;
-  private final HTimeLimiter timeLimiter;
+  private final TimeLimiter timeLimiter;
   private final PerpetualTaskExecutionParams params;
   private final PerpetualTaskExecutionContext context;
   private final PerpetualTaskExecutor perpetualTaskExecutor;
@@ -40,7 +40,7 @@ public class PerpetualTaskLifecycleManager {
 
   PerpetualTaskLifecycleManager(PerpetualTaskId taskId, PerpetualTaskExecutionContext context,
       Map<String, PerpetualTaskExecutor> factoryMap, PerpetualTaskServiceGrpcClient perpetualTaskServiceGrpcClient,
-      HTimeLimiter timeLimiter, AtomicInteger currentlyExecutingPerpetualTasksCount) {
+      TimeLimiter timeLimiter, AtomicInteger currentlyExecutingPerpetualTasksCount) {
     this.taskId = taskId;
     this.context = context;
     this.timeLimiter = timeLimiter;

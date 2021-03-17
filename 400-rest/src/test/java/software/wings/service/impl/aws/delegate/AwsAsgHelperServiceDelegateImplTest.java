@@ -385,11 +385,9 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new SetDesiredCapacityResult()).when(mockClient).setDesiredCapacity(any());
     doNothing().when(mockTracker).trackASGCall(anyString());
     try {
-      doReturn(true)
-          .when(mockTimeLimiter)
-          .callInterruptible(any(), any())
-              awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
-                  AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
+      doReturn(true).when(mockTimeLimiter).callInterruptible(any(), any());
+      awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+          AwsConfig.builder().build(), emptyList(), "us-east-1", "asgName", 1, mockCallback, 10);
       verify(mockClient).setDesiredCapacity(any());
       verify(mockTimeLimiter).callInterruptible(any(), any());
     } catch (Exception ex) {

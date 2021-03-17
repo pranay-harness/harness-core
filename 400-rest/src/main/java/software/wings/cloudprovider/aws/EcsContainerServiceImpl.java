@@ -12,6 +12,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
 
+import static java.lang.String.format;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
