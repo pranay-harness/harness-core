@@ -1,0 +1,14 @@
+failureStrategies:
+  - onFailure:
+      errors:
+        - AnyOther
+      action:
+        type: Abort
+spec:
+  execution:
+    steps:
+      - step:
+          approvalMessage: |-
+            Please review the following jira ticket
+            and approve the pipeline progression
+          includePipelineExecutionHistory: true
