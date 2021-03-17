@@ -8,7 +8,7 @@ import io.harness.filter.dto.FilterVisibility;
 import io.harness.filter.entity.Filter;
 import io.harness.filter.entity.Filter.FilterBuilder;
 import io.harness.filter.entity.FilterProperties;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
@@ -44,9 +44,9 @@ public class FilterMapper {
   }
 
   private void populateUserInfoInTheFilter(FilterVisibility filterVisibility, FilterBuilder filterBuilder) {
-    if (SecurityContextBuilder.getPrincipal() != null
-        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
-      UserPrincipal userPrincipal = (UserPrincipal) SecurityContextBuilder.getPrincipal();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
       EmbeddedUser user = EmbeddedUser.builder().uuid(userPrincipal.getName()).build();
       filterBuilder.createdBy(user);
     }

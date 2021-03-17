@@ -44,6 +44,7 @@ import software.wings.WingsBaseTest;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -120,6 +121,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
                 ConnectorInfoDTO.builder()
                     .connectorConfig(
                         KubernetesClusterConfigDTO.builder()
+                            .delegateSelectors(Collections.singleton("delegate"))
                             .credential(
                                 KubernetesCredentialDTO.builder()
                                     .kubernetesCredentialType(KubernetesCredentialType.MANUAL_CREDENTIALS)

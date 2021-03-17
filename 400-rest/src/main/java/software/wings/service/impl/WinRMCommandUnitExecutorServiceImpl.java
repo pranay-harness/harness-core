@@ -39,6 +39,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -178,6 +179,21 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
                 .executionResult(commandExecutionStatus)
                 .build());
         throw new ShellExecutionException("Script Execution Failed", e);
+      }
+      ex = ExceptionUtils.cause(SocketException.class, e);
+      if (ex != null) {
+        String errorMessage = ExceptionUtils.getMessage(ex);
+        logService.save(context.getAccountId(),
+            aLog()
+                .appId(context.getAppId())
+                .activityId(activityId)
+                .hostName(publicDns)
+                .commandUnitName(commandUnit.getName())
+                .logLevel(ERROR)
+                .logLine(errorMessage)
+                .executionResult(commandExecutionStatus)
+                .build());
+        throw new ShellExecutionException("Unable to connect to remote host", e);
       }
       logService.save(context.getAccountId(),
           aLog()

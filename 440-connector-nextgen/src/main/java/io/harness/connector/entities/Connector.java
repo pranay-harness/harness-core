@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Data;
@@ -61,6 +62,7 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @NotEmpty ConnectorType type;
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
+  Set<String> delegateSelectors;
   @CreatedBy private EmbeddedUser createdBy;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @CreatedDate Long createdAt;
