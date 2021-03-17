@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.gcp;
 
+import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -9,17 +10,16 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import java.util.Set;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
-public class GcpValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+@Data
+@SuperBuilder
+public class GcpValidationParams
+    extends ConnectorTaskParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   GcpConnectorDTO gcpConnectorDTO;
   private List<EncryptedDataDetail> encryptionDetails;
   String connectorName;
-  private Set<String> delegateSelectors;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

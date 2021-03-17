@@ -51,8 +51,7 @@ public class AwsEntityToDTOTest extends CategoryTest {
     assertThat(connectorDTO).isNotNull();
     assertThat(connectorDTO.getCredential()).isNotNull();
     assertThat(connectorDTO.getCredential().getAwsCredentialType()).isEqualTo(AwsCredentialType.INHERIT_FROM_DELEGATE);
-    assertThat(((AwsInheritFromDelegateSpecDTO) connectorDTO.getCredential().getConfig()).getDelegateSelectors())
-        .isEqualTo(Collections.singleton(delegateSelector));
+    assertThat((AwsInheritFromDelegateSpecDTO) connectorDTO.getCredential().getConfig()).isEqualTo(null);
     assertThat(connectorDTO.getCredential().getCrossAccountAccess()).isEqualTo(crossAccountAccess);
 
     final String accessKey = "accessKey";

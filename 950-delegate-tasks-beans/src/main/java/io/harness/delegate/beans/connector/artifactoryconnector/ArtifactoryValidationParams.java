@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.artifactoryconnector;
 
+import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -8,12 +9,13 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
-public class ArtifactoryValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+@Data
+@SuperBuilder
+public class ArtifactoryValidationParams
+    extends ConnectorTaskParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   ArtifactoryConnectorDTO artifactoryConnectorDTO;
   List<EncryptedDataDetail> encryptedDataDetails;
   String connectorName;
@@ -25,6 +27,6 @@ public class ArtifactoryValidationParams implements ConnectorValidationParams, E
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return ArtifactoryCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, artifactoryConnectorDTO);
+    return ArtifactoryCapabilityHelper.fetchRequiredExecutionCapabilities(artifactoryConnectorDTO, maskingEvaluator);
   }
 }
