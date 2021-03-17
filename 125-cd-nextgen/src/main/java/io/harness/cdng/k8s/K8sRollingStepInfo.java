@@ -77,6 +77,7 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
         .identifier(baseStepParameterInfo.getIdentifier())
         .skipCondition(baseStepParameterInfo.getSkipCondition())
         .description(baseStepParameterInfo.getDescription())
+        .skipDryRun(skipDryRun)
         .build();
   }
 }
