@@ -9,10 +9,12 @@ import io.harness.pms.yaml.ParameterDocumentField.ParameterDocumentFieldKeys;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 @UtilityClass
+@Slf4j
 public class ParameterDocumentFieldMapper {
   public ParameterDocumentField fromParameterField(ParameterField<?> parameterField, CastedField castedField) {
     Class<?> cls = findValueClass(null, castedField);
@@ -22,7 +24,7 @@ public class ParameterDocumentFieldMapper {
       }
       return ParameterDocumentField.builder()
           .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(null)))
-          .valueClass(cls.getSimpleName())
+          .valueClass(cls.getName())
           .typeString(cls.isAssignableFrom(String.class))
           .build();
     }
@@ -30,7 +32,7 @@ public class ParameterDocumentFieldMapper {
         .expression(parameterField.isExpression())
         .expressionValue(parameterField.getExpressionValue())
         .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(parameterField.getValue())))
-        .valueClass(cls == null ? null : cls.getSimpleName())
+        .valueClass(cls == null ? null : cls.getName())
         .inputSetValidator(parameterField.getInputSetValidator())
         .typeString(parameterField.isTypeString())
         .jsonResponseField(parameterField.isJsonResponseField())
@@ -42,8 +44,10 @@ public class ParameterDocumentFieldMapper {
     if (documentField == null) {
       return null;
     }
+
     ParameterFieldValueWrapper<?> parameterFieldValueWrapper =
         RecastOrchestrationUtils.fromDocument(documentField.getValueDoc(), ParameterFieldValueWrapper.class);
+    checkValueClass(documentField, parameterFieldValueWrapper);
     return ParameterField.builder()
         .expression(documentField.isExpression())
         .expressionValue(documentField.getExpressionValue())
@@ -53,6 +57,28 @@ public class ParameterDocumentFieldMapper {
         .jsonResponseField(documentField.isJsonResponseField())
         .responseField(documentField.getResponseField())
         .build();
+  }
+
+  private void checkValueClass(
+      ParameterDocumentField documentField, ParameterFieldValueWrapper<?> parameterFieldValueWrapper) {
+    if (documentField.getValueClass() == null || parameterFieldValueWrapper == null
+        || parameterFieldValueWrapper.getValue() == null) {
+      return;
+    }
+
+    Class<?> cls;
+    try {
+      cls = Class.forName(documentField.getValueClass());
+    } catch (Exception ex) {
+      // For backwards compatibility
+      log.warn("Unknown class: {}", documentField.getValueClass());
+      return;
+    }
+
+    if (!cls.isAssignableFrom(parameterFieldValueWrapper.getValue().getClass())) {
+      log.error(String.format("Expected value of type: %s, got: %s", cls.getSimpleName(),
+          parameterFieldValueWrapper.getValue().getClass().getSimpleName()));
+    }
   }
 
   public Optional<ParameterDocumentField> fromParameterFieldDocument(Object o) {

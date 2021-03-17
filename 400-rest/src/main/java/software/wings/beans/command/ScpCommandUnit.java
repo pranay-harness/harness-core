@@ -342,7 +342,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         aLog()
             .appId(context.getAppId())
             .activityId(context.getActivityId())
-            .hostName(context.getHost().getPublicDns())
+            .hostName(context.getHost() == null ? null : context.getHost().getPublicDns())
             .logLevel(logLevel)
             .commandUnitName(getName())
             .logLine(line)

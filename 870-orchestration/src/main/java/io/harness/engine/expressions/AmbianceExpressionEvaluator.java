@@ -69,6 +69,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
   private final Set<NodeExecutionEntityType> entityTypes;
   private final boolean refObjectSpecific;
   private final Map<String, String> groupAliases;
+  private NodeExecutionsCache nodeExecutionsCache;
 
   @Builder
   public AmbianceExpressionEvaluator(VariableResolverTracker variableResolverTracker, Ambiance ambiance,
@@ -111,7 +112,7 @@ public class AmbianceExpressionEvaluator extends EngineExpressionEvaluator {
       return;
     }
 
-    NodeExecutionsCache nodeExecutionsCache = new NodeExecutionsCache(nodeExecutionService, ambiance);
+    nodeExecutionsCache = new NodeExecutionsCache(nodeExecutionService, ambiance);
     // Access StepParameters and Outcomes of self and children.
     addToContext("child",
         NodeExecutionChildFunctor.builder()

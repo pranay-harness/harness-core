@@ -21,9 +21,13 @@ import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
 import io.harness.pms.contracts.execution.Status;
 
 import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
+@Slf4j
 public class StatusUtils {
   // Status Groups
   private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
@@ -115,5 +119,24 @@ public class StatusUtils {
 
   public boolean isFinalStatus(Status status) {
     return FINAL_STATUSES.contains(status);
+  }
+
+  public Status calculateEndStatus(List<Status> statuses, String planExecutionId) {
+    statuses =
+        statuses.stream().filter(s -> !StatusUtils.finalizableStatuses().contains(s)).collect(Collectors.toList());
+    if (StatusUtils.positiveStatuses().containsAll(statuses)) {
+      return SUCCEEDED;
+    } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
+      return ABORTED;
+    } else if (statuses.stream().anyMatch(status -> status == ERRORED)) {
+      return ERRORED;
+    } else if (statuses.stream().anyMatch(status -> status == FAILED)) {
+      return FAILED;
+    } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
+      return EXPIRED;
+    } else {
+      log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
+      return ERRORED;
+    }
   }
 }

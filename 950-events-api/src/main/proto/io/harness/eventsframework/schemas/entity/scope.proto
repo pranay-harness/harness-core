@@ -6,4 +6,5 @@ enum ScopeProtoEnum {
   ACCOUNT = 0;
   ORG = 1;
   PROJECT = 2;
+  UNKNOWN = 3;
 }

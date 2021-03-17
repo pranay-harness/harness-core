@@ -67,6 +67,7 @@ import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
@@ -88,6 +89,7 @@ import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
@@ -284,6 +286,7 @@ public class CVServiceModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY))
           .to(ConnectorChangeEventMessageProcessor.class);
       bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
+      bind(NewRelicService.class).to(NewRelicServiceImpl.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")

@@ -15,5 +15,5 @@ import lombok.experimental.FieldDefaults;
 public class HarnessApprovalInstanceDetailsDTO implements ApprovalInstanceDetailsDTO {
   @NotNull ApproversDTO approvers;
   List<HarnessApprovalActivity> approvalActivities;
-  ApproverInputInfoDTO approverInputs;
+  List<ApproverInputInfoDTO> approverInputs;
 }

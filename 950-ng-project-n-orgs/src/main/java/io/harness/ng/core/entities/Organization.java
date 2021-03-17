@@ -5,8 +5,10 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
+import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
@@ -44,20 +46,17 @@ public class Organization implements PersistentEntity, NGAccountAccess {
                  .field(OrganizationKeys.accountIdentifier)
                  .field(OrganizationKeys.identifier)
                  .unique(true)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
-        .add(CompoundMongoIndex.builder()
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountIdentifierNameIdx")
                  .field(OrganizationKeys.accountIdentifier)
-                 .field(OrganizationKeys.name)
+                 .descSortField(OrganizationKeys.harnessManaged)
+                 .ascSortField(OrganizationKeys.name)
                  .unique(false)
-                 .collation(CompoundMongoIndex.Collation.builder()
-                                .locale(CollationLocale.ENGLISH)
-                                .strength(CollationStrength.PRIMARY)
-                                .build())
+                 .collation(
+                     Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
         .build();
   }

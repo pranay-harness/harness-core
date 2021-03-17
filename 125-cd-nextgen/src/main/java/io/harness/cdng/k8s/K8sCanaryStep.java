@@ -121,7 +121,6 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sCanaryOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }

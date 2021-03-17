@@ -55,6 +55,7 @@ message SubmitTaskRequest {
   // The time the task should stay in the queue. To set the execution time out, fill out
   // details.execution_timeout
   google.protobuf.Duration queue_timeout = 8;
+  bool selectionTrackingLogEnabled = 9;
 }
 
 message SubmitTaskResponse {
