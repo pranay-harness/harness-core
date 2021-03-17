@@ -141,3 +141,11 @@ fi
 if [[ "" != "$DEFAULT_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE defaultServiceSecret "$DEFAULT_SERVICE_SECRET"
 fi
+
+if [[ "" != "$JWT_AUTH_SECRET" ]]; then
+  yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE identityServiceSecret "$IDENTITY_SERVICE_SECRET"
+fi

@@ -1,7 +1,6 @@
 package io.harness.accesscontrol.test;
 
 import io.harness.accesscontrol.AccountIdentifier;
-import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.ResourceScope;
@@ -14,6 +13,7 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -23,7 +23,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AllArgsConstructor;
 
 @Path("/acl")
 @Api("/acl")
@@ -34,15 +33,18 @@ import lombok.AllArgsConstructor;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
 public class ACLTestResource {
   private final AccessControlClient accessControlClient;
 
+  @Inject
+  public ACLTestResource(@Named("NON_PRIVILEGED") AccessControlClient accessControlClient) {
+    this.accessControlClient = accessControlClient;
+  }
+
   @GET
   @Path("/acl-test")
   @ApiOperation(value = "Test ACL", nickname = "testACL")
-  @NGAccessControlCheck(resourceType = "SECRET_MANAGER", permission = "core.secretManager.create")
   public ResponseDTO<String> get(@QueryParam("account") @AccountIdentifier String account,
       @QueryParam("org") @OrgIdentifier String org, @QueryParam("project") @ProjectIdentifier String project,
       @QueryParam("resourceIdentifier") @ResourceIdentifier String resourceIdentifier) {

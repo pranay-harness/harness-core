@@ -20,6 +20,4 @@ public interface VaultRestClient {
   String readSecret(String authToken, String secretEngine, String fullPath) throws IOException;
 
   VaultSecretMetadata readSecretMetadata(String authToken, String secretEngine, String fullPath) throws IOException;
-
-  boolean renewToken(String authToken) throws IOException;
 }

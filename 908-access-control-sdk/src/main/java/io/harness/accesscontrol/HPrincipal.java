@@ -3,7 +3,6 @@ package io.harness.accesscontrol;
 import io.harness.accesscontrol.principals.PrincipalType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.swagger.annotations.ApiModel;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -17,7 +16,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "PrincipalKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel(value = "Principal")
 public class HPrincipal implements Principal {
   @NotEmpty String principalIdentifier;
   @NotNull PrincipalType principalType;

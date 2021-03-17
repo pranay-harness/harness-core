@@ -14,6 +14,7 @@ enum GitProvider {
   GITLAB = 3;
   GOGS = 4;
   STASH = 5;
+  CODECOMMIT = 6;
 }
 
 enum Action {
