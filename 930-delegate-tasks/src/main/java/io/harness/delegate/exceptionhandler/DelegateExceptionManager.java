@@ -30,10 +30,7 @@ public class DelegateExceptionManager {
     }
 
     WingsException exception1 = handleException(exception);
-    DelegateResponseData responseData =
-        prepareErrorResponse(exception1, errorNotifyResponseDataBuilder).exception(exception1).build();
-
-    return responseData;
+    return prepareErrorResponse(exception1, errorNotifyResponseDataBuilder).exception(exception1).build();
   }
 
   // ---------- PRIVATE METHODS -------------
