@@ -14,7 +14,7 @@ if [ "${PLATFORM}" == "jenkins" ]; then
 fi
 
 BAZEL_DIRS=${HOME}/.bazel-dirs
-BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
+BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --incompatible_restrict_string_escapes=false --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
   local_repo=${OVERRIDE_LOCAL_M2}
