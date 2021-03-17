@@ -8,11 +8,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.changestreamsframework.ChangeDataCapture;
-import io.harness.changestreamsframework.ChangeDataCaptureSink;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.Field;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.mongo.index.NgUniqueIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.LogKeyUtils;
 import io.harness.persistence.NameAccess;
@@ -50,10 +47,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
-@NgUniqueIndex(name = "yaml", fields = { @Field(ApplicationKeys.accountId)
-                                         , @Field(ApplicationKeys.name) })
-@ChangeDataCapture(table = "ApplicationTruthTable", sink = {ChangeDataCaptureSink.TIMESCALE},
-    fields = {ApplicationKeys.uuid, ApplicationKeys.appId, ApplicationKeys.name})
+@ChangeDataCapture(table = "ApplicationTruthTable", fields = {})
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
