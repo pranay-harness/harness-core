@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all",
 ] + [
     "//:lombok",
     "//430-cv-nextgen-commons:module",
@@ -78,7 +79,6 @@ shared_dependencies = [
     "@maven//:org_reflections_reflections",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:ru_vyarus_guice_validator",
-    "@maven//:io_netty_netty_all",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
