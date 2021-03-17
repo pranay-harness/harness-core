@@ -25,6 +25,7 @@ import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -67,6 +68,7 @@ import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.executions.steps.StepConstants;
@@ -113,8 +115,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 public class K8sStepHelper {
-  private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES =
-      ImmutableSet.of(ManifestType.K8Manifest, ManifestType.HelmChart);
+  private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
+      ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
 
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
@@ -209,6 +211,13 @@ public class K8sStepHelper {
             .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
                 manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
             .pluginPath(kustomizeManifestOutcome.getPluginPath())
+            .build();
+
+      case ManifestType.OpenshiftTemplate:
+        OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
+        return OpenshiftManifestDelegateConfig.builder()
+            .storeDelegateConfig(getStoreDelegateConfig(openshiftManifestOutcome.getStore(), ambiance,
+                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
             .build();
 
       default:
@@ -375,14 +384,22 @@ public class K8sStepHelper {
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
 
-  public List<String> renderValues(Ambiance ambiance, List<String> valuesFileContents) {
+  public List<String> renderValues(
+      ManifestOutcome manifestOutcome, Ambiance ambiance, List<String> valuesFileContents) {
     if (isEmpty(valuesFileContents)) {
       return Collections.emptyList();
     }
 
-    return valuesFileContents.stream()
-        .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
-        .collect(Collectors.toList());
+    List<String> renderedValuesFileContents =
+        valuesFileContents.stream()
+            .map(valuesFileContent -> engineExpressionService.renderExpression(ambiance, valuesFileContent))
+            .collect(Collectors.toList());
+
+    if (manifestOutcome.getType() == ManifestType.OpenshiftTemplate) {
+      Collections.reverse(renderedValuesFileContents);
+    }
+
+    return renderedValuesFileContents;
   }
 
   public TaskChainResponse executeValuesFetchTask(Ambiance ambiance, K8sStepParameters k8sStepParameters,
@@ -637,6 +654,10 @@ public class K8sStepHelper {
       case ManifestType.Kustomize:
         KustomizeManifestOutcome kustomizeManifestOutcome = (KustomizeManifestOutcome) manifestOutcome;
         return kustomizeManifestOutcome.isSkipResourceVersioning();
+
+      case ManifestType.OpenshiftTemplate:
+        OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
+        return openshiftManifestOutcome.isSkipResourceVersioning();
 
       default:
         return false;
