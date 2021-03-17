@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
+    "//830-notification-service:module",
     "//835-notification-senders:module",
     "//890-sm-core:module",
     "//910-delegate-service-driver:module",
@@ -340,16 +341,18 @@ shared_dependencies = [
     "@maven//:software_amazon_ion_ion_java",
 ]
 
-java_library(
+java_binary(
     name = "module",
     srcs = glob(["src/main/**/*.java"]),
     data = ["//:resource"],
-    #    main_class = "io.harness.notification.NotificationApplication",
+    main_class = "io.harness.platform.PlatformApplication",
     resources = [
+        "//820-platform-service/src/main/resources:resource",
         "//830-notification-service/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
+        "//820-platform-service/src/main/resources",
         "//830-notification-service/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
@@ -374,14 +377,17 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     data = [
+        "//820-platform-service/src/test/resources:resource",
         "//830-notification-service/src/test/resources:resource",
     ],
     resources = [
         "//:resource",
+        "//820-platform-service/src/main/resources:resource",
         "//830-notification-service/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
+        "//820-platform-service/src/main/resources",
         "//830-notification-service/src/main/resources",
         "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
