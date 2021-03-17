@@ -115,6 +115,7 @@ import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
+  run-configurations/ChangeDataCaptureApp.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
   run-configurations/DataGen_App.xml
