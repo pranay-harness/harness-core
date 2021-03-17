@@ -1,16 +1,16 @@
-package io.harness.pms.barriers.visitor;
+package io.harness.steps.barriers.service.visitor;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.PipelineServiceTestBase;
+import io.harness.OrchestrationStepsTestBase;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.barriers.beans.BarrierSetupInfo;
-import io.harness.pms.barriers.beans.StageDetail;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
+import io.harness.steps.barriers.beans.BarrierSetupInfo;
+import io.harness.steps.barriers.beans.StageDetail;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -26,7 +26,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class BarrierVisitorTest extends PipelineServiceTestBase {
+public class BarrierVisitorTest extends OrchestrationStepsTestBase {
   @Inject private Injector injector;
   private BarrierVisitor barrierVisitor;
 
@@ -76,21 +76,30 @@ public class BarrierVisitorTest extends PipelineServiceTestBase {
     YamlNode yamlNode = YamlUtils.extractPipelineField(yaml).getNode();
     barrierVisitor.walkElementTree(yamlNode);
 
+    String vbStage = "VBStage";
+    String sampleStage = "SampleStage";
     Map<String, BarrierSetupInfo> expectedMap = ImmutableMap.of("myBarrierId1",
         BarrierSetupInfo.builder()
             .identifier("myBarrierId1")
             .name("myBarrier1Name")
-            .stages(ImmutableSet.of(
-                StageDetail.builder().name("VBStage").build(), StageDetail.builder().name("SampleStage").build()))
+            .stages(ImmutableSet.of(StageDetail.builder().identifier(vbStage).name(vbStage).build(),
+                StageDetail.builder().identifier(sampleStage).name(sampleStage).build()))
+            .timeout(600_000)
             .build(),
         "myBarrierId2",
         BarrierSetupInfo.builder()
             .identifier("myBarrierId2")
             .name("myBarrier2Name")
-            .stages(ImmutableSet.of(StageDetail.builder().name("VBStage").build()))
+            .stages(ImmutableSet.of(StageDetail.builder().identifier(vbStage).name(vbStage).build()))
+            .timeout(1_200_000)
             .build(),
         "myBarrierId3",
-        BarrierSetupInfo.builder().identifier("myBarrierId3").name("myBarrier3Name").stages(new HashSet<>()).build());
+        BarrierSetupInfo.builder()
+            .identifier("myBarrierId3")
+            .name("myBarrier3Name")
+            .stages(new HashSet<>())
+            .timeout(0)
+            .build());
 
     assertThat(barrierVisitor.getBarrierIdentifierMap()).isNotEmpty();
     assertThat(barrierVisitor.getBarrierIdentifierMap().size()).isEqualTo(3);

@@ -1,13 +1,14 @@
-package io.harness.pms.barriers.visitor;
+package io.harness.steps.barriers.service.visitor;
 
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.barriers.beans.BarrierSetupInfo;
-import io.harness.pms.barriers.beans.StageDetail;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.steps.barriers.beans.BarrierSetupInfo;
+import io.harness.steps.barriers.beans.StageDetail;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.visitor.DummyVisitableElement;
 import io.harness.walktree.visitor.SimpleVisitor;
+import io.harness.yaml.core.timeout.Timeout;
 
 import com.google.api.client.util.Preconditions;
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Singleton
 public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
@@ -32,12 +34,14 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
 
   // state variable
   private String stageName; // this field will be changed each time we encounter a stage
+  private String stageIdentifier; // this field will be changed each time we encounter a stage
 
   @Inject
   public BarrierVisitor(Injector injector) {
     super(injector);
     this.barrierIdentifierMap = new HashMap<>();
     this.stageName = null;
+    this.stageIdentifier = null;
   }
 
   @Override
@@ -79,7 +83,8 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
   private void addMetadataIfStageNode(YamlNode element) {
     // let's obtain the current stage name by checking if the parent is a stage node
     if (element.nextSiblingNodeFromParentObject(STAGE_FIELD) != null) {
-      stageName = element.getIdentifier();
+      stageName = element.getName();
+      stageIdentifier = element.getIdentifier();
     }
   }
 
@@ -99,13 +104,20 @@ public class BarrierVisitor extends SimpleVisitor<DummyVisitableElement> {
           .getStages()
           .add(StageDetail.builder()
                    .name(Preconditions.checkNotNull(stageName, "Stage name should not be null"))
+                   .identifier(Preconditions.checkNotNull(stageIdentifier, "Stage identifier should not be null"))
                    .build());
+      barrierIdentifierMap.get(identifier).setTimeout(obtainBarrierTimeoutFromStep(element));
     }
   }
 
   private String obtainBarrierIdentifierFromStep(YamlNode currentElement) {
     return Preconditions.checkNotNull(currentElement.getField(SPEC_FIELD).getNode().getStringValue(BARRIER_REF_FIELD),
         String.format(BARRIER_REF_FIELD + " cannot be null -> %s", currentElement.asText()));
+  }
+
+  private Long obtainBarrierTimeoutFromStep(YamlNode currentElement) {
+    return Objects.requireNonNull(Timeout.fromString(currentElement.getCurrJsonNode().get("timeout").asText()))
+        .getTimeoutInMillis();
   }
 
   public Map<String, BarrierSetupInfo> getBarrierIdentifierMap() {
