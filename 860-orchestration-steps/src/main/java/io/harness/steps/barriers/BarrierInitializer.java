@@ -10,6 +10,7 @@ import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
+import io.harness.steps.barriers.beans.BarrierSetupInfo;
 import io.harness.steps.barriers.service.BarrierService;
 import io.harness.timeout.TimeoutParameters;
 
@@ -19,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class BarrierInitializer implements SyncOrchestrationEventHandler {
@@ -30,6 +32,10 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
   public void handleEvent(OrchestrationEvent event) {
     String planExecutionId = event.getAmbiance().getPlanExecutionId();
     PlanExecution planExecution = Preconditions.checkNotNull(planExecutionService.get(planExecutionId));
+    Map<String, BarrierSetupInfo> barrierIdentifierSetupInfoMap =
+        barrierService.getBarrierSetupInfoList(event.getAmbiance().getMetadata().getYaml())
+            .stream()
+            .collect(Collectors.toMap(BarrierSetupInfo::getIdentifier, Function.identity()));
     Map<String, List<BarrierExecutionInstance>> barrierIdentifierMap =
         planExecution.getPlan()
             .getNodes()
@@ -53,6 +59,7 @@ public class BarrierInitializer implements SyncOrchestrationEventHandler {
                   .planExecutionId(planExecution.getUuid())
                   .barrierState(Barrier.State.STANDING)
                   .expiredIn(expiredIn)
+                  .setupInfo(barrierIdentifierSetupInfoMap.get(stepParameters.getIdentifier()))
                   .build();
             })
             .collect(Collectors.groupingBy(BarrierExecutionInstance::getIdentifier));

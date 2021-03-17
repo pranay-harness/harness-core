@@ -8,6 +8,8 @@ import io.harness.outbox.OutboxEvent;
 public interface OutboxService {
   OutboxEvent save(Event event);
 
+  OutboxEvent update(OutboxEvent outboxEvent);
+
   PageResponse<OutboxEvent> list(PageRequest pageRequest);
 
   boolean delete(String outboxEventId);

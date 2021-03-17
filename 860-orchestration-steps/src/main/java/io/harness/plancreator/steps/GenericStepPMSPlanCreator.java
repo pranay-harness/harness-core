@@ -110,17 +110,19 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     }
 
     if (stepElement.getStepSpecType() instanceof WithRollbackInfo) {
-      // Failure strategy should be present.
-      List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
-      if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
-        throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
-      }
+      if (((WithRollbackInfo) stepElement.getStepSpecType()).validateStageFailureStrategy()) {
+        // Failure strategy should be present.
+        List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
+        if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+          throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+        }
 
-      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
-      // type is involved
-      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
-        throw new InvalidRequestException(
-            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+        // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+        // error type is involved
+        if (!containsOnlyAnyOtherError(stageFailureStrategies)) {
+          throw new InvalidRequestException(
+              "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+        }
       }
 
       String timeout = DEFAULT_TIMEOUT;
@@ -135,7 +137,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
               .description(stepElement.getDescription())
               .skipCondition(stepElement.getSkipCondition())
               .name(stepElement.getName())
-              .description(stepElement.getDescription())
+              .identifier(stepElement.getIdentifier())
               .build();
       stepParameters =
           ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
