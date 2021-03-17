@@ -30,7 +30,7 @@ public class AuditEventDTO {
   HttpRequestInfo httpRequestInfo;
   RequestMetadata requestMetadata;
 
-  Long timestamp;
+  @NotNull Long timestamp;
 
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 

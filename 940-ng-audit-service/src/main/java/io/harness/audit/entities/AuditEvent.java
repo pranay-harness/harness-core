@@ -29,7 +29,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -63,7 +62,6 @@ public class AuditEvent {
   List<KeyValuePair> additionalInfo;
 
   @CreatedDate Long createdAt;
-  @Version Long version;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -72,13 +70,13 @@ public class AuditEvent {
                  .field(AuditEventKeys.accountIdentifier)
                  .field(AuditEventKeys.orgIdentifier)
                  .field(AuditEventKeys.projectIdentifier)
-                 .field(AuditEventKeys.principalType)
-                 .field(AuditEventKeys.principalName)
+                 .field(AuditEventKeys.PRINCIPAL_TYPE)
+                 .field(AuditEventKeys.PRINCIPAL_NAME)
                  .field(AuditEventKeys.moduleType)
-                 .field(AuditEventKeys.resourceType)
-                 .field(AuditEventKeys.resourceIdentifier)
-                 .field(AuditEventKeys.resourceLabelKeys)
-                 .field(AuditEventKeys.resourceLabelValues)
+                 .field(AuditEventKeys.RESOURCE_TYPE)
+                 .field(AuditEventKeys.RESOURCE_IDENTIFIER)
+                 .field(AuditEventKeys.RESOURCE_LABEL_KEYS)
+                 .field(AuditEventKeys.RESOURCE_LABEL_VALUES)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditEventUniqueIdx")
@@ -92,17 +90,17 @@ public class AuditEvent {
 
   @UtilityClass
   public static final class AuditEventKeys {
-    public static final String principalType =
+    public static final String PRINCIPAL_TYPE =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.type;
-    public static final String principalName =
+    public static final String PRINCIPAL_NAME =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.name;
 
-    public static final String resourceType = AuditEventKeys.resource + "." + ResourceKeys.type;
-    public static final String resourceIdentifier = AuditEventKeys.resource + "." + ResourceKeys.identifier;
+    public static final String RESOURCE_TYPE = AuditEventKeys.resource + "." + ResourceKeys.type;
+    public static final String RESOURCE_IDENTIFIER = AuditEventKeys.resource + "." + ResourceKeys.identifier;
 
-    public static final String resourceLabelKeys =
+    public static final String RESOURCE_LABEL_KEYS =
         AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;
-    public static final String resourceLabelValues =
+    public static final String RESOURCE_LABEL_VALUES =
         AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.value;
   }
 }
