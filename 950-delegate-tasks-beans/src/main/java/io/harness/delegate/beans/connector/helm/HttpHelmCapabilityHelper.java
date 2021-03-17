@@ -1,4 +1,4 @@
-package io.harness.delegate.beans.connector.appdynamicsconnector;
+package io.harness.delegate.beans.connector.helm;
 
 import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -11,14 +11,15 @@ import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class AppDynamicsCapabilityHelper extends ConnectorCapabilityBaseHelper {
+public class HttpHelmCapabilityHelper extends ConnectorCapabilityBaseHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
       ConnectorConfigDTO connectorConfigDTO, ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilityList = new ArrayList<>();
-    AppDynamicsConnectorDTO appDynamicsConnectorDTO = (AppDynamicsConnectorDTO) connectorConfigDTO;
+    HttpHelmConnectorDTO helmConnector = (HttpHelmConnectorDTO) connectorConfigDTO;
+    final String helmRepoUrl = helmConnector.getHelmRepoUrl();
     capabilityList.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        appDynamicsConnectorDTO.getControllerUrl(), maskingEvaluator));
-    populateDelegateSelectorCapability(capabilityList, appDynamicsConnectorDTO.getDelegateSelectors());
+        helmRepoUrl, maskingEvaluator));
+    populateDelegateSelectorCapability(capabilityList, helmConnector.getDelegateSelectors());
     return capabilityList;
   }
 }

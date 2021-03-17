@@ -34,4 +34,12 @@ public enum KubernetesCredentialType {
   public boolean isDecryptable() {
     return decryptable;
   }
+  public static KubernetesCredentialType fromString(String typeEnum) {
+    for (KubernetesCredentialType enumValue : KubernetesCredentialType.values()) {
+      if (enumValue.getDisplayName().equals(typeEnum)) {
+        return enumValue;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + typeEnum);
+  }
 }
