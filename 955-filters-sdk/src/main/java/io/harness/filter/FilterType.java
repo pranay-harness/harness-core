@@ -6,5 +6,6 @@ public enum FilterType {
   @JsonProperty("Connector") CONNECTOR,
   @JsonProperty("PipelineSetup") PIPELINESETUP,
   @JsonProperty("PipelineExecution") PIPELINEEXECUTION,
-  @JsonProperty("Deployment") DEPLOYMENT
+  @JsonProperty("Deployment") DEPLOYMENT,
+  @JsonProperty("Audit") AUDIT
 }
