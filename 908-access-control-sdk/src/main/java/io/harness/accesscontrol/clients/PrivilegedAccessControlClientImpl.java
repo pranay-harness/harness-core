@@ -9,16 +9,22 @@ import io.harness.remote.client.NGRestUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
-import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @ValidateOnExecution
-public class AccessControlClientImpl implements AccessControlClient {
-  private final AccessControlHttpClient accessControlHttpClient;
+@NoArgsConstructor
+public class PrivilegedAccessControlClientImpl implements AccessControlClient {
+  private AccessControlHttpClient accessControlHttpClient;
+
+  @Inject
+  public PrivilegedAccessControlClientImpl(@Named("PRIVILEGED") AccessControlHttpClient accessControlHttpClient) {
+    this.accessControlHttpClient = accessControlHttpClient;
+  }
 
   @Override
   public HAccessCheckResponseDTO checkForAccess(

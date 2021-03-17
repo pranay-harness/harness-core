@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.clients;
 
 import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -15,8 +16,10 @@ import lombok.experimental.FieldDefaults;
 public class AccessControlHttpClientFactory
     extends AbstractHttpClientFactory implements Provider<AccessControlHttpClient> {
   public AccessControlHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
+      boolean enableCircuitBreaker, ClientMode clientMode) {
+    super(secretManagerConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, enableCircuitBreaker,
+        clientMode);
   }
 
   @Override

@@ -348,7 +348,8 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
 
-    install(AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
+    install(AccessControlClientModule.getInstance(
+        appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
 
     registerEventsFrameworkMessageListeners();
   }
