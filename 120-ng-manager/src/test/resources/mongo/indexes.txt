@@ -79,6 +79,7 @@ authTokens {"name": "appId_1", "background": true} {"appId": 1}
 authTokens {"name": "createdAt_1", "background": true} {"createdAt": 1}
 authTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 barrierExecutionInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
+barrierExecutionInstances {"name": "planExecutionId_barrierState_stagesIdentifier_idx", "background": true} {"planExecutionId": 1, "barrierState": 1, "setupInfo.stages.identifier": 1}
 barrierInstances {"name": "accountId_1", "background": true} {"accountId": 1}
 barrierInstances {"name": "appId_1", "background": true} {"appId": 1}
 barrierInstances {"name": "next", "background": true} {"state": 1, "nextIteration": 1}
@@ -519,7 +520,7 @@ orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAft
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 organizations {"name": "accountIdentifierNameIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "harnessManaged": -1, "name": 1}
 organizations {"name": "unique_accountIdentifier_organizationIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1}
-outboxEvents {"name": "createdAt_outbox_Idx", "background": true} {"createdAt": 1}
+outboxEvents {"name": "blocked_createdAt_nextIteration_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextIteration": 1}
 outcomeInstances {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 outcomeInstances {"name": "planExecutionIdIdx", "background": true} {"planExecutionId": 1}
 outcomeInstances {"name": "producedBySetupIdIdx", "background": true} {"planExecutionId": 1, "producedBy.setupId": 1, "name": 1}

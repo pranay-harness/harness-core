@@ -8,4 +8,8 @@ public interface WithRollbackInfo {
   @JsonIgnore
   @JsonOrchestrationIgnore
   StepParameters getStepParametersWithRollbackInfo(BaseStepParameterInfo baseStepParameterInfo);
+
+  default boolean validateStageFailureStrategy() {
+    return true;
+  }
 }
