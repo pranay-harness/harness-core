@@ -1,7 +1,8 @@
-package io.harness.notification;
+package io.harness.platform.notification;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.mongo.MongoConfig;
+import io.harness.platform.PlatformConfiguration;
 import io.harness.springdata.HMongoTemplate;
 
 import com.google.inject.Inject;
@@ -34,7 +35,7 @@ public class NotificationPersistenceConfig extends AbstractMongoConfiguration {
 
   @Inject
   public NotificationPersistenceConfig(Injector injector) {
-    this.mongoBackendConfiguration = injector.getInstance(Key.get(NotificationConfiguration.class)).getMongoConfig();
+    this.mongoBackendConfiguration = injector.getInstance(Key.get(PlatformConfiguration.class)).getMongoConfig();
   }
 
   @Override

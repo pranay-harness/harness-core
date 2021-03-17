@@ -164,6 +164,8 @@ aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
 
+aeriform("//874-orchestration-delay:module")
+
 aeriform("//876-orchestration-beans:module")
 
 aeriform("//876-orchestration-beans:tests")
@@ -242,6 +244,8 @@ aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
 
+aeriform("//949-git-sync-sdk:module")
+
 aeriform("//950-command-library-common:module")
 
 aeriform("//950-common-entities:module")
@@ -255,8 +259,6 @@ aeriform("//950-events-api:module")
 aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
-
-aeriform("//950-git-sync-sdk:module")
 
 aeriform("//950-log-client:module")
 

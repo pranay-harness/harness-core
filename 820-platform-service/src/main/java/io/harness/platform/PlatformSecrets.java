@@ -1,4 +1,4 @@
-package io.harness.notification;
+package io.harness.platform;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,8 +8,8 @@ import lombok.experimental.FieldDefaults;
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class NotificationSecrets {
-  String managerServiceSecret;
+public class PlatformSecrets {
+  String ngManagerServiceSecret;
   String jwtAuthSecret;
   String jwtIdentityServiceSecret;
 }

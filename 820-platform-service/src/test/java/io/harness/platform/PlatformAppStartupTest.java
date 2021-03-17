@@ -1,12 +1,11 @@
-package io.harness;
+package io.harness.platform;
 
 import static io.harness.rule.OwnerRule.ANKUSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.notification.NotificationApplication;
-import io.harness.notification.NotificationConfiguration;
 import io.harness.rule.Owner;
 
 import com.mongodb.ServerAddress;
@@ -24,9 +23,9 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class NotificationServiceAppStartupTest extends CategoryTest {
+public class PlatformAppStartupTest extends CategoryTest {
   public static MongoServer MONGO_SERVER;
-  public static DropwizardTestSupport<NotificationConfiguration> SUPPORT;
+  public static DropwizardTestSupport<PlatformConfiguration> SUPPORT;
 
   private static MongoServer startMongoServer() {
     final MongoServer mongoServer = new MongoServer(new MemoryBackend());
@@ -49,8 +48,8 @@ public class NotificationServiceAppStartupTest extends CategoryTest {
   @BeforeClass
   public static void beforeClass() {
     MONGO_SERVER = startMongoServer();
-    SUPPORT = new DropwizardTestSupport<NotificationConfiguration>(NotificationApplication.class,
-        String.valueOf(new File("830-notification-service/src/test/resources/test-config.yml")),
+    SUPPORT = new DropwizardTestSupport<PlatformConfiguration>(PlatformApplication.class,
+        String.valueOf(new File("820-platform-service/src/test/resources/test-config.yml")),
         ConfigOverride.config("mongo.uri", getMongoUri("notification")),
         ConfigOverride.config("notificationClient.messageBroker.uri", getMongoUri("notificationChannel")));
     SUPPORT.before();

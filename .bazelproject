@@ -36,6 +36,7 @@ directories:
   490-ce-commons
   800-pipeline-service
   810-ng-triggers
+  820-platform-service
   830-notification-service
   835-notification-senders
   850-execution-plan
@@ -124,7 +125,7 @@ import_run_configurations:
   run-configurations/GitSyncTestApp.xml
   run-configurations/NextGen_Manager.xml
   run-configurations/Notification Client.xml
-  run-configurations/Notification Microservice.xml
+  run-configurations/Platform Microservice.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
   run-configurations/VerificationServiceApp.xml
