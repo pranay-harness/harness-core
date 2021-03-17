@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.execution.events;
+import "io/harness/pms/contracts/execution/tasks/task_request.proto";
+import "io/harness/pms/contracts/execution/node_execution_proto.proto";
+
+option java_multiple_files = true;
+
+message SdkResponseEventRequest {
+  oneof request {
+    QueueTaskRequest queueTaskRequest = 1;
+    QueueNodeExecutionRequest queueNodeExecutionRequest = 2;
+  }
+  string nodeExecutionId = 3;
+}
+
+message QueueTaskRequest {
+  string nodeExecutionId = 1;
+  map<string, string> setupAbstractions = 3;
+  io.harness.pms.contracts.execution.tasks.TaskRequest taskRequest = 4;
+}
+
+message QueueNodeExecutionRequest {
+  NodeExecutionProto nodeExecution = 1;
+}
+
+enum SdkResponseEventType {
+  UNKNOWN_EVENT_TYPE = 0;
+  QUEUE_NODE = 1;
+}
