@@ -5,6 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.EntityFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.permissions.QLDeploymentFilterType;
 
 import lombok.Builder;
 import lombok.Value;
@@ -16,4 +17,5 @@ public class QLServiceFilter implements EntityFilter {
   QLIdFilter application;
   QLIdFilter service;
   QLServiceTagFilter tag;
+  QLDeploymentTypeFilter deploymentType;
 }
