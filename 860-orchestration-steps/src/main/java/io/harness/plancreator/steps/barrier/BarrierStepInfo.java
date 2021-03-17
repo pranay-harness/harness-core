@@ -1,5 +1,6 @@
-package io.harness.plancreator.steps.internal;
+package io.harness.plancreator.steps.barrier;
 
+import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.steps.barriers.BarrierFacilitator;
