@@ -463,6 +463,15 @@ public class InstanceServiceImpl implements InstanceService {
     return wingsMongoPersistence.getAllEntities(pageRequest, () -> list(pageRequest));
   }
 
+  public List<Instance> getInstancesForAppAndInframappingNotRemovedFully(String appId, String infraMappingId) {
+    PageRequest<Instance> pageRequest = new PageRequest<>();
+    pageRequest.addFilter("infraMappingId", Operator.EQ, infraMappingId);
+    pageRequest.addFilter("appId", Operator.EQ, appId);
+    Query<Instance> pageRequestQuery = wingsPersistence.convertToQuery(Instance.class, pageRequest);
+    List<Instance> listInstancesNotRemovedFully = listInstancesNotRemovedFully(pageRequestQuery);
+    return listInstancesNotRemovedFully;
+  }
+
   @Override
   public long getInstanceCount(String appId, String infraMappingId) {
     return wingsPersistence.createQuery(Instance.class)

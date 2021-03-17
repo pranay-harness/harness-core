@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static java.util.Collections.emptySet;
 import static software.wings.beans.container.Label.Builder.aLabel;
 import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
 import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
@@ -45,6 +46,7 @@ import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.ondemandrollback.OnDemandRollbackInfo;
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.HelmExecutionSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.WorkflowExecution;
@@ -193,6 +195,32 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     }
   }
 
+  /**
+   * In the case of Ecs we have some older instances that are already marked as deleted in the
+   * map of instances in DB. We can't delete them again as then there deletedAt field in those
+   * would be updated, which we don't want.
+   */
+  private SetView<String> getInstancesToBeDeleted(ContainerInfrastructureMapping containerInfraMapping,
+                                                  Map<String, Instance> instancesInDBMap, Map<String, ContainerInfo> latestContainerInfoMap) {
+    if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+      Set<String> instanceKeysToBeDeleted = new HashSet<>();
+      for (Map.Entry<String, Instance> entry : instancesInDBMap.entrySet()) {
+        String key = entry.getKey();
+        Instance instance = entry.getValue();
+        if (instance.isDeleted()) {
+          continue;
+        }
+        if (!latestContainerInfoMap.containsKey(key)) {
+          instanceKeysToBeDeleted.add(key);
+        }
+      }
+      return Sets.difference(instanceKeysToBeDeleted, emptySet());
+    } else {
+      return Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
+    }
+  }
+
+
   private void handleContainerServiceInstances(boolean rollback, DelegateResponseData responseData,
       InstanceSyncFlow instanceSyncFlow, ContainerInfrastructureMapping containerInfraMapping,
       Map<ContainerMetadata, DeploymentSummary> deploymentSummaryMap, ContainerMetadata containerMetadata,
@@ -245,7 +273,9 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     // Find the instances that were yet to be added to db
     SetView<String> instancesToBeAdded = Sets.difference(latestContainerInfoMap.keySet(), instancesInDBMap.keySet());
 
-    SetView<String> instancesToBeDeleted = Sets.difference(instancesInDBMap.keySet(), latestContainerInfoMap.keySet());
+    SetView<String> instancesToBeDeleted =
+            getInstancesToBeDeleted(containerInfraMapping, instancesInDBMap, latestContainerInfoMap);
+
 
     Set<String> instanceIdsToBeDeleted = new HashSet<>();
     for (String containerId : instancesToBeDeleted) {
@@ -632,7 +662,10 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
   private void loadContainerSvcNameInstanceMap(
       ContainerInfrastructureMapping containerInfraMapping, Multimap<ContainerMetadata, Instance> instanceMap) {
     String appId = containerInfraMapping.getAppId();
-    List<Instance> instanceListInDBForInfraMapping = getInstances(appId, containerInfraMapping.getUuid());
+    List<Instance> instanceListInDBForInfraMapping = (containerInfraMapping instanceof EcsInfrastructureMapping)
+            ? instanceService.getInstancesForAppAndInframappingNotRemovedFully(appId, containerInfraMapping.getUuid())
+            : getInstances(appId, containerInfraMapping.getUuid());
+
     log.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
@@ -1246,7 +1279,15 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
 
   private Status getContainerSyncPerpetualTaskStatus(ContainerSyncResponse response) {
     boolean success = response.getCommandExecutionStatus() == SUCCESS;
-    boolean deleteTask = success && isEmpty(response.getContainerInfoList());
+    boolean deleteTask;
+    if (response.isEcs()) {
+      // Ecs
+      deleteTask = success && !response.isEcsServiceExists();
+    } else {
+      // K8s v1
+      deleteTask = success && isEmpty(response.getContainerInfoList());
+    }
+
     String errorMessage = success ? null : response.getErrorMessage();
 
     return Status.builder().retryable(!deleteTask).errorMessage(errorMessage).success(success).build();

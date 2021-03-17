@@ -32,6 +32,8 @@ public interface AwsEcsHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster);
   List<String> listTasksArnForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String cluster, String service, DesiredStatus desiredStatus);
+  boolean serviceExists(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster,
+      String serviceName);
   List<Task> listTasksForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String cluster, String service, DesiredStatus desiredStatus);
   List<ContainerInstance> listContainerInstancesForCluster(AwsConfig awsConfig,

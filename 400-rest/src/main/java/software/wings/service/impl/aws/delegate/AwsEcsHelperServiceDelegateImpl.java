@@ -238,4 +238,22 @@ public class AwsEcsHelperServiceDelegateImpl
     }
     return emptyList();
   }
+
+  @Override
+  public boolean serviceExists(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String cluster, String serviceName) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+      List<Service> services = listServicesForCluster(awsConfig, encryptionDetails, region, cluster);
+      if (isEmpty(services)) {
+        return false;
+      }
+      return services.stream().anyMatch(service -> serviceName.equals(service.getServiceName()));
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return false;
+  }
 }
