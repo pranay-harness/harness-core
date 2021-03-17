@@ -1,4 +1,4 @@
-package io.harness.batch.processing.anomalydetection;
+package io.harness.ccm.anomaly;
 
 import io.harness.ccm.anomaly.entities.AnomalyEntity;
 import io.harness.ccm.anomaly.entities.TimeGranularity;
