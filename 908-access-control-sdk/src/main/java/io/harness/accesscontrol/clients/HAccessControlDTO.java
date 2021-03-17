@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.clients;
 
-import io.harness.accesscontrol.ResourceScope;
+import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
