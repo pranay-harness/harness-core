@@ -13,7 +13,8 @@ import lombok.EqualsAndHashCode;
 @TargetModule(Module._950_DELEGATE_TASKS_BEANS)
 public class EcsBGRoute53DNSWeightUpdateResponse extends EcsCommandResponse {
   @Builder
-  public EcsBGRoute53DNSWeightUpdateResponse(CommandExecutionStatus commandExecutionStatus, String output) {
-    super(commandExecutionStatus, output);
+  public EcsBGRoute53DNSWeightUpdateResponse(
+      CommandExecutionStatus commandExecutionStatus, String output, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
   }
 }

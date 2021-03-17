@@ -1,12 +1,12 @@
 package io.harness.accesscontrol;
 
-import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
 import java.lang.reflect.Parameter;
@@ -27,20 +27,16 @@ public class NGAccessControlCheckHandler implements MethodInterceptor {
     for (int i = 0; i < parameters.length; i++) {
       Parameter parameter = parameters[i];
       Object argument = methodInvocation.getArguments()[i];
-      if (parameter.isAnnotationPresent(AccountIdentifier.class)
-          || parameter.getName().equals(NGCommonEntityConstants.ACCOUNT_KEY)) {
+      if (parameter.isAnnotationPresent(AccountIdentifier.class)) {
         builder.accountIdentifier((String) argument);
       }
-      if (parameter.isAnnotationPresent(OrgIdentifier.class)
-          || parameter.getName().equals(NGCommonEntityConstants.ORG_KEY)) {
+      if (parameter.isAnnotationPresent(OrgIdentifier.class)) {
         builder.orgIdentifier((String) argument);
       }
-      if (parameter.isAnnotationPresent(ProjectIdentifier.class)
-          || parameter.getName().equals(NGCommonEntityConstants.PROJECT_KEY)) {
+      if (parameter.isAnnotationPresent(ProjectIdentifier.class)) {
         builder.projectIdentifier((String) argument);
       }
-      if (parameter.isAnnotationPresent(ResourceIdentifier.class)
-          || parameter.getName().equals(NGCommonEntityConstants.IDENTIFIER_KEY)) {
+      if (parameter.isAnnotationPresent(ResourceIdentifier.class)) {
         builder.identifier((String) argument);
       }
     }
@@ -52,9 +48,11 @@ public class NGAccessControlCheckHandler implements MethodInterceptor {
     NGAccessControlCheck ngAccessControlCheck = methodInvocation.getMethod().getAnnotation(NGAccessControlCheck.class);
     NGAccess ngAccess = getScopeIdentifiers(methodInvocation);
     accessControlClient.checkForAccessOrThrow(PermissionCheckDTO.builder()
-                                                  .accountIdentifier(ngAccess.getAccountIdentifier())
-                                                  .orgIdentifier(ngAccess.getOrgIdentifier())
-                                                  .projectIdentifier(ngAccess.getProjectIdentifier())
+                                                  .resourceScope(ResourceScope.builder()
+                                                                     .accountIdentifier(ngAccess.getAccountIdentifier())
+                                                                     .orgIdentifier(ngAccess.getOrgIdentifier())
+                                                                     .projectIdentifier(ngAccess.getProjectIdentifier())
+                                                                     .build())
                                                   .resourceType(ngAccessControlCheck.resourceType())
                                                   .resourceIdentifier(ngAccess.getIdentifier())
                                                   .permission(ngAccessControlCheck.permission())

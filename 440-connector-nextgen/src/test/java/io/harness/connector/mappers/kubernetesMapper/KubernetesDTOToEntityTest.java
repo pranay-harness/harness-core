@@ -57,11 +57,10 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     String delegateName = "testDeleagete";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
+            .delegateSelectors(Collections.singleton(delegateName))
             .credential(KubernetesCredentialDTO.builder()
                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder()
-                                        .delegateSelectors(Collections.singleton(delegateName))
-                                        .build())
+                            .config(KubernetesDelegateDetailsDTO.builder().build())
                             .build())
             .build();
     Connector connector = kubernetesDTOToEntity.toConnectorEntity(connectorDTOWithDelegateCreds);
@@ -69,7 +68,7 @@ public class KubernetesDTOToEntityTest extends CategoryTest {
     KubernetesClusterConfig k8Config = (KubernetesClusterConfig) connector;
     assertThat(k8Config.getCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
     KubernetesDelegateDetails kubernetesCredential = (KubernetesDelegateDetails) k8Config.getCredential();
-    assertThat(kubernetesCredential.getDelegateSelectors()).isEqualTo(Collections.singleton(delegateName));
+    assertThat(kubernetesCredential).isEqualTo(null);
   }
 
   @Test(expected = UnexpectedException.class)

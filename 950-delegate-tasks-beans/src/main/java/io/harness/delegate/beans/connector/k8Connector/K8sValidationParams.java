@@ -8,11 +8,11 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
+@Data
+@SuperBuilder
 public class K8sValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   KubernetesClusterConfigDTO kubernetesClusterConfigDTO;
   List<EncryptedDataDetail> encryptedDataDetails;

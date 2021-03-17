@@ -7,7 +7,6 @@ directories:
   420-delegate-service
   460-capability
   470-alert
-  480-alert-beans
   882-pms-sdk-core
   879-pms-sdk
   910-delegate-service-driver
@@ -16,6 +15,7 @@ directories:
   920-delegate-agent-beans
   920-delegate-service-beans
   930-delegate-tasks
+  955-alert-beans
   955-delegate-beans
   940-feature-flag
   950-delegate-tasks-beans

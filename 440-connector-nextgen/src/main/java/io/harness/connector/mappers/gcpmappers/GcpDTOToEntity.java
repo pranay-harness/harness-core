@@ -1,13 +1,11 @@
 package io.harness.connector.mappers.gcpmappers;
 
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
-import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
-import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.InvalidRequestException;
@@ -41,12 +39,6 @@ public class GcpDTOToEntity implements ConnectorDTOToEntityMapper<GcpConnectorDT
   }
 
   private GcpConfig buildInheritFromDelegate(GcpConnectorCredentialDTO connector) {
-    final GcpDelegateDetailsDTO gcpCredential = (GcpDelegateDetailsDTO) connector.getConfig();
-    GcpDelegateDetails gcpDelegateDetails =
-        GcpDelegateDetails.builder().delegateSelectors(gcpCredential.getDelegateSelectors()).build();
-    return GcpConfig.builder()
-        .credentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
-        .credential(gcpDelegateDetails)
-        .build();
+    return GcpConfig.builder().credentialType(GcpCredentialType.INHERIT_FROM_DELEGATE).credential(null).build();
   }
 }

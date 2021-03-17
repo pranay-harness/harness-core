@@ -17,6 +17,8 @@ public class HelmChartManifestOutcome implements ManifestOutcome {
   String identifier;
   String type = ManifestType.HelmChart;
   StoreConfig store;
+  String chartName;
+  String chartVersion;
   HelmVersion helmVersion;
   boolean skipResourceVersioning;
   List<HelmManifestCommandFlag> commandFlags;

@@ -54,6 +54,12 @@ public class CloudBillingSortCriteria {
       case awsLinkedAccount:
         orderIdentifier = PreAggregateConstants.entityConstantAwsLinkedAccount;
         break;
+      case awsUsageType:
+        orderIdentifier = PreAggregateConstants.entityConstantAwsUsageType;
+        break;
+      case awsInstanceType:
+        orderIdentifier = PreAggregateConstants.entityConstantAwsInstanceType;
+        break;
       default:
         break;
     }

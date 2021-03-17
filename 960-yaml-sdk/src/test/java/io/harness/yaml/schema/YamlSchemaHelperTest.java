@@ -15,6 +15,7 @@ import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.dropwizard.jackson.Jackson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -47,8 +48,8 @@ public class YamlSchemaHelperTest extends CategoryTest {
     ObjectMapper objectMapper = new ObjectMapper();
     final JsonNode jsonNode = objectMapper.readTree(schema);
 
-    YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+    YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
+        new JacksonClassHelper(), new SwaggerGenerator(Jackson.newObjectMapper()), yamlSchemaRootClasses);
     Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     yamlSchemaHelper.initializeSchemaMaps(entityTypeJsonNodeMap);
     final YamlSchemaWithDetails schemaForEntityType =

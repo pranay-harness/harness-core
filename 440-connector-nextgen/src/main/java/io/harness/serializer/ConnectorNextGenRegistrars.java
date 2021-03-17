@@ -25,6 +25,7 @@ public class ConnectorNextGenRegistrars {
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(DelegateAgentBeansRegistrars.kryoRegistrars)
           .add(ConnectorNextGenKryoRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -37,6 +38,8 @@ public class ConnectorNextGenRegistrars {
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .add(ConnectorMorphiaClassesRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .add(PmsSdkCoreMorphiaRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =

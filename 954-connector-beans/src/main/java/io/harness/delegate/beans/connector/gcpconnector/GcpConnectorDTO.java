@@ -1,12 +1,14 @@
 package io.harness.delegate.beans.connector.gcpconnector;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -24,9 +26,9 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GcpConnector")
-public class GcpConnectorDTO extends ConnectorConfigDTO {
+public class GcpConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid GcpConnectorCredentialDTO credential;
-
+  Set<String> delegateSelectors;
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {
     if (credential.getGcpCredentialType() == GcpCredentialType.MANUAL_CREDENTIALS) {

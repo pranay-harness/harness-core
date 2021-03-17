@@ -71,6 +71,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
+            .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, k8sBGDeployRequest, ambiance, infrastructure);
@@ -121,7 +122,6 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sBlueGreenOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }

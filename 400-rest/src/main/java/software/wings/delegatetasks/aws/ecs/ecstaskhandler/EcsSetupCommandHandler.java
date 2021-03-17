@@ -90,7 +90,7 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
         } else {
           createServiceWithReplicaSchedulingStrategy(setupParams, taskDefinition, cloudProviderSetting,
               encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback,
-              isMultipleLoadBalancersFeatureFlagActive);
+              isMultipleLoadBalancersFeatureFlagActive, ecsServiceSetupRequest.isTimeoutErrorSupported());
         }
       }
       commandResponse.setSetupData(commandExecutionDataBuilder.build());
@@ -126,7 +126,8 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   private void createServiceWithReplicaSchedulingStrategy(EcsSetupParams setupParams, TaskDefinition taskDefinition,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
-      ExecutionLogCallback executionLogCallback, boolean isMultipleLoadBalancersFeatureFlagActive) {
+      ExecutionLogCallback executionLogCallback, boolean isMultipleLoadBalancersFeatureFlagActive,
+      boolean timeoutErrorSupported) {
     String containerServiceName = ecsSetupCommandTaskHelper.createEcsService(setupParams, taskDefinition,
         cloudProviderSetting, encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback,
         isMultipleLoadBalancersFeatureFlagActive);
@@ -136,8 +137,8 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
     commandExecutionDataBuilder.isMultipleLoadBalancersFeatureFlagActive(
         setupParams.isMultipleLoadBalancersFeatureFlagActive());
 
-    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(
-        cloudProviderSetting, setupParams, containerServiceName, encryptedDataDetails, executionLogCallback);
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(cloudProviderSetting, setupParams, containerServiceName,
+        encryptedDataDetails, executionLogCallback, timeoutErrorSupported);
 
     ecsSetupCommandTaskHelper.cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName,
         setupParams.getClusterName(), encryptedDataDetails, executionLogCallback);

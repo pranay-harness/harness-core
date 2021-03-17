@@ -14,6 +14,7 @@ enum GitProvider {
   GITLAB = 3;
   GOGS = 4;
   STASH = 5;
+  CODECOMMIT = 6;
 }
 
 enum Action {
@@ -185,7 +186,102 @@ message ParseWebhookResponse {
   }
 }
 
+message GithubApp {
+  string app_id = 1;
+  string private_key = 2;
+}
+
+message GithubProvider {
+  oneof provider {
+    string access_token = 1;
+    GithubApp github_app = 2;
+  }
+}
+
+message GitlabProvider {
+  oneof provider {
+    string access_token = 1;
+    string personal_token = 2;
+  }
+}
+
+message GiteaProvider {
+  string access_token = 1;
+}
+
+message BitbucketProvider {
+  oneof provider {
+    BitbucketCloudProvider bitbucket_cloud = 1;
+    BitbucketServerProvider bitbucket_server = 2;
+  }
+}
+
+message BitbucketCloudProvider {
+  string access_token = 1;
+  string private_key = 2;
+}
+
+message BitbucketServerProvider {
+  string access_token = 1;
+  string personal_token = 2;
+}
+
+message Provider {
+  oneof hook {
+    GithubProvider github = 1;
+    GitlabProvider gitlab = 2;
+    GiteaProvider gitea = 3;
+    BitbucketProvider bitbucket = 4;
+  }
+  string endpoint = 5;
+}
+
+message FileFindRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  Provider provider = 5;
+}
+
+message FileDeleteRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  Provider provider = 5;
+}
+
+message FileModifyRequest {
+  string slug = 1;
+  string path = 2;
+  oneof type {
+    string branch = 3;
+    string ref = 4;
+  }
+  string data = 5;
+  string message = 6;
+  string sha = 7;
+  Signature signature = 8;
+  Provider provider = 9;
+}
+
+message ContentResponse {
+  string data = 1;
+  int32 status = 2;
+}
+
 service SCM {
   // RPC to stop tailing on a file.
   rpc ParseWebhook(ParseWebhookRequest) returns (ParseWebhookResponse);
+  // File functions
+  rpc CreateFile(FileModifyRequest) returns (ContentResponse);
+  rpc DeleteFile(FileDeleteRequest) returns (ContentResponse);
+  rpc FindFile(FileFindRequest) returns (ContentResponse);
+  rpc UpdateFile(FileModifyRequest) returns (ContentResponse);
+  rpc UpsertFile(FileModifyRequest) returns (ContentResponse);
 }

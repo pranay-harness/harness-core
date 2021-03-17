@@ -2,6 +2,7 @@ package io.harness.engine;
 
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
@@ -23,5 +24,11 @@ public class NoopTaskExecutor implements TaskExecutor {
   @Override
   public boolean abortTask(Map<String, String> setupAbstractions, String taskId) {
     return false;
+  }
+
+  @Override
+  public <T extends ResponseData> T executeTask(Map<String, String> setupAbstractions, TaskRequest taskRequest)
+      throws InterruptedException {
+    return null;
   }
 }

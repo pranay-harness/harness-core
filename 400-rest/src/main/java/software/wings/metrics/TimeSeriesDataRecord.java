@@ -280,6 +280,8 @@ public class TimeSeriesDataRecord
     appendIfNecessary(keyBuilder, workflowId);
     appendIfNecessary(keyBuilder, stateType.name());
     appendIfNecessary(keyBuilder, groupName);
+    appendIfNecessary(keyBuilder, String.valueOf(dataCollectionMinute));
+    appendIfNecessary(keyBuilder, tag);
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
   }
 

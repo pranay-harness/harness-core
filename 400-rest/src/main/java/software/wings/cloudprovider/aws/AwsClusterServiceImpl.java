@@ -70,7 +70,8 @@ public class AwsClusterServiceImpl implements AwsClusterService {
   @Override
   public List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
-      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
     if (previousCount != desiredCount) {
       executionLogCallback.saveExecutionLog(format("Resize service [%s] in cluster [%s] from %s to %s instances",
           serviceName, clusterName, previousCount, desiredCount));
@@ -79,7 +80,8 @@ public class AwsClusterServiceImpl implements AwsClusterService {
           format("Service [%s] in cluster [%s] stays at %s instances", serviceName, clusterName, previousCount));
     }
     return ecsContainerService.provisionTasks(region, cloudProviderSetting, encryptedDataDetails, clusterName,
-        serviceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback);
+        serviceName, previousCount, desiredCount, serviceSteadyStateTimeout, executionLogCallback,
+        timeoutErrorSupported);
   }
 
   @Override

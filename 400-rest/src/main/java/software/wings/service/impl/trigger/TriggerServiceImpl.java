@@ -1187,9 +1187,7 @@ public class TriggerServiceImpl implements TriggerService {
             "Service Infrastructure [" + infraMappingIdOrName + "] does not exist", infrastructureMapping, USER);
         triggerWorkflowVariableValues.put(infraDefVarName, infrastructureMapping.getInfrastructureDefinitionId());
       } else {
-        if (infraDefIdOrName.contains(",")
-            && featureFlagService.isEnabled(
-                FeatureName.MULTISELECT_INFRA_PIPELINE, appService.getAccountIdByAppId(appId))) {
+        if (infraDefIdOrName.contains(",")) {
           if (!variable.isAllowMultipleValues()) {
             throw new InvalidRequestException(
                 "Multiple values provided for infra var { " + infraDefVarName + " }, but variable only allows one");

@@ -19,8 +19,8 @@ public class EcsServiceSetupResponse extends EcsCommandResponse {
 
   @Builder
   public EcsServiceSetupResponse(CommandExecutionStatus commandExecutionStatus, String output, boolean isBlueGreen,
-      ContainerSetupCommandUnitExecutionData setupData) {
-    super(commandExecutionStatus, output);
+      ContainerSetupCommandUnitExecutionData setupData, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.isBlueGreen = isBlueGreen;
     this.setupData = setupData;
   }

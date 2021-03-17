@@ -13,6 +13,7 @@ java_library(
         "//955-setup-usage-sdk:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
+        "//970-ng-commons:module",
         "@maven//:com_fasterxml_jackson_core_jackson_databind",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_guava",
         "@maven//:com_fasterxml_jackson_datatype_jackson_datatype_jdk8",

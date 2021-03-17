@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.scm.github;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -11,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -27,12 +29,12 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("GithubConnector")
-public class GithubConnectorDTO extends ConnectorConfigDTO implements ScmConnector {
+public class GithubConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
   @NotBlank @NotNull String url;
   @Valid @NotNull GithubAuthenticationDTO authentication;
   @Valid GithubApiAccessDTO apiAccess;
-
+  Set<String> delegateSelectors;
   @Builder
   public GithubConnectorDTO(GitConnectionType connectionType, String url, GithubAuthenticationDTO authentication,
       GithubApiAccessDTO apiAccess) {

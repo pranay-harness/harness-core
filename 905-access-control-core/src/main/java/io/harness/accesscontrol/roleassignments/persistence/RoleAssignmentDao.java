@@ -16,9 +16,11 @@ public interface RoleAssignmentDao {
   PageResponse<RoleAssignment> list(
       @NotNull PageRequest pageRequest, @Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 
-  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  Optional<RoleAssignment> get(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
-  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
+  RoleAssignment update(@NotNull @Valid RoleAssignment roleAssignment);
+
+  Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String scopeIdentifier);
 
   long deleteMulti(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
 }

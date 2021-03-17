@@ -12,6 +12,7 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
@@ -100,7 +101,7 @@ public class DeploymentStagePMSPlanCreator extends ChildrenPlanCreator<StageElem
         .group(StepOutcomeGroup.STAGE.name())
         .stepParameters(stepParameters)
         .stepType(DeploymentStageStep.STEP_TYPE)
-        .skipCondition(config.getSkipCondition() != null ? config.getSkipCondition().getValue() : null)
+        .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();

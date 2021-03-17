@@ -7,7 +7,9 @@ import java.util.Optional;
 public enum Scope {
   @JsonProperty("account") ACCOUNT("account"),
   @JsonProperty("org") ORG("org"),
-  @JsonProperty("project") PROJECT("project");
+  @JsonProperty("project") PROJECT("project"),
+  @JsonProperty("unknown") UNKNOWN("unknown");
+  // TODO: mark UNKNOWN as JsonIgnore if Scope ever becomes visible in swagger
   private final String yamlRepresentation;
 
   public String getYamlRepresentation() {

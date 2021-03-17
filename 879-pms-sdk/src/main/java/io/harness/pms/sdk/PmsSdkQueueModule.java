@@ -10,6 +10,8 @@ import io.harness.pms.execution.NodeExecutionEvent;
 import io.harness.pms.interrupts.InterruptEvent;
 import io.harness.pms.sdk.PmsSdkConfiguration.DeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.sdk.core.execution.NodeExecutionEventListener;
+import io.harness.pms.sdk.core.interrupt.InterruptEventListener;
 import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -45,6 +47,8 @@ public class PmsSdkQueueModule extends AbstractModule {
   protected void configure() {
     if (config.getDeploymentMode() == DeployMode.REMOTE) {
       bind(new TypeLiteral<QueueListener<OrchestrationEvent>>() {}).to(SdkOrchestrationEventListener.class);
+      bind(new TypeLiteral<QueueListener<NodeExecutionEvent>>() {}).to(NodeExecutionEventListener.class);
+      bind(new TypeLiteral<QueueListener<InterruptEvent>>() {}).to(InterruptEventListener.class);
     }
   }
 

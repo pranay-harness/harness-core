@@ -1043,7 +1043,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   @Override
   public List<ContainerInfo> provisionTasks(String region, SettingAttribute connectorConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
-      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+      int desiredCount, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails, false);
 
     try {
@@ -1055,29 +1056,31 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       // Even if service task count is already equal to desired count, try to resize
       // This should help retry step in case of timeouts or ECS provisioning issue
-      List<ServiceEvent> serviceEvents = new ArrayList<>();
-      if (isNotEmpty(service.getEvents())) {
-        serviceEvents.addAll(service.getEvents());
-      }
+      if (service.getDesiredCount() != desiredCount || timeoutErrorSupported) {
+        List<ServiceEvent> serviceEvents = new ArrayList<>();
+        if (isNotEmpty(service.getEvents())) {
+          serviceEvents.addAll(service.getEvents());
+        }
 
-      UpdateServiceCountRequestData serviceCountRequestData =
-          UpdateServiceCountRequestData.builder()
-              .region(region)
-              .encryptedDataDetails(encryptedDataDetails)
-              .cluster(clusterName)
-              .serviceName(serviceName)
-              .desiredCount(desiredCount)
-              .executionLogCallback(executionLogCallback)
-              .awsConfig(awsConfig)
-              .serviceEvents(serviceEvents)
-              .timeOut(serviceSteadyStateTimeout < 10 ? 10 : serviceSteadyStateTimeout)
-              .build();
+        UpdateServiceCountRequestData serviceCountRequestData =
+            UpdateServiceCountRequestData.builder()
+                .region(region)
+                .encryptedDataDetails(encryptedDataDetails)
+                .cluster(clusterName)
+                .serviceName(serviceName)
+                .desiredCount(desiredCount)
+                .executionLogCallback(executionLogCallback)
+                .awsConfig(awsConfig)
+                .serviceEvents(serviceEvents)
+                .timeOut(serviceSteadyStateTimeout < 10 ? 10 : serviceSteadyStateTimeout)
+                .build();
 
-      updateServiceCount(serviceCountRequestData);
-      executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
-      waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountRequestData);
-      if (desiredCount > service.getDesiredCount()) { // don't do it for downsize.
-        waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
+        updateServiceCount(serviceCountRequestData);
+        executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
+        waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountRequestData);
+        if (desiredCount > service.getDesiredCount()) { // don't do it for downsize.
+          waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
+        }
       }
 
       return getContainerInfosAfterEcsWait(

@@ -39,7 +39,8 @@ public interface AwsClusterService {
    */
   List<ContainerInfo> resizeCluster(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName, int previousCount,
-      int desiredSize, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
+      int desiredSize, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported);
 
   /**
    * Delete service.

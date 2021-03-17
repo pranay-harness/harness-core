@@ -85,9 +85,9 @@ public class PermissionServiceImpl implements PermissionService {
           String.format("Could not find the permission %s", permissionUpdate.getIdentifier()));
     }
     Permission currentPermission = currentPermissionOptional.get();
-    if (!permissionUpdate.getAllowedScopeLevels().equals(currentPermission.getAllowedScopeLevels())) {
-      throw new InvalidRequestException("Cannot change the the scopes at which this permission can be used.");
-    }
+    //    if (!permissionUpdate.getAllowedScopeLevels().equals(currentPermission.getAllowedScopeLevels())) {
+    //      throw new InvalidRequestException("Cannot change the the scopes at which this permission can be used.");
+    //    }
     permissionUpdate.setVersion(currentPermission.getVersion());
     return permissionDao.update(permissionUpdate);
   }

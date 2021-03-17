@@ -7,3 +7,37 @@ input TagInput {
   name: String
   value: String
 }
+
+type Tag {
+  name: String
+  value: String
+}
+
+extend type Service {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"serviceId\": \"id\"}")
+}
+
+extend type Environment {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"envId\": \"id\"}")
+}
+
+extend type Workflow {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"workflowId\": \"id\"}")
+}
+
+extend type Pipeline {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"pipelineId\": \"id\"}")
+}
+
+extend type Trigger {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"triggerId\": \"id\"}")
+}
+
+extend type Application {
+  tags: [Tag] @dataFetcher(name: tags, contextFieldArgsMap: "{ \"applicationId\": \"id\"}")
+}
+
+input TagAggregation {
+  entityType: EntityType
+  tagName: String
+}

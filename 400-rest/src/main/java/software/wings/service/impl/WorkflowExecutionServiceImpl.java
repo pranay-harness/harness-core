@@ -482,8 +482,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             != pipelineExecution.getPipeline().getPipelineStages().size()) {
           boolean isAnyStageLooped =
               pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
-          if (featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())
-              && isAnyStageLooped) {
+          if (isAnyStageLooped) {
             continue;
           } else {
             res.remove(i);
@@ -763,10 +762,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 stageExecution.setMessage(envStateExecutionData.getErrorMsg());
               }
               stageExecutionDataList.add(stageExecution);
-            } else if ((ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
-                           || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType()))
-                && featureFlagService.isEnabled(
-                    FeatureName.MULTISELECT_INFRA_PIPELINE, workflowExecution.getAccountId())) {
+            } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
+                || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
               if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
                 setWaitingForInputFlag(stateExecutionInstance, stageExecution);
               }

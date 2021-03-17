@@ -1267,7 +1267,7 @@ public class EcsSetupCommandTaskHelper {
   }
   public void downsizeOldOrUnhealthy(SettingAttribute settingAttribute, EcsSetupParams setupParams,
       String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, boolean timeoutErrorSupported) {
     Map<String, Integer> activeCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
         settingAttribute, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
     String latestHealthyController = null;
@@ -1300,7 +1300,7 @@ public class EcsSetupCommandTaskHelper {
           executionLogCallback.saveExecutionLog("");
           awsClusterService.resizeCluster(setupParams.getRegion(), settingAttribute, encryptedDataDetails,
               setupParams.getClusterName(), serviceName, entry.getValue(), 0,
-              setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+              setupParams.getServiceSteadyStateTimeout(), executionLogCallback, timeoutErrorSupported);
         }
       }
     }
