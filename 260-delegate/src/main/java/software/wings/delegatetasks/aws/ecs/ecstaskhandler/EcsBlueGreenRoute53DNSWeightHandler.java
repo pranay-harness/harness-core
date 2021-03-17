@@ -64,7 +64,8 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
             request.getServiceNameDownsized(), request.getServiceCountDownsized()));
         ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
             request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
-            request.getServiceNameDownsized(), executionLogCallback, request.getTimeout());
+            request.getServiceNameDownsized(), executionLogCallback, request.getTimeout(),
+            request.isTimeoutErrorSupported());
         blueServiceWeight = 100;
         blueServiceValue = oldServiceValue;
         greenServiceWeight = 0;

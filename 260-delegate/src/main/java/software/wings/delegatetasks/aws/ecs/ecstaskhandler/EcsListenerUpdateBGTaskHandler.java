@@ -57,7 +57,8 @@ public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
       if (request.isRollback()) {
         ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
             request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
-            request.getServiceNameDownsized(), executionLogCallback, request.getServiceSteadyStateTimeout());
+            request.getServiceNameDownsized(), executionLogCallback, request.getServiceSteadyStateTimeout(),
+            request.isTimeoutErrorSupported());
       }
 
       if (isUpdateRequired(request, encryptedDataDetails, executionLogCallback)) {
