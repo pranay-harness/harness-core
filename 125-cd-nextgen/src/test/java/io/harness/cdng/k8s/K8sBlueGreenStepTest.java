@@ -45,6 +45,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.getManifestDelegateConfig()).isEqualTo(manifestDelegateConfig);
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
+    assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
   @Test
@@ -58,6 +59,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     K8sBGDeployRequest request = executeTask(stepParameters, K8sBGDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeout(stepParameters));
+    assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
   @Test
@@ -83,6 +85,7 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(1);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBlueGreenOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.OUTPUT);
+    assertThat(outcome.getGroup()).isNull();
   }
 
   @Override

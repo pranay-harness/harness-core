@@ -1,7 +1,5 @@
 package io.harness.delegate.beans;
 
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.io.File;
 import java.io.FileInputStream;

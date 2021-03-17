@@ -27,13 +27,11 @@ public interface VaultService {
 
   void decryptVaultConfigSecrets(String accountId, VaultConfig vaultConfig, boolean maskSecret);
 
-  VaultConfig getVaultConfig(String accountId, String entityId);
-
   VaultConfig getVaultConfigByName(String accountId, String name);
 
   void renewToken(BaseVaultConfig baseVaultConfig);
 
-  void renewAppRoleClientToken(BaseVaultConfig vaultConfig);
+  void renewAppRoleClientToken(BaseVaultConfig baseVaultConfig);
 
   List<SecretChangeLog> getVaultSecretChangeLogs(EncryptedData encryptedData, VaultConfig vaultConfig);
 
@@ -44,4 +42,6 @@ public interface VaultService {
   void validateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingDummySecret);
 
   VaultAppRoleLoginResult appRoleLogin(BaseVaultConfig baseVaultConfig);
+
+  VaultConfig getVaultConfig(String accountId, String entityId);
 }

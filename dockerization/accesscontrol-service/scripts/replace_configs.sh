@@ -133,3 +133,19 @@ fi
 if [[ "" != "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceSecret "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET"
 fi
+
+if [[ "" != "$ENABLE_AUTH" ]]; then
+  yq write -i $CONFIG_FILE enableAuth "$ENABLE_AUTH"
+fi
+
+if [[ "" != "$DEFAULT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE defaultServiceSecret "$DEFAULT_SERVICE_SECRET"
+fi
+
+if [[ "" != "$JWT_AUTH_SECRET" ]]; then
+  yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE identityServiceSecret "$IDENTITY_SERVICE_SECRET"
+fi

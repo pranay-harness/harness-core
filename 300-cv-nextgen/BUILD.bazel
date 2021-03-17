@@ -78,6 +78,7 @@ shared_dependencies = [
     "@maven//:org_reflections_reflections",
     "@maven//:org_slf4j_slf4j_api",
     "@maven//:ru_vyarus_guice_validator",
+    "@maven//:io_netty_netty_all",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 
@@ -116,6 +117,7 @@ java_library(
         "module",
         "//:lombok",
         "//430-cv-nextgen-commons:module",
+        "//876-orchestration-beans:module",
         "//940-feature-flag:module",
         "//940-notification-client:module",
         "//960-notification-beans:module",

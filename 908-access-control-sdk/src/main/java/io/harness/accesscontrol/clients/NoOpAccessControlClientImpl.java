@@ -1,6 +1,6 @@
 package io.harness.accesscontrol.clients;
 
-import io.harness.accesscontrol.HUserPrincipal;
+import io.harness.accesscontrol.HPrincipal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.Principal;
@@ -12,16 +12,14 @@ import java.util.stream.Collectors;
 
 public class NoOpAccessControlClientImpl implements AccessControlClient {
   @Override
-  public AccessCheckResponseDTO checkForAccess(
+  public HAccessCheckResponseDTO checkForAccess(
       String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckDTOList) {
-    return AccessCheckResponseDTO.builder()
-        .principal(HUserPrincipal.builder().principalIdentifier(principal).principalType(principalType).build())
+    return HAccessCheckResponseDTO.builder()
+        .principal(HPrincipal.builder().principalIdentifier(principal).principalType(principalType).build())
         .accessControlList(permissionCheckDTOList.stream()
                                .map(x
                                    -> HAccessControlDTO.builder()
-                                          .accountIdentifier(x.getAccountIdentifier())
-                                          .orgIdentifier(x.getOrgIdentifier())
-                                          .projectIdentifier(x.getProjectIdentifier())
+                                          .resourceScope(x.getResourceScope())
                                           .permission(x.getPermission())
                                           .resourceIdentifier(x.getResourceIdentifier())
                                           .resourceType(x.getResourceType())
@@ -32,7 +30,7 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public AccessControlDTO checkForAccess(
+  public HAccessControlDTO checkForAccess(
       String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO) {
     return checkForAccess(principal, principalType, Collections.singletonList(permissionCheckDTO))
         .getAccessControlList()
@@ -40,7 +38,7 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
+  public HAccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList) {
     Principal principal = SecurityContextBuilder.getPrincipal();
     if (principal instanceof UserPrincipal) {
       UserPrincipal userPrincipal = (UserPrincipal) principal;
@@ -50,7 +48,7 @@ public class NoOpAccessControlClientImpl implements AccessControlClient {
   }
 
   @Override
-  public AccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO) {
+  public HAccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO) {
     return checkForAccess(Collections.singletonList(permissionCheckDTO)).getAccessControlList().get(0);
   }
 

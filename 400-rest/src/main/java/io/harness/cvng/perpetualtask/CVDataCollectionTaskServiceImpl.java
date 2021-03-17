@@ -14,6 +14,7 @@ import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.govern.Switch;
@@ -153,10 +154,12 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       case KUBERNETES:
         KubernetesClusterConfigDTO kubernetesClusterConfigDTO =
             (KubernetesClusterConfigDTO) bundle.getConnectorDTO().getConnectorConfig();
-        return ngSecretService.getEncryptionDetails(basicNGAccessObject,
-            ((KubernetesClusterDetailsDTO) kubernetesClusterConfigDTO.getCredential().getConfig())
-                .getAuth()
-                .getCredentials());
+        KubernetesCredentialDTO credential = kubernetesClusterConfigDTO.getCredential();
+        if (!credential.getKubernetesCredentialType().isDecryptable()) {
+          return new ArrayList<>();
+        }
+        return ngSecretService.getEncryptionDetails(
+            basicNGAccessObject, ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials());
       default:
         Switch.unhandled(bundle.getDataCollectionType());
         throw new IllegalStateException("invalid type " + bundle.getDataCollectionType());

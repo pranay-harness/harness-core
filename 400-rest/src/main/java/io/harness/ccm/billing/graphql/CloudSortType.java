@@ -10,5 +10,7 @@ public enum CloudSortType {
   awsUnblendedCost,
   awsBlendedCost,
   awsService,
-  awsLinkedAccount;
+  awsLinkedAccount,
+  awsUsageType,
+  awsInstanceType;
 }

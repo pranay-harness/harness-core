@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
@@ -39,6 +40,8 @@ import org.springframework.data.annotation.TypeAlias;
 public class HelmChartManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartName;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> chartVersion;
   @Wither HelmVersion helmVersion;
   @Wither @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) ParameterField<Boolean> skipResourceVersioning;
   @Wither List<HelmManifestCommandFlag> commandFlags;
@@ -52,6 +55,15 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
       resultantManifest =
           resultantManifest.withStoreConfigWrapper(storeConfigWrapper.applyOverrides(storeConfigOverride));
     }
+
+    if (!ParameterField.isNull(helmChartManifest.getChartName())) {
+      resultantManifest = resultantManifest.withChartName(helmChartManifest.getChartName());
+    }
+
+    if (!ParameterField.isNull(helmChartManifest.getChartVersion())) {
+      resultantManifest = resultantManifest.withChartVersion(helmChartManifest.getChartVersion());
+    }
+
     if (helmChartManifest.getHelmVersion() != null) {
       resultantManifest = resultantManifest.withHelmVersion(helmChartManifest.getHelmVersion());
     }
@@ -78,6 +90,6 @@ public class HelmChartManifest implements ManifestAttributes, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.HELM_CHART_MANIFEST).build();
+    return LevelNode.builder().qualifierName(YamlTypes.HELM_CHART_MANIFEST).isPartOfFQN(false).build();
   }
 }

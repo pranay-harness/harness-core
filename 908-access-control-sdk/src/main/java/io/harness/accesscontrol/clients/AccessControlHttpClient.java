@@ -10,5 +10,5 @@ public interface AccessControlHttpClient {
   String ACL_API = "/api/acl";
 
   @POST(ACL_API)
-  Call<ResponseDTO<AccessCheckResponseDTO>> getAccessControlList(@Body AccessCheckRequestDTO accessCheckRequestDTO);
+  Call<ResponseDTO<HAccessCheckResponseDTO>> getAccessControlList(@Body HAccessCheckRequestDTO accessCheckRequestDTO);
 }

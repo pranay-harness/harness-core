@@ -19,7 +19,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
@@ -470,8 +469,7 @@ public class PipelineExecutionController {
             envIdForInfra = variable.obtainEnvIdField();
           }
           if (isNotEmpty(envIdForInfra)) {
-            if (value.contains(",")
-                && featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, pipeline.getAccountId())) {
+            if (value.contains(",")) {
               return handleMultiInfra(appId, envIdForInfra, value, variable);
             }
             InfrastructureDefinition infrastructureDefinition =

@@ -59,17 +59,11 @@ public final class MonitoringSourcePerpetualTask
   @FdIndex private Long dataCollectionTaskIteration;
   private String perpetualTaskId;
   private String dataCollectionWorkerId;
-  // TODO: remove this once migration is done.
-  @FdIndex private Long migrationIteration;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (MonitoringSourcePerpetualTaskKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
-      return;
-    }
-    if (MonitoringSourcePerpetualTaskKeys.migrationIteration.equals(fieldName)) {
-      this.migrationIteration = nextIteration;
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -79,9 +73,6 @@ public final class MonitoringSourcePerpetualTask
   public Long obtainNextIteration(String fieldName) {
     if (MonitoringSourcePerpetualTaskKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
-    }
-    if (MonitoringSourcePerpetualTaskKeys.migrationIteration.equals(fieldName)) {
-      return this.migrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }

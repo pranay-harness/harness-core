@@ -52,6 +52,6 @@ public class StepGroupElement implements ExecutionWrapper, WithIdentifier, Visit
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_GROUP).build();
+    return LevelNode.builder().qualifierName(LevelNodeQualifierName.STEP_GROUP).isPartOfFQN(false).build();
   }
 }

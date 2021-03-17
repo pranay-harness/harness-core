@@ -63,6 +63,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
                   .interruptType(interrupt.getType())
                   .tookEffectAt(System.currentTimeMillis())
                   .interruptId(interrupt.getUuid())
+                  .interruptConfig(interrupt.getInterruptConfig())
                   .build()));
 
       planExecutionService.updateStatus(interrupt.getPlanExecutionId(), RUNNING);

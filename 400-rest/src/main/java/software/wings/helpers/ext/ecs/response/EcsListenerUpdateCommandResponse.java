@@ -17,8 +17,8 @@ public class EcsListenerUpdateCommandResponse extends EcsCommandResponse {
 
   @Builder
   public EcsListenerUpdateCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
-      String downsizedServiceName, int downsizedServiceCount) {
-    super(commandExecutionStatus, output);
+      String downsizedServiceName, int downsizedServiceCount, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.downsizedServiceName = downsizedServiceName;
     this.downsizedServiceCount = downsizedServiceCount;
   }

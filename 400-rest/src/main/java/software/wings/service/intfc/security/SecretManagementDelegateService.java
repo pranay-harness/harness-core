@@ -36,7 +36,7 @@ public interface SecretManagementDelegateService {
   /**
    * Renew the Hashicorp Vault authentication token.
    */
-  @DelegateTaskType(TaskType.VAULT_RENEW_TOKEN) boolean renewVaultToken(VaultConfig vaultConfig);
+  @DelegateTaskType(TaskType.VAULT_RENEW_TOKEN) boolean renewVaultToken(BaseVaultConfig vaultConfig);
 
   /**
    * List vault secret engines

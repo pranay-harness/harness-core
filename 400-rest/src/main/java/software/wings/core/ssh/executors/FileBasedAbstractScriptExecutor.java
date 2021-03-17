@@ -9,8 +9,8 @@ import static io.harness.logging.LogLevel.WARN;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.delegate.beans.DelegateAgentFileService;
 import io.harness.delegate.beans.DelegateFile;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -59,8 +59,8 @@ public abstract class FileBasedAbstractScriptExecutor implements FileBasedScript
   }
 
   @Override
-  public CommandExecutionStatus copyGridFsFiles(String destinationDirectoryPath,
-      DelegateAgentFileService.FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
+  public CommandExecutionStatus copyGridFsFiles(
+      String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     if (isEmpty(fileNamesIds)) {
       saveExecutionLog("There are no artifacts to copy.");
       return CommandExecutionStatus.SUCCESS;

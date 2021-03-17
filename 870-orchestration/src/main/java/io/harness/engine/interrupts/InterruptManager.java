@@ -21,6 +21,7 @@ public class InterruptManager {
                               .metadata(interruptPackage.getMetadata())
                               .nodeExecutionId(interruptPackage.getNodeExecutionId())
                               .parameters(interruptPackage.getParameters())
+                              .interruptConfig(interruptPackage.getInterruptConfig())
                               .build();
     try (AutoLogContext ignore = interrupt.autoLogContext()) {
       InterruptHandler interruptHandler = interruptHandlerFactory.obtainHandler(interruptPackage.getInterruptType());

@@ -22,7 +22,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
@@ -61,12 +60,7 @@ public class KubernetesEntityToDTO
   private KubernetesClusterConfigDTO createInheritFromDelegateCredentialsDTO(
       KubernetesDelegateDetails delegateCredential) {
     KubernetesCredentialDTO k8sCredentials =
-        KubernetesCredentialDTO.builder()
-            .config(KubernetesDelegateDetailsDTO.builder()
-                        .delegateSelectors(delegateCredential.getDelegateSelectors())
-                        .build())
-            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-            .build();
+        KubernetesCredentialDTO.builder().config(null).kubernetesCredentialType(INHERIT_FROM_DELEGATE).build();
     return KubernetesClusterConfigDTO.builder().credential(k8sCredentials).build();
   }
 

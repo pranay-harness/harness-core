@@ -8,8 +8,8 @@ shared_dependencies = [
 ] + [
     "//:lombok",
     "//400-rest:module",
-    "//480-alert-beans:module",
     "//920-delegate-service-beans:module",
+    "//955-alert-beans:module",
 ]
 
 java_library(

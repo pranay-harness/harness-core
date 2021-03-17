@@ -25,6 +25,7 @@ public class ResourceGroup {
   @NotEmpty final String identifier;
   @NotEmpty final String name;
   @NotNull final Set<String> resourceSelectors;
+  final boolean fullScopeSelected;
   final boolean managed;
   @EqualsAndHashCode.Exclude @Setter Long createdAt;
   @EqualsAndHashCode.Exclude @Setter Long lastModifiedAt;

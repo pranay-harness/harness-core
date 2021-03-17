@@ -24,8 +24,8 @@ public class EcsServiceDeployResponse extends EcsCommandResponse {
   @Builder
   public EcsServiceDeployResponse(CommandExecutionStatus commandExecutionStatus, String output,
       List<ContainerInfo> containerInfos, List<ContainerServiceData> newInstanceData,
-      List<ContainerServiceData> oldInstanceData, List<ContainerInfo> previousContainerInfos) {
-    super(commandExecutionStatus, output);
+      List<ContainerServiceData> oldInstanceData, List<ContainerInfo> previousContainerInfos, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.containerInfos = containerInfos;
     this.newInstanceData = newInstanceData;
     this.oldInstanceData = oldInstanceData;
