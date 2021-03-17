@@ -640,7 +640,7 @@ public class UserResource {
     return new RestResponse<>(NGLoginResponse.builder()
                                   .user(loggedInUser)
                                   .showCaptcha(false)
-                                  .dashboardPreference(account.getDashboardPreference())
+                                  .defaultExperience(account.getDefaultExperience())
                                   .build());
   }
 

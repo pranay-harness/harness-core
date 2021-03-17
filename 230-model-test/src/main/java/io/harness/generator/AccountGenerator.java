@@ -26,7 +26,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Account.AccountKeys;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
-import software.wings.beans.DashboardPreference;
+import software.wings.beans.DefaultExperience;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -194,7 +194,7 @@ public class AccountGenerator {
                     .withUuid(accountId)
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
-                    .withDashboardPreference(DashboardPreference.CG)
+                    .withDefaultExperience(DefaultExperience.CG)
                     .withLicenseInfo(LicenseInfo.builder()
                                          .accountType(accountType)
                                          .accountStatus(AccountStatus.ACTIVE)

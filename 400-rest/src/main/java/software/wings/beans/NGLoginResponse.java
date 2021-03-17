@@ -13,5 +13,5 @@ import lombok.Data;
 public class NGLoginResponse {
   private boolean showCaptcha;
   private User user;
-  private DashboardPreference dashboardPreference;
+  private DefaultExperience defaultExperience;
 }

@@ -69,7 +69,7 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @FdUniqueIndex @NotNull private String accountName;
 
-  @Getter @Setter DashboardPreference dashboardPreference;
+  @Getter @Setter DefaultExperience defaultExperience;
 
   private Set<String> whitelistedDomains = new HashSet<>();
 
@@ -513,7 +513,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
-    private DashboardPreference dashboardPreference = DashboardPreference.CG;
+    private DefaultExperience defaultExperience = DefaultExperience.CG;
 
     private Builder() {}
 
@@ -526,8 +526,8 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
-    public Builder withDashboardPreference(DashboardPreference dashboardPreference) {
-      this.dashboardPreference = dashboardPreference;
+    public Builder withDefaultExperience(DefaultExperience defaultExperience) {
+      this.defaultExperience = defaultExperience;
       return this;
     }
 
@@ -680,7 +680,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
-          .withDashboardPreference(dashboardPreference)
+          .withDefaultExperience(defaultExperience)
           .withAccountPreferences(accountPreferences);
     }
 
@@ -712,7 +712,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setAccountPreferences(accountPreferences);
-      account.setDashboardPreference(dashboardPreference);
+      account.setDefaultExperience(defaultExperience);
       return account;
     }
   }

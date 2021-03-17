@@ -192,7 +192,7 @@ public class AuthenticationManager {
 
     Account account = userService.getAccountByIdIfExistsElseGetDefaultAccount(
         user, isEmpty(accountId) ? Optional.empty() : Optional.of(accountId));
-    builder.dashboardPreference(account.getDashboardPreference());
+    builder.defaultExperience(account.getDefaultExperience());
     AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
     if (null == authenticationMechanism) {
       authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
