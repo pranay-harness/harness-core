@@ -141,6 +141,7 @@ public class ServiceVariableCreator {
     }
     switch (manifestNode.getNode().getType()) {
       case ManifestType.K8Manifest:
+      case ManifestType.Kustomize:
         addVariablesFork8sManifest(specNode, yamlPropertiesMap);
         break;
       case ManifestType.VALUES:

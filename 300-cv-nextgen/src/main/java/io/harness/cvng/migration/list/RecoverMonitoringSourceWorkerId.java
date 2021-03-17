@@ -6,7 +6,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -15,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 @Slf4j
-public class RecoverMonitoringSourceWorkerId implements CNVGMigration {
+public class RecoverMonitoringSourceWorkerId implements CVNGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
 
@@ -38,5 +39,15 @@ public class RecoverMonitoringSourceWorkerId implements CNVGMigration {
       UpdateResults updateResults = hPersistence.update(monitoringSourcePerpetualTask, updateOperations);
       log.info("Updated monitoring source {}, {}", monitoringSourcePerpetualTask, updateResults.getUpdatedCount());
     });
+  }
+
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 }

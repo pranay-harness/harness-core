@@ -35,7 +35,6 @@ public class K8sBGSwapServicesStepParameters implements K8sStepParameters {
                                                        .identifier(identifier)
                                                        .description(description)
                                                        .skipCondition(skipCondition)
-                                                       .skipDryRun(skipDryRun)
                                                        .build());
   }
 

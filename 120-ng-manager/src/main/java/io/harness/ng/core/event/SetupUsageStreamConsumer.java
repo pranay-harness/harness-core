@@ -39,7 +39,7 @@ public class SetupUsageStreamConsumer implements Runnable {
         pollAndProcessMessages();
       }
     } catch (Exception ex) {
-      log.error("Entity crud stream consumer unexpectedly stopped", ex);
+      log.error("Setup Usage consumer unexpectedly stopped", ex);
     }
     SecurityContextBuilder.unsetCompleteContext();
   }

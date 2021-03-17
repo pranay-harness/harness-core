@@ -10,8 +10,24 @@ import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsClientImpl;
-import io.harness.azure.client.*;
-import io.harness.azure.impl.*;
+import io.harness.azure.client.AzureAuthorizationClient;
+import io.harness.azure.client.AzureAutoScaleSettingsClient;
+import io.harness.azure.client.AzureBlueprintClient;
+import io.harness.azure.client.AzureComputeClient;
+import io.harness.azure.client.AzureContainerRegistryClient;
+import io.harness.azure.client.AzureManagementClient;
+import io.harness.azure.client.AzureMonitorClient;
+import io.harness.azure.client.AzureNetworkClient;
+import io.harness.azure.client.AzureWebClient;
+import io.harness.azure.impl.AzureAuthorizationClientImpl;
+import io.harness.azure.impl.AzureAutoScaleSettingsClientImpl;
+import io.harness.azure.impl.AzureBlueprintClientImpl;
+import io.harness.azure.impl.AzureComputeClientImpl;
+import io.harness.azure.impl.AzureContainerRegistryClientImpl;
+import io.harness.azure.impl.AzureManagementClientImpl;
+import io.harness.azure.impl.AzureMonitorClientImpl;
+import io.harness.azure.impl.AzureNetworkClientImpl;
+import io.harness.azure.impl.AzureWebClientImpl;
 import io.harness.cdng.notification.task.MailSenderDelegateTask;
 import io.harness.cdng.secrets.tasks.SSHConfigValidationDelegateTask;
 import io.harness.cistatus.service.GithubService;
@@ -94,6 +110,7 @@ import io.harness.delegate.task.gcp.taskHandlers.TaskHandler;
 import io.harness.delegate.task.git.GitFetchTaskNG;
 import io.harness.delegate.task.git.GitValidationHandler;
 import io.harness.delegate.task.git.NGGitCommandTask;
+import io.harness.delegate.task.gitapi.DecryptGitAPIAccessTask;
 import io.harness.delegate.task.gitapi.GitApiTask;
 import io.harness.delegate.task.helm.HttpHelmConnectivityDelegateTask;
 import io.harness.delegate.task.helm.HttpHelmValidationHandler;
@@ -255,7 +272,11 @@ import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWeb
 import software.wings.delegatetasks.azure.appservice.webapp.taskhandler.AzureWebAppSlotSwapTaskHandler;
 import software.wings.delegatetasks.azure.arm.AbstractAzureARMTaskHandler;
 import software.wings.delegatetasks.azure.arm.AzureARMTask;
-import software.wings.delegatetasks.azure.arm.taskhandler.*;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMDeploymentTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListManagementGroupTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListSubscriptionLocationsTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMRollbackTaskHandler;
+import software.wings.delegatetasks.azure.arm.taskhandler.AzureBlueprintDeploymentTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -1282,6 +1303,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.NG_NEXUS_TASK).toInstance(NexusDelegateTask.class);
     mapBinder.addBinding(TaskType.NG_ARTIFACTORY_TASK).toInstance(ArtifactoryDelegateTask.class);
     mapBinder.addBinding(TaskType.NG_AWS_CODE_COMMIT_TASK).toInstance(AwsCodeCommitDelegateTask.class);
+    mapBinder.addBinding(TaskType.NG_DECRYT_GIT_API_ACCESS_TASK).toInstance(DecryptGitAPIAccessTask.class);
   }
 
   private void registerSecretManagementBindings() {

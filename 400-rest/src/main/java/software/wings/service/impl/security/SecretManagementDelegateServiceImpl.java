@@ -178,12 +178,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public boolean renewVaultToken(VaultConfig vaultConfig) {
+  public boolean renewVaultToken(BaseVaultConfig baseVaultConfig) {
     int failedAttempts = 0;
     while (true) {
       try {
-        log.info("renewing token for vault {}", vaultConfig);
-        boolean isSuccessful = VaultRestClientFactory.create(vaultConfig).renewToken(vaultConfig.getAuthToken());
+        log.info("renewing token for vault {}", baseVaultConfig);
+        VaultSysAuthRestClient restClient =
+            VaultRestClientFactory
+                .getVaultRetrofit(baseVaultConfig.getVaultUrl(), baseVaultConfig.isCertValidationRequired())
+                .create(VaultSysAuthRestClient.class);
+        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken()).execute().isSuccessful();
         if (isSuccessful) {
           return true;
         } else {

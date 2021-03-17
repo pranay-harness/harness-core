@@ -94,7 +94,6 @@ import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateApproval;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
@@ -124,6 +123,7 @@ import io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
@@ -179,6 +179,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateCallbackService;
+import io.harness.service.intfc.DelegateInsightsService;
 import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.service.intfc.DelegateTaskResultsProvider;
@@ -195,6 +196,7 @@ import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.CEDelegateStatus.CEDelegateStatusBuilder;
 import software.wings.beans.DelegateConnection;
+import software.wings.beans.DelegateInsightsDetails;
 import software.wings.beans.DelegateScalingGroup;
 import software.wings.beans.DelegateSequenceConfig;
 import software.wings.beans.DelegateSequenceConfig.DelegateSequenceConfigKeys;
@@ -421,6 +423,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private NGSecretService ngSecretService;
   @Inject private DelegateCache delegateCache;
   @Inject private CapabilityService capabilityService;
+  @Inject private DelegateInsightsService delegateInsightsService;
 
   @Inject @Named(DelegatesFeature.FEATURE_NAME) private UsageLimitedFeature delegatesFeature;
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
@@ -892,6 +895,7 @@ public class DelegateServiceImpl implements DelegateService {
               .groupName(groupName)
               .groupHostName(groupHostName)
               .groupSelectors(groupSelectors)
+              .delegateInsightsDetails(retrieveDelegateInsightsDetails(accountId, entry.getKey()))
               .lastHeartBeat(lastHeartBeat)
               .delegates(buildInnerDelegates(entry.getValue(), activeDelegateConnections, true))
               .build();
@@ -909,6 +913,11 @@ public class DelegateServiceImpl implements DelegateService {
         .field(DelegateKeys.delegateGroupId)
         .doesNotExist()
         .asList();
+  }
+
+  private DelegateInsightsDetails retrieveDelegateInsightsDetails(String accountId, String delegateGroupId) {
+    return delegateInsightsService.retrieveDelegateInsightsDetails(
+        accountId, delegateGroupId, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
   }
 
   @NotNull

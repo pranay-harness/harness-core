@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.azure.arm.deployment;
 
 import static io.harness.azure.model.AzureConstants.ARM_DEPLOYMENT_STATUS_CHECK_INTERVAL;
+import static io.harness.azure.model.AzureConstants.ROLE_ASSIGNMENT_EXISTS_CLOUD_ERROR_CODE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
@@ -27,6 +28,8 @@ import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentBluep
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.microsoft.azure.CloudError;
+import com.microsoft.azure.CloudException;
 import com.microsoft.azure.management.graphrbac.BuiltInRole;
 import com.microsoft.azure.management.graphrbac.RoleAssignment;
 import com.microsoft.azure.management.network.ResourceIdentityType;
@@ -236,12 +239,23 @@ public class AzureBlueprintDeploymentService {
               + "%n- Role Assignment Name: [%s] %n- Built In Role: [%s] %n- Azure Blueprints SP Object ID: [%s] %n- Subscription Id: [%s]",
           roleAssignmentName, BuiltInRole.OWNER.toString(), objectId, assignmentSubscriptionId));
 
-      RoleAssignment roleAssignment = azureAuthorizationClient.roleAssignmentAtSubscriptionScope(
-          azureConfig, assignmentSubscriptionId, objectId, roleAssignmentName, BuiltInRole.OWNER);
+      try {
+        RoleAssignment roleAssignment = azureAuthorizationClient.roleAssignmentAtSubscriptionScope(
+            azureConfig, assignmentSubscriptionId, objectId, roleAssignmentName, BuiltInRole.OWNER);
 
-      blueprintDeploymentLogCallback.saveExecutionLog(format(
-          "Role assignment successfully created %n- Principal ID: [%s] %n- Role Definition ID: [%s] %n- Scope: [%s]",
-          roleAssignment.principalId(), roleAssignment.roleDefinitionId(), roleAssignment.scope()));
+        blueprintDeploymentLogCallback.saveExecutionLog(format(
+            "Role assignment successfully created %n- Principal ID: [%s] %n- Role Definition ID: [%s] %n- Scope: [%s]",
+            roleAssignment.principalId(), roleAssignment.roleDefinitionId(), roleAssignment.scope()));
+
+      } catch (CloudException ex) {
+        CloudError body = ex.body();
+        if (body != null && ROLE_ASSIGNMENT_EXISTS_CLOUD_ERROR_CODE.equals(body.code())) {
+          blueprintDeploymentLogCallback.saveExecutionLog(
+              format("The role assignment already exists. %n- Scope: [%s]", assignmentResourceScope));
+        } else {
+          throw ex;
+        }
+      }
     } else {
       blueprintDeploymentLogCallback.saveExecutionLog(format("Assignment is using user-assigned managed identity. "
               + "User is responsible for managing the rights and lifecycle of a user-assigned managed identity. "

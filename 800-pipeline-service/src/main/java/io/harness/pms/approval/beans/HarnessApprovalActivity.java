@@ -3,10 +3,11 @@ package io.harness.pms.approval.beans;
 import io.harness.beans.EmbeddedUser;
 
 import java.util.List;
-import lombok.AllArgsConstructor;
+import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 
 /**
@@ -14,13 +15,12 @@ import lombok.experimental.FieldNameConstants;
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "HarnessApprovalActivityKeys")
 public class HarnessApprovalActivity {
-  EmbeddedUser user;
-  ApprovalStatus status;
+  @NotNull EmbeddedUser user;
+  @NotNull HarnessApprovalAction action;
   List<ApproverInput> approverInputs;
-  private String comments;
+  String comments;
   long approvedAt;
 }

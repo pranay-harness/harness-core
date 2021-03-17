@@ -12,7 +12,6 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTO
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
-import io.harness.pms.preflight.PreFlightStatus;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -127,12 +126,13 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse("dummyPreFlightCheckId");
+      @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
+    return ResponseDTO.newResponse(pipelineExecuteHelper.startPreflightCheck(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
   }
 
   @GET
-  @ApiOperation(value = "initiate pre flight check", nickname = "getPreflightCheckResponse")
+  @ApiOperation(value = "get preflight check response", nickname = "getPreflightCheckResponse")
   @Path("/getPreflightCheckResponse")
   public ResponseDTO<PreFlightDTO> getPreflightCheckResponse(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
@@ -140,6 +140,6 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse(PreFlightDTO.builder().status(PreFlightStatus.SUCCESS).build());
+    return ResponseDTO.newResponse(pipelineExecuteHelper.getPreflightCheckResponse(preflightCheckId));
   }
 }
