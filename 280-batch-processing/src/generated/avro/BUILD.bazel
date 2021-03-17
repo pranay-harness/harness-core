@@ -1,0 +1,7 @@
+load("@io_bazel_rules_avro//avro:avro.bzl", "avro_gen", "avro_java_library")
+
+avro_java_library(
+    name = "280_batch_processing_avro",
+    srcs = glob(["**/*.avsc"]),
+    visibility = ["//visibility:public"],
+)
