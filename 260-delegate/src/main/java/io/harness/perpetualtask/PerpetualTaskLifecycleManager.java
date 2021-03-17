@@ -2,8 +2,6 @@ package io.harness.perpetualtask;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import static java.time.Duration.ofMillis;
-
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.grpc.utils.AnyUtils;
@@ -53,7 +51,7 @@ public class PerpetualTaskLifecycleManager {
 
   void startTask() {
     try {
-      timeLimiter.callInterruptible(ofMillis(timeoutMillis), this::call);
+      timeLimiter.callWithTimeout(this::call, timeoutMillis, TimeUnit.MILLISECONDS, true);
     } catch (UncheckedTimeoutException tex) {
       log.warn("Timed out starting task", tex);
     } catch (Exception ex) {
