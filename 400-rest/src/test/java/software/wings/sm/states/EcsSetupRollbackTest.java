@@ -38,8 +38,6 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureFlag;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
