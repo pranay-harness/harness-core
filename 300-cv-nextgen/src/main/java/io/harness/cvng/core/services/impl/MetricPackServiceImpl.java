@@ -42,7 +42,7 @@ public class MetricPackServiceImpl implements MetricPackService {
       Lists.newArrayList("/appdynamics/metric-packs/peformance-pack.yml", "/appdynamics/metric-packs/quality-pack.yml");
 
   static final List<String> NEWRELIC_METRICPACK_FILES =
-      Lists.newArrayList("/newrelic/metric-packs/peformance-pack.yml");
+      Lists.newArrayList("/newrelic/metric-packs/performance-pack.yml");
 
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
