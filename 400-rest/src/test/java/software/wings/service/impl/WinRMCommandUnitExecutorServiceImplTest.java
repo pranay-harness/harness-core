@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 
@@ -61,6 +62,7 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Injector;
+import java.net.SocketException;
 import java.util.HashMap;
 import javax.xml.soap.SOAPException;
 import javax.xml.soap.SOAPFactory;
@@ -501,6 +503,74 @@ public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
                 .hostName(PUBLIC_DNS)
                 .logLevel(ERROR)
                 .logLine("SOAPFaultException: " + errorMessage)
+                .commandUnitName(commandUnit.getName())
+                .executionResult(FAILURE)
+                .build());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testExecuteSocketException() {
+    WinRmConnectionAttributes winRmConnectionAttributes = WinRmConnectionAttributes.builder()
+                                                              .domain("TEST.LOCAL")
+                                                              .username("testUser")
+                                                              .password(new char[0])
+                                                              .useKeyTab(true)
+                                                              .keyTabFilePath("/etc/test.keyTab")
+                                                              .build();
+    WinRmSessionConfig winRmSessionConfig = WinRmSessionConfig.builder()
+                                                .accountId(ACCOUNT_ID)
+                                                .environment(new HashMap<>())
+                                                .appId(APP_ID)
+                                                .executionId(ACTIVITY_ID)
+                                                .hostname(PUBLIC_DNS)
+                                                .domain("TEST.LOCAL")
+                                                .username("testUser")
+                                                .password("")
+                                                .useKeyTab(true)
+                                                .keyTabFilePath("/etc/test.keyTab")
+                                                .port(0)
+                                                .useSSL(false)
+                                                .skipCertChecks(false)
+                                                .workingDirectory(null)
+                                                .useNoProfile(false)
+                                                .build();
+    CommandExecutionContext commandExecutionContext = commandExecutionContextBuider.but()
+                                                          .timeout(0)
+                                                          .hostConnectionAttributes(HOST_CONN_ATTR_PWD)
+                                                          .winRmConnectionAttributes(winRmConnectionAttributes)
+                                                          .build();
+
+    final String errorMessage = "Network unreachable";
+
+    CommandUnit commandUnit = mock(CommandUnit.class);
+    when(commandUnit.execute(any())).thenThrow(new RuntimeException(new SocketException(errorMessage)));
+    when(winRmExecutorFactory.getExecutor(winRmSessionConfig, false)).thenReturn(winRmExecutor);
+
+    assertThatExceptionOfType(ShellExecutionException.class)
+        .isThrownBy(() -> winRMCommandUnitExecutorService.execute(commandUnit, commandExecutionContext))
+        .withMessage("Unable to connect to remote host");
+    verify(winRmExecutorFactory).getExecutor(winRmSessionConfig, false);
+    verify(delegateLogService)
+        .save(ACCOUNT_ID,
+            aLog()
+                .appId(APP_ID)
+                .hostName(PUBLIC_DNS)
+                .activityId(ACTIVITY_ID)
+                .logLevel(INFO)
+                .commandUnitName(commandUnit.getName())
+                .logLine(format("Begin execution of command: %s", commandUnit.getName()))
+                .executionResult(RUNNING)
+                .build());
+    verify(delegateLogService)
+        .save(ACCOUNT_ID,
+            aLog()
+                .appId(APP_ID)
+                .activityId(ACTIVITY_ID)
+                .hostName(PUBLIC_DNS)
+                .logLevel(ERROR)
+                .logLine("SocketException: " + errorMessage)
                 .commandUnitName(commandUnit.getName())
                 .executionResult(FAILURE)
                 .build());

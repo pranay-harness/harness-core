@@ -146,6 +146,27 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ExecutionElement": {
+      "type": "object",
+      "properties": {
+        "metadata": {
+          "type": "string"
+        },
+        "rollbackSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapper"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapper"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ExecutionElementConfig": {
       "type": "object",
       "properties": {
@@ -162,6 +183,10 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionWrapper": {
+      "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ExecutionWrapperConfig": {
@@ -269,6 +294,9 @@
     "InfrastructureDef": {
       "type": "object",
       "properties": {
+        "provisioner": {
+          "$ref": "#/definitions/ExecutionElement"
+        },
         "spec": {
           "$ref": "#/definitions/Infrastructure"
         },
@@ -552,6 +580,31 @@
           ]
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParallelStepElement": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionWrapper"
+        },
+        {
+          "type": "object",
+          "required": [
+            "sections"
+          ],
+          "properties": {
+            "metadata": {
+              "type": "string"
+            },
+            "sections": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExecutionWrapper"
+              }
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ParallelStepElementConfig": {
@@ -896,6 +949,46 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "StepElement": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionWrapper"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier"
+          ],
+          "properties": {
+            "failureStrategies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FailureStrategyConfig"
+              }
+            },
+            "identifier": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "skipCondition": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/StepSpecType"
+            },
+            "type": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "StepElementConfig": {
       "type": "object",
       "properties": {
@@ -927,6 +1020,50 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepGroupElement": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionWrapper"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "steps"
+          ],
+          "properties": {
+            "failureStrategies": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FailureStrategyConfig"
+              }
+            },
+            "identifier": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "rollbackSteps": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExecutionWrapper"
+              }
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExecutionWrapper"
+              }
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StepGroupElementConfig": {

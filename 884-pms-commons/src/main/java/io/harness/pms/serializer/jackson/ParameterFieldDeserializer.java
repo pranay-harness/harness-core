@@ -84,12 +84,12 @@ public class ParameterFieldDeserializer extends StdDeserializer<ParameterField<?
     }
     if (inputSetValidator != null) {
       String value = getLeftSideOfExpression(text);
-      if (EngineExpressionEvaluator.matchesVariablePattern(value)) {
+      if (EngineExpressionEvaluator.hasVariables(value)) {
         return ParameterField.createExpressionField(true, value, inputSetValidator, isTypeString);
       }
       return ParameterField.createValueFieldWithInputSetValidator(value, inputSetValidator, isTypeString);
     }
-    if (EngineExpressionEvaluator.matchesVariablePattern(text)) {
+    if (EngineExpressionEvaluator.hasVariables(text)) {
       return ParameterField.createExpressionField(true, text, null, isTypeString);
     }
 

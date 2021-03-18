@@ -76,7 +76,7 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
             .resources(isResourceName ? deleteStepParameters.getDeleteResources().getSpec().getResourceNames() : "")
             .deleteNamespacesForRelease(deleteStepParameters.deleteResources.getSpec().getDeleteNamespace())
             .filePaths(isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPaths() : "")
-            .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
+            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .taskType(K8sTaskType.DELETE)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))

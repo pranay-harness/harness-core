@@ -37,7 +37,7 @@ public class ParameterField<T> implements VisitorFieldWrapper {
   }
 
   public static <T> ParameterField<T> createValueField(T value) {
-    return new ParameterField<>(value, false, null, null, value.getClass().equals(String.class));
+    return new ParameterField<>(value, false, null, null, value != null && value.getClass().equals(String.class));
   }
 
   public static <T> ParameterField<T> createValueFieldWithInputSetValidator(
