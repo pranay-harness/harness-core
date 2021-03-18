@@ -6,16 +6,20 @@ import io.harness.persistence.PersistentEntity;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
+import com.mongodb.ClientSessionOptions;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
+import com.mongodb.TagSet;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,11 +31,13 @@ import org.mongodb.morphia.annotations.Entity;
 public class ChangeTracker {
   @Inject private ChangeDataCaptureServiceConfig mainConfiguration;
   @Inject private ChangeEventFactory changeEventFactory;
+  @Inject private TagSet mongoTagSet;
   private ExecutorService executorService;
   private Set<ChangeTrackingTask> changeTrackingTasks;
   private Set<Future<?>> changeTrackingTasksFuture;
   private MongoClient mongoClient;
   private ReadPreference readPreference;
+  private ClientSession clientSession;
 
   private String getCollectionName(Class<? extends PersistentEntity> clazz) {
     return clazz.getAnnotation(Entity.class).value();
@@ -51,7 +57,11 @@ public class ChangeTracker {
         mongoClientUrl = mainConfiguration.getHarnessMongo().getUri();
         break;
     }
-    readPreference = ReadPreference.secondaryPreferred();
+    if (Objects.isNull(mongoTagSet)) {
+      readPreference = ReadPreference.secondaryPreferred();
+    } else {
+      readPreference = ReadPreference.secondary(mongoTagSet);
+    }
     return new MongoClientURI(mongoClientUrl,
         MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
   }
@@ -59,6 +69,11 @@ public class ChangeTracker {
   private MongoDatabase connectToMongoDatabase(String dataStore) {
     MongoClientURI uri = mongoClientUri(dataStore);
     mongoClient = new MongoClient(uri);
+    if (readPreference.getClass() == ReadPreference.secondaryPreferred().getClass()) {
+      clientSession = null;
+    } else {
+      clientSession = mongoClient.startSession(ClientSessionOptions.builder().build());
+    }
     final String databaseName = uri.getDatabase();
     log.info("Database is {}", databaseName);
     return mongoClient.getDatabase(databaseName)
@@ -80,7 +95,8 @@ public class ChangeTracker {
       log.info("Connection details for mongo collection {}", collection.getReadPreference());
 
       ChangeStreamSubscriber changeStreamSubscriber = getChangeStreamSubscriber(changeTrackingInfo);
-      ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(changeStreamSubscriber, collection);
+      ChangeTrackingTask changeTrackingTask = new ChangeTrackingTask(changeStreamSubscriber, collection, clientSession,
+          changeTrackingInfo.getResumeToken());
       changeTrackingTasks.add(changeTrackingTask);
     }
   }
@@ -100,7 +116,7 @@ public class ChangeTracker {
   }
 
   private boolean shouldProcessChange(ChangeStreamDocument<DBObject> changeStreamDocument) {
-    return changeStreamDocument.getFullDocument() != null;
+    return changeStreamDocument.getFullDocument() != null || changeStreamDocument.getOperationType() == ChangeType.DELETE;
   }
 
   private <T extends PersistentEntity> ChangeStreamSubscriber getChangeStreamSubscriber(

@@ -10,4 +10,5 @@ import lombok.Value;
 public class ChangeTrackingInfo<T extends PersistentEntity> {
   private Class<T> morphiaClass;
   private ChangeSubscriber<T> changeSubscriber;
+  private String resumeToken;
 }

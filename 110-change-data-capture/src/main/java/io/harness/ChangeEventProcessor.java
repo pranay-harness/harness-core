@@ -12,10 +12,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import lombok.extern.slf4j.Slf4j;
+import software.wings.dl.WingsPersistence;
 
 @Slf4j
 class ChangeEventProcessor {
   @Inject private Set<CDCEntity<?>> subscribedClasses;
+  @Inject private WingsPersistence wingsPersistence;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue = new LinkedBlockingQueue<>(1000);
   private ExecutorService changeEventExecutorService =
       Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("primary-change-processor").build());
@@ -23,7 +25,7 @@ class ChangeEventProcessor {
 
   void startProcessingChangeEvents() {
     ChangeEventProcessorTask changeEventProcessorTask =
-        new ChangeEventProcessorTask(subscribedClasses, changeEventQueue);
+        new ChangeEventProcessorTask(subscribedClasses, changeEventQueue, wingsPersistence);
     changeEventProcessorTaskFuture = changeEventExecutorService.submit(changeEventProcessorTask);
   }
 

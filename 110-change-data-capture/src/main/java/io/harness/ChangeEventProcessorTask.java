@@ -1,5 +1,7 @@
 package io.harness;
 
+import static io.harness.persistence.HPersistence.upsertReturnNewOptions;
+
 import io.harness.changestreamsframework.ChangeDataCapture;
 import io.harness.changestreamsframework.ChangeDataCaptureSink;
 import io.harness.changestreamsframework.ChangeEvent;
@@ -19,16 +21,21 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.util.Strings;
+import software.wings.dl.WingsPersistence;
+import software.wings.search.framework.SearchSourceEntitySyncState;
+import software.wings.search.framework.SearchSourceEntitySyncState.SearchSourceEntitySyncStateKeys;
 
 @Slf4j
 public class ChangeEventProcessorTask implements Runnable {
   private ExecutorService executorService;
   private Set<CDCEntity<?>> cdcEntities;
   private BlockingQueue<ChangeEvent<?>> changeEventQueue;
+  private WingsPersistence wingsPersistence;
 
-  ChangeEventProcessorTask(Set<CDCEntity<?>> cdcEntities, BlockingQueue<ChangeEvent<?>> changeEventQueue) {
+  ChangeEventProcessorTask(Set<CDCEntity<?>> cdcEntities, BlockingQueue<ChangeEvent<?>> changeEventQueue, WingsPersistence wingsPersistence) {
     this.cdcEntities = cdcEntities;
     this.changeEventQueue = changeEventQueue;
+    this.wingsPersistence = wingsPersistence;
   }
 
   private String getChangeDataCaptureDataDestinationTable(Class<? extends PersistentEntity> clazz) {
@@ -106,6 +113,32 @@ public class ChangeEventProcessorTask implements Runnable {
       }
     }
 
+    boolean isSaved = saveCDCStateEntityToken(clazz, changeEvent.getToken());
+    if (!isSaved) {
+      log.error("Could not save token. ChangeEvent {} could not be processed for entity {}", changeEvent.toString(),
+          sourceClass.getCanonicalName());
+    }
+    return isSaved;
+  }
+
+  private boolean saveCDCStateEntityToken(Class<? extends PersistentEntity> sourceClass, String token) {
+    String sourceClassName = sourceClass.getCanonicalName();
+
+    Query<CDCStateEntity> query = wingsPersistence.createQuery(CDCStateEntity.class)
+        .field(CDCStateEntityKeys.sourceEntityClass)
+        .equal(sourceClassName);
+
+    UpdateOperations<CDCStateEntity> updateOperations =
+        wingsPersistence.createUpdateOperations(CDCStateEntity.class)
+            .set(CDCStateEntityKeys.lastSyncedToken, token);
+
+    CDCStateEntity cdcStateEntity =
+        wingsPersistence.upsert(query, updateOperations, upsertReturnNewOptions);
+    if (cdcStateEntity == null || !cdcStateEntity.getLastSyncedToken().equals(token)) {
+      log.error(String.format("Search Entity %s token %s could not be updated", sourceClass.getCanonicalName(), token));
+      return false;
+    }
     return true;
   }
+
 }
