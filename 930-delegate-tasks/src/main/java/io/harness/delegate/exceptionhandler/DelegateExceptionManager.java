@@ -1,5 +1,7 @@
 package io.harness.delegate.exceptionhandler;
 
+import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
+
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData.ErrorNotifyResponseDataBuilder;
@@ -8,6 +10,7 @@ import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
 
@@ -29,8 +32,12 @@ public class DelegateExceptionManager {
       return prepareErrorResponse(exception, errorNotifyResponseDataBuilder).build();
     }
 
-    WingsException exception1 = handleException(exception);
-    return prepareErrorResponse(exception1, errorNotifyResponseDataBuilder).exception(exception1).build();
+    WingsException processedException = handleException(exception);
+    DelegateResponseData responseData =
+        prepareErrorResponse(processedException, errorNotifyResponseDataBuilder).exception(processedException).build();
+
+    ExceptionLogger.logProcessedMessages(processedException, DELEGATE, log);
+    return responseData;
   }
 
   // ---------- PRIVATE METHODS -------------
