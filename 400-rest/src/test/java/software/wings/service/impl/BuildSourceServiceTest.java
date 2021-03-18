@@ -1336,10 +1336,15 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build())
+            .withValue(NexusConfig.builder()
+                           .nexusUrl("https://harness.nexus.com/")
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
-    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNullOrEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNotEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags())
+        .isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
   }
 
   @Test
@@ -1352,10 +1357,15 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     ArgumentCaptor<SyncTaskContext> syncTaskContextArgumentCaptor = ArgumentCaptor.forClass(SyncTaskContext.class);
     buildSourceService.getBuildService(
         SettingAttribute.Builder.aSettingAttribute()
-            .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com/").build())
+            .withValue(ArtifactoryConfig.builder()
+                           .artifactoryUrl("https://harness.jfrog.com/")
+                           .delegateSelectors(Collections.singletonList(DELEGATE_SELECTOR))
+                           .build())
             .build());
     verify(delegateProxyFactory).get(any(), syncTaskContextArgumentCaptor.capture());
-    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNullOrEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags()).isNotEmpty();
+    assertThat(syncTaskContextArgumentCaptor.getValue().getTags())
+        .isEqualTo(Collections.singletonList(DELEGATE_SELECTOR));
   }
 
   @Test

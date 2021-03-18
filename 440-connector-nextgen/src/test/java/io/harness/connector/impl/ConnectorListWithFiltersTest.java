@@ -49,7 +49,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -288,21 +287,20 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
   private void createK8sConnector() {
     ConnectorDTO connectorDTO =
         ConnectorDTO.builder()
-            .connectorInfo(
-                ConnectorInfoDTO.builder()
-                    .name(name)
-                    .orgIdentifier(orgIdentifier)
-                    .projectIdentifier(projectIdentifier)
-                    .identifier(identifier)
-                    .connectorType(KUBERNETES_CLUSTER)
-                    .connectorConfig(
-                        KubernetesClusterConfigDTO.builder()
-                            .credential(KubernetesCredentialDTO.builder()
-                                            .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                            .config(KubernetesDelegateDetailsDTO.builder().build())
-                                            .build())
-                            .build())
-                    .build())
+            .connectorInfo(ConnectorInfoDTO.builder()
+                               .name(name)
+                               .orgIdentifier(orgIdentifier)
+                               .projectIdentifier(projectIdentifier)
+                               .identifier(identifier)
+                               .connectorType(KUBERNETES_CLUSTER)
+                               .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                                    .credential(KubernetesCredentialDTO.builder()
+                                                                    .kubernetesCredentialType(
+                                                                        KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                                                    .config(null)
+                                                                    .build())
+                                                    .build())
+                               .build())
             .build();
     connectorService.create(connectorDTO, accountIdentifier);
   }
@@ -449,12 +447,8 @@ public class ConnectorListWithFiltersTest extends ConnectorsTestBase {
     String delegateName = "delegateName";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
-            .credential(KubernetesCredentialDTO.builder()
-                            .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder()
-                                        .delegateSelectors(Collections.singleton(delegateName))
-                                        .build())
-                            .build())
+            .credential(
+                KubernetesCredentialDTO.builder().kubernetesCredentialType(INHERIT_FROM_DELEGATE).config(null).build())
             .build();
     ConnectorDTO connectorDTO = createConnectorDTO(identifier, KUBERNETES_CLUSTER, connectorDTOWithDelegateCreds);
     connectorService.create(connectorDTO, accountIdentifier);

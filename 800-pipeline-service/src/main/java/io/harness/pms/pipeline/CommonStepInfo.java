@@ -34,18 +34,35 @@ public class CommonStepInfo {
           .setType("HarnessApproval")
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
           .build();
+  StepInfo barrierStepInfo =
+      StepInfo.newBuilder()
+          .setName("Barrier")
+          .setType("Barrier")
+          .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Barrier").build())
+          .build();
+
   public List<StepInfo> getCommonSteps(String accountId) {
     List<StepInfo> stepInfos = new ArrayList<>();
     stepInfos.add(shellScriptStepInfo);
+    stepInfos.add(httpStepInfo);
+    addIfFeatureFlagEnabled(stepInfos, accountId);
+    return stepInfos;
+  }
+
+  private void addIfFeatureFlagEnabled(List<StepInfo> stepInfos, String accountId) {
+    String featureName = null;
     try {
+      featureName = FeatureName.NG_HARNESS_APPROVAL.name();
       if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_HARNESS_APPROVAL)) {
         stepInfos.add(harnessApprovalStepInfo);
       }
+
+      featureName = FeatureName.NG_BARRIERS.name();
+      if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_BARRIERS)) {
+        stepInfos.add(barrierStepInfo);
+      }
     } catch (Exception ex) {
-      log.warn("Exception While checking Feature Flag. accountId: {} flag: {}", accountId,
-          FeatureName.NG_HARNESS_APPROVAL, ex);
+      log.warn("Exception While checking Feature Flag. accountId: {} flag: {}", accountId, featureName, ex);
     }
-    stepInfos.add(httpStepInfo);
-    return stepInfos;
   }
 }

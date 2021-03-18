@@ -77,6 +77,7 @@ public enum FeatureName {
   IGNORE_PCF_CONNECTION_CONTEXT_CACHE,
   IRSA_FOR_EKS,
   LIMIT_PCF_THREADS,
+  PCF_OLD_APP_RESIZE,
   LOCAL_DELEGATE_CONFIG_OVERRIDE,
   LOG_STREAMING_INTEGRATION,
   LOGS_V2_247,
@@ -163,7 +164,8 @@ public enum FeatureName {
   NG_BARRIERS,
   NG_HELM_SOURCE_REPO,
   ENHANCED_GCR_CONNECTIVITY_CHECK,
-  SETTING_API_BATCH_RBAC; /*Flag to use batch RBAC api exposed by SecretManager*/
+  SETTING_API_BATCH_RBAC,
+  NG_PROVISIONERS; /*Flag to use batch RBAC api exposed by SecretManager*/
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

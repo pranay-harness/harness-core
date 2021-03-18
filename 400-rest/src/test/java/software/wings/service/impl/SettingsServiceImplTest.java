@@ -491,12 +491,12 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     settingAttribute =
         aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
-    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
 
     settingAttribute = aSettingAttribute()
                            .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
                            .build();
-    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
 
     settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
@@ -518,14 +518,23 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                            .build();
     assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Lists.newArrayList("docker", "k8s"));
 
-    settingAttribute =
-        aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
-    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+    settingAttribute = aSettingAttribute()
+                           .withValue(NexusConfig.builder()
+                                          .nexusUrl("https://harness.nexus.com/")
+                                          .delegateSelectors(Lists.newArrayList("nexus", "harness"))
+                                          .build())
+                           .build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute))
+        .isEqualTo(Lists.newArrayList("nexus", "harness"));
 
     settingAttribute = aSettingAttribute()
-                           .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
+                           .withValue(ArtifactoryConfig.builder()
+                                          .artifactoryUrl("https://harness.jfrog.com")
+                                          .delegateSelectors(Lists.newArrayList("artifactory", "jfrog"))
+                                          .build())
                            .build();
-    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute))
+        .isEqualTo(Lists.newArrayList("artifactory", "jfrog"));
 
     settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();

@@ -117,6 +117,7 @@ import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -687,7 +688,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute) {
     return settingAttribute.getValue() instanceof GcpConfig || settingAttribute.getValue() instanceof DockerConfig
-        || settingAttribute.getValue() instanceof AwsConfig;
+        || settingAttribute.getValue() instanceof AwsConfig || settingAttribute.getValue() instanceof NexusConfig
+        || settingAttribute.getValue() instanceof ArtifactoryConfig;
   }
 
   @Override
@@ -701,6 +703,12 @@ public class SettingsServiceImpl implements SettingsService {
     }
     if (settingAttribute.getValue() instanceof DockerConfig) {
       selectors = ((DockerConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof NexusConfig) {
+      selectors = ((NexusConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof ArtifactoryConfig) {
+      selectors = ((ArtifactoryConfig) settingAttribute.getValue()).getDelegateSelectors();
     }
     if (settingAttribute.getValue() instanceof AwsConfig) {
       selectors = Collections.singletonList(((AwsConfig) settingAttribute.getValue()).getTag());

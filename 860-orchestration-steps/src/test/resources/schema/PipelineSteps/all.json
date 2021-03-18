@@ -84,14 +84,8 @@
             "approvers": {
               "$ref": "#/definitions/Approvers"
             },
-            "identifier": {
-              "type": "string"
-            },
             "includePipelineExecutionHistory": {
               "type": "boolean"
-            },
-            "name": {
-              "type": "string"
             }
           }
         }

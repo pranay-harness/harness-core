@@ -309,6 +309,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case PCF: // Deployment Type: PCF,
       case WAR: // Deployment type: ssh
       case JAR:
+      case NUGET:
       case TAR:
       case RPM:
       case ZIP:
@@ -366,6 +367,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       case PCF: // Deployment Type: PCF,
       case WAR: // Deployment type: ssh
       case JAR:
+      case NUGET:
       case TAR:
       case RPM:
       case ZIP:

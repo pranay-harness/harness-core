@@ -1,19 +1,25 @@
 package io.harness.delegate.beans.connector.artifactoryconnector;
 
+import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class ArtifactoryCapabilityHelper {
+public class ArtifactoryCapabilityHelper extends ConnectorCapabilityBaseHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
-      ExpressionEvaluator maskingEvaluator, ArtifactoryConnectorDTO artifactoryConnectorDTO) {
+      ConnectorConfigDTO connectorConfigDTO, ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilityList = new ArrayList<>();
+    ArtifactoryConnectorDTO artifactoryConnectorDTO = (ArtifactoryConnectorDTO) connectorConfigDTO;
     final String artifactoryServerUrl = artifactoryConnectorDTO.getArtifactoryServerUrl();
-    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+    capabilityList.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         artifactoryServerUrl, maskingEvaluator));
+    populateDelegateSelectorCapability(capabilityList, artifactoryConnectorDTO.getDelegateSelectors());
+    return capabilityList;
   }
 }
