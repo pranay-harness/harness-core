@@ -52,7 +52,7 @@ pub struct Analyze {
     only_team_filter: bool,
 
     #[clap(short, long)]
-    kind_filter: Option<Kind>,
+    kind_filter: Vec<Kind>,
 
     #[clap(short, long)]
     auto_actionable_filter: bool,
@@ -234,9 +234,7 @@ pub fn analyze(opts: Analyze) {
 }
 
 fn filter_report(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
-    filter_by_class(&opts, report, class_locations)
-        && filter_by_module(&opts, report)
-        && filter_by_root(&opts, report)
+    filter_by_class(&opts, report, class_locations) && filter_by_module(&opts, report) && filter_by_root(&opts, report)
 }
 
 fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
@@ -244,14 +242,15 @@ fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<St
 }
 
 fn filter_by_class_name(opts: &Analyze, report: &Report) -> bool {
-    opts.class_filter.iter().any(|class| report.for_class.eq(class))
+    opts.class_filter.is_empty() || opts.class_filter.iter().any(|class| report.for_class.eq(class))
 }
 
 fn filter_by_class_location(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
-    opts.location_class_filter.iter().any(|class_location| {
-        let class = &class_locations.get(class_location).unwrap().name;
-        report.for_class.eq(class)
-    })
+    opts.location_class_filter.is_empty()
+        || opts.location_class_filter.iter().any(|class_location| {
+            let class = &class_locations.get(class_location).unwrap().name;
+            report.for_class.eq(class)
+        })
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
@@ -259,7 +258,7 @@ fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
 }
 
 fn filter_by_kind(opts: &Analyze, report: &Report) -> bool {
-    opts.kind_filter.is_none() || report.kind == opts.kind_filter.unwrap()
+    opts.kind_filter.is_empty() || opts.kind_filter.iter().any(|&kind| kind == report.kind)
 }
 
 fn filter_by_team(opts: &Analyze, report: &Report) -> bool {

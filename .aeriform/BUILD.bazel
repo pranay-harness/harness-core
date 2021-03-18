@@ -282,6 +282,8 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
+aeriform("//950-ng-signup:module")
+
 aeriform("//950-timeout-engine:module")
 
 aeriform("//950-timeout-engine:tests")
