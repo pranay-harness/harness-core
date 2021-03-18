@@ -3,6 +3,8 @@ package io.harness.delegate.task;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static java.lang.String.format;
+
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -122,28 +124,15 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
                                 .errorMessage(ExceptionUtils.getMessage(exception))
                                 .build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
-    } catch (Exception exception) {
-      // TODO add this exception logging
-      //                  ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
-      //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-      //                                .errorMessage(ExceptionUtils.getMessage(exception))
-      //                                .build());
+    } catch (Throwable throwable) {
+      if (!(throwable instanceof Exception) || !isSupportingErrorFramework()) {
+        log.error(
+            format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId, accountId),
+            throwable);
+      }
       taskResponse.response(delegateExceptionManager.getResponseData(
-          exception, errorNotifyResponseDataBuilder, isSupportingErrorFramework()));
+          throwable, errorNotifyResponseDataBuilder, isSupportingErrorFramework()));
       taskResponse.responseCode(ResponseCode.FAILED);
-
-      // TODO check if its runtime exception
-      // if not, then log that its an ERROR/throwable - not runtime exception, lly to already existing
-      // if supportErrorFramework = false => log error -> exception occured while handling task
-
-      //    } catch (Throwable exception) {
-      //      // TODO remove this log
-      ////      log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId,
-      /// accountId), /          exception);
-      //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-      //                                .errorMessage(ExceptionUtils.getMessage(exception))
-      //                                .build());
-      //      taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
       if (consumer != null) {
         consumer.accept(taskResponse.build());
