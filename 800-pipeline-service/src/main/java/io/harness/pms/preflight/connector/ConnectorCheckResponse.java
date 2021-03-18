@@ -13,6 +13,8 @@ public class ConnectorCheckResponse {
   PreFlightEntityErrorInfo errorInfo;
   String fqn;
   String stageName;
+  String stageIdentifier;
   String stepName;
+  String stepIdentifier;
   PreFlightStatus status;
 }

@@ -6,6 +6,9 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK;
+import static io.harness.pms.contracts.plan.TriggerType.WEBHOOK_CUSTOM;
+import static io.harness.pms.contracts.triggers.Type.CUSTOM;
+import static io.harness.pms.contracts.triggers.Type.GIT;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.TriggerException;
@@ -23,9 +26,9 @@ import io.harness.ngtriggers.beans.target.TargetSpec;
 import io.harness.ngtriggers.beans.target.pipeline.PipelineTargetSpec;
 import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
-import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.TriggerPayload;
@@ -47,12 +50,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TriggerWebhookExecutionHelper {
   private final PipelineExecuteHelper pipelineExecuteHelper;
-  private final WebhookEventPayloadParser webhookEventPayloadParser;
   private final WebhookEventMapperHelper webhookEventMapperHelper;
   private final PMSPipelineService pmsPipelineService;
-
-  public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_REPO_TYPE = "webhookEventRepoType";
-  public static final String WEBHOOK_EVENT_PAYLOAD_EVENT_TYPE = "webhookEventType";
 
   public WebhookEventProcessingResult handleTriggerWebhookEvent(TriggerWebhookEvent triggerWebhookEvent) {
     WebhookEventMappingResponse webhookEventMappingResponse =
@@ -82,7 +81,7 @@ public class TriggerWebhookExecutionHelper {
     Builder builder = TriggerPayload.newBuilder().setJsonPayload(jsonPayload);
 
     if (webhookEventMappingResponse.isCustomTrigger()) {
-      return builder.build();
+      return builder.setType(CUSTOM).build();
     }
 
     ParseWebhookResponse parseWebhookResponse = webhookEventMappingResponse.getParseWebhookResponse();
@@ -92,7 +91,7 @@ public class TriggerWebhookExecutionHelper {
       builder.setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build()).build();
     }
 
-    return builder.build();
+    return builder.setType(GIT).build();
   }
 
   private WebhookEventResponse triggerPipelineExecution(
@@ -127,8 +126,10 @@ public class TriggerWebhookExecutionHelper {
   private PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(
       TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
     TriggeredBy embeddedUser = TriggeredBy.newBuilder().setIdentifier("trigger").setUuid("systemUser").build();
+
+    TriggerType triggerType = findTriggerType(triggerPayload);
     ExecutionTriggerInfo triggerInfo =
-        ExecutionTriggerInfo.newBuilder().setTriggerType(WEBHOOK).setTriggeredBy(embeddedUser).build();
+        ExecutionTriggerInfo.newBuilder().setTriggerType(triggerType).setTriggeredBy(embeddedUser).build();
     try {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       String targetIdentifier = ngTriggerEntity.getTargetIdentifier();
@@ -175,6 +176,15 @@ public class TriggerWebhookExecutionHelper {
     } catch (Exception e) {
       throw new TriggerException("Failed while requesting Pipeline Execution" + e.getMessage(), USER);
     }
+  }
+
+  private TriggerType findTriggerType(TriggerPayload triggerPayload) {
+    TriggerType triggerType = WEBHOOK;
+    if (triggerPayload.getType() == CUSTOM) {
+      triggerType = WEBHOOK_CUSTOM;
+    } // cron will come here
+
+    return triggerType;
   }
 
   private String readRuntimeInputFromConfig(NGTriggerConfig ngTriggerConfig) {

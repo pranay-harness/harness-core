@@ -205,6 +205,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       return BuildStatusUpdateParameter.builder()
           .sha(sha)
           .connectorIdentifier(codeBase.getConnectorRef())
+          .repoName(codeBase.getRepoName())
           .name(stageElementConfig.getName())
           .identifier(stageElementConfig.getIdentifier())
           .build();

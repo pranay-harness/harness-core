@@ -13,6 +13,7 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegatelog.client.DelegateSelectionLogHttpClientModule;
 import io.harness.engine.StepTypeLookupService;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
@@ -168,6 +169,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
+        this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
