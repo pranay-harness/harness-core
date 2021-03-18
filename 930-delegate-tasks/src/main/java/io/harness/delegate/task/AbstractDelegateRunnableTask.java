@@ -124,7 +124,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (Exception exception) {
       // TODO add this exception logging
-      //            ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
+      //                  ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
       //                                .errorMessage(ExceptionUtils.getMessage(exception))
       //                                .build());
@@ -139,7 +139,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       //    } catch (Throwable exception) {
       //      // TODO remove this log
       ////      log.error(format("Unexpected error while executing delegate taskId: [%s] in accountId: [%s]", taskId,
-      ///accountId), /          exception);
+      /// accountId), /          exception);
       //      taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
       //                                .errorMessage(ExceptionUtils.getMessage(exception))
       //                                .build());
@@ -165,7 +165,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   }
 
   public boolean isSupportingErrorFramework() {
-    return true;
+    return false;
   }
 
   @Override
