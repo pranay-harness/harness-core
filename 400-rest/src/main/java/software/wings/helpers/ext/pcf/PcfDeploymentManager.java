@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.PivotalClientApiException;
 
 import software.wings.beans.PcfConfig;
@@ -11,6 +14,7 @@ import java.util.List;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 
+@OwnedBy(CDP)
 public interface PcfDeploymentManager {
   List<String> getOrganizations(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
 

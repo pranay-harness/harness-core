@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.pcf.response;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -23,6 +26,7 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = PcfInstanceSyncResponse.class, name = "pcfInstanceSyncResponse"),
       @JsonSubTypes.Type(value = PcfSetupCommandResponse.class, name = "pcfSetupCommandResponse")
 })
+@OwnedBy(CDP)
 public class PcfCommandResponse {
   private CommandExecutionStatus commandExecutionStatus;
   private String output;
