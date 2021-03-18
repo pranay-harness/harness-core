@@ -1241,6 +1241,11 @@
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-alpn-openjdk8-server</artifactId>
+                <version>${jetty.upgraded.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-client</artifactId>
                 <version>${jetty.upgraded.version}</version>
             </dependency>
@@ -1273,6 +1278,11 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.upgraded.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
                 <version>${jetty.upgraded.version}</version>
             </dependency>
             <dependency>
@@ -1920,6 +1930,9 @@
             <url>https://harness.jfrog.io/artifactory/harness-internal</url>
         </repository>
         <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
             <id>spring-io</id>
             <url>https://repo.spring.io/plugins-release/</url>
         </repository>
