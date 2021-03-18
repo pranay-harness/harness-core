@@ -8,6 +8,7 @@ proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//970-ng-commons/src/main/proto:970_ng_commons_proto",
+        "//product/ci/scm/proto:ciscmpb_proto",
         "@com_google_protobuf//:any_proto",
         "@com_google_protobuf//:descriptor_proto",
         "@com_google_protobuf//:duration_proto",
