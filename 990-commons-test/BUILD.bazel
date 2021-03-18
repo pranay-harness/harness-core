@@ -2,6 +2,7 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//tools/checkstyle:rules.bzl", "checkstyle")
 load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:macros.bzl", "sonarqube_test")
 
 java_library(
     name = "abstract-module",
@@ -16,7 +17,6 @@ java_library(
 
 java_library(
     name = "module",
-    testonly = True,
     srcs = glob(["src/main/**/*.java"]),
     resource_jars = [
         ":abstract-module",
@@ -56,3 +56,11 @@ run_tests()
 checkstyle()
 
 pmd()
+
+sonarqube_test(
+    name = "sq_mycomponent",
+    srcs = ["sources"],
+    targets = [
+        ":module",
+    ],
+)
