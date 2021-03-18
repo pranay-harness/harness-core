@@ -24,6 +24,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -168,8 +169,18 @@ public class PcfDeployState extends State {
 
     PcfInfrastructureMapping pcfInfrastructureMapping =
         (PcfInfrastructureMapping) infrastructureMappingService.get(app.getUuid(), context.fetchInfraMappingId());
+    SetupSweepingOutputPcf setupSweepingOutputPcf = null;
 
-    SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    try {
+      setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
+    } catch (InvalidArgumentsException ex) {
+      if (isRollback()) {
+        setupSweepingOutputPcf = SetupSweepingOutputPcf.builder().build();
+      } else {
+        throw ex;
+      }
+    }
+
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
 
     Activity activity = createActivity(context, setupSweepingOutputPcf);
