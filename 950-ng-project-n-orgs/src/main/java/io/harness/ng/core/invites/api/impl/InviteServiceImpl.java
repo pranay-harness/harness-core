@@ -13,6 +13,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.Team;
 import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
@@ -369,8 +371,18 @@ public class InviteServiceImpl implements InviteService {
   }
 
   private Invite processInvite(Invite invite, String userId, String emailId) {
-    invite.getRoleAssignments().forEach(roleAssignment -> roleAssignment.setDisabled(false));
-    createRoleAssignments(invite, invite.getRoleAssignments());
+    List<RoleAssignmentDTO> roleAssignments = invite.getRoleAssignments();
+    List<RoleAssignmentDTO> newRoleAssignments =
+        roleAssignments.stream()
+            .map(roleAssignment
+                -> RoleAssignmentDTO.builder()
+                       .roleIdentifier(roleAssignment.getRoleIdentifier())
+                       .resourceGroupIdentifier(roleAssignment.getResourceGroupIdentifier())
+                       .principal(PrincipalDTO.builder().type(PrincipalType.USER).identifier(userId).build())
+                       .disabled(false)
+                       .build())
+            .collect(Collectors.toList());
+    createRoleAssignments(invite, newRoleAssignments);
     ngUserService.addUserToScope(userId, emailId,
         Scope.builder()
             .accountIdentifier(invite.getAccountIdentifier())

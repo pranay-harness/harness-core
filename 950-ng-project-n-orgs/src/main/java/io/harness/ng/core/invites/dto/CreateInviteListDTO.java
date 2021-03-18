@@ -3,7 +3,6 @@ package io.harness.ng.core.invites.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.invites.entities.Invite.InviteType;
 
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,6 +22,13 @@ import org.hibernate.validator.constraints.NotEmpty;
 @OwnedBy(PL)
 public class CreateInviteListDTO {
   @ApiModelProperty(required = true) @NotEmpty @Size(max = 100) List<String> users;
-  @ApiModelProperty(required = true) @NotEmpty List<RoleAssignmentDTO> roleAssignments;
+  @ApiModelProperty(required = true) @NotEmpty List<RoleAssignment> roleAssignments;
   @ApiModelProperty(required = true) InviteType inviteType;
+
+  @Data
+  @Builder
+  public static class RoleAssignment {
+    String resourceGroupIdentifier;
+    @ApiModelProperty(required = true) String roleIdentifier;
+  }
 }

@@ -13,12 +13,12 @@ import lombok.Data;
 @ApiModel(value = "ACLUserAggregate")
 public class ACLUserAggregateDTO {
   @ApiModelProperty(required = true) UserSearchDTO user;
-  List<RoleAssignment> roleAssignments;
+  List<RoleBinding> roleBindings;
   @ApiModelProperty(required = true) Status status;
 
   @Data
   @Builder
-  public static class RoleAssignment {
+  public static class RoleBinding {
     @ApiModelProperty(required = true) String roleIdentifier;
     @ApiModelProperty(required = true) String roleName;
     @ApiModelProperty(required = true) String resourceGroupIdentifier;

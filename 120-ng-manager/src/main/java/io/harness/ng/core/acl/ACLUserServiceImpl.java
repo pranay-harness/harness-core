@@ -19,7 +19,7 @@ import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.acl.ACLUserAggregateDTO.RoleAssignment;
+import io.harness.ng.core.acl.ACLUserAggregateDTO.RoleBinding;
 import io.harness.ng.core.acl.ACLUserAggregateDTO.Status;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.invites.dto.UserSearchDTO;
@@ -71,7 +71,7 @@ public class ACLUserServiceImpl implements ACLUserService {
     RoleAssignmentAggregateResponseDTO roleAssignmentAggregateResponseDTO =
         getResponse(accessControlAdminClient.getAggregatedFilteredRoleAssignments(
             accountIdentifier, orgIdentifier, projectIdentifier, roleAssignmentFilterDTO));
-    Map<String, List<RoleAssignment>> userRoleAssignmentsMap =
+    Map<String, List<RoleBinding>> userRoleAssignmentsMap =
         getUserRoleAssignmentMap(roleAssignmentAggregateResponseDTO);
     List<ACLUserAggregateDTO> aclUserAggregateDTOs =
         users.stream()
@@ -104,14 +104,14 @@ public class ACLUserServiceImpl implements ACLUserService {
     List<ACLUserAggregateDTO> userAggregateDTOs = new ArrayList<>();
     List<Invite> accumulatedInvites = accumulateRoleAssignments(invites);
     for (Invite invite : accumulatedInvites) {
-      List<ACLUserAggregateDTO.RoleAssignment> roleAssignments =
+      List<RoleBinding> roleBindings =
           invite.getRoleAssignments()
               .stream()
               .filter(roleAssignmentDTO
                   -> roleMap.containsKey(roleAssignmentDTO.getRoleIdentifier())
                       && resourceGroupMap.containsKey(roleAssignmentDTO.getResourceGroupIdentifier()))
               .map(roleAssignmentDTO
-                  -> ACLUserAggregateDTO.RoleAssignment.builder()
+                  -> RoleBinding.builder()
                          .roleIdentifier(roleAssignmentDTO.getRoleIdentifier())
                          .roleName(roleMap.get(roleAssignmentDTO.getRoleIdentifier()).getRole().getName())
                          .resourceGroupIdentifier(roleAssignmentDTO.getResourceGroupIdentifier())
@@ -122,7 +122,7 @@ public class ACLUserServiceImpl implements ACLUserService {
               .collect(toList());
       userAggregateDTOs.add(ACLUserAggregateDTO.builder()
                                 .user(userMap.get(invite.getEmail()))
-                                .roleAssignments(roleAssignments)
+                                .roleAssignments(roleBindings)
                                 .status(getPendingStatus(invite.getInviteType()))
                                 .build());
     }
@@ -223,7 +223,7 @@ public class ACLUserServiceImpl implements ACLUserService {
     return successfullyDeleted;
   }
 
-  private Map<String, List<RoleAssignment>> getUserRoleAssignmentMap(
+  private Map<String, List<RoleBinding>> getUserRoleAssignmentMap(
       RoleAssignmentAggregateResponseDTO roleAssignmentAggregateResponseDTO) {
     Map<String, RoleResponseDTO> roleMap = roleAssignmentAggregateResponseDTO.getRoles().stream().collect(
         toMap(e -> e.getRole().getIdentifier(), Function.identity()));
@@ -238,7 +238,7 @@ public class ACLUserServiceImpl implements ACLUserService {
         .collect(Collectors.groupingBy(roleAssignment
             -> roleAssignment.getPrincipal().getIdentifier(),
             mapping(roleAssignment
-                -> RoleAssignment.builder()
+                -> RoleBinding.builder()
                        .roleIdentifier(roleAssignment.getRoleIdentifier())
                        .resourceGroupIdentifier(roleAssignment.getResourceGroupIdentifier())
                        .roleName(roleMap.get(roleAssignment.getRoleIdentifier()).getRole().getName())

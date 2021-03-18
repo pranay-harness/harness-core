@@ -2,6 +2,7 @@ package io.harness.ng.core.invites.remote;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.NGAccess;
@@ -11,6 +12,7 @@ import io.harness.ng.core.invites.entities.Invite;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.validator.routines.EmailValidator;
 
@@ -55,7 +57,8 @@ public class InviteMapper {
       if (emailValidator.isValid(emailId)) {
         invites.add(Invite.builder()
                         .email(emailId)
-                        .roleAssignments(createInviteListDTO.getRoleAssignments())
+                        .roleAssignments(createRoleAssignment(createInviteListDTO.getRoleAssignments(),
+                            accountIdentifier, orgIdentifier, projectIdentifier))
                         .inviteType(createInviteListDTO.getInviteType())
                         .approved(Boolean.FALSE)
                         .accountIdentifier(accountIdentifier)
@@ -67,5 +70,34 @@ public class InviteMapper {
       }
     }
     return invites;
+  }
+
+  private static List<RoleAssignmentDTO> createRoleAssignment(List<CreateInviteListDTO.RoleAssignment> roleAssignments,
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return roleAssignments.stream()
+        .map(r
+            -> RoleAssignmentDTO.builder()
+                   .roleIdentifier(r.getRoleIdentifier())
+                   .resourceGroupIdentifier(getResourceGroupIdentifier(
+                       r.getResourceGroupIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier))
+                   .disabled(true)
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  private static String getResourceGroupIdentifier(
+      String resourceGroupIdentifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    if (resourceGroupIdentifier != null) {
+      return resourceGroupIdentifier;
+    }
+    String resourceGroup;
+    if (projectIdentifier != null) {
+      resourceGroup = projectIdentifier;
+    } else if (orgIdentifier != null) {
+      resourceGroup = orgIdentifier;
+    } else {
+      resourceGroup = accountIdentifier;
+    }
+    return String.format("_%s", resourceGroup);
   }
 }
