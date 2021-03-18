@@ -4,8 +4,10 @@ import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
+import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.serializer.JsonUtils;
@@ -50,5 +52,11 @@ public class NewRelicServiceImpl implements NewRelicService {
     Type type = new TypeToken<List<NewRelicApplication>>() {}.getType();
     List<NewRelicApplication> newRelicApplications = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
     return newRelicApplications;
+  }
+
+  @Override
+  public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
+      List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
+    return null;
   }
 }
