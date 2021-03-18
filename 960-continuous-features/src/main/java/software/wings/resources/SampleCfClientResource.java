@@ -29,9 +29,8 @@ public class SampleCfClientResource {
   @ExceptionMetered
   public RestResponse<Boolean> get(
       @QueryParam("accountId") String accountId, @QueryParam("feature") String featureIdentifier) {
-    Target target = Target.builder()
-                        .attributes(new ImmutableMap.Builder<String, Object>().put("accountId", accountId).build())
-                        .build();
+    Target target =
+        Target.builder().custom(new ImmutableMap.Builder<String, Object>().put("accountId", accountId).build()).build();
     return new RestResponse<>(cfClient.boolVariation(featureIdentifier, target, false));
   }
 }
