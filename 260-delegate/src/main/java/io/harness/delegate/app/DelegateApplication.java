@@ -170,11 +170,12 @@ public class DelegateApplication {
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
             .build()));
-    if (!isOnPrem(System.getenv().get(DEPLOY_MODE))) {
-      modules.add(new PingPongModule());
-      modules.add(new PerpetualTaskWorkerModule());
-      modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
-    }
+
+    // Removing the on prem check for the following 3 modules to test out the communicatuon
+    modules.add(new PingPongModule());
+    modules.add(new PerpetualTaskWorkerModule());
+    modules.add(DelegateServiceGrpcAgentClientModule.getInstance());
+
     modules.add(KubernetesClientFactoryModule.getInstance());
     modules.add(KubernetesApiClientFactoryModule.getInstance());
     modules.add(new CITaskFactoryModule());
