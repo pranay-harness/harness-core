@@ -20,9 +20,11 @@ import com.google.inject.name.Named;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import javax.net.ssl.SSLContext;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.Morphia;
@@ -45,6 +47,9 @@ public class MongoModule extends AbstractModule {
                                                                          .serverSelectionTimeout(90000)
                                                                          .maxConnectionIdleTime(600000)
                                                                          .connectionsPerHost(300)
+                                                                         .socketKeepAlive(true)
+                                                                         .sslEnabled(true)
+                                                                         .sslInvalidHostNameAllowed(true)
                                                                          .build();
 
   public static AdvancedDatastore createDatastore(Morphia morphia, String uri) {
@@ -80,12 +85,15 @@ public class MongoModule extends AbstractModule {
   @Singleton
   public AdvancedDatastore primaryDatastore(MongoConfig mongoConfig, @Named("morphiaClasses") Set<Class> classes,
       @Named("morphiaInterfaceImplementersClasses") Map<String, Class> morphiaInterfaceImplementers, Morphia morphia,
-      ObjectFactory objectFactory, IndexManager indexManager) {
+      ObjectFactory objectFactory, IndexManager indexManager) throws NoSuchAlgorithmException {
     for (Class clazz : classes) {
       if (morphia.getMapper().getMCMap().get(clazz.getName()).getCollectionName().startsWith("!!!custom_")) {
         throw new UnexpectedException(format("The custom collection name for %s is not provided", clazz.getName()));
       }
     }
+
+    //    System.setProperty("javax.net.ssl.trustStore", "/home/harnessdeveloper/Downloads/testFolder/trust");
+    //    System.setProperty("javax.net.ssl.trustStorePassword", "qwerty");
 
     MongoClientOptions primaryMongoClientOptions = MongoClientOptions.builder()
                                                        .retryWrites(defaultMongoClientOptions.getRetryWrites())
@@ -94,6 +102,10 @@ public class MongoModule extends AbstractModule {
                                                        .maxConnectionIdleTime(mongoConfig.getMaxConnectionIdleTime())
                                                        .connectionsPerHost(mongoConfig.getConnectionsPerHost())
                                                        .readPreference(mongoConfig.getReadPreference())
+//                                                       .sslContext(SSLContext.getInstance("TLS"))
+                                                       .socketKeepAlive(true)
+                                                       .sslEnabled(true)
+                                                       .sslInvalidHostNameAllowed(true)
                                                        .build();
     MongoClientURI uri =
         new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(primaryMongoClientOptions));

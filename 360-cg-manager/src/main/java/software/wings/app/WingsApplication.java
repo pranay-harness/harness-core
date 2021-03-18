@@ -322,6 +322,10 @@ public class WingsApplication extends Application<MainConfiguration> {
    * @throws Exception the exception
    */
   public static void main(String[] args) throws Exception {
+        System.setProperty("javax.net.ssl.trustStore", "/home/harnessdeveloper/Downloads/testFolder/trust");
+        System.setProperty("javax.net.ssl.trustStorePassword", "qwerty");
+//    System.getenv("TRUST_STORE_PATH");
+//    System.getenv("TRUST_STORE_PASSWORD");
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       log.info("Shutdown hook, entering maintenance...");
       MaintenanceController.forceMaintenance(true);

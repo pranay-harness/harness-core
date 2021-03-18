@@ -35,10 +35,10 @@ public class MongoConfig {
     ImmutableMap<String, String> tagSet;
   }
 
-  @JsonProperty(defaultValue = "mongodb://localhost:27017/wings")
+  @JsonProperty(defaultValue = "mongodb://localhost:27017/harness")
   @Default
   @NotEmpty
-  private String uri = "mongodb://localhost:27017/wings";
+  private String uri = "mongodb://localhost:27017/harness";
 
   @ToString.Include @Getter(NONE) private ReadPref readPref;
 
