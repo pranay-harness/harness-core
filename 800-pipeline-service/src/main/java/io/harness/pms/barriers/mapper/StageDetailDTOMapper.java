@@ -1,7 +1,7 @@
 package io.harness.pms.barriers.mapper;
 
-import io.harness.pms.barriers.beans.StageDetail;
 import io.harness.pms.barriers.response.StageDetailDTO;
+import io.harness.steps.barriers.beans.StageDetail;
 
 import java.util.function.Function;
 import lombok.experimental.UtilityClass;

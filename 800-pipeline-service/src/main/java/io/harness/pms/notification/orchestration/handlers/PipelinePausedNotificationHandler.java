@@ -12,7 +12,11 @@ public class PipelinePausedNotificationHandler implements AsyncOrchestrationEven
 
   @Override
   public void handleEvent(OrchestrationEvent event) {
-    notificationHelper.sendNotification(
-        event.getNodeExecutionProto().getAmbiance(), PipelineEventType.PIPELINE_PAUSED, null);
+    if (event.getNodeExecutionProto() != null) {
+      notificationHelper.sendNotification(
+          event.getNodeExecutionProto().getAmbiance(), PipelineEventType.PIPELINE_PAUSED, null);
+    } else {
+      notificationHelper.sendNotification(event.getAmbiance(), PipelineEventType.PIPELINE_PAUSED, null);
+    }
   }
 }

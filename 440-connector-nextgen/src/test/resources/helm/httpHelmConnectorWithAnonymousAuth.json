@@ -6,11 +6,12 @@
     "orgIdentifier": "orgIdentifier",
     "projectIdentifier": "projectIdentifier",
     "tags": {
-      "company" : "Harness",
-      "env" : "dev"
+      "company": "Harness",
+      "env": "dev"
     },
     "type": "HttpHelmRepo",
     "spec": {
+      "delegateSelectors": null,
       "helmRepoUrl": "http://storage.googleapis.com/kubernetes-charts",
       "auth": {
         "type": "Anonymous"

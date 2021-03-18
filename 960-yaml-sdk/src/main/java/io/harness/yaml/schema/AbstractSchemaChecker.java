@@ -13,6 +13,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -31,18 +32,20 @@ import org.reflections.Reflections;
 @Slf4j
 @Singleton
 public class AbstractSchemaChecker {
-  public void schemaTests(List<YamlSchemaRootClass> yamlSchemaRootClasses) throws IOException, ClassNotFoundException {
+  public void schemaTests(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+      throws IOException, ClassNotFoundException {
     Reflections reflections = new Reflections(IO_HARNESS, SOFTWARE_WINGS);
-    ensureSchemaUpdated(yamlSchemaRootClasses);
+    ensureSchemaUpdated(yamlSchemaRootClasses, objectMapper);
     ensureOneOfHasCorrectValues(reflections);
   }
 
-  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses) throws IOException, ClassNotFoundException {
+  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+      throws IOException, ClassNotFoundException {
     if (isEmpty(yamlSchemaRootClasses)) {
       return;
     }
     YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(), yamlSchemaRootClasses);
+        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
     final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final ObjectWriter objectWriter = yamlSchemaGenerator.getObjectWriter();
     for (YamlSchemaRootClass schemaRoot : yamlSchemaRootClasses) {

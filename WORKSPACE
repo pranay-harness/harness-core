@@ -951,22 +951,15 @@ go_repository(
 go_repository(
     name = "com_github_drone_go_scm",
     importpath = "github.com/drone/go-scm",
-    sum = "h1:wME/n7Qdo70VJ+WXZanJHjLtNWONEfjNsO2iwHDdlkE=",
-    version = "v1.7.1",
-)
-
-go_repository(
-    name = "com_github_drone_go_scm",
-    importpath = "github.com/drone/go-scm",
-    sum = "h1:3+40bTenkFIfpd0xX66Crbpoy279mq4daYJzheG1M3Q=",
-    version = "v1.7.2",
-)
-
-go_repository(
-    name = "com_github_drone_go_scm",
-    importpath = "github.com/drone/go-scm",
     sum = "h1:4OeFha6WdntK0EnRRcZ1q02W8yAkC4uCidpIlYtTEi4=",
     version = "v1.8.1-0.20210111143840-199eee180289",
+)
+
+go_repository(
+    name = "com_github_drone_go_scm_codecommit",
+    importpath = "github.com/drone/go-scm-codecommit",
+    sum = "h1:0i0YKhLdfnUvtB7UZstfbDslmhh1DXR+z3JsrNSwsG4=",
+    version = "v0.0.0-20210315104920-2d8b9dc5ed8a",
 )
 
 go_repository(
@@ -2046,7 +2039,7 @@ load("//:bazel-credentials.bzl", "JFROG_PASSWORD", "JFROG_USERNAME")
 maven_install(
     name = "maven_harness",
     artifacts = [
-        "io.harness.cf:cf-client-sdk-java:0.0.2",
+        "io.harness:ff-java-server-sdk:0.0.2",
         "io.harness.cv:data-collection-dsl:0.18-RELEASE",
     ],
     repositories = [
@@ -2120,20 +2113,6 @@ maven_install(
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
         "https://harness.jfrog.io/harness/datacollection-dsl",
     ],
-)
-
-go_repository(
-    name = "com_github_drone_go_scm",
-    importpath = "github.com/drone/go-scm",
-    sum = "h1:KUf9gEaCDzhsE/V7hpFz7nmTisuR0gXJz3+D946ggLk=",
-    version = "v1.7.0",
-)
-
-go_repository(
-    name = "com_github_drone_go_scm",
-    importpath = "github.com/drone/go-scm",
-    sum = "h1:kDHu38a11loKf6uaBu75TmY1YPwsSaZdseET738Oy0o=",
-    version = "v1.8.0",
 )
 
 load("//tools/bazel/sonarqube:repositories.bzl", "bazel_sonarqube_repositories")
@@ -5323,8 +5302,16 @@ go_repository(
 )
 
 go_repository(
+
     name = "com_github_linkedin_goavro_v2",
     importpath = "github.com/linkedin/goavro/v2",
     sum = "h1:eTBIRoInBM88gITGXYtUSqqxLTFXfOsJBiX8ZMW0o4U=",
     version = "v2.10.0",
+)
+
+go_repository(
+    name = "com_github_robbiet480_go_sns",
+    importpath = "github.com/robbiet480/go.sns",
+    sum = "h1:oiuVamdP4LloTcrinlnYOxhLwhJCV3hE9D+NSxH0L4I=",
+    version = "v0.0.0-20181124163742-ca087b49e1da",
 )

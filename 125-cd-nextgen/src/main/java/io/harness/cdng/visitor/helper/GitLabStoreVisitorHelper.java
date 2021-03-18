@@ -18,6 +18,7 @@ import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,13 +44,23 @@ public class GitLabStoreVisitorHelper implements ConfigValidator, EntityReferenc
     if (ParameterField.isNull(gitLabStore.getConnectorRef())) {
       return result;
     }
+    String fullQualifiedDomainName =
+        VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
+    Map<String, String> metadata = new HashMap<>(Collections.singletonMap("fqn", fullQualifiedDomainName));
     if (!gitLabStore.getConnectorRef().isExpression()) {
       String connectorRefString = gitLabStore.getConnectorRef().getValue();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-      Map<String, String> metadata = Collections.singletonMap("fqn", fullQualifiedDomainName);
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
+      EntityDetailProtoDTO entityDetail =
+          EntityDetailProtoDTO.newBuilder()
+              .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
+              .setType(EntityTypeProtoEnum.CONNECTORS)
+              .build();
+      result.add(entityDetail);
+    } else {
+      metadata.put("expression", gitLabStore.getConnectorRef().getExpressionValue());
+      IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
+          orgIdentifier, projectIdentifier, gitLabStore.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =
           EntityDetailProtoDTO.newBuilder()
               .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))

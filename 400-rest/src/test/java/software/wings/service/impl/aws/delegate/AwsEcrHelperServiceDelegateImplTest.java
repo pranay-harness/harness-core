@@ -66,12 +66,15 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testGetAmazonEcrAuthToken() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
     doReturn(mockClient).when(awsEcrHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
+    doReturn(mockClient).when(awsEcrApiHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new GetAuthorizationTokenResult().withAuthorizationData(
                  new AuthorizationData().withAuthorizationToken("token")))
         .when(mockClient)
         .getAuthorizationToken(any());
     doNothing().when(mockTracker).trackECRCall(anyString());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegate).getAmazonEcrAuthToken(any(), any(), any());
+    on(awsEcrApiHelperServiceDelegate).set("tracker", tracker);
     String token = awsEcrHelperServiceDelegate.getAmazonEcrAuthToken(
         AwsConfig.builder().build(), Collections.emptyList(), "account", "us-east-1");
     assertThat(token).isEqualTo("token");

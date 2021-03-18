@@ -6,6 +6,7 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
@@ -48,6 +49,8 @@ import io.harness.cdng.manifest.yaml.ManifestConfig;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifest;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -171,5 +174,8 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(HttpStoreConfig.class, 12530);
     kryo.register(KustomizeManifest.class, 12531);
     kryo.register(KustomizeManifestOutcome.class, 12532);
+    kryo.register(EcrArtifactConfig.class, 12533);
+    kryo.register(OpenshiftManifest.class, 12534);
+    kryo.register(OpenshiftManifestOutcome.class, 12535);
   }
 }

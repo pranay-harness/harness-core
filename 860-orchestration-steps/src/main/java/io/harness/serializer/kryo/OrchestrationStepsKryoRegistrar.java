@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.steps.approval.stage.ApprovalStageStepParameters;
+import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -48,5 +50,7 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(DummySectionOutcome.class, 3216);
 
     kryo.register(SectionChainPassThroughData.class, 3217);
+    kryo.register(ApprovalStageStepParameters.class, 3218);
+    kryo.register(HarnessApprovalStepParameters.class, 3219);
   }
 }

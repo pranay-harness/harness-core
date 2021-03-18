@@ -37,7 +37,7 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.repositories.core.spring.ProjectRepository;
-import io.harness.security.SecurityContextBuilder;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.dto.PrincipalType;
 
 import com.google.common.collect.ImmutableMap;
@@ -112,9 +112,9 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   private void createUserProjectMap(Project project) {
-    if (SecurityContextBuilder.getPrincipal() != null
-        && SecurityContextBuilder.getPrincipal().getType() == PrincipalType.USER) {
-      String userId = SecurityContextBuilder.getPrincipal().getName();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
       Role role = Role.builder()
                       .accountIdentifier(project.getAccountIdentifier())
                       .orgIdentifier(project.getOrgIdentifier())

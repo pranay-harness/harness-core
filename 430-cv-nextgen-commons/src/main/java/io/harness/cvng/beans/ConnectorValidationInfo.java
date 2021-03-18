@@ -1,9 +1,11 @@
 package io.harness.cvng.beans;
 
 import io.harness.cvng.beans.appd.AppDynamicsConnectorValidationInfo;
+import io.harness.cvng.beans.newrelic.NewRelicConnectorValidationInfo;
 import io.harness.cvng.beans.splunk.SplunkConnectorValidationInfo;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
 import com.google.common.io.Resources;
@@ -24,6 +26,8 @@ public abstract class ConnectorValidationInfo<T extends ConnectorConfigDTO> {
       connectorValidationInfo = AppDynamicsConnectorValidationInfo.builder().build();
     } else if (connectorConfigDTO instanceof SplunkConnectorDTO) {
       connectorValidationInfo = SplunkConnectorValidationInfo.builder().build();
+    } else if (connectorConfigDTO instanceof NewRelicConnectorDTO) {
+      connectorValidationInfo = NewRelicConnectorValidationInfo.builder().build();
     } else {
       throw new IllegalStateException(
           "Class: " + connectorConfigDTO.getClass().getSimpleName() + " does not have ValidationInfo object");
