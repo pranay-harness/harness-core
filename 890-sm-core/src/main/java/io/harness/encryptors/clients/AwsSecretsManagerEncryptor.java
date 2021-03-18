@@ -186,7 +186,6 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
   public boolean validateSecretManagerConfiguration(String accountId, EncryptionConfig encryptionConfig) {
     AwsSecretsManagerConfig secretsManagerConfig = (AwsSecretsManagerConfig) encryptionConfig;
     try {
-      System.out.println("Test");
       log.info("Validating AWS SecretManager configuration Start: {}", secretsManagerConfig);
       AWSSecretsManager client = getAwsSecretsManagerClient(secretsManagerConfig);
       GetSecretValueRequest request = new GetSecretValueRequest().withSecretId(getFullPath(
