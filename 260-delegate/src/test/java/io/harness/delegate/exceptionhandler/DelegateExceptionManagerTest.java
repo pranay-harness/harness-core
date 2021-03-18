@@ -12,6 +12,7 @@ import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
@@ -89,5 +90,46 @@ public class DelegateExceptionManagerTest extends DelegateTestBase {
     assertThat(exception instanceof InvalidArtifactServerException).isTrue();
     Exception cause = (Exception) exception.getCause();
     assertThat(cause instanceof InvalidRequestException).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testUnhandledExceptionNotRegisteredWithKryo() {
+    String errorMessage = "Random exception not registered to Kryo";
+    RandomRuntimeException randomRuntimeException = new RandomRuntimeException(errorMessage);
+
+    DelegateResponseData delegateResponseData =
+        delegateExceptionManager.getResponseData(randomRuntimeException, null, true);
+    assertThat(delegateResponseData).isNotNull();
+
+    ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
+    assertThat(errorNotifyResponseData.getException()).isNotNull();
+
+    WingsException exception = errorNotifyResponseData.getException();
+    assertThat(exception instanceof DelegateErrorHandlerException).isTrue();
+    Exception cause = (Exception) exception.getCause();
+    assertThat(cause instanceof KryoHandlerNotFoundException).isTrue();
+    assertThat(cause.getMessage().equals(errorMessage)).isTrue();
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testThrowable() {
+    Throwable throwable = new Throwable("Throwable  exception");
+    DelegateResponseData delegateResponseData = delegateExceptionManager.getResponseData(throwable, null, false);
+    assertThat(delegateResponseData).isNotNull();
+
+    ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) delegateResponseData;
+    assertThat(errorNotifyResponseData.getException()).isNull();
+    assertThat(errorNotifyResponseData.getErrorMessage().equals(ExceptionUtils.getMessage(throwable))).isTrue();
+    assertThat(errorNotifyResponseData.getFailureTypes().equals(ExceptionUtils.getFailureTypes(throwable))).isTrue();
+  }
+
+  public static class RandomRuntimeException extends RuntimeException {
+    public RandomRuntimeException(String message) {
+      super(message);
+    }
   }
 }
