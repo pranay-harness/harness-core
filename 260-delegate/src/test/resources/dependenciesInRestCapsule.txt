@@ -10,6 +10,7 @@ com.amazonaws:aws-java-sdk-applicationautoscaling:jar:1.11.834
 com.amazonaws:aws-java-sdk-autoscaling:jar:1.11.834
 com.amazonaws:aws-java-sdk-cloudformation:jar:1.11.834
 com.amazonaws:aws-java-sdk-cloudwatch:jar:1.11.834
+com.amazonaws:aws-java-sdk-codecommit:jar:1.11.834
 com.amazonaws:aws-java-sdk-codedeploy:jar:1.11.834
 com.amazonaws:aws-java-sdk-core:jar:1.11.834
 com.amazonaws:aws-java-sdk-costandusagereport:jar:1.11.834
@@ -166,6 +167,7 @@ com.intellij:annotations:jar:12.0
 com.j256.two-factor-auth:two-factor-auth:jar:1.0
 com.jakewharton.retrofit:retrofit1-okhttp3-client:jar:1.1.0
 com.jayway.jsonpath:json-path:jar:2.2.0
+com.jcraft.harness:jsch-0-1-54-harness-patch:jar:1.1
 com.jcraft:jsch:jar:0.1.54
 com.jcraft:jzlib:jar:1.1.3
 com.lmax:disruptor:jar:3.4.2
@@ -333,8 +335,8 @@ io.grpc:grpc-services:jar:1.33.1
 io.grpc:grpc-stub:jar:1.33.1
 io.grpc:grpc-testing:jar:1.33.1:test
 io.gsonfire:gson-fire:jar:1.8.3
-io.harness.cf:cf-client-sdk-java:jar:0.0.2
 io.harness.cv:data-collection-dsl:jar:0.18-RELEASE
+io.harness:ff-java-server-sdk:jar:0.0.2
 io.jsonwebtoken:jjwt:jar:0.9.1
 io.kubernetes:client-java-api:jar:8.0.2
 io.kubernetes:client-java-extended:jar:8.0.2
@@ -512,8 +514,8 @@ org.eclipse.jetty.websocket:websocket-client:jar:9.4.35.v20201120
 org.eclipse.jetty.websocket:websocket-common:jar:9.4.35.v20201120
 org.eclipse.jetty.websocket:websocket-xxxxxxxxjar:9.4.35.v20201120
 org.eclipse.jetty.websocket:websocket-servlet:jar:9.4.35.v20201120
-org.eclipse.jetty:jetty-alpn-openjdk8-xxxxxxxxjar:9.4.18.v20190429
-org.eclipse.jetty:jetty-alpn-xxxxxxxxjar:9.4.18.v20190429
+org.eclipse.jetty:jetty-alpn-openjdk8-xxxxxxxxjar:9.4.35.v20201120
+org.eclipse.jetty:jetty-alpn-xxxxxxxxjar:9.4.35.v20201120
 org.eclipse.jetty:jetty-client:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-continuation:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-http:jar:9.4.35.v20201120
@@ -521,7 +523,7 @@ org.eclipse.jetty:jetty-io:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-security:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-xxxxxxxxjar:9.4.35.v20201120
 org.eclipse.jetty:jetty-servlet:jar:9.4.35.v20201120
-org.eclipse.jetty:jetty-servlets:jar:9.4.18.v20190429
+org.eclipse.jetty:jetty-servlets:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-util-ajax:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-util:jar:9.4.35.v20201120
 org.eclipse.jetty:jetty-webapp:jar:9.4.35.v20201120
@@ -637,6 +639,7 @@ org.slf4j:jcl-over-slf4j:jar:1.7.29
 org.slf4j:jul-to-slf4j:jar:1.7.29
 org.slf4j:log4j-over-slf4j:jar:1.7.29
 org.slf4j:slf4j-api:jar:1.7.29
+org.slf4j:slf4j-simple:jar:1.7.25
 org.sonatype.nexus.plugins:nexus-restlet1x-model:jar:2.14.18-01
 org.springframework.data:spring-data-commons:jar:2.2.7.RELEASE
 org.springframework.data:spring-data-mongodb:jar:2.2.7.RELEASE
@@ -656,6 +659,7 @@ org.xmlunit:xmlunit-matchers:jar:2.3.0
 org.yaml:snakeyaml:jar:1.26
 org.zeroturnaround:zt-exec:jar:1.9
 ru.vyarus:guice-validator:jar:1.2.0
+software.amazon.ion:ion-java:jar:1.0.2
 stax:stax-api:jar:1.0.1
 stax:stax:jar:1.2.0
 wsdl4j:wsdl4j:jar:1.6.3
