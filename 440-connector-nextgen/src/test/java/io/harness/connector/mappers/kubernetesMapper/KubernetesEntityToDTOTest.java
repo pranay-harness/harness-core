@@ -24,7 +24,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClientKeyCertDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesOpenIdConnectDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesUserNamePasswordDTO;
@@ -64,9 +63,9 @@ public class KubernetesEntityToDTOTest extends CategoryTest {
     KubernetesClusterConfigDTO connectorDTO =
         kubernetesEntityToDTO.createConnectorDTO((KubernetesClusterConfig) connector);
     assertThat(connectorDTO).isNotNull();
-    assertThat(((KubernetesDelegateDetailsDTO) connectorDTO.getCredential().getConfig()).getDelegateSelectors())
-        .isEqualTo(Collections.singleton(delegateName));
+    assertThat(connectorDTO.getDelegateSelectors()).isEqualTo(null);
     assertThat(connectorDTO.getCredential().getKubernetesCredentialType()).isEqualTo(INHERIT_FROM_DELEGATE);
+    assertThat(connectorDTO.getCredential().getConfig()).isEqualTo(null);
   }
 
   @Test(expected = UnexpectedException.class)

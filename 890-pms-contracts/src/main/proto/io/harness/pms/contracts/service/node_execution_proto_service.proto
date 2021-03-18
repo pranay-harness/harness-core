@@ -15,7 +15,6 @@ import "io/harness/pms/contracts/advisers/advise.proto";
 import "io/harness/pms/contracts/service/node_execution_event.proto";
 
 service NodeExecutionProtoService {
-  rpc queueNodeExecution(QueueNodeExecutionRequest) returns (QueueNodeExecutionResponse);
   rpc queueTask(QueueTaskRequest) returns (QueueTaskResponse);
   rpc addExecutableResponse(AddExecutableResponseRequest) returns (AddExecutableResponseResponse);
   rpc handleStepResponse(HandleStepResponseRequest) returns (HandleStepResponseResponse);
@@ -25,12 +24,6 @@ service NodeExecutionProtoService {
   rpc handleAdviserResponse(AdviserResponseRequest) returns (AdviserResponseResponse);
   rpc handleEventError(EventErrorRequest) returns (EventErrorResponse);
 }
-
-message QueueNodeExecutionRequest {
-  execution.NodeExecutionProto nodeExecution = 1;
-}
-
-message QueueNodeExecutionResponse {}
 
 message QueueTaskRequest {
   string nodeExecutionId = 1;

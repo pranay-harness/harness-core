@@ -21,5 +21,5 @@ public class BuildStatusUpdateParameter implements BuildUpdateParameters {
   private String identifier;
   private String name;
   private String connectorIdentifier;
-  // Harsh TODO Also add github app or connector details. It is not finalised yet.
+  private String repoName;
 }

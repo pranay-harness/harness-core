@@ -31,23 +31,28 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Created by srinivas on 3/31/17.
  */
 @OwnedBy(CDC)
 @Singleton
+@Slf4j
 public class NexusBuildServiceImpl implements NexusBuildService {
   @Inject private NexusService nexusService;
 
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    log.info("[Nexus Delegate Selection] Get Plans with selectors {}", config.getDelegateSelectors());
     return nexusService.getRepositories(config, encryptionDetails);
   }
 
   @Override
   public Map<String, String> getPlans(NexusConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactType artifactType, String repositoryFormat) {
+    log.info("[Nexus Delegate Selection] Get Plans with artifactType {} and repo format {} and delegate selectors - {}",
+        artifactType, repositoryFormat, config.getDelegateSelectors());
     if (artifactType != ArtifactType.DOCKER && repositoryFormat != null
         && repositoryFormat.equals(RepositoryFormat.docker.name())) {
       throw new WingsException(format("Not supported for Artifact Type %s", artifactType), USER);
@@ -61,12 +66,16 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public Map<String, String> getPlans(
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, RepositoryFormat repositoryFormat) {
+    log.info("[Nexus Delegate Selection] Get Plans with repo format {} and delegate selectors - {}", repositoryFormat,
+        config.getDelegateSelectors());
     return nexusService.getRepositories(config, encryptionDetails, repositoryFormat.name());
   }
 
   @Override
   public List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    log.info("[Nexus Delegate Selection] Get Builds for artifactStreamId {} and delegate selectors - {}",
+        artifactStreamAttributes.getArtifactStreamId(), config.getDelegateSelectors());
     return wrapNewBuildsWithLabels(
         getBuildsInternal(artifactStreamAttributes, config, encryptionDetails), artifactStreamAttributes, config);
   }
@@ -74,6 +83,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public BuildDetails getBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes, NexusConfig config,
       List<EncryptedDataDetail> encryptionDetails, String buildNo) {
+    log.info("[Nexus Delegate Selection] Get Build for artifactStreamId {} and delegate selectors - {}",
+        artifactStreamAttributes.getArtifactStreamId(), config.getDelegateSelectors());
     List<BuildDetails> buildDetails =
         wrapNewBuildsWithLabels(getBuildInternal(artifactStreamAttributes, config, encryptionDetails, buildNo),
             artifactStreamAttributes, config);
@@ -120,6 +131,7 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<JobDetails> getJobs(
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
+    log.info("[Nexus Delegate Selection] Get Jobs for delegate selectors - {}", config.getDelegateSelectors());
     List<String> jobNames = Lists.newArrayList(nexusService.getRepositories(config, encryptionDetails).keySet());
     return wrapJobNameWithJobDetails(jobNames);
   }
@@ -127,6 +139,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<String> getArtifactPaths(
       String repoId, String groupId, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    log.info("[Nexus Delegate Selection] Get artifact paths for repoId {}, groupId {} and delegate selectors - {}",
+        repoId, groupId, config.getDelegateSelectors());
     if (isBlank(groupId)) {
       return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
     }
@@ -136,6 +150,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<String> getArtifactPaths(String repoId, String groupId, NexusConfig config,
       List<EncryptedDataDetail> encryptionDetails, String repositoryFormat) {
+    log.info(
+        "[Nexus Delegate Selection] Get artifact paths for repoId {}, groupId {}, repository format {} and delegate selectors - {}",
+        repoId, groupId, repositoryFormat, config.getDelegateSelectors());
     if (isBlank(groupId)) {
       return nexusService.getArtifactPaths(config, encryptionDetails, repoId);
     }
@@ -151,12 +168,16 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   @Override
   public List<String> getGroupIds(
       String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    log.info("[Nexus Delegate Selection] Get GroupIds for repo name {} and delegate selectors - {}", repositoryName,
+        config.getDelegateSelectors());
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, null);
   }
 
   @Override
   public List<String> getGroupIds(
       String repositoryName, String repositoryFormat, NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    log.info("[Nexus Delegate Selection] Get GroupIds for repo name {} and delegate selectors - {}", repositoryName,
+        config.getDelegateSelectors());
     return nexusService.getGroupIdPaths(config, encryptionDetails, repositoryName, repositoryFormat);
   }
 

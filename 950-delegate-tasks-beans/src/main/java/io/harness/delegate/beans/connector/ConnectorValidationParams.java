@@ -9,6 +9,5 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander
  */
 public interface ConnectorValidationParams extends ExecutionCapabilityDemander {
   ConnectorType getConnectorType();
-
   String getConnectorName();
 }

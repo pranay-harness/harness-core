@@ -71,9 +71,11 @@ directories:
   955-alert-beans
   955-delegate-beans
   940-feature-flag
+  940-ng-audit-service
   940-notification-client
   940-resource-group-beans
   940-secret-manager-client
+  945-ng-audit-client
   949-git-sync-sdk
   950-command-library-common
   950-log-client
@@ -81,8 +83,10 @@ directories:
   950-delegate-tasks-beans
   950-events-api
   950-events-framework
+  950-ng-audit-commons
   950-ng-core
   950-ng-project-n-orgs
+  950-ng-signup
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor

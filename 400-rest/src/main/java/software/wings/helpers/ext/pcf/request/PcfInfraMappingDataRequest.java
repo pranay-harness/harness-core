@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.PcfConfig;
@@ -12,6 +15,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class PcfInfraMappingDataRequest extends PcfCommandRequest {
   private PcfConfig pcfConfig;
   private String host;

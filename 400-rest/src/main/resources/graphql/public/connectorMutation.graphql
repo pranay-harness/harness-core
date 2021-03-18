@@ -87,6 +87,7 @@ input NexusConnectorInput {
   URL: String!
   userName: String
   passwordSecretId: String
+  delegateSelectors: [String]
   version: NexusVersion!
 }
 
