@@ -16,6 +16,7 @@ import io.harness.security.annotations.NextGenManagerAuth;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.List;
 import javax.validation.constraints.Max;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -66,6 +67,20 @@ public class EntitySetupUsageResource {
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     return ResponseDTO.newResponse(entitySetupUsageService.listAllEntityUsage(
         page, size, accountIdentifier, referredEntityFQN, entityType, searchTerm));
+  }
+
+  @GET
+  @Path("internal/listAllReferredUsages")
+  @ApiOperation(value = "Get Entities referred by this resource", nickname = "listAllReferredUsages", hidden = true)
+  public ResponseDTO<List<EntitySetupUsageDTO>> listAllReferredUsages(
+      @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
+      @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,
+      @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
+      @QueryParam(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    return ResponseDTO.newResponse(entitySetupUsageService.listAllReferredUsages(
+        page, size, accountIdentifier, referredByEntityFQN, referredEntityType, searchTerm));
   }
 
   @GET
