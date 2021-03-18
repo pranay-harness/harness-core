@@ -17,6 +17,8 @@ import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 @Slf4j
 public class ParameterDocumentFieldMapper {
   public ParameterDocumentField fromParameterField(ParameterField<?> parameterField, CastedField castedField) {
+    boolean skipAutoEvaluation = castedField != null && castedField.getField() != null
+        && castedField.getField().isAnnotationPresent(SkipAutoEvaluation.class);
     Class<?> cls = findValueClass(null, castedField);
     if (parameterField == null) {
       if (cls == null) {
@@ -26,6 +28,7 @@ public class ParameterDocumentFieldMapper {
           .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(null)))
           .valueClass(cls.getName())
           .typeString(cls.isAssignableFrom(String.class))
+          .skipAutoEvaluation(skipAutoEvaluation)
           .build();
     }
     return ParameterDocumentField.builder()
@@ -35,6 +38,7 @@ public class ParameterDocumentFieldMapper {
         .valueClass(cls == null ? null : cls.getName())
         .inputSetValidator(parameterField.getInputSetValidator())
         .typeString(parameterField.isTypeString())
+        .skipAutoEvaluation(skipAutoEvaluation)
         .jsonResponseField(parameterField.isJsonResponseField())
         .responseField(parameterField.getResponseField())
         .build();
