@@ -1001,7 +1001,7 @@ maven_install(
     name = "maven",
     artifacts = [
         "aopalliance:aopalliance:1.0",
-        "cglib:cglib-nodep:2.2.2",
+        "cglib:cglib-nodep:3.1",
         "ch.qos.logback.contrib:logback-jackson:0.1.5",
         "ch.qos.logback.contrib:logback-json-classic:0.1.5",
         "ch.qos.logback.contrib:logback-json-core:0.1.5",
