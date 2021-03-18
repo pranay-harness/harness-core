@@ -86,6 +86,7 @@ directories:
   950-ng-audit-commons
   950-ng-core
   950-ng-project-n-orgs
+  950-ng-signup
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
