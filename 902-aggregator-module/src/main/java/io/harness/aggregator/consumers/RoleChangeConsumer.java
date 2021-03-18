@@ -1,6 +1,5 @@
 package io.harness.aggregator.consumers;
 
-import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.accesscontrol.acl.models.ACL;
 import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.aggregator.services.apis.AggregatorService;
@@ -13,12 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
-public class RoleChangeConsumer implements ChangeConsumer {
+public class RoleChangeConsumer implements ChangeConsumer<RoleDBO> {
   private final AggregatorService aggregatorService;
 
   @Override
-  public void consumeUpdateEvent(String id, AccessControlEntity persistentEntity) {
-    List<ACL> aclList = aggregatorService.processRoleUpdation((RoleDBO) persistentEntity);
+  public void consumeUpdateEvent(String id, RoleDBO roleDBO) {
+    List<ACL> aclList = aggregatorService.processRoleUpdation(roleDBO);
     log.info("Processed role updation event, number of new ACLs created: {}", aclList.size());
   }
 
@@ -28,7 +27,7 @@ public class RoleChangeConsumer implements ChangeConsumer {
   }
 
   @Override
-  public void consumeCreateEvent(String id, AccessControlEntity accessControlEntity) {
+  public void consumeCreateEvent(String id, RoleDBO roleDBO) {
     log.info("New Role created with id: {}, skipping processing it", id);
   }
 }

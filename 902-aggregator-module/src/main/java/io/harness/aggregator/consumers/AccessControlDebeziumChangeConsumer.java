@@ -41,9 +41,9 @@ public class AccessControlDebeziumChangeConsumer implements DebeziumEngine.Chang
   private final Deserializer<String> idDeserializer;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private AggregatorService aggregatorService;
-  @Inject @Named("roleAssignment") private ChangeConsumer roleAssignmentChangeConsumer;
-  @Inject @Named("role") private ChangeConsumer roleChangeConsumer;
-  @Inject @Named("resourceGroup") private ChangeConsumer resourceGroupChangeConsumer;
+  private ChangeConsumer<RoleAssignmentDBO> roleAssignmentChangeConsumer;
+  private ChangeConsumer<RoleDBO> roleChangeConsumer;
+  private ChangeConsumer<ResourceGroupDBO> resourceGroupChangeConsumer;
 
   public AccessControlDebeziumChangeConsumer() {
     // configuring id deserializer

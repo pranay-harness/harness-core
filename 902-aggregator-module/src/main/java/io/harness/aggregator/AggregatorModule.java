@@ -1,7 +1,10 @@
 package io.harness.aggregator;
 
+import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
+import io.harness.accesscontrol.roles.persistence.RoleDBO;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumer;
@@ -14,7 +17,7 @@ import io.harness.threading.ExecutorModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
-import com.google.inject.name.Names;
+import com.google.inject.TypeLiteral;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.Json;
@@ -68,10 +71,10 @@ public class AggregatorModule extends AbstractModule {
     if (configuration.isEnabled()) {
       registerRequiredBindings();
 
+      bind(new TypeLiteral<ChangeConsumer<RoleAssignmentDBO>>() {}).to(RoleAssignmentChangeConsumer.class);
+      bind(new TypeLiteral<ChangeConsumer<RoleDBO>>() {}).to(RoleChangeConsumer.class);
+      bind(new TypeLiteral<ChangeConsumer<ResourceGroupDBO>>() {}).to(ResourceGroupChangeConsumer.class);
       bind(AggregatorService.class).to(AggregatorServiceImpl.class).in(Scopes.SINGLETON);
-      bind(ChangeConsumer.class).annotatedWith(Names.named("roleAssignment")).to(RoleAssignmentChangeConsumer.class);
-      bind(ChangeConsumer.class).annotatedWith(Names.named("role")).to(RoleChangeConsumer.class);
-      bind(ChangeConsumer.class).annotatedWith(Names.named("resourceGroup")).to(ResourceGroupChangeConsumer.class);
 
       // configuring debezium
       ExecutorModule.getInstance().setExecutorService(this.executorService);

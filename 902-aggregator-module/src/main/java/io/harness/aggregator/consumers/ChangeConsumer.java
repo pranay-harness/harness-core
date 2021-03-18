@@ -3,14 +3,14 @@ package io.harness.aggregator.consumers;
 import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.aggregator.OpType;
 
-public interface ChangeConsumer {
-  void consumeUpdateEvent(String id, AccessControlEntity persistentEntity);
+public interface ChangeConsumer<T extends AccessControlEntity> {
+  void consumeUpdateEvent(String id, T persistentEntity);
 
   void consumeDeleteEvent(String id);
 
-  void consumeCreateEvent(String id, AccessControlEntity accessControlEntity);
+  void consumeCreateEvent(String id, T accessControlEntity);
 
-  default void consumeEvent(OpType opType, String id, AccessControlEntity accessControlEntity) {
+  default void consumeEvent(OpType opType, String id, T accessControlEntity) {
     switch (opType) {
       case SNAPSHOT:
       case CREATE:
