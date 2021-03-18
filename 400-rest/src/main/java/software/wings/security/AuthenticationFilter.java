@@ -200,29 +200,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     throw new InvalidRequestException(INVALID_CREDENTIAL.name(), INVALID_CREDENTIAL, USER);
   }
 
-  //  protected boolean isScimAPI() {
-  //    Class<?> resourceClass = resourceInfo.getResourceClass();
-  //    Method resourceMethod = resourceInfo.getResourceMethod();
-  //
-  //    return resourceMethod.getAnnotation(ScimAPI.class) != null || resourceClass.getAnnotation(ScimAPI.class) !=
-  //    null;
-  //  }
-
   protected boolean isAuthenticatedByIdentitySvc(ContainerRequestContext containerRequestContext) {
     String value = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
     return isNotEmpty(value);
   }
-
-  //  protected boolean isAdminPortalRequest() {
-  //    return resourceInfo.getResourceMethod().getAnnotation(AdminPortalAuth.class) != null
-  //        || resourceInfo.getResourceClass().getAnnotation(AdminPortalAuth.class) != null;
-  //  }
-
-  //  @VisibleForTesting
-  //  boolean isNextGenManagerRequest(ResourceInfo requestResourceInfo) {
-  //    return requestResourceInfo.getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
-  //        || requestResourceInfo.getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
-  //  }
 
   @VisibleForTesting
   boolean isNextGenAuthorizationValid(ContainerRequestContext containerRequestContext) {
