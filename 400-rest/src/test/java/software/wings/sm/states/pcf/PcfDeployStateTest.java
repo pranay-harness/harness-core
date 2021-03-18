@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -56,6 +57,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -132,6 +134,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;

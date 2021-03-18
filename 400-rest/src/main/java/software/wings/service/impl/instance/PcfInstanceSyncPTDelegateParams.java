@@ -1,5 +1,9 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 
@@ -11,6 +15,7 @@ import lombok.experimental.FieldDefaults;
 @Value
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class PcfInstanceSyncPTDelegateParams {
   String infraMappingId;
   String applicationName;
