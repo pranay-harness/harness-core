@@ -238,15 +238,8 @@ fn filter_report(opts: &Analyze, report: &Report, class_locations: &HashMap<Stri
 }
 
 fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
-    filter_by_class_name(opts, report) | filter_by_class_location(opts, report, class_locations)
-}
-
-fn filter_by_class_name(opts: &Analyze, report: &Report) -> bool {
-    opts.class_filter.is_empty() || opts.class_filter.iter().any(|class| report.for_class.eq(class))
-}
-
-fn filter_by_class_location(opts: &Analyze, report: &Report, class_locations: &HashMap<String, &JavaClass>) -> bool {
-    opts.location_class_filter.is_empty()
+    (opts.class_filter.is_empty() && opts.location_class_filter.is_empty())
+        || opts.class_filter.iter().any(|class| report.for_class.eq(class))
         || opts.location_class_filter.iter().any(|class_location| {
             let class = &class_locations.get(class_location).unwrap().name;
             report.for_class.eq(class)
