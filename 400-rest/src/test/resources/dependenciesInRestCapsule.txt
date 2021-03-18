@@ -1,5 +1,5 @@
 aopalliance:aopalliance:jar:1.0
-cglib:cglib-nodep:jar:2.2.2
+cglib:cglib-nodep:jar:3.1
 ch.qos.logback.contrib:logback-jackson:jar:0.1.5
 ch.qos.logback.contrib:logback-json-classic:jar:0.1.5
 ch.qos.logback.contrib:logback-json-core:jar:0.1.5
