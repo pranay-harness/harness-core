@@ -78,6 +78,8 @@ aeriform("//360-cg-manager:module")
 
 aeriform("//370-users-syncbridge:module")
 
+aeriform("//375-ce-graphql:module")
+
 aeriform("//380-cg-graphql:module")
 
 aeriform("//380-cg-graphql:tests")
