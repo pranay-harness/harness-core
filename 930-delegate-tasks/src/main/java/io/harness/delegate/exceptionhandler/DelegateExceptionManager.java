@@ -25,13 +25,14 @@ public class DelegateExceptionManager {
   @Inject private Map<Class<? extends Exception>, DelegateExceptionHandler> exceptionHandler;
   @Inject private KryoSerializer kryoSerializer;
 
-  public DelegateResponseData getResponseData(Exception exception,
+  public DelegateResponseData getResponseData(Throwable throwable,
       ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder, boolean isErrorFrameworkSupportedByTask) {
-    if (!isErrorFrameworkSupportedByTask) {
+    if (!(throwable instanceof Exception) || !isErrorFrameworkSupportedByTask) {
       // return default response
-      return prepareErrorResponse(exception, errorNotifyResponseDataBuilder).build();
+      return prepareErrorResponse(throwable, errorNotifyResponseDataBuilder).build();
     }
 
+    Exception exception = (Exception) throwable;
     WingsException processedException = handleException(exception);
     DelegateResponseData responseData =
         prepareErrorResponse(processedException, errorNotifyResponseDataBuilder).exception(processedException).build();
@@ -86,13 +87,13 @@ public class DelegateExceptionManager {
   }
 
   private ErrorNotifyResponseDataBuilder prepareErrorResponse(
-      Exception exception, ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder) {
+      Throwable throwable, ErrorNotifyResponseDataBuilder errorNotifyResponseDataBuilder) {
     if (errorNotifyResponseDataBuilder == null) {
       errorNotifyResponseDataBuilder = ErrorNotifyResponseData.builder();
     }
 
-    return errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))
-        .errorMessage(ExceptionUtils.getMessage(exception));
+    return errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(throwable))
+        .errorMessage(ExceptionUtils.getMessage(throwable));
   }
 
   private void setExceptionCause(WingsException exception, Exception cause) throws IllegalAccessException {
