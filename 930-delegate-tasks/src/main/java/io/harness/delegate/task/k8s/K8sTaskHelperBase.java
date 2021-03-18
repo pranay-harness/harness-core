@@ -839,9 +839,7 @@ public class K8sTaskHelperBase {
       List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
       throws Exception {
     for (KubernetesResourceId resourceId : kubernetesResourceIds) {
-      DeleteCommand deleteCommand =
-          client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-      ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
       if (result.getExitValue() != 0) {
         log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
       }
@@ -850,6 +848,32 @@ public class K8sTaskHelperBase {
     if (denoteOverallSuccess) {
       executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
     }
+  }
+
+  public boolean executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+      List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
+      throws Exception {
+    for (KubernetesResourceId resourceId : kubernetesResourceIds) {
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
+      if (result.getExitValue() != 0) {
+        log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+        return false;
+      }
+    }
+
+    if (denoteOverallSuccess) {
+      executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
+    }
+
+    return true;
+  }
+
+  private ProcessResult executeDeleteCommand(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+      LogCallback executionLogCallback, KubernetesResourceId resourceId) throws Exception {
+    DeleteCommand deleteCommand =
+        client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+    return runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
   }
 
   public void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback)
