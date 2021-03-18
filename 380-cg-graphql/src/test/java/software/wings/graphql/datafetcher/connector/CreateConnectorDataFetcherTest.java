@@ -355,6 +355,7 @@ public class CreateConnectorDataFetcherTest {
         dataFetcher.mutateAndFetch(QLConnectorInput.builder()
                                        .connectorType(QLConnectorType.NEXUS)
                                        .nexusConnector(getQlNexusConnectorInputBuilder()
+                                                           .delegateSelectors(RequestField.ofNull())
                                                            .passwordSecretId(RequestField.ofNullable(PASSWORD))
                                                            .version(RequestField.ofNullable(QLNexusVersion.V2))
                                                            .build())
