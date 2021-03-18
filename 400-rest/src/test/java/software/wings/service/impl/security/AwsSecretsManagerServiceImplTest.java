@@ -61,7 +61,7 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
-
+    System.out.println("Test");
     Account account = getAccount(AccountType.PAID);
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
