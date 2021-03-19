@@ -13,6 +13,7 @@ import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -31,6 +32,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -263,6 +266,26 @@ public abstract class VerificationJob
 
   public abstract boolean collectHostData();
 
+  public Instant roundToClosestBoundary(Instant deploymentStartTime, Instant startTime) {
+    if (deploymentStartTime.equals(startTime)) {
+      // This is done to handle the case of host detection.
+      // Host detection logic does not work if deployment minute and start time are same.
+      startTime = startTime.plus(Duration.ofMinutes(1));
+    }
+    return DateTimeUtils.roundDownTo1MinBoundary(startTime);
+  }
+
+  public Duration getExecutionDuration() {
+    return getDuration();
+  }
+
+  public Instant getAnalysisStartTime(Instant startTime) {
+    return startTime;
+  }
+
+  public Instant eligibleToStartAnalysisTime(Instant startTime, Duration dataCollectionDelay, Instant createdAt) {
+    return Collections.max(Arrays.asList(startTime.plus(dataCollectionDelay), createdAt));
+  }
   @FieldNameConstants(innerTypeName = "RuntimeParameterKeys")
   @Data
   @Builder
