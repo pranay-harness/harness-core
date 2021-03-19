@@ -61,7 +61,7 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
         }
       }
     }
-    assertThat(mismatchedVersions).hasSize(19);
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(17);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {

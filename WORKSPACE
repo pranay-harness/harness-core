@@ -1723,10 +1723,10 @@ maven_install(
         "org.atteo:evo-inflector:1.2.2",
         "org.awaitility:awaitility:2.0.0",
         "org.bitbucket.b_c:jose4j:0.7.0",
-        "org.bouncycastle:bcpg-jdk15on:1.60",
-        "org.bouncycastle:bcpkix-jdk15on:1.60",
+        "org.bouncycastle:bcpg-jdk15on:1.64",
+        "org.bouncycastle:bcpkix-jdk15on:1.64",
         "org.bouncycastle:bcprov-ext-jdk15on:1.64",
-        "org.bouncycastle:bcprov-jdk15on:1.61",
+        "org.bouncycastle:bcprov-jdk15on:1.64",
         "org.checkerframework:checker-compat-qual:2.5.5",
         "org.checkerframework:checker-qual:2.10.0",
         maven.artifact(
