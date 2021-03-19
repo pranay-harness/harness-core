@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.FileBucket.ARTIFACTS;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -101,6 +103,7 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 5/31/16.
  */
+@OwnedBy(CDP)
 public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
   /**
    * The constant EXEC_CMD.

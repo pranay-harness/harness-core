@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.LogLevel.ERROR;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ShellExecutionException;
@@ -74,6 +76,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class WinRMCommandUnitExecutorServiceImplTest extends WingsBaseTest {
   private static final String EXEC_CMD = "ls";
   private static final SettingAttribute HOST_CONN_ATTR_PWD = aSettingAttribute()

@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.secrets;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.shell.AccessType.KEY;
 import static io.harness.shell.AccessType.USER_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
@@ -14,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.shell.AccessType;
@@ -56,6 +58,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDP)
 public class SSHCredentialController {
   @Inject SettingsService settingsService;
   @Inject SecretManager secretManager;

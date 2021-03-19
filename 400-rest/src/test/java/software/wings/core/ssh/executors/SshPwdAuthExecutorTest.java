@@ -1,5 +1,6 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 import static io.harness.delegate.beans.FileBucket.CONFIGS;
@@ -26,6 +27,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
@@ -83,6 +85,7 @@ import org.mockito.Mock;
  18. su app user
 */
 
+@OwnedBy(CDP)
 public class SshPwdAuthExecutorTest extends WingsBaseTest {
   private static final String HOST = "localhost";
   /**
