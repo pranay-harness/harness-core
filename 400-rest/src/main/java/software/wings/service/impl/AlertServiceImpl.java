@@ -87,7 +87,7 @@ import org.mongodb.morphia.query.UpdateResults;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(Module._955_ALERT_BEANS)
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
   private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = ImmutableList.of(NoActiveDelegates, DelegatesDown,

@@ -23,8 +23,8 @@ public class CVNGBackgroundMigrationList {
    * Make sure your background migration is resumable and with rate limit that does not exhaust
    * the resources.
    */
-  public static List<Pair<Integer, Class<? extends CNVGMigration>>> getMigrations() {
-    return new ImmutableList.Builder<Pair<Integer, Class<? extends CNVGMigration>>>()
+  public static List<Pair<Integer, Class<? extends CVNGMigration>>> getMigrations() {
+    return new ImmutableList.Builder<Pair<Integer, Class<? extends CVNGMigration>>>()
         .add(Pair.of(1, CVNGBaseMigration.class))
         .add(Pair.of(2, RecreateMetricPackAndThresholdMigration.class))
         .add(Pair.of(3, CVNGBaseMigration.class))

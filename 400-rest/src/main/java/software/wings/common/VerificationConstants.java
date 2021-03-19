@@ -119,7 +119,6 @@ public class VerificationConstants {
   public static final double LOGS_MEDIUM_RISK_THRESHOLD = 25;
   public static final int DURATION_TO_ASK_MINUTES = 5;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
-  public static final int PERIODIC_GAP_IN_DAYS = 7;
   public static final int TIME_DELAY_QUERY_MINS = 2;
   public static final int DEFAULT_TIMEOUT_IN_MINS = 2;
 

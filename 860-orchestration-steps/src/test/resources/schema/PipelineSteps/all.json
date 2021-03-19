@@ -3,6 +3,37 @@
   "discriminator": "type",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "ApproverInputInfo": {
+      "type": "object",
+      "properties": {
+        "defaultValue": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Approvers": {
+      "type": "object",
+      "properties": {
+        "disallowPipelineExecutor": {
+          "type": "boolean"
+        },
+        "minimumCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "userGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BarrierStepInfo": {
       "allOf": [
         {
@@ -16,6 +47,39 @@
           "properties": {
             "barrierRef": {
               "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HarnessApprovalStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PMSStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "approvalMessage",
+            "approvers",
+            "includePipelineExecutionHistory"
+          ],
+          "properties": {
+            "approvalMessage": {
+              "type": "string"
+            },
+            "approverInputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ApproverInputInfo"
+              }
+            },
+            "approvers": {
+              "$ref": "#/definitions/Approvers"
+            },
+            "includePipelineExecutionHistory": {
+              "type": "boolean"
             }
           }
         }

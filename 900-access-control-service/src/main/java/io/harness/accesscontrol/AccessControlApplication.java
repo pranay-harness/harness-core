@@ -1,5 +1,15 @@
 package io.harness.accesscontrol;
 
+import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
+import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
+import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
+import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.accesscontrol.AccessControlConfiguration.getResourceClasses;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
@@ -18,6 +28,9 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.security.NextGenAuthenticationFilter;
+import io.harness.security.annotations.InternalApi;
+import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Guice;
@@ -30,12 +43,19 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration.Dynamic;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -88,7 +108,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     registerCorrelationFilter(environment, injector);
     registerIterators(injector);
     registerManagedBeans(appConfig, environment, injector);
-
+    registerAuthFilters(appConfig, environment, injector);
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
 
@@ -141,6 +161,49 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void registerAuthFilters(
+      AccessControlConfiguration configuration, Environment environment, Injector injector) {
+    if (configuration.isAuthEnabled()) {
+      registerAccessControlAuthFilter(configuration, environment);
+    }
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthenticationExemptedRequestsPredicate() {
+    return getAuthFilterPredicate(PublicApi.class)
+        .or(resourceInfoAndRequest
+            -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+                    "/swagger.json"));
+  }
+
+  private void registerAccessControlAuthFilter(AccessControlConfiguration configuration, Environment environment) {
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
+        (getAuthenticationExemptedRequestsPredicate().negate())
+            .and((getAuthFilterPredicate(InternalApi.class)).negate());
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getJwtAuthSecret());
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(NG_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(CI_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(CV_NEXT_GEN.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(NOTIFICATION_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(PIPELINE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(IDENTITY_SERVICE.getServiceId(), configuration.getIdentityServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
+      Class<? extends Annotation> annotation) {
+    return resourceInfoAndRequest
+        -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 
   public SwaggerBundleConfiguration getSwaggerConfiguration() {

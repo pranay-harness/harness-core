@@ -9,7 +9,6 @@ import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
-import io.harness.delay.DelayEventNotifyData;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -28,6 +27,5 @@ public class OrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(ExecutionStatusResponseData.class, 3102);
 
     // Put promoted classes here and do not change the id
-    kryo.register(DelayEventNotifyData.class, 7273);
   }
 }

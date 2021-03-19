@@ -116,8 +116,6 @@ aeriform("//460-capability:tests")
 
 aeriform("//470-alert:module")
 
-aeriform("//480-alert-beans:module")
-
 aeriform("//490-ce-commons:module")
 
 aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")
@@ -133,6 +131,10 @@ aeriform("//800-pipeline-service:tests")
 aeriform("//810-ng-triggers:module")
 
 aeriform("//810-ng-triggers:tests")
+
+aeriform("//820-platform-service:module")
+
+aeriform("//820-platform-service:tests")
 
 aeriform("//830-notification-service:module")
 
@@ -165,6 +167,8 @@ aeriform("//870-orchestration:tests")
 aeriform("//870-yaml-beans:module")
 
 aeriform("//870-yaml-beans:tests")
+
+aeriform("//874-orchestration-delay:module")
 
 aeriform("//876-orchestration-beans:module")
 
@@ -238,11 +242,17 @@ aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
 
+aeriform("//940-ng-audit-service:module")
+
 aeriform("//940-notification-client:module")
 
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
+
+aeriform("//945-ng-audit-client:module")
+
+aeriform("//949-git-sync-sdk:module")
 
 aeriform("//950-command-library-common:module")
 
@@ -258,11 +268,11 @@ aeriform("//950-events-framework:module")
 
 aeriform("//950-events-framework:tests")
 
-aeriform("//950-git-sync-sdk:module")
-
 aeriform("//950-log-client:module")
 
 aeriform("//950-log-client:tests")
+
+aeriform("//950-ng-audit-commons:module")
 
 aeriform("//950-ng-core:module")
 
@@ -271,6 +281,8 @@ aeriform("//950-ng-core:tests")
 aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
+
+aeriform("//950-ng-signup:module")
 
 aeriform("//950-timeout-engine:module")
 
@@ -286,6 +298,8 @@ aeriform("//950-walktree-visitor:tests")
 
 aeriform("//954-connector-beans:module")
 
+aeriform("//955-alert-beans:module")
+
 aeriform("//955-delegate-beans:module")
 
 aeriform("//955-filters-sdk:module")
@@ -293,6 +307,10 @@ aeriform("//955-filters-sdk:module")
 aeriform("//955-filters-sdk:tests")
 
 aeriform("//955-outbox-sdk:module")
+
+aeriform("//955-scm-java-client:module")
+
+aeriform("//955-scm-java-client:tests")
 
 aeriform("//955-setup-usage-sdk:module")
 

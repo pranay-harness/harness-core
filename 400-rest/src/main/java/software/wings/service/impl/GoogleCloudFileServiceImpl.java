@@ -13,6 +13,7 @@ import static software.wings.service.impl.FileServiceUtils.parseGoogleCloudFileI
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.ChecksumType;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.GCPStorageFileReadException;

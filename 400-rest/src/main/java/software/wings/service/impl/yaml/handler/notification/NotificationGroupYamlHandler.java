@@ -10,9 +10,9 @@ import static java.util.stream.Collectors.toList;
 
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.NotificationGroup.AddressYaml;
 import software.wings.beans.NotificationGroup.NotificationGroupBuilder;
 import software.wings.beans.NotificationGroup.Yaml;
+import software.wings.beans.NotificationGroupAddressYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -63,7 +63,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
   @Override
   public Yaml toYaml(NotificationGroup bean, String appId) {
     bean = notificationSetupService.readNotificationGroup(bean.getAccountId(), bean.getUuid());
-    List<AddressYaml> addressYamlList = toAddressYamlList(bean.getAddressesByChannelType());
+    List<NotificationGroupAddressYaml> addressYamlList = toAddressYamlList(bean.getAddressesByChannelType());
     return Yaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .addresses(addressYamlList)
@@ -88,15 +88,20 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     }
   }
 
-  private List<AddressYaml> toAddressYamlList(Map<NotificationChannelType, List<String>> addressesByChannelType) {
+  private List<NotificationGroupAddressYaml> toAddressYamlList(
+      Map<NotificationChannelType, List<String>> addressesByChannelType) {
     return addressesByChannelType.entrySet().stream().map(this::toAddressYaml).collect(toList());
   }
 
-  private AddressYaml toAddressYaml(Entry<NotificationChannelType, List<String>> entry) {
-    return AddressYaml.builder().addresses(entry.getValue()).channelType(entry.getKey().name()).build();
+  private NotificationGroupAddressYaml toAddressYaml(Entry<NotificationChannelType, List<String>> entry) {
+    return NotificationGroupAddressYaml.builder()
+        .addresses(entry.getValue())
+        .channelType(entry.getKey().name())
+        .build();
   }
 
-  private Map<NotificationChannelType, List<String>> toAddressByChannelTypeMap(List<AddressYaml> addressYamlList) {
+  private Map<NotificationChannelType, List<String>> toAddressByChannelTypeMap(
+      List<NotificationGroupAddressYaml> addressYamlList) {
     return addressYamlList.stream().collect(Collectors.toMap(addressYaml
         -> Utils.getEnumFromString(NotificationChannelType.class, addressYaml.getChannelType()),
         addressYaml -> {

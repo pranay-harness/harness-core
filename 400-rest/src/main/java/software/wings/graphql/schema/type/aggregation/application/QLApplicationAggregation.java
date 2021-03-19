@@ -11,4 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 @TargetModule(Module._380_CG_GRAPHQL)
-public class QLApplicationAggregation implements Aggregation {}
+public class QLApplicationAggregation implements Aggregation {
+  private QLApplicationEntityAggregation entityAggregation;
+  private QLApplicationTagAggregation tagAggregation;
+}

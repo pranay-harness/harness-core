@@ -22,4 +22,5 @@ public class K8sBGDeployRequest implements K8sDeployRequest {
   ManifestDelegateConfig manifestDelegateConfig;
   boolean deprecateFabric8Enabled;
   String accountId;
+  boolean skipResourceVersioning;
 }

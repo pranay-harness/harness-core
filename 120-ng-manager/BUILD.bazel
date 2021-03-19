@@ -44,6 +44,7 @@ shared_dependencies = [
     "//950-events-framework:module",
     "//950-ng-core:module",
     "//950-ng-project-n-orgs:module",
+    "//950-ng-signup:module",
     "//950-timeout-engine:module",
     "//950-wait-engine:module",
     "//954-connector-beans:module",
@@ -675,7 +676,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+    "@maven_harness//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 

@@ -15,3 +15,7 @@ build --action_env=CACHE_RESET=1
 
 build --javacopt="-Xlint:deprecation"
 build --experimental_replay_action_out_err
+
+# Test Intelligence flag
+test --define=HARNESS_ARGS=
+build --define=HARNESS_ARGS=

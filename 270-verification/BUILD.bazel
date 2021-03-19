@@ -7,7 +7,7 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//400-rest:module",
-    "//480-alert-beans:module",
+    "//955-alert-beans:module",
     "//970-rbac-core:module",
     "//:lombok",
     "@maven//:com_openpojo_openpojo",

@@ -11,7 +11,9 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegatelog.client.DelegateSelectionLogHttpClientModule;
 import io.harness.engine.StepTypeLookupService;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
@@ -31,6 +33,8 @@ import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.pms.approval.ApprovalResourceService;
+import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
 import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
@@ -63,6 +67,7 @@ import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.client.YamlSchemaClientModule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -74,6 +79,7 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -160,7 +166,11 @@ public class PipelineServiceModule extends AbstractModule {
         PIPELINE_SERVICE.getServiceId()));
     install(new AccountClientModule(configuration.getManagerClientConfig(), configuration.getManagerServiceSecret(),
         PIPELINE_SERVICE.getServiceId()));
+    install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
+        configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
+        this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
@@ -185,6 +195,7 @@ public class PipelineServiceModule extends AbstractModule {
         .to(PipelineExecutionFilterPropertiesMapper.class);
 
     bind(PMSBarrierService.class).to(PMSBarrierServiceImpl.class);
+    bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
   }
 
   @Provides
@@ -284,5 +295,12 @@ public class PipelineServiceModule extends AbstractModule {
   public ExecutorService templateRegistrationExecutionServiceThreadPool() {
     return ThreadPool.create(
         1, 1, 10, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("TemplateRegistrationService-%d").build());
+  }
+
+  @Provides
+  @Named("yaml-schema-mapper")
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapper() {
+    return Jackson.newObjectMapper();
   }
 }

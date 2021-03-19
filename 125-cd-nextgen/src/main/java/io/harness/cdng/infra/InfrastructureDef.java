@@ -10,10 +10,12 @@ import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.core.ExecutionElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModelProperty;
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
@@ -30,25 +32,29 @@ public class InfrastructureDef implements Visitable {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   Infrastructure infrastructure;
 
+  @JsonProperty("provisioner") @Nullable ExecutionElement provisioner;
+
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public InfrastructureDef(String type, Infrastructure infrastructure) {
+  public InfrastructureDef(String type, Infrastructure infrastructure, ExecutionElement provisioner) {
     this.type = type;
     this.infrastructure = infrastructure;
+    this.provisioner = provisioner;
   }
 
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
     children.add("infrastructure", infrastructure);
+    children.add("provisioner", provisioner);
     return children;
   }
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.INFRASTRUCTURE_DEF).build();
+    return LevelNode.builder().qualifierName(YamlTypes.INFRASTRUCTURE_DEF).isPartOfFQN(false).build();
   }
 }

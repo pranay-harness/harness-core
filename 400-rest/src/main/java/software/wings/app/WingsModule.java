@@ -49,10 +49,8 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.cf.ApiException;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.client.api.CfClient;
-import io.harness.cf.client.api.CfClientException;
 import io.harness.config.PipelineConfig;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
@@ -1590,12 +1588,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     log.info("Using CF API key {}", cfClientConfig.getApiKey());
     String apiKey = cfClientConfig.getApiKey();
 
-    try {
-      return new CfClient(apiKey);
-    } catch (CfClientException | ApiException e) {
-      log.error("Failed to initialize the CF client, {}", e.getMessage());
-    }
-    return null;
+    return new CfClient(apiKey);
   }
 
   @Provides

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.morphia.FiltersMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationVisualizationKryoRegistrar;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.PMSPipelineMorphiaRegistrar;
@@ -24,6 +25,7 @@ public class PipelineServiceModuleRegistrars {
           .add(OrchestrationVisualizationKryoRegistrar.class)
           .addAll(NGTriggerRegistrars.kryoRegistrars)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
+          .add(DelegateServiceBeansKryoRegistrar.class)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

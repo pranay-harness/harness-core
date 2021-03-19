@@ -736,6 +736,11 @@
                 <version>1.1</version>
             </dependency>
             <dependency>
+                <groupId>com.jcraft.harness</groupId>
+                <artifactId>jsch-0-1-54-harness-patch</artifactId>
+                <version>1.1</version>
+            </dependency>
+            <dependency>
                 <groupId>com.microsoft.azure</groupId>
                 <artifactId>azure</artifactId>
                 <version>1.31.1</version>
@@ -1204,6 +1209,11 @@
                 <version>1.2.2</version>
             </dependency>
             <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>1.64</version>
+            </dependency>
+            <dependency>
                 <groupId>org.clojure</groupId>
                 <artifactId>clojure</artifactId>
                 <version>1.9.0</version>
@@ -1233,6 +1243,11 @@
                 <groupId>org.coursera</groupId>
                 <artifactId>metrics-datadog</artifactId>
                 <version>1.1.13</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-alpn-openjdk8-server</artifactId>
+                <version>${jetty.upgraded.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
@@ -1268,6 +1283,11 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-servlet</artifactId>
+                <version>${jetty.upgraded.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
                 <version>${jetty.upgraded.version}</version>
             </dependency>
             <dependency>
@@ -1311,6 +1331,12 @@
                 <groupId>org.eclipse.jgit</groupId>
                 <artifactId>org.eclipse.jgit</artifactId>
                 <version>${jgit.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcpg-jdk15on</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jgit</groupId>
@@ -1816,12 +1842,6 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk16</artifactId>
-                <version>1.46</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.glassfish.jersey.test-framework.providers</groupId>
                 <artifactId>jersey-test-framework-provider-grizzly2</artifactId>
                 <version>2.23.1</version>
@@ -1915,6 +1935,9 @@
             <url>https://harness.jfrog.io/artifactory/harness-internal</url>
         </repository>
         <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
             <id>spring-io</id>
             <url>https://repo.spring.io/plugins-release/</url>
         </repository>

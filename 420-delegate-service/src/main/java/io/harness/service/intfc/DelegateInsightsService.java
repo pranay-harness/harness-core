@@ -1,3 +1,8 @@
 package io.harness.service.intfc;
 
-public interface DelegateInsightsService {}
+import software.wings.beans.DelegateInsightsDetails;
+
+public interface DelegateInsightsService {
+  DelegateInsightsDetails retrieveDelegateInsightsDetails(
+      String accountId, String delegateGroupId, long startTimestamp);
+}

@@ -1,5 +1,9 @@
 package software.wings.service.impl.yaml.handler.templatelibrary;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.PcfCommandTemplate;
@@ -10,6 +14,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class PcfCommandTemplateYamlHandler extends TemplateLibraryYamlHandler<PcfCommandTemplateYaml> {
   @Override
   public PcfCommandTemplateYaml toYaml(Template bean, String appId) {

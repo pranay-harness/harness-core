@@ -68,6 +68,8 @@ public class EntityDetailProtoToRestMapper {
         return Scope.ORG;
       case PROJECT:
         return Scope.PROJECT;
+      case UNKNOWN:
+        return Scope.UNKNOWN;
       case UNRECOGNIZED:
       default:
         throw new UnknownEnumTypeException("scope", String.valueOf(scope));

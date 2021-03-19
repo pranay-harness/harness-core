@@ -67,10 +67,11 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
-            .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
+            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
+            .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, k8sBGDeployRequest, ambiance, infrastructure);
@@ -121,7 +122,6 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sBlueGreenOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }

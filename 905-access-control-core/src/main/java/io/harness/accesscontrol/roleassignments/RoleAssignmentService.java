@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.roleassignments;
 
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
+import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -24,4 +26,6 @@ public interface RoleAssignmentService {
   Optional<RoleAssignment> delete(@NotEmpty String identifier, @NotEmpty String parentIdentifier);
 
   long deleteMulti(@Valid @NotNull RoleAssignmentFilter roleAssignmentFilter);
+
+  RoleAssignmentValidationResult validate(@Valid @NotNull RoleAssignmentValidationRequest validationRequest);
 }

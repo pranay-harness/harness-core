@@ -11,8 +11,11 @@ public interface EntitySetupUsageService {
   Page<EntitySetupUsageDTO> listAllEntityUsage(int page, int size, String accountIdentifier, String referredEntityFQN,
       EntityType referredEntityType, String searchTerm);
 
+  List<EntitySetupUsageDTO> listAllReferredUsages(int page, int size, String accountIdentifier,
+      String referredByEntityFQN, EntityType referredEntityType, String searchTerm);
+
   Page<EntitySetupUsageDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String referredEntityIdentifier, EntityType referrredEntityType, String searchTerm);
+      String projectIdentifier, String referredEntityIdentifier, EntityType referredEntityType, String searchTerm);
 
   @Deprecated EntitySetupUsageDTO save(EntitySetupUsageDTO entitySetupUsageDTO);
 

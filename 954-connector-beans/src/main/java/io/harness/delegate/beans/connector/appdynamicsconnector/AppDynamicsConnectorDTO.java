@@ -1,6 +1,7 @@
 package io.harness.delegate.beans.connector.appdynamicsconnector;
 
 import io.harness.beans.DecryptableEntity;
+import io.harness.connector.DelegateSelectable;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -9,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,11 +27,12 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity {
+public class AppDynamicsConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
   @NotNull String username;
   @NotNull String accountname;
   @NotNull String controllerUrl;
   @NotNull String accountId;
+  Set<String> delegateSelectors;
 
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
 

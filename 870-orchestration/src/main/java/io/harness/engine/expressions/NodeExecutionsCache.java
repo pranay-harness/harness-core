@@ -80,4 +80,8 @@ public class NodeExecutionsCache {
     childrenMap.put(parentId, childExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList()));
     return childExecutions;
   }
+
+  public List<NodeExecution> findAllChildren(String parentId) {
+    return nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), parentId);
+  }
 }

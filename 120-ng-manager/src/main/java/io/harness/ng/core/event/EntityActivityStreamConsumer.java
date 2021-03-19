@@ -41,7 +41,7 @@ public class EntityActivityStreamConsumer implements Runnable {
     } catch (Exception ex) {
       log.error("Entity crud stream consumer unexpectedly stopped", ex);
     }
-    SecurityContextBuilder.unsetContext();
+    SecurityContextBuilder.unsetCompleteContext();
   }
 
   private void pollAndProcessMessages() throws ConsumerShutdownException {

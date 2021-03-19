@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
-import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
 
@@ -19,8 +18,8 @@ public class IdentifierRefProtoUtils {
     String projectIdentifier = identifierRef.getProjectIdentifier();
     String orgIdentifier = identifierRef.getOrgIdentifier();
     String identifier = identifierRef.getIdentifier();
+    Scope scope = identifierRef.getScope();
 
-    Scope scope = ScopeHelper.getScope(accountIdentifier, orgIdentifier, projectIdentifier);
     IdentifierRefProtoDTO.Builder identifierRefBuilder = IdentifierRefProtoDTO.newBuilder()
                                                              .setIdentifier(StringValue.of(identifier))
                                                              .setAccountIdentifier(StringValue.of(accountIdentifier))

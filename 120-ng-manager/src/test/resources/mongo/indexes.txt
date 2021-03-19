@@ -3,6 +3,8 @@
 !!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 !!!custom_delegateTaskProgressResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
 !!!custom_delegateTaskProgressResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+SdkResponseEvent {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
+SdkResponseEvent {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 accounts {"name": "accountBackgroundJobCheckIteration_1", "background": true} {"accountBackgroundJobCheckIteration": 1}
 accounts {"name": "accountDeletionIteration_1", "background": true} {"accountDeletionIteration": 1}
 accounts {"name": "accountName_1", "unique": true} {"accountName": 1}
@@ -48,6 +50,8 @@ applicationManifests {"name": "createdAt_1", "background": true} {"createdAt": 1
 applications {"name": "appId_1", "background": true} {"appId": 1}
 applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
+approvalInstances {"name": "nodeExecutionId_1", "background": true} {"nodeExecutionId": 1}
+approvalInstances {"name": "status_deadline", "background": true} {"status": 1, "deadline": 1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 artifactSourceNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
 artifactSourceNG {"name": "uniqueHash", "unique": true} {"uniqueHash": 1}
@@ -79,6 +83,7 @@ authTokens {"name": "appId_1", "background": true} {"appId": 1}
 authTokens {"name": "createdAt_1", "background": true} {"createdAt": 1}
 authTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 barrierExecutionInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
+barrierExecutionInstances {"name": "planExecutionId_barrierState_stagesIdentifier_idx", "background": true} {"planExecutionId": 1, "barrierState": 1, "setupInfo.stages.identifier": 1}
 barrierInstances {"name": "accountId_1", "background": true} {"accountId": 1}
 barrierInstances {"name": "appId_1", "background": true} {"appId": 1}
 barrierInstances {"name": "next", "background": true} {"state": 1, "nextIteration": 1}
@@ -172,6 +177,7 @@ delegateConnections {"name": "index2", "background": true} {"accountId": 1, "del
 delegateConnections {"name": "lastHeartbeatIndex", "background": true} {"disconnected": 1, "lastHeartbeat": 1}
 delegateConnections {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateGroups {"name": "byAccount", "unique": true} {"accountId": 1, "name": 1}
+delegateInsightsSummary {"name": "byAcctGrpTime", "background": true} {"accountId": 1, "delegateGroupId": 1, "periodStartTime": 1}
 delegatePerpetualTaskUsageInsights {"name": "timestamp_1", "background": true} {"timestamp": 1}
 delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
 delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
@@ -516,9 +522,9 @@ notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
-organizations {"name": "accountIdentifierNameIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "name": 1}
+organizations {"name": "accountIdentifierNameIdx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "harnessManaged": -1, "name": 1}
 organizations {"name": "unique_accountIdentifier_organizationIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "identifier": 1}
-outboxEvents {"name": "createdAt_outbox_Idx", "background": true} {"createdAt": 1}
+outboxEvents {"name": "blocked_createdAt_nextIteration_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextIteration": 1}
 outcomeInstances {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}
 outcomeInstances {"name": "planExecutionIdIdx", "background": true} {"planExecutionId": 1}
 outcomeInstances {"name": "producedBySetupIdIdx", "background": true} {"planExecutionId": 1, "producedBy.setupId": 1, "name": 1}

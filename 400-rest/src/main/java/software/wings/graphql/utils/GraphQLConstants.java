@@ -22,4 +22,8 @@ public class GraphQLConstants {
   public static final String DELETE_APPLICATION_API = "deleteApplication";
   public static final String HTTP_SERVLET_REQUEST = "httpServletRequest";
   public static final String GRAPHQL_QUERY_STRING = "graphqlQueryString";
+  public static final String CREATE_USERGROUP_API = "createUserGroup";
+  public static final String DELETE_USERGROUP_API = "deleteUserGroup";
+  public static final String UPDATE_USERGROUP_API = "updateUserGroup";
+  public static final String UPDATE_USERGROUP_PERMISSIONS_API = "updateUserGroupPermissions";
 }

@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -56,6 +57,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
@@ -144,6 +146,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class PcfPluginStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
 

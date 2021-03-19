@@ -27,9 +27,9 @@ import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState
 import io.harness.cvng.statemachine.entities.TestTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.exception.AnalysisStateMachineException;
 import io.harness.cvng.statemachine.services.intfc.AnalysisStateMachineService;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.base.Preconditions;
@@ -51,7 +51,6 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private VerificationJobService verificationJobService;
   @Inject private Clock clock;
 
   @Override
@@ -278,25 +277,26 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       Preconditions.checkNotNull(verificationJobInstance, "verificationJobInstance can not be null");
       Preconditions.checkNotNull(cvConfigForDeployment, "cvConfigForDeployment can not be null");
 
-      if (VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-        createDeploymentAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
+      if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH) {
+        createHealthAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance);
       } else {
-        createHealthAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
+        createDeploymentAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
       }
     }
     return stateMachine;
   }
 
   private void createHealthAnalysisState(AnalysisStateMachine stateMachine, AnalysisInput inputForAnalysis,
-      VerificationJobInstance verificationJobInstance, CVConfig cvConfigForDeployment) {
+      VerificationJobInstance verificationJobInstance) {
+    HealthVerificationJob resolvedJob = (HealthVerificationJob) verificationJobInstance.getResolvedJob();
     ActivityVerificationState healthAnalysisState = ActivityVerificationState.builder().build();
     healthAnalysisState.setInputs(inputForAnalysis);
     healthAnalysisState.setHealthVerificationPeriod(HealthVerificationPeriod.PRE_ACTIVITY);
     healthAnalysisState.setDuration(verificationJobInstance.getResolvedJob().getDuration());
-    healthAnalysisState.setPreActivityVerificationStartTime(
-        verificationJobInstance.getPreActivityVerificationStartTime());
-    healthAnalysisState.setPostActivityVerificationStartTime(
-        verificationJobInstance.getPostActivityVerificationStartTime());
+    healthAnalysisState.setPreActivityVerificationStartTime(resolvedJob.getPreActivityVerificationStartTime(
+        verificationJobInstance.getStartTime(), verificationJobInstance.getPreActivityVerificationStartTime()));
+    healthAnalysisState.setPostActivityVerificationStartTime(resolvedJob.getPostActivityVerificationStartTime(
+        verificationJobInstance.getStartTime(), verificationJobInstance.getPostActivityVerificationStartTime()));
     healthAnalysisState.setStatus(AnalysisStatus.CREATED);
     stateMachine.setCurrentState(healthAnalysisState);
   }

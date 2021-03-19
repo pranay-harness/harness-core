@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.roleassignments;
 
+import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.validator.ValidRoleAssignmentFilter;
@@ -21,11 +24,6 @@ public class RoleAssignmentFilter {
   @Builder.Default @NotNull Set<String> roleFilter = new HashSet<>();
   @Builder.Default @NotNull Set<PrincipalType> principalTypeFilter = new HashSet<>();
   @Builder.Default @NotNull Set<Principal> principalFilter = new HashSet<>();
-  @Builder.Default @NotNull Set<Boolean> managedFilter = new HashSet<>();
+  @Builder.Default @NotNull ManagedFilter managedFilter = NO_FILTER;
   @Builder.Default @NotNull Set<Boolean> disabledFilter = new HashSet<>();
-
-  public boolean isEmpty() {
-    return resourceGroupFilter.isEmpty() && roleFilter.isEmpty() && principalFilter.isEmpty()
-        && principalTypeFilter.isEmpty() && managedFilter.isEmpty() && disabledFilter.isEmpty();
-  }
 }

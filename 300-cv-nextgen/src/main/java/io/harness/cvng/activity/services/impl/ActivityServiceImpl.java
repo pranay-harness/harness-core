@@ -488,7 +488,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   private ActivityVerificationResultDTO getResultForAnActivity(Activity activity) {
     List<VerificationJobInstance> verificationJobInstances =
-        verificationJobInstanceService.getNonDeploymentInstances(activity.getVerificationJobInstanceIds());
+        verificationJobInstanceService.getHealthVerificationJobInstances(activity.getVerificationJobInstanceIds());
 
     ActivityVerificationSummary summary =
         verificationJobInstanceService.getActivityVerificationSummary(verificationJobInstances);
@@ -641,7 +641,6 @@ public class ActivityServiceImpl implements ActivityService {
   private VerificationJobInstanceBuilder fillOutCommonJobInstanceProperties(
       Activity activity, VerificationJob verificationJob) {
     return VerificationJobInstance.builder()
-        .verificationJobIdentifier(verificationJob.getIdentifier())
         .accountId(activity.getAccountId())
         .executionStatus(ExecutionStatus.QUEUED)
         .deploymentStartTime(activity.getActivityStartTime())

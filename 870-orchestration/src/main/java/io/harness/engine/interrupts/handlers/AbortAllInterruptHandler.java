@@ -10,7 +10,6 @@ import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-import static io.harness.pms.contracts.execution.Status.ABORTED;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 
 import io.harness.OrchestrationPublisherName;
@@ -105,6 +104,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
                 .interruptType(interrupt.getType())
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptId(interrupt.getUuid())
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
     if (isEmpty(discontinuingNodeExecutions)) {
@@ -139,7 +139,7 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     List<String> notifyIds = new ArrayList<>();
     try {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, ABORTED, updatedInterrupt);
+        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, updatedInterrupt);
         notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + interrupt.getUuid());
       }
 

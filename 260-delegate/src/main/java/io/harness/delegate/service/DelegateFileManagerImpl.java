@@ -8,8 +8,8 @@ import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
 import io.harness.delegate.beans.DelegateFile;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;

@@ -47,6 +47,8 @@ import io.harness.connector.mappers.jira.JiraDTOToEntity;
 import io.harness.connector.mappers.jira.JiraEntityToDTO;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesDTOToEntity;
 import io.harness.connector.mappers.kubernetesMapper.KubernetesEntityToDTO;
+import io.harness.connector.mappers.newerlicmapper.NewRelicDTOToEntity;
+import io.harness.connector.mappers.newerlicmapper.NewRelicEntityToDTO;
 import io.harness.connector.mappers.nexusmapper.NexusDTOToEntity;
 import io.harness.connector.mappers.nexusmapper.NexusEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.GcpKmsDTOToEntity;
@@ -98,6 +100,9 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.APP_DYNAMICS,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, AppDynamicsDTOToEntity.class, AppDynamicsEntityToDTO.class));
+    registrar.put(ConnectorType.NEW_RELIC,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            NoOpConnectorValidationParamsProvider.class, NewRelicDTOToEntity.class, NewRelicEntityToDTO.class));
     registrar.put(ConnectorType.SPLUNK,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, SplunkDTOToEntity.class, SplunkEntityToDTO.class));

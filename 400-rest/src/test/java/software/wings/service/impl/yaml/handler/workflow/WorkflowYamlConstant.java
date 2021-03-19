@@ -27,6 +27,12 @@ public class WorkflowYamlConstant {
   public static final String BUILD_VALID_YAML_USER_GROUP_TEMPLATIZED2_RESOURCE_PATH =
       resourcePath + "buildValidWorkflowTemplatized.yaml";
 
+  public static final String BUILD_VALID_JIRA_RESOURCE_PATH = resourcePath + "buildWorkflowJira.yaml";
+
+  public static final String BUILD_VALID_SERVICENOW_RESOURCE_PATH = resourcePath + "buildServiceNow.yaml";
+
+  public static final String BUILD_VALID_LINKED_SHELL_RESOURCE_PATH = resourcePath + "buildLinkedShellScript.yaml";
+
   public static final String BUILD_VALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/Workflows/build.yaml";
   public static final String BUILD_VALID_YAML_FILE_PATH2 = "Setup/Applications/APP_NAME/Workflows/test.yaml";
   public static final String BUILD_INVALID_YAML_CONTENT_RESOURCE_PATH = resourcePath + "buildInvalidWorkflow.yaml";
@@ -43,6 +49,13 @@ public class WorkflowYamlConstant {
 
   // START STRING CONSTANTS FOR ROLLING WORKFLOW YAML TEST
   public static final String ROLLING_VALID_YAML_CONTENT_RESOURCE_PATH = resourcePath + "rollingValidWorkflow.yaml";
+  public static final String ROLLING_JENKINS_YAML_CONTENT_RESOURCE_PATH = resourcePath + "rollingJenkins.yaml";
+  public static final String ROLLING_GCB_YAML_CONTENT_RESOURCE_PATH = resourcePath + "rollingGCB.yaml";
+  public static final String ROLLING_BAMBOO_YAML_CONTENT_RESOURCE_PATH = resourcePath + "rollingBamboo.yaml";
+  public static final String ROLLING_RESOURCE_CONSTRAINT_RESOURCE_PATH =
+      resourcePath + "rollingResourceConstraint.yaml";
+  public static final String ROLLING_RESOURCE_CONSTRAINT_RESOURCE_PATH2 =
+      resourcePath + "rollingResourceConstraintEdited.yaml";
 
   public static final String ROLLING_VALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/Workflows/rolling.yaml";
   public static final String ROLLING_INVALID_YAML_CONTENT = "envName: env1\nphaseInvalid: phase1\ntype: ROLLING";

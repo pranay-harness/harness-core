@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
@@ -12,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.scm.SecretName;
@@ -31,6 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(CDP)
 public class PcfConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @Inject YamlHandlersSecretGeneratorHelper yamlHandlersSecretGeneratorHelper;
   @InjectMocks @Inject private PcfConfigYamlHandler yamlHandler;

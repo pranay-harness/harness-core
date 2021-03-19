@@ -74,7 +74,8 @@ public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
         Resources.toString(Objects.requireNonNull(classLoader.getResource(pipelineFilename)), StandardCharsets.UTF_8);
 
     NgPipeline pipeline = YamlPipelineUtils.read(pipelineYaml, NgPipeline.class);
-    EntityReferenceExtractorVisitor visitor = factory.obtainEntityReferenceExtractorVisitor(ACCOUNT, ORG, PROJECT);
+    EntityReferenceExtractorVisitor visitor =
+        factory.obtainEntityReferenceExtractorVisitor(ACCOUNT, ORG, PROJECT, null);
 
     visitor.walkElementTree(pipeline);
     Set<EntityDetailProtoDTO> references = visitor.getEntityReferenceSet();

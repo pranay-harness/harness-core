@@ -1,5 +1,7 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
+import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
+
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
@@ -7,6 +9,7 @@ import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.K8sManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -14,6 +17,7 @@ import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -32,7 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class K8sManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
   @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
-
+  @Wither @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) ParameterField<Boolean> skipResourceVersioning;
   // For Visitor Framework Impl
   String metadata;
 
@@ -44,6 +48,10 @@ public class K8sManifest implements ManifestAttributes, Visitable {
       resultantManifest = resultantManifest.withStoreConfigWrapper(
           storeConfigWrapper.applyOverrides(k8sManifest.getStoreConfigWrapper()));
     }
+    if (k8sManifest.getSkipResourceVersioning() != null) {
+      resultantManifest = resultantManifest.withSkipResourceVersioning(k8sManifest.getSkipResourceVersioning());
+    }
+
     return resultantManifest;
   }
 
@@ -66,6 +74,6 @@ public class K8sManifest implements ManifestAttributes, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_MANIFEST).build();
+    return LevelNode.builder().qualifierName(YamlTypes.K8S_MANIFEST).isPartOfFQN(false).build();
   }
 }

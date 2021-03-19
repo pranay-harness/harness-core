@@ -32,6 +32,8 @@ public interface YamlTypes {
   String MANIFEST_OVERRIDE_SETS = "manifestOverrideSets";
   String K8S_MANIFEST = ManifestType.K8Manifest;
   String HELM_CHART_MANIFEST = ManifestType.HelmChart;
+  String KUSTOMIZE_MANIFEST = ManifestType.Kustomize;
+  String OPENSHIFT_MANIFEST = ManifestType.OpenshiftTemplate;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
   String HTTP_STEP = StepSpecTypeConstants.HTTP;

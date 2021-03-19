@@ -14,8 +14,19 @@ public class OutboxSDKConstants {
   public static final PageRequest DEFAULT_OUTBOX_POLL_PAGE_REQUEST =
       PageRequest.builder()
           .pageIndex(0)
-          .pageSize(20)
+          .pageSize(10)
           .sortOrders(Collections.singletonList(
               SortOrder.Builder.aSortOrder().withField(OutboxEventKeys.createdAt, ASC).build()))
+          .build();
+
+  public static final long DEFAULT_MAX_ATTEMPTS = 10;
+
+  public static final OutboxEventIteratorConfiguration DEFAULT_OUTBOX_ITERATOR_CONFIGURATION =
+      OutboxEventIteratorConfiguration.builder()
+          .threadPoolSize(2)
+          .intervalInSeconds(90)
+          .targetIntervalInSeconds(60)
+          .acceptableNoAlertDelayInSeconds(60)
+          .maximumOutboxEventHandlingAttempts(10)
           .build();
 }

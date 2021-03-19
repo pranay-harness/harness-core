@@ -7,7 +7,6 @@ import static io.harness.rule.OwnerRule.POOJA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.FunctionalTests;
 import io.harness.ff.FeatureFlagService;
@@ -80,9 +79,6 @@ public class LoopedPipelineTest extends AbstractFunctionalTest {
     application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
     assertThat(application).isNotNull();
 
-    if (!featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, application.getAccountId())) {
-      featureFlagService.enableAccount(FeatureName.MULTISELECT_INFRA_PIPELINE, application.getAccountId());
-    }
     service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
     environment = environmentGenerator.ensurePredefined(seed, owners, GENERIC_TEST);
     infrastructureDefinition1 =

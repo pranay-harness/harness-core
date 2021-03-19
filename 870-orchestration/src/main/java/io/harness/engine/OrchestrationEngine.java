@@ -4,12 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.pms.contracts.execution.Status.ABORTED;
-import static io.harness.pms.contracts.execution.Status.ERRORED;
-import static io.harness.pms.contracts.execution.Status.EXPIRED;
 import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
-import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
 import static java.lang.String.format;
@@ -32,6 +28,7 @@ import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.resume.EngineWaitResumeCallback;
 import io.harness.engine.skip.SkipCheck;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.ExceptionUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -98,7 +95,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -443,21 +439,7 @@ public class OrchestrationEngine {
   // TODO (prashant) => Improve this with more clarity.
   private Status calculateEndStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
-    if (StatusUtils.positiveStatuses().containsAll(statuses)) {
-      return SUCCEEDED;
-    } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
-      return ABORTED;
-    } else if (statuses.stream().anyMatch(status -> status == ERRORED)) {
-      return ERRORED;
-    } else if (statuses.stream().anyMatch(status -> status == FAILED)) {
-      return FAILED;
-    } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
-      return EXPIRED;
-    } else {
-      log.error("This should not Happen. PlanExecutionId : {}", planExecutionId);
-      return ERRORED;
-    }
+    return OrchestrationUtils.calculateEndStatus(nodeExecutions, planExecutionId);
   }
 
   private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull AdviserResponse adviserResponse) {

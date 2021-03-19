@@ -16,7 +16,7 @@ import software.wings.alerts.AlertSeverity;
 
 import lombok.Getter;
 
-@TargetModule(Module._480_ALERT_BEANS)
+@TargetModule(Module._955_ALERT_BEANS)
 @BreakDependencyOn("software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation")
 public enum AlertType {
   ApprovalNeeded(Approval, Warning),

@@ -1,19 +1,25 @@
 package io.harness.delegate.beans.connector.docker;
 
+import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class DockerCapabilityHelper {
-  public static List<ExecutionCapability> fetchRequiredExecutionCapabilities(
-      DockerConnectorDTO dockerConnectorDTO, ExpressionEvaluator maskingEvaluator) {
+public class DockerCapabilityHelper extends ConnectorCapabilityBaseHelper {
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
+      ConnectorConfigDTO connectorConfigDTO, ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilityList = new ArrayList<>();
+    DockerConnectorDTO dockerConnectorDTO = (DockerConnectorDTO) connectorConfigDTO;
     final String dockerRegistryUrl = dockerConnectorDTO.getDockerRegistryUrl();
-    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+    capabilityList.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         dockerRegistryUrl.endsWith("/") ? dockerRegistryUrl : dockerRegistryUrl.concat("/"), maskingEvaluator));
+    populateDelegateSelectorCapability(capabilityList, dockerConnectorDTO.getDelegateSelectors());
+    return capabilityList;
   }
 }

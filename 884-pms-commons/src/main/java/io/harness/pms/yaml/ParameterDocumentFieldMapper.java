@@ -9,30 +9,36 @@ import io.harness.pms.yaml.ParameterDocumentField.ParameterDocumentFieldKeys;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 @UtilityClass
+@Slf4j
 public class ParameterDocumentFieldMapper {
   public ParameterDocumentField fromParameterField(ParameterField<?> parameterField, CastedField castedField) {
+    boolean skipAutoEvaluation = castedField != null && castedField.getField() != null
+        && castedField.getField().isAnnotationPresent(SkipAutoEvaluation.class);
+    Class<?> cls = findValueClass(null, castedField);
     if (parameterField == null) {
-      Class<?> cls = findValueClass(null, castedField);
       if (cls == null) {
         throw new InvalidRequestException("Parameter field is null");
       }
       return ParameterDocumentField.builder()
           .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(null)))
-          .valueClass(cls)
+          .valueClass(cls.getName())
           .typeString(cls.isAssignableFrom(String.class))
+          .skipAutoEvaluation(skipAutoEvaluation)
           .build();
     }
     return ParameterDocumentField.builder()
         .expression(parameterField.isExpression())
         .expressionValue(parameterField.getExpressionValue())
         .valueDoc(RecastOrchestrationUtils.toDocument(new ParameterFieldValueWrapper<>(parameterField.getValue())))
-        .valueClass(findValueClass(parameterField, castedField))
+        .valueClass(cls == null ? null : cls.getName())
         .inputSetValidator(parameterField.getInputSetValidator())
         .typeString(parameterField.isTypeString())
+        .skipAutoEvaluation(skipAutoEvaluation)
         .jsonResponseField(parameterField.isJsonResponseField())
         .responseField(parameterField.getResponseField())
         .build();
@@ -42,8 +48,10 @@ public class ParameterDocumentFieldMapper {
     if (documentField == null) {
       return null;
     }
+
     ParameterFieldValueWrapper<?> parameterFieldValueWrapper =
         RecastOrchestrationUtils.fromDocument(documentField.getValueDoc(), ParameterFieldValueWrapper.class);
+    checkValueClass(documentField, parameterFieldValueWrapper);
     return ParameterField.builder()
         .expression(documentField.isExpression())
         .expressionValue(documentField.getExpressionValue())
@@ -53,6 +61,28 @@ public class ParameterDocumentFieldMapper {
         .jsonResponseField(documentField.isJsonResponseField())
         .responseField(documentField.getResponseField())
         .build();
+  }
+
+  private void checkValueClass(
+      ParameterDocumentField documentField, ParameterFieldValueWrapper<?> parameterFieldValueWrapper) {
+    if (documentField.getValueClass() == null || parameterFieldValueWrapper == null
+        || parameterFieldValueWrapper.getValue() == null) {
+      return;
+    }
+
+    Class<?> cls;
+    try {
+      cls = Class.forName(documentField.getValueClass());
+    } catch (Exception ex) {
+      // For backwards compatibility
+      log.warn("Unknown class: {}", documentField.getValueClass());
+      return;
+    }
+
+    if (!cls.isAssignableFrom(parameterFieldValueWrapper.getValue().getClass())) {
+      log.error(String.format("Expected value of type: %s, got: %s", cls.getSimpleName(),
+          parameterFieldValueWrapper.getValue().getClass().getSimpleName()));
+    }
   }
 
   public Optional<ParameterDocumentField> fromParameterFieldDocument(Object o) {

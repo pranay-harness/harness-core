@@ -20,8 +20,9 @@ public class ParameterDocumentField {
   @NotExpression private String expressionValue;
   private boolean expression;
   @Setter private Document valueDoc;
-  private Class<?> valueClass;
+  private String valueClass;
   private boolean typeString;
+  private boolean skipAutoEvaluation;
 
   // This field is set when runtime input with validation is given.
   private InputSetValidator inputSetValidator;
@@ -31,13 +32,15 @@ public class ParameterDocumentField {
   private String responseField;
 
   @Builder
-  public ParameterDocumentField(String expressionValue, boolean expression, Document valueDoc, Class<?> valueClass,
-      boolean typeString, InputSetValidator inputSetValidator, boolean jsonResponseField, String responseField) {
+  public ParameterDocumentField(String expressionValue, boolean expression, Document valueDoc, String valueClass,
+      boolean typeString, boolean skipAutoEvaluation, InputSetValidator inputSetValidator, boolean jsonResponseField,
+      String responseField) {
     this.expressionValue = expressionValue;
     this.expression = expression;
     this.valueDoc = valueDoc;
     this.valueClass = valueClass;
     this.typeString = typeString;
+    this.skipAutoEvaluation = skipAutoEvaluation;
     this.inputSetValidator = inputSetValidator;
     this.jsonResponseField = jsonResponseField;
     this.responseField = responseField;

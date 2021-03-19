@@ -1,3 +1,6 @@
 package software.wings.core.managerConfiguration;
 
-public enum ConfigChangeEvent { PrimaryChanged }
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
+
+@TargetModule(Module._960_PERSISTENCE) public enum ConfigChangeEvent { PrimaryChanged }

@@ -14,7 +14,7 @@ import static software.wings.beans.command.ScpCommandUnit.ScpFileCategory.ARTIFA
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 
-import io.harness.delegate.beans.DelegateAgentFileService.FileBucket;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -334,7 +334,7 @@ public class ScpCommandUnit extends SshCommandUnit {
     return ArtifactType.JAR == artifactType || ArtifactType.TAR == artifactType || ArtifactType.WAR == artifactType
         || ArtifactType.ZIP == artifactType || ArtifactType.IIS == artifactType || ArtifactType.IIS_APP == artifactType
         || ArtifactType.IIS_VirtualDirectory == artifactType || ArtifactType.RPM == artifactType
-        || ArtifactType.OTHER == artifactType;
+        || ArtifactType.OTHER == artifactType || ArtifactType.NUGET == artifactType;
   }
 
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
@@ -342,7 +342,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         aLog()
             .appId(context.getAppId())
             .activityId(context.getActivityId())
-            .hostName(context.getHost().getPublicDns())
+            .hostName(context.getHost() == null ? null : context.getHost().getPublicDns())
             .logLevel(logLevel)
             .commandUnitName(getName())
             .logLine(line)

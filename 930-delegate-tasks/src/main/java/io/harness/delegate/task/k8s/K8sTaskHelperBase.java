@@ -2,6 +2,7 @@ package io.harness.delegate.task.k8s;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getFilesUnderPath;
 import static io.harness.helm.HelmConstants.HELM_PATH_PLACEHOLDER;
@@ -63,12 +64,16 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
+import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmTaskHelperBase;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GitOperationException;
+import io.harness.exception.HelmClientException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
@@ -193,6 +198,9 @@ public class K8sTaskHelperBase {
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
+  @Inject private KustomizeTaskHelper kustomizeTaskHelper;
+  @Inject private OpenShiftDelegateService openShiftDelegateService;
+  @Inject private HelmTaskHelperBase helmTaskHelperBase;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
 
@@ -831,9 +839,7 @@ public class K8sTaskHelperBase {
       List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
       throws Exception {
     for (KubernetesResourceId resourceId : kubernetesResourceIds) {
-      DeleteCommand deleteCommand =
-          client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-      ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
       if (result.getExitValue() != 0) {
         log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
       }
@@ -842,6 +848,32 @@ public class K8sTaskHelperBase {
     if (denoteOverallSuccess) {
       executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
     }
+  }
+
+  public boolean executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+      List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
+      throws Exception {
+    for (KubernetesResourceId resourceId : kubernetesResourceIds) {
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
+      if (result.getExitValue() != 0) {
+        log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+        return false;
+      }
+    }
+
+    if (denoteOverallSuccess) {
+      executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
+    }
+
+    return true;
+  }
+
+  private ProcessResult executeDeleteCommand(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+      LogCallback executionLogCallback, KubernetesResourceId resourceId) throws Exception {
+    DeleteCommand deleteCommand =
+        client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+    return runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
   }
 
   public void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback)
@@ -1846,11 +1878,29 @@ public class K8sTaskHelperBase {
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
             k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
-        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, valuesFiles,
-            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+        return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(),
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), valuesFiles, releaseName,
+            namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
             helmChartManifest.getHelmCommandFlag());
+
+      case KUSTOMIZE:
+        KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+        GitStoreDelegateConfig gitStoreDelegateConfig =
+            (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
+        return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
+
+      case OPENSHIFT_TEMPLATE:
+        final List<String> paramFilesContent = valuesFiles;
+        OpenshiftManifestDelegateConfig openshiftManifestConfig =
+            (OpenshiftManifestDelegateConfig) manifestDelegateConfig;
+        GitStoreDelegateConfig otGitStoreDelegateConfig =
+            (GitStoreDelegateConfig) openshiftManifestConfig.getStoreDelegateConfig();
+        return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
+            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, paramFilesContent);
 
       default:
         throw new UnsupportedOperationException(
@@ -1873,9 +1923,15 @@ public class K8sTaskHelperBase {
 
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
-        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(), manifestFilesDirectory, filesList,
-            valuesFiles, releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(),
-            timeoutInMillis, helmChartManifest.getHelmCommandFlag());
+        return renderTemplateForHelmChartFiles(k8sDelegateTaskParams.getHelmPath(),
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), filesList, valuesFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            helmChartManifest.getHelmCommandFlag());
+
+      case KUSTOMIZE:
+        KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
+        return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
+            kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList, executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -1906,6 +1962,10 @@ public class K8sTaskHelperBase {
       case GIT:
         return downloadManifestFilesFromGit(
             storeDelegateConfig, manifestFilesDirectory, executionLogCallback, accountId);
+
+      case HTTP_HELM:
+        return downloadFilesFromHttpChartRepo(
+            manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
 
       default:
         throw new UnsupportedOperationException(
@@ -1964,6 +2024,34 @@ public class K8sTaskHelperBase {
 
     gitStoreDelegateConfig.getPaths().stream().collect(
         Collectors.joining(System.lineSeparator(), "\nFetching manifest files at path: ", System.lineSeparator()));
+  }
+
+  private boolean downloadFilesFromHttpChartRepo(ManifestDelegateConfig manifestDelegateConfig,
+      String destinationDirectory, LogCallback logCallback, long timeoutInMillis) {
+    if (!(manifestDelegateConfig instanceof HelmChartManifestDelegateConfig)) {
+      throw new InvalidArgumentsException(
+          Pair.of("manifestDelegateConfig", "Must be instance of HelmChartManifestDelegateConfig"));
+    }
+
+    try {
+      HelmChartManifestDelegateConfig helmChartManifestConfig =
+          (HelmChartManifestDelegateConfig) manifestDelegateConfig;
+      logCallback.saveExecutionLog(color(format("%nFetching files from helm chart repo"), White, Bold));
+      helmTaskHelperBase.printHelmChartInfoInExecutionLogs(helmChartManifestConfig, logCallback);
+
+      helmTaskHelperBase.downloadChartFilesFromHttpRepo(helmChartManifestConfig, destinationDirectory, timeoutInMillis);
+
+      logCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
+      logCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
+      logCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
+
+    } catch (Exception e) {
+      String errorMsg = "Failed to download manifest files from helm HTTP repo. ";
+      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(errorMsg, e);
+    }
+
+    return true;
   }
 
   public ConnectorValidationResult validate(
@@ -2173,5 +2261,14 @@ public class K8sTaskHelperBase {
         .replace("${RELEASE_NAME}", releaseName)
         .replace("${NAMESPACE}", namespace)
         .replace("${OVERRIDE_VALUES}", valueOverrides);
+  }
+
+  private String getManifestDirectoryForHelmChart(
+      String baseManifestDirectory, HelmChartManifestDelegateConfig helmChartManifest) {
+    if (HTTP_HELM == helmChartManifest.getStoreDelegateConfig().getType()) {
+      return HelmTaskHelperBase.getChartDirectory(baseManifestDirectory, helmChartManifest.getChartName());
+    }
+
+    return baseManifestDirectory;
   }
 }

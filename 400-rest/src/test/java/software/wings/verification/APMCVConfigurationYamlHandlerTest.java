@@ -29,8 +29,8 @@ import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.sm.states.APMVerificationState.MetricCollectionInfo;
 import software.wings.sm.states.APMVerificationState.ResponseMapping;
 import software.wings.sm.states.APMVerificationState.ResponseType;
+import software.wings.verification.apm.APMCVConfigurationYaml;
 import software.wings.verification.apm.APMCVServiceConfiguration;
-import software.wings.verification.apm.APMCVServiceConfiguration.APMCVConfigurationYaml;
 
 import java.util.ArrayList;
 import java.util.List;

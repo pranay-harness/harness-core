@@ -1,5 +1,6 @@
 package io.harness.accesscontrol.roles.filter;
 
+import io.harness.accesscontrol.common.filter.ManagedFilter;
 import io.harness.accesscontrol.roles.validator.ValidRoleFilter;
 
 import java.util.HashSet;

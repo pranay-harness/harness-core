@@ -56,6 +56,7 @@ public final class HealthVerificationHeatMap implements UuidAware, PersistentEnt
 
   @Id private String uuid;
   private String aggregationId;
+  // TODO: remove this if possible.
   @FdIndex private String activityId;
   private String serviceIdentifier;
   private String envIdentifier;
