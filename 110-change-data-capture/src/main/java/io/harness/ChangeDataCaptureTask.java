@@ -1,13 +1,8 @@
 package io.harness;
 
 import io.harness.changestreamsframework.ChangeSubscriber;
-import io.harness.persistence.PersistentEntity;
-
-import software.wings.beans.Application;
 
 import com.google.inject.Inject;
-import java.util.HashSet;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

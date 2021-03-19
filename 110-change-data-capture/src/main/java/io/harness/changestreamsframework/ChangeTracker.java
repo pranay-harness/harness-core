@@ -18,6 +18,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
+import com.mongodb.client.model.changestream.OperationType;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -116,7 +117,7 @@ public class ChangeTracker {
   }
 
   private boolean shouldProcessChange(ChangeStreamDocument<DBObject> changeStreamDocument) {
-    return changeStreamDocument.getFullDocument() != null || changeStreamDocument.getOperationType() == ChangeType.DELETE;
+    return changeStreamDocument.getFullDocument() != null || changeStreamDocument.getOperationType() == OperationType.DELETE;
   }
 
   private <T extends PersistentEntity> ChangeStreamSubscriber getChangeStreamSubscriber(

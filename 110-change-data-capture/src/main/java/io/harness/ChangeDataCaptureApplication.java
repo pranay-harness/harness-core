@@ -14,7 +14,6 @@ import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.serializer.YamlUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

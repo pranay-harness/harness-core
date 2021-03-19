@@ -2,6 +2,7 @@
 package io.harness.changestreamsframework;
 
 import com.mongodb.DBObject;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoInterruptedException;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.ClientSession;
@@ -9,17 +10,13 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
-
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import io.harness.notification.messageclient.MongoClient;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 
 @Value
 @Slf4j
@@ -47,7 +44,6 @@ class ChangeTrackingTask implements Runnable {
   }
 
   private void openChangeStream(Consumer<ChangeStreamDocument<DBObject>> changeStreamDocumentConsumer) {
-
     ChangeStreamIterable<DBObject> changeStreamIterable;
     if (Objects.isNull(clientSession)) {
       changeStreamIterable = collection.watch();
@@ -66,7 +62,8 @@ class ChangeTrackingTask implements Runnable {
       } else {
         log.info("Opening changeStream with resumeToken");
         mongoCursor = changeStreamIterable.resumeAfter(resumeToken).iterator();
-      }      log.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
+      }
+      log.info("Connection details for mongo cursor {}", mongoCursor.getServerCursor());
       mongoCursor.forEachRemaining(changeStreamDocumentConsumer);
     } finally {
       if (mongoCursor != null) {
