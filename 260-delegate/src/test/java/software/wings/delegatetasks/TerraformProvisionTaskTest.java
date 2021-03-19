@@ -35,6 +35,7 @@ import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.filesystem.FileIo;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -82,6 +83,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private GitClientHelper gitClientHelper;
   @Mock private DelegateFileManager delegateFileManager;
   @Mock private EncryptDecryptHelper planEncryptDecryptHelper;
+  @Mock private TerraformBaseHelper terraformBaseHelper;
 
   private static final String GIT_BRANCH = "test/git_branch";
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
@@ -112,6 +114,7 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     on(terraformProvisionTask).set("gitClientHelper", gitClientHelper);
     on(terraformProvisionTask).set("delegateFileManager", delegateFileManager);
     on(terraformProvisionTask).set("planEncryptDecryptHelper", planEncryptDecryptHelper);
+    on(terraformProvisionTask).set("terraformBaseHelper", terraformBaseHelper);
 
     gitConfig = GitConfig.builder().branch(GIT_BRANCH).build();
     gitConfig.setReference(COMMIT_REFERENCE);
@@ -157,15 +160,6 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     List<String> targets = new ArrayList<>(Arrays.asList("target1", "target2"));
 
     assertThat(terraformProvisionTask.getTargetArgs(targets)).isEqualTo("-target=target1 -target=target2 ");
-  }
-
-  @Test
-  @Owner(developers = VAIBHAV_SI)
-  @Category(UnitTests.class)
-  public void testParseOutput() {
-    String workspaceCommandOutput = "* w1\n  w2\n w3";
-    assertThat(Arrays.asList("w1", "w2", "w3").equals(terraformProvisionTask.parseOutput(workspaceCommandOutput)))
-        .isTrue();
   }
 
   @Test
