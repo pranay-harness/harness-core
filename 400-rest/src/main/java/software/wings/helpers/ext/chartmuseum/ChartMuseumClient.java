@@ -2,6 +2,7 @@ package software.wings.helpers.ext.chartmuseum;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.chartmuseum.ChartMuseumServer;
 
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.settings.SettingValue;

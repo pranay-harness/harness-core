@@ -13,14 +13,17 @@ import io.swagger.models.Model;
 import io.swagger.models.Swagger;
 import java.lang.reflect.Type;
 import java.util.Map;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
 public class SwaggerGenerator {
-  @Named("yaml-schema-mapper") ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
+
+  @Inject
+  public SwaggerGenerator(@Named("yaml-schema-mapper") ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
 
   /**
    * @param baseClass Class for which and all its descendants swagger definitions will be generated.

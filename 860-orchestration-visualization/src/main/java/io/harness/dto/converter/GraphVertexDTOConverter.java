@@ -24,6 +24,7 @@ public class GraphVertexDTOConverter {
              .status(graphVertex.getStatus())
              .failureInfo(graphVertex.getFailureInfo())
              .skipInfo(graphVertex.getSkipInfo())
+             .nodeRunInfo(graphVertex.getNodeRunInfo())
              .stepParameters(graphVertex.getStepParameters())
              .mode(graphVertex.getMode())
              .executableResponses(CollectionUtils.emptyIfNull(graphVertex.getExecutableResponses()))

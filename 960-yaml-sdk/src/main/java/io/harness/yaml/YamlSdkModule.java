@@ -12,6 +12,7 @@ import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
+import com.google.inject.name.Names;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -56,7 +57,8 @@ public class YamlSdkModule extends AbstractModule {
     if (!binder().currentStage().name().equals("TOOL")) {
       Provider<List<YamlSchemaRootClass>> providerClasses =
           getProvider(Key.get(new TypeLiteral<List<YamlSchemaRootClass>>() {}));
-      Provider<ObjectMapper> providerMapper = getProvider(Key.get(new TypeLiteral<ObjectMapper>() {}));
+      Provider<ObjectMapper> providerMapper =
+          getProvider(Key.get(new TypeLiteral<ObjectMapper>() {}, Names.named("yaml-schema-mapper")));
       // todo(abhinav): add auto discovery of schema classes if it becomes chaotic.
       //      testExecutionMapBinder.addBinding("YamlSchema test registration")
       //              .toInstance(() -> testAutomaticSearch(providerClasses));

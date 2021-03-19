@@ -15,7 +15,6 @@ import io.harness.notification.entities.MongoNotificationRequest;
 import io.harness.notification.eventbackbone.MessageConsumer;
 import io.harness.notification.eventbackbone.MongoMessageConsumer;
 import io.harness.notification.modules.SmtpConfigClientModule;
-import io.harness.notification.modules.UserGroupClientModule;
 import io.harness.notification.service.ChannelServiceImpl;
 import io.harness.notification.service.MSTeamsServiceImpl;
 import io.harness.notification.service.MailServiceImpl;
@@ -32,6 +31,7 @@ import io.harness.notification.service.api.NotificationTemplateService;
 import io.harness.notification.service.api.SeedDataPopulaterService;
 import io.harness.platform.PlatformConfiguration;
 import io.harness.queue.QueueConsumer;
+import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

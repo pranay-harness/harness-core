@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.rule.OwnerRule.ADWAIT;
@@ -56,12 +57,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -132,6 +135,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -297,6 +301,32 @@ public class PcfDeployStateTest extends WingsBaseTest {
     assertThat(pcfCommandRequest.getRouteMaps()).hasSize(2);
     assertThat(pcfCommandRequest.getRouteMaps().contains("R1")).isTrue();
     assertThat(pcfCommandRequest.getRouteMaps().contains("R2")).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteExceptionThrownWhenRetrievingSweepingOutput() throws IllegalAccessException {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    on(context).set("variableProcessor", variableProcessor);
+    on(context).set("sweepingOutputService", sweepingOutputService);
+    on(context).set("evaluator", evaluator);
+    pcfDeployState.setRollback(true);
+
+    PcfStateHelper mockPcfStateHelper = mock(PcfStateHelper.class);
+    FieldUtils.writeField(pcfDeployState, "pcfStateHelper", mockPcfStateHelper, true);
+    when(mockPcfStateHelper.handleRollbackSkipped(any(), any(), any(), any()))
+        .thenReturn(ExecutionResponse.builder().executionStatus(ExecutionStatus.SKIPPED).build());
+    when(mockPcfStateHelper.isRollBackNotNeeded(any())).thenReturn(true);
+    when(mockPcfStateHelper.getActivityBuilder(any())).thenReturn(Activity.builder());
+    when(mockPcfStateHelper.findSetupSweepingOutputPcf(context, true))
+        .thenThrow(new InvalidArgumentsException("message"));
+
+    pcfDeployState.setInstanceCount(50);
+    pcfDeployState.setInstanceUnitType(PERCENTAGE);
+
+    ExecutionResponse response = pcfDeployState.execute(context);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SKIPPED);
   }
 
   @Test

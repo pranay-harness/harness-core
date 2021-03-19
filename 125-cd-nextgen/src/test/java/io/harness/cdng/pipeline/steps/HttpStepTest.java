@@ -73,7 +73,7 @@ public class HttpStepTest extends CategoryTest {
     // not a valid assertion
     stepParameters.setAssertion(ParameterField.createValueField("<+httpResponseCode> 200"));
     assertThatThrownBy(() -> HttpStep.validateAssertions(response, stepParameters))
-        .hasMessage("Assertion provided is not a valid expression.");
+        .hasMessage("Assertion provided is not a valid expression");
 
     // status code assertion
     stepParameters.setAssertion(ParameterField.createValueField("<+httpResponseCode> == 200"));
@@ -119,5 +119,37 @@ public class HttpStepTest extends CategoryTest {
         ParameterField.createValueField("<+json.list(\"data\", httpResponseBody).get(5).id> == 5"));
     assertion = HttpStep.validateAssertions(response, stepParameters);
     assertThat(assertion).isFalse();
+
+    // null case
+    stepParameters.setAssertion(ParameterField.createValueField(null));
+    assertion = HttpStep.validateAssertions(response, stepParameters);
+    assertThat(assertion).isTrue();
+
+    // empty string case
+    stepParameters.setAssertion(ParameterField.createValueField("  "));
+    assertion = HttpStep.validateAssertions(response, stepParameters);
+    assertThat(assertion).isTrue();
+
+    // non expression true case
+    stepParameters.setAssertion(ParameterField.createValueField("true"));
+    assertion = HttpStep.validateAssertions(response, stepParameters);
+    assertThat(assertion).isTrue();
+
+    // non expression true case
+    stepParameters.setAssertion(ParameterField.createValueField("1 == 5"));
+    assertion = HttpStep.validateAssertions(response, stepParameters);
+    assertThat(assertion).isFalse();
+
+    // boolean expression field
+    stepParameters.setAssertion(
+        ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).page> == 1", null, false));
+    assertion = HttpStep.validateAssertions(response, stepParameters);
+    assertThat(assertion).isTrue();
+
+    // non boolean expression field
+    stepParameters.setAssertion(
+        ParameterField.createExpressionField(true, "<+json.object(httpResponseBody).page>", null, false));
+    assertThatThrownBy(() -> HttpStep.validateAssertions(response, stepParameters))
+        .hasMessage("Assertion provided is not a valid expression");
   }
 }

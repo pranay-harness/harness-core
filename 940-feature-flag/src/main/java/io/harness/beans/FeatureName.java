@@ -165,7 +165,8 @@ public enum FeatureName {
   NG_BARRIERS,
   NG_HELM_SOURCE_REPO,
   ENHANCED_GCR_CONNECTIVITY_CHECK,
-  SETTING_API_BATCH_RBAC; /*Flag to use batch RBAC api exposed by SecretManager*/
+  SETTING_API_BATCH_RBAC,
+  NG_PROVISIONERS; /*Flag to use batch RBAC api exposed by SecretManager*/
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;
