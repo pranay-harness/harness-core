@@ -1,6 +1,9 @@
 package io.harness.migrations;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
@@ -18,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class TerraformProvisionerBranchMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingsService settingService;
