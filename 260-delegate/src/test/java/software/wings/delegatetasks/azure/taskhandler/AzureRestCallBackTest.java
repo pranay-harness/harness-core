@@ -2,7 +2,6 @@ package software.wings.delegatetasks.azure.taskhandler;
 
 import static io.harness.rule.OwnerRule.IVAN;
 
-import static okhttp3.MediaType.parse;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -20,6 +19,7 @@ import software.wings.beans.command.ExecutionLogCallback;
 import com.microsoft.azure.CloudError;
 import com.microsoft.azure.CloudException;
 import javax.ws.rs.core.MediaType;
+import okhttp3.Protocol;
 import okhttp3.ResponseBody;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +76,14 @@ public class AzureRestCallBackTest extends WingsBaseTest {
     CloudError cloudError = new CloudError();
     cloudError.withMessage("Reason of cloud error");
     azureRestCallBack.failure(new CloudException("Cloud exception error message",
-        Response.error(500, ResponseBody.create(parse(MediaType.APPLICATION_JSON), "Reason of server error")),
+        Response.error(
+            ResponseBody.create(okhttp3.MediaType.parse(MediaType.APPLICATION_JSON), "Reason of server error"),
+            new okhttp3.Response.Builder()
+                .code(401)
+                .protocol(Protocol.HTTP_1_1)
+                .message("")
+                .request((new okhttp3.Request.Builder()).url("http://localhost/").build())
+                .build()),
         cloudError));
     String errorMessage = azureRestCallBack.getErrorMessage();
 

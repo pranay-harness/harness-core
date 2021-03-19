@@ -61,6 +61,7 @@ public class WatcherStackdriverLogAppenderTest extends CategoryTest {
   private final okhttp3.Response rawResponse = new Builder()
                                                    .protocol(Protocol.HTTP_2)
                                                    .code(200)
+                                                   .message("")
                                                    .request(new Request.Builder().url("http://test.harness.io").build())
                                                    .build();
 

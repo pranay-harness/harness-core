@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import okhttp3.MediaType;
+import okhttp3.Protocol;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import okio.Buffer;
@@ -223,7 +224,13 @@ public class ManifestPerpetualTaskExecutorTest extends DelegateTestBase {
         .thenReturn(call);
     when(call.execute())
         .thenReturn(throwErrorWhilePublishing
-                ? Response.error(401, ResponseBody.create(MediaType.parse("text/plain"), "MSG"))
+                ? Response.error(ResponseBody.create(MediaType.parse("text/plain"), "MSG"),
+                    new okhttp3.Response.Builder()
+                        .code(401)
+                        .protocol(Protocol.HTTP_1_1)
+                        .message("")
+                        .request((new okhttp3.Request.Builder()).url("http://localhost/").build())
+                        .build())
                 : Response.success(new RestResponse<>()));
 
     // New build details: 3-510, unpublished: 4-510, toBeDeleted: 1-2

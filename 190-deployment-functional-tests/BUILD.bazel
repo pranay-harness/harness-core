@@ -12,10 +12,7 @@ shared_dependencies = [
     "@jira_client//jar",
 ]
 
-test_dependencies = [
-    "@delegate//:com_github_tomakehurst_wiremock_jre8_standalone",
-    "@delegate//:org_apache_httpcomponents_httpmime",
-] + shared_dependencies + [
+test_dependencies = shared_dependencies + [
     "//990-commons-test:module",
     "//200-functional-test:module",
     "//200-functional-test:tests",
@@ -25,6 +22,8 @@ test_dependencies = [
     "@maven//:com_openpojo_openpojo",
     "@maven//:io_github_benas_random_beans",
     "@maven//:junit_junit",
+    "@maven//:com_github_tomakehurst_wiremock_jre8_standalone",
+    "@maven//:org_apache_httpcomponents_httpmime",
     "@maven//:org_assertj_assertj_core",
     "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
     "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
