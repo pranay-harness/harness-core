@@ -1,7 +1,8 @@
-package io.harness.gitsync.sdk;
+package io.harness.gitsync.client;
 
-import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc;
-import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
+import io.harness.ModuleType;
+import io.harness.gitsync.GitToHarnessServiceGrpc;
+import io.harness.gitsync.GitToHarnessServiceGrpc.GitToHarnessServiceBlockingStub;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
 
@@ -10,24 +11,28 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.grpc.Channel;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
+import java.util.HashMap;
+import java.util.Map;
 import javax.net.ssl.SSLException;
-import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-public class GitSyncGrpcClientModule extends AbstractModule {
+public class GitSyncSdkGrpcClientModule extends AbstractModule {
+  private static GitSyncSdkGrpcClientModule instance;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");
-  private static volatile GitSyncGrpcClientModule instance;
 
-  public static GitSyncGrpcClientModule getInstance() {
+  public static GitSyncSdkGrpcClientModule getInstance() {
     if (instance == null) {
-      instance = new GitSyncGrpcClientModule();
+      instance = new GitSyncSdkGrpcClientModule();
     }
     return instance;
   }
+
+  @Override
+  protected void configure() {}
 
   public Channel getChannel(GrpcClientConfig clientConfig) throws SSLException {
     String authorityToUse = clientConfig.getAuthority();
@@ -53,8 +58,14 @@ public class GitSyncGrpcClientModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public HarnessToGitPushInfoServiceBlockingStub gitToHarnessServiceClient(
-      @Named("GitSyncGrpcClientConfig") GrpcClientConfig clientConfig) throws SSLException {
-    return HarnessToGitPushInfoServiceGrpc.newBlockingStub(getChannel(clientConfig));
+  public Map<ModuleType, GitToHarnessServiceBlockingStub> gitToHarnessServiceGrpcClient(
+      @Named("GitSyncGrpcClientConfigs") GitSyncClientConfigs clientConfigs) throws SSLException {
+    Map<ModuleType, GitToHarnessServiceBlockingStub> map = new HashMap<>();
+    map.put(GmsClientConstants.moduleType,
+        GitToHarnessServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("gmsSdkInternal").build()));
+    for (Map.Entry<ModuleType, GrpcClientConfig> entry : clientConfigs.getGitSyncGrpcClients().entrySet()) {
+      map.put(entry.getKey(), GitToHarnessServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
+    }
+    return map;
   }
 }
