@@ -1,4 +1,4 @@
-package io.harness.platform.notification;
+package io.harness.platform.audit;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
@@ -32,15 +32,15 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 
 @OwnedBy(PL)
 @Configuration
-@EnableMongoRepositories(
-    basePackages = {"io.harness.notification"}, includeFilters = @ComponentScan.Filter(HarnessRepo.class))
-public class NotificationPersistenceConfig extends AbstractMongoConfiguration {
+@EnableMongoRepositories(basePackages = {"io.harness.audit.repositories", "io.harness.repositories"},
+    includeFilters = @ComponentScan.Filter(HarnessRepo.class))
+public class AuditPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;
 
   @Inject
-  public NotificationPersistenceConfig(Injector injector) {
+  public AuditPersistenceConfig(Injector injector) {
     this.mongoBackendConfiguration =
-        injector.getInstance(Key.get(PlatformConfiguration.class)).getNotificationServiceConfig().getMongoConfig();
+        injector.getInstance(Key.get(PlatformConfiguration.class)).getAuditServiceConfig().getMongoConfig();
   }
 
   @Override
