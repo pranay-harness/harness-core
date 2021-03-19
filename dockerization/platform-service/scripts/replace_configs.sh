@@ -34,27 +34,27 @@ if [[ "" != "$ALLOWED_ORIGINS" ]]; then
 fi
 
 if [[ "" != "$MONGO_URI" ]]; then
-  yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
 if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
-  yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
 fi
 
 if [[ "" != "$MONGO_SERVER_SELECTION_TIMEOUT" ]]; then
-  yq write -i $CONFIG_FILE mongo.serverSelectionTimeout $MONGO_SERVER_SELECTION_TIMEOUT
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.serverSelectionTimeout $MONGO_SERVER_SELECTION_TIMEOUT
 fi
 
 if [[ "" != "$MAX_CONNECTION_IDLE_TIME" ]]; then
-  yq write -i $CONFIG_FILE mongo.maxConnectionIdleTime $MAX_CONNECTION_IDLE_TIME
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.maxConnectionIdleTime $MAX_CONNECTION_IDLE_TIME
 fi
 
 if [[ "" != "$MONGO_CONNECTIONS_PER_HOST" ]]; then
-  yq write -i $CONFIG_FILE mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.connectionsPerHost $MONGO_CONNECTIONS_PER_HOST
 fi
 
 if [[ "" != "$MONGO_INDEX_MANAGER_MODE" ]]; then
-  yq write -i $CONFIG_FILE mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.indexManagerMode $MONGO_INDEX_MANAGER_MODE
 fi
 
 if [[ "" != "$MANAGER_CLIENT_SECRET" ]]; then
@@ -70,19 +70,19 @@ if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
 fi
 
 if [[ "" != "$SMTP_HOST" ]]; then
-  yq write -i $CONFIG_FILE smtp.host "$SMTP_HOST"
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.host "$SMTP_HOST"
 fi
 
 if [[ "" != "$SMTP_USERNAME" ]]; then
-  yq write -i $CONFIG_FILE smtp.username "$SMTP_USERNAME"
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.username "$SMTP_USERNAME"
 fi
 
 if [[ "" != "$SMTP_PASSWORD" ]]; then
-  yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.password "$SMTP_PASSWORD"
 fi
 
 if [[ "" != "$OVERRIDE_PREDEFINED_TEMPLATES" ]]; then
-  yq write -i $CONFIG_FILE seedDataConfiguration.shouldOverrideAllPredefinedTemplates "$OVERRIDE_PREDEFINED_TEMPLATES"
+  yq write -i $CONFIG_FILE notificationServiceConfig.seedDataConfiguration.shouldOverrideAllPredefinedTemplates "$OVERRIDE_PREDEFINED_TEMPLATES"
 fi
 
 if [[ "" != "$MONGO_MESSAGE_BROKER_URI" ]]; then
@@ -106,11 +106,11 @@ if [[ "" != "$JWT_IDENTITY_SERVICE_SECRET" ]]; then
 fi
 
 if [[ "" != "$GRPC_MANAGER_TARGET" ]]; then
-  yq write -i $CONFIG_FILE grpcClient.target $GRPC_MANAGER_TARGET
+  yq write -i $CONFIG_FILE notificationServiceConfig.grpcClient.target $GRPC_MANAGER_TARGET
 fi
 
 if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE grpcClient.authority $GRPC_MANAGER_AUTHORITY
+  yq write -i $CONFIG_FILE notificationServiceConfig.grpcClient.authority $GRPC_MANAGER_AUTHORITY
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
@@ -118,4 +118,32 @@ if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
 else
   yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
+if [[ "" != "$AUDIT_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.uri "${AUDIT_MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$AUDIT_MONGO_CONNECT_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.connectTimeout $AUDIT_MONGO_CONNECT_TIMEOUT
+fi
+
+if [[ "" != "$AUDIT_MONGO_SERVER_SELECTION_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.serverSelectionTimeout $AUDIT_MONGO_SERVER_SELECTION_TIMEOUT
+fi
+
+if [[ "" != "$AUDIT_MAX_CONNECTION_IDLE_TIME" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.maxConnectionIdleTime $AUDIT_MAX_CONNECTION_IDLE_TIME
+fi
+
+if [[ "" != "$AUDIT_MONGO_CONNECTIONS_PER_HOST" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.connectionsPerHost $AUDIT_MONGO_CONNECTIONS_PER_HOST
+fi
+
+if [[ "" != "$AUDIT_MONGO_INDEX_MANAGER_MODE" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.indexManagerMode $AUDIT_MONGO_INDEX_MANAGER_MODE
+fi
+
+if [[ "" != "$ENABLE_AUDIT_SERVICE" ]]; then
+  yq write -i $CONFIG_FILE auditServiceConfig.enableAuditService $ENABLE_AUDIT_SERVICE
 fi

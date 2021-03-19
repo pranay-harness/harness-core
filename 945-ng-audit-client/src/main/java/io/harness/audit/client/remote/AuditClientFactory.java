@@ -1,4 +1,4 @@
-package io.harness.auditclient.remote;
+package io.harness.audit.client.remote;
 
 import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;

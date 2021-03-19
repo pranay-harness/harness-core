@@ -1,10 +1,12 @@
 package io.harness.platform;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ANKUSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -23,6 +25,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class PlatformAppStartupTest extends CategoryTest {
   public static MongoServer MONGO_SERVER;
   public static DropwizardTestSupport<PlatformConfiguration> SUPPORT;
@@ -50,7 +53,8 @@ public class PlatformAppStartupTest extends CategoryTest {
     MONGO_SERVER = startMongoServer();
     SUPPORT = new DropwizardTestSupport<PlatformConfiguration>(PlatformApplication.class,
         String.valueOf(new File("820-platform-service/src/test/resources/test-config.yml")),
-        ConfigOverride.config("mongo.uri", getMongoUri("notification")),
+        ConfigOverride.config("notificationServiceConfig.mongo.uri", getMongoUri("notification")),
+        ConfigOverride.config("auditServiceConfig.mongo.uri", getMongoUri("ng-audits")),
         ConfigOverride.config("notificationClient.messageBroker.uri", getMongoUri("notificationChannel")));
     SUPPORT.before();
   }
