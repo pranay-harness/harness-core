@@ -1,10 +1,12 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.AwsSshPTClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -23,6 +25,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsSshInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject private PerpetualTaskService perpetualTaskService;
 

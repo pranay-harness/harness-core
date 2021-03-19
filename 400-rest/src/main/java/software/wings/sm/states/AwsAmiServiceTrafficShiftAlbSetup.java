@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -17,6 +18,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.LOAD_BA
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -67,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsAmiServiceTrafficShiftAlbSetup extends State {
   @Getter @Setter private String autoScalingGroupName;
   @Getter @Setter private String autoScalingSteadyStateTimeout;

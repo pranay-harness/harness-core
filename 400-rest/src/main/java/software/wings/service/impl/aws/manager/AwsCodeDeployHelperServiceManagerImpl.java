@@ -1,11 +1,13 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
+@OwnedBy(CDP)
 public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;

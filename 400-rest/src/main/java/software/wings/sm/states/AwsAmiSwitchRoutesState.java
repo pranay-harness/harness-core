@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,6 +11,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SET
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
@@ -58,6 +60,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsAmiSwitchRoutesState extends State {
   public static final String SWAP_AUTO_SCALING_ROUTES = "Swap AutoScaling Routes";
   @Attributes(title = "Downsize Old Auto Scaling Group")

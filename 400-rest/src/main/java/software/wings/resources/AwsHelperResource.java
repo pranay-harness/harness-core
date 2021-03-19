@@ -1,9 +1,12 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.NameValuePair;
@@ -32,6 +35,7 @@ import javax.ws.rs.QueryParam;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
+@OwnedBy(CDP)
 public class AwsHelperResource {
   @Inject private AwsHelperResourceService awsHelperResourceService;
 

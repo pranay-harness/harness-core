@@ -1,8 +1,11 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.AwsSecretsManagerConfig;
@@ -28,6 +31,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(SETTING)
 @AuthRule(permissionType = MANAGE_SECRET_MANAGERS)
+@OwnedBy(CDP)
 public class AwsSecretsManagerResource {
   @Inject private AwsSecretsManagerService awsSecretsManagerService;
 

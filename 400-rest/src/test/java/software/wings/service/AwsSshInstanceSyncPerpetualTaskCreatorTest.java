@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
@@ -11,6 +13,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -34,6 +37,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(CDP)
 public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Mock private PerpetualTaskService perpetualTaskService;
   @InjectMocks @Inject private AwsSshInstanceSyncPerpetualTaskCreator perpetualTaskController;

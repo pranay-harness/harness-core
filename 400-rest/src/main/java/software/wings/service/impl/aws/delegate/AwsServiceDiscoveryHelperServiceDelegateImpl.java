@@ -1,8 +1,11 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -25,6 +28,7 @@ import java.util.List;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsServiceDiscoveryHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsServiceDiscoveryHelperServiceDelegate {
   @VisibleForTesting

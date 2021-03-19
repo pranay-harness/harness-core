@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AwsConfig;
@@ -20,6 +22,7 @@ import java.util.List;
 
 @Singleton
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsCommandHelper {
   public List<String> getAwsConfigTagsFromContext(CommandExecutionContext context) {
     SettingAttribute cloudProviderSetting = context.getCloudProviderSetting();

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
@@ -10,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
@@ -38,6 +40,7 @@ import org.mockito.Mock;
 /**
  * Created by sgurubelli on 7/20/18.
  */
+@OwnedBy(CDP)
 public class AwsHelperResourceServiceImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private AwsS3HelperServiceManagerImpl awsS3HelperServiceManagerImpl;
