@@ -69,8 +69,9 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? OptionalSweepingOutput.builder().found(false).build()
-                         : OptionalSweepingOutput.builder().found(true).output((SweepingOutput) value).build();
+    return value == null
+        ? OptionalSweepingOutput.builder().found(false).build()
+        : OptionalSweepingOutput.builder().found(true).output(RecastOrchestrationUtils.toDocumentJson(value)).build();
   }
 
   private OptionalSweepingOutput resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
@@ -81,7 +82,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     }
     return OptionalSweepingOutput.builder()
         .found(true)
-        .output(RecastOrchestrationUtils.fromDocument(instance.getValue(), SweepingOutput.class))
+        .output(RecastOrchestrationUtils.toDocumentJson(instance.getValue()))
         .build();
   }
 

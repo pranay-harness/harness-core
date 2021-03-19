@@ -7,5 +7,5 @@ import lombok.Data;
 @Builder
 public class OptionalSweepingOutput {
   boolean found;
-  SweepingOutput output;
+  String output;
 }

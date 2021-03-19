@@ -9,7 +9,7 @@ import "io/harness/pms/contracts/refobjects/ref_objects.proto";
 
 service SweepingOutputService {
   rpc resolve(SweepingOutputResolveBlobRequest) returns (SweepingOutputResolveBlobResponse);
-  rpc resolveOptional(SweepingOutputResolveBlobRequest) returns (SweepingOutputResolveBlobResponse);
+  rpc resolveOptional(SweepingOutputResolveBlobRequest) returns (OptionalSweepingOutputResolveBlobResponse);
   rpc consume(SweepingOutputConsumeBlobRequest) returns (SweepingOutputConsumeBlobResponse);
 }
 
@@ -22,6 +22,10 @@ message SweepingOutputResolveBlobResponse {
   string stepTransput = 1;
 }
 
+message OptionalSweepingOutputResolveBlobResponse {
+  bool found = 1;
+  string stepTransput = 2;
+}
 message SweepingOutputConsumeBlobRequest {
   io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
   string name = 2;

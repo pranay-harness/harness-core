@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
@@ -53,7 +54,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
 
   @Override
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
-    SweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
+    OptionalSweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
         SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), OptionalSweepingOutput.class);
   }
