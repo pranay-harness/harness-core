@@ -239,9 +239,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     User user = UserThreadLocal.get();
 
+    boolean isApiKeyAuthorized = apiKeyAuthorizationAPI();
     if (isPublicApiWithWhitelist()) {
       checkForWhitelisting(accountId, FeatureName.WHITELIST_PUBLIC_API, requestContext, user);
-      return;
+      if (!isApiKeyAuthorized) {
+        return;
+      }
     }
 
     String uriPath = requestContext.getUriInfo().getPath();
@@ -263,7 +266,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    boolean isApiKeyAuthorized = apiKeyAuthorizationAPI();
     if (user == null) {
       if (isExternalApi) {
         return;
