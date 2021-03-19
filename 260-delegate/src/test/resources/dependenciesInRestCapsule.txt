@@ -335,8 +335,8 @@ io.grpc:grpc-services:jar:1.33.1
 io.grpc:grpc-stub:jar:1.33.1
 io.grpc:grpc-testing:jar:1.33.1:test
 io.gsonfire:gson-fire:jar:1.8.3
+io.harness.cf:cf-client-sdk-java:jar:0.0.2
 io.harness.cv:data-collection-dsl:jar:0.18-RELEASE
-io.harness:ff-java-server-sdk:jar:0.0.2
 io.jsonwebtoken:jjwt:jar:0.9.1
 io.kubernetes:client-java-api:jar:8.0.2
 io.kubernetes:client-java-extended:jar:8.0.2
@@ -482,7 +482,6 @@ org.atmosphere:wasync:jar:2.1.7
 org.atteo:evo-inflector:jar:1.2.2
 org.awaitility:awaitility:jar:2.0.0:test
 org.bitbucket.b_c:jose4j:jar:0.7.0
-org.bouncycastle:bcpg-jdk15on:jar:1.60
 org.bouncycastle:bcpkix-jdk15on:jar:1.64
 org.bouncycastle:bcprov-ext-jdk15on:jar:1.64
 org.bouncycastle:bcprov-jdk15on:jar:1.64
@@ -639,7 +638,6 @@ org.slf4j:jcl-over-slf4j:jar:1.7.29
 org.slf4j:jul-to-slf4j:jar:1.7.29
 org.slf4j:log4j-over-slf4j:jar:1.7.29
 org.slf4j:slf4j-api:jar:1.7.29
-org.slf4j:slf4j-simple:jar:1.7.25
 org.sonatype.nexus.plugins:nexus-restlet1x-model:jar:2.14.18-01
 org.springframework.data:spring-data-commons:jar:2.2.7.RELEASE
 org.springframework.data:spring-data-mongodb:jar:2.2.7.RELEASE

@@ -1209,6 +1209,11 @@
                 <version>1.2.2</version>
             </dependency>
             <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk15on</artifactId>
+                <version>1.64</version>
+            </dependency>
+            <dependency>
                 <groupId>org.clojure</groupId>
                 <artifactId>clojure</artifactId>
                 <version>1.9.0</version>
@@ -1326,6 +1331,12 @@
                 <groupId>org.eclipse.jgit</groupId>
                 <artifactId>org.eclipse.jgit</artifactId>
                 <version>${jgit.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.bouncycastle</groupId>
+                        <artifactId>bcpg-jdk15on</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jgit</groupId>
@@ -1828,12 +1839,6 @@
                 <groupId>org.awaitility</groupId>
                 <artifactId>awaitility</artifactId>
                 <version>2.0.0</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk16</artifactId>
-                <version>1.46</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
