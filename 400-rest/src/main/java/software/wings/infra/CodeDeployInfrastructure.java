@@ -8,12 +8,10 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @JsonTypeName("AWS_AWS_CODEDEPLOY")
@@ -56,32 +54,5 @@ public class CodeDeployInfrastructure implements InfraMappingInfrastructureProvi
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.AWS;
-  }
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(CODE_DEPLOY)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String region;
-    @NotEmpty private String applicationName;
-    @NotEmpty private String deploymentGroup;
-    private String deploymentConfig;
-    private String hostNameConvention;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String region, String applicationName, String deploymentGroup,
-        String deploymentConfig, String hostNameConvention) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setRegion(region);
-      setApplicationName(applicationName);
-      setDeploymentGroup(deploymentGroup);
-      setDeploymentConfig(deploymentConfig);
-      setHostNameConvention(hostNameConvention);
-    }
-
-    public Yaml() {
-      super(CODE_DEPLOY);
-    }
   }
 }

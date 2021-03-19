@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("AZURE_KUBERNETES")
@@ -230,29 +229,6 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
       azureKubernetesInfrastructureMapping.setAccountId(accountId);
       azureKubernetesInfrastructureMapping.setMasterUrl(masterUrl);
       return azureKubernetesInfrastructureMapping;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends YamlWithComputeProvider {
-    private String subscriptionId;
-    private String resourceGroup;
-    private String namespace;
-    private String releaseName;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster,
-        String subscriptionId, String resourceGroup, String namespace, String releaseName,
-        Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster, blueprints);
-      this.subscriptionId = subscriptionId;
-      this.resourceGroup = resourceGroup;
-      this.namespace = namespace;
-      this.releaseName = releaseName;
     }
   }
 }

@@ -8,12 +8,10 @@ import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.VMSSAuthType;
 import software.wings.beans.VMSSDeploymentType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("AZURE_VMSS")
@@ -60,40 +58,5 @@ public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, Field
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.AZURE;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AZURE_VMSS)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String baseVMSSName;
-    private String userName;
-    private String resourceGroupName;
-    private String subscriptionId;
-    private String passwordSecretTextName;
-    private String hostConnectionAttrs;
-    private VMSSAuthType vmssAuthType;
-    private VMSSDeploymentType vmssDeploymentType;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String baseVMSSName, String userName, String resourceGroupName,
-        String subscriptionId, String passwordSecretTextName, String hostConnectionAttrs, VMSSAuthType vmssAuthType,
-        VMSSDeploymentType vmssDeploymentType) {
-      super(type);
-      this.cloudProviderName = cloudProviderName;
-      this.baseVMSSName = baseVMSSName;
-      this.userName = userName;
-      this.resourceGroupName = resourceGroupName;
-      this.subscriptionId = subscriptionId;
-      this.passwordSecretTextName = passwordSecretTextName;
-      this.hostConnectionAttrs = hostConnectionAttrs;
-      this.vmssAuthType = vmssAuthType;
-      this.vmssDeploymentType = vmssDeploymentType;
-    }
-
-    public Yaml() {
-      super(AZURE_VMSS);
-    }
   }
 }

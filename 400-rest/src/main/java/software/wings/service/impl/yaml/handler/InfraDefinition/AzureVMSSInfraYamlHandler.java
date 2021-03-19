@@ -4,23 +4,24 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.VMSSAuthType.PASSWORD;
 import static software.wings.beans.VMSSAuthType.SSH_PUBLIC_KEY;
-import static software.wings.infra.AzureVMSSInfra.Yaml;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.AzureVMSSInfra;
+import software.wings.infra.AzureVMSSInfraYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
 import com.google.inject.Inject;
 import java.util.List;
 
-public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHandler<Yaml, AzureVMSSInfra> {
+public class AzureVMSSInfraYamlHandler
+    extends CloudProviderInfrastructureYamlHandler<AzureVMSSInfraYaml, AzureVMSSInfra> {
   @Inject private SettingsService settingsService;
 
   @Override
-  public Yaml toYaml(AzureVMSSInfra bean, String appId) {
+  public AzureVMSSInfraYaml toYaml(AzureVMSSInfra bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     notNullCheck("Cloud provider is NULL", cloudProvider);
     notNullCheck("Subscription id is NULL", bean.getSubscriptionId());
@@ -39,7 +40,7 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
       notNullCheck("Password Secret Text Name is NULL", passwordSecretTextName);
     }
 
-    return Yaml.builder()
+    return AzureVMSSInfraYaml.builder()
         .type(InfrastructureType.AZURE_VMSS)
         .cloudProviderName(cloudProvider.getName())
         .baseVMSSName(bean.getBaseVMSSName())
@@ -54,14 +55,15 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
   }
 
   @Override
-  public AzureVMSSInfra upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public AzureVMSSInfra upsertFromYaml(
+      ChangeContext<AzureVMSSInfraYaml> changeContext, List<ChangeContext> changeSetContext) {
     AzureVMSSInfra bean = AzureVMSSInfra.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(AzureVMSSInfra bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(AzureVMSSInfra bean, ChangeContext<AzureVMSSInfraYaml> changeContext) {
+    AzureVMSSInfraYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck("Cloud Provider is NULL", cloudProvider);
@@ -93,6 +95,6 @@ public class AzureVMSSInfraYamlHandler extends CloudProviderInfrastructureYamlHa
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AzureVMSSInfraYaml.class;
   }
 }

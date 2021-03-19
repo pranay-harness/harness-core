@@ -23,6 +23,7 @@ import io.harness.yaml.BaseYaml;
 import software.wings.beans.Application;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.AzureKubernetesInfrastructureMappingYaml;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -149,11 +150,11 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTestB
     when(containerMasterUrlHelper.fetchMasterUrl(any(ContainerServiceParams.class), any(SyncTaskContext.class)))
         .thenReturn("master_url");
 
-    ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<AzureKubernetesInfrastructureMappingYaml> changeContext =
         getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    AzureKubernetesInfrastructureMapping.Yaml yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class);
+    AzureKubernetesInfrastructureMappingYaml yamlObject = (AzureKubernetesInfrastructureMappingYaml) getYaml(
+        validYamlContent, AzureKubernetesInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     AzureKubernetesInfrastructureMapping azureInfraMapping =
@@ -161,7 +162,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTestB
     assertThat(azureInfraMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(azureInfraMapping.getName());
 
-    AzureKubernetesInfrastructureMapping.Yaml yaml = yamlHandler.toYaml(azureInfraMapping, APP_ID);
+    AzureKubernetesInfrastructureMappingYaml yaml = yamlHandler.toYaml(azureInfraMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo("AZURE_KUBERNETES");
 
@@ -184,15 +185,15 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends YamlHandlerTestB
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void testFailures() throws Exception {
-    ChangeContext<AzureKubernetesInfrastructureMapping.Yaml> changeContext =
+    ChangeContext<AzureKubernetesInfrastructureMappingYaml> changeContext =
         getChangeContext(invalidYamlContent, validYamlFilePath, yamlHandler);
 
-    AzureKubernetesInfrastructureMapping.Yaml yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
-        validYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class);
+    AzureKubernetesInfrastructureMappingYaml yamlObject = (AzureKubernetesInfrastructureMappingYaml) getYaml(
+        validYamlContent, AzureKubernetesInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
-    yamlObject = (AzureKubernetesInfrastructureMapping.Yaml) getYaml(
-        invalidYamlContent, AzureKubernetesInfrastructureMapping.Yaml.class);
+    yamlObject = (AzureKubernetesInfrastructureMappingYaml) getYaml(
+        invalidYamlContent, AzureKubernetesInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
     thrown.expect(Exception.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

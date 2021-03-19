@@ -12,7 +12,6 @@ import io.harness.exception.InvalidRequestException;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureWebAppInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableSet;
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.apache.commons.lang3.StringUtils;
 
@@ -101,27 +99,6 @@ public class AzureWebAppInfra implements InfraMappingInfrastructureProvider, Fie
     if (StringUtils.isEmpty(field)) {
       String message = fieldName + " is required";
       throw new InvalidRequestException(message);
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AZURE_WEBAPP)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String subscriptionId;
-    private String resourceGroup;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String subscriptionId, String resourceGroup) {
-      super(type);
-      this.cloudProviderName = cloudProviderName;
-      this.subscriptionId = subscriptionId;
-      this.resourceGroup = resourceGroup;
-    }
-
-    public Yaml() {
-      super(AZURE_WEBAPP);
     }
   }
 }

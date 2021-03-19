@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.CodeDeployCommandUnit;
-import software.wings.beans.command.CodeDeployCommandUnit.Yaml;
+import software.wings.beans.command.CodeDeployCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -10,15 +10,15 @@ import com.google.inject.Singleton;
  */
 @Singleton
 public class CodeDeployCommandUnitYamlHandler
-    extends CommandUnitYamlHandler<CodeDeployCommandUnit.Yaml, CodeDeployCommandUnit> {
+    extends CommandUnitYamlHandler<CodeDeployCommandUnitYaml, CodeDeployCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return CodeDeployCommandUnit.Yaml.class;
+    return CodeDeployCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(CodeDeployCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public CodeDeployCommandUnitYaml toYaml(CodeDeployCommandUnit bean, String appId) {
+    CodeDeployCommandUnitYaml yaml = CodeDeployCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.ccm.config.CCMConfig;
+import io.harness.ccm.config.CCMConfigYaml;
 import io.harness.ccm.config.CCMConfigYamlHandler;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.exception.InvalidRequestException;
@@ -121,7 +122,7 @@ public class KubernetesClusterConfigYamlHandler extends CloudProviderYamlHandler
     yaml.setClientKeyAlgo(kubernetesClusterConfig.getClientKeyAlgo());
 
     if (ccmSettingService.isCloudCostEnabled(settingAttribute.getAccountId())) {
-      CCMConfig.Yaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
+      CCMConfigYaml ccmConfigYaml = ccmConfigYamlHandler.toYaml(kubernetesClusterConfig.getCcmConfig(), "");
       yaml.setContinuousEfficiencyConfig(ccmConfigYaml);
     }
     toYaml(yaml, settingAttribute, appId);

@@ -9,13 +9,11 @@ import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
@@ -61,30 +59,5 @@ public class CloudFormationInfrastructureProvisioner extends InfrastructureProvi
   @Override
   public String variableKey() {
     return VARIABLE_KEY;
-  }
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class Yaml extends InfraProvisionerYaml {
-    private String sourceType;
-    private String templateBody;
-    private String templateFilePath;
-    private GitFileConfig gitFileConfig;
-
-    // TODO: check usage of yaml constructor
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
-        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
-        String sourceType, String templateBody, String templateFilePath, GitFileConfig gitFileConfig) {
-      super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
-      this.sourceType = sourceType;
-      this.templateBody = templateBody;
-      this.templateFilePath = templateFilePath;
-      this.gitFileConfig = gitFileConfig;
-    }
   }
 }

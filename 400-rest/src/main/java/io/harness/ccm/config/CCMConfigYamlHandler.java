@@ -10,24 +10,24 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMConfig> {
+public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfigYaml, CCMConfig> {
   @Override
-  public CCMConfig.Yaml toYaml(CCMConfig ccmConfig, String appId) {
+  public CCMConfigYaml toYaml(CCMConfig ccmConfig, String appId) {
     boolean isCloudCostEnabled = false;
     if (ccmConfig != null) {
       isCloudCostEnabled = ccmConfig.isCloudCostEnabled();
     }
-    return CCMConfig.Yaml.builder().continuousEfficiencyEnabled(isCloudCostEnabled).build();
+    return CCMConfigYaml.builder().continuousEfficiencyEnabled(isCloudCostEnabled).build();
   }
 
   @Override
-  public CCMConfig upsertFromYaml(ChangeContext<CCMConfig.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public CCMConfig upsertFromYaml(ChangeContext<CCMConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return CCMConfig.Yaml.class;
+    return CCMConfigYaml.class;
   }
 
   @Override
@@ -36,12 +36,12 @@ public class CCMConfigYamlHandler extends BaseYamlHandler<CCMConfig.Yaml, CCMCon
   }
 
   @Override
-  public void delete(ChangeContext<CCMConfig.Yaml> changeContext) {
+  public void delete(ChangeContext<CCMConfigYaml> changeContext) {
     // do nothing
   }
 
-  private CCMConfig toBean(ChangeContext<CCMConfig.Yaml> changeContext) {
-    CCMConfig.Yaml yaml = changeContext.getYaml();
+  private CCMConfig toBean(ChangeContext<CCMConfigYaml> changeContext) {
+    CCMConfigYaml yaml = changeContext.getYaml();
     if (null == yaml) {
       return null;
     }

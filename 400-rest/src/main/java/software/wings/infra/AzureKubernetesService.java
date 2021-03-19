@@ -14,12 +14,10 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 @JsonTypeName("AZURE_KUBERNETES")
 @Data
@@ -64,33 +62,5 @@ public class AzureKubernetesService
   @Override
   public CloudProviderType getCloudProviderType() {
     return CloudProviderType.AZURE;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(AZURE_KUBERNETES)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String clusterName;
-    private String namespace;
-    private String releaseName;
-    private String resourceGroup;
-    private String subscriptionId;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String clusterName, String namespace, String releaseName,
-        String resourceGroup, String subscriptionId) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setClusterName(clusterName);
-      setNamespace(namespace);
-      setReleaseName(releaseName);
-      setResourceGroup(resourceGroup);
-      setSubscriptionId(subscriptionId);
-    }
-
-    public Yaml() {
-      super(AZURE_KUBERNETES);
-    }
   }
 }
