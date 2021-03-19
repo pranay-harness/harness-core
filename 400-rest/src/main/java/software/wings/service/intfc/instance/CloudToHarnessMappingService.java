@@ -2,6 +2,7 @@ package software.wings.service.intfc.instance;
 
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
 
 import software.wings.api.DeploymentSummary;
@@ -11,7 +12,6 @@ import software.wings.beans.ResourceLookup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.User;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.security.UserGroup;
 import software.wings.graphql.datafetcher.billing.BillingDataQueryMetadata;
 import software.wings.settings.SettingVariableTypes;

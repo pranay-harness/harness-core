@@ -862,7 +862,6 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstance.builder()
             .accountId(accountId)
             .executionStatus(ExecutionStatus.QUEUED)
-            .verificationJobIdentifier(verificationJob.getIdentifier())
             .deploymentStartTime(Instant.ofEpochMilli(clock.millis()))
             .resolvedJob(verificationJob)
             .startTime(Instant.ofEpochMilli(clock.millis() + Duration.ofMinutes(2).toMillis()))

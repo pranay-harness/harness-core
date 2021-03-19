@@ -153,19 +153,25 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
     if (ParameterField.isNull(stepParameters.getAssertion())) {
       return true;
     }
+
     HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse.getHttpResponseCode());
-    String assertion = stepParameters.getAssertion().getValue();
-    if (assertion == null) {
+    String assertion = (String) stepParameters.getAssertion().fetchFinalValue();
+    if (assertion == null || EmptyPredicate.isEmpty(assertion.trim())) {
       return true;
     }
+
     try {
       Map<String, Object> context = ImmutableMap.<String, Object>builder()
                                         .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
                                         .build();
-      return (boolean) evaluator.evaluateExpression(assertion, context);
+      Object value = evaluator.evaluateExpression(assertion, context);
+      if (!(value instanceof Boolean)) {
+        throw new InvalidRequestException(String.format(
+            "Expected boolean assertion, got %s value", value == null ? "null" : value.getClass().getSimpleName()));
+      }
+      return (boolean) value;
     } catch (Exception e) {
-      log.error(e.getMessage());
-      throw new InvalidRequestException("Assertion provided is not a valid expression.");
+      throw new InvalidRequestException("Assertion provided is not a valid expression", e);
     }
   }
 

@@ -3,7 +3,6 @@ package io.harness.cvng.statemachine.services;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
@@ -29,10 +28,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private HPersistence hPersistence;
   @Inject private AnalysisStateMachineService stateMachineService;
-  @Inject private VerificationTaskService verificationTaskService;
 
   @Override
   public void queueAnalysis(String verificationTaskId, Instant startTime, Instant endTime) {
+    log.info("Queuing analysis for verificationTaskId: {}, startTime: {}, endTime: {}", verificationTaskId, startTime,
+        endTime);
+
     AnalysisInput inputForAnalysis =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
     validateAnalysisInputs(inputForAnalysis);
@@ -76,7 +77,15 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Override
   public void orchestrate(AnalysisOrchestrator orchestrator) {
     Preconditions.checkNotNull(orchestrator, "orchestrator cannot be null when trying to orchestrate");
-    orchestrateAtRunningState(orchestrator);
+    try {
+      orchestrateAtRunningState(orchestrator);
+    } catch (Exception e) {
+      // TODO: these errors needs to go to execution log so that we can connect it with the right context and show them
+      // in the UI.
+      // TODO: setup alert
+      log.error("Failed to orchestrate: {}", orchestrator, e);
+      throw e;
+    }
   }
 
   private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {

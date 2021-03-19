@@ -5,8 +5,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.NGConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
+import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.LogCallback;
+import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
@@ -26,19 +32,30 @@ public class ArtifactUtils {
                                               : SIDECAR_ARTIFACT + "." + artifactConfig.getIdentifier();
   }
 
-  public List<ArtifactConfig> convertArtifactListIntoArtifacts(ArtifactListConfig artifactListConfig) {
+  public List<ArtifactConfig> convertArtifactListIntoArtifacts(
+      ArtifactListConfig artifactListConfig, NGManagerLogCallback ngManagerLogCallback) {
     List<ArtifactConfig> artifacts = new LinkedList<>();
     if (artifactListConfig == null) {
       return artifacts;
     }
     if (artifactListConfig.getPrimary() != null) {
       artifacts.add(artifactListConfig.getPrimary().getArtifactConfig());
+      saveLogs(ngManagerLogCallback,
+          "Primary artifact details: \n"
+              + getLogInfo(artifactListConfig.getPrimary().getArtifactConfig(),
+                  artifactListConfig.getPrimary().getSourceType()));
     }
     if (EmptyPredicate.isNotEmpty(artifactListConfig.getSidecars())) {
       artifacts.addAll(artifactListConfig.getSidecars()
                            .stream()
                            .map(s -> s.getSidecar().getArtifactConfig())
                            .collect(Collectors.toList()));
+      saveLogs(ngManagerLogCallback,
+          "Sidecars details: \n"
+              + artifactListConfig.getSidecars()
+                    .stream()
+                    .map(s -> getLogInfo(s.getSidecar().getArtifactConfig(), s.getSidecar().getSourceType()))
+                    .collect(Collectors.joining()));
     }
     return artifacts;
   }
@@ -58,5 +75,38 @@ public class ArtifactUtils {
     StringBuilder keyBuilder = new StringBuilder();
     valuesList.forEach(s -> appendIfNecessary(keyBuilder, s));
     return Hashing.sha256().hashString(keyBuilder.toString(), StandardCharsets.UTF_8).toString();
+  }
+  private void saveLogs(LogCallback executionLogCallback, String message) {
+    if (executionLogCallback != null) {
+      executionLogCallback.saveExecutionLog(message);
+    }
+  }
+  private String getLogInfo(ArtifactConfig artifactConfig, ArtifactSourceType sourceType) {
+    if (sourceType == null) {
+      return "";
+    }
+    String placeholder = "  type: %s, image: %s, tag/tagRegex: %s, connectorRef: %s \n";
+    switch (sourceType) {
+      case DOCKER_HUB:
+        DockerHubArtifactConfig dockerHubArtifactConfig = (DockerHubArtifactConfig) artifactConfig;
+        return String.format(placeholder, sourceType, dockerHubArtifactConfig.getImagePath().getValue(),
+            dockerHubArtifactConfig.getTag().getValue() != null ? dockerHubArtifactConfig.getTag().getValue()
+                                                                : dockerHubArtifactConfig.getTagRegex().getValue(),
+            dockerHubArtifactConfig.getConnectorRef().getValue());
+      case GCR:
+        GcrArtifactConfig gcrArtifactConfig = (GcrArtifactConfig) artifactConfig;
+        return String.format(placeholder, sourceType, gcrArtifactConfig.getImagePath().getValue(),
+            gcrArtifactConfig.getTag().getValue() != null ? gcrArtifactConfig.getTag().getValue()
+                                                          : gcrArtifactConfig.getTagRegex().getValue(),
+            gcrArtifactConfig.getConnectorRef().getValue());
+      case ECR:
+        EcrArtifactConfig ecrArtifactConfig = (EcrArtifactConfig) artifactConfig;
+        return String.format(placeholder, sourceType, ecrArtifactConfig.getImagePath().getValue(),
+            ecrArtifactConfig.getTag().getValue() != null ? ecrArtifactConfig.getTag().getValue()
+                                                          : ecrArtifactConfig.getTagRegex().getValue(),
+            ecrArtifactConfig.getConnectorRef().getValue());
+      default:
+        throw new UnsupportedOperationException(String.format("Unknown Artifact Config type: [%s]", sourceType));
+    }
   }
 }

@@ -5,6 +5,8 @@ import static io.harness.terraform.TerraformConstants.DEFAULT_TERRAFORM_COMMAND_
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 
 import io.harness.CategoryTest;
@@ -48,11 +50,12 @@ public class TerraformClientImplTest extends CategoryTest {
     TerraformInitCommandRequest terraformInitCommandRequest =
         TerraformInitCommandRequest.builder().tfBackendConfigsFilePath("/tmp/terraform/backendconfig.tf").build();
 
+    String command = format(
+        "terraform init -input=false -backend-config=%s", terraformInitCommandRequest.getTfBackendConfigsFilePath());
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand(format("terraform init -input=false -backend-config=%s",
-                               terraformInitCommandRequest.getTfBackendConfigsFilePath()),
-            DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(format("echo \"no\" | %s", command)), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT),
+            eq(Collections.emptyMap()), eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.init(
         terraformInitCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -70,14 +73,14 @@ public class TerraformClientImplTest extends CategoryTest {
             .targets(Arrays.asList("10.0.10.1", "10.0.10.2"))
             .varFilePaths(Arrays.asList("variableParams"))
             .build();
+    String command = format("terraform destroy -force %s %s",
+        TerraformHelperUtils.generateCommandFlagsString(terraformDestroyCommandRequest.getTargets(), "-target="),
+        TerraformHelperUtils.generateCommandFlagsString(
+            terraformDestroyCommandRequest.getVarFilePaths(), "-var-file="));
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand(format("terraform destroy -force %s %s",
-                               TerraformHelperUtils.generateCommandFlagsString(
-                                   terraformDestroyCommandRequest.getTargets(), "-target="),
-                               TerraformHelperUtils.generateCommandFlagsString(
-                                   terraformDestroyCommandRequest.getVarFilePaths(), "-var-file=")),
-            DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.destroy(
         terraformDestroyCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -93,14 +96,13 @@ public class TerraformClientImplTest extends CategoryTest {
     TerraformPlanCommandRequest terraformPlanCommandRequest =
         TerraformPlanCommandRequest.builder().destroySet(true).build();
 
+    String command = format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
+        TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), "-target="),
+        TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getVarFilePaths(), "-var-file="));
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand(
-            format("terraform plan -input=false -destroy -out=tfdestroyplan %s %s",
-                TerraformHelperUtils.generateCommandFlagsString(terraformPlanCommandRequest.getTargets(), "-target="),
-                TerraformHelperUtils.generateCommandFlagsString(
-                    terraformPlanCommandRequest.getVarFilePaths(), "-var-file=")),
-            DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.plan(
         terraformPlanCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -114,14 +116,14 @@ public class TerraformClientImplTest extends CategoryTest {
   public void testRefreshCommand() throws InterruptedException, IOException, TimeoutException {
     CliResponse cliResponse = CliResponse.builder().build();
     TerraformRefreshCommandRequest terraformRefreshCommandRequest = TerraformRefreshCommandRequest.builder().build();
+    String command = "terraform refresh -input=false "
+        + TerraformHelperUtils.generateCommandFlagsString(terraformRefreshCommandRequest.getTargets(), "-target=")
+        + TerraformHelperUtils.generateCommandFlagsString(
+            terraformRefreshCommandRequest.getVarFilePaths(), "-var-file=");
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand("terraform refresh -input=false "
-                + TerraformHelperUtils.generateCommandFlagsString(
-                    terraformRefreshCommandRequest.getTargets(), "-target=")
-                + TerraformHelperUtils.generateCommandFlagsString(
-                    terraformRefreshCommandRequest.getVarFilePaths(), "-var-file="),
-            DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.refresh(
         terraformRefreshCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -135,10 +137,11 @@ public class TerraformClientImplTest extends CategoryTest {
   public void testApplyCommand() throws InterruptedException, IOException, TimeoutException {
     CliResponse cliResponse = CliResponse.builder().build();
     TerraformApplyCommandRequest terraformApplyCommandRequest = TerraformApplyCommandRequest.builder().build();
+    String command = "terraform apply -input=false tfplan";
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand("terraform apply -input=false tfplan", DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-            Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.apply(
         terraformApplyCommandRequest, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -152,10 +155,11 @@ public class TerraformClientImplTest extends CategoryTest {
   public void testWorkspaceCommand() throws InterruptedException, IOException, TimeoutException {
     CliResponse cliResponse = CliResponse.builder().build();
     String workspace = "workspace";
+    String command = "terraform workspace NEW " + workspace;
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand("terraform workspace NEW " + workspace, DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-            Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse =
         terraformClientImpl.workspace(workspace, true, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -169,10 +173,11 @@ public class TerraformClientImplTest extends CategoryTest {
   public void testshowCommand() throws InterruptedException, IOException, TimeoutException {
     CliResponse cliResponse = CliResponse.builder().build();
     String plan = "planName";
+    String command = "terraform show -json " + plan;
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand("terraform show -json " + plan, DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(),
-            "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse =
         terraformClientImpl.show(plan, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
@@ -186,10 +191,11 @@ public class TerraformClientImplTest extends CategoryTest {
   public void testOutputCommand() throws InterruptedException, IOException, TimeoutException {
     CliResponse cliResponse = CliResponse.builder().build();
     String tfOutputsFile = "OutFile.txt";
+    String command = "terraform show -json > " + tfOutputsFile;
     doReturn(cliResponse)
         .when(cliHelper)
-        .executeCliCommand("terraform show -json > " + tfOutputsFile, DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-            Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
+            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse =
         terraformClientImpl.output(tfOutputsFile, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);

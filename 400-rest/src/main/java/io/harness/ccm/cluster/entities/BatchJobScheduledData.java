@@ -39,9 +39,10 @@ public final class BatchJobScheduledData
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_batchJobType_endAt")
+                 .name("accountId_batchJobType_validRun_endAt")
                  .field(BatchJobScheduledDataKeys.accountId)
                  .field(BatchJobScheduledDataKeys.batchJobType)
+                 .field(BatchJobScheduledDataKeys.validRun)
                  .descSortField(BatchJobScheduledDataKeys.endAt)
                  .build())
         .build();
@@ -51,6 +52,7 @@ public final class BatchJobScheduledData
   String accountId;
   String batchJobType;
   long jobRunTimeMillis;
+  boolean validRun;
   Instant startAt;
   Instant endAt;
   long createdAt;
@@ -70,5 +72,6 @@ public final class BatchJobScheduledData
     this.jobRunTimeMillis = jobRunTimeMillis;
     this.startAt = startAt;
     this.endAt = endAt;
+    this.validRun = true;
   }
 }

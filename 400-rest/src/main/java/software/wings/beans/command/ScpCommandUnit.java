@@ -334,7 +334,7 @@ public class ScpCommandUnit extends SshCommandUnit {
     return ArtifactType.JAR == artifactType || ArtifactType.TAR == artifactType || ArtifactType.WAR == artifactType
         || ArtifactType.ZIP == artifactType || ArtifactType.IIS == artifactType || ArtifactType.IIS_APP == artifactType
         || ArtifactType.IIS_VirtualDirectory == artifactType || ArtifactType.RPM == artifactType
-        || ArtifactType.OTHER == artifactType;
+        || ArtifactType.OTHER == artifactType || ArtifactType.NUGET == artifactType;
   }
 
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
@@ -342,7 +342,7 @@ public class ScpCommandUnit extends SshCommandUnit {
         aLog()
             .appId(context.getAppId())
             .activityId(context.getActivityId())
-            .hostName(context.getHost().getPublicDns())
+            .hostName(context.getHost() == null ? null : context.getHost().getPublicDns())
             .logLevel(logLevel)
             .commandUnitName(getName())
             .logLine(line)

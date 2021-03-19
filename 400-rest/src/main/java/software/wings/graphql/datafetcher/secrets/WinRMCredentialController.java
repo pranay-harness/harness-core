@@ -1,5 +1,7 @@
 package software.wings.graphql.datafetcher.secrets;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme.NTLM;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
@@ -7,6 +9,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDP)
 public class WinRMCredentialController {
   @Inject SettingsService settingService;
   @Inject SecretManager secretManager;

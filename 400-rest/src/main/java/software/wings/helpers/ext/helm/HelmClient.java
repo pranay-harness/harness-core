@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.HelmVersion;
 
@@ -19,6 +22,7 @@ import java.util.concurrent.TimeoutException;
  * Created by anubhaw on 3/22/18.
  */
 @TargetModule(Module._960_API_SERVICES)
+@OwnedBy(CDP)
 public interface HelmClient {
   /**
    * Install helm command response.

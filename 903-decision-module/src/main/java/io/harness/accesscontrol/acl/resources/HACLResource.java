@@ -21,6 +21,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -58,7 +59,7 @@ public class HACLResource {
 
     return serviceCall.isPresent()
         && (principalToCheckPermissions == null
-            || serviceCall.get().getName().equals(principalToCheckPermissions.getPrincipalIdentifier()));
+            || Objects.equals(serviceCall.get().getName(), principalToCheckPermissions.getPrincipalIdentifier()));
   }
 
   private boolean shouldApplyAccessControlCheckToQueryPermissions(
@@ -69,7 +70,7 @@ public class HACLResource {
         Optional.ofNullable(principalInContext).filter(x -> !PrincipalType.SERVICE.equals(x.getType()));
     return nonServiceCall.isPresent()
         && (principalToCheckPermissions != null
-            && !principalInContext.getName().equals(principalToCheckPermissions.getPrincipalIdentifier()));
+            && !Objects.equals(principalInContext.getName(), principalToCheckPermissions.getPrincipalIdentifier()));
   }
 
   @POST
@@ -108,6 +109,15 @@ public class HACLResource {
     if (shouldApplyAccessControlCheckToQueryPermissions(principalInContext, principalToCheckPermissions)) {
       // apply RBAC checks here
       log.debug("checking for access control checks here...");
+    }
+
+    if (principalToCheckPermissions == null) {
+      principalToCheckPermissions =
+          HPrincipal.builder()
+              .principalIdentifier(principalInContext.getName())
+              .principalType(io.harness.accesscontrol.principals.PrincipalType.fromSecurityPrincipalType(
+                  principalInContext.getType()))
+              .build();
     }
 
     // otherwise forward the call ahead and return response

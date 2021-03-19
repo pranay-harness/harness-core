@@ -654,9 +654,6 @@
         "name": {
           "type": "string"
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "spec": {
           "$ref": "#/definitions/StepSpecType"
         },
@@ -664,6 +661,9 @@
           "type": "string"
         },
         "type": {
+          "type": "string"
+        },
+        "when": {
           "type": "string"
         }
       },
@@ -694,14 +694,14 @@
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "steps": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/ExecutionWrapperConfig"
           }
+        },
+        "when": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"

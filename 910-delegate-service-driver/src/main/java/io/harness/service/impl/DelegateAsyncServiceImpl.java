@@ -29,7 +29,7 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
   @Inject private HPersistence persistence;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private WaitNotifyEngine waitNotifyEngine;
-  private static final int DELETE_TRESHOLD = 20;
+  private static final int DELETE_THRESHOLD = 20;
   private static final long MAX_PROCESSING_DURATION_MILLIS = 60000L;
 
   @Override
@@ -58,9 +58,13 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
         log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(),
             (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData()));
-        responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
-        if (responsesToBeDeleted.size() >= DELETE_TRESHOLD) {
-          deleteProcessedResponses(responsesToBeDeleted);
+
+        if (lockedAsyncTaskResponse.getHoldUntil() > currentTimeMillis()) {
+          responsesToBeDeleted.add(lockedAsyncTaskResponse.getUuid());
+          if (responsesToBeDeleted.size() >= DELETE_THRESHOLD) {
+            deleteProcessedResponses(responsesToBeDeleted);
+            responsesToBeDeleted.clear();
+          }
         }
       } catch (Exception ex) {
         log.info(String.format("Ignoring async task response because of the following error: %s", ex.getMessage()));
@@ -94,11 +98,12 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
           .build());
 
   @Override
-  public void setupTimeoutForTask(String taskId, long expiry) {
+  public void setupTimeoutForTask(String taskId, long expiry, long holdUntil) {
     persistence.save(DelegateAsyncTaskResponse.builder()
                          .uuid(taskId)
                          .responseData(getTimeoutMessage())
                          .processAfter(expiry)
+                         .holdUntil(holdUntil)
                          .build());
   }
 }

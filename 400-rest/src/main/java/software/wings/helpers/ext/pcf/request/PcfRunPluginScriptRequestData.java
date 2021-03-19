@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
@@ -11,6 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 @TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class PcfRunPluginScriptRequestData {
   private PcfRequestConfig pcfRequestConfig;
   private PcfRunPluginCommandRequest pluginCommandRequest;

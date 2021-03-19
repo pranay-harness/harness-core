@@ -1,9 +1,11 @@
 package io.harness.pms.serializer.jackson;
 
 import io.harness.logging.UnitProgress;
+import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -16,7 +18,9 @@ import io.harness.serializer.json.ExecutionErrorInfoSerializer;
 import io.harness.serializer.json.ExecutionMetadataSerializer;
 import io.harness.serializer.json.ExecutionTriggerInfoSerializer;
 import io.harness.serializer.json.FailureInfoSerializer;
+import io.harness.serializer.json.InterruptConfigSerializer;
 import io.harness.serializer.json.LayoutNodeInfoSerializer;
+import io.harness.serializer.json.NodeRunInfoSerializer;
 import io.harness.serializer.json.SkipInfoSerializer;
 import io.harness.serializer.json.StepTypeSerializer;
 import io.harness.serializer.json.TriggeredBySerializer;
@@ -38,5 +42,7 @@ public class PmsBeansJacksonModule extends SimpleModule {
     addSerializer(ExecutableResponse.class, new ExecutableResponseSerializer());
     addSerializer(SkipInfo.class, new SkipInfoSerializer());
     addSerializer(UnitProgress.class, new UnitProgressSerializer());
+    addSerializer(InterruptConfig.class, new InterruptConfigSerializer());
+    addSerializer(NodeRunInfo.class, new NodeRunInfoSerializer());
   }
 }

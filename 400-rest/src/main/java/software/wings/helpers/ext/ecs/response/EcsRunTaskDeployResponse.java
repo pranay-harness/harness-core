@@ -21,8 +21,8 @@ public class EcsRunTaskDeployResponse extends EcsCommandResponse {
   @Builder
   public EcsRunTaskDeployResponse(CommandExecutionStatus commandExecutionStatus, String output,
       List<String> newRunTaskArns, List<String> newRegisteredRunTaskDefinitions, List<String> previousRunTaskArns,
-      List<String> previousRegisteredRunTaskDefinitions) {
-    super(commandExecutionStatus, output);
+      List<String> previousRegisteredRunTaskDefinitions, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.newRegisteredRunTaskDefinitions = newRegisteredRunTaskDefinitions;
     this.previousRegisteredRunTaskDefinitions = previousRegisteredRunTaskDefinitions;
     this.newRunTaskArns = newRunTaskArns;

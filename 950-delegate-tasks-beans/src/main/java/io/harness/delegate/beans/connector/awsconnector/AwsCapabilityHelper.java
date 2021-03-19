@@ -3,31 +3,32 @@ package io.harness.delegate.beans.connector.awsconnector;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 
+import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
-import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.expression.ExpressionEvaluator;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class AwsCapabilityHelper {
+public class AwsCapabilityHelper extends ConnectorCapabilityBaseHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
-      ExpressionEvaluator maskingEvaluator, AwsConnectorDTO awsConnectorDTO) {
+      ConnectorConfigDTO connectorConfigDTO, ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilityList = new ArrayList<>();
+    AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorConfigDTO;
     AwsCredentialDTO credential = awsConnectorDTO.getCredential();
-    if (credential.getAwsCredentialType() == INHERIT_FROM_DELEGATE) {
-      AwsInheritFromDelegateSpecDTO config = (AwsInheritFromDelegateSpecDTO) credential.getConfig();
-      return Collections.singletonList(SelectorCapability.builder().selectors(config.getDelegateSelectors()).build());
-    } else if (credential.getAwsCredentialType() == MANUAL_CREDENTIALS) {
+    if (credential.getAwsCredentialType() == MANUAL_CREDENTIALS) {
       final String AWS_URL = "https://aws.amazon.com/";
-      return Arrays.asList(
+      capabilityList.add(
           HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
-    } else {
+    } else if (credential.getAwsCredentialType() != INHERIT_FROM_DELEGATE) {
       throw new UnknownEnumTypeException("AWS Credential Type", String.valueOf(credential.getAwsCredentialType()));
     }
+    populateDelegateSelectorCapability(capabilityList, awsConnectorDTO.getDelegateSelectors());
+    return capabilityList;
   }
 }

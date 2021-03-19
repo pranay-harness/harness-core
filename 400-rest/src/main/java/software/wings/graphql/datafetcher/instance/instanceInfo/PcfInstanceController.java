@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.instance.instanceInfo;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -12,6 +15,7 @@ import software.wings.graphql.schema.type.instance.QLPcfInstance;
 import com.google.inject.Inject;
 
 @TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDP)
 public class PcfInstanceController implements InstanceController<QLPcfInstance> {
   @Inject InstanceControllerUtils util;
 

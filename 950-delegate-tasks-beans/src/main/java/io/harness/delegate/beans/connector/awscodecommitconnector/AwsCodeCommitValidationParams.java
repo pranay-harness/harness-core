@@ -1,7 +1,6 @@
 package io.harness.delegate.beans.connector.awscodecommitconnector;
 
-import static java.util.Collections.singletonList;
-
+import io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
@@ -11,13 +10,15 @@ import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
-public class AwsCodeCommitValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+public class AwsCodeCommitValidationParams
+    extends ConnectorCapabilityBaseHelper implements ConnectorValidationParams, ExecutionCapabilityDemander {
   private final String AWS_URL = "https://aws.amazon.com/";
   private AwsCodeCommitConnectorDTO awsConnector;
   private List<EncryptedDataDetail> encryptionDetails;
@@ -25,8 +26,11 @@ public class AwsCodeCommitValidationParams implements ConnectorValidationParams,
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return singletonList(
+    List<ExecutionCapability> capabilityList = new ArrayList<>();
+    capabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
+    populateDelegateSelectorCapability(capabilityList, awsConnector.getDelegateSelectors());
+    return capabilityList;
   }
 
   @Override

@@ -16,4 +16,5 @@ message DelegateTaskRequest {
   repeated io.harness.delegate.TaskSelector selectors = 6;
   repeated string units = 7;
   repeated string logKeys = 8;
+  bool selectionTrackingLogEnabled = 9;
 }

@@ -121,6 +121,7 @@ public class CEExportDataQueryBuilder {
       decorateQueryWithFilters(selectQuery, filters);
     }
 
+    sortCriteria = addSortBasedOnGroupBy(sortCriteria, groupBy);
     List<QLCESort> finalSortCriteria = validateAndAddSortCriteria(selectQuery, sortCriteria, fieldNames);
     addAccountFilter(selectQuery, accountId);
     selectQuery.getWhereClause().setDisableParens(true);
@@ -631,6 +632,66 @@ public class CEExportDataQueryBuilder {
 
   // Methods for applying Sorting
 
+  private List<QLCESort> addSortBasedOnGroupBy(List<QLCESort> sortCriteria, List<QLCEEntityGroupBy> groupBy) {
+    List<QLCESort> updatedSortCriteria = new ArrayList<>();
+    sortCriteria.forEach(sort -> updatedSortCriteria.add(sort));
+    for (QLCEEntityGroupBy entityGroupBy : groupBy) {
+      switch (entityGroupBy) {
+        case Cluster:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.CLUSTER).build());
+          break;
+        case Namespace:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.NAMESPACE).build());
+          break;
+        case Workload:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.WORKLOAD).build());
+          break;
+        case WorkloadType:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.WORKLOADTYPE).build());
+          break;
+        case Pod:
+        case Node:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.INSTANCE).build());
+          break;
+        case Application:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.APPLICATION).build());
+          break;
+        case Service:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.SERVICE).build());
+          break;
+        case Environment:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.ENVIRONMENT).build());
+          break;
+        case Task:
+          updatedSortCriteria.add(QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.TASK).build());
+          break;
+        case EcsService:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.ECS_SERVICE).build());
+          break;
+        case LaunchType:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.LAUNCHTYPE).build());
+          break;
+        case Region:
+          updatedSortCriteria.add(
+              QLCESort.builder().order(QLSortOrder.ASCENDING).sortType(QLCESortType.REGION).build());
+          break;
+        default:
+          break;
+      }
+    }
+    return updatedSortCriteria;
+  }
+
   private List<QLCESort> validateAndAddSortCriteria(
       SelectQuery selectQuery, List<QLCESort> sortCriteria, List<CEExportDataMetadataFields> fieldNames) {
     if (isEmpty(sortCriteria)) {
@@ -663,6 +724,42 @@ public class CEExportDataQueryBuilder {
         break;
       case UNALLOCATEDCOST:
         selectQuery.addCustomOrdering(CEExportDataMetadataFields.UNALLOCATEDCOST.getFieldName(), dir);
+        break;
+      case CLUSTER:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.CLUSTERID.getFieldName(), dir);
+        break;
+      case WORKLOAD:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.WORKLOADNAME.getFieldName(), dir);
+        break;
+      case NAMESPACE:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.NAMESPACE.getFieldName(), dir);
+        break;
+      case WORKLOADTYPE:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.WORKLOADTYPE.getFieldName(), dir);
+        break;
+      case INSTANCE:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.INSTANCEID.getFieldName(), dir);
+        break;
+      case APPLICATION:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.APPID.getFieldName(), dir);
+        break;
+      case SERVICE:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.SERVICEID.getFieldName(), dir);
+        break;
+      case ENVIRONMENT:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.ENVID.getFieldName(), dir);
+        break;
+      case TASK:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.TASKID.getFieldName(), dir);
+        break;
+      case ECS_SERVICE:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.CLOUDSERVICENAME.getFieldName(), dir);
+        break;
+      case LAUNCHTYPE:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.LAUNCHTYPE.getFieldName(), dir);
+        break;
+      case REGION:
+        selectQuery.addCustomOrdering(CEExportDataMetadataFields.REGION.getFieldName(), dir);
         break;
       default:
         throw new InvalidRequestException("Order type not supported " + sortType);

@@ -50,6 +50,8 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
   @JsonProperty("enableAuth") @Getter(AccessLevel.NONE) private boolean enableAuth;
   @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
+  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
+  @JsonProperty("identityServiceSecret") private String identityServiceSecret;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;

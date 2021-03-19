@@ -1,6 +1,7 @@
 package io.harness.pms.merger.fqn;
 
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +38,21 @@ public class FQN {
       }
     }
     return res.toString();
+  }
+
+  public String getExpressionFqn() {
+    StringBuilder res = new StringBuilder();
+    for (FQNNode node : fqnList) {
+      if (node.getNodeType() == FQNNode.NodeType.KEY && !YamlUtils.shouldNotIncludeInQualifiedName(node.getKey())) {
+        res.append(node.getKey()).append('.');
+      } else if (node.getNodeType() == FQNNode.NodeType.KEY_WITH_UUID) {
+        res.append(node.getUuidValue()).append('.');
+      } else if (node.getNodeType() == FQNNode.NodeType.UUID) {
+        res.append(node.getUuidValue()).append('.');
+      }
+    }
+    String temp = res.toString();
+    return temp.substring(0, temp.length() - 1);
   }
 
   public boolean contains(FQN baseFQN) {

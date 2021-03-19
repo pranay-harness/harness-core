@@ -2,6 +2,7 @@ package io.harness.impl;
 
 import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.constants.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
@@ -185,6 +186,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
 
   private Repository convertRepository(io.harness.product.ci.scm.proto.Repository repo) {
     return Repository.builder()
+        .id(repo.getId())
         .name(repo.getName())
         .namespace(repo.getNamespace())
         .slug(repo.getNamespace() + "/" + repo.getName())
@@ -207,6 +209,8 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
       return GitProvider.GITLAB;
     } else if (containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
       return getBitbucketProvider(headerKeys);
+    } else if (containsHeaderKey(headerKeys, X_AMZ_SNS_MESSAGE_TYPE)) {
+      return GitProvider.CODECOMMIT;
     }
 
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "

@@ -15,4 +15,5 @@ public class OrchestrationStepTypes {
   public static final String NG_SECTION = "NG_SECTION";
   public static final String NG_FORK = "NG_FORK";
   public static final String STEP_GROUP = "STEP_GROUP";
+  public static final String APPROVAL_STAGE = "APPROVAL_STAGE";
 }

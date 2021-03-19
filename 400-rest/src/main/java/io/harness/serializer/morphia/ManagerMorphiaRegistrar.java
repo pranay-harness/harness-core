@@ -339,7 +339,6 @@ import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CECloudAccount;
 import software.wings.beans.ce.CECluster;
 import software.wings.beans.ce.CEGcpConfig;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.ce.depricated.CECloudAccountOld;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
@@ -868,7 +867,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(CECloudAccount.class);
     set.add(CECloudAccountOld.class);
     set.add(CECluster.class);
-    set.add(CEMetadataRecord.class);
     set.add(CECommunications.class);
     set.add(CeExceptionRecord.class);
     set.add(CESlackWebhook.class);

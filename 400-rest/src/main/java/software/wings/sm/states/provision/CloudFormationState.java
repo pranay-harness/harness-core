@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -11,6 +12,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
@@ -82,6 +84,7 @@ import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.query.Query;
 
 @FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
+@OwnedBy(CDP)
 public abstract class CloudFormationState extends State {
   @Inject protected transient ActivityService activityService;
   @Inject private transient SettingsService settingsService;

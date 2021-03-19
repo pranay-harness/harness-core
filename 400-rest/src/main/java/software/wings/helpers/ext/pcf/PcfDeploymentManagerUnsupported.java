@@ -1,5 +1,8 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pcf.PivotalClientApiException;
 
 import software.wings.beans.PcfConfig;
@@ -13,6 +16,7 @@ import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 
 @Singleton
+@OwnedBy(CDP)
 public class PcfDeploymentManagerUnsupported implements PcfDeploymentManager {
   public static final String DELIMITER = "__";
 

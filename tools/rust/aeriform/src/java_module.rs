@@ -4,6 +4,7 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
@@ -213,6 +214,10 @@ fn populate_dependencies(name: &String) -> (MultiMap<String, String>, HashSet<St
 }
 
 fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
+    if !Path::new(jar).exists() {
+        panic!(format!("Jar file {} does not exist", jar));
+    }
+
     let output = Command::new("jdeps")
         .args(&["-v", jar])
         .output()

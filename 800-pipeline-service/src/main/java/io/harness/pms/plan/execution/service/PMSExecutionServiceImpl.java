@@ -1,5 +1,7 @@
 package io.harness.pms.plan.execution.service;
 
+import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
+
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
@@ -13,7 +15,13 @@ import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.pms.contracts.advisers.InterruptConfig;
+import io.harness.pms.contracts.advisers.IssuedBy;
+import io.harness.pms.contracts.advisers.ManualIssuer;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
+import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
@@ -38,11 +46,12 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private FilterService filterService;
+  @Inject private TriggeredByHelper triggeredByHelper;
 
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm) {
+      String searchTerm, ExecutionStatus status, boolean myDeployments) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -56,6 +65,9 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
       criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
+    if (status != null) {
+      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).is(status);
+    }
 
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
@@ -63,6 +75,14 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
       populatePipelineFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
       populatePipelineFilter(criteria, filterProperties);
+    }
+
+    if (myDeployments) {
+      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.executionTriggerInfo)
+          .is(ExecutionTriggerInfo.newBuilder()
+                  .setTriggerType(MANUAL)
+                  .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
+                  .build());
     }
 
     if (EmptyPredicate.isNotEmpty(moduleName)) {
@@ -148,11 +168,16 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public InterruptDTO registerInterrupt(
       PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
-    InterruptPackage interruptPackage = InterruptPackage.builder()
-                                            .interruptType(executionInterruptType.getExecutionInterruptType())
-                                            .planExecutionId(planExecutionId)
-                                            .nodeExecutionId(nodeExecutionId)
-                                            .build();
+    InterruptPackage interruptPackage =
+        InterruptPackage.builder()
+            .interruptType(executionInterruptType.getExecutionInterruptType())
+            .planExecutionId(planExecutionId)
+            .nodeExecutionId(nodeExecutionId)
+            .interruptConfig(
+                InterruptConfig.newBuilder()
+                    .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
+                    .build())
+            .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return InterruptDTO.builder()
         .id(interrupt.getUuid())

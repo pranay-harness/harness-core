@@ -9,6 +9,7 @@ import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.security.JWTAuthenticationFilter.setSourcePrincipalInContext;
 import static io.harness.security.JWTTokenServiceUtils.extractToken;
 import static io.harness.security.JWTTokenServiceUtils.verifyJWTToken;
 
@@ -184,6 +185,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       HarnessUserThreadLocal.set(harnessUserAccountActions);
       if (isAuthenticatedByIdentitySvc(containerRequestContext)) {
         SecurityContextBuilder.setContext(claimMap);
+
+        setSourcePrincipalInContext(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping,
+            SecurityContextBuilder.getPrincipal());
+
         String userId = containerRequestContext.getHeaderString(USER_IDENTITY_HEADER);
         User user = userService.getUserFromCacheOrDB(userId);
         if (user != null) {
@@ -200,6 +205,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     // Bearer token validation is needed for environments without Gateway
     if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
+      setSourcePrincipalInContext(containerRequestContext, serviceToJWTTokenHandlerMapping, serviceToSecretMapping,
+          SecurityContextBuilder.getPrincipal());
       return;
     }
 

@@ -12,7 +12,8 @@ import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
-import io.harness.cvng.migration.CNVGMigration;
+import io.harness.cvng.migration.CVNGMigration;
+import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
 
 import com.google.api.client.util.Charsets;
@@ -32,7 +33,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
-public class AddDeploymentMonitoringSourcePerpetualTask implements CNVGMigration {
+public class AddDeploymentMonitoringSourcePerpetualTask implements CVNGMigration {
   @Inject private HPersistence hPersistence;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Override
@@ -116,5 +117,15 @@ public class AddDeploymentMonitoringSourcePerpetualTask implements CNVGMigration
                 .monitoringSourceIdentifier(monitoringSourceIdentifier)
                 .verificationType(MonitoringSourcePerpetualTask.VerificationType.DEPLOYMENT)
                 .build()));
+  }
+
+  @Override
+  public ChecklistItem whatHappensOnRollback() {
+    return ChecklistItem.NA;
+  }
+
+  @Override
+  public ChecklistItem whatHappensIfOldVersionIteratorPicksMigratedEntity() {
+    return ChecklistItem.NA;
   }
 }

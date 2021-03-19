@@ -62,6 +62,6 @@ public class DeploymentStage implements CDStage, Visitable {
   }
 
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SPEC).build();
+    return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
   }
 }

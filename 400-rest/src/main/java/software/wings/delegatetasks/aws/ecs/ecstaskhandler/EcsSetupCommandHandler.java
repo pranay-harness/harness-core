@@ -5,6 +5,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -32,6 +33,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -82,30 +84,43 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
             ecsServiceSetupRequest.getSafeDisplayServiceVariables(), executionLogCallback, setupParams);
 
         // 2. Create ECS Service
-        if (!setupParams.isDaemonSchedulingStrategy()) {
+        if (setupParams.isDaemonSchedulingStrategy()) {
+          handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
+              encryptedDataDetails, commandExecutionDataBuilder, isMultipleLoadBalancersFeatureFlagActive);
+        } else {
           createServiceWithReplicaSchedulingStrategy(setupParams, taskDefinition, cloudProviderSetting,
               encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback,
               isMultipleLoadBalancersFeatureFlagActive);
-        } else {
-          handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
-              encryptedDataDetails, commandExecutionDataBuilder, isMultipleLoadBalancersFeatureFlagActive);
         }
       }
       commandResponse.setSetupData(commandExecutionDataBuilder.build());
+    } catch (TimeoutException ex) {
+      commandExecutionStatus = createFailureResponse(executionLogCallback, commandResponse, ex);
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        commandResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
-      log.error("Completed operation with errors");
-      log.error(ExceptionUtils.getMessage(ex), ex);
-      Misc.logAllMessages(ex, executionLogCallback);
-
-      commandExecutionStatus = CommandExecutionStatus.FAILURE;
-      commandResponse.setCommandExecutionStatus(commandExecutionStatus);
-      commandResponse.setOutput(ExceptionUtils.getMessage(ex));
+      commandExecutionStatus = createFailureResponse(executionLogCallback, commandResponse, ex);
     }
 
     return EcsCommandExecutionResponse.builder()
         .commandExecutionStatus(commandExecutionStatus)
         .ecsCommandResponse(commandResponse)
         .build();
+  }
+
+  @NotNull
+  private CommandExecutionStatus createFailureResponse(
+      ExecutionLogCallback executionLogCallback, EcsServiceSetupResponse commandResponse, Exception ex) {
+    CommandExecutionStatus commandExecutionStatus;
+    log.error("Completed operation with errors");
+    log.error(ExceptionUtils.getMessage(ex), ex);
+    Misc.logAllMessages(ex, executionLogCallback);
+
+    commandExecutionStatus = CommandExecutionStatus.FAILURE;
+    commandResponse.setCommandExecutionStatus(commandExecutionStatus);
+    commandResponse.setOutput(ExceptionUtils.getMessage(ex));
+    return commandExecutionStatus;
   }
 
   private void createServiceWithReplicaSchedulingStrategy(EcsSetupParams setupParams, TaskDefinition taskDefinition,
@@ -143,7 +158,7 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
     Optional<Service> existingServiceMetadataSnapshot = ecsSetupCommandTaskHelper.getExistingServiceMetadataSnapshot(
         setupParams, cloudProviderSetting, encryptedDataDetails, setupParams.getTaskFamily(), awsHelperService);
 
-    // We just use mapper to deserialize service Spec.We then use this object to get configs we want to updat e with
+    // We just use mapper to deserialize service Spec.We then use this object to get configs we want to update with
     // service
     CreateServiceRequest createServiceRequest = ecsSetupCommandTaskHelper.getCreateServiceRequest(cloudProviderSetting,
         encryptedDataDetails, setupParams, taskDefinition, setupParams.getTaskFamily(), executionLogCallback, log,

@@ -26,4 +26,13 @@ public enum AwsCredentialType {
   final String displayName() {
     return this.displayName;
   }
+
+  public static AwsCredentialType fromString(String typeEnum) {
+    for (AwsCredentialType enumValue : AwsCredentialType.values()) {
+      if (enumValue.getDisplayName().equals(typeEnum)) {
+        return enumValue;
+      }
+    }
+    throw new IllegalArgumentException("Invalid value: " + typeEnum);
+  }
 }

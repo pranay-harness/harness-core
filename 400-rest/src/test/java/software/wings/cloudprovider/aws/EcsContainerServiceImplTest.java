@@ -262,30 +262,30 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
   public void testWaitForTasksToBeInRunningStateButDontThrowException() throws Exception {
     doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
     UpdateServiceCountRequestData requestData = mock(UpdateServiceCountRequestData.class);
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData);
 
     doThrow(new TimeoutException(null, "timeout", null))
         .when(timeLimiter)
         .callWithTimeout(any(), anyLong(), any(), anyBoolean());
     assertThatExceptionOfType(TimeoutException.class)
-        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
 
     doThrow(new InvalidRequestException("timeout"))
         .when(timeLimiter)
         .callWithTimeout(any(), anyLong(), any(), anyBoolean());
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
 
     doThrow(new WingsException(ErrorCode.DEFAULT_ERROR_CODE))
         .when(timeLimiter)
         .callWithTimeout(any(), anyLong(), any(), anyBoolean());
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData);
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData);
 
     doThrow(new WingsException(ErrorCode.INIT_TIMEOUT))
         .when(timeLimiter)
         .callWithTimeout(any(), anyLong(), any(), anyBoolean());
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(requestData));
+        .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
   }
 
   @Test
