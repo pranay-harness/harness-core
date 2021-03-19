@@ -12,6 +12,7 @@ import static com.google.common.collect.Sets.newHashSet;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.codec.digest.DigestUtils.sha1Hex;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -52,6 +53,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOType;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.AuditTrailFeature;
@@ -110,6 +112,7 @@ public class AuditServiceImpl implements AuditService {
   @Inject private AccountService accountService;
   @Inject private UserService userService;
   @Inject private AuditHelper auditHelper;
+  @Inject private ApiKeyService apiKeyService;
 
   private WingsPersistence wingsPersistence;
 
@@ -428,32 +431,78 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
+  private AuditHeader getAuditHeaderById(@NotNull String Id) {
+    return wingsPersistence.createQuery(AuditHeader.class).filter(AuditHeader.ID_KEY2, Id).get();
+  }
+
   private <T> void addDetails(String accountId, T entity, EntityAuditRecord record, String auditHeaderId, Type type) {
-    if (entity instanceof User && (type.equals(Type.LOGIN) || type.equals(Type.LOGIN_2FA))) {
+    if (auditHeaderId == null) {
+      return;
+    }
+    AuditHeader header = auditHelper.get();
+    if (header == null) {
+      return;
+    }
+    HashMap<String, Object> details = new HashMap<String, Object>();
+    if (entity instanceof User) {
       Account account = accountService.get(accountId);
-      record.getDetails().put("Authentication", account.getAuthenticationMechanism());
+      details.put("Authentication", account.getAuthenticationMechanism());
       User user = (User) entity;
-      record.getDetails().put("MFA", user.isTwoFactorAuthenticationEnabled());
-      List<UserGroup> userGroups = userService.getUserGroupsOfUser(accountId, user.getUuid(), false);
+      details.put("MFA", user.isTwoFactorAuthenticationEnabled());
+      List<UserGroup> userGroupList = userService.getUserGroupsOfUserAudit(accountId, user.getUuid());
       List<String> userGroupNamesList = new ArrayList<>();
-      userGroups.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
-      record.getDetails().put("Groups", userGroupNamesList);
+      userGroupList.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
+      details.put("Groups", userGroupNamesList);
+      UpdateOperations<AuditHeader> updateOperation = wingsPersistence.createUpdateOperations(AuditHeader.class);
+      updateOperation.set(AuditHeaderKeys.details, details);
+      wingsPersistence.update(header, updateOperation);
     } else if (entity instanceof ApiKeyEntry && type.equals(Type.INVOKED)) {
-      AuditHeader header = auditHelper.get();
-      record.getDetails().put("Authentication", "API Key");
-      record.getDetails().put("resourcePath", header.getResourcePath());
-      //    header.withCreatedBy(EmbeddedUser.builder().name("API").build());
-    } else if (entity instanceof SSOSettings && (type.equals(Type.DELETE) || type.equals(Type.CREATE))) {
-      AuditHeader header = auditHelper.get();
+      details.put("Authentication", "API Key");
+      details.put("resourcePath", header.getResourcePath());
+      ApiKeyEntry apiKeyEntry = (ApiKeyEntry) entity;
+      List<ApiKeyEntry> apiKeyEntryList = new ArrayList<ApiKeyEntry>();
+      List<String> userGroupNamesList = new ArrayList<>();
+      apiKeyEntryList.add(apiKeyEntry);
+      apiKeyService.loadUserGroupsForApiKeys(apiKeyEntryList, accountId);
+      apiKeyEntry.getUserGroups().forEach(userGroup -> { userGroupNamesList.add(userGroup.getName()); });
+      details.put("Groups", userGroupNamesList);
+      UpdateOperations<AuditHeader> updateOperation = wingsPersistence.createUpdateOperations(AuditHeader.class);
+      updateOperation.set(AuditHeaderKeys.details, details);
+      wingsPersistence.update(header, updateOperation);
+      updateOperation.set(AuditHeaderKeys.createdBy, EmbeddedUser.builder().name("API").build());
+      wingsPersistence.update(header, updateOperation);
+    } else if (entity instanceof SSOSettings) {
+      SSOSettings ssoSettings = (SSOSettings) entity;
+      if (!ssoSettings.getType().equals(SSOType.OAUTH) && (type.equals(Type.CREATE) || type.equals(Type.DELETE))) {
+        return;
+      }
       String userUuid = header.getCreatedBy().getUuid();
       User user = userService.get(userUuid);
       Account account = accountService.get(accountId);
-      record.getDetails().put("Authentication", account.getAuthenticationMechanism());
-      record.getDetails().put("MFA", user.isTwoFactorAuthenticationEnabled());
-      List<UserGroup> userGroups = userService.getUserGroupsOfUser(accountId, user.getUuid(), false);
+      details.put("Authentication", account.getAuthenticationMechanism());
+      details.put("MFA", user.isTwoFactorAuthenticationEnabled());
+      List<UserGroup> userGroupList = userService.getUserGroupsOfUserAudit(accountId, user.getUuid());
       List<String> userGroupNamesList = new ArrayList<>();
-      userGroups.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
-      record.getDetails().put("Groups", userGroupNamesList);
+      userGroupList.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
+      details.put("Groups", userGroupNamesList);
+      UpdateOperations<AuditHeader> updateOperation = wingsPersistence.createUpdateOperations(AuditHeader.class);
+      updateOperation.set(AuditHeaderKeys.details, details);
+      wingsPersistence.update(header, updateOperation);
+    } else {
+      if (header.getCreatedBy() != null) {
+        String userUuid = header.getCreatedBy().getUuid();
+        User user = userService.get(userUuid);
+        Account account = accountService.get(accountId);
+        details.put("Authentication", account.getAuthenticationMechanism());
+        details.put("MFA", user.isTwoFactorAuthenticationEnabled());
+        List<UserGroup> userGroupList = userService.getUserGroupsOfUserAudit(accountId, user.getUuid());
+        List<String> userGroupNamesList = new ArrayList<>();
+        userGroupList.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
+        details.put("Groups", userGroupNamesList);
+        UpdateOperations<AuditHeader> updateOperation = wingsPersistence.createUpdateOperations(AuditHeader.class);
+        updateOperation.set(AuditHeaderKeys.details, details);
+        wingsPersistence.update(header, updateOperation);
+      }
     }
   }
 
@@ -489,6 +538,7 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE:
         case ADD:
         case LOGIN:
+        case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
@@ -525,6 +575,7 @@ public class AuditServiceImpl implements AuditService {
         case REMOVE:
         case DELEGATE_APPROVAL:
         case LOGIN:
+        case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case NON_WHITELISTED:
         case INVOKED:
@@ -616,6 +667,7 @@ public class AuditServiceImpl implements AuditService {
         auditPreference.setOperationTypes(Arrays.stream(Type.values())
                                               .filter(type -> type != Type.LOGIN)
                                               .filter(type -> type != Type.LOGIN_2FA)
+                                              .filter(type -> type != Type.UNSUCCESSFUL_LOGIN)
                                               .map(Type::name)
                                               .collect(Collectors.toList()));
       }

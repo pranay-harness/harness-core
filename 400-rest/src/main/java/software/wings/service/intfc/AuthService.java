@@ -130,4 +130,6 @@ public interface AuthService {
   void auditLogin(List<String> accountIds, User loggedInUser);
 
   void auditLogin2FA(List<String> accountIds, User loggedInUser);
+
+  void auditUnsuccessfulLogin(List<String> accountIds, User user);
 }

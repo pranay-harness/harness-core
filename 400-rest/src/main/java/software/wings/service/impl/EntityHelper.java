@@ -125,7 +125,6 @@ public class EntityHelper {
     String affectedResourceType = EMPTY;
 
     String affectedResourceOperation = Type.UPDATE.name();
-    HashMap<String, Object> details = new HashMap<String, Object>();
 
     if (entity instanceof Environment) {
       Environment environment = (Environment) entity;
@@ -627,8 +626,7 @@ public class EntityHelper {
         .affectedResourceId(affectedResourceId)
         .affectedResourceName(affectedResourceName)
         .affectedResourceType(affectedResourceType)
-        .affectedResourceOperation(affectedResourceOperation)
-        .details(details);
+        .affectedResourceOperation(affectedResourceOperation);
   }
 
   private String getAffectedResourceTypeForSettingValue(SettingValue value) {

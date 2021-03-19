@@ -229,11 +229,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
-    if (isExternalApi) {
-      String apiKey = requestContext.getHeaderString("X-Api-Key");
-      ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
-      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
-    }
     String uriPath = requestContext.getUriInfo().getPath();
 
     boolean graphQLRequest = isGraphQLRequest(uriPath);

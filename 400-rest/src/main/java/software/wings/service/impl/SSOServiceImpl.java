@@ -7,8 +7,7 @@ import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
-import static software.wings.security.authentication.AuthenticationMechanism.OAUTH;
-import static software.wings.security.authentication.AuthenticationMechanism.USER_PASSWORD;
+import static software.wings.security.authentication.AuthenticationMechanism.*;
 
 import static java.util.Arrays.asList;
 
@@ -20,6 +19,7 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
+import software.wings.beans.Event;
 import software.wings.beans.SyncTaskContext;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
@@ -83,6 +83,7 @@ public class SSOServiceImpl implements SSOService {
   @Inject private AuthHandler authHandler;
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
   @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
+  @Inject private AuditServiceHelper auditServiceHelper;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
@@ -183,8 +184,22 @@ public class SSOServiceImpl implements SSOService {
     }
     account.setOauthEnabled(shouldEnableOauth);
     if (shouldUpdateAuthMechanism) {
+      if (mechanism == SAML && currentAuthMechanism == USER_PASSWORD) {
+        SSOSettings ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
+      } else if (currentAuthMechanism == SAML && mechanism == USER_PASSWORD) {
+        SSOSettings ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
+      } else if (currentAuthMechanism == USER_PASSWORD && mechanism == LDAP) {
+        SSOSettings ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
+      } else if (currentAuthMechanism == LDAP && mechanism == USER_PASSWORD) {
+        SSOSettings ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
+      }
       account.setAuthenticationMechanism(mechanism);
     }
+
     accountService.update(account);
     return getAccountAccessManagementSettings(accountId);
   }

@@ -20,6 +20,7 @@ import software.wings.jersey.JsonViews;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableList;
+import java.util.HashMap;
 import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -107,6 +108,7 @@ public class AuditHeader extends Base implements AccountAccess {
   private Long requestTime;
   @JsonView(JsonViews.Internal.class) private Long responseTime;
   private String failureStatusMsg;
+  private HashMap<String, Object> details;
 
   // For Audit Headers created by Git user actions
   @Getter @Setter @FdIndex private String accountId;
@@ -400,6 +402,13 @@ public class AuditHeader extends Base implements AccountAccess {
     this.failureStatusMsg = failureStatusMsg;
   }
 
+  public HashMap<String, Object> getDetails() {
+    return details;
+  }
+
+  public void setDetails(HashMap<String, Object> details) {
+    this.details = details;
+  }
   @UtilityClass
   public static final class AuditHeaderKeys {
     // Temporary
@@ -412,6 +421,7 @@ public class AuditHeader extends Base implements AccountAccess {
     public static final String affectedResourceId = "entityAuditRecords.affectedResourceId";
     public static final String affectedResourceType = "entityAuditRecords.affectedResourceType";
     public static final String affectedResourceOp = "entityAuditRecords.affectedResourceOperation";
+    public static final String details = "details";
   }
   /**
    * The Enum RequestType.
@@ -490,6 +500,7 @@ public class AuditHeader extends Base implements AccountAccess {
     private List<EntityAuditRecord> entityAuditRecords;
     private String failureStatusMsg;
     private ApiKeyAuditDetails apiKeyAuditDetails;
+    private HashMap<String, Object> details;
 
     private Builder() {}
 
@@ -783,6 +794,11 @@ public class AuditHeader extends Base implements AccountAccess {
       return this;
     }
 
+    public Builder details(HashMap<String, Object> details) {
+      this.details = details;
+      return this;
+    }
+
     /**
      * Builds the.
      *
@@ -820,6 +836,7 @@ public class AuditHeader extends Base implements AccountAccess {
       auditHeader.setGitAuditDetails(gitAuditDetails);
       auditHeader.setFailureStatusMsg(failureStatusMsg);
       auditHeader.setApiKeyAuditDetails(apiKeyAuditDetails);
+      auditHeader.setDetails(details);
       return auditHeader;
     }
   }

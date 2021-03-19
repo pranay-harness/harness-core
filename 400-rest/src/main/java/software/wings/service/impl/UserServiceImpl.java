@@ -667,7 +667,8 @@ public class UserServiceImpl implements UserService {
     return userInvite;
   }
 
-  private void loadUserGroups(String accountId, User user) {
+  @Override
+  public void loadUserGroups(String accountId, User user) {
     List<UserGroup> userGroupList = getUserGroupsOfUser(accountId, user.getUuid(), false);
     user.setUserGroups(userGroupList);
   }
@@ -1053,6 +1054,13 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
+  public List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId) {
+    List<UserGroup> userGroupList = wingsPersistence.createQuery(UserGroup.class)
+                                        .filter(UserGroupKeys.accountId, accountId)
+                                        .filter(UserGroupKeys.memberIds, userId)
+                                        .asList();
+    return userGroupList;
+  }
   private List<UserGroup> getUserGroups(String accountId, SetView<String> userGroupIds) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
                                              .addFilter("_id", IN, userGroupIds.toArray())
