@@ -1056,7 +1056,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
       // Even if service task count is already equal to desired count, try to resize
       // This should help retry step in case of timeouts or ECS provisioning issue
-      if (service.getDesiredCount() != desiredCount || timeoutErrorSupported) {
+      if (service.getDesiredCount() != desiredCount
+          || (timeoutErrorSupported && !isServiceStable(desiredCount, service))) {
         List<ServiceEvent> serviceEvents = new ArrayList<>();
         if (isNotEmpty(service.getEvents())) {
           serviceEvents.addAll(service.getEvents());
@@ -1090,6 +1091,19 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     } catch (Exception ex) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), ex);
     }
+  }
+
+  /**
+   * This is taken from ECS service stable check waiters.
+   * https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html
+   * logic is: runningCount == desiredCount && (service.getDeployments().size() == 1)
+   *
+   * @param desiredCount
+   * @param service
+   * @return
+   */
+  private boolean isServiceStable(int desiredCount, Service service) {
+    return service.getRunningCount() == desiredCount && !isEmpty(service.getDeployments());
   }
 
   @Override
@@ -1393,7 +1407,10 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    * The algorithm is pretty straigh forward.
    * Look at the deployments. If there are more that one deployments, no steady state.
    * else, the deployment.getUpdatedAt() >= last message with "has reached steady state."
+   *
+   * Deprecated Note: Please use {@link #isServiceStable(int, Service)}
    */
+  @Deprecated
   @VisibleForTesting
   boolean hasServiceReachedSteadyState(Service service) {
     List<Deployment> deployments = service.getDeployments();

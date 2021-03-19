@@ -1218,7 +1218,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback, false);
     verify(awsClusterService)
         .resizeCluster(
-            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), any());
+            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), anyBoolean());
   }
 
   @Test
