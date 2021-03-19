@@ -12,7 +12,7 @@ import io.harness.git.model.ChangeType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
-import software.wings.beans.defaults.Defaults.Yaml;
+import software.wings.beans.defaults.DefaultsYaml;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
@@ -55,7 +55,7 @@ public class DefaultVariablesHelper {
         .collect(toList());
   }
 
-  public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId, boolean syncFromGit)
+  public void saveOrUpdateDefaults(DefaultsYaml updatedYaml, String appId, String accountId, boolean syncFromGit)
       throws HarnessException {
     List<SettingAttribute> previousDefaultValues = getCurrentDefaultVariables(appId, accountId);
     List<NameValuePair.Yaml> previousDefaultYamls = convertToNameValuePairYamlList(previousDefaultValues);

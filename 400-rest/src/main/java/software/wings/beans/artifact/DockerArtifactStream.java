@@ -17,7 +17,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -77,18 +76,5 @@ public class DockerArtifactStream extends ArtifactStream {
   @Override
   public boolean checkIfStreamParameterized() {
     return validateParameters(imageName);
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String imageName;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, String imageName) {
-      super(DOCKER.name(), harnessApiVersion, serverName);
-      this.imageName = imageName;
-    }
   }
 }

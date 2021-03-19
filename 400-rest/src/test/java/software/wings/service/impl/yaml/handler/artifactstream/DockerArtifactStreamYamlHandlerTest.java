@@ -25,6 +25,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -57,7 +58,7 @@ public class DockerArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
         DockerArtifactStream.builder().settingId(SETTING_ID).imageName("hello-world").build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    DockerArtifactStream.Yaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
+    DockerArtifactStreamYaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
     assertThat(yaml.getImageName()).isEqualTo("hello-world");
   }
 
@@ -69,11 +70,11 @@ public class DockerArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
-    DockerArtifactStream.Yaml baseYaml = DockerArtifactStream.Yaml.builder()
-                                             .imageName("hello-world")
-                                             .harnessApiVersion("1.0")
-                                             .serverName("test server")
-                                             .build();
+    DockerArtifactStreamYaml baseYaml = DockerArtifactStreamYaml.builder()
+                                            .imageName("hello-world")
+                                            .harnessApiVersion("1.0")
+                                            .serverName("test server")
+                                            .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -111,11 +112,11 @@ public class DockerArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(true);
-    DockerArtifactStream.Yaml baseYaml = DockerArtifactStream.Yaml.builder()
-                                             .imageName("hello-world")
-                                             .harnessApiVersion("1.0")
-                                             .serverName("test server")
-                                             .build();
+    DockerArtifactStreamYaml baseYaml = DockerArtifactStreamYaml.builder()
+                                            .imageName("hello-world")
+                                            .harnessApiVersion("1.0")
+                                            .serverName("test server")
+                                            .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -149,6 +150,6 @@ public class DockerArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(DockerArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(DockerArtifactStreamYaml.class);
   }
 }

@@ -4,7 +4,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.CustomAppFilter;
 import io.harness.governance.CustomAppFilterYaml;
-import io.harness.governance.CustomEnvFilter;
+import io.harness.governance.CustomEnvFilterYaml;
 import io.harness.governance.EnvironmentFilter;
 import io.harness.governance.EnvironmentFilterYaml;
 
@@ -73,7 +73,7 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
       environmentFilterYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.ENV_FILTER, entry.getFilterType().name());
-      if (entry instanceof CustomEnvFilter.Yaml && appIds.size() != 1) {
+      if (entry instanceof CustomEnvFilterYaml && appIds.size() != 1) {
         throw new InvalidRequestException(
             "Application filter should have exactly one app when environment filter type is CUSTOM");
       }

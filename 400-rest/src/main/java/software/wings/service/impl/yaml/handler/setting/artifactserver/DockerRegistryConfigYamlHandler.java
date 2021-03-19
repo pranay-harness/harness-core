@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.DockerConfig;
-import software.wings.beans.DockerConfig.Yaml;
+import software.wings.beans.DockerConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -22,14 +22,14 @@ import org.apache.commons.lang3.StringUtils;
  */
 @OwnedBy(CDC)
 @Singleton
-public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, DockerConfig> {
+public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<DockerConfigYaml, DockerConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public DockerConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
-    Yaml yaml;
+    DockerConfigYaml yaml;
     List<String> delegateSelectors = getDelegateSelectors(dockerConfig.getDelegateSelectors());
     if (dockerConfig.hasCredentials()) {
-      yaml = Yaml.builder()
+      yaml = DockerConfigYaml.builder()
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(dockerConfig.getType())
                  .url(dockerConfig.getDockerRegistryUrl())
@@ -38,7 +38,7 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
                  .password(getEncryptedYamlRef(dockerConfig.getAccountId(), dockerConfig.getEncryptedPassword()))
                  .build();
     } else {
-      yaml = Yaml.builder()
+      yaml = DockerConfigYaml.builder()
                  .harnessApiVersion(getHarnessApiVersion())
                  .type(dockerConfig.getType())
                  .url(dockerConfig.getDockerRegistryUrl())
@@ -51,10 +51,10 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
+  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<DockerConfigYaml> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    DockerConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
 
     List<String> delegateSelectors = getDelegateSelectors(yaml.getDelegateSelectors());
@@ -76,6 +76,6 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DockerConfigYaml.class;
   }
 }

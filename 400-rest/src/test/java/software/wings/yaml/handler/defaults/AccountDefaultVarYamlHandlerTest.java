@@ -14,7 +14,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
-import software.wings.beans.defaults.Defaults.Yaml;
+import software.wings.beans.defaults.DefaultsYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -112,19 +112,19 @@ public class AccountDefaultVarYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<DefaultsYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.ACCOUNT_DEFAULTS);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class);
+    DefaultsYaml yamlObject = (DefaultsYaml) getYaml(v1_validYamlContent, DefaultsYaml.class);
     changeContext.setYaml(yamlObject);
 
     List<SettingAttribute> createdSettingAttributes = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
     resetPresetFields(createdSettingAttributes);
     compareSettingAttributes(v1_settingAttributeList, createdSettingAttributes);
 
-    Yaml yaml = yamlHandler.toYaml(this.v1_settingAttributeList, GLOBAL_APP_ID);
+    DefaultsYaml yaml = yamlHandler.toYaml(this.v1_settingAttributeList, GLOBAL_APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isNotNull();
 
@@ -139,7 +139,7 @@ public class AccountDefaultVarYamlHandlerTest extends YamlHandlerTestBase {
 
     gitFileChange.setFileContent(v2_validYamlContent);
 
-    yamlObject = (Yaml) getYaml(v2_validYamlContent, Yaml.class);
+    yamlObject = (DefaultsYaml) getYaml(v2_validYamlContent, DefaultsYaml.class);
     changeContext.setYaml(yamlObject);
 
     List<SettingAttribute> v2_createdSettingAttributes =
@@ -162,16 +162,16 @@ public class AccountDefaultVarYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<DefaultsYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.ACCOUNT_DEFAULTS);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(v1_validYamlContent, Yaml.class);
+    DefaultsYaml yamlObject = (DefaultsYaml) getYaml(v1_validYamlContent, DefaultsYaml.class);
     changeContext.setYaml(yamlObject);
 
     // Invalid yaml content
-    yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class);
+    yamlObject = (DefaultsYaml) getYaml(invalidYamlContent, DefaultsYaml.class);
     changeContext.setYaml(yamlObject);
     thrown.expect(ConstraintViolationException.class);
     yamlHandler.upsertFromYaml(changeContext, asList(changeContext));

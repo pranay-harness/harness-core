@@ -58,7 +58,7 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
+  public static final class Yaml extends DeploymentSpecificationYaml {
     private DefaultSpecification.Yaml defaults;
     private List<FunctionSpecification.Yaml> functions;
 

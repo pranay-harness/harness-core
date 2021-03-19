@@ -3,7 +3,7 @@ package software.wings.beans.container;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.DeploymentSpecificationYaml;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public abstract class ContainerTaskYaml extends DeploymentSpecification.Yaml {
+public abstract class ContainerTaskYaml extends DeploymentSpecificationYaml {
   private String advancedConfig;
   private ContainerDefinitionYaml containerDefinition;
 

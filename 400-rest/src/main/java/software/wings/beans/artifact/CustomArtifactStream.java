@@ -2,8 +2,6 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
-
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -21,7 +19,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -85,20 +82,5 @@ public class CustomArtifactStream extends ArtifactStream {
   @Override
   public boolean shouldValidate() {
     return true;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    @NotNull private List<Script> scripts = new ArrayList<>();
-    private List<String> delegateTags = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, List<Script> scripts, List<String> delegateTags) {
-      super(CUSTOM.name(), harnessApiVersion, serverName);
-      this.scripts = scripts;
-      this.delegateTags = delegateTags;
-    }
   }
 }

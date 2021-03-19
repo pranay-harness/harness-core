@@ -25,8 +25,8 @@ import software.wings.infra.AzureKubernetesServiceYaml;
 import software.wings.infra.AzureVMSSInfraYaml;
 import software.wings.infra.AzureWebAppInfraYaml;
 import software.wings.infra.CodeDeployInfrastructureYaml;
-import software.wings.infra.CustomInfrastructure;
-import software.wings.infra.DirectKubernetesInfrastructure;
+import software.wings.infra.CustomInfrastructureYaml;
+import software.wings.infra.DirectKubernetesInfrastructureYaml;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
@@ -49,14 +49,14 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = AzureKubernetesServiceYaml.class, name = AZURE_KUBERNETES),
       @JsonSubTypes.Type(value = AzureInstanceInfrastructureYaml.class, name = AZURE_SSH),
       @JsonSubTypes.Type(value = CodeDeployInfrastructureYaml.class, name = CODE_DEPLOY),
-      @JsonSubTypes.Type(value = DirectKubernetesInfrastructure.Yaml.class, name = DIRECT_KUBERNETES),
+      @JsonSubTypes.Type(value = DirectKubernetesInfrastructureYaml.class, name = DIRECT_KUBERNETES),
       @JsonSubTypes.Type(value = GoogleKubernetesEngine.Yaml.class, name = GCP_KUBERNETES_ENGINE),
       @JsonSubTypes.Type(value = PcfInfraStructure.Yaml.class, name = PCF_INFRASTRUCTURE),
       @JsonSubTypes.Type(value = PhysicalInfra.Yaml.class, name = PHYSICAL_INFRA),
       @JsonSubTypes.Type(value = PhysicalInfraWinrm.Yaml.class, name = PHYSICAL_INFRA_WINRM),
       @JsonSubTypes.Type(value = AzureVMSSInfraYaml.class, name = AZURE_VMSS),
       @JsonSubTypes.Type(value = AzureWebAppInfraYaml.class, name = AZURE_WEBAPP),
-      @JsonSubTypes.Type(value = CustomInfrastructure.Yaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE)
+      @JsonSubTypes.Type(value = CustomInfrastructureYaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE)
 })
 public abstract class CloudProviderInfrastructureYaml extends BaseYamlWithType {
   public CloudProviderInfrastructureYaml(String type) {

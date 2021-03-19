@@ -3,6 +3,7 @@ package software.wings.beans.container;
 import io.harness.annotation.HarnessEntity;
 
 import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.DeploymentSpecificationYaml;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -51,7 +52,7 @@ public class EcsServiceSpecification extends DeploymentSpecification {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
+  public static final class Yaml extends DeploymentSpecificationYaml {
     private String serviceSpecJson;
     private String schedulingStrategy = ECS_REPLICA_SCHEDULING_STRATEGY;
 

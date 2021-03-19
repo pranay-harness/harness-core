@@ -5,6 +5,7 @@ import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.DeploymentSpecificationYaml;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -42,7 +43,7 @@ public class HelmChartSpecification extends DeploymentSpecification implements A
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
+  public static final class Yaml extends DeploymentSpecificationYaml {
     private String chartUrl;
     private String chartName;
     private String chartVersion;

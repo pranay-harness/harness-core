@@ -28,6 +28,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
+import software.wings.beans.artifact.CustomArtifactStreamYaml;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.artifactsource.ArtifactSourceTemplate;
 import software.wings.beans.template.artifactsource.CustomArtifactSourceTemplate;
@@ -69,7 +70,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     when(templateService.makeNamespacedTemplareUri(TEMPLATE_ID, "LATEST"))
         .thenReturn(APP_PREFIX + TEMPLATE_URI + ":LATEST");
     when(templateService.get(TEMPLATE_ID)).thenReturn(template);
-    CustomArtifactStream.Yaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
+    CustomArtifactStreamYaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
     assertThat(yaml.getType()).isEqualTo("CUSTOM");
     assertThat(yaml.getTemplateUri()).isEqualTo("App/Harness/My Template:LATEST");
     assertThat(yaml.getTemplateVariables().size()).isEqualTo(1);
@@ -88,7 +89,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     Template template = createTemplate(customArtifactSourceTemplate, GLOBAL_APP_ID);
     when(templateService.makeNamespacedTemplareUri(TEMPLATE_ID, "LATEST")).thenReturn(TEMPLATE_URI + ":LATEST");
     when(templateService.get(TEMPLATE_ID)).thenReturn(template);
-    CustomArtifactStream.Yaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
+    CustomArtifactStreamYaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
     assertThat(yaml.getType()).isEqualTo("CUSTOM");
     assertThat(yaml.getTemplateUri()).isEqualTo("Harness/My Template:LATEST");
     assertThat(yaml.getTemplateVariables().size()).isEqualTo(1);
@@ -106,7 +107,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     customArtifactStream.setTemplateVariables(null);
     customArtifactStream.setTemplateVersion(null);
     when(templateService.makeNamespacedTemplareUri(null, "LATEST")).thenReturn(null);
-    CustomArtifactStream.Yaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
+    CustomArtifactStreamYaml yaml = yamlHandler.toYaml(customArtifactStream, APP_ID);
     assertThat(yaml.getType()).isEqualTo("CUSTOM");
     assertThat(yaml.getTemplateUri()).isNull();
     assertThat(yaml.getTemplateVariables()).isEmpty();
@@ -130,7 +131,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     Template template = createTemplate(customArtifactSourceTemplate, APP_ID);
     when(templateService.fetchTemplateUri(TEMPLATE_ID)).thenReturn(TEMPLATE_URI);
     when(templateService.get(TEMPLATE_ID)).thenReturn(template);
-    CustomArtifactStream.Yaml baseYaml = CustomArtifactStream.Yaml.builder().harnessApiVersion("1.0").build();
+    CustomArtifactStreamYaml baseYaml = CustomArtifactStreamYaml.builder().harnessApiVersion("1.0").build();
     baseYaml.setTemplateUri("App/" + TEMPLATE_URI);
     baseYaml.setTemplateVariables(asList(NameValuePair.builder().name("path").value("path1").build()));
     baseYaml.setType("CUSTOM");
@@ -168,7 +169,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
     Template template = createTemplate(customArtifactSourceTemplate, GLOBAL_APP_ID);
     when(templateService.fetchTemplateUri(TEMPLATE_ID)).thenReturn(TEMPLATE_URI);
     when(templateService.get(TEMPLATE_ID)).thenReturn(template);
-    CustomArtifactStream.Yaml baseYaml = CustomArtifactStream.Yaml.builder().harnessApiVersion("1.0").build();
+    CustomArtifactStreamYaml baseYaml = CustomArtifactStreamYaml.builder().harnessApiVersion("1.0").build();
     baseYaml.setTemplateUri(TEMPLATE_URI);
     baseYaml.setTemplateVariables(asList(NameValuePair.builder().name("path").value("path1").build()));
     baseYaml.setType("CUSTOM");
@@ -199,7 +200,7 @@ public class CustomArtifactStreamYamlHandlerTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(CustomArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(CustomArtifactStreamYaml.class);
   }
 
   private Template createTemplate(CustomArtifactSourceTemplate customArtifactSourceTemplate, String appId) {

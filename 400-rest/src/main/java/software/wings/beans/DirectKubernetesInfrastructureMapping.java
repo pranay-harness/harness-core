@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 /**
@@ -239,44 +238,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       directKubernetesInfrastructureMapping.setAccountId(accountId);
       directKubernetesInfrastructureMapping.setSample(sample);
       return directKubernetesInfrastructureMapping;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends YamlWithComputeProvider {
-    private String masterUrl;
-    private String username;
-    private String password;
-    private String caCert;
-    private String clientCert;
-    private String clientKey;
-    private String clientKeyPassphrase;
-    private String serviceAccountToken;
-    private String clientKeyAlgo;
-    private String namespace;
-    private String releaseName;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String masterUrl,
-        String username, String password, String caCert, String clientCert, String clientKey,
-        String clientKeyPassphrase, String serviceAccountToken, String clientKeyAlgo, String namespace,
-        String releaseName, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster, blueprints);
-      this.masterUrl = masterUrl;
-      this.username = username;
-      this.password = password;
-      this.caCert = caCert;
-      this.clientCert = clientCert;
-      this.clientKey = clientKey;
-      this.clientKeyPassphrase = clientKeyPassphrase;
-      this.serviceAccountToken = serviceAccountToken;
-      this.clientKeyAlgo = clientKeyAlgo;
-      this.namespace = namespace;
-      this.releaseName = releaseName;
     }
   }
 }

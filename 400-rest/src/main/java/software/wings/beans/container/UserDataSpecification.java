@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdUniqueIndex;
 
 import software.wings.beans.DeploymentSpecification;
+import software.wings.beans.DeploymentSpecificationYaml;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class UserDataSpecification extends DeploymentSpecification {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecification.Yaml {
+  public static final class Yaml extends DeploymentSpecificationYaml {
     private String data;
 
     @Builder
