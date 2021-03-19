@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -33,6 +35,7 @@ import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private AwsAmiHelperServiceDelegate awsAmiHelperServiceDelegate;

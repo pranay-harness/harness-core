@@ -1,10 +1,12 @@
 package software.wings.delegatetasks;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -44,6 +46,7 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableTask {
   private static final String TERRAFORM_FILE_EXTENSION = ".tf";
   @Inject private GitService gitService;

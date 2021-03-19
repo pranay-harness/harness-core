@@ -1,5 +1,6 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -8,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class AwsAmiAsgDesiredInstancesMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;

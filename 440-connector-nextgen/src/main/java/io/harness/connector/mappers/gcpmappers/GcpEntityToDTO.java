@@ -1,13 +1,11 @@
 package io.harness.connector.mappers.gcpmappers;
 
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
-import io.harness.connector.entities.embedded.gcpconnector.GcpDelegateDetails;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
-import io.harness.delegate.beans.connector.gcpconnector.GcpDelegateDetailsDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
@@ -35,6 +33,7 @@ public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConnectorDT
     final SecretRefData secretRef = SecretRefHelper.createSecretRef(auth.getSecretKeyRef());
     final GcpManualDetailsDTO gcpManualDetailsDTO = GcpManualDetailsDTO.builder().secretKeyRef(secretRef).build();
     return GcpConnectorDTO.builder()
+        .delegateSelectors(connector.getDelegateSelectors())
         .credential(GcpConnectorCredentialDTO.builder()
                         .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
                         .config(gcpManualDetailsDTO)
@@ -43,13 +42,11 @@ public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConnectorDT
   }
 
   private GcpConnectorDTO buildInheritFromDelegate(GcpConfig connector) {
-    final GcpDelegateDetails gcpCredential = (GcpDelegateDetails) connector.getCredential();
-    GcpDelegateDetailsDTO gcpDelegateDetailsDTO =
-        GcpDelegateDetailsDTO.builder().delegateSelectors(gcpCredential.getDelegateSelectors()).build();
     return GcpConnectorDTO.builder()
+        .delegateSelectors(connector.getDelegateSelectors())
         .credential(GcpConnectorCredentialDTO.builder()
                         .gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE)
-                        .config(gcpDelegateDetailsDTO)
+                        .config(null)
                         .build())
         .build();
   }

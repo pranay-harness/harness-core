@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.sm.states.spotinst.SpotInstDeployState.SPOTINST_DEPLOY_COMMAND;
@@ -12,6 +13,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.spotinst.model.ElastiGroup;
@@ -23,6 +25,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbDeployExecutionDataTest extends CategoryTest {
   @Test
   @Owner(developers = SATYAM)

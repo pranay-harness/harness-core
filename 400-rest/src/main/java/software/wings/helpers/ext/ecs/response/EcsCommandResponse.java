@@ -16,4 +16,5 @@ import lombok.NoArgsConstructor;
 public class EcsCommandResponse implements DelegateResponseData {
   private CommandExecutionStatus commandExecutionStatus;
   private String output;
+  private boolean timeoutFailure;
 }

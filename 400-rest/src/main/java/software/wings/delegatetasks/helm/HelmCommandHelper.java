@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class HelmCommandHelper {
   public static final String URL = "url";
   public static final String NAME = "name";

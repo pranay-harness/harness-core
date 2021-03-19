@@ -48,6 +48,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
@@ -135,6 +136,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
   @Mock private GitDecryptionHelper gitDecryptionHelper;
   @Mock private KustomizeTaskHelper kustomizeTaskHelper;
   @Mock private HelmTaskHelperBase helmTaskHelperBase;
+  @Mock private OpenShiftDelegateService openShiftDelegateService;
 
   @Inject @InjectMocks private K8sTaskHelperBase k8sTaskHelperBase;
 
@@ -1028,5 +1030,30 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     assertThat(result).isEqualTo(renderedFiles);
     verify(kustomizeTaskHelper, times(1))
         .buildForApply(kustomizePath, kustomizePluginPath, "manifest", fileList, executionLogCallback);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testRenderTemplateOpenshift() throws Exception {
+    String ocPath = "/usr/bin/openshift";
+    String ocTemplatePath = "/usr/bin/openshift/template";
+    List<String> valuesList = new ArrayList<>();
+    ManifestDelegateConfig manifestDelegateConfig =
+        OpenshiftManifestDelegateConfig.builder()
+            .storeDelegateConfig(GitStoreDelegateConfig.builder().paths(Arrays.asList(ocTemplatePath)).build())
+            .build();
+    K8sDelegateTaskParams delegateTaskParams = K8sDelegateTaskParams.builder().ocPath(ocPath).build();
+    List<FileData> renderedFiles = new ArrayList<>();
+    doReturn(renderedFiles)
+        .when(openShiftDelegateService)
+        .processTemplatization("manifest", ocPath, ocTemplatePath, executionLogCallback, valuesList);
+
+    List<FileData> result = k8sTaskHelperBase.renderTemplate(delegateTaskParams, manifestDelegateConfig, "manifest",
+        valuesList, "release", "namespace", executionLogCallback, 10);
+
+    assertThat(result).isEqualTo(renderedFiles);
+    verify(openShiftDelegateService, times(1))
+        .processTemplatization("manifest", ocPath, ocTemplatePath, executionLogCallback, valuesList);
   }
 }

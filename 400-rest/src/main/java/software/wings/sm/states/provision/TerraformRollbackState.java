@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
@@ -11,6 +12,7 @@ import static software.wings.beans.delegation.TerraformProvisionParameters.TIMEO
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.persistence.HIterator;
@@ -52,6 +54,7 @@ import org.mongodb.morphia.query.Sort;
 @Getter
 @Setter
 @Slf4j
+@OwnedBy(CDP)
 public class TerraformRollbackState extends TerraformProvisionState {
   private TerraformCommand rollbackCommand;
 

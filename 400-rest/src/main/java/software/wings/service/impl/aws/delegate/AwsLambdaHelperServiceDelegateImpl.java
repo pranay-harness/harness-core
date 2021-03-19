@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -19,6 +20,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.UUIDGenerator;
@@ -118,6 +120,7 @@ import org.apache.logging.log4j.util.Strings;
 @Singleton
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsLambdaHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsLambdaHelperServiceDelegate {
   String REPOSITORY_DIR_PATH = "./repository";

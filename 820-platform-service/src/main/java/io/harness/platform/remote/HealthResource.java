@@ -11,13 +11,14 @@ import io.harness.exception.NoResultFoundException;
 import io.harness.health.HealthException;
 import io.harness.health.HealthService;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.codahale.metrics.health.HealthCheck;
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -32,12 +33,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @ExposeInternalException
 @Slf4j
+@PublicApi
 public class HealthResource {
-  private HealthService healthService;
+  private final List<HealthService> healthServices;
 
-  @Inject
-  public HealthResource(HealthService healthService) {
-    this.healthService = healthService;
+  public HealthResource(List<HealthService> healthServices) {
+    this.healthServices = healthServices;
   }
 
   @GET
@@ -54,10 +55,13 @@ public class HealthResource {
           .build();
     }
 
-    final HealthCheck.Result check = healthService.check();
-    if (check.isHealthy()) {
-      return ResponseDTO.newResponse("healthy");
+    for (HealthService healthService : healthServices) {
+      final HealthCheck.Result healthCheck = healthService.check();
+      if (!healthCheck.isHealthy()) {
+        throw new HealthException(healthCheck.getMessage(), healthCheck.getError());
+      }
     }
-    throw new HealthException(check.getMessage(), check.getError());
+
+    return ResponseDTO.newResponse("healthy");
   }
 }

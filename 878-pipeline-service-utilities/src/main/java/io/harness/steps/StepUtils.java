@@ -245,7 +245,7 @@ public class StepUtils {
     return generateLogKeys(logAbstractionMap, units);
   }
 
-  private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
+  public static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
     if (isEmpty(logAbstractionMap)) {
       return Collections.emptyList();
     }

@@ -63,7 +63,7 @@ public class EcsSwapRoutesCommandTaskHelper {
             awsConfig, encryptedDataDetails, region, cluster, count, serviceName, executionLogCallback)) {
       ecsContainerService.updateServiceCount(serviceCountUpdateRequestData);
 
-      ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(serviceCountUpdateRequestData);
+      ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountUpdateRequestData);
 
       ecsContainerService.waitForServiceToReachSteadyState(timeout, serviceCountUpdateRequestData);
     }

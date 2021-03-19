@@ -22,7 +22,8 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
-import io.harness.ngtriggers.beans.source.cron.CronTriggerConfig;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
@@ -230,7 +231,8 @@ public class NGTriggerResourceTest extends CategoryTest {
     String triggerYaml =
         Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
     ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
-    CronTriggerConfig cronTriggerConfig = (CronTriggerConfig) ngTriggerConfig.getSource().getSpec();
-    assertThat(cronTriggerConfig.getExpression()).isEqualTo("20 4 * * *");
+    ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) ngTriggerConfig.getSource().getSpec();
+    CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
+    assertThat(cronTriggerSpec.getExpression()).isEqualTo("20 4 * * *");
   }
 }

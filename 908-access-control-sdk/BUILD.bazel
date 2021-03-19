@@ -13,6 +13,7 @@ java_library(
         "//909-access-control-commons:module",
         "//960-ng-core-beans:module",
         "//960-persistence:module",
+        "//970-ng-commons:module",
         "@maven//:com_google_inject_guice",
         "@maven//:org_slf4j_slf4j_api",
     ],

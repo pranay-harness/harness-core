@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -37,6 +39,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsElbTask extends AbstractDelegateRunnableTask {
   @Inject private AwsElbHelperServiceDelegate elbHelperServiceDelegate;
 

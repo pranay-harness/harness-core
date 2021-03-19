@@ -1,7 +1,6 @@
 package io.harness.gitsync.server;
 
-import io.harness.gitsync.common.GitSyncConstants;
-import io.harness.grpc.server.GrpcInProcessServer;
+import io.harness.gitsync.sdk.HarnessToGitPushInfoGrpcService;
 import io.harness.grpc.server.GrpcServer;
 
 import com.google.common.util.concurrent.Service;
@@ -36,7 +35,6 @@ public class GitSyncGrpcModule extends AbstractModule {
   protected void configure() {
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("gitsync-grpc-service")));
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("gitsync-grpc-internal-service")));
   }
 
   @Provides
@@ -55,19 +53,11 @@ public class GitSyncGrpcModule extends AbstractModule {
   }
 
   @Provides
-  @Singleton
-  @Named("gitsync-grpc-internal-service")
-  public Service gitSyncGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services) {
-    return new GrpcInProcessServer(
-        GitSyncConstants.INTERNAL_SERVICE_NAME, services, Collections.emptySet(), healthStatusManager);
-  }
-
-  @Provides
   private Set<BindableService> bindableServices(
-      HealthStatusManager healthStatusManager, GitToHarnessGrpcService gitToHarnessGrpcService) {
+      HealthStatusManager healthStatusManager, HarnessToGitPushInfoGrpcService harnessToGitPushInfoGrpcService) {
     Set<BindableService> services = new HashSet<>();
     services.add(healthStatusManager.getHealthService());
-    services.add(gitToHarnessGrpcService);
+    services.add(harnessToGitPushInfoGrpcService);
     return services;
   }
 }

@@ -1,5 +1,6 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -7,6 +8,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class HelmReleaseNamePrefixMigration implements Migration {
   private static final String HELM_RELEASE_NAME_PREFIX_KEY = "helmReleaseNamePrefix";
   private static final String HELM_RELEASE_NAME_PREFIX_DEFAULT_VALUE = "${app.name}-${service.name}-${env.name}";

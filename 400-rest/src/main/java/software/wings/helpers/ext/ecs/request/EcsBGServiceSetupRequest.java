@@ -24,8 +24,10 @@ public class EcsBGServiceSetupRequest extends EcsCommandRequest {
   @Builder
   public EcsBGServiceSetupRequest(String commandName, String appId, String accountId, String activityId,
       String clusterName, String region, AwsConfig awsConfig, EcsSetupParams ecsSetupParams,
-      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables) {
-    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, BG_SERVICE_SETUP);
+      Map<String, String> serviceVariables, Map<String, String> safeDisplayServiceVariables,
+      boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, BG_SERVICE_SETUP,
+        timeoutErrorSupported);
     this.ecsSetupParams = ecsSetupParams;
     this.serviceVariables = serviceVariables;
     this.safeDisplayServiceVariables = safeDisplayServiceVariables;

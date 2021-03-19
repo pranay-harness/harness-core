@@ -5,8 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.steps.approval.harness.HarnessApprovalStepParameters;
 import io.harness.steps.approval.stage.ApprovalStageStepParameters;
+import io.harness.steps.approval.step.entities.ApprovalInstance;
+import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
+import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -32,6 +34,8 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ResourceRestraint.class);
     set.add(ResourceConstraint.class);
     set.add(ResourceRestraintInstance.class);
+    set.add(ApprovalInstance.class);
+    set.add(HarnessApprovalInstance.class);
   }
 
   @Override

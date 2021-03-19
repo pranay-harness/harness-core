@@ -48,7 +48,6 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
   private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
     String moduleName = request.getModuleName();
     String planExecutionId = request.getPlanExecutionId();
-    ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     Document pipelineInfoDoc = RecastOrchestrationUtils.toDocumentFromJson(request.getPipelineModuleInfoJson());
 
     Update update = new Update();
@@ -67,6 +66,8 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
       }
     }
     if (Objects.equals(nodeExecution.getNode().getGroup(), "PIPELINE")) {
+      ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
+      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.internalStatus, nodeExecution.getStatus());
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status, status);
       if (ExecutionStatus.isTerminal(status)) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.endTs, nodeExecution.getEndTs());
@@ -120,6 +121,9 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
         update.set(
             PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".skipInfo",
             nodeExecution.getSkipInfo());
+        update.set(
+            PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".nodeRunInfo",
+            nodeExecution.getNodeRunInfo());
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
             nodeExecution.getEndTs());
       }

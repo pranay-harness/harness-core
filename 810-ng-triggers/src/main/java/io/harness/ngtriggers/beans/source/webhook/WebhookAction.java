@@ -37,7 +37,11 @@ public enum WebhookAction {
   @JsonProperty("pull request created") BT_PULL_REQUEST_CREATED("open", "pull request created"),
   @JsonProperty("pull request updated") BT_PULL_REQUEST_UPDATED("sync", "pull request updated"),
   @JsonProperty("pull request merged") BT_PULL_REQUEST_MERGED("merge", "pull request merged"),
-  @JsonProperty("pull request declined") BT_PULL_REQUEST_DECLINED("close", "pull request declined");
+  @JsonProperty("pull request declined") BT_PULL_REQUEST_DECLINED("close", "pull request declined"),
+
+  // AWS Codecommit
+  @JsonProperty("created") AWS_CODECOMMIT_DELETED("created", "created"),
+  @JsonProperty("deleted") AWS_CODECOMMIT_CREATED("deleted", "deleted");
 
   // TODO: Add more support for more actions we need to support
   private String value;
@@ -97,6 +101,18 @@ public enum WebhookAction {
         return EnumSet.of(GITLAB_OPEN, GITLAB_CLOSE, GITLAB_REOPEN, GITLAB_MERGED, GITLAB_UPDATED, GITLAB_SYNC);
       case PUSH:
       case DELETE:
+        return emptySet();
+      default:
+        throw new InvalidRequestException("Event " + event.name() + " not a gitlab event");
+    }
+  }
+
+  public static Set<WebhookAction> getAwsCodeCommitActionForEvent(WebhookEvent event) {
+    switch (event) {
+      case BRANCH:
+      case TAG:
+        return EnumSet.of(AWS_CODECOMMIT_CREATED, AWS_CODECOMMIT_DELETED);
+      case PUSH:
         return emptySet();
       default:
         throw new InvalidRequestException("Event " + event.name() + " not a gitlab event");

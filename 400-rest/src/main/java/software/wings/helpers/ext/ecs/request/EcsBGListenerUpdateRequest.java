@@ -35,8 +35,9 @@ public class EcsBGListenerUpdateRequest extends EcsCommandRequest {
       String targetGroupArn1, String targetGroupArn2, String serviceName, String clusterName, String region,
       String serviceNameDownsized, int serviceCountDownsized, AwsConfig awsConfig, boolean rollback,
       boolean downsizeOldService, boolean isUseSpecificListenerRuleArn, String targetGroupForNewService,
-      String targetGroupForExistingService, int serviceSteadyStateTimeout) {
-    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG);
+      String targetGroupForExistingService, int serviceSteadyStateTimeout, boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, clusterName, awsConfig, EcsCommandType.LISTENER_UPDATE_BG,
+        timeoutErrorSupported);
     this.prodListenerArn = prodListenerArn;
     this.stageListenerArn = stageListenerArn;
     this.prodListenerRuleArn = prodListenerRuleArn;

@@ -25,7 +25,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
@@ -58,20 +57,19 @@ public class ConnectorResourceTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
-    connectorInfo =
-        ConnectorInfoDTO.builder()
-            .name("connector")
-            .identifier("identifier")
-            .connectorType(KUBERNETES_CLUSTER)
-            .connectorConfig(KubernetesClusterConfigDTO.builder()
-                                 .credential(KubernetesCredentialDTO.builder()
-                                                 .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                                                 .config(KubernetesDelegateDetailsDTO.builder()
-                                                             .delegateSelectors(Collections.singleton("delegateName"))
+    connectorInfo = ConnectorInfoDTO.builder()
+                        .name("connector")
+                        .identifier("identifier")
+                        .connectorType(KUBERNETES_CLUSTER)
+                        .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                             .delegateSelectors(Collections.singleton("delegateName"))
+                                             .credential(KubernetesCredentialDTO.builder()
+                                                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
+
+                                                             .config(null)
                                                              .build())
-                                                 .build())
-                                 .build())
-            .build();
+                                             .build())
+                        .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
     catalogueResponseDTO = setUpCatalogueResponse();

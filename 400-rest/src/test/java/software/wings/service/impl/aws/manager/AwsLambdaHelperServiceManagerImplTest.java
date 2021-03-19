@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,6 +9,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -30,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AwsLambdaHelperServiceManagerImplTest extends CategoryTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private DelegateService delegateService;

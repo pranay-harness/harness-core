@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
@@ -22,6 +23,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.k8s.K8sApplyBaseHandler;
 import io.harness.delegate.k8s.beans.K8sApplyHandlerConfig;
@@ -55,6 +57,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sApplyTaskHandler extends K8sTaskHandler {
   @Inject private K8sTaskHelper k8sTaskHelper;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;

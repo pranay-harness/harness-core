@@ -54,10 +54,11 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretState;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.ccm.license.CeLicenseInfo;
-import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.CEInfraSetupHandlerFactory;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
@@ -116,7 +117,7 @@ import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
-import software.wings.beans.ce.CEMetadataRecord;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -687,7 +688,8 @@ public class SettingsServiceImpl implements SettingsService {
   @Override
   public boolean hasDelegateSelectorProperty(SettingAttribute settingAttribute) {
     return settingAttribute.getValue() instanceof GcpConfig || settingAttribute.getValue() instanceof DockerConfig
-        || settingAttribute.getValue() instanceof AwsConfig;
+        || settingAttribute.getValue() instanceof AwsConfig || settingAttribute.getValue() instanceof NexusConfig
+        || settingAttribute.getValue() instanceof ArtifactoryConfig;
   }
 
   @Override
@@ -701,6 +703,12 @@ public class SettingsServiceImpl implements SettingsService {
     }
     if (settingAttribute.getValue() instanceof DockerConfig) {
       selectors = ((DockerConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof NexusConfig) {
+      selectors = ((NexusConfig) settingAttribute.getValue()).getDelegateSelectors();
+    }
+    if (settingAttribute.getValue() instanceof ArtifactoryConfig) {
+      selectors = ((ArtifactoryConfig) settingAttribute.getValue()).getDelegateSelectors();
     }
     if (settingAttribute.getValue() instanceof AwsConfig) {
       selectors = Collections.singletonList(((AwsConfig) settingAttribute.getValue()).getTag());

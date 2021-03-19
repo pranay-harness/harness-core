@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
@@ -12,6 +13,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -60,6 +62,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Inject private AwsHelperService awsHelperService;
   @Inject private TimeLimiter timeLimiter;

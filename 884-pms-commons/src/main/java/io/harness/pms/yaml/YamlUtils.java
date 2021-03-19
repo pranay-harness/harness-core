@@ -30,7 +30,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class YamlUtils {
-  private static List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel", "spec");
+  private static final List<String> ignorableStringForQualifiedName = Arrays.asList("step", "parallel", "spec");
 
   private final ObjectMapper mapper;
 
@@ -393,5 +393,10 @@ public class YamlUtils {
     String json = yamlField.getNode().toString();
     JsonNode jsonNode = mapper.readTree(json);
     return mapper.writeValueAsString(jsonNode);
+  }
+
+  public String getStageIdentifierFromFqn(String fqn) {
+    String[] strings = fqn.split("\\.");
+    return strings[2];
   }
 }

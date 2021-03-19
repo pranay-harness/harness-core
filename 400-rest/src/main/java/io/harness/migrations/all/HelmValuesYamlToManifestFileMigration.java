@@ -1,9 +1,11 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class HelmValuesYamlToManifestFileMigration implements Migration {
   private static final String HELM_VALUE_YAML_KEY = "helmValueYaml";
   private static final String HELM_VALUE_YAML_BY_SERVICE_TEMPLATE_ID_KEY = "helmValueYamlByServiceTemplateId";

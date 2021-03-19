@@ -1,11 +1,13 @@
 package io.harness.ccm.setup.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.HITESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 import io.harness.rule.Owner;
@@ -26,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(CDP)
 public class AwsEKSClusterServiceImplTest extends CategoryTest {
   private AwsEKSClusterServiceImpl awsEKSClusterService;
   @Mock private AwsHelperResourceService awsHelperResourceService;

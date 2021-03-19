@@ -70,7 +70,7 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
         .when(mockEcsDeployCommandTaskHelper)
         .getEmptyEcsDeployRollbackDataFetchResponse();
 
-    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null);
+    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null, false);
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid request Type, expected EcsDeployRollbackFetchRequest");

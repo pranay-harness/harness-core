@@ -19,7 +19,8 @@ trigger:
                       spec:
                         releaseName: releaseName1
   source:
-    type: Cron
+    type: Scheduled
     spec:
-      type: vixie
-      expression: 20 4 * * *
+      type: Cron
+      spec:
+        expression: 20 4 * * *

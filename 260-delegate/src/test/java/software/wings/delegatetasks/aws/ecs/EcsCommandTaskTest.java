@@ -69,7 +69,7 @@ public class EcsCommandTaskTest extends WingsBaseTest {
     doReturn(null).when(mockEcsCommandTaskHandler).executeTask(any(), any());
 
     Object[] inputParams = new Object[2];
-    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP);
+    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP, false);
     inputParams[1] = new ArrayList<>();
 
     assertThat(task.run(inputParams)).isNull();
@@ -86,7 +86,7 @@ public class EcsCommandTaskTest extends WingsBaseTest {
     doThrow(new InvalidRequestException("exeception")).when(mockEcsCommandTaskHandler).executeTask(any(), any());
 
     Object[] inputParams = new Object[2];
-    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP);
+    inputParams[0] = new EcsCommandRequest(null, null, null, null, null, null, null, BG_SERVICE_SETUP, false);
     inputParams[1] = new ArrayList<>();
 
     EcsCommandExecutionResponse response = task.run(inputParams);

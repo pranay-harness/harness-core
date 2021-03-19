@@ -5,6 +5,7 @@ import io.harness.outbox.api.OutboxDao;
 import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.api.impl.OutboxDaoImpl;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
+import io.harness.persistence.HPersistence;
 import io.harness.springdata.HTransactionTemplate;
 
 import com.google.inject.AbstractModule;
@@ -23,6 +24,7 @@ public class TransactionOutboxModule extends AbstractModule {
   protected void configure() {
     bind(OutboxDao.class).to(OutboxDaoImpl.class);
     bind(OutboxService.class).to(OutboxServiceImpl.class);
+    registerRequiredBindings();
   }
 
   @Provides
@@ -31,5 +33,9 @@ public class TransactionOutboxModule extends AbstractModule {
   protected TransactionTemplate getTransactionTemplate(
       MongoTransactionManager mongoTransactionManager, MongoConfig mongoConfig) {
     return new HTransactionTemplate(mongoTransactionManager, mongoConfig.isTransactionsEnabled());
+  }
+
+  private void registerRequiredBindings() {
+    requireBinding(HPersistence.class);
   }
 }

@@ -1,10 +1,13 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -18,6 +21,7 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class AwsCodeDeployInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject AwsCodeDeployInstanceSyncPerpetualTaskClient perpetualTaskClient;
 

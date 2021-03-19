@@ -1009,21 +1009,19 @@ public class CIExecutionPlanTestHelper {
   }
   public ConnectorDTO getK8sConnectorFromDelegateDTO() {
     return ConnectorDTO.builder()
-        .connectorInfo(
-            ConnectorInfoDTO.builder()
-                .name("k8sConnector")
-                .identifier("k8sConnector")
-                .connectorType(ConnectorType.KUBERNETES_CLUSTER)
-                .connectorConfig(
-                    KubernetesClusterConfigDTO.builder()
-                        .credential(KubernetesCredentialDTO.builder()
-                                        .kubernetesCredentialType(KubernetesCredentialType.INHERIT_FROM_DELEGATE)
-                                        .config(KubernetesDelegateDetailsDTO.builder()
-                                                    .delegateSelectors(Collections.singleton("delegate"))
-                                                    .build())
-                                        .build())
-                        .build())
-                .build())
+        .connectorInfo(ConnectorInfoDTO.builder()
+                           .name("k8sConnector")
+                           .identifier("k8sConnector")
+                           .connectorType(ConnectorType.KUBERNETES_CLUSTER)
+                           .connectorConfig(KubernetesClusterConfigDTO.builder()
+                                                .delegateSelectors(Collections.singleton("delegate"))
+                                                .credential(KubernetesCredentialDTO.builder()
+                                                                .kubernetesCredentialType(
+                                                                    KubernetesCredentialType.INHERIT_FROM_DELEGATE)
+                                                                .config(KubernetesDelegateDetailsDTO.builder().build())
+                                                                .build())
+                                                .build())
+                           .build())
         .build();
   }
   public ConnectorDTO getDockerConnectorDTO() {

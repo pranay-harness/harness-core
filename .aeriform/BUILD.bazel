@@ -132,6 +132,10 @@ aeriform("//810-ng-triggers:module")
 
 aeriform("//810-ng-triggers:tests")
 
+aeriform("//820-platform-service:module")
+
+aeriform("//820-platform-service:tests")
+
 aeriform("//830-notification-service:module")
 
 aeriform("//830-notification-service:tests")
@@ -238,11 +242,15 @@ aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
 
+aeriform("//940-ng-audit-service:module")
+
 aeriform("//940-notification-client:module")
 
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
+
+aeriform("//945-ng-audit-client:module")
 
 aeriform("//949-git-sync-sdk:module")
 
@@ -264,6 +272,8 @@ aeriform("//950-log-client:module")
 
 aeriform("//950-log-client:tests")
 
+aeriform("//950-ng-audit-commons:module")
+
 aeriform("//950-ng-core:module")
 
 aeriform("//950-ng-core:tests")
@@ -271,6 +281,8 @@ aeriform("//950-ng-core:tests")
 aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
+
+aeriform("//950-ng-signup:module")
 
 aeriform("//950-timeout-engine:module")
 

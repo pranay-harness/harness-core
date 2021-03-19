@@ -1,5 +1,8 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -15,6 +18,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class TerraformPlanHelper {
   @Inject protected SweepingOutputService sweepingOutputService;
   @Inject protected WingsPersistence wingsPersistence;

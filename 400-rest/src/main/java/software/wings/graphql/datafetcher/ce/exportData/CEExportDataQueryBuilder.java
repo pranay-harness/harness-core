@@ -634,6 +634,7 @@ public class CEExportDataQueryBuilder {
 
   private List<QLCESort> addSortBasedOnGroupBy(List<QLCESort> sortCriteria, List<QLCEEntityGroupBy> groupBy) {
     List<QLCESort> updatedSortCriteria = new ArrayList<>();
+    sortCriteria.forEach(sort -> updatedSortCriteria.add(sort));
     for (QLCEEntityGroupBy entityGroupBy : groupBy) {
       switch (entityGroupBy) {
         case Cluster:
@@ -688,7 +689,6 @@ public class CEExportDataQueryBuilder {
           break;
       }
     }
-    sortCriteria.forEach(sort -> updatedSortCriteria.add(sort));
     return updatedSortCriteria;
   }
 

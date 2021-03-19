@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
@@ -14,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandFlagsUtils;
@@ -57,6 +59,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @Singleton
 @Slf4j
 @TargetModule(Module._960_API_SERVICES)
+@OwnedBy(CDP)
 public class HelmClientImpl implements HelmClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";

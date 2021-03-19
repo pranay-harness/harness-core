@@ -142,6 +142,7 @@ public class ServiceVariableCreator {
     switch (manifestNode.getNode().getType()) {
       case ManifestType.K8Manifest:
       case ManifestType.Kustomize:
+      case ManifestType.OpenshiftTemplate:
         addVariablesFork8sManifest(specNode, yamlPropertiesMap);
         break;
       case ManifestType.VALUES:
