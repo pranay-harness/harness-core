@@ -2,6 +2,9 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/wings-software/portal/product/ci/addon/ti"
+	"github.com/wings-software/portal/product/ci/common/avro"
 	"net/http"
 	"time"
 
@@ -9,6 +12,11 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"go.uber.org/zap"
+)
+
+const (
+	// path of this needs to be decided [TODO: Aman]
+	cgSchemaPath = "/Users/amansingh/code/portal/product/ci/common/avro/schema.avsc" 
 )
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
@@ -103,4 +111,39 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 		log.Infow("retrieved test overview", "account_id", accountId, "time_taken", time.Since(st))
 
 	}
+}
+
+
+func UploadCg( log *zap.SugaredLogger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var data []byte
+		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+			WriteBadRequest(w, err)
+			log.Errorw("could not unmarshal request body")
+		}
+		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
+		if err != nil {
+			log.Errorf("failed to create callgraph serializer instance", zap.Error(err))
+			WriteInternalError(w, err)
+			return
+		}
+		cgString, err := cgSer.Deserialize(data)
+		if err != nil {
+			log.Errorf("failed to deserialize callgraph", zap.Error(err))
+			WriteInternalError(w, err)
+			return
+		}
+
+		cg, err := ti.FromStringMap(cgString.(map[string]interface{}))
+		if err != nil {
+			log.Errorf("failed to construct callgraph object from interface object", zap.Error(err))
+			WriteInternalError(w, err)
+			return
+		}
+		writeCg()
+	}
+}
+
+func writeCg () {
+	return
 }

@@ -66,7 +66,7 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 							node.Package = v.(string)
 						case "id":
 							node.ID = v.(int)
-						case "paramas":
+						case "params":
 							node.Params = v.(string)
 						case "class":
 							node.Class = v.(string)
@@ -77,7 +77,7 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 					fNodes = append(fNodes, node)
 				}
 			}
-		case "relations":
+		case "relns":
 			if relations, ok := v.([]interface{}); ok {
 				for _, reln := range relations {
 					var relation Relation

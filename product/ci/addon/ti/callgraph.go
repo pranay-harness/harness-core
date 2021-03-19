@@ -57,8 +57,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 						case "package":
 							node.Package = v.(string)
 						case "id":
-							node.ID = v.(int)
-						case "paramas":
+							node.ID = int(v.(int32))
+						case "params":
 							node.Params = v.(string)
 						case "class":
 							node.Class = v.(string)

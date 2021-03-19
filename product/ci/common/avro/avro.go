@@ -25,8 +25,7 @@ type CgphSerialzer struct {
 func NewCgphSerialzer(file string) (*CgphSerialzer, error) {
 	schema, err := ioutil.ReadFile(file)
 	if err != nil {
-		// handle this seperately
-		panic(err)
+		return nil, errors.Wrap(err, "failed to read schema file")
 	}
 
 	codec, err := goavro.NewCodec(string(schema))

@@ -13,11 +13,24 @@ import (
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
+	"github.com/wings-software/portal/product/ci/common/avro"
+	"github.com/wings-software/portal/product/ci/addon/ti"
 )
 
 var (
 	getWrkspcPath = external.GetWrkspcPath
 	getChFiles    = external.GetChangedFiles
+	remoteTiClient = external.GetTiHTTPClient
+	getOrgId       = external.GetOrgId
+	getProjectId   = external.GetProjectId
+	getPipelineId  = external.GetPipelineId
+	getBuildId     = external.GetBuildId
+	getStageId     = external.GetStageId
+)
+
+const (
+	cgDir                        = "/Users/amansingh/Desktop/f2.txt" // Discuss with Shiv - How to handle the deduping being done in job [TODO: Aman]
+	cgSchemaPath                 = "/Users/amansingh/code/portal/product/ci/common/avro/schema.avsc"        // the path of this needs to be decided [TODO: Aman]
 )
 
 // RunTestsStep represents interface to execute a runTests step
@@ -67,8 +80,22 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		e.log.Errorw("failed to validate runTestsStep step", "step_id", e.id, zap.Error(err))
 		return nil, int32(1), err
 	}
+	out, retries, err := e.execute(ctx)
 	// TODO: Add JEXL resolution to fields that need to be resolved
-	return e.execute(ctx)
+	// processCg should be called regardless of execute returns successfully or not
+	// for instance the script could error out in post steps or somewhere halfway through running tests
+	// If execute has errored out, return of this step would be err.
+	// If execute completed successfully but processCg() failed still the step will be marked as error.
+	cgErr := e.processCg()
+	// if the runTests step failed, then overall step status will be failure
+	if err != nil {
+		return out, retries, err
+	}
+	// if the runTests step passed, then overall step status will be failure
+	if cgErr != nil {
+		e.log.Errorw("failed to process callgraph", zap.Error(cgErr))
+		return out, retries, cgErr
+	}
 }
 
 // validate the container port and language
@@ -123,4 +150,57 @@ func (e *runTestsStep) getExecuteStepArg(diffFiles []string) *addonpb.ExecuteSte
 	return &addonpb.ExecuteStepRequest{
 		Step: e.step,
 	}
+}
+
+func (e *runTestsStep) processCg() error {
+	parser := ti.NewCallGraphParser(e.log)
+	cg, err := parser.Parse(cgDir)
+	if err != nil {
+		e.log.Errorf("failed to read callgraph file", zap.Error(err))
+		return err
+	}
+	e.log.Infow(fmt.Sprintf("succesfully read callgraph files. size of nodes:[%d], size of relations:[%d]", len(cg.Nodes), len(cg.Relns)))
+	cgMap := cg.ToStringMap()
+	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
+	if err != nil {
+		e.log.Errorf("failed to create callgraph serializer instance", zap.Error(err))
+		return err
+	}
+	encBytes, err := cgSer.Serialize(cgMap)
+	if err != nil {
+		e.log.Errorf("failed to encode callgraph", zap.Error(err))
+		return err
+	}
+	e.log.Infow(fmt.Sprintf("dsds %s", string(encBytes)))
+	client, err := remoteTiClient()
+	if err != nil {
+		e.log.Errorf("failed to create tiClient", zap.Error(err))
+		return err
+	}
+	org, err := getOrgId()
+	if err != nil {
+		return err
+	}
+	project, err := getProjectId()
+	if err != nil {
+		return err
+	}
+	pipeline, err := getPipelineId()
+	if err != nil {
+		return err
+	}
+	build, err := getBuildId()
+	if err != nil {
+		return err
+	}
+	stage, err := getStageId()
+	if err != nil {
+		return err
+	}
+	err = client.UploadCg(org, project, pipeline, build, stage, e.id, "repo", "sha", "branch", encBytes)
+	if err != nil {
+		e.log.Errorf("failed to upload cg to ti server", zap.Error(err))
+		return err
+	}
+	return nil
 }

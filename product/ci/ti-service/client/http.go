@@ -23,6 +23,7 @@ var _ Client = (*HTTPClient)(nil)
 const (
 	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s"
 	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
+	cgEndpoint = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&branch=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -78,6 +79,14 @@ func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, rep
 	var tests []types.RunnableTest
 	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
 	return tests, err
+}
+
+// UploadCg uploads avro encoded callgraph to server
+func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch string, cg []byte) error {
+	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
+	var tests string
+	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, &tests)
+	return err
 }
 
 func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool, b backoff.BackOff) (*http.Response, error) {
