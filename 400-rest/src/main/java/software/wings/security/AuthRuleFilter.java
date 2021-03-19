@@ -116,7 +116,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private ResourceInfo resourceInfo;
   @Context private HttpServletRequest servletRequest;
   @Inject AuditServiceHelper auditServiceHelper;
-  @Inject private ApiKeyService apiKeyService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -126,6 +125,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private WhitelistService whitelistService;
   private HarnessUserGroupService harnessUserGroupService;
   private GraphQLUtils graphQLUtils;
+  private ApiKeyService apiKeyService;
   private FeatureFlagService featureFlagService;
 
   /**
@@ -139,7 +139,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Inject
   public AuthRuleFilter(AuthService authService, AuthHandler authHandler, AppService appService,
       UserService userService, AccountService accountService, WhitelistService whitelistService,
-      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils,
+      HarnessUserGroupService harnessUserGroupService, GraphQLUtils graphQLUtils, ApiKeyService apiKeyService,
       FeatureFlagService featureFlagService) {
     this.authService = authService;
     this.authHandler = authHandler;
@@ -149,6 +149,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     this.whitelistService = whitelistService;
     this.harnessUserGroupService = harnessUserGroupService;
     this.graphQLUtils = graphQLUtils;
+    this.apiKeyService = apiKeyService;
     this.featureFlagService = featureFlagService;
   }
 

@@ -73,6 +73,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -150,6 +151,7 @@ public class SecureResourceTest extends CategoryTest {
   private static Cache<String, UserRestrictionInfo> cacheRestrictionInfo = mock(Cache.class);
   private static VersionInfoManager versionInfoManager = mock(VersionInfoManager.class);
   private static ConfigurationController configurationController = mock(ConfigurationController.class);
+  private static ApiKeyService apiKeyService = mock(ApiKeyService.class);
   private static io.harness.ff.FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
 
   private static AuthService authService =
@@ -158,7 +160,7 @@ public class SecureResourceTest extends CategoryTest {
           harnessUserGroupService, secretManager, versionInfoManager, configurationController);
 
   private static AuthRuleFilter authRuleFilter = new AuthRuleFilter(authService, authHandler, appService, userService,
-      accountService, whitelistService, harnessUserGroupService, graphQLUtils, featureFlagService);
+      accountService, whitelistService, harnessUserGroupService, graphQLUtils, apiKeyService, featureFlagService);
 
   /**
    * The constant resources.
