@@ -30,6 +30,11 @@ public class StageElementConfig {
   @EntityName String name;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
 
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  ParameterField<String> skipCondition;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> when;
+
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;
   @NotNull String type;
@@ -37,12 +42,10 @@ public class StageElementConfig {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageInfoConfig stageType;
 
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
-
   @Builder
   public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,
       List<FailureStrategyConfig> failureStrategies, String type, StageInfoConfig stageType,
-      ParameterField<String> skipCondition) {
+      ParameterField<String> skipCondition, ParameterField<String> when) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
@@ -51,5 +54,6 @@ public class StageElementConfig {
     this.type = type;
     this.stageType = stageType;
     this.skipCondition = skipCondition;
+    this.when = when;
   }
 }

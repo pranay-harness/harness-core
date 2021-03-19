@@ -27,7 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("io.harness.yaml.core.variables.NumberNGVariable")
 public class NumberNGVariable implements NGVariable {
   String name;
-  @Builder.Default NGVariableType type = NGVariableType.NUMBER;
+  @ApiModelProperty(allowableValues = NGVariableConstants.NUMBER_TYPE) NGVariableType type = NGVariableType.NUMBER;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.DOUBLE_CLASSPATH) ParameterField<Double> value;
   String description;
   boolean required;
@@ -39,5 +39,10 @@ public class NumberNGVariable implements NGVariable {
     return LevelNode.builder()
         .qualifierName(LevelNodeQualifierName.NG_VARIABLES + LevelNodeQualifierName.PATH_CONNECTOR + name)
         .build();
+  }
+
+  @Override
+  public ParameterField<?> getCurrentValue() {
+    return value;
   }
 }
