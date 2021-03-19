@@ -21,9 +21,7 @@ import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
 import static io.harness.provision.TerraformConstants.TF_SCRIPT_DIR;
 import static io.harness.provision.TerraformConstants.TF_VAR_FILES_DIR;
 import static io.harness.provision.TerraformConstants.USER_DIR_KEY;
-import static io.harness.provision.TerraformConstants.WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_DIR_BASE;
-import static io.harness.provision.TerraformConstants.WORKSPACE_PLAN_FILE_PATH_FORMAT;
 import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
 import static io.harness.provision.TfVarSource.TfVarSourceType;
 import static io.harness.threading.Morpheus.sleep;
@@ -32,7 +30,6 @@ import static software.wings.beans.delegation.TerraformProvisionParameters.Terra
 import static software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand.DESTROY;
 import static software.wings.delegatetasks.validation.terraform.TerraformTaskUtils.fetchAllTfVarFilesArgument;
 
-import static com.google.common.base.Joiner.on;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 
@@ -40,6 +37,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.cli.LogCallbackOutputStream;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -47,6 +45,7 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.terraform.TerraformBaseHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -94,7 +93,6 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +128,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private EncryptDecryptHelper planEncryptDecryptHelper;
+  @Inject private TerraformBaseHelper terraformBaseHelper;
 
   public TerraformProvisionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -226,8 +225,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     File tfVariablesFile = null, tfBackendConfigsFile = null;
 
     try (ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters, logCallback);
-         PlanLogOutputStream planLogOutputStream = new PlanLogOutputStream(parameters, new ArrayList<>(), logCallback);
-         PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream();) {
+         LogCallbackOutputStream logCallbackOutputStream = new LogCallbackOutputStream(logCallback);
+         PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = parameters.getCommitId() != null
           ? parameters.getCommitId()
@@ -314,7 +313,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             command = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, varParams);
             commandToLog = format("terraform plan -out=tfplan -input=false %s %s ", targetArgs, uiLogs);
             saveExecutionLog(commandToLog, CommandExecutionStatus.RUNNING, INFO, logCallback);
-            code = executeShellCommand(command, scriptDirectory, parameters, envVars, planLogOutputStream);
+            code = executeShellCommand(command, scriptDirectory, parameters, envVars, logCallbackOutputStream);
 
             if (code == 0 && parameters.isSaveTerraformJson()) {
               code = executeTerraformShowCommand(
@@ -372,7 +371,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               commandToLog =
                   format("terraform plan -destroy -out=tfdestroyplan -input=false %s %s ", targetArgs, uiLogs);
               saveExecutionLog(commandToLog, CommandExecutionStatus.RUNNING, INFO, logCallback);
-              code = executeShellCommand(command, scriptDirectory, parameters, envVars, planLogOutputStream);
+              code = executeShellCommand(command, scriptDirectory, parameters, envVars, logCallbackOutputStream);
 
               if (code == 0 && parameters.isSaveTerraformJson()) {
                 code = executeTerraformShowCommand(
@@ -647,18 +646,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   }
 
   private void downloadTfStateFile(TerraformProvisionParameters parameters, String scriptDirectory) throws IOException {
-    File tfStateFile = (isEmpty(parameters.getWorkspace()))
-        ? Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile()
-        : Paths.get(scriptDirectory, format(WORKSPACE_STATE_FILE_PATH_FORMAT, parameters.getWorkspace())).toFile();
-
-    if (parameters.getCurrentStateFileId() != null) {
-      try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
-               FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
-        FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
-      }
-    } else {
-      FileUtils.deleteQuietly(tfStateFile);
-    }
+    terraformBaseHelper.downloadTfStateFile(
+        parameters.getWorkspace(), parameters.getAccountId(), parameters.getCurrentStateFileId(), scriptDirectory);
   }
 
   private WorkspaceCommand getWorkspaceCommand(String scriptDir, String workspace, long timeoutInMillis)
@@ -681,21 +670,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     if (processResult.getExitValue() != 0) {
       throw new InvalidRequestException("Failed to list workspaces. " + output);
     }
-    return parseOutput(output);
-  }
-
-  @VisibleForTesting
-  public List<String> parseOutput(String workspaceOutput) {
-    List<String> outputs = Arrays.asList(StringUtils.split(workspaceOutput, "\n"));
-    List<String> workspaces = new ArrayList<>();
-    for (String output : outputs) {
-      if (output.charAt(0) == '*') {
-        output = output.substring(1);
-      }
-      output = output.trim();
-      workspaces.add(output);
-    }
-    return workspaces;
+    return terraformBaseHelper.parseOutput(output);
   }
 
   public int executeShellCommand(String command, String directory, TerraformProvisionParameters parameters,
@@ -775,18 +750,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
   }
 
-  @NotNull
-  private String getWorkspacePlanFileFormat(TerraformProvisionParameters parameters) {
-    switch (parameters.getCommand()) {
-      case APPLY:
-        return WORKSPACE_PLAN_FILE_PATH_FORMAT;
-      case DESTROY:
-        return WORKSPACE_DESTROY_PLAN_FILE_PATH_FORMAT;
-      default:
-        throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
-    }
-  }
-
   public String getLatestCommitSHAFromLocalRepo(GitOperationContext gitOperationContext) {
     File repoDir = new File(gitClientHelper.getRepoDirectory(gitOperationContext));
     if (repoDir.exists()) {
@@ -834,30 +797,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     @Override
     protected void processLine(String line) {
       saveExecutionLog(line, CommandExecutionStatus.RUNNING, INFO, logCallback);
-    }
-  }
-
-  @AllArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  private class PlanLogOutputStream extends LogOutputStream {
-    private TerraformProvisionParameters parameters;
-    private List<String> logs;
-    private LogCallback logCallback;
-
-    @Override
-    protected void processLine(String line) {
-      saveExecutionLog(line, CommandExecutionStatus.RUNNING, INFO, logCallback);
-      if (logs == null) {
-        logs = new ArrayList<>();
-      }
-      logs.add(line);
-    }
-
-    String getPlanLog() {
-      if (isNotEmpty(logs)) {
-        return on("\n").join(logs);
-      }
-      return "";
     }
   }
 
