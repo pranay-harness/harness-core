@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.perpetualtask.PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC;
 import static io.harness.rule.OwnerRule.ABOSII;
 
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
@@ -55,6 +57,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class AwsCodeDeployInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   @Mock private PerpetualTaskService perpetualTaskService;
   @Mock private InfrastructureMappingService infraMappingService;
