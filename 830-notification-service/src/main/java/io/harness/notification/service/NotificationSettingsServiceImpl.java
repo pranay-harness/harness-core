@@ -3,8 +3,9 @@ package io.harness.notification.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
-import io.harness.ng.core.dto.NotificationSettingConfigDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
+import io.harness.ng.core.dto.UserGroupFilterDTO;
+import io.harness.ng.core.notification.NotificationSettingConfigDTO;
 import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.notification.NotificationChannelType;
@@ -12,10 +13,10 @@ import io.harness.notification.SmtpConfig;
 import io.harness.notification.entities.NotificationSetting;
 import io.harness.notification.remote.SmtpConfigClient;
 import io.harness.notification.remote.SmtpConfigResponse;
-import io.harness.notification.remote.UserGroupClient;
 import io.harness.notification.repositories.NotificationSettingRepository;
 import io.harness.notification.service.api.NotificationSettingsService;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.usergroups.UserGroupClient;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -42,7 +43,9 @@ public class NotificationSettingsServiceImpl implements NotificationSettingsServ
     }
     List<UserGroupDTO> userGroups = new ArrayList<>();
     try {
-      userGroups = getResponse(userGroupClient.getUserGroups(userGroupIds));
+      UserGroupFilterDTO userGroupFilterDTO =
+          UserGroupFilterDTO.builder().databaseIdFilter(new HashSet<>(userGroupIds)).build();
+      userGroups = getResponse(userGroupClient.getFilteredUserGroups(userGroupFilterDTO));
     } catch (Exception ex) {
       log.error("Error while fetching user groups.", ex);
     }

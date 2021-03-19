@@ -1,7 +1,5 @@
-package io.harness.notification.modules;
+package io.harness.usergroups;
 
-import io.harness.notification.remote.UserGroupClient;
-import io.harness.notification.remote.UserGroupHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
