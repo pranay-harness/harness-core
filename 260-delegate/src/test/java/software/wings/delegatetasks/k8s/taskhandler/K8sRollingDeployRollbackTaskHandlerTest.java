@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.BOJANA;
 
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.k8s.K8sRollingRollbackBaseHandler;
@@ -44,6 +46,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @PrepareForTest({K8sTaskHelper.class, Utils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sRollingDeployRollbackTaskHandlerTest extends WingsBaseTest {
   @Mock private K8sTaskHelper taskHelper;
   @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
