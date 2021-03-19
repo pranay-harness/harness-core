@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
@@ -97,6 +99,7 @@ import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class HelmTaskHelperTest extends WingsBaseTest {
   public static final String V_3_HELM_SEARCH_REPO_COMMAND =
       "v3/helm search repo repoName/chartName -l --devel --max-col-width 300";

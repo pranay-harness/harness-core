@@ -1,7 +1,10 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.beans.TaskType;
@@ -29,6 +32,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class HelmDeployStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String commandName;
