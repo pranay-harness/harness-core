@@ -4,6 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -100,6 +101,7 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStepAndWinRmDeployment;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithInfraNodeDeployServicePhaseStepWithInfraDefinitionId;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhase;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBasicWorkflowWithPhaseSteps;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenHelmWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBlueGreenWorkflow;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructBuildWorkflow;
@@ -5042,5 +5044,27 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotNull()
         .size()
         .isEqualTo(workflowPhase2.getPhaseSteps().get(0).getStepSkipStrategies().size());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void shouldFailOnNegativeWaitIntervalOnUpdatingWorkflow() {
+    Workflow workflow = constructBasicWorkflowWithPhaseSteps();
+
+    BasicOrchestrationWorkflow basicOrchestrationWorkflow =
+        (BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
+    List<WorkflowPhase> workflowPhases = basicOrchestrationWorkflow.getWorkflowPhases();
+    assertThat(workflowPhases).isNotEmpty().size().isGreaterThan(0);
+    WorkflowPhase workflowPhase = workflowPhases.get(0);
+
+    assertThat(workflowPhase.getPhaseSteps()).isNotEmpty().size().isGreaterThan(0);
+    PhaseStep phaseStep = workflowPhase.getPhaseSteps().get(0);
+    assertThat(phaseStep).isNotNull();
+
+    phaseStep.setWaitInterval(-1);
+
+    workflowService.updateWorkflowPhase(workflow.getAppId(), workflow.getUuid(), workflowPhase);
   }
 }

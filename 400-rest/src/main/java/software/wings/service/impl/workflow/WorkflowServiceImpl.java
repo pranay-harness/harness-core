@@ -1734,6 +1734,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       throw new InvalidRequestException("The direct workflow phase should not have rollback flag set!", USER_SRE);
     }
 
+    if (workflowPhase.getPhaseSteps().stream().anyMatch(
+            phaseStep -> (phaseStep.getWaitInterval() != null && phaseStep.getWaitInterval() < 0))) {
+      throw new InvalidRequestException("Negative values not allowed.");
+    }
+
     WorkflowServiceHelper.cleanupPhaseStrategies(workflowPhase);
     Workflow workflow = readWorkflow(appId, workflowId);
     if (workflow == null) {
