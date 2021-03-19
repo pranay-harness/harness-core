@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.spotinst.model.SpotInstConstants.DEFAULT_ELASTIGROUP_MAX_INSTANCES;
@@ -16,6 +17,7 @@ import static software.wings.sm.states.spotinst.SpotInstServiceSetup.SPOTINST_SE
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
@@ -93,6 +95,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class SpotInstStateHelper {
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
