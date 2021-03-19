@@ -3,7 +3,9 @@ package io.harness.pms.expressions.utils;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import io.harness.common.NGTaskType;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.TaskDetails;
+import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
@@ -20,13 +22,16 @@ import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.exception.ArtifactServerException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.DelegateTaskRequest;
+import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.DelegateGrpcClientWrapper;
+import io.harness.steps.StepUtils;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 
@@ -36,6 +41,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -61,18 +67,20 @@ public class EcrImagePullSecretHelper {
     }
     return new ArrayList<>();
   }
-  ArtifactTaskExecutionResponse executeSyncTask(
-      EcrArtifactDelegateRequest ecrRequest, ArtifactTaskType taskType, BaseNGAccess ngAccess, String ifFailedMessage) {
-    DelegateResponseData responseData = getResponseData(ngAccess, ecrRequest, taskType);
+  ArtifactTaskExecutionResponse executeSyncTask(Ambiance ambiance, EcrArtifactDelegateRequest ecrRequest,
+      ArtifactTaskType taskType, BaseNGAccess ngAccess, String ifFailedMessage) {
+    DelegateResponseData responseData = getResponseData(ambiance, ngAccess, ecrRequest, taskType);
     return getTaskExecutionResponse(responseData, ifFailedMessage);
   }
-  private DelegateResponseData getResponseData(
-      BaseNGAccess ngAccess, EcrArtifactDelegateRequest ecrRequest, ArtifactTaskType artifactTaskType) {
+  private DelegateResponseData getResponseData(Ambiance ambiance, BaseNGAccess ngAccess,
+      EcrArtifactDelegateRequest ecrRequest, ArtifactTaskType artifactTaskType) {
     ArtifactTaskParameters artifactTaskParameters = ArtifactTaskParameters.builder()
                                                         .accountId(ngAccess.getAccountIdentifier())
                                                         .artifactTaskType(artifactTaskType)
                                                         .attributes(ecrRequest)
                                                         .build();
+    LinkedHashMap<String, String> logAbstractionMap = StepUtils.generateLogAbstractions(ambiance);
+    List<String> units = new ArrayList<>();
     DelegateTaskRequest delegateTaskRequest =
         DelegateTaskRequest.newBuilder()
             .setAccountId(ngAccess.getAccountIdentifier())
@@ -80,7 +88,7 @@ public class EcrImagePullSecretHelper {
                 TaskDetails.newBuilder()
                     .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(artifactTaskParameters)))
                     .setMode(TaskMode.SYNC)
-                    .setExecutionTimeout(Duration.newBuilder().setSeconds(60).build())
+                    .setExecutionTimeout(Duration.newBuilder().setSeconds(20).build())
                     .setType(TaskType.newBuilder().setType(NGTaskType.ECR_ARTIFACT_TASK_NG.name()).build())
                     .build())
             .setSetupAbstractions(
@@ -88,8 +96,14 @@ public class EcrImagePullSecretHelper {
                     .putValues(SetupAbstractionKeys.orgIdentifier, ngAccess.getOrgIdentifier())
                     .putValues(SetupAbstractionKeys.projectIdentifier, ngAccess.getProjectIdentifier())
                     .build())
+            .addAllUnits(CollectionUtils.emptyIfNull(units))
+            .addAllLogKeys(CollectionUtils.emptyIfNull(StepUtils.generateLogKeys(logAbstractionMap, units)))
+            .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .build();
-    TaskRequest taskRequest = TaskRequest.newBuilder().setDelegateTaskRequest(delegateTaskRequest).build();
+    TaskRequest taskRequest = TaskRequest.newBuilder()
+                                  .setDelegateTaskRequest(delegateTaskRequest)
+                                  .setTaskCategory(TaskCategory.DELEGATE_TASK_V2)
+                                  .build();
 
     ResponseData response = ngDelegate2TaskExecutor.executeTask(new HashMap<String, String>(), taskRequest);
     return (DelegateResponseData) kryoSerializer.asInflatedObject(((BinaryResponseData) response).getData());
