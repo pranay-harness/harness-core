@@ -34,8 +34,9 @@ public class EcsBGRoute53DNSWeightUpdateRequest extends EcsCommandRequest {
       String region, String cluster, AwsConfig awsConfig, boolean rollback, String serviceName,
       String serviceNameDownsized, int serviceCountDownsized, boolean downsizeOldService, int oldServiceWeight,
       int newServiceWeight, String parentRecordName, String parentRecordHostedZoneId, String oldServiceDiscoveryArn,
-      String newServiceDiscoveryArn, int timeout, int ttl) {
-    super(accountId, appId, commandName, activityId, region, cluster, awsConfig, ROUTE53_DNS_WEIGHT_UPDATE);
+      String newServiceDiscoveryArn, int timeout, int ttl, boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, cluster, awsConfig, ROUTE53_DNS_WEIGHT_UPDATE,
+        timeoutErrorSupported);
     this.rollback = rollback;
     this.serviceName = serviceName;
     this.serviceNameDownsized = serviceNameDownsized;

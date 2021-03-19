@@ -16,6 +16,14 @@ import java.util.List;
 @TargetModule(Module._930_DELEGATE_TASKS)
 public interface AwsEcsHelperServiceDelegate {
   List<String> listClusters(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+
+  /**
+   * Deprecated: use software.wings.cloudprovider.aws.AwsClusterServiceImpl#getServices(java.lang.String,
+   * software.wings.beans.SettingAttribute, java.util.List, java.lang.String, java.lang.String)
+   *
+   * The filtering logic can be provided inside that method. Saves api calls.
+   */
+  @Deprecated
   List<Service> listServicesForCluster(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster);
   List<String> listTasksArnForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,

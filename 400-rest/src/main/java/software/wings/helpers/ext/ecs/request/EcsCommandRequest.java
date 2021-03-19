@@ -25,6 +25,7 @@ public class EcsCommandRequest implements ExecutionCapabilityDemander {
   private String cluster;
   private AwsConfig AwsConfig;
   @NotEmpty private EcsCommandType EcsCommandType;
+  private boolean timeoutErrorSupported;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

@@ -20,8 +20,8 @@ public class EcsServiceDeployRequest extends EcsCommandRequest {
 
   @Builder
   public EcsServiceDeployRequest(String accountId, String appId, String commandName, String activityId, String region,
-      String cluster, AwsConfig awsConfig, EcsResizeParams ecsResizeParams) {
-    super(accountId, appId, commandName, activityId, region, cluster, awsConfig, SERVICE_DEPLOY);
+      String cluster, AwsConfig awsConfig, EcsResizeParams ecsResizeParams, boolean timeoutErrorSupported) {
+    super(accountId, appId, commandName, activityId, region, cluster, awsConfig, SERVICE_DEPLOY, timeoutErrorSupported);
     this.ecsResizeParams = ecsResizeParams;
   }
 }
