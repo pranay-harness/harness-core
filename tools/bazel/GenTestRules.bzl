@@ -12,6 +12,7 @@ def run_tests(**kwargs):
             runtime_deps = ["tests"],
             size = "large",
             jvm_flags = [
+                "$(HARNESS_ARGS)",
                 "-Xmx1G",
                 "-XX:+HeapDumpOnOutOfMemoryError",
                 "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
