@@ -1,7 +1,9 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.spotinst.model.SpotInstConstants.ELASTI_GROUP_ALL_PHASE_ROLLBACK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
@@ -25,6 +27,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
 public class SpotInstRollbackState extends SpotInstDeployState {
   @Inject private transient SpotInstStateHelper spotInstStateHelper;
   @Inject private transient SweepingOutputService sweepingOutputService;

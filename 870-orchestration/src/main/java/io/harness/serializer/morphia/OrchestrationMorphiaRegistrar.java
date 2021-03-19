@@ -5,8 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.delay.DelayEvent;
-import io.harness.delay.DelayEventNotifyData;
 import io.harness.engine.interrupts.InterruptCallback;
 import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
@@ -29,7 +27,6 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateTask.class);
     set.add(StateInspection.class);
     set.add(SweepingOutputInstance.class);
-    set.add(DelayEvent.class);
   }
 
   @Override
@@ -45,8 +42,5 @@ public class OrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     h.put("engine.pms.EngineAdviseCallback", EngineAdviseCallback.class);
     h.put("engine.progress.EngineProgressCallback", EngineProgressCallback.class);
     h.put("engine.interrupts.InterruptCallback", InterruptCallback.class);
-
-    // Facilitator related classes
-    h.put("delay.DelayEventNotifyData", DelayEventNotifyData.class);
   }
 }

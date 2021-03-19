@@ -10,8 +10,10 @@ import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
+import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -61,23 +63,26 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
+    if (null != instant && BatchJobType.ANOMALY_DETECTION_K8S == batchJobType) {
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+      return instant;
+    }
+
+    if (null != instant && BatchJobType.ANOMALY_DETECTION_CLOUD == batchJobType) {
+      Instant startInstant = Instant.now().minus(30, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
+      instant = startInstant.isAfter(instant) ? startInstant : instant;
+      return instant;
+    }
+
     if (null != instant && batchJobType.getBatchJobBucket() != BatchJobBucket.OUT_OF_CLUSTER
         && batchJobType != BatchJobType.INSTANCE_BILLING_AGGREGATION) {
       Instant startInstant = Instant.now().minus(MAX_IN_CLUSTER_DATA, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
 
-    if (null != instant && BatchJobType.ANOMALY_DETECTION_K8S == batchJobType) {
-      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
-      instant = startInstant.isAfter(instant) ? startInstant : instant;
-    }
-
-    if (null != instant && BatchJobType.ANOMALY_DETECTION_CLOUD == batchJobType) {
-      Instant startInstant = Instant.now().minus(10, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
-      instant = startInstant.isAfter(instant) ? startInstant : instant;
-    }
-
-    if (null != instant && BatchJobType.AWS_ECS_CLUSTER_SYNC == batchJobType) {
+    if (null != instant
+        && ImmutableSet.of(BatchJobType.RERUN_JOB, BatchJobType.AWS_ECS_CLUSTER_SYNC).contains(batchJobType)) {
       Instant startInstant = Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS);
       instant = startInstant.isAfter(instant) ? startInstant : instant;
     }
@@ -102,5 +107,10 @@ public class BatchJobScheduledDataServiceImpl implements BatchJobScheduledDataSe
       return batchJobScheduledData.getEndAt();
     }
     return null;
+  }
+
+  @Override
+  public void invalidateJobs(String accountId, List<String> batchJobTypes, Instant instant) {
+    batchJobScheduledDataDao.invalidateJobs(accountId, batchJobTypes, instant);
   }
 }

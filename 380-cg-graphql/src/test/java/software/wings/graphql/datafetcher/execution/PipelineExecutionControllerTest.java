@@ -809,7 +809,6 @@ public class PipelineExecutionControllerTest extends WingsBaseTest {
         .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID).build());
     when(infrastructureDefinitionService.getInfraDefByName(APP_ID, ENV_ID, INFRA_NAME + 2))
         .thenReturn(InfrastructureDefinition.builder().uuid(INFRA_DEFINITION_ID + 2).build());
-    when(featureFlagService.isEnabled(FeatureName.MULTISELECT_INFRA_PIPELINE, ACCOUNT_ID)).thenReturn(true);
 
     ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
 

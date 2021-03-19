@@ -3,6 +3,7 @@ package software.wings.verification.prometheus;
 import software.wings.metrics.MetricType;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.CVConfigurationYaml;
 import software.wings.verification.ServiceGuardThroughputToErrorsMap;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

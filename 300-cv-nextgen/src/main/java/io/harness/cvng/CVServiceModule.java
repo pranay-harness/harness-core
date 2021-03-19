@@ -13,7 +13,6 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.services.impl.AlertRuleAnomalyServiceImpl;
 import io.harness.cvng.alert.services.impl.AlertRuleServiceImpl;
 import io.harness.cvng.analysis.services.api.AnalysisService;
-import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.HealthVerificationService;
@@ -23,8 +22,8 @@ import io.harness.cvng.analysis.services.api.LogClusterService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnomalousPatternsService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
+import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.analysis.services.impl.AnalysisServiceImpl;
-import io.harness.cvng.analysis.services.impl.DeploymentAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentLogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.HealthVerificationServiceImpl;
@@ -34,6 +33,7 @@ import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.TimeSeriesAnomalousPatternsServiceImpl;
 import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
+import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
@@ -67,6 +67,7 @@ import io.harness.cvng.core.services.api.LogRecordService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourceImportStatusCreator;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
+import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.cvng.core.services.api.SplunkService;
 import io.harness.cvng.core.services.api.StackdriverService;
@@ -88,6 +89,7 @@ import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
 import io.harness.cvng.core.services.impl.SplunkDataCollectionInfoMapper;
@@ -257,7 +259,7 @@ public class CVServiceModule extends AbstractModule {
       bind(HostRecordService.class).to(HostRecordServiceImpl.class);
       bind(KubernetesActivitySourceService.class).to(KubernetesActivitySourceServiceImpl.class);
       bind(DeploymentLogAnalysisService.class).to(DeploymentLogAnalysisServiceImpl.class);
-      bind(DeploymentAnalysisService.class).to(DeploymentAnalysisServiceImpl.class);
+      bind(VerificationJobInstanceAnalysisService.class).to(VerificationJobInstanceAnalysisServiceImpl.class);
       bind(HealthVerificationService.class).to(HealthVerificationServiceImpl.class);
       bind(HealthVerificationHeatMapService.class).to(HealthVerificationHeatMapServiceImpl.class);
       bind(AnalysisService.class).to(AnalysisServiceImpl.class);
@@ -284,6 +286,7 @@ public class CVServiceModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkMetadataConstants.CONNECTOR_ENTITY))
           .to(ConnectorChangeEventMessageProcessor.class);
       bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
+      bind(NewRelicService.class).to(NewRelicServiceImpl.class);
       bind(String.class)
           .annotatedWith(Names.named("portalUrl"))
           .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")

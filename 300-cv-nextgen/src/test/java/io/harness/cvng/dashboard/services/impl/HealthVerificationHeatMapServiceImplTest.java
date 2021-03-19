@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 
@@ -24,7 +25,6 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
-import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap.AggregationLevel;
@@ -40,6 +40,7 @@ import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -52,10 +53,10 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase {
-  @Mock private CVConfigService cvConfigService;
   @Mock private ActivityService activityService;
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private VerificationTaskService verificationTaskService;
+  @Inject private VerificationTaskService realVerificationTaskService;
 
   @Inject private HealthVerificationHeatMapService heatMapService;
 
@@ -68,7 +69,6 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
   private String activityId;
   private String cvConfigId;
   private long startTime = 1603780200000l;
-  private CVConfig cvConfig;
 
   @Inject private HPersistence hPersistence;
 
@@ -85,14 +85,12 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
 
     MockitoAnnotations.initMocks(this);
 
-    FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(heatMapService, "verificationTaskService", verificationTaskService, true);
     FieldUtils.writeField(heatMapService, "verificationJobInstanceService", verificationJobInstanceService, true);
     FieldUtils.writeField(heatMapService, "activityService", activityService, true);
 
     when(verificationTaskService.getCVConfigId(verificationTaskId)).thenReturn(cvConfigId);
-    when(cvConfigService.get(cvConfigId)).thenReturn(getAppDCVConfig());
-    when(verificationJobInstanceService.getEmbeddedCVConfig(eq(cvConfigId), any())).thenReturn(getAppDCVConfig());
+    when(verificationJobInstanceService.getEmbeddedCVConfig(any(), any())).thenReturn(getAppDCVConfig());
     when(activityService.get(activityId)).thenReturn(getActivity());
     when(verificationTaskService.get(verificationTaskId))
         .thenReturn(VerificationTask.builder()
@@ -304,6 +302,113 @@ public class HealthVerificationHeatMapServiceImplTest extends CvNextGenTestBase 
       } else {
         assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
       }
+    }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetVerificationJobInstanceAggregatedRisk() {
+    Instant endTime = Instant.now();
+    heatMapService.updateRisk(verificationTaskId, 1.0, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(
+        verificationTaskId, 0.7, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+    when(verificationTaskService.maybeGetVerificationTaskIds(anyString(), anyString()))
+        .thenReturn(Collections.singleton(verificationTaskId));
+    Set<CategoryRisk> preActivityRisks = heatMapService.getVerificationJobInstanceAggregatedRisk(
+        accountId, verificationJobInstanceId, HealthVerificationPeriod.PRE_ACTIVITY);
+    Set<CategoryRisk> postActivityRisks = heatMapService.getVerificationJobInstanceAggregatedRisk(
+        accountId, verificationJobInstanceId, HealthVerificationPeriod.POST_ACTIVITY);
+
+    assertThat(preActivityRisks).isNotNull();
+    assertThat(postActivityRisks).isNotNull();
+
+    assertThat(preActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(postActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+
+    for (CategoryRisk categoryRisk : preActivityRisks) {
+      if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
+        assertThat(categoryRisk.getRisk()).isEqualTo(100.0);
+      } else {
+        assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+      }
+    }
+
+    for (CategoryRisk categoryRisk : postActivityRisks) {
+      if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
+        assertThat(categoryRisk.getRisk()).isEqualTo(70.0);
+      } else {
+        assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetVerificationJobInstanceAggregatedRisk_maxOfVerificationTasks() throws IllegalAccessException {
+    Instant endTime = Instant.now();
+    FieldUtils.writeField(heatMapService, "verificationTaskService", realVerificationTaskService, true);
+    String verificationTaskId1 =
+        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId);
+    heatMapService.updateRisk(verificationTaskId1, .5, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(
+        verificationTaskId1, 0.7, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+    String verificationTaskId2 =
+        realVerificationTaskService.create(accountId, generateUuid(), verificationJobInstanceId);
+    heatMapService.updateRisk(verificationTaskId2, 0.9, endTime, HealthVerificationPeriod.PRE_ACTIVITY);
+    heatMapService.updateRisk(
+        verificationTaskId2, 0.8, endTime.plus(Duration.ofMinutes(15)), HealthVerificationPeriod.POST_ACTIVITY);
+    Set<CategoryRisk> preActivityRisks = heatMapService.getVerificationJobInstanceAggregatedRisk(
+        accountId, verificationJobInstanceId, HealthVerificationPeriod.PRE_ACTIVITY);
+    Set<CategoryRisk> postActivityRisks = heatMapService.getVerificationJobInstanceAggregatedRisk(
+        accountId, verificationJobInstanceId, HealthVerificationPeriod.POST_ACTIVITY);
+
+    assertThat(preActivityRisks).isNotNull();
+    assertThat(postActivityRisks).isNotNull();
+
+    assertThat(preActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(postActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+
+    for (CategoryRisk categoryRisk : preActivityRisks) {
+      if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
+        assertThat(categoryRisk.getRisk()).isEqualTo(90.0);
+      } else {
+        assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+      }
+    }
+
+    for (CategoryRisk categoryRisk : postActivityRisks) {
+      if (categoryRisk.getCategory().equals(CVMonitoringCategory.PERFORMANCE)) {
+        assertThat(categoryRisk.getRisk()).isEqualTo(80.0);
+      } else {
+        assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetVerificationJobInstanceAggregatedRisk_zeroVerificationTaskIds() throws IllegalAccessException {
+    FieldUtils.writeField(heatMapService, "verificationTaskService", realVerificationTaskService, true);
+    Set<CategoryRisk> preActivityRisks = heatMapService.getVerificationJobInstanceAggregatedRisk(
+        accountId, verificationJobInstanceId, HealthVerificationPeriod.PRE_ACTIVITY);
+    Set<CategoryRisk> postActivityRisks = heatMapService.getVerificationJobInstanceAggregatedRisk(
+        accountId, verificationJobInstanceId, HealthVerificationPeriod.POST_ACTIVITY);
+
+    assertThat(preActivityRisks).isNotNull();
+    assertThat(postActivityRisks).isNotNull();
+
+    assertThat(preActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+    assertThat(postActivityRisks.size()).isEqualTo(CVMonitoringCategory.values().length);
+
+    for (CategoryRisk categoryRisk : preActivityRisks) {
+      assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
+    }
+
+    for (CategoryRisk categoryRisk : postActivityRisks) {
+      assertThat(categoryRisk.getRisk()).isEqualTo(-1.0);
     }
   }
 

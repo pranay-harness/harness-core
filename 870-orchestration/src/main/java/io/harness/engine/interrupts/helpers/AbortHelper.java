@@ -56,6 +56,8 @@ public class AbortHelper {
               .finalStatus(Status.ABORTED)
               .nodeExecutionId(nodeExecution.getUuid())
               .interruptId(interrupt.getUuid())
+              .interruptType(interrupt.getType())
+              .interruptConfig(interrupt.getInterruptConfig())
               .build(),
           interruptEvent.getNotifyId());
       return interruptEvent.getNotifyId();

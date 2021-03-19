@@ -1,11 +1,10 @@
 package software.wings.verification.apm;
 
-import static software.wings.verification.CVConfiguration.CVConfigurationYaml;
-
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.sm.states.APMVerificationState;
+import software.wings.verification.CVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import java.util.List;

@@ -16,20 +16,23 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Slf4j
 @Configuration
 public class BanzaiPricingConfiguration {
-  private String BASE_PRICING_SERVICE_URL = "http://35.232.8.217:80/";
+  private String BASE_PRICING_SERVICE_URL_TEMPLATE = "%s:%s/";
 
   @Bean
-  public BanzaiPricingClient banzaiPricingClient() {
-    log.info("BASE_PRICING_SERVICE_URL: {}", BASE_PRICING_SERVICE_URL);
+  public BanzaiPricingClient banzaiPricingClient(BatchMainConfig batchMainConfig) {
+    BanzaiConfig banzaiConfig = batchMainConfig.getBanzaiConfig();
+    String pricingServiceUrl =
+        String.format(BASE_PRICING_SERVICE_URL_TEMPLATE, banzaiConfig.getHost(), banzaiConfig.getPort());
+    log.info("BASE_PRICING_SERVICE_URL: {}", pricingServiceUrl);
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(120, TimeUnit.SECONDS)
                                     .readTimeout(120, TimeUnit.SECONDS)
-                                    .proxy(Http.checkAndGetNonProxyIfApplicable(BASE_PRICING_SERVICE_URL))
+                                    .proxy(Http.checkAndGetNonProxyIfApplicable(pricingServiceUrl))
                                     .retryOnConnectionFailure(true)
                                     .build();
     Retrofit retrofit = new Retrofit.Builder()
                             .client(okHttpClient)
-                            .baseUrl(BASE_PRICING_SERVICE_URL)
+                            .baseUrl(pricingServiceUrl)
                             .addConverterFactory(JacksonConverterFactory.create())
                             .build();
     return retrofit.create(BanzaiPricingClient.class);

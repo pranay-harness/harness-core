@@ -28,9 +28,13 @@ public class ParameterFieldProcessor {
       return ProcessorResult.builder().build();
     }
 
-    Object newValue = null;
+    Object newValue;
     InputSetValidator inputSetValidator = field.getInputSetValidator();
     if (field.isExpression()) {
+      if (field.isSkipAutoEvaluation()) {
+        return ProcessorResult.builder().build();
+      }
+
       if (field.isTypeString()) {
         newValue = engineExpressionService.renderExpression(ambiance, field.getExpressionValue());
       } else {

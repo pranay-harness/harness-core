@@ -26,6 +26,7 @@ public interface VaultSysAuthRestClient {
   String APPROLE_LOGIN_URL = "v1/auth/approle/login";
   String CONFIG_CA_URL = "v1/{secret-engine-name}/config/ca";
   String SIGN_PUBLIC_SSH_KEY_URL = "v1/{secret-engine-name}/sign/{role-name}";
+  String TOKEN_RENEW_URL = "v1/auth/token/renew-self";
 
   /**
    * The JSON response will be returned as a String. The caller of this API need to '/secret/options/version' field in
@@ -43,4 +44,6 @@ public interface VaultSysAuthRestClient {
   Call<SignedSSHVaultResponse> fetchSignedPublicKey(@Path(value = "secret-engine-name") String secretEngineName,
       @Path(value = "role-name") String roleName, @Header("X-Vault-Token") String header,
       @Body SignedSSHVaultRequest request);
+
+  @POST(TOKEN_RENEW_URL) Call<Object> renewToken(@Header("X-Vault-Token") String header);
 }

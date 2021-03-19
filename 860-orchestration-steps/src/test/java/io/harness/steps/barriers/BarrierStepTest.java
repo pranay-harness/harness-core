@@ -57,11 +57,13 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .setPlanExecutionId(generateUuid())
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
-    when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
+    when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))
+        .thenReturn(barrier);
     when(barrierService.save(any())).thenReturn(updatedBarrier);
 
     StepResponse stepResponse = barrierStep.executeSync(ambiance, stepParameters, stepInputPackage, null);
@@ -72,7 +74,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     assertThat(updatedBarrier).isNotNull();
     assertThat(updatedBarrier.getBarrierState()).isEqualTo(DOWN);
 
-    verify(barrierService).findByPlanNodeId(planNodeId);
+    verify(barrierService).findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId());
     verify(barrierService).save(any());
   }
 
@@ -94,11 +96,13 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .setPlanExecutionId(generateUuid())
                             .build();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
-    when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
+    when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))
+        .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
     AsyncExecutableResponse stepResponse = barrierStep.executeAsync(ambiance, stepParameters, stepInputPackage);
@@ -108,7 +112,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     assertThat(stepResponse.getLogKeysList()).isEmpty();
     assertThat(stepResponse.getUnitsList()).isEmpty();
 
-    verify(barrierService).findByPlanNodeId(planNodeId);
+    verify(barrierService).findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId());
     verify(barrierService).update(barrier);
   }
 
@@ -130,10 +134,12 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .setPlanExecutionId(generateUuid())
                             .build();
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
-    when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
+    when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))
+        .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
     StepResponse stepResponse = barrierStep.handleAsyncResponse(
@@ -142,7 +148,7 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     assertThat(stepResponse).isNotNull();
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
 
-    verify(barrierService).findByPlanNodeId(planNodeId);
+    verify(barrierService).findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId());
     verify(barrierService).update(barrier);
   }
 
@@ -162,15 +168,17 @@ public class BarrierStepTest extends OrchestrationStepsTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .addAllLevels(Collections.singletonList(
                                 Level.newBuilder().setRuntimeId(uuid).setSetupId(planNodeId).build()))
+                            .setPlanExecutionId(generateUuid())
                             .build();
     BarrierStepParameters stepParameters = BarrierStepParameters.builder().identifier(barrierIdentifier).build();
 
-    when(barrierService.findByPlanNodeId(planNodeId)).thenReturn(barrier);
+    when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))
+        .thenReturn(barrier);
     when(barrierService.update(barrier)).thenReturn(barrier);
 
     barrierStep.handleAbort(ambiance, stepParameters, null);
 
-    verify(barrierService).findByPlanNodeId(planNodeId);
+    verify(barrierService).findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId());
     verify(barrierService).update(barrier);
   }
 }

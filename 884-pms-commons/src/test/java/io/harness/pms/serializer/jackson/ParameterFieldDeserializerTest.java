@@ -42,7 +42,7 @@ public class ParameterFieldDeserializerTest extends CategoryTest implements Mult
     assertThat(readValue.infrastructure.getValue().inner1.getValue()).isEqualTo("kubernetes-direct");
     assertThat(readValue.infrastructure.isExpression()).isEqualTo(false);
     assertThat(readValue.infrastructure.getValue().inner2.isExpression()).isEqualTo(true);
-    assertThat(readValue.infrastructure.getValue().inner2.getExpressionValue()).isEqualTo("<+abc>");
+    assertThat(readValue.infrastructure.getValue().inner2.getExpressionValue()).isEqualTo("<+abc> == \"def\"");
   }
 
   @Test

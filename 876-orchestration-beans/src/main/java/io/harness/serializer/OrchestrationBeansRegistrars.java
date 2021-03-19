@@ -20,6 +20,7 @@ public class OrchestrationBeansRegistrars {
           .add(PmsContractsKryoRegistrar.class)
           .add(PmsSdkCoreKryoRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
+          .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .add(OrchestrationBeansKryoRegistrar.class)
           .build();
@@ -28,6 +29,7 @@ public class OrchestrationBeansRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
+          .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .add(PmsCommonsMorphiaRegistrar.class)
           .add(PmsSdkCoreMorphiaRegistrar.class)
           .add(OrchestrationBeansMorphiaRegistrar.class)

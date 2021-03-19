@@ -5,12 +5,12 @@ import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotific
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.ccm.cluster.entities.CEUserInfo;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.commons.utils.DataUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.User;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.security.UserGroup;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.PermissionType;

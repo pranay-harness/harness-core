@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.resource;
 
+import static io.harness.rule.OwnerRule.MATT;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 
@@ -21,6 +22,8 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.WebhookTriggerConfig;
 import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
@@ -217,5 +220,19 @@ public class NGTriggerResourceTest extends CategoryTest {
     ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
     WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) ngTriggerConfig.getSource().getSpec();
     assertThat(webhookTriggerConfig.getSpec().getRepoSpec().getIdentifier()).isEqualTo("account.gitAccount");
+  }
+
+  @Test
+  @Owner(developers = MATT)
+  @Category(UnitTests.class)
+  public void testCronTrigger() throws IOException {
+    ClassLoader classLoader = getClass().getClassLoader();
+    String filename = "ng-trigger-cron.yaml";
+    String triggerYaml =
+        Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    ngTriggerConfig = YamlPipelineUtils.read(triggerYaml, NGTriggerConfig.class);
+    ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) ngTriggerConfig.getSource().getSpec();
+    CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
+    assertThat(cronTriggerSpec.getExpression()).isEqualTo("20 4 * * *");
   }
 }

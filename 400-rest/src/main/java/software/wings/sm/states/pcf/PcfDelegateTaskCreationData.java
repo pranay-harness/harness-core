@@ -1,5 +1,8 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.TaskType;
@@ -10,6 +13,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class PcfDelegateTaskCreationData {
   private String accountId;
   private String appId;

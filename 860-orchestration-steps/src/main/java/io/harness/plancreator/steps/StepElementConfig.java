@@ -33,12 +33,16 @@ public class StepElementConfig implements WithSkipCondition {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<Timeout> timeout;
   List<FailureStrategyConfig> failureStrategies;
 
+  @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
+  @ApiModelProperty(hidden = true)
+  ParameterField<String> skipCondition;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> when;
+
   String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StepSpecType stepSpecType;
 
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
   ParameterField<List<String>> delegateSelectors;
@@ -46,7 +50,8 @@ public class StepElementConfig implements WithSkipCondition {
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description,
       ParameterField<Timeout> timeout, List<FailureStrategyConfig> failureStrategies, String type,
-      StepSpecType stepSpecType, ParameterField<String> skipCondition, ParameterField<List<String>> delegateSelectors) {
+      StepSpecType stepSpecType, ParameterField<String> skipCondition, ParameterField<String> when,
+      ParameterField<List<String>> delegateSelectors) {
     this.uuid = uuid;
     this.identifier = identifier;
     this.name = name;
@@ -57,5 +62,6 @@ public class StepElementConfig implements WithSkipCondition {
     this.stepSpecType = stepSpecType;
     this.skipCondition = skipCondition;
     this.delegateSelectors = delegateSelectors;
+    this.when = when;
   }
 }

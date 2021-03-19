@@ -2,8 +2,10 @@ package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
@@ -71,6 +73,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
@@ -245,6 +248,8 @@ public class EcsDaemonServiceSetup extends State {
                                          .activityId(activityId)
                                          .safeDisplayServiceVariables(variables.getSafeDisplayServiceVariables())
                                          .serviceVariables(variables.getServiceVariables())
+                                         .timeoutErrorSupported(featureFlagService.isEnabled(
+                                             TIMEOUT_FAILURE_SUPPORT, ecsSetUpDataBag.getApplication().getAccountId()))
                                          .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
@@ -427,7 +432,13 @@ public class EcsDaemonServiceSetup extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus).build();
+
+    ExecutionResponseBuilder builder =
+        ExecutionResponse.builder().stateExecutionData(executionData).executionStatus(executionStatus);
+    if (ecsServiceSetupResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+    return builder.build();
   }
 
   public void restoreStateDataAfterGitFetch(EcsSetupStateExecutionData stateExecutionData) {

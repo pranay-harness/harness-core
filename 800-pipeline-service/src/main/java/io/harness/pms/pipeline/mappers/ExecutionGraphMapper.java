@@ -1,15 +1,18 @@
 package io.harness.pms.pipeline.mappers;
 
 import io.harness.beans.EdgeList;
+import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.beans.DelegateInfo;
 import io.harness.pms.execution.beans.ExecutionGraph;
 import io.harness.pms.execution.beans.ExecutionNode;
 import io.harness.pms.execution.beans.ExecutionNodeAdjacencyList;
 import io.harness.pms.plan.execution.PlanExecutionUtils;
 import io.harness.serializer.JsonUtils;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -39,6 +42,21 @@ public class ExecutionGraphMapper {
         .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
         .unitProgresses(graphVertex.getUnitProgresses())
+        .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getDelegateSelectionLogParams()))
+        .build();
+  }
+
+  private List<DelegateInfo> mapDelegateSelectionLogParamsToDelegateInfo(
+      List<DelegateSelectionLogParams> delegateSelectionLogParams) {
+    return delegateSelectionLogParams.stream()
+        .map(ExecutionGraphMapper::getDelegateInfoForUI)
+        .collect(Collectors.toList());
+  }
+
+  private DelegateInfo getDelegateInfoForUI(DelegateSelectionLogParams delegateSelectionLogParams) {
+    return DelegateInfo.builder()
+        .id(delegateSelectionLogParams.getDelegateId())
+        .name(delegateSelectionLogParams.getDelegateName())
         .build();
   }
 

@@ -244,4 +244,7 @@ public interface AzureConstants {
   Pattern BLUEPRINT_ID_REGEX = Pattern.compile(
       "^(?<resourceScope>\\S+)(?<providerName>/providers/Microsoft.Blueprint/blueprints/)(?<blueprintName>\\S+)(?<versionsPath>/versions/)(?<versionId>\\S+)$");
   String DEPLOYMENT_NAME_PATTERN = "harness_%s_%s";
+
+  // Azure Cloud Error codes
+  String ROLE_ASSIGNMENT_EXISTS_CLOUD_ERROR_CODE = "RoleAssignmentExists";
 }

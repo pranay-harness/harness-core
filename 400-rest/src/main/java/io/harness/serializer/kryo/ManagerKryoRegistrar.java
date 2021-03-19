@@ -169,6 +169,7 @@ import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DatadogYaml;
 import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -1012,7 +1013,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PortMapping.class, 5222);
     kryo.register(StorageConfiguration.class, 5164);
     kryo.register(CountsByStatuses.class, 4008);
-    kryo.register(DatadogConfig.DatadogYaml.class, 5468);
+    kryo.register(DatadogYaml.class, 5468);
     kryo.register(DatadogConfig.class, 5467);
     kryo.register(ShellScriptParameters.class, 5186);
     kryo.register(TerraformProvisionParameters.TerraformCommand.class, 5524);

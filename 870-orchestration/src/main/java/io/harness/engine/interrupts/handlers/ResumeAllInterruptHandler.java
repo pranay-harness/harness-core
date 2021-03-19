@@ -80,6 +80,7 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
                 .interruptId(interrupt.getUuid())
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
+                .interruptConfig(interrupt.getInterruptConfig())
                 .build()));
 
     resumeStepStatusUpdate.onStepStatusUpdate(StepStatusUpdateInfo.builder()

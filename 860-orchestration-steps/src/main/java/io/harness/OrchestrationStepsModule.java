@@ -1,5 +1,7 @@
 package io.harness;
 
+import io.harness.steps.approval.step.ApprovalInstanceService;
+import io.harness.steps.approval.step.ApprovalInstanceServiceImpl;
 import io.harness.steps.barriers.service.BarrierService;
 import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.steps.resourcerestraint.service.ResourceRestraintRegistry;
@@ -27,5 +29,6 @@ public class OrchestrationStepsModule extends AbstractModule {
     bind(RestraintService.class).to(RestraintServiceImpl.class);
     bind(ResourceRestraintService.class).to(ResourceRestraintServiceImpl.class);
     bind(ResourceRestraintRegistry.class).to(ResourceRestraintRegistryImpl.class);
+    bind(ApprovalInstanceService.class).to(ApprovalInstanceServiceImpl.class);
   }
 }

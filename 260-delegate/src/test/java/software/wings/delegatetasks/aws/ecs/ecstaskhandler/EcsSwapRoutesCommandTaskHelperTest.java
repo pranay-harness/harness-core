@@ -51,7 +51,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
     taskHelper.upsizeOlderService(
         AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", 1, "foo_1", mockCallback, 20);
     verify(mockEcsContainerService).updateServiceCount(any());
-    verify(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    verify(mockEcsContainerService).waitForTasksToBeInRunningStateWithHandledExceptions(any());
     verify(mockEcsContainerService).waitForServiceToReachSteadyState(eq(20), any());
   }
 

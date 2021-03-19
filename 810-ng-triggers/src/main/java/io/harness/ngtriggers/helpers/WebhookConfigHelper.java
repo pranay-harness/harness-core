@@ -18,6 +18,8 @@ public class WebhookConfigHelper {
     map.put(WebhookSourceRepo.GITHUB, new ArrayList<>(WebhookEvent.githubEvents));
     map.put(WebhookSourceRepo.GITLAB, new ArrayList<>(WebhookEvent.gitlabEvents));
     map.put(WebhookSourceRepo.BITBUCKET, new ArrayList<>(WebhookEvent.bitbucketEvents));
+    map.put(WebhookSourceRepo.AWS_CODECOMMIT, new ArrayList<>(WebhookEvent.awsCodeCommitEvents));
+
     return map;
   }
 
@@ -28,6 +30,8 @@ public class WebhookConfigHelper {
       return new ArrayList<>(WebhookAction.getBitbucketActionForEvent(event));
     } else if (sourceRepo == WebhookSourceRepo.GITLAB) {
       return new ArrayList<>(WebhookAction.getGitLabActionForEvent(event));
+    } else if (sourceRepo == WebhookSourceRepo.AWS_CODECOMMIT) {
+      return new ArrayList<>(WebhookAction.getAwsCodeCommitActionForEvent(event));
     } else {
       return Collections.emptyList();
     }

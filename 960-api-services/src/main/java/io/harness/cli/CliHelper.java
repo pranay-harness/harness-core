@@ -26,7 +26,16 @@ public class CliHelper {
   @Nonnull
   public CliResponse executeCliCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
       String directory, LogCallback executionLogCallback) throws IOException, InterruptedException, TimeoutException {
-    executionLogCallback.saveExecutionLog(command, LogLevel.INFO, RUNNING);
+    return executeCliCommand(
+        command, timeoutInMillis, envVariables, directory, executionLogCallback, command, new EmptyLogOutputStream());
+  }
+
+  @Nonnull
+  public CliResponse executeCliCommand(String command, long timeoutInMillis, Map<String, String> envVariables,
+      String directory, LogCallback executionLogCallback, String loggingCommand, LogOutputStream logOutputStream)
+      throws IOException, InterruptedException, TimeoutException {
+    executionLogCallback.saveExecutionLog(loggingCommand, LogLevel.INFO, RUNNING);
+
     ProcessExecutor processExecutor =
         new ProcessExecutor()
             .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
@@ -34,12 +43,7 @@ public class CliHelper {
             .readOutput(true)
             .environment(envVariables)
             .directory(new File(directory))
-            .redirectOutput(new LogOutputStream() {
-              @Override
-              protected void processLine(String line) {
-                // Not logging as secrets will be exposed
-              }
-            })
+            .redirectOutput(logOutputStream)
             .redirectError(new LogOutputStream() {
               @Override
               protected void processLine(String line) {

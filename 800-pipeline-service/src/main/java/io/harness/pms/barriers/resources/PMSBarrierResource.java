@@ -4,10 +4,15 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.barriers.beans.BarrierSetupInfo;
+import io.harness.pms.barriers.beans.BarrierExecutionInfo;
+import io.harness.pms.barriers.mapper.BarrierExecutionInfoDTOMapper;
+import io.harness.pms.barriers.mapper.BarrierInfoDTOMapper;
 import io.harness.pms.barriers.mapper.BarrierSetupInfoDTOMapper;
+import io.harness.pms.barriers.response.BarrierExecutionInfoDTO;
+import io.harness.pms.barriers.response.BarrierInfoDTO;
 import io.harness.pms.barriers.response.BarrierSetupInfoDTO;
 import io.harness.pms.barriers.service.PMSBarrierService;
+import io.harness.steps.barriers.beans.BarrierSetupInfo;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -19,9 +24,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -48,5 +55,30 @@ public class PMSBarrierResource {
     List<BarrierSetupInfoDTO> barrierSetupInfoDTOList =
         barrierSetupInfoList.stream().map(BarrierSetupInfoDTOMapper.toBarrierSetupInfoDTO).collect(Collectors.toList());
     return ResponseDTO.newResponse(barrierSetupInfoDTOList);
+  }
+
+  @GET
+  @Path("/executionInfo")
+  @ApiOperation(value = "Gets barriers execution info list", nickname = "getBarriersExecutionInfo")
+  public ResponseDTO<List<BarrierExecutionInfoDTO>> getBarriersExecutionInfo(
+      @NotNull @QueryParam("stageSetupId") String stageSetupId,
+      @NotNull @QueryParam("planExecutionId") String planExecutionId) {
+    List<BarrierExecutionInfo> barrierExecutionInfoList =
+        pmsBarrierService.getBarrierExecutionInfoList(stageSetupId, planExecutionId);
+    List<BarrierExecutionInfoDTO> barrierExecutionInfoDTOList =
+        barrierExecutionInfoList.stream()
+            .map(BarrierExecutionInfoDTOMapper.toBarrierExecutionInfoDTO)
+            .collect(Collectors.toList());
+    return ResponseDTO.newResponse(barrierExecutionInfoDTOList);
+  }
+
+  @GET
+  @Path("/info")
+  @ApiOperation(value = "Gets barriers info", nickname = "getBarrierInfo")
+  public ResponseDTO<BarrierInfoDTO> getBarriersInfo(@NotNull @QueryParam("barrierSetupId") String barrierSetupId,
+      @NotNull @QueryParam("planExecutionId") String planExecutionId) {
+    BarrierExecutionInfo barrierExecutionInfo =
+        pmsBarrierService.getBarrierExecutionInfo(barrierSetupId, planExecutionId);
+    return ResponseDTO.newResponse(BarrierInfoDTOMapper.toBarrierInfoDTO.apply(barrierExecutionInfo));
   }
 }

@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
@@ -28,6 +29,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sRollingBaseHandler;
@@ -57,6 +59,7 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
+import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.io.IOException;
@@ -72,6 +75,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
@@ -161,9 +165,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
       k8sRollingBaseHandler.updateManagedWorkloadsRevision(k8sDelegateTaskParams, release, client);
 
       if (!success || !customWorkloadsStatusSuccess) {
-        releaseHistory.setReleaseStatus(Status.Failed);
-        k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-            releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
+        saveRelease(k8sRollingDeployTaskParameters, Status.Failed);
         return getFailureResponse();
       }
     }
@@ -171,12 +173,21 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     HelmChartInfo helmChartInfo = k8sTaskHelper.getHelmChartDetails(
         k8sRollingDeployTaskParameters.getK8sDelegateManifestConfig(), manifestFilesDirectory);
 
-    k8sRollingBaseHandler.wrapUp(
-        k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp), client);
+    ExecutionLogCallback executionLogCallback =
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, WrapUp);
 
-    releaseHistory.setReleaseStatus(Status.Succeeded);
-    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
-        releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
+    k8sRollingBaseHandler.wrapUp(k8sDelegateTaskParams, executionLogCallback, client);
+
+    String loadBalancer = null;
+    try {
+      loadBalancer = k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources);
+    } catch (Exception ex) {
+      executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR, FAILURE);
+      saveRelease(k8sRollingDeployTaskParameters, Status.Failed);
+      throw ex;
+    }
+    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    saveRelease(k8sRollingDeployTaskParameters, Status.Succeeded);
 
     K8sRollingDeployResponse rollingSetupResponse =
         K8sRollingDeployResponse.builder()
@@ -184,7 +195,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
             .k8sPodList(k8sTaskHelperBase.tagNewPods(
                 k8sRollingBaseHandler.getPods(steadyStateTimeoutInMillis, allWorkloads, kubernetesConfig, releaseName),
                 existingPodList))
-            .loadBalancer(k8sTaskHelperBase.getLoadBalancerEndpoint(kubernetesConfig, resources))
+            .loadBalancer(loadBalancer)
             .helmChartInfo(helmChartInfo)
             .build();
 
@@ -192,6 +203,13 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
         .k8sTaskResponse(rollingSetupResponse)
         .build();
+  }
+
+  private void saveRelease(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters, Status status)
+      throws YamlException {
+    releaseHistory.setReleaseStatus(status);
+    k8sTaskHelperBase.saveReleaseHistory(kubernetesConfig, k8sRollingDeployTaskParameters.getReleaseName(),
+        releaseHistory.getAsYaml(), !customWorkloads.isEmpty());
   }
 
   private K8sTaskExecutionResponse getFailureResponse() {

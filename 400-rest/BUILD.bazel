@@ -20,6 +20,7 @@ shared_dependencies = [
     "//870-cg-yaml-beans:module",
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
+    "//874-orchestration-delay:module",
     "//878-pipeline-service-utilities:module",
     "//882-pms-sdk-core:module",
     "//890-sm-core:module",
@@ -672,7 +673,7 @@ shared_dependencies = [
     "@maven//:xml_apis_xml_apis",
     "@maven//:xml_resolver_xml_resolver",
     "@maven//:xpp3_xpp3",
-    "@maven_harness//:io_harness_cf_cf_client_sdk_java",
+    "@maven_harness//:io_harness_ff_java_server_sdk",
     "@maven_harness//:io_harness_cv_data_collection_dsl",
 ]
 

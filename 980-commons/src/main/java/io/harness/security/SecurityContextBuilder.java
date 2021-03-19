@@ -23,8 +23,9 @@ public class SecurityContextBuilder {
   public static final String PRINCIPAL_TYPE = "type";
   public static final String PRINCIPAL_NAME = "name";
   public static final String ACCOUNT_ID = "accountId";
+  public static final String EMAIL = "email";
 
-  public void setContext(Map<String, Claim> claimMap) {
+  public Principal getPrincipalFromClaims(Map<String, Claim> claimMap) {
     Principal principal = null;
     if (claimMap.get(PRINCIPAL_TYPE) != null) {
       PrincipalType type = claimMap.get(PRINCIPAL_TYPE).as(PrincipalType.class);
@@ -42,6 +43,11 @@ public class SecurityContextBuilder {
           Switch.unhandled(type);
       }
     }
+    return principal;
+  }
+
+  public void setContext(Map<String, Claim> claimMap) {
+    Principal principal = getPrincipalFromClaims(claimMap);
     setContext(principal);
   }
 

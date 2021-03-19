@@ -28,10 +28,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.SecretState;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.dao.CEMetadataRecordDao;
+import io.harness.ccm.commons.entities.CEMetadataRecord;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.license.CeLicenseInfo;
-import io.harness.ccm.setup.CEMetadataRecordDao;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -55,7 +56,6 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEGcpConfig;
-import software.wings.beans.ce.CEMetadataRecord;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
@@ -491,12 +491,12 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
     settingAttribute =
         aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
-    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
 
     settingAttribute = aSettingAttribute()
                            .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
                            .build();
-    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isFalse();
+    assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
 
     settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     assertThat(settingsService.hasDelegateSelectorProperty(settingAttribute)).isTrue();
@@ -518,14 +518,23 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                            .build();
     assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEqualTo(Lists.newArrayList("docker", "k8s"));
 
-    settingAttribute =
-        aSettingAttribute().withValue(NexusConfig.builder().nexusUrl("https://harness.nexus.com/").build()).build();
-    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+    settingAttribute = aSettingAttribute()
+                           .withValue(NexusConfig.builder()
+                                          .nexusUrl("https://harness.nexus.com/")
+                                          .delegateSelectors(Lists.newArrayList("nexus", "harness"))
+                                          .build())
+                           .build();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute))
+        .isEqualTo(Lists.newArrayList("nexus", "harness"));
 
     settingAttribute = aSettingAttribute()
-                           .withValue(ArtifactoryConfig.builder().artifactoryUrl("https://harness.jfrog.com").build())
+                           .withValue(ArtifactoryConfig.builder()
+                                          .artifactoryUrl("https://harness.jfrog.com")
+                                          .delegateSelectors(Lists.newArrayList("artifactory", "jfrog"))
+                                          .build())
                            .build();
-    assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();
+    assertThat(settingsService.getDelegateSelectors(settingAttribute))
+        .isEqualTo(Lists.newArrayList("artifactory", "jfrog"));
 
     settingAttribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     assertThat(settingsService.getDelegateSelectors(settingAttribute)).isEmpty();

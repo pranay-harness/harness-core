@@ -28,6 +28,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -609,15 +610,15 @@ public class EcsSetupCommandTaskHelper {
 
     // For DAEMON scheduling Strategy, no desired count is required.
     // Its automatically calculated by ECS based on number of instances in cluster
-    if (!setupParams.isDaemonSchedulingStrategy()) {
+    if (setupParams.isDaemonSchedulingStrategy()) {
+      createServiceRequest.setSchedulingStrategy(SchedulingStrategy.DAEMON.name());
+      createServiceRequest.withDeploymentConfiguration(
+          new DeploymentConfiguration().withMaximumPercent(100).withMinimumHealthyPercent(50));
+    } else {
       createServiceRequest.setDesiredCount(0);
       createServiceRequest.withDeploymentConfiguration(
           new DeploymentConfiguration().withMaximumPercent(200).withMinimumHealthyPercent(100));
       createServiceRequest.setSchedulingStrategy(SchedulingStrategy.REPLICA.name());
-    } else {
-      createServiceRequest.setSchedulingStrategy(SchedulingStrategy.DAEMON.name());
-      createServiceRequest.withDeploymentConfiguration(
-          new DeploymentConfiguration().withMaximumPercent(100).withMinimumHealthyPercent(50));
     }
 
     // Set load balancer config
@@ -1216,6 +1217,8 @@ public class EcsSetupCommandTaskHelper {
           awsHelperService.deleteService(setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(),
               encryptedDataDetails, deleteServiceRequest);
         }
+      } catch (TimeoutException e) {
+        throw e;
       } catch (Exception e) {
         String errorMsg = "Failed while handling rollback";
         log.error(errorMsg, e);
@@ -1247,7 +1250,7 @@ public class EcsSetupCommandTaskHelper {
                                                                .awsConfig(awsConfig)
                                                                .build();
 
-    ecsContainerService.waitForTasksToBeInRunningStateButDontThrowException(updateCountRequestData);
+    ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(updateCountRequestData);
     ecsContainerService.waitForServiceToReachSteadyState(serviceSteadyStateTimeout, updateCountRequestData);
 
     return ecsContainerService.getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName,

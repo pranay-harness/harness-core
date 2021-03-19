@@ -70,7 +70,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
             .instances(instancesValue)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
-            .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
+            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
@@ -121,7 +121,6 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sCanaryOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
                          .build())
         .build();
   }

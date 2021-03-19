@@ -24,6 +24,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.VaultService;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -52,10 +53,8 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
             .handler(this)
             .entityProcessController(new AccountStatusBasedEntityProcessController<>(accountService))
             .filterExpander(query
-                -> query.field(SecretManagerConfigKeys.encryptionType)
-                       .equal(EncryptionType.VAULT)
-                       .field(SecretManagerConfigKeys.encryptionType)
-                       .equal(EncryptionType.VAULT_SSH))
+                -> query.criteria(SecretManagerConfigKeys.encryptionType)
+                       .in(Sets.newHashSet(EncryptionType.VAULT, EncryptionType.VAULT_SSH)))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));

@@ -31,6 +31,13 @@
             "controllerUrl": {
               "type": "string"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "passwordRef": {
               "type": "string"
             },
@@ -96,6 +103,13 @@
             },
             "auth": {
               "$ref": "#/definitions/ArtifactoryAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -190,6 +204,13 @@
           "properties": {
             "authentication": {
               "$ref": "#/definitions/AwsCodeCommitAuthenticationDTO"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "type": {
               "type": "string",
@@ -305,6 +326,13 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/AwsCredential"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -314,7 +342,6 @@
     "AwsCredential": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
@@ -331,22 +358,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "InheritFromDelegate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/AwsInheritFromDelegateSpec"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -383,31 +394,6 @@
           "type": "string"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "AwsInheritFromDelegateSpec": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/AwsCredentialSpec"
-        },
-        {
-          "type": "object",
-          "required": [
-            "delegateSelectors"
-          ],
-          "properties": {
-            "delegateSelectors": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 2147483647,
-              "minItems": 1
-            }
-          }
-        }
-      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "AwsManualConfigSpec": {
@@ -576,6 +562,13 @@
             },
             "authentication": {
               "$ref": "#/definitions/BitbucketAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "type": {
               "type": "string",
@@ -890,7 +883,8 @@
             "CEAws",
             "CEAzure",
             "CEK8sCluster",
-            "HttpHelmRepo"
+            "HttpHelmRepo",
+            "NewRelic"
           ]
         }
       },
@@ -1188,6 +1182,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "NewRelic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/NewRelicConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Nexus"
               }
             }
@@ -1317,6 +1327,13 @@
             "auth": {
               "$ref": "#/definitions/DockerAuthenticationDTO"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "dockerRegistryUrl": {
               "type": "string"
             },
@@ -1383,6 +1400,13 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/GcpConnectorCredential"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -1392,7 +1416,6 @@
     "GcpConnectorCredential": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
@@ -1406,22 +1429,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "InheritFromDelegate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/GcpDelegateDetails"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -1442,31 +1449,6 @@
     },
     "GcpCredentialSpec": {
       "type": "object",
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GcpDelegateDetails": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/GcpCredentialSpec"
-        },
-        {
-          "type": "object",
-          "required": [
-            "delegateSelectors"
-          ],
-          "properties": {
-            "delegateSelectors": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 2147483647,
-              "minItems": 1
-            }
-          }
-        }
-      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GcpKmsConnectorDTO": {
@@ -1550,6 +1532,13 @@
                 "Account",
                 "Repo"
               ]
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "gitSync": {
               "$ref": "#/definitions/GitSyncConfig"
@@ -1824,6 +1813,13 @@
             },
             "authentication": {
               "$ref": "#/definitions/GithubAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "type": {
               "type": "string",
@@ -2113,6 +2109,13 @@
             "authentication": {
               "$ref": "#/definitions/GitlabAuthentication"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "type": {
               "type": "string",
               "enum": [
@@ -2382,6 +2385,13 @@
             "auth": {
               "$ref": "#/definitions/HttpHelmAuthenticationDTO"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "helmRepoUrl": {
               "type": "string"
             }
@@ -2441,6 +2451,13 @@
             "passwordRef"
           ],
           "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "jiraUrl": {
               "type": "string"
             },
@@ -2590,6 +2607,13 @@
           "properties": {
             "credential": {
               "$ref": "#/definitions/KubernetesCredentialDTO"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -2622,7 +2646,6 @@
     "KubernetesCredentialDTO": {
       "type": "object",
       "required": [
-        "spec",
         "type"
       ],
       "properties": {
@@ -2636,22 +2659,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "InheritFromDelegate"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/KubernetesDelegateDetailsDTO"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -2672,31 +2679,6 @@
     },
     "KubernetesCredentialSpecDTO": {
       "type": "object",
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "KubernetesDelegateDetailsDTO": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/KubernetesCredentialSpecDTO"
-        },
-        {
-          "type": "object",
-          "required": [
-            "delegateSelectors"
-          ],
-          "properties": {
-            "delegateSelectors": {
-              "type": "array",
-              "uniqueItems": true,
-              "items": {
-                "type": "string"
-              },
-              "maxItems": 2147483647,
-              "minItems": 1
-            }
-          }
-        }
-      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "KubernetesOpenIdConnectDTO": {
@@ -2825,6 +2807,33 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "NewRelicConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "newRelicAccountId",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "newRelicAccountId": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "NexusAuthCredentials": {
       "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2877,6 +2886,13 @@
           "properties": {
             "auth": {
               "$ref": "#/definitions/NexusAuthentication"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "nexusServerUrl": {
               "type": "string"
@@ -2942,6 +2958,13 @@
           "properties": {
             "accountId": {
               "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "passwordRef": {
               "type": "string"

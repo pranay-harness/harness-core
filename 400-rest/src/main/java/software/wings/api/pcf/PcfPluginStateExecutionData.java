@@ -1,5 +1,8 @@
 package software.wings.api.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
@@ -25,6 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class PcfPluginStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String accountId;

@@ -1,8 +1,10 @@
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -24,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public abstract class PcfCommandTaskHandler {
   @Inject protected DelegateFileManager delegateFileManager;
   @Inject protected PcfDeploymentManager pcfDeploymentManager;

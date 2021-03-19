@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.pcf.request;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.api.pcf.PcfServiceData;
@@ -19,6 +22,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class PcfCommandRollbackRequest extends PcfCommandRequest {
   private List<PcfServiceData> instanceData;
   private List<String> routeMaps;

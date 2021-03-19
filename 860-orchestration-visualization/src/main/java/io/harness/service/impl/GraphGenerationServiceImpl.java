@@ -15,11 +15,11 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.event.GraphStatusUpdateHelper;
 import io.harness.event.NodeExecutionUpdateEventHandler;
 import io.harness.event.OrchestrationEndEventHandler;
 import io.harness.event.OrchestrationStartEventHandler;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
-import io.harness.event.StatusUpdateEventHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
@@ -53,7 +53,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject OrchestrationEndEventHandler orchestrationEndEventHandler;
   @Inject PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject NodeExecutionUpdateEventHandler nodeExecutionUpdateEventHandler;
-  @Inject StatusUpdateEventHelper statusUpdateEventHelper;
+  @Inject GraphStatusUpdateHelper graphStatusUpdateHelper;
 
   @Override
   public OrchestrationGraph getCachedOrchestrationGraph(String planExecutionId) {
@@ -170,7 +170,7 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
         switch (eventType) {
           case NODE_EXECUTION_STATUS_UPDATE:
             orchestrationGraph =
-                statusUpdateEventHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
+                graphStatusUpdateHelper.handleEvent(orchestrationEventLog.getEvent(), orchestrationGraph);
             break;
           case ORCHESTRATION_START:
             orchestrationGraph = orchestrationStartEventHandler.handleEventFromLog(orchestrationEventLog.getEvent());

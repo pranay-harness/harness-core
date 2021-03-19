@@ -14,5 +14,5 @@ import org.springframework.data.repository.CrudRepository;
 @HarnessRepo
 public interface BarrierNodeRepository extends CrudRepository<BarrierExecutionInstance, String> {
   List<BarrierExecutionInstance> findByIdentifierAndPlanExecutionId(String identifier, String planExecutionId);
-  Optional<BarrierExecutionInstance> findByPlanNodeId(String planNodeId);
+  Optional<BarrierExecutionInstance> findByPlanNodeIdAndPlanExecutionId(String planNodeId, String planExecutionId);
 }

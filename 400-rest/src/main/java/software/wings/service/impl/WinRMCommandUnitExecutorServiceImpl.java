@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -12,6 +13,7 @@ import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -39,6 +41,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import java.net.SocketException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -50,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   @Inject private DelegateLogService logService;
   @Inject private TimeLimiter timeLimiter;
@@ -178,6 +182,21 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
                 .executionResult(commandExecutionStatus)
                 .build());
         throw new ShellExecutionException("Script Execution Failed", e);
+      }
+      ex = ExceptionUtils.cause(SocketException.class, e);
+      if (ex != null) {
+        String errorMessage = ExceptionUtils.getMessage(ex);
+        logService.save(context.getAccountId(),
+            aLog()
+                .appId(context.getAppId())
+                .activityId(activityId)
+                .hostName(publicDns)
+                .commandUnitName(commandUnit.getName())
+                .logLevel(ERROR)
+                .logLine(errorMessage)
+                .executionResult(commandExecutionStatus)
+                .build());
+        throw new ShellExecutionException("Unable to connect to remote host", e);
       }
       logService.save(context.getAccountId(),
           aLog()

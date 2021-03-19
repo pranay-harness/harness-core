@@ -1,11 +1,13 @@
 package io.harness.migrations;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
@@ -32,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class HelmConnectorPathMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 

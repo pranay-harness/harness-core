@@ -180,7 +180,7 @@ public class EngineExpressionEvaluator {
 
   public Object evaluateExpression(String expression, Map<String, Object> ctx) {
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
-    if (EmptyPredicate.isEmpty(expression)) {
+    if (expression == null || EmptyPredicate.isEmpty(expression.trim())) {
       return null;
     }
     return evaluateExpressionInternal(expression, prepareContext(ctx), MAX_DEPTH);
@@ -279,7 +279,7 @@ public class EngineExpressionEvaluator {
     }
 
     // If object is another expression, evaluate it recursively.
-    Object object = evaluatePrefixCombinations(expressionBlock, ctx);
+    Object object = evaluatePrefixCombinations(expressionBlock, ctx, depth);
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
@@ -325,7 +325,7 @@ public class EngineExpressionEvaluator {
     }
 
     // If object is another expression, evaluate it recursively.
-    Object object = evaluatePrefixCombinations(expressionBlock, ctx);
+    Object object = evaluatePrefixCombinations(expressionBlock, ctx, depth);
     if (object instanceof String && hasVariables((String) object)) {
       if (createExpression(expressionBlock).equals(object)) {
         // If returned expression is exactly the same, throw exception.
@@ -340,13 +340,18 @@ public class EngineExpressionEvaluator {
     return object;
   }
 
-  private Object evaluatePrefixCombinations(@NotNull String expressionBlock, @NotNull EngineJexlContext ctx) {
+  private Object evaluatePrefixCombinations(
+      @NotNull String expressionBlock, @NotNull EngineJexlContext ctx, int depth) {
     // Apply all the prefixes and return first one that evaluates successfully.
     List<String> finalExpressions = preProcessExpression(expressionBlock);
     Object object = null;
     for (String finalExpression : finalExpressions) {
       try {
-        object = evaluateInternal(finalExpression, ctx);
+        if (hasVariables(finalExpression)) {
+          object = evaluateExpressionInternal(finalExpression, ctx, depth - 1);
+        } else {
+          object = evaluateInternal(finalExpression, ctx);
+        }
       } catch (JexlException ex) {
         if (ex.getCause() instanceof FunctorException) {
           throw(FunctorException) ex.getCause();
@@ -375,6 +380,9 @@ public class EngineExpressionEvaluator {
    */
   private List<String> preProcessExpression(@NotNull String expression) {
     String normalizedExpression = applyStaticAliases(expression);
+    if (hasVariables(normalizedExpression)) {
+      return Collections.singletonList(normalizedExpression);
+    }
     return fetchPrefixes()
         .stream()
         .map(prefix -> EmptyPredicate.isEmpty(prefix) ? normalizedExpression : prefix + "." + normalizedExpression)

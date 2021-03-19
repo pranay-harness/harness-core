@@ -23,6 +23,6 @@ public class CfClientConfiguration {
     }
     log.info("Using CF API key {}", cfConfig.getApiKey());
     String apiKey = cfConfig.getApiKey();
-    return new CfClient(apiKey, Config.builder().baseUrl(cfConfig.getBaseUrl()).build());
+    return new CfClient(apiKey, Config.builder().configUrl(cfConfig.getBaseUrl()).build());
   }
 }

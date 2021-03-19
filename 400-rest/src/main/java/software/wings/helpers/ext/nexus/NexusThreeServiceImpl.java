@@ -3,7 +3,6 @@ package software.wings.helpers.ext.nexus;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.threading.Morpheus.quietSleep;
 
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -85,6 +84,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @Singleton
 @Slf4j
 public class NexusThreeServiceImpl {
+  private static final int MAX_PAGES = 10;
+
   @Inject EncryptionService encryptionService;
   @Inject private ExecutorService executorService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
@@ -121,8 +122,7 @@ public class NexusThreeServiceImpl {
         log.info("Retrieved repositories are {}", repositories.values());
         return repositories;
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-            .addParam("message", "Failed to fetch the repositories");
+        throw new InvalidArtifactServerException("Failed to fetch the repositories", WingsException.USER);
       }
     }
     log.info("No repositories found returning empty map");
@@ -171,8 +171,7 @@ public class NexusThreeServiceImpl {
             hasMoreResults = true;
           }
         } else {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-              .addParam("message", "Failed to fetch the package names");
+          throw new InvalidArtifactServerException("Failed to fetch the package names", WingsException.USER);
         }
       }
     }
@@ -367,8 +366,7 @@ public class NexusThreeServiceImpl {
             hasMoreResults = true;
           }
         } else {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-              .addParam("message", "Failed to fetch the groupIds");
+          throw new InvalidArtifactServerException("Failed to fetch the groupIds", WingsException.USER);
         }
       }
     }
@@ -397,8 +395,7 @@ public class NexusThreeServiceImpl {
       }
     } else {
       log.warn("Failed to fetch the docker images as request is not success");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-          .addParam("message", "Failed to fetch the docker images");
+      throw new InvalidArtifactServerException("Failed to fetch the docker images", WingsException.USER);
     }
     log.info("No images found for repository {}", repository);
     return images;
@@ -455,8 +452,8 @@ public class NexusThreeServiceImpl {
           }
         }
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-            .addParam("message", "Failed to fetch the versions for package [" + packageName + "]");
+        throw new InvalidArtifactServerException(
+            "Failed to fetch the versions for package [" + packageName + "]", WingsException.USER);
       }
     }
     log.info("Versions come from nexus server {}", versions);
@@ -550,8 +547,8 @@ public class NexusThreeServiceImpl {
         return buildDetails.stream().sorted(new BuildDetailsComparatorAscending()).collect(toList());
       }
     } else {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-          .addParam("message", "Failed to fetch the docker tags of image [" + imageName + "]");
+      throw new InvalidArtifactServerException(
+          "Failed to fetch the docker tags of image [" + imageName + "]", WingsException.USER);
     }
     log.info("No tags found for image name {}", imageName);
     return buildDetails;
@@ -602,12 +599,12 @@ public class NexusThreeServiceImpl {
               });
             }
           } else {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-                .addParam("message", "Unable to find package [" + packageName + "] version [" + version + "]");
+            throw new InvalidArtifactServerException(
+                "Unable to find package [" + packageName + "] version [" + version + "]", WingsException.USER);
           }
         } else {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-              .addParam("message", "Failed to download package [" + packageName + "] version [" + version + "]");
+          throw new InvalidArtifactServerException(
+              "Failed to download package [" + packageName + "] version [" + version + "]", WingsException.USER);
         }
       } else if (repositoryFormat.equals(RepositoryFormat.maven.name())) {
         final String version = artifactMetadata.get(ArtifactMetadataKeys.buildNo);
@@ -638,16 +635,14 @@ public class NexusThreeServiceImpl {
               });
             }
           } else {
-            throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-                .addParam("message",
-                    "Unable to find artifact for groupId [" + groupId + "] artifactId [" + artifactName + "] version ["
-                        + version + "]");
+            throw new InvalidArtifactServerException("Unable to find artifact for groupId [" + groupId
+                    + "] artifactId [" + artifactName + "] version [" + version + "]",
+                WingsException.USER);
           }
         } else {
-          throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-              .addParam("message",
-                  "Failed to download artifact for groupId [" + groupId + "] artifactId [" + artifactName + "]version ["
-                      + version + "]");
+          throw new InvalidArtifactServerException("Failed to download artifact for groupId [" + groupId
+                  + "] artifactId [" + artifactName + "]version [" + version + "]",
+              WingsException.USER);
         }
       }
     }
@@ -741,8 +736,7 @@ public class NexusThreeServiceImpl {
           }
         }
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-            .addParam("message", "Failed to fetch the groupIds");
+        throw new InvalidArtifactServerException("Failed to fetch the groupIds", WingsException.USER);
       }
     }
     log.info("Retrieving Artifact Names success");
@@ -760,7 +754,9 @@ public class NexusThreeServiceImpl {
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
     String continuationToken = null;
-    while (hasMoreResults) {
+    int page = 0;
+    while (hasMoreResults && page <= MAX_PAGES) {
+      page++;
       hasMoreResults = false;
       if (nexusConfig.hasCredentials()) {
         response = nexusThreeRestClient
@@ -776,7 +772,7 @@ public class NexusThreeServiceImpl {
           if (isNotEmpty(response.body().getItems())) {
             for (Nexus3ComponentResponse.Component component : response.body().getItems()) {
               String version = component.getVersion();
-              versions.add(version); // todo: add limit if results are returned in descending order of lastUpdatedTs
+              versions.add(version);
               // get artifact urls for each version
               Response<Nexus3AssetResponse> versionResponse = getNexus3MavenAssets(
                   nexusConfig, version, groupId, artifactName, repoId, extension, classifier, nexusThreeRestClient);
@@ -795,9 +791,9 @@ public class NexusThreeServiceImpl {
           }
         }
       } else {
-        throw new WingsException(INVALID_ARTIFACT_SERVER, WingsException.USER)
-            .addParam("message",
-                "Failed to fetch the versions for groupId [" + groupId + "] and artifactId [" + artifactName + "]");
+        throw new InvalidArtifactServerException(
+            "Failed to fetch the versions for groupId [" + groupId + "] and artifactId [" + artifactName + "]",
+            WingsException.USER);
       }
     }
     return nexusHelper.constructBuildDetails(repoId, groupId, artifactName, versions, versionToArtifactUrls,
@@ -807,23 +803,20 @@ public class NexusThreeServiceImpl {
   private List<ArtifactFileMetadata> getDownloadUrlsForMaven(
       Response<Nexus3AssetResponse> response, String repoId, boolean supportForNexusGroupReposEnabled) {
     List<ArtifactFileMetadata> artifactFileMetadata = new ArrayList<>();
-    if (isSuccessful(response)) {
-      if (response.body() != null && isNotEmpty(response.body().getItems())) {
-        for (Asset item : response.body().getItems()) {
-          String url = item.getDownloadUrl();
-          String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
-          if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5")
-              || artifactFileName.endsWith("sha1")) {
-            continue;
-          }
-          // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
-          // Replacing the repository name in url with group repo name if the repotype is group
-          // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
-          if (supportForNexusGroupReposEnabled && !item.getRepository().equals(repoId)) {
-            url = url.replace(item.getRepository(), repoId);
-          }
-          artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
+    if (isSuccessful(response) && response.body() != null && isNotEmpty(response.body().getItems())) {
+      for (Asset item : response.body().getItems()) {
+        String url = item.getDownloadUrl();
+        String artifactFileName = url.substring(url.lastIndexOf('/') + 1);
+        if (artifactFileName.endsWith("pom") || artifactFileName.endsWith("md5") || artifactFileName.endsWith("sha1")) {
+          continue;
         }
+        // FeatureFlag SUPPORT_NEXUS_GROUP_REPOS
+        // Replacing the repository name in url with group repo name if the repotype is group
+        // This ok because artifacts in repos that are member of group repo can be accessed via group repo.
+        if (supportForNexusGroupReposEnabled && !item.getRepository().equals(repoId)) {
+          url = url.replace(item.getRepository(), repoId);
+        }
+        artifactFileMetadata.add(ArtifactFileMetadata.builder().fileName(artifactFileName).url(url).build());
       }
     }
     return artifactFileMetadata;
@@ -836,7 +829,9 @@ public class NexusThreeServiceImpl {
     Response<Nexus3ComponentResponse> response;
     boolean hasMoreResults = true;
     String continuationToken = null;
-    while (hasMoreResults) {
+    int page = 0;
+    while (hasMoreResults && page <= MAX_PAGES) {
+      page++;
       hasMoreResults = false;
       if (nexusConfig.hasCredentials()) {
         response = nexusThreeRestClient
@@ -850,16 +845,14 @@ public class NexusThreeServiceImpl {
                            repoId, groupId, artifactName, extension, classifier, continuationToken)
                        .execute();
       }
-      if (isSuccessful(response)) {
-        if (response.body() != null) {
-          if (isEmpty(response.body().getItems())) {
-            throw new ArtifactServerException(
-                "No versions found matching the provided extension/ classifier", null, WingsException.USER);
-          }
-          if (response.body().getContinuationToken() != null) {
-            continuationToken = response.body().getContinuationToken();
-            hasMoreResults = true;
-          }
+      if (isSuccessful(response) && response.body() != null) {
+        if (isEmpty(response.body().getItems())) {
+          throw new ArtifactServerException(
+              "No versions found matching the provided extension/ classifier", null, WingsException.USER);
+        }
+        if (response.body().getContinuationToken() != null) {
+          continuationToken = response.body().getContinuationToken();
+          hasMoreResults = true;
         }
       }
     }

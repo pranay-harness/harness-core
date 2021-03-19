@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -23,6 +26,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class HelmCommandExecutionResponse implements DelegateTaskNotifyResponseData {
   private DelegateMetaInfo delegateMetaInfo;
   private HelmCommandResponse helmCommandResponse;
