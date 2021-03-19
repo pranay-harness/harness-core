@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(CDP)
 public enum CloudFormationSourceType {
   TEMPLATE_BODY("Template Body"),
   TEMPLATE_URL("Amazon S3"),
