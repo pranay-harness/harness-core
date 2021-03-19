@@ -1,9 +1,11 @@
 package software.wings.delegatetasks.validation.terraform;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.provision.TerraformConstants.VAR_FILE_FORMAT;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.provision.TfVarScriptRepositorySource;
@@ -24,6 +26,7 @@ import org.eclipse.jgit.api.errors.JGitInternalException;
 @Singleton
 @UtilityClass
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class TerraformTaskUtils {
   public static String getGitExceptionMessageIfExists(Throwable t) {
     if (t instanceof JGitInternalException) {

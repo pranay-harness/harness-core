@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.terraform.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.BOJANA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,6 +10,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -24,6 +26,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class TerraformConfigInspectClientImplTest extends WingsBaseTest {
   private static final String GIT_REPO_DIRECTORY = "repository/terraformTest";
 

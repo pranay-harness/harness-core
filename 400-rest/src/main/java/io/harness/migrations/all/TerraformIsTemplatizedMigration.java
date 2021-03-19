@@ -1,8 +1,10 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.migrations.Migration;
@@ -23,6 +25,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class TerraformIsTemplatizedMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
