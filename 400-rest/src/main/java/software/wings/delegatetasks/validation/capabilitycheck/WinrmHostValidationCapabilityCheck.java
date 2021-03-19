@@ -1,8 +1,11 @@
 package software.wings.delegatetasks.validation.capabilitycheck;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse.CapabilityResponseBuilder;
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class WinrmHostValidationCapabilityCheck implements CapabilityCheck {
   @Inject private EncryptionService encryptionService;
 

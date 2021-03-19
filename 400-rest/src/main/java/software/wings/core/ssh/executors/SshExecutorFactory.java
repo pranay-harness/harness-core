@@ -1,6 +1,9 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.shell.BaseScriptExecutor;
 import io.harness.shell.ScriptSshExecutor;
@@ -18,6 +21,7 @@ import com.google.inject.Singleton;
  */
 @Singleton
 @TargetModule(Module._960_API_SERVICES)
+@OwnedBy(CDP)
 public class SshExecutorFactory {
   @Inject private DelegateFileManager fileService;
   @Inject private DelegateLogService logService;
