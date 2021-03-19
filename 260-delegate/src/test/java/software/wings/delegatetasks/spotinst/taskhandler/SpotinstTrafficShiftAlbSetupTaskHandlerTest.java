@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static java.util.Collections.singletonList;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
@@ -36,6 +38,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbSetupTaskHandlerTest extends WingsBaseTest {
   private final String INIT_JSON = "{\n"
       + "  \"group\": {\n"

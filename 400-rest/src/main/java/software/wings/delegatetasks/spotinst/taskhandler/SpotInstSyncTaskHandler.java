@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
 import static java.lang.String.valueOf;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.spotinst.request.SpotInstGetElastigroupJsonParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class SpotInstSyncTaskHandler extends SpotInstTaskHandler {
   @Override
   protected SpotInstTaskExecutionResponse executeTaskInternal(SpotInstTaskParameters spotInstTaskParameters,

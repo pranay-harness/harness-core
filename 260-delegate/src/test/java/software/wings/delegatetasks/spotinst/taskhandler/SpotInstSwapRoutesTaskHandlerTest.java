@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static org.mockito.Matchers.any;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
@@ -44,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class SpotInstSwapRoutesTaskHandlerTest extends WingsBaseTest {
   @Mock private DelegateLogService mockDelegateLogService;
   @Mock private SpotInstHelperServiceDelegate mockSpotInstHelperServiceDelegate;

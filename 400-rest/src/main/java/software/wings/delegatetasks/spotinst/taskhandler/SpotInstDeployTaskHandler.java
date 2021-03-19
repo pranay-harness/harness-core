@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.spotinst.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.INFO;
@@ -13,6 +14,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @NoArgsConstructor
 @Slf4j
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class SpotInstDeployTaskHandler extends SpotInstTaskHandler {
   @VisibleForTesting
   void scaleElastigroup(ElastiGroup elastiGroup, String spotInstToken, String spotInstAccountId, int steadyStateTimeOut,
