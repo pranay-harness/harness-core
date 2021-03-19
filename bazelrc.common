@@ -31,3 +31,7 @@ build --test_env=TEST_OWNERS_ROOT_DIR
 build --test_env=TEST_MONGO_URI
 build --test_output=errors
 build --test_env=LC_ALL="en_US.UTF-8"
+
+# Test Intelligence flag
+test --define=HARNESS_ARGS=
+build --define=HARNESS_ARGS=
