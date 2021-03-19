@@ -8,4 +8,5 @@ import java.util.List;
 public interface PMSBarrierService {
   List<BarrierSetupInfo> getBarrierSetupInfoList(String yaml);
   List<BarrierExecutionInfo> getBarrierExecutionInfoList(String stageSetupId, String planExecutionId);
+  BarrierExecutionInfo getBarrierExecutionInfo(String barrierSetupId, String planExecutionId);
 }
