@@ -38,6 +38,7 @@ public class DelegateServiceGrpcAgentClient {
   public boolean sendTaskProgressUpdate(
       AccountId accountId, TaskId taskId, DelegateCallbackToken delegateCallbackToken, byte[] responseData) {
     try {
+      log.info("Sending Task Progress update to from delegate agent");
       SendTaskProgressResponse response =
           delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
               .sendTaskProgress(

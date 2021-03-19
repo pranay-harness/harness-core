@@ -10,7 +10,9 @@ import io.harness.logstreaming.LogLine;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class NGLogCallback implements LogCallback {
   private ILogStreamingTaskClient iLogStreamingTaskClient;
   private String commandUnitName;
@@ -70,7 +72,10 @@ public class NGLogCallback implements LogCallback {
 
     ITaskProgressClient taskProgressClient = iLogStreamingTaskClient.obtainTaskProgressClient();
     if (taskProgressClient != null) {
+      log.info("Sending Task progress update");
       taskProgressClient.sendTaskProgressUpdate(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
+    } else {
+      log.warn("TaskProgressClient is null");
     }
   }
 }

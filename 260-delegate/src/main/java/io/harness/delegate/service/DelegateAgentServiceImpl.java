@@ -1968,6 +1968,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .activityId(activityId);
 
     if (isNotBlank(delegateTaskPackage.getDelegateCallbackToken()) && delegateServiceGrpcAgentClient != null) {
+      log.info("Adding task progress Client to delegateServiceGrpcAgentClient");
       taskClientBuilder.taskProgressClient(TaskProgressClient.builder()
                                                .accountId(delegateTaskPackage.getAccountId())
                                                .taskId(delegateTaskPackage.getDelegateTaskId())
@@ -1975,6 +1976,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                                .delegateServiceGrpcAgentClient(delegateServiceGrpcAgentClient)
                                                .kryoSerializer(kryoSerializer)
                                                .build());
+    } else {
+      log.info("Task Progress client addition skipped delegateServiceGrpcAgentClient null: {}",
+          delegateServiceGrpcAgentClient == null);
     }
 
     return taskClientBuilder.build();
