@@ -7,6 +7,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.SettingAttributeKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
@@ -66,7 +67,7 @@ public class CloudProviderQueryHelper {
           throw new WingsException("Only one value needs to be inputted for operator EQUALS");
         }
         query.disableValidation();
-        query.filter(SettingAttribute.SettingAttributeKeys.isCEEnabled, booleanFilterValues[0]);
+        query.filter(SettingAttributeKeys.isCEEnabled, booleanFilterValues[0]);
       }
 
       if (filter.getCreatedAt() != null) {
