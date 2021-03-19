@@ -1,4 +1,4 @@
-package io.harness.notification.remote;
+package io.harness.usergroups;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 

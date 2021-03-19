@@ -1,4 +1,4 @@
-package io.harness.ng.core.dto;
+package io.harness.ng.core.notification;
 
 import io.harness.notification.NotificationChannelType;
 
