@@ -1,5 +1,6 @@
 package io.harness.migrations.all;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -7,6 +8,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(Module._390_DB_MIGRATION)
+@OwnedBy(CDP)
 public class HelmReleaseNameSuffixMigration implements Migration {
   // This migration appends "harness and ${infra.helm.shortId} to the release name prefix".
   // After this migration release prefix will technically become release name.

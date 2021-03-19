@@ -1,6 +1,9 @@
 package software.wings.graphql.datafetcher.connector.types;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
@@ -27,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
 @TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDP)
 public class HelmConnector extends Connector {
   private SecretManager secretManager;
   private ConnectorsController connectorsController;
