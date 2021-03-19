@@ -6,6 +6,7 @@ import lombok.Value;
 @Value
 @Builder
 public class Repository {
+  private String id;
   private String name;
   private String namespace;
   private String link;

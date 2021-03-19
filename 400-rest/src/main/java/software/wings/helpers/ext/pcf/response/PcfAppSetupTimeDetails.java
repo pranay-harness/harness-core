@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.pcf.response;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.List;
@@ -10,6 +13,7 @@ import lombok.Data;
 @Data
 @Builder
 @TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class PcfAppSetupTimeDetails {
   private String applicationGuid;
   private String applicationName;

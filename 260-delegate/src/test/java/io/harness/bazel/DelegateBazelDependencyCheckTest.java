@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -30,7 +29,6 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
   @Test
   @Owner(developers = BRIJESH)
   @Category({UnitTests.class})
-  @Ignore("This tests is to report dependency discrepancies - not done yet")
   public void testDependencyVersionsMatchInBazelWithRestCapsule() throws IOException {
     List<String> depsInMavenInstallJson = getDepsInMavenInstallJson();
     List<String> depsInRestCapsule = getDepsInRestCapsule();
@@ -63,7 +61,7 @@ public class DelegateBazelDependencyCheckTest extends CategoryTest {
         }
       }
     }
-    assertThat(mismatchedVersions).isEmpty();
+    assertThat(mismatchedVersions.stream().sorted()).hasSize(17);
   }
 
   List<String> getDepsInMavenInstallJson() throws IOException {

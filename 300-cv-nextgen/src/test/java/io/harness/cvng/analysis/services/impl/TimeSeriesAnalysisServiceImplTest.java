@@ -721,7 +721,6 @@ public class TimeSeriesAnalysisServiceImplTest extends CvNextGenTestBase {
         VerificationJobInstance.builder()
             .accountId(accountId)
             .executionStatus(VerificationJobInstance.ExecutionStatus.QUEUED)
-            .verificationJobIdentifier(verificationJob.getIdentifier())
             .deploymentStartTime(Instant.ofEpochMilli(deploymentStartTimeMs))
             .resolvedJob(verificationJob)
             .startTime(Instant.ofEpochMilli(deploymentStartTimeMs + Duration.ofMinutes(2).toMillis()))

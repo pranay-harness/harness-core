@@ -1,8 +1,10 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
@@ -19,6 +21,7 @@ import com.google.inject.Singleton;
 
 @Singleton
 @TargetModule(Module._380_CG_GRAPHQL)
+@OwnedBy(CDP)
 public class PcfDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 

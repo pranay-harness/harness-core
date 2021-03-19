@@ -1,5 +1,9 @@
 package software.wings.helpers.ext.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
@@ -7,6 +11,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class PcfRequestConfig {
   private String orgName;
   private String spaceName;

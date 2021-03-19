@@ -1,4 +1,4 @@
-package software.wings.beans.ce;
+package io.harness.ccm.commons.entities;
 
 import io.harness.annotation.StoreIn;
 import io.harness.persistence.AccountAccess;

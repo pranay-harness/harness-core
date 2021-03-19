@@ -11,6 +11,7 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 
+import java.util.List;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import retrofit2.Call;
@@ -36,6 +37,14 @@ public interface EntitySetupUsageClient {
       @Query(NGResourceFilterConstants.SIZE_KEY) int size,
       @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
+      @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm);
+
+  @GET(INTERNAL_ENTITY_REFERENCE_API + "/listAllReferredUsages")
+  Call<ResponseDTO<List<EntitySetupUsageDTO>>> listAllReferredUsages(
+      @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size,
+      @NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
+      @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @Query(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm);
 
   @Deprecated

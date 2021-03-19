@@ -1,9 +1,12 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.rest.RestResponse;
 
 import software.wings.security.annotations.AuthRule;
@@ -25,6 +28,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(APPLICATION)
+@OwnedBy(CDP)
 public class PCFResource {
   @Inject InfrastructureMappingService infrastructureMappingService;
 

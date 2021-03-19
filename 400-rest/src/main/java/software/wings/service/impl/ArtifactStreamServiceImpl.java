@@ -143,6 +143,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Slf4j
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
+  public static final String ARTIFACT_STREAM_DEBUG_LOG = "ARTIFACT_STREAM_DEBUG_LOG ";
 
   // Restrict to docker only artifact streams.
   private static final List<String> dockerOnlyArtifactStreams = Collections.unmodifiableList(
@@ -494,6 +495,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     String id = PersistenceValidator.duplicateCheck(
         () -> wingsPersistence.save(artifactStream), "name", artifactStream.getName());
+    log.info(ARTIFACT_STREAM_DEBUG_LOG + "Artifact Stream {} created with id: {}", artifactStream.getName(), id);
+
     yamlPushService.pushYamlChangeSet(
         accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
 
@@ -503,6 +506,9 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     ArtifactStream newArtifactStream = get(id);
+    if (newArtifactStream == null) {
+      log.info(ARTIFACT_STREAM_DEBUG_LOG + "Artifact Stream Created with id {} is null", id);
+    }
     createPerpetualTask(newArtifactStream);
     return newArtifactStream;
   }
@@ -1031,6 +1037,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public boolean delete(String artifactStreamId, boolean syncFromGit) {
+    log.info(ARTIFACT_STREAM_DEBUG_LOG + "Delete artifact stream {} from setting resource", artifactStreamId);
     ArtifactStream artifactStream = get(artifactStreamId);
     if (artifactStream == null) {
       return true;
@@ -1067,6 +1074,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private boolean delete(String appId, ArtifactStream artifactStream, boolean forceDelete, boolean syncFromGit) {
+    log.info(ARTIFACT_STREAM_DEBUG_LOG + "Deleting artifact stream {}", artifactStream.getUuid());
     String accountId = null;
     if (!GLOBAL_APP_ID.equals(appId)) {
       accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
@@ -1100,6 +1108,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   }
 
   private boolean pruneArtifactStream(String appId, String artifactStreamId, boolean gitSync) {
+    log.info(ARTIFACT_STREAM_DEBUG_LOG + "Deleting Artifact Stream with id: {}", artifactStreamId);
     alertService.deleteByArtifactStream(appId, artifactStreamId);
     pruneQueue.send(new PruneEvent(ArtifactStream.class, appId, artifactStreamId, gitSync));
     boolean retVal = wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
@@ -1467,6 +1476,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     try {
       artifactStreamServiceBindingService.createOld(appId, serviceId, savedArtifactStream.getUuid());
     } catch (Exception e) {
+      log.error(ARTIFACT_STREAM_DEBUG_LOG + "Exception occurred: ", e);
       delete(appId, savedArtifactStream, false, false);
       throw e;
     }
@@ -1482,6 +1492,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Override
   @ValidationGroups(Create.class)
   public boolean deleteWithBinding(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit) {
+    log.info(ARTIFACT_STREAM_DEBUG_LOG + "Delete artifact stream {} with binding", artifactStreamId);
     if (GLOBAL_APP_ID.equals(appId)) {
       return delete(artifactStreamId, syncFromGit);
     }

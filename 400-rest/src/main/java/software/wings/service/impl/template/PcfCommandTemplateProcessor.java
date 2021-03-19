@@ -1,8 +1,11 @@
 package software.wings.service.impl.template;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Arrays.asList;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Singleton
+@OwnedBy(CDP)
 public class PcfCommandTemplateProcessor extends StateTemplateProcessor {
   private static final String SCRIPT_STRING = "scriptString";
   private static final String TIMEOUT_MINS = "timeoutIntervalInMinutes";
