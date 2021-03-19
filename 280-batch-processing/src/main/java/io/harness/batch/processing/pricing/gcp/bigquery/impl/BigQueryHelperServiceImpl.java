@@ -282,7 +282,7 @@ public class BigQueryHelperServiceImpl implements BigQueryHelperService {
               vmInstanceBillingData.toBuilder().computeCost(memoryCost + cost).cpuCost(cost).build();
         }
         if (vmInstanceServiceBillingData.getUsageType().contains(eksMemoryInstanceType)) {
-          double cpuCost = vmInstanceBillingData.getMemoryCost();
+          double cpuCost = vmInstanceBillingData.getCpuCost();
           vmInstanceBillingData =
               vmInstanceBillingData.toBuilder().computeCost(cpuCost + cost).memoryCost(cost).build();
         }
