@@ -1969,7 +1969,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("KUBERNETES_SETUP")
-  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
+  public static class Yaml extends ContainerSetupCommandUnitYaml {
     public Yaml() {
       super(CommandUnitType.KUBERNETES_SETUP.name());
     }

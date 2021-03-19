@@ -13,10 +13,6 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Map;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -46,31 +42,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
   public void applyProvisionerVariables(
       Map<String, Object> map, NodeFilteringType nodeFilteringType, boolean featureFlagEnabled) {
     throw new UnsupportedOperationException();
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private String region;
-    private String applicationName;
-    private String deploymentGroup;
-    private String deploymentConfig;
-    private String hostNameConvention;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String region,
-        String applicationName, String deploymentGroup, String deploymentConfig, String hostNameConvention,
-        Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.region = region;
-      this.applicationName = applicationName;
-      this.deploymentGroup = deploymentGroup;
-      this.deploymentConfig = deploymentConfig;
-      this.hostNameConvention = hostNameConvention;
-    }
   }
 
   @SchemaIgnore

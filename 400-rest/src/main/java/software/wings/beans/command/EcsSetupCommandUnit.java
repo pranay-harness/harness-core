@@ -134,7 +134,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("ECS_SETUP")
-  public static class Yaml extends ContainerSetupCommandUnit.Yaml {
+  public static class Yaml extends ContainerSetupCommandUnitYaml {
     public Yaml() {
       super(CommandUnitType.ECS_SETUP.name());
     }

@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.governance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.CustomAppFilter;
+import io.harness.governance.CustomAppFilterYaml;
 import io.harness.governance.CustomEnvFilter;
 import io.harness.governance.EnvironmentFilter;
 import io.harness.governance.EnvironmentFilterYaml;
@@ -20,13 +21,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<CustomAppFilter.Yaml, CustomAppFilter> {
+public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<CustomAppFilterYaml, CustomAppFilter> {
   @Inject private AppService appService;
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
   @Override
-  public CustomAppFilter.Yaml toYaml(CustomAppFilter bean, String accountId) {
+  public CustomAppFilterYaml toYaml(CustomAppFilter bean, String accountId) {
     List<String> appNames = appService.getAppsByIds(new HashSet<String>(bean.getApps()))
                                 .stream()
                                 .map(Application::getName)
@@ -36,7 +37,7 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
         yamlHandlerFactory.getYamlHandler(YamlType.ENV_FILTER, bean.getEnvSelection().getFilterType().name());
 
     // envSelection is made a List to make Yaml cleanup work YamlUtils.cleanUpDoubleExclamationLines
-    return CustomAppFilter.Yaml.builder()
+    return CustomAppFilterYaml.builder()
         .apps(appNames)
         .envSelection(Arrays.asList(environmentFilterYamlHandler.toYaml(bean.getEnvSelection(), accountId)))
         .filterType(bean.getFilterType())
@@ -45,7 +46,7 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
   @Override
   public CustomAppFilter upsertFromYaml(
-      ChangeContext<CustomAppFilter.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<CustomAppFilterYaml> changeContext, List<ChangeContext> changeSetContext) {
     CustomAppFilter customAppFilter = CustomAppFilter.builder().build();
     toBean(customAppFilter, changeContext, changeSetContext);
     return customAppFilter;
@@ -53,14 +54,14 @@ public class CustomAppFilterYamlHandler extends ApplicationFilterYamlHandler<Cus
 
   @Override
   public Class getYamlClass() {
-    return CustomAppFilter.Yaml.class;
+    return CustomAppFilterYaml.class;
   }
 
   private void toBean(
-      CustomAppFilter bean, ChangeContext<CustomAppFilter.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      CustomAppFilter bean, ChangeContext<CustomAppFilterYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
 
-    CustomAppFilter.Yaml yaml = changeContext.getYaml();
+    CustomAppFilterYaml yaml = changeContext.getYaml();
 
     EnvironmentFilterYamlHandler environmentFilterYamlHandler;
     List<String> appIds = getAppIds(accountId, yaml.getApps());

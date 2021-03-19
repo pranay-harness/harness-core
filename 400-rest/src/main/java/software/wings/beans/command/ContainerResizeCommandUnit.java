@@ -32,8 +32,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -316,18 +314,6 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
 
   protected abstract List<ContainerInfo> executeResize(
       ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback);
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml(String commandUnitType) {
-      super(commandUnitType);
-    }
-
-    public Yaml(String name, String commandUnitType, String deploymentType) {
-      super(name, commandUnitType, deploymentType);
-    }
-  }
 
   static class ContextData {
     final SettingAttribute settingAttribute;

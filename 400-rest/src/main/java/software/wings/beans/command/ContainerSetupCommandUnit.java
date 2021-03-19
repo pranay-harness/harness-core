@@ -11,8 +11,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
@@ -50,16 +48,4 @@ public abstract class ContainerSetupCommandUnit extends AbstractCommandUnit {
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       ContainerSetupParams setupParams, Map<String, String> serviceVariables,
       Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback);
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml(String commandUnitType) {
-      super(commandUnitType);
-    }
-
-    public Yaml(String name, String commandUnitType, String deploymentType) {
-      super(name, commandUnitType, deploymentType);
-    }
-  }
 }

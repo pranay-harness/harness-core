@@ -29,7 +29,6 @@ import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
@@ -176,22 +175,5 @@ public class CopyConfigCommandUnit extends SshCommandUnit {
     }
     final CopyConfigCommandUnit other = (CopyConfigCommandUnit) obj;
     return Objects.equals(this.destinationParentPath, other.destinationParentPath);
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("COPY_CONFIGS")
-  public static class Yaml extends AbstractCommandUnitYaml {
-    private String destinationParentPath;
-
-    public Yaml() {
-      super(CommandUnitType.COPY_CONFIGS.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType, String destinationParentPath) {
-      super(name, CommandUnitType.COPY_CONFIGS.name(), deploymentType);
-      this.destinationParentPath = destinationParentPath;
-    }
   }
 }

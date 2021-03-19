@@ -21,19 +21,4 @@ public class CustomAppFilter extends ApplicationFilter {
     super(blackoutWindowFilterType, envSelection);
     this.apps = apps;
   }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("CUSTOM")
-  public static final class Yaml extends ApplicationFilterYaml {
-    private List<String> apps;
-
-    @Builder
-    public Yaml(BlackoutWindowFilterType filterType, List<EnvironmentFilterYaml> envSelection, List<String> apps) {
-      super(filterType, envSelection);
-      setApps(apps);
-    }
-
-    public Yaml() {}
-  }
 }

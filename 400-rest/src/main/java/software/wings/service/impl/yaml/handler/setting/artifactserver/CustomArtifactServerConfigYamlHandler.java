@@ -6,20 +6,23 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.CustomArtifactServerConfig;
-import software.wings.beans.CustomArtifactServerConfig.Yaml;
+import software.wings.beans.CustomArtifactServerConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
 import java.util.List;
 
 @OwnedBy(CDC)
-public class CustomArtifactServerConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, CustomArtifactServerConfig> {
+public class CustomArtifactServerConfigYamlHandler
+    extends ArtifactServerYamlHandler<CustomArtifactServerConfigYaml, CustomArtifactServerConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public CustomArtifactServerConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     CustomArtifactServerConfig customArtifactServerConfig = (CustomArtifactServerConfig) settingAttribute.getValue();
 
-    Yaml yaml =
-        Yaml.builder().harnessApiVersion(getHarnessApiVersion()).type(customArtifactServerConfig.getType()).build();
+    CustomArtifactServerConfigYaml yaml = CustomArtifactServerConfigYaml.builder()
+                                              .harnessApiVersion(getHarnessApiVersion())
+                                              .type(customArtifactServerConfig.getType())
+                                              .build();
 
     toYaml(yaml, settingAttribute, appId);
 
@@ -28,12 +31,13 @@ public class CustomArtifactServerConfigYamlHandler extends ArtifactServerYamlHan
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return CustomArtifactServerConfigYaml.class;
   }
 
   @Override
-  protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  protected SettingAttribute toBean(SettingAttribute previous,
+      ChangeContext<CustomArtifactServerConfigYaml> changeContext, List<ChangeContext> changeSetContext)
+      throws HarnessException {
     String uuid = previous != null ? previous.getUuid() : null;
     String accountId = changeContext.getChange().getAccountId();
     CustomArtifactServerConfig customArtifactServerConfig =

@@ -291,7 +291,7 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("RESIZE")
-  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
+  public static class Yaml extends CommandExecutionStatusYaml {
     public Yaml() {
       super(CommandUnitType.RESIZE.name());
     }

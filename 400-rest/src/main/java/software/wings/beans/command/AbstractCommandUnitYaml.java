@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
   @JsonSubTypes.Type(value = SetupEnvCommandUnit.Yaml.class, name = "SETUP_ENV")
   , @JsonSubTypes.Type(value = ExecCommandUnit.Yaml.class, name = "EXEC"),
       @JsonSubTypes.Type(value = ScpCommandUnit.Yaml.class, name = "SCP"),
-      @JsonSubTypes.Type(value = CopyConfigCommandUnit.Yaml.class, name = "COPY_CONFIGS"),
+      @JsonSubTypes.Type(value = CopyConfigCommandUnitYaml.class, name = "COPY_CONFIGS"),
       @JsonSubTypes.Type(value = CommandRefYaml.class, name = "COMMAND"),
       @JsonSubTypes.Type(value = DockerStartCommandUnit.Yaml.class, name = "DOCKER_START"),
       @JsonSubTypes.Type(value = DockerStopCommandUnit.Yaml.class, name = "DOCKER_STOP"),

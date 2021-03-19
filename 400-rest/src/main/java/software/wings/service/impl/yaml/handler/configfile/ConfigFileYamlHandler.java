@@ -16,7 +16,7 @@ import io.harness.stream.BoundedInputStream;
 
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.ConfigFile.Yaml;
+import software.wings.beans.ConfigFileYaml;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
@@ -46,14 +46,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
-public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
+public class ConfigFileYamlHandler extends BaseYamlHandler<ConfigFileYaml, ConfigFile> {
   @Inject private EnvironmentService environmentService;
   @Inject private ConfigService configService;
   @Inject private YamlHelper yamlHelper;
   @Inject private SecretManager secretManager;
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<ConfigFileYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
@@ -67,14 +67,14 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       return;
     }
 
-    Yaml yaml = changeContext.getYaml();
+    ConfigFileYaml yaml = changeContext.getYaml();
     String targetFilePath = yaml.getTargetFilePath();
     configService.delete(
         optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), EntityType.SERVICE, targetFilePath);
   }
 
   @Override
-  public Yaml toYaml(ConfigFile bean, String appId) {
+  public ConfigFileYaml toYaml(ConfigFile bean, String appId) {
     // target environments
     Map<String, EntityVersion> envIdVersionMap = bean.getEnvIdVersionMap();
     List<String> envNameList = Lists.newArrayList();
@@ -104,7 +104,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
       fileName = Utils.normalize(bean.getRelativeFilePath());
     }
 
-    return ConfigFile.Yaml.builder()
+    return ConfigFileYaml.builder()
         .description(bean.getDescription())
         .encrypted(bean.isEncrypted())
         .targetEnvs(envNameList)
@@ -118,7 +118,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
   }
 
   @Override
-  public ConfigFile upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public ConfigFile upsertFromYaml(ChangeContext<ConfigFileYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -127,7 +127,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
     notNullCheck("Invalid Service for the yaml file:" + yamlFilePath, serviceId, USER);
     String configFileName = yamlHelper.getNameFromYamlFilePath(yamlFilePath);
 
-    Yaml yaml = changeContext.getYaml();
+    ConfigFileYaml yaml = changeContext.getYaml();
     List<String> envNameList = yaml.getTargetEnvs();
     Map<String, EntityVersion> envIdMap = new HashMap<>();
     if (isNotEmpty(envNameList)) {
@@ -212,12 +212,12 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ConfigFileYaml.class;
   }
 
   @Override
-  public ConfigFile get(String accountId, String yamlFilePath, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  public ConfigFile get(String accountId, String yamlFilePath, ChangeContext<ConfigFileYaml> changeContext) {
+    ConfigFileYaml yaml = changeContext.getYaml();
     String relativeFilePath = yaml.getTargetFilePath();
     return getConfigFile(accountId, yamlFilePath, relativeFilePath);
   }

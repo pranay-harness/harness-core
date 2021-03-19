@@ -9,14 +9,11 @@ import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Create;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.yaml.YamlType;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -199,37 +196,5 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   @Override
   public void setDecrypted(boolean decrypted) {
     //
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseEntityYaml {
-    private String targetFilePath;
-    private boolean encrypted;
-    private String fileName;
-    private String description;
-    private String checksum;
-    private String checksumType;
-    private boolean targetToAllEnv;
-    private List<String> targetEnvs = new ArrayList<>();
-
-    public Yaml(String harnessApiVersion) {
-      super(YamlType.CONFIG_FILE.name(), harnessApiVersion);
-    }
-
-    @Builder
-    public Yaml(String harnessApiVersion, String targetFilePath, boolean encrypted, String fileName, String description,
-        String checksum, String checksumType, boolean targetToAllEnv, List<String> targetEnvs) {
-      super(YamlType.CONFIG_FILE.name(), harnessApiVersion);
-      this.targetFilePath = targetFilePath;
-      this.encrypted = encrypted;
-      this.fileName = fileName;
-      this.description = description;
-      this.checksum = checksum;
-      this.checksumType = checksumType;
-      this.targetToAllEnv = targetToAllEnv;
-      this.targetEnvs = targetEnvs;
-    }
   }
 }

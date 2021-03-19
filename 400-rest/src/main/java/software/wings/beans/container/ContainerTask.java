@@ -16,9 +16,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.regex.Pattern;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -149,19 +146,4 @@ public abstract class ContainerTask extends DeploymentSpecification implements A
   }
 
   public abstract void validate();
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends DeploymentSpecification.Yaml {
-    private String advancedConfig;
-    private ContainerDefinition.Yaml containerDefinition;
-
-    protected Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
-      super(type, harnessApiVersion);
-      this.advancedConfig = advancedConfig;
-      this.containerDefinition = containerDefinition;
-    }
-  }
 }

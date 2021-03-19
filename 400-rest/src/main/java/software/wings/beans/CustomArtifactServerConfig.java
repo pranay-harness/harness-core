@@ -7,10 +7,8 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.audit.ResourceType;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.ArtifactServerYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -18,7 +16,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -45,15 +42,5 @@ public class CustomArtifactServerConfig extends SettingValue {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return null;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
-    @Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, null, null, null, usageRestrictions);
-    }
   }
 }

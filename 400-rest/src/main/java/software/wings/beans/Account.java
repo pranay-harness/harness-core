@@ -22,12 +22,10 @@ import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
 
 import software.wings.security.authentication.AuthenticationMechanism;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,10 +35,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -704,19 +699,6 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setAccountPreferences(accountPreferences);
       return account;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private List<NameValuePair.Yaml> defaults = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, List<NameValuePair.Yaml> defaults) {
-      super(type, harnessApiVersion);
-      this.defaults = defaults;
     }
   }
 

@@ -332,7 +332,7 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
   @Data
   @EqualsAndHashCode(callSuper = true)
   @JsonTypeName("RESIZE_KUBERNETES")
-  public static class Yaml extends ContainerResizeCommandUnit.Yaml {
+  public static class Yaml extends CommandExecutionStatusYaml {
     public Yaml() {
       super(CommandUnitType.RESIZE_KUBERNETES.name());
     }

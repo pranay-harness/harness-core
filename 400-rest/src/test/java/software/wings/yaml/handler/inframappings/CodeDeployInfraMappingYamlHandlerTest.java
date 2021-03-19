@@ -13,7 +13,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.CodeDeployInfrastructureMapping;
-import software.wings.beans.CodeDeployInfrastructureMapping.Yaml;
+import software.wings.beans.CodeDeployInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
@@ -57,9 +57,11 @@ public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlH
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
+    ChangeContext<CodeDeployInfrastructureMappingYaml> changeContext =
+        getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    CodeDeployInfrastructureMappingYaml yamlObject =
+        (CodeDeployInfrastructureMappingYaml) getYaml(validYamlContent, CodeDeployInfrastructureMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     CodeDeployInfrastructureMapping infrastructureMapping =
@@ -67,7 +69,7 @@ public class CodeDeployInfraMappingYamlHandlerTest extends BaseInfraMappingYamlH
     assertThat(infrastructureMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(infrastructureMapping.getName());
 
-    Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
+    CodeDeployInfrastructureMappingYaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_AWS_CODEDEPLOY.name());
 

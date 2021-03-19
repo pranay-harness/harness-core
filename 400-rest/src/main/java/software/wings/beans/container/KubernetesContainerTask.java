@@ -331,10 +331,10 @@ public class KubernetesContainerTask extends ContainerTask {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerTask.Yaml {
+  public static class Yaml extends ContainerTaskYaml {
     @Builder
     public Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinition.Yaml containerDefinition) {
+        String type, String harnessApiVersion, String advancedConfig, ContainerDefinitionYaml containerDefinition) {
       super(type, harnessApiVersion, advancedConfig, containerDefinition);
     }
   }
