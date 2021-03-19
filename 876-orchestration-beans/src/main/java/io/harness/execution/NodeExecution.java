@@ -18,6 +18,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -83,6 +84,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   @Singular private List<InterruptEffect> interruptHistories;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
+  NodeRunInfo nodeRunInfo;
 
   // Retries
   @Singular List<String> retryIds;

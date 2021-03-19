@@ -65,6 +65,8 @@ import io.harness.serializer.spring.converters.refobject.RefObjectReadConverter;
 import io.harness.serializer.spring.converters.refobject.RefObjectWriteConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeWriteConverter;
+import io.harness.serializer.spring.converters.run.NodeRunInfoReadConverter;
+import io.harness.serializer.spring.converters.run.NodeRunInfoWriteConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
@@ -157,5 +159,6 @@ public class OrchestrationRegistrars {
       TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class, AdviserResponseReadConverter.class,
       AdviserResponseWriteConverter.class, UnitProgressReadConverter.class, UnitProgressWriteConverter.class,
       InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class,
-      SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class);
+      SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
+      NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class);
 }

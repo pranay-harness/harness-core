@@ -30,6 +30,53 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ApprovalStageConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StageInfoConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "execution": {
+              "$ref": "#/definitions/ExecutionElementConfig"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ApproverInputInfo": {
+      "type": "object",
+      "properties": {
+        "defaultValue": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "Approvers": {
+      "type": "object",
+      "properties": {
+        "disallowPipelineExecutor": {
+          "type": "boolean"
+        },
+        "minimumCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "userGroups": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BarrierInfoConfig": {
       "type": "object",
       "required": [
@@ -44,6 +91,25 @@
           "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BarrierStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "barrierRef"
+          ],
+          "properties": {
+            "barrierRef": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "BranchBuildSpec": {
@@ -155,6 +221,39 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ExecutionElementConfig": {
+      "type": "object",
+      "properties": {
+        "rollbackSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionWrapperConfig": {
+      "type": "object",
+      "properties": {
+        "parallel": {
+          "$ref": "#/definitions/ParallelStepElementConfig"
+        },
+        "step": {
+          "$ref": "#/definitions/StepElementConfig"
+        },
+        "stepGroup": {
+          "$ref": "#/definitions/StepGroupElementConfig"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "FailureStrategyActionConfig": {
       "type": "object",
       "required": [
@@ -199,6 +298,39 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HarnessApprovalStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "approvalMessage",
+            "approvers",
+            "includePipelineExecutionHistory"
+          ],
+          "properties": {
+            "approvalMessage": {
+              "type": "string"
+            },
+            "approverInputs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ApproverInputInfo"
+              }
+            },
+            "approvers": {
+              "$ref": "#/definitions/Approvers"
+            },
+            "includePipelineExecutionHistory": {
+              "type": "boolean"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "IgnoreFailureActionConfig": {
@@ -299,6 +431,7 @@
     },
     "NGVariable": {
       "type": "object",
+      "discriminator": "type",
       "properties": {
         "description": {
           "type": "string"
@@ -319,9 +452,6 @@
             "Number",
             "Secret"
           ]
-        },
-        "value": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -420,6 +550,36 @@
           }
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NumberNGVariable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NGVariable"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "default": {
+              "type": "number",
+              "format": "double"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Number"
+              ]
+            },
+            "value": {
+              "type": "number",
+              "format": "double"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "OnFailureConfig": {
@@ -535,6 +695,21 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/StageElementWrapperConfig"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParallelStepElementConfig": {
+      "type": "object",
+      "required": [
+        "sections"
+      ],
+      "properties": {
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
           }
         }
       },
@@ -775,6 +950,34 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "SecretNGVariable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NGVariable"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Secret"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "StageElementConfig": {
       "type": "object",
       "required": [
@@ -797,9 +1000,6 @@
         "name": {
           "type": "string"
         },
-        "skipCondition": {
-          "type": "string"
-        },
         "spec": {
           "$ref": "#/definitions/StageInfoConfig"
         },
@@ -811,6 +1011,9 @@
           "items": {
             "$ref": "#/definitions/NGVariable"
           }
+        },
+        "when": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -829,6 +1032,7 @@
     },
     "StageInfoConfig": {
       "type": "object",
+      "discriminator": "type",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StageRollbackFailureActionConfig": {
@@ -853,6 +1057,76 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "StepElementConfig": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        "timeout": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "when": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepGroupElementConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "steps"
+      ],
+      "properties": {
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "rollbackSteps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionWrapperConfig"
+          }
+        },
+        "when": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "StepGroupFailureActionConfig": {
       "allOf": [
         {
@@ -869,6 +1143,39 @@
               "enum": [
                 "StepGroupRollback"
               ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StepSpecType": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StringNGVariable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NGVariable"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "String"
+              ]
+            },
+            "value": {
+              "type": "string"
             }
           }
         }

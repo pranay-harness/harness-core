@@ -25,7 +25,7 @@ public class NGVariablesUtils {
         String value = "${ngSecretManager.obtain(\"" + secretValue + "\", " + expressionFunctorToken + ")}";
         mapOfVariables.put(variable.getName(), value);
       } else {
-        mapOfVariables.put(variable.getName(), variable.getValue());
+        mapOfVariables.put(variable.getName(), variable.getCurrentValue());
       }
     }
     return mapOfVariables;
@@ -37,7 +37,7 @@ public class NGVariablesUtils {
       return originalVariablesMap;
     }
     overrideVariables.forEach(
-        overrideVariable -> originalVariablesMap.put(overrideVariable.getName(), overrideVariable.getValue()));
+        overrideVariable -> originalVariablesMap.put(overrideVariable.getName(), overrideVariable.getCurrentValue()));
     return originalVariablesMap;
   }
 }
