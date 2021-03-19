@@ -8,6 +8,7 @@ import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -55,6 +56,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
@@ -62,6 +64,8 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -78,6 +82,9 @@ import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.command.CommandExecutionResult;
+import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -92,6 +99,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
+import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.Builder;
@@ -101,6 +109,7 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WinRmConnectionAttributes;
@@ -120,8 +129,11 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.template.TemplateUtils;
 import software.wings.beans.template.command.SshCommandTemplate;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
+import software.wings.exception.ShellScriptException;
 import software.wings.service.impl.ActivityHelperService;
+import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -154,6 +166,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -201,7 +214,7 @@ public class CommandStateTest extends WingsBaseTest {
                                .addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build())
                                .build())
           .build();
-  private static final Service SERVICE = Service.builder().uuid(SERVICE_ID).build();
+  private static final Service SERVICE = Service.builder().uuid(SERVICE_ID).name("SERVICE_NAME").build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
   private static final Host HOST = aHost()
@@ -317,6 +330,8 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private TemplateService templateService;
   @Mock private StateExecutionService stateExecutionService;
   @Mock private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
+  @Mock private ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
 
   @Inject MembersInjector<WorkflowStandardParams> injector;
 
@@ -378,6 +393,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(context.getWorkflowId()).thenReturn(UUID.randomUUID().toString());
     ServiceTemplate serviceTemplate = aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
+    when(serviceTemplateHelper.fetchServiceTemplate(any())).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     commandState.setExecutorService(executorService);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
@@ -435,6 +451,30 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetServiceTemplateFormServiceTemplateHelperIfInstanceElementIsNull() {
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
+    commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
+    when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(null);
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("WINRM_CONNECTION_ATTRIBUTES")).thenReturn(settingAttribute);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+    commandState.execute(context);
+
+    verify(serviceTemplateHelper).fetchServiceTemplate(any());
+  }
+
+  @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testExecuteLinkedCommandWithExecuteOnDelegate() {
@@ -476,6 +516,28 @@ public class CommandStateTest extends WingsBaseTest {
     verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
         workflowExecutionService, artifactStreamService);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeWingsExceptionThrown() {
+    CommandState commandState = spy(new CommandState("start1", "START"));
+    doThrow(new WingsException("message")).when(commandState).executeInternal(context);
+
+    assertThatThrownBy(() -> commandState.execute(context)).isInstanceOf(WingsException.class).hasMessage("message");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeInvalidRequestExceptionThrown() {
+    CommandState commandState = spy(new CommandState("start1", "START"));
+    doThrow(new NullPointerException("message")).when(commandState).executeInternal(context);
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("NullPointerException: message");
   }
 
   @Test
@@ -1176,6 +1238,36 @@ public class CommandStateTest extends WingsBaseTest {
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeFailureWhenServieceIsNull() {
+    Artifact artifact =
+        anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).withArtifactStreamId(ARTIFACT_STREAM_ID).build();
+
+    setWorkflowStandardParams(artifact, null);
+
+    commandState.setTemplateUuid("123454");
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+    when(context.fetchInfraMappingId()).thenReturn(null);
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Arrays.asList(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                                            .withFileCategory(ScpFileCategory.ARTIFACTS)
+                                                                            .build()))
+                                            .build())
+                        .build());
+    ExecutionResponse executionResponse = commandState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Linked command needs artifact but service is not found");
+  }
+
   private void setWorkflowStandardParams(Artifact artifact, Command command) {
     WorkflowStandardParams workflowStandardParams =
         aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
@@ -1500,6 +1592,167 @@ public class CommandStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeWinRmCommandVerifyWinRmConfigExpressionIsResolved() {
+    TemplateExpression winRmConfigExp = TemplateExpression.builder().build();
+    List<TemplateExpression> templateExpressions = asList(TemplateExpression.builder().build());
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setTemplateExpressions(templateExpressions);
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("WINRM_CONNECTION_ATTRIBUTES")).thenReturn(settingAttribute);
+
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "connectionAttributes"))
+        .thenReturn(winRmConfigExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp))
+        .thenReturn("WINRM_CONNECTION_ATTRIBUTES");
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+    commandState.execute(context);
+
+    verify(templateExpressionProcessor).getTemplateExpression(templateExpressions, "connectionAttributes");
+    verify(templateExpressionProcessor).resolveTemplateExpression(context, winRmConfigExp);
+    assertThat(commandState.getConnectionAttributes()).isEqualTo("WINRM_CONNECTION_ATTRIBUTES");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeWinRmCommandCommandExceptionThrownWhenEmptyWinRmConfigExpressionIsResolved() {
+    TemplateExpression winRmConfigExp = TemplateExpression.builder().build();
+    List<TemplateExpression> templateExpressions = asList(TemplateExpression.builder().build());
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setTemplateExpressions(templateExpressions);
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
+    commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("WINRM_CONNECTION_ATTRIBUTES")).thenReturn(settingAttribute);
+
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "connectionAttributes"))
+        .thenReturn(winRmConfigExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, winRmConfigExp)).thenReturn("");
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("WinRM Connection Attribute not provided in Shell Script Step");
+
+    verify(templateExpressionProcessor).getTemplateExpression(templateExpressions, "connectionAttributes");
+    verify(templateExpressionProcessor).resolveTemplateExpression(context, winRmConfigExp);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeWinRmCommandGeneralExceptionThrownWhenGetSettingAttributeByNameIsNull() {
+    Application application = new Application();
+    application.setAccountId(ACCOUNT_ID);
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
+    commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
+
+    when(context.getApp()).thenReturn(application);
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("WINRM_CONNECTION_ATTRIBUTES")).thenReturn(null);
+    when(settingsService.getSettingAttributeByName(ACCOUNT_ID, "WINRM_CONNECTION_ATTRIBUTES")).thenReturn(null);
+
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Winrm Connection Attribute provided in Shell Script Step not found");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeWinRmCommandSetConnectionAttributesFromKeySettingAttributeUuid() {
+    Application application = new Application();
+    application.setAccountId(ACCOUNT_ID);
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid("UUID");
+    settingAttribute.setValue(WinRmConnectionAttributes.builder().build());
+
+    when(context.getApp()).thenReturn(application);
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("WINRM_CONNECTION_ATTRIBUTES")).thenReturn(null);
+    when(settingsService.get("UUID")).thenReturn(settingAttribute);
+    when(settingsService.getSettingAttributeByName(ACCOUNT_ID, "WINRM_CONNECTION_ATTRIBUTES"))
+        .thenReturn(settingAttribute);
+
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    commandState.execute(context);
+    assertThat(commandState.getConnectionAttributes()).isEqualTo(settingAttribute.getUuid());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeWinRmCommandWxceptionThrownWhenWinRmConnectionAttributesIsNull() {
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionAttributes("WINRM_CONNECTION_ATTRIBUTES");
+    commandState.setConnectionType(CommandState.ConnectionType.WINRM);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(null);
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("WINRM_CONNECTION_ATTRIBUTES")).thenReturn(settingAttribute);
+
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("Winrm Connection Attribute provided in Shell Script Step not found");
+  }
+
+  @Test
   @Owner(developers = HINGER)
   @Category(UnitTests.class)
   public void executeServiceCommandFromServiceWithSshConnection() {
@@ -1592,6 +1845,244 @@ public class CommandStateTest extends WingsBaseTest {
     verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
         workflowExecutionService, artifactStreamService);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandVerifySshConfigExpressionIsResolved() {
+    TemplateExpression sshConfigExp = TemplateExpression.builder().build();
+    List<TemplateExpression> templateExpressions = asList(TemplateExpression.builder().build());
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setTemplateExpressions(templateExpressions);
+    commandState.setHost(HOST_NAME);
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "sshKeyRef")).thenReturn(sshConfigExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp)).thenReturn("ssh_key_ref");
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    commandState.execute(context);
+
+    verify(templateExpressionProcessor).getTemplateExpression(templateExpressions, "sshKeyRef");
+    verify(templateExpressionProcessor).resolveTemplateExpression(context, sshConfigExp);
+    assertThat(commandState.getSshKeyRef()).isEqualTo("ssh_key_ref");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandExceptionThrownWhenEmptySshConfigExpressionIsResolved() {
+    TemplateExpression sshConfigExp = TemplateExpression.builder().build();
+    List<TemplateExpression> templateExpressions = asList(TemplateExpression.builder().build());
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setTemplateExpressions(templateExpressions);
+    commandState.setHost(HOST_NAME);
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "sshKeyRef")).thenReturn(sshConfigExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp)).thenReturn("");
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("SSH Connection Attribute not provided in Command Step");
+
+    verify(templateExpressionProcessor).getTemplateExpression(templateExpressions, "sshKeyRef");
+    verify(templateExpressionProcessor).resolveTemplateExpression(context, sshConfigExp);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandExceptionThrownWhenSettingAttributeByNameNotFound() {
+    Application application = new Application();
+    application.setAccountId(ACCOUNT_ID);
+    TemplateExpression sshConfigExp = TemplateExpression.builder().build();
+    List<TemplateExpression> templateExpressions = asList(TemplateExpression.builder().build());
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setTemplateExpressions(templateExpressions);
+    commandState.setHost(HOST_NAME);
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "sshKeyRef")).thenReturn(sshConfigExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp)).thenReturn("inexistentKeyRef");
+    when(settingsService.get("inexistentKeyRef")).thenReturn(null);
+    when(context.getApp()).thenReturn(application);
+    when(settingsService.getSettingAttributeByName(ACCOUNT_ID, "inexistentKeyRef")).thenReturn(null);
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("SSH Connection Attribute provided in Shell Script Step not found");
+
+    verify(settingsService).getSettingAttributeByName(ACCOUNT_ID, "inexistentKeyRef");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandSetSshKeyRefFromSettingAttributeUUid() {
+    SettingAttribute settingAttributeByName = aSettingAttribute().withUuid("ssh_key_ref").build();
+    Application application = new Application();
+    application.setAccountId(ACCOUNT_ID);
+    TemplateExpression sshConfigExp = TemplateExpression.builder().build();
+    List<TemplateExpression> templateExpressions = asList(TemplateExpression.builder().build());
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setTemplateExpressions(templateExpressions);
+    commandState.setHost(HOST_NAME);
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateExpressionProcessor.getTemplateExpression(templateExpressions, "sshKeyRef")).thenReturn(sshConfigExp);
+    when(templateExpressionProcessor.resolveTemplateExpression(context, sshConfigExp)).thenReturn("inexistentKeyRef");
+    when(settingsService.get("inexistentKeyRef")).thenReturn(null);
+    when(context.getApp()).thenReturn(application);
+    when(settingsService.getSettingAttributeByName(ACCOUNT_ID, "inexistentKeyRef")).thenReturn(settingAttributeByName);
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    commandState.execute(context);
+
+    assertThat(commandState.getSshKeyRef()).isEqualTo("ssh_key_ref");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandThrowExceptionWhenHostIsNull() {
+    commandState.setTemplateUuid(TEMPLATE_ID);
+    commandState.setHost(null);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("Host cannot be empty");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandThrowExceptionWhenHostTemplateIdAndInstanceElementAreNull() {
+    commandState.setTemplateUuid(null);
+    commandState.setHost(null);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(context.getContextElement(ContextElementType.INSTANCE)).thenReturn(null);
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unable to find instance element from context");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandThrowExceptionWhenServiceInstanceIsNull() {
+    commandState.setTemplateUuid(null);
+    commandState.setHost(null);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(null);
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Unable to find service instance");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeSshCommandThrowExceptionWhenGetHostByEnvReturnsNull() {
+    commandState.setTemplateUuid(null);
+    commandState.setHost(null);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(null);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get(eq("123454"), any()))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder().commandUnits(Arrays.asList(commandUnit)).build())
+                        .build());
+
+    assertThatThrownBy(() -> commandState.execute(context))
+        .isInstanceOf(ShellScriptException.class)
+        .hasMessage("Host cannot be empty");
   }
 
   @Test
@@ -1698,6 +2189,89 @@ public class CommandStateTest extends WingsBaseTest {
     verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, settingsService,
         workflowExecutionService, artifactStreamService);
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeFailureWhenArtifactIsNotNeeded() {
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
+        .thenReturn(aServiceCommand()
+                        .withTargetToAllEnv(true)
+                        .withCommand(aCommand()
+                                         .addCommandUnits(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                              .withFileCategory(ScpFileCategory.ARTIFACTS)
+                                                              .build())
+                                         .build())
+                        .build());
+
+    commandState.setTemplateUuid(TEMPLATE_ID);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Arrays.asList(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                                            .withFileCategory(ScpFileCategory.ARTIFACTS)
+                                                                            .build()))
+                                            .build())
+                        .build());
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Unable to find artifact for service SERVICE_NAME");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeFailureWhenArtifactIsNotNeededArtifactStreamRefactorEnabled() {
+    when(featureFlagService.isEnabled(eq(FeatureName.ARTIFACT_STREAM_REFACTOR), any())).thenReturn(true);
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, COMMAND_NAME))
+        .thenReturn(aServiceCommand()
+                        .withTargetToAllEnv(true)
+                        .withCommand(aCommand()
+                                         .addCommandUnits(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                              .withFileCategory(ScpFileCategory.ARTIFACTS)
+                                                              .build())
+                                         .build())
+                        .build());
+
+    commandState.setTemplateUuid(TEMPLATE_ID);
+
+    commandState.setHost(HOST_NAME);
+    commandState.setSshKeyRef("ssh_key_ref");
+    commandState.setConnectionType(CommandState.ConnectionType.SSH);
+
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build());
+
+    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+    when(settingsService.get("ssh_key_ref")).thenReturn(settingAttribute);
+    when(serviceResourceService.getWithDetails(APP_ID, null)).thenReturn(SERVICE);
+
+    when(templateService.get("TEMPLATE_ID", null))
+        .thenReturn(Template.builder()
+                        .templateObject(SshCommandTemplate.builder()
+                                            .commandUnits(Arrays.asList(ScpCommandUnit.Builder.aScpCommandUnit()
+                                                                            .withFileCategory(ScpFileCategory.ARTIFACTS)
+                                                                            .build()))
+                                            .build())
+                        .build());
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage()).isEqualTo("Unable to find artifact for service SERVICE_NAME");
   }
 
   @Test
