@@ -1,5 +1,6 @@
 package software.wings.infra;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -8,6 +9,7 @@ import static software.wings.beans.InfrastructureType.AWS_ECS;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
@@ -35,6 +37,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AwsEcsInfrastructureKeys")
+@OwnedBy(CDP)
 public class AwsEcsInfrastructure
     implements InfraMappingInfrastructureProvider, ContainerInfrastructure, FieldKeyValMapProvider, ProvisionerAware {
   private String cloudProviderId;

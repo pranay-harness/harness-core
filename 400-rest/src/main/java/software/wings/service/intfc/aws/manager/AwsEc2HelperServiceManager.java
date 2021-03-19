@@ -1,5 +1,8 @@
 package software.wings.service.intfc.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -13,6 +16,7 @@ import com.amazonaws.services.ec2.model.ResourceType;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(CDP)
 public interface AwsEc2HelperServiceManager {
   void validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails);
   List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String appId);

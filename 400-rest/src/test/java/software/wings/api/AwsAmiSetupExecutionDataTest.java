@@ -1,10 +1,12 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -12,6 +14,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class AwsAmiSetupExecutionDataTest extends CategoryTest {
   private AwsAmiSetupExecutionData awsAmiSetupExecutionData =
       AwsAmiSetupExecutionData.builder().maxInstances(2).desiredInstances(3).build();

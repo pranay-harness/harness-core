@@ -1,5 +1,6 @@
 package software.wings.service.intfc.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static java.util.Collections.emptyList;
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -23,6 +25,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import wiremock.com.google.common.collect.ImmutableList;
 
+@OwnedBy(CDP)
 public class AwsS3HelperServiceManagerTest extends WingsBaseTest {
   @Mock private DelegateService mockDelegateService;
   @Inject @InjectMocks private AwsS3HelperServiceManager helper;

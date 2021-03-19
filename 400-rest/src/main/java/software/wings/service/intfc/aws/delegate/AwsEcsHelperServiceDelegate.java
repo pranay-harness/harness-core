@@ -1,6 +1,9 @@
 package software.wings.service.intfc.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -14,6 +17,7 @@ import com.amazonaws.services.ecs.model.Task;
 import java.util.List;
 
 @TargetModule(Module._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public interface AwsEcsHelperServiceDelegate {
   List<String> listClusters(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
 
