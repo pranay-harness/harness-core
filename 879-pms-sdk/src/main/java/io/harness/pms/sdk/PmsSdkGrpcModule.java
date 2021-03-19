@@ -2,7 +2,6 @@ package io.harness.pms.sdk;
 
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcInProcessServer;
-import io.harness.grpc.server.GrpcServer;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc;
 import io.harness.pms.contracts.plan.NodeExecutionProtoServiceGrpc.NodeExecutionProtoServiceBlockingStub;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
@@ -25,7 +24,6 @@ import io.harness.version.VersionInfo;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
@@ -39,9 +37,6 @@ import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
 import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
-import io.grpc.services.HealthStatusManager;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
@@ -65,22 +60,15 @@ public class PmsSdkGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class, Names.named("pmsServices"));
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-sdk-grpc-service")));
-  }
-
-  @Provides
-  @Singleton
-  @Named("pms-sdk-grpc-service")
-  public Service pmsSdkGrpcService(HealthStatusManager healthStatusManager, PlanCreatorService planCreatorService) {
-    Set<BindableService> cdServices = new HashSet<>();
-    cdServices.add(healthStatusManager.getHealthService());
-    cdServices.add(planCreatorService);
+    Multibinder<BindableService> serviceBinderInProcess =
+        Multibinder.newSetBinder(binder(), BindableService.class, Names.named("in_process_services"));
+    Multibinder<BindableService> serviceBinderRemote =
+        Multibinder.newSetBinder(binder(), BindableService.class, Names.named("out_process_services"));
     if (config.getDeploymentMode() == DeployMode.REMOTE_IN_PROCESS) {
-      return new GrpcInProcessServer("pmsSdkInternal", cdServices, Collections.emptySet(), healthStatusManager);
+      serviceBinderInProcess.addBinding().to(PlanCreatorService.class);
+    } else {
+      serviceBinderRemote.addBinding().to(PlanCreatorService.class);
     }
-    return new GrpcServer(
-        config.getGrpcServerConfig().getConnectors().get(0), cdServices, Collections.emptySet(), healthStatusManager);
   }
 
   private String computeAuthority(String authority, VersionInfo versionInfo) {
@@ -188,7 +176,7 @@ public class PmsSdkGrpcModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("pmsSDKServiceManager")
-  public ServiceManager serviceManager(@Named("pmsServices") Set<Service> services) {
+  public ServiceManager serviceManager(Set<Service> services) {
     return new ServiceManager(services);
   }
 }

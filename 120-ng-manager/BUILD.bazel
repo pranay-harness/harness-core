@@ -6,6 +6,7 @@ load("//tools/bazel/pmd:defs.bzl", "pmd")
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
+    "@maven//:io_netty_netty_all"
 ] + [
     "//:lombok",
     "//125-cd-nextgen:module",
@@ -375,7 +376,6 @@ shared_dependencies = [
     "@maven//:io_kubernetes_client_java_api",
     "@maven//:io_kubernetes_client_java_extended",
     "@maven//:io_kubernetes_client_java_proto",
-    "@maven//:io_netty_netty_all",
     "@maven//:io_netty_netty_buffer",
     "@maven//:io_netty_netty_codec",
     "@maven//:io_netty_netty_codec_http",

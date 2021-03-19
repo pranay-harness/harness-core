@@ -34,6 +34,9 @@ import io.harness.gitsync.core.impl.GitSyncManagerInterfaceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.server.GrpcInProcessServerModule;
+import io.harness.grpc.server.GrpcServerConstants;
+import io.harness.grpc.server.GrpcServerModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
@@ -105,11 +108,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.grpc.BindableService;
+import io.grpc.ServerInterceptor;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -274,12 +281,23 @@ public class NextGenModule extends AbstractModule {
             .addAll(ManagerRegistrars.springConverters)
             .build();
       }
+
       @Provides
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClasses() {
         return ImmutableList.<YamlSchemaRootClass>builder().addAll(NextGenRegistrars.yamlSchemaRegistrars).build();
       }
     });
+
+    install(new GrpcServerModule(appConfig.getPmsSdkGrpcServerConfig().getConnectors(),
+        getProvider(
+            Key.get(new TypeLiteral<Set<BindableService>>() {}, Names.named(GrpcServerConstants.OUT_PROCESS_SERVICES))),
+        getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
+
+    install(new GrpcInProcessServerModule(getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {},
+                                              Names.named(GrpcServerConstants.IN_PROCESS_SERVICES))),
+        getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
+
     install(new AbstractModule() {
       @Override
       protected void configure() {

@@ -16,11 +16,9 @@ import io.harness.pms.utils.PmsConstants;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
@@ -31,7 +29,6 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.grpc.services.HealthStatusManager;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -53,9 +50,25 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-service")));
-    serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-internal-service")));
+    Multibinder<BindableService> serviceBinderInProcess =
+        Multibinder.newSetBinder(binder(), BindableService.class, Names.named("in_process_services"));
+    Multibinder<BindableService> serviceBinderRemote =
+        Multibinder.newSetBinder(binder(), BindableService.class, Names.named("out_process_services"));
+    serviceBinderInProcess.addBinding().to(PmsSdkInstanceService.class);
+    serviceBinderInProcess.addBinding().to(PmsNodeExecutionGrpcSevice.class);
+    serviceBinderInProcess.addBinding().to(PmsExecutionGrpcService.class);
+    serviceBinderInProcess.addBinding().to(SweepingOutputServiceImpl.class);
+    serviceBinderInProcess.addBinding().to(OutcomeServiceGrpcServerImpl.class);
+    serviceBinderInProcess.addBinding().to(EngineExpressionGrpcServiceImpl.class);
+    serviceBinderInProcess.addBinding().to(InterruptGrpcService.class);
+
+    serviceBinderRemote.addBinding().to(PmsSdkInstanceService.class);
+    serviceBinderRemote.addBinding().to(PmsNodeExecutionGrpcSevice.class);
+    serviceBinderRemote.addBinding().to(PmsExecutionGrpcService.class);
+    serviceBinderRemote.addBinding().to(SweepingOutputServiceImpl.class);
+    serviceBinderRemote.addBinding().to(OutcomeServiceGrpcServerImpl.class);
+    serviceBinderRemote.addBinding().to(EngineExpressionGrpcServiceImpl.class);
+    serviceBinderRemote.addBinding().to(InterruptGrpcService.class);
   }
 
   @Provides
@@ -70,7 +83,8 @@ public class PipelineServiceGrpcModule extends AbstractModule {
       throws SSLException {
     Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
     map.put(PmsConstants.INTERNAL_SERVICE_NAME,
-        PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build()));
+        PlanCreationServiceGrpc.newBlockingStub(
+            InProcessChannelBuilder.forName(GrpcServerConstants.IN_PROCESS_SERVICES).build()));
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
       map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
@@ -107,23 +121,6 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     }
 
     return channel;
-  }
-
-  @Provides
-  @Singleton
-  @Named("pms-grpc-service")
-  public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
-      Set<BindableService> services) {
-    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
-        healthStatusManager);
-  }
-
-  @Provides
-  @Singleton
-  @Named("pms-grpc-internal-service")
-  public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services) {
-    return new GrpcInProcessServer(
-        PmsConstants.INTERNAL_SERVICE_NAME, services, Collections.emptySet(), healthStatusManager);
   }
 
   @Provides

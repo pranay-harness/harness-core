@@ -18,6 +18,9 @@ import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.grpc.server.GrpcInProcessServerModule;
+import io.harness.grpc.server.GrpcServerConstants;
+import io.harness.grpc.server.GrpcServerModule;
 import io.harness.grpc.server.PipelineServiceGrpcModule;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLockModule;
@@ -70,11 +73,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.grpc.BindableService;
+import io.grpc.ServerInterceptor;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -164,6 +171,14 @@ public class PipelineServiceModule extends AbstractModule {
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration()));
+    install(new GrpcServerModule(configuration.getGrpcServerConfig().getConnectors(),
+        getProvider(
+            Key.get(new TypeLiteral<Set<BindableService>>() {}, Names.named(GrpcServerConstants.OUT_PROCESS_SERVICES))),
+        getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
+
+    install(new GrpcInProcessServerModule(getProvider(Key.get(new TypeLiteral<Set<BindableService>>() {},
+                                              Names.named(GrpcServerConstants.IN_PROCESS_SERVICES))),
+        getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}))));
 
     bind(HPersistence.class).to(MongoPersistence.class);
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
