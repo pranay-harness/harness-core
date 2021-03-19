@@ -15,6 +15,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -35,6 +36,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
   public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public Class<K8sBlueGreenStepParameters> getStepParametersClass() {
@@ -112,13 +114,10 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
                                                   .stageColor(k8sBGDeployResponse.getStageColor())
                                                   .primaryColor(k8sBGDeployResponse.getPrimaryColor())
                                                   .build();
+    executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME,
+        k8sBlueGreenOutcome, StepOutcomeGroup.STAGE.name());
 
     return responseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME)
-                         .outcome(k8sBlueGreenOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
-                         .build())
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sBlueGreenOutcome)

@@ -17,6 +17,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -37,6 +38,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
   private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public TaskChainResponse startChainLink(
@@ -111,13 +113,10 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
                                             .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
                                             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
                                             .build();
+    executionSweepingOutputService.consume(
+        ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
 
     return responseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)
-                         .outcome(k8sCanaryOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
-                         .build())
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sCanaryOutcome)
