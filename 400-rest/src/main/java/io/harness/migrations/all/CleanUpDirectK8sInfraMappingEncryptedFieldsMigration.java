@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -21,7 +21,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class CleanUpDirectK8sInfraMappingEncryptedFieldsMigration implements Migration {
   static final List<String> ENCRYPTED_FIELDS = asList("encryptedPassword", "encryptedCaCert", "encryptedClientCert",
       "encryptedClientKey", "encryptedClientKeyPassphrase", "encryptedServiceAccountToken");

@@ -7,7 +7,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.context.ARMDeploymentSteadyStateContext;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureARMDeploymentService {
   @Inject private AzureManagementClient azureManagementClient;
   @Inject private ARMDeploymentSteadyStateChecker deploymentSteadyStateChecker;

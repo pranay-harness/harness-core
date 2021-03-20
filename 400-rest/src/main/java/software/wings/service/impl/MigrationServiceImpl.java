@@ -11,7 +11,7 @@ import static software.wings.beans.Schema.SCHEMA_ID;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.eraro.ErrorCode;
@@ -58,7 +58,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrationServiceImpl implements MigrationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;

@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.cluster;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -11,7 +11,7 @@ import io.harness.ccm.cluster.entities.EcsCluster;
 
 import software.wings.graphql.schema.type.QLCluster.QLClusterBuilder;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ClusterController {
   private static String DEFAULT = "Cluster type not ECS/Direct Kubernetes";
 

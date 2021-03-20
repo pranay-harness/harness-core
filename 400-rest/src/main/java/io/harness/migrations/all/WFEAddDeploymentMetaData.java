@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.migrations.Migration;
@@ -22,7 +22,7 @@ import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class WFEAddDeploymentMetaData implements Migration {
   @Inject WingsPersistence wingsPersistence;
   @Inject WorkflowExecutionUpdate workflowExecutionUpdate;

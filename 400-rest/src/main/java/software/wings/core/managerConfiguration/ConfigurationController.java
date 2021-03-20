@@ -10,7 +10,7 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.MapUtils.synchronizedMap;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -33,7 +33,7 @@ import org.apache.commons.codec.binary.StringUtils;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._960_PERSISTENCE)
+@TargetModule(HarnessModule._960_PERSISTENCE)
 @BreakDependencyOn("software.wings.beans.ManagerConfiguration")
 public class ConfigurationController implements Managed, QueueController {
   @Inject private HPersistence persistence;

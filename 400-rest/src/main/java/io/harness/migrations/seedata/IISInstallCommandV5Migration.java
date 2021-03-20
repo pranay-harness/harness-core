@@ -9,7 +9,7 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V5_INS
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V6_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V5_INSTALL_PATH;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class IISInstallCommandV5Migration implements Migration {
   @Inject private TemplateService templateService;
   @Inject private TemplateFolderService templateFolderService;

@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.ce.exportData;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.healthmarketscience.sqlbuilder.dbspec.basic.DbColumn;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "CEExportDataTableKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CEExportDataTableSchema {
   DbSpec dbSpec;
   DbSchema dbSchema;

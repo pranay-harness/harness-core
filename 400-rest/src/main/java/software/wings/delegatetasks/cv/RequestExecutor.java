@@ -8,7 +8,7 @@ import static software.wings.common.VerificationConstants.RATE_LIMIT_STATUS;
 import static software.wings.common.VerificationConstants.URL_STRING;
 import static software.wings.delegatetasks.cv.CVConstants.RETRY_SLEEP_DURATION;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.delegatetasks.DelegateLogService;
@@ -35,7 +35,7 @@ import retrofit2.Response;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class RequestExecutor {
   private static final String DATADOG_API_MASK = "api_key=([^&]*)";
   private static final String DATADOG_APP_MASK = "application_key=([^&]*)";

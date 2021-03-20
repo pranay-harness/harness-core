@@ -7,7 +7,7 @@ import static io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData.build
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
@@ -35,7 +35,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureARMDeploymentTaskHandler extends AbstractAzureARMTaskHandler {
   @Inject private AzureARMDeploymentService azureARMDeploymentService;
   private static final Random rand = new Random();

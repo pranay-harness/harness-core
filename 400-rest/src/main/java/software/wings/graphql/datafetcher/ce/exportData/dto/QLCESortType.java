@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.datafetcher.ce.exportData.CEExportDataQueryMetadata.CEExportDataMetadataFields;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLCESortType {
   TIME(CEExportDataMetadataFields.STARTTIME),
   TOTALCOST(CEExportDataMetadataFields.SUM),

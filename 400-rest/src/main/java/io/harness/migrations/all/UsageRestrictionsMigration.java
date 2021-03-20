@@ -5,7 +5,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.WingsException;
@@ -37,7 +37,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * @author rktummala on 05/03/18
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class UsageRestrictionsMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UsageRestrictionsService usageRestrictionsService;

@@ -14,7 +14,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.helm.HelmCliCommandType;
@@ -58,7 +58,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 @OwnedBy(CDP)
 public class HelmClientImpl implements HelmClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;

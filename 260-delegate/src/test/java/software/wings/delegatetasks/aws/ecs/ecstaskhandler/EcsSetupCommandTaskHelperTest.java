@@ -38,7 +38,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
@@ -109,7 +109,7 @@ import org.mockito.Spy;
 import org.slf4j.Logger;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String SECURITY_GROUP_ID_1 = "sg-id";
   public static final String CLUSTER_NAME = "clusterName";

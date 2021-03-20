@@ -12,7 +12,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -54,7 +54,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
   public static final String PRIMARY_PROFILE_NAME = "Primary";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the account";

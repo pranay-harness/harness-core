@@ -1,4 +1,5 @@
 use clap::Clap;
+use enumset::{EnumSet, EnumSetType};
 use multimap::MultiMap;
 use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
@@ -19,6 +20,28 @@ enum Kind {
     Blocked,
     ToDo,
 }
+
+#[derive(Debug, EnumSetType)]
+enum Explanation {
+    Empty,
+    TeamIsMissing,
+    DeprecatedModule,
+}
+
+pub const EXPLANATION_TEAM_IS_MISSING: &str =
+    "Please use the source level java annotation io.harness.annotations.dev.OwnedBy
+to specify which team is the owner of the class. The list of teams is in the
+enum io.harness.annotations.dev.HarnessTeam";
+
+pub const EXPLANATION_CLASS_IN_DEPRECATED_MODULE: &str =
+    "When a module is deprecated, every class that is still in use should be
+moved to another module. To plan it better we start with annotating the class
+with a source level annotation io.harness.annotations.dev.TargetModule. This
+will allow aeriform to scan for dependencies and point out issues with such
+promotion/demotion without the need to discover them the hard way. The list
+of the available modules is in io.harness.annotations.dev.HarnessModule.
+WARNING: Add target modules with cation. If wrong targets are specified
+         this could lead to all sorts of inappropriate error reports.";
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -64,6 +87,7 @@ pub struct Analyze {
 #[derive(Debug)]
 struct Report {
     kind: Kind,
+    explanation: Explanation,
     message: String,
     action: String,
 
@@ -136,11 +160,11 @@ pub fn analyze(opts: Analyze) {
     }
 
     if opts.module_filter.is_some() {
-        println!("analizing for module {} ...", opts.module_filter.as_ref().unwrap());
+        println!("analyzing for module {} ...", opts.module_filter.as_ref().unwrap());
     } else if opts.root_filter.is_some() {
-        println!("analizing for root {} ...", opts.root_filter.as_ref().unwrap());
+        println!("analyzing for root {} ...", opts.root_filter.as_ref().unwrap());
     } else {
-        println!("analizing...");
+        println!("analyzing...");
     }
 
     let mut results: Vec<Report> = Vec::new();
@@ -200,6 +224,8 @@ pub fn analyze(opts: Analyze) {
         }
     }
 
+    let mut explanations: EnumSet<Explanation> = EnumSet::empty();
+
     results
         .iter()
         .filter(|&report| {
@@ -214,6 +240,7 @@ pub fn analyze(opts: Analyze) {
                 println!("   {}", &report.action);
             }
             total[report.kind as usize] += 1;
+            explanations.insert(report.explanation);
         });
 
     println!();
@@ -227,6 +254,15 @@ pub fn analyze(opts: Analyze) {
     if results.is_empty() {
         println!("aeriform did not find any issues");
     } else {
+        if explanations.contains(Explanation::TeamIsMissing) {
+            println!();
+            println!("{}", EXPLANATION_TEAM_IS_MISSING);
+        }
+        if explanations.contains(Explanation::DeprecatedModule) {
+            println!();
+            println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
+        }
+
         if opts.exit_code {
             exit(1);
         }
@@ -289,6 +325,7 @@ fn check_for_extra_break(class: &JavaClass, module: &JavaModule) -> Vec<Report> 
 
             results.push(Report {
                 kind: Kind::Critical,
+                explanation: Explanation::Empty,
                 message: format!("{} has no dependency on {}", class.name, break_dependency),
                 action: Default::default(),
                 for_class: class.name.clone(),
@@ -316,6 +353,7 @@ fn check_for_classes_in_more_than_one_module(
             if tracked_module.name.ne(&module.name) {
                 results.push(Report {
                     kind: Kind::Critical,
+                    explanation: Explanation::Empty,
                     message: format!("{} appears in {} and {}", class.name, module.name, tracked_module.name),
                     action: Default::default(),
                     for_class: class.name.clone(),
@@ -343,6 +381,7 @@ fn check_for_reversed_dependency(module: &JavaModule, modules: &HashMap<String, 
         if module.index >= dependent.index {
             results.push(Report {
                 kind: Kind::Critical,
+                explanation: Explanation::Empty,
                 message: format!(
                     "Module {} depends on module {} that is not lower",
                     module.name, dependent.name
@@ -369,6 +408,7 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule) -> Vec<Report
         if module.name.eq(target_module.unwrap()) {
             results.push(Report {
                 kind: Kind::AutoAction,
+                explanation: Explanation::Empty,
                 message: format!(
                     "{} target module is where it already is - remove the annotation",
                     class.name
@@ -451,6 +491,7 @@ fn check_for_promotion(
             results.push(if class.break_dependencies_on.contains(src) {
                 Report {
                     kind: Kind::DevAction,
+                    explanation: Explanation::Empty,
                     message: format!(
                         "{} depends on {} and this dependency has to be broken",
                         class.name, dependent_class.name
@@ -464,6 +505,7 @@ fn check_for_promotion(
             } else {
                 Report {
                     kind: Kind::Error,
+                    explanation: Explanation::Empty,
                     message: format!(
                         "{} depends on {} that is in module {} but {} does not depend on it",
                         class.name, dependent_class.name, dependent_target_module.name, target_module.name
@@ -495,6 +537,7 @@ fn check_for_promotion(
         results.push(match module {
             None => Report {
                 kind: Kind::DevAction,
+                explanation: Explanation::Empty,
                 action: Default::default(),
                 message: msg,
                 for_class: class.name.clone(),
@@ -504,6 +547,7 @@ fn check_for_promotion(
             },
             Some(&module) => Report {
                 kind: Kind::AutoAction,
+                explanation: Explanation::Empty,
                 message: msg,
                 action: format!(
                     "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
@@ -524,6 +568,7 @@ fn check_for_promotion(
 
         results.push(Report {
             kind: Kind::Blocked,
+            explanation: Explanation::Empty,
             message: format!(
                 "{} does not have untargeted dependencies to go to {}. First move {}",
                 class.name,
@@ -611,6 +656,7 @@ fn check_for_demotion(
                 results.push(if dependee_class.break_dependencies_on.contains(&class.name) {
                     Report {
                         kind: Kind::DevAction,
+                        explanation: Explanation::Empty,
                         message: format!(
                             "{} has dependee {} and this dependency has to be broken",
                             class.name, dependee_class.name
@@ -624,6 +670,7 @@ fn check_for_demotion(
                 } else {
                     Report {
                         kind: Kind::Error,
+                        explanation: Explanation::Empty,
                         message: format!(
                             "{} has dependee {} that is in module {} but {} is not a dependee of it",
                             class.name, dependee_class.name, dependee_target_module.name, target_module.name
@@ -657,6 +704,7 @@ fn check_for_demotion(
         results.push(match module {
             None => Report {
                 kind: Kind::DevAction,
+                explanation: Explanation::Empty,
                 action: Default::default(),
                 message: msg,
                 for_class: class.name.clone(),
@@ -666,6 +714,7 @@ fn check_for_demotion(
             },
             Some(&module) => Report {
                 kind: Kind::AutoAction,
+                explanation: Explanation::Empty,
                 message: msg,
                 action: format!(
                     "execute move-class --from-module=\"{}\" --from-location=\"{}\" --to-module=\"{}\"",
@@ -686,6 +735,7 @@ fn check_for_demotion(
 
         results.push(Report {
             kind: Kind::Blocked,
+            explanation: Explanation::Empty,
             message: format!(
                 "{} does not have dependees to go to {}. First move {}",
                 class.name,
@@ -709,6 +759,7 @@ fn check_for_demotion(
 fn target_module_needed(class: &JavaClass) -> Report {
     Report {
         kind: Kind::DevAction,
+        explanation: Explanation::Empty,
         message: format!(
             "Target module {} needs to be created.",
             class.target_module.as_ref().unwrap()
@@ -727,6 +778,7 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     if class.team.is_none() {
         results.push(Report {
             kind: Kind::ToDo,
+            explanation: Explanation::TeamIsMissing,
             message: format!("{} is missing team", class.name),
             action: Default::default(),
             for_class: class.name.clone(),
@@ -745,6 +797,7 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
     if class.target_module.is_none() && module.deprecated {
         results.push(Report {
             kind: Kind::ToDo,
+            explanation: Explanation::DeprecatedModule,
             message: format!(
                 "{} is in deprecated module {} and has no target module",
                 class.name, module.name

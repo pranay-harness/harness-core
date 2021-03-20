@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.grpc;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.HeartbeatRequest;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class PerpetualTaskServiceGrpc
     extends io.harness.perpetualtask.PerpetualTaskServiceGrpc.PerpetualTaskServiceImplBase {
   @Inject private PerpetualTaskService perpetualTaskService;

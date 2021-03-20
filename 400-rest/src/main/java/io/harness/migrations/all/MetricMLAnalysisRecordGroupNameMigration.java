@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Created by rsingh on 5/20/18.
  */
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MetricMLAnalysisRecordGroupNameMigration extends AddFieldMigration {
   private static final org.slf4j.Logger logger =
       LoggerFactory.getLogger(MetricMLAnalysisRecordGroupNameMigration.class);

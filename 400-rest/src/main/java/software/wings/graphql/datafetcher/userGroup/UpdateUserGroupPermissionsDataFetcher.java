@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.userGroup;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -21,7 +21,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateUserGroupPermissionsDataFetcher
     extends BaseMutatorDataFetcher<QLUpdateUserGroupPermissionsInput, QLUpdateUserGroupPermissionsPayload> {
   @Inject private UserGroupService userGroupService;

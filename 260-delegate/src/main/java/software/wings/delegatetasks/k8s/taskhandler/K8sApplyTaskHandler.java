@@ -22,7 +22,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.k8s.K8sApplyBaseHandler;
@@ -56,7 +56,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class K8sApplyTaskHandler extends K8sTaskHandler {
   @Inject private K8sTaskHelper k8sTaskHelper;

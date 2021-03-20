@@ -2,7 +2,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.TimeoutException;
@@ -37,7 +37,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
   @Inject private AwsHelperService awsHelperService;
   @Inject private EcsContainerService ecsContainerService;

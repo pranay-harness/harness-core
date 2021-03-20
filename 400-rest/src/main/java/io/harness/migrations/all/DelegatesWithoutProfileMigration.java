@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
@@ -21,7 +21,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class DelegatesWithoutProfileMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DelegateService delegateService;

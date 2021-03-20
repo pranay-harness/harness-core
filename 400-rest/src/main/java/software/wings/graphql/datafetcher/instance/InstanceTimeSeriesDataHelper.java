@@ -10,7 +10,7 @@ import static software.wings.graphql.datafetcher.instance.Constants.INSTANCE_STA
 import static software.wings.graphql.datafetcher.instance.Constants.INSTANCE_STATS_TABLE_NAME;
 import static software.wings.graphql.datafetcher.instance.Constants.PARTIAL_AGGREGATION_INTERVAL;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.timeseries.processor.utils.DateUtils;
 import io.harness.exception.WingsException;
@@ -57,7 +57,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class InstanceTimeSeriesDataHelper {
   @Inject TimeScaleDBService timeScaleDBService;
   @Inject NameService nameService;
