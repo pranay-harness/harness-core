@@ -16,5 +16,5 @@ public class QLWorkflowFilter implements EntityFilter {
   QLIdFilter application;
   QLIdFilter workflow;
   QLWorkflowTagFilter tag;
-  QLWorkflowTypeFilter workflowType;
+  QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType;
 }

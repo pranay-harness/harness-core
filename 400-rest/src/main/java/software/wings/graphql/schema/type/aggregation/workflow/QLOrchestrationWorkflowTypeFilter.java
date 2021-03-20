@@ -12,7 +12,7 @@ import lombok.Value;
 @Value
 @Builder
 @TargetModule(Module._380_CG_GRAPHQL)
-public class QLWorkflowTypeFilter implements Filter {
+public class QLOrchestrationWorkflowTypeFilter implements Filter {
   private QLEnumOperator operator;
-  private QLWorkflowType[] values;
+  private QLOrchestrationWorkflowType[] values;
 }

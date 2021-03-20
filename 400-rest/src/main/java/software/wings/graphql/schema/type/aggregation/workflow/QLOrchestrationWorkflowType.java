@@ -6,9 +6,14 @@ import io.harness.annotations.dev.TargetModule;
 import software.wings.graphql.schema.type.QLEnum;
 
 @TargetModule(Module._380_CG_GRAPHQL)
-public enum QLWorkflowType implements QLEnum {
-  PIPELINE,
-  ORCHESTRATION;
+public enum QLOrchestrationWorkflowType implements QLEnum {
+  BUILD,
+  BASIC,
+  CANARY,
+  MULTI_SERVICE,
+  BLUE_GREEN,
+  ROLLING,
+  CUSTOM;
 
   @Override
   public String getStringValue() {

@@ -60,7 +60,7 @@ public class WorkflowStatsDataFetcher
     switch (workflowAggregation) {
       case Application:
         return "appId";
-      case WorkflowType:
+      case OrchestrationWorkflowType:
         return "orchestration.orchestrationWorkflowType";
       default:
         throw new InvalidRequestException("Unknown aggregation type" + aggregation);

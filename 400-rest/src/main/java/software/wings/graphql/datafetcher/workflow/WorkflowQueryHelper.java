@@ -13,10 +13,10 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagType;
-import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTypeFilter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -56,10 +56,10 @@ public class WorkflowQueryHelper {
         utils.setIdFilter(field, workflowFilter);
       }
 
-      if (filter.getWorkflowType() != null) {
+      if (filter.getOrchestrationWorkflowType() != null) {
         field = query.field("orchestration.orchestrationWorkflowType");
-        QLWorkflowTypeFilter workflowTypeFilter = filter.getWorkflowType();
-        utils.setEnumFilter(field, workflowTypeFilter);
+        QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType = filter.getOrchestrationWorkflowType();
+        utils.setEnumFilter(field, orchestrationWorkflowType);
       }
 
       if (filter.getTag() != null) {

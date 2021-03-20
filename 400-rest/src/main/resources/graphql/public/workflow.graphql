@@ -68,6 +68,12 @@ input WorkflowFilter {
   application: IdFilter
   workflow: IdFilter
   tag: WorkflowTagFilter
+  orchestrationWorkflowType: OrchestrationWorkflowTypeFilter
+}
+
+input OrchestrationWorkflowTypeFilter {
+  operator: EnumOperator
+  values: [OrchestrationWorkflowType]
 }
 
 input WorkflowTagFilter {
@@ -79,7 +85,12 @@ enum WorkflowTagType {
   APPLICATION
 }
 
-enum WorkflowType {
-  PIPELINE
-  ORCHESTRATION
+enum OrchestrationWorkflowType {
+  BUILD
+  BASIC
+  CANARY
+  MULTI_SERVICE
+  BLUE_GREEN
+  ROLLING
+  CUSTOM
 }
