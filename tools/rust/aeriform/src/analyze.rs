@@ -235,6 +235,7 @@ pub fn analyze(opts: Analyze) {
     }
 
     let mut explanations: EnumSet<Explanation> = EnumSet::empty();
+    let mut total_count = 0;
 
     results
         .iter()
@@ -249,13 +250,14 @@ pub fn analyze(opts: Analyze) {
             if opts.auto_actionable_command && !report.action.is_empty() {
                 println!("   {}", &report.action);
             }
+            total_count += 1;
             total[report.kind as usize] += 1;
             explanations.insert(report.explanation);
         });
 
     println!();
 
-    if results.is_empty() {
+    if total_count == 0 {
         println!("aeriform did not find any issues");
     } else {
         let mut issue_points = 0;
