@@ -16,6 +16,8 @@ import lombok.Data;
 
 @Data
 @Builder
+// TODO: rename this to HealthVerificationState, this will also require thinking about migration as the classpath is
+// saved in db
 public class ActivityVerificationState extends AnalysisState {
   @JsonIgnore @Inject private transient HealthVerificationService healthVerificationService;
   private Instant preActivityVerificationStartTime;

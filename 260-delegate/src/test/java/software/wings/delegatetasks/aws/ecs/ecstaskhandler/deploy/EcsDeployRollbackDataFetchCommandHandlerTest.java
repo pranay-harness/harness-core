@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -125,7 +126,8 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
 
     verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), any());
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
     verify(mockEcsDeployCommandTaskHelper, times(0)).restoreAutoScalarConfigs(any(), any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }
@@ -168,7 +170,8 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
     assertThat(ecsCommandResponse.getOldInstanceData()).containsExactly(oldInstanceData);
 
     verify(mockAwsClusterService, times(0))
-        .resizeCluster(anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), any());
+        .resizeCluster(
+            anyString(), any(), any(), anyString(), anyString(), anyInt(), anyInt(), anyInt(), any(), anyBoolean());
     verify(mockEcsDeployCommandTaskHelper, times(0)).deregisterAutoScalarsIfExists(any(), any());
     verify(mockEcsDeployCommandTaskHelper, times(0)).createAutoScalarConfigIfServiceReachedMaxSize(any(), any(), any());
   }

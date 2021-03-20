@@ -1,11 +1,13 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.BITBUCKET;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.GITHUB;
@@ -140,7 +142,8 @@ public class NGTriggerElementMapper {
   @VisibleForTesting
   boolean isGitSpec(WebhookTriggerConfig webhookTriggerConfig) {
     return webhookTriggerConfig.getSpec().getType() == GITHUB || webhookTriggerConfig.getSpec().getType() == GITLAB
-        || webhookTriggerConfig.getSpec().getType() == BITBUCKET;
+        || webhookTriggerConfig.getSpec().getType() == BITBUCKET
+        || webhookTriggerConfig.getSpec().getType() == AWS_CODECOMMIT;
   }
 
   @VisibleForTesting
@@ -203,6 +206,10 @@ public class NGTriggerElementMapper {
       webhookSourceRepo = GITLAB;
     } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
       webhookSourceRepo = BITBUCKET;
+    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
+      webhookSourceRepo = BITBUCKET;
+    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_AMZ_SNS_MESSAGE_TYPE)) {
+      webhookSourceRepo = AWS_CODECOMMIT;
     } else {
       webhookSourceRepo = CUSTOM;
     }

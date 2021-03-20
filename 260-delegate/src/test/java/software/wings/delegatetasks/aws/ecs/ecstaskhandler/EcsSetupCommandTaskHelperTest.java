@@ -3,6 +3,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.container.ContainerInfo.Status.FAILURE;
 import static io.harness.container.ContainerInfo.Status.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -20,6 +21,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -29,6 +31,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -39,6 +42,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -1130,6 +1134,41 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleRollback_ThrowTimeoutException() {
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withClusterName("cluster")
+                                .withIsDaemonSchedulingStrategy(true)
+                                .withPreviousEcsServiceSnapshotJson("PrevJson")
+                                .withServiceSteadyStateTimeout(10)
+                                .build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    doReturn(new Service().withServiceName("foo__1").withServiceArn("svcArn"))
+        .when(ecsSetupCommandTaskHelper)
+        .getAwsServiceFromJson(anyString(), any());
+    doReturn(AwsConfig.builder().build())
+        .when(mockAwsHelperService)
+        .validateAndGetAwsConfig(any(), anyList(), anyBoolean());
+    doReturn(new DescribeServicesResult().withServices(
+                 new Service().withDesiredCount(2).withEvents(new ServiceEvent().withId("evId"))))
+        .when(mockAwsHelperService)
+        .describeServices(anyString(), any(), anyList(), any());
+    doThrow(TimeoutException.class)
+        .when(mockEcsContainerService)
+        .waitForTasksToBeInRunningStateWithHandledExceptions(any());
+
+    assertThatExceptionOfType(TimeoutException.class)
+        .isThrownBy(
+            () -> ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback));
+    verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
+  }
+
+  @Test
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCreateEcsService() {
@@ -1179,7 +1218,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback, false);
     verify(awsClusterService)
         .resizeCluster(
-            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), any());
+            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), anyBoolean());
   }
 
   @Test

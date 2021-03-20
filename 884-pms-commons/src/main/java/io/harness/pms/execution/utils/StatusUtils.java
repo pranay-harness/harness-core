@@ -1,6 +1,7 @@
 package io.harness.pms.execution.utils;
 
 import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.contracts.execution.Status.APPROVAL_WAITING;
 import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
@@ -31,14 +32,14 @@ import lombok.extern.slf4j.Slf4j;
 public class StatusUtils {
   // Status Groups
   private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSED, ASYNC_WAITING,
-      INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
+      APPROVAL_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
 
   private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED);
 
   private final EnumSet<Status> RESUMABLE_STATUSES =
-      EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING);
+      EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, APPROVAL_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING);
 
   private final EnumSet<Status> FLOWING_STATUSES =
       EnumSet.of(RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING);
@@ -79,11 +80,13 @@ public class StatusUtils {
   public EnumSet<Status> nodeAllowedStartSet(Status status) {
     switch (status) {
       case RUNNING:
-        return EnumSet.of(QUEUED, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED);
+        return EnumSet.of(
+            QUEUED, ASYNC_WAITING, APPROVAL_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED);
       case INTERVENTION_WAITING:
         return BROKE_STATUSES;
       case TIMED_WAITING:
       case ASYNC_WAITING:
+      case APPROVAL_WAITING:
       case TASK_WAITING:
       case PAUSING:
       case SKIPPED:
@@ -91,8 +94,8 @@ public class StatusUtils {
       case PAUSED:
         return EnumSet.of(QUEUED, RUNNING, PAUSING);
       case DISCONTINUING:
-        return EnumSet.of(
-            QUEUED, RUNNING, ASYNC_WAITING, TASK_WAITING, TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
+        return EnumSet.of(QUEUED, RUNNING, ASYNC_WAITING, APPROVAL_WAITING, TASK_WAITING, TIMED_WAITING,
+            INTERVENTION_WAITING, PAUSED, PAUSING);
       case QUEUED:
         return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:

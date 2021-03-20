@@ -3,7 +3,6 @@ package io.harness.cvng.activity.entities;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
-import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.mongo.index.FdIndex;
 
@@ -40,12 +39,7 @@ public class KubernetesActivity extends Activity {
 
   @Override
   public void fillInVerificationJobInstanceDetails(VerificationJobInstanceBuilder verificationJobInstanceBuilder) {
-    Instant roundedDownTime = DateTimeUtils.roundDownTo5MinBoundary(getActivityStartTime());
-    Instant preactivityStart = roundedDownTime.minus(verificationJobInstanceBuilder.getResolvedJob().getDuration());
-
-    verificationJobInstanceBuilder.preActivityVerificationStartTime(preactivityStart);
-    verificationJobInstanceBuilder.postActivityVerificationStartTime(roundedDownTime);
-    verificationJobInstanceBuilder.startTime(preactivityStart);
+    verificationJobInstanceBuilder.startTime(getActivityStartTime());
   }
 
   @Override

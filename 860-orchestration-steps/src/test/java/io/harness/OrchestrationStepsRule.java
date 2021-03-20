@@ -1,5 +1,7 @@
 package io.harness;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
@@ -19,14 +21,18 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
+import io.harness.pms.serializer.jackson.NGHarnessJacksonModule;
+import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
+import io.harness.serializer.jackson.HarnessJacksonModule;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -43,6 +49,15 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import software.wings.jersey.JsonViews;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.fasterxml.jackson.datatype.guava.GuavaModule;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +68,8 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
+import io.dropwizard.jackson.Jackson;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -124,6 +141,34 @@ public class OrchestrationStepsRule implements MethodRule, InjectorRuleMixin, Mo
         return ImmutableList.<YamlSchemaRootClass>builder()
             .addAll(OrchestrationStepsModuleRegistrars.yamlSchemaRegistrars)
             .build();
+      }
+
+      @Provides
+      @Named("yaml-schema-mapper")
+      @Singleton
+      public ObjectMapper getYamlSchemaObjectMapper() {
+        ObjectMapper mapper = Jackson.newObjectMapper();
+        final AnnotationAwareJsonSubtypeResolver subtypeResolver =
+            AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver());
+        mapper.setSubtypeResolver(subtypeResolver);
+        mapper.setConfig(mapper.getSerializationConfig().withView(JsonViews.Public.class));
+        mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+          @Override
+          public List<NamedType> findSubtypes(Annotated a) {
+            final List<NamedType> subtypesFromSuper = super.findSubtypes(a);
+            if (isNotEmpty(subtypesFromSuper)) {
+              return subtypesFromSuper;
+            }
+            return emptyIfNull(subtypeResolver.findSubtypes(a));
+          }
+        });
+        mapper.registerModule(new Jdk8Module());
+        mapper.registerModule(new GuavaModule());
+        mapper.registerModule(new JavaTimeModule());
+        mapper.registerModule(new HarnessJacksonModule());
+        mapper.registerModule(new NGHarnessJacksonModule());
+        mapper.registerModule(new PmsBeansJacksonModule());
+        return mapper;
       }
     });
 

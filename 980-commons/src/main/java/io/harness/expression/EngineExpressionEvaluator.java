@@ -180,7 +180,7 @@ public class EngineExpressionEvaluator {
 
   public Object evaluateExpression(String expression, Map<String, Object> ctx) {
     // NOTE: Don't check for hasExpressions here. There might be normal expressions like '"true" != "false"'
-    if (EmptyPredicate.isEmpty(expression)) {
+    if (expression == null || EmptyPredicate.isEmpty(expression.trim())) {
       return null;
     }
     return evaluateExpressionInternal(expression, prepareContext(ctx), MAX_DEPTH);

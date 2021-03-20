@@ -7,6 +7,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.beans.RepresentationStrategy;
@@ -39,6 +40,7 @@ public class GraphVertexDTO {
   Status status;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
+  NodeRunInfo nodeRunInfo;
   Document stepParameters;
   ExecutionMode mode;
 
