@@ -3,7 +3,7 @@ package software.wings.helpers.ext.pcf.request;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
@@ -27,7 +27,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class PcfRunPluginCommandRequest
     extends PcfCommandRequest implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess {

@@ -13,7 +13,7 @@ pub const MODULE_IMPORT: &str = "import io.harness.annotations.dev.Module;";
 pub const TARGET_MODULE_IMPORT: &str = "import io.harness.annotations.dev.TargetModule;";
 
 lazy_static! {
-    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"^@TargetModule\((Module.)?_.*\)").unwrap();
+    pub static ref TARGET_MODULE_PATTERN: Regex = Regex::new(r"^@TargetModule\((HarnessModule.)?_.*\)").unwrap();
 }
 
 #[derive(Clap)]

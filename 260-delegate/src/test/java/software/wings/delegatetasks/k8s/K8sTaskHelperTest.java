@@ -61,7 +61,7 @@ import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.spy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
@@ -165,7 +165,7 @@ import wiremock.com.google.common.collect.Lists;
  now,
  * only then use it. Meanwhile, move powermock based tests to K8sTaskHelperSecondaryTest
  */
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class K8sTaskHelperTest extends WingsBaseTest {
   @Mock private ExecutionLogCallback logCallback;

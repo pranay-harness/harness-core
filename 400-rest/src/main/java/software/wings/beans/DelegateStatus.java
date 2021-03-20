@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -18,7 +18,7 @@ import lombok.Value;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
 @Builder
-@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
+@TargetModule(HarnessModule._920_DELEGATE_SERVICE_BEANS)
 public class DelegateStatus {
   List<String> publishedVersions;
   List<DelegateInner> delegates;

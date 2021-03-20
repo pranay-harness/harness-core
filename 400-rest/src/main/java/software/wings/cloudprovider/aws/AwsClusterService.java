@@ -2,7 +2,7 @@ package software.wings.cloudprovider.aws;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
@@ -28,7 +28,7 @@ import java.util.Optional;
 /**
  * Created by anubhaw on 12/29/16.
  */
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 @OwnedBy(CDP)
 public interface AwsClusterService {
   /**

@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -32,7 +32,7 @@ import org.mongodb.morphia.Morphia;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AuditRecordMigration implements Migration {
   public static final String GIT_SYNC = "GIT_SYNC";
   public static final String GIT = "GIT";

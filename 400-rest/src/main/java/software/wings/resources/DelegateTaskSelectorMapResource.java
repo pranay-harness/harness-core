@@ -4,7 +4,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.rest.RestResponse;
@@ -33,7 +33,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE_SCOPE)
 @AuthRule(permissionType = LOGGED_IN)
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 // TODO: we should use this auth rule: @AuthRule(permissionType = MANAGE_TASK_SELECTORS)
 public class DelegateTaskSelectorMapResource {
   private DelegateTaskSelectorMapService selectorMapService;

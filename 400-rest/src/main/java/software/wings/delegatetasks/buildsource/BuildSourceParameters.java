@@ -8,7 +8,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 
 import static java.util.Collections.emptyList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -30,7 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Value
 @Builder
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class BuildSourceParameters implements TaskParameters, ExecutionCapabilityDemander {
   public enum BuildSourceRequestType { GET_BUILDS, GET_LAST_SUCCESSFUL_BUILD }
 

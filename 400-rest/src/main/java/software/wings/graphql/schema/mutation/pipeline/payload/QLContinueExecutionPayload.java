@@ -1,7 +1,7 @@
 package software.wings.graphql.schema.mutation.pipeline.payload;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Scope(PermissionAttribute.ResourceType.DEPLOYMENT)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLContinueExecutionPayload {
   private String clientMutationId;
   private boolean status;

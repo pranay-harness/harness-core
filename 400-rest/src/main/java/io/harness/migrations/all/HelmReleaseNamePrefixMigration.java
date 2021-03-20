@@ -7,7 +7,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
@@ -30,7 +30,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 @OwnedBy(CDP)
 public class HelmReleaseNamePrefixMigration implements Migration {
   private static final String HELM_RELEASE_NAME_PREFIX_KEY = "helmReleaseNamePrefix";

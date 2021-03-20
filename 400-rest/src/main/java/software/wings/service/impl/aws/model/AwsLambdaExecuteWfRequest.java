@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType.EXECUTE_LAMBDA_WF;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -21,7 +21,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class AwsLambdaExecuteWfRequest extends AwsLambdaRequest {
   private String accountId;

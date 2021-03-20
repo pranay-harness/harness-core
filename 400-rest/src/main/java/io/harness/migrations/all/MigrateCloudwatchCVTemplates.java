@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -25,7 +25,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrateCloudwatchCVTemplates implements Migration {
   @Inject WingsPersistence wingsPersistence;
 

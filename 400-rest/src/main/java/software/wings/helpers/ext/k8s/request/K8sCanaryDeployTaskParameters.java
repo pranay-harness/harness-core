@@ -2,7 +2,7 @@ package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   private Boolean skipVersioningForAllK8sObjects;
   @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;

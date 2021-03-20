@@ -5,7 +5,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.SeedDataMigration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by anubhaw on 8/20/18.
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigration {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private WingsPersistence wingsPersistence;

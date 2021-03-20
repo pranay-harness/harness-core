@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector.types;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -9,7 +9,7 @@ import software.wings.graphql.schema.type.QLConnectorType;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ConnectorFactory {
   private ConnectorFactory() {
     throw new IllegalStateException("Utility class");

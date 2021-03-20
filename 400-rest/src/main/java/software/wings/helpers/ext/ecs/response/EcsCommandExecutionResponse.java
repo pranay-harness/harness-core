@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.ecs.response;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -12,7 +12,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsCommandExecutionResponse implements DelegateResponseData, DelegateTaskNotifyResponseData {
   private DelegateMetaInfo delegateMetaInfo;
   private EcsCommandResponse ecsCommandResponse;

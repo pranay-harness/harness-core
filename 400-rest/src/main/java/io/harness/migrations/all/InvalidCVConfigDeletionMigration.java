@@ -5,7 +5,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class InvalidCVConfigDeletionMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EnvironmentService environmentService;

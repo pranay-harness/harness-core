@@ -8,7 +8,7 @@ import static io.harness.ccm.billing.graphql.CloudEntityGroupBy.tagsValue;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
 import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CloudBillingHelper {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BillingDataPipelineRecordDao billingDataPipelineRecordDao;

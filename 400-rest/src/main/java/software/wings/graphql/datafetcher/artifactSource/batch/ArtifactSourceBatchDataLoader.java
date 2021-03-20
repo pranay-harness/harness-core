@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.graphql.datafetcher.artifactSource.ArtifactSourceController.populateArtifactSource;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -26,7 +26,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.dataloader.MappedBatchLoader;
 
 @OwnedBy(CDC)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ArtifactSourceBatchDataLoader implements MappedBatchLoader<String, QLArtifactSource> {
   final ArtifactStreamService artifactStreamService;
 

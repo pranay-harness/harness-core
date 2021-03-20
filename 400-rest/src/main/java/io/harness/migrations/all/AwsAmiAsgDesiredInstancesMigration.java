@@ -8,7 +8,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
@@ -32,7 +32,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 @OwnedBy(CDP)
 public class AwsAmiAsgDesiredInstancesMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;

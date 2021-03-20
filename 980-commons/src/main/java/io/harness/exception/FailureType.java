@@ -1,11 +1,11 @@
 package io.harness.exception;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.EnumSet;
 
-@TargetModule(Module._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum FailureType {
   EXPIRED(""),
   DELEGATE_PROVISIONING(""),

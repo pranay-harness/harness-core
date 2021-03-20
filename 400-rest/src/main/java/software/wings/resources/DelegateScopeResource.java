@@ -5,7 +5,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -41,7 +41,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE_SCOPE)
 @AuthRule(permissionType = LOGGED_IN)
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateScopeResource {
   private DelegateScopeService delegateScopeService;
 

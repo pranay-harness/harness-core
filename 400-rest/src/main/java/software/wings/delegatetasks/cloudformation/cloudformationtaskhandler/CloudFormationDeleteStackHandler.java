@@ -5,7 +5,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 
 @Singleton
 @NoArgsConstructor
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskHandler {
   @Override

@@ -1,6 +1,6 @@
 package software.wings.service.intfc;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
@@ -14,7 +14,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import java.util.List;
 import java.util.Map;
 
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public interface AssignDelegateService {
   boolean canAssign(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task);
 

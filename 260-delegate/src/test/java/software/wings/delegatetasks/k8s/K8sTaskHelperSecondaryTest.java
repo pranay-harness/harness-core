@@ -11,7 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
@@ -57,7 +57,7 @@ import org.zeroturnaround.exec.StartedProcess;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({Utils.class, K8sTaskHelperBase.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class K8sTaskHelperSecondaryTest extends WingsBaseTest {
   @Mock private Process process;

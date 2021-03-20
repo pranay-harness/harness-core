@@ -1,6 +1,6 @@
 package io.harness.delegate.app;
 
-import static io.harness.annotations.dev.Module._420_DELEGATE_AGENT;
+import static io.harness.annotations.dev.HarnessModule._420_DELEGATE_AGENT;
 import static io.harness.configuration.DeployMode.DEPLOY_MODE;
 import static io.harness.configuration.DeployMode.isOnPrem;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_DASH;

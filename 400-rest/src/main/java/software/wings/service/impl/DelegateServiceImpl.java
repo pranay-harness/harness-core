@@ -70,7 +70,7 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -330,7 +330,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")

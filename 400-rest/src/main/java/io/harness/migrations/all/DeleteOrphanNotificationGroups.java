@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -31,7 +31,7 @@ import org.mongodb.morphia.query.Query;
  * Delete Notification Groups in workflows which are not in `notificationGroups` collection
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class DeleteOrphanNotificationGroups implements Migration {
   @Inject private WingsPersistence persistence;
   @Inject private UserGroupService userGroupService;

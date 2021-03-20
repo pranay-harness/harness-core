@@ -13,7 +13,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
@@ -36,7 +36,7 @@ import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DeleteSecretDataFetcher extends BaseMutatorDataFetcher<QLDeleteSecretInput, QLDeleteSecretPayload> {
   @Inject private SecretManager secretManager;
   @Inject private SettingsService settingsService;

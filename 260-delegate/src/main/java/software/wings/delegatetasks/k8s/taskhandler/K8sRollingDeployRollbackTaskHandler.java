@@ -5,7 +5,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Rollback;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.k8s.K8sRollingRollbackBaseHandler;
@@ -31,7 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;

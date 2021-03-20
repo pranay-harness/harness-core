@@ -2,7 +2,7 @@ package software.wings.helpers.ext.ecs.request;
 
 import static software.wings.helpers.ext.ecs.request.EcsCommandRequest.EcsCommandType.SERVICE_SETUP;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AwsConfig;
@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsServiceSetupRequest extends EcsCommandRequest {
   private EcsSetupParams ecsSetupParams;
   private Map<String, String> serviceVariables;

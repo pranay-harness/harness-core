@@ -3,7 +3,7 @@ package io.harness.migrations.gitsync;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.OnPrimaryManagerMigration;
 import io.harness.persistence.HIterator;
@@ -23,7 +23,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetQueueKeyYamChangeSetMigration implements OnPrimaryManagerMigration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlChangeSetService yamlChangeSetService;

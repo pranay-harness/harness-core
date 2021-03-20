@@ -1,6 +1,6 @@
 package io.harness.annotations.dev;
 
-public enum Module {
+public enum HarnessModule {
   UNDEFINED,
   _280_BATCH_PROCESSING,
   _310_CI_MANAGER,

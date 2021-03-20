@@ -25,7 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.atLeastOnce;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -74,7 +74,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class TerraformProvisionTaskTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
