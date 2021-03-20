@@ -78,3 +78,8 @@ input WorkflowTagFilter {
 enum WorkflowTagType {
   APPLICATION
 }
+
+enum WorkflowType {
+  PIPELINE
+  ORCHESTRATION
+}

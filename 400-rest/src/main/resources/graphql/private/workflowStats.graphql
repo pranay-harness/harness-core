@@ -1,5 +1,6 @@
 enum WorkflowEntityAggregation {
   Application
+  WorkflowType
 }
 
 input WorkflowAggregation {
