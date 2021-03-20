@@ -21,6 +21,8 @@ enum Kind {
     ToDo,
 }
 
+static WEIGHTS: [i32; 6] = [5, 3, 1, 2, 1, 1];
+
 #[derive(Debug, EnumSetType)]
 enum Explanation {
     Empty,
@@ -31,7 +33,7 @@ enum Explanation {
 pub const EXPLANATION_TEAM_IS_MISSING: &str =
     "Please use the source level java annotation io.harness.annotations.dev.OwnedBy
 to specify which team is the owner of the class. The list of teams is in the
-enum io.harness.annotations.dev.HarnessTeam";
+enum io.harness.annotations.dev.HarnessTeam.";
 
 pub const EXPLANATION_CLASS_IN_DEPRECATED_MODULE: &str =
     "When a module is deprecated, every class that is still in use should be
@@ -42,6 +44,11 @@ promotion/demotion without the need to discover them the hard way. The list
 of the available modules is in io.harness.annotations.dev.HarnessModule.
 WARNING: Add target modules with cation. If wrong targets are specified
          this could lead to all sorts of inappropriate error reports.";
+
+pub const EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS: &str =
+    "Please resolve the necessary issues so your issue points drop under the expected limit.
+Note resolving some of the issues with higher issue points weight might be harder,
+but you will need to resolve less of those.";
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -82,6 +89,9 @@ pub struct Analyze {
 
     #[clap(long)]
     auto_actionable_command: bool,
+
+    #[clap(short, long)]
+    issue_points_per_class_limit: Option<f64>,
 }
 
 #[derive(Debug)]
@@ -245,15 +255,34 @@ pub fn analyze(opts: Analyze) {
 
     println!();
 
-    for kind in Kind::iter() {
-        if total[kind as usize] > 0 {
-            println!("{:?} -> {}", kind, total[kind as usize]);
-        }
-    }
-
     if results.is_empty() {
         println!("aeriform did not find any issues");
     } else {
+        let mut issue_points = 0;
+        for kind in Kind::iter() {
+            if total[kind as usize] > 0 {
+                let ip = total[kind as usize] * WEIGHTS[kind as usize];
+                issue_points += ip;
+
+                println!(
+                    "{:?} -> {} * {} = {}",
+                    kind, total[kind as usize], WEIGHTS[kind as usize], ip
+                );
+            }
+        }
+
+        let count = classes
+            .iter()
+            .filter(|(_, &class)| {
+                class.team.is_none()
+                    || opts.team_filter.is_none()
+                    || class.team.as_ref().unwrap().eq(opts.team_filter.as_ref().unwrap())
+            })
+            .count();
+
+        let ipc = issue_points as f64 / count as f64;
+        println!("IssuePoints -> {} / {} classes = {}", issue_points, count, ipc);
+
         if explanations.contains(Explanation::TeamIsMissing) {
             println!();
             println!("{}", EXPLANATION_TEAM_IS_MISSING);
@@ -261,6 +290,17 @@ pub fn analyze(opts: Analyze) {
         if explanations.contains(Explanation::DeprecatedModule) {
             println!();
             println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
+        }
+
+        if opts.issue_points_per_class_limit.is_some() && opts.issue_points_per_class_limit.unwrap() < ipc {
+            println!();
+            println!(
+                "The analyze found {} that is more than the expected limit of issues per class {}.",
+                ipc,
+                opts.issue_points_per_class_limit.unwrap()
+            );
+            println!("{}", EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS);
+            exit(1);
         }
 
         if opts.exit_code {
