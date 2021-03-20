@@ -16,7 +16,7 @@ import static software.wings.audit.ResourceType.WORKFLOW;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.migrations.Migration;
@@ -66,7 +66,7 @@ import org.mongodb.morphia.Morphia;
  * This may happen when any entity is created but somehow creating resourceLookup record fails.
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class ResourceLookupMigration implements Migration {
   @Inject WingsPersistence wingsPersistence;
   @Inject Morphia morphia;

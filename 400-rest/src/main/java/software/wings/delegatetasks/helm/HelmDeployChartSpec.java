@@ -2,7 +2,7 @@ package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -24,7 +24,7 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class HelmDeployChartSpec {
   private String url;

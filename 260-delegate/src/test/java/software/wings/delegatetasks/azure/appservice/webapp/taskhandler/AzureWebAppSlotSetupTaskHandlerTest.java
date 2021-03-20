@@ -13,7 +13,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
@@ -55,7 +55,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private ILogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private LogCallback mockLogCallback;

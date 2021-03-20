@@ -2,7 +2,7 @@ package io.harness.migrations.seedata;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -16,7 +16,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class ReImportTemplatesMigration implements SeedDataMigration {
   private static final String ACCOUNT_ID = "-czOfo4UTPumhprgLZkDYg"; // Bitcentral Inc.
   @Inject private TemplateGalleryService templateGalleryService;

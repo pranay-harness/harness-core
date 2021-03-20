@@ -2,7 +2,7 @@ package software.wings.delegatetasks.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -75,7 +75,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class JiraTask extends AbstractDelegateRunnableTask {
   public static final String RESOLUTION = "resolution";
   @Inject private EncryptionService encryptionService;

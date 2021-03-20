@@ -8,7 +8,7 @@ import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTR
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 @OwnedBy(CDP)
 public class WinRMCredentialController {
   @Inject SettingsService settingService;

@@ -10,7 +10,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
@@ -55,7 +55,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FileUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();

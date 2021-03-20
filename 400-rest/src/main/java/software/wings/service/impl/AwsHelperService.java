@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
@@ -200,7 +200,7 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 @OwnedBy(CDP)
 public class AwsHelperService {
   @Inject private EncryptionService encryptionService;

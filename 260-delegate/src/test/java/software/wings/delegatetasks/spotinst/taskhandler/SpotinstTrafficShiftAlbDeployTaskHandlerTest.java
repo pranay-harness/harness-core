@@ -13,7 +13,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
@@ -32,7 +32,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbDeployTaskHandlerTest extends WingsBaseTest {
   @Test

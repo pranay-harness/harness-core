@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -28,7 +28,7 @@ import org.apache.logging.log4j.util.Strings;
 @Data
 @Builder
 @Slf4j
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class AwsLambdaDetails {
   private String functionName;

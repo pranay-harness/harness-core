@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.chartmuseum;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.chartmuseum.ChartMuseumClientHelper;
 import io.harness.chartmuseum.ChartMuseumServer;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.StartedProcess;
 
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class ChartMuseumClientImpl implements ChartMuseumClient {
   @Inject private ChartMuseumClientHelper chartMuseumClientHelper;
 

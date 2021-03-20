@@ -4,7 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.function.Function.identity;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class NameServiceImpl implements NameService {
   @Inject WingsPersistence wingsPersistence;
 

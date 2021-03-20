@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.perpetualtask.PerpetualTaskState;
@@ -10,7 +10,7 @@ import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class PerpetualTaskMigration implements Migration {
   @Inject private HPersistence persistence;
 

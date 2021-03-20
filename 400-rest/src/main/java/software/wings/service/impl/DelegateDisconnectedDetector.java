@@ -7,7 +7,7 @@ import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 
 import static java.lang.System.currentTimeMillis;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.task.DelegateLogContext;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateDisconnectedDetector implements Runnable {
   @Inject private DelegateService delegateService;
   @Inject private QueueController queueController;

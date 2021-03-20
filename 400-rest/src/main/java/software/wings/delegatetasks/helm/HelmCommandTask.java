@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -41,7 +41,7 @@ import org.apache.commons.lang3.NotImplementedException;
  * Created by anubhaw on 3/22/18.
  */
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class HelmCommandTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;

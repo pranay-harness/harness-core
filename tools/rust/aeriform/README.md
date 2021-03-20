@@ -16,7 +16,7 @@ fixing.
 
 ## How it works
 The tool detects and report possible actions, warnings and errors with the layering, based on
-the annotation @TargetModule(Module.xxx) of the classes in the modules. This suggested target
+the annotation @TargetModule(HarnessModule.xxx) of the classes in the modules. This suggested target
 module is analyzed against the dependencies of the classes and issues are reported.
 
 The tool assumes that every class without an annotation is purposed to stay in the current module.

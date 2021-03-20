@@ -10,7 +10,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
@@ -35,7 +35,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({EcsServiceDeployCommandHandler.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsServiceDeployCommandHandlerTest extends WingsBaseTest {
   @Mock private Injector injector;
   @Mock private ExecutionLogCallback executionLogCallback;

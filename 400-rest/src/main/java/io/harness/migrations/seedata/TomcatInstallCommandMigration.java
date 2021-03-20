@@ -8,7 +8,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -31,7 +31,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TomcatInstallCommandMigration implements SeedDataMigration {
   @Inject private TemplateService templateService;
   @Inject private TemplateGalleryService templateGalleryService;

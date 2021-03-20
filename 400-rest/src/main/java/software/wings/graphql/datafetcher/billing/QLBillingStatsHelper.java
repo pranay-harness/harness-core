@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.billing;
 import static io.harness.ccm.cluster.entities.ClusterType.AWS_ECS;
 import static io.harness.ccm.cluster.entities.ClusterType.DIRECT_KUBERNETES;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.InstanceDataServiceImpl;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLBillingStatsHelper {
   @Inject WingsPersistence wingsPersistence;
   @Inject ClusterRecordService clusterRecordService;

@@ -9,7 +9,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidRequestException;
@@ -51,7 +51,7 @@ import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class InstanceStatsDataFetcher
     extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLInstanceFilter, QLInstanceAggregation,
         QLNoOpSortCriteria, QLInstanceTagType, QLInstanceTagAggregation, QLInstanceEntityAggregation> {

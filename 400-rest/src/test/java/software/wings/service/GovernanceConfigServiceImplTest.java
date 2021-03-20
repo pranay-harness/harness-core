@@ -18,7 +18,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
@@ -64,7 +64,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class GovernanceConfigServiceImplTest extends WingsBaseTest {
   public static final int DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
   @Mock FeatureFlagService featureFlagService;

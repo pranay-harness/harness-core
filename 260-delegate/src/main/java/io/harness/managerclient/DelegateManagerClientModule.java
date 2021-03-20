@@ -1,6 +1,6 @@
 package io.harness.managerclient;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.TokenGenerator;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -8,7 +8,7 @@ import io.harness.verificationclient.CVNextGenServiceClientFactory;
 
 import com.google.inject.AbstractModule;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class DelegateManagerClientModule extends AbstractModule {
   private final String managerBaseUrl;
   private final String accountId;

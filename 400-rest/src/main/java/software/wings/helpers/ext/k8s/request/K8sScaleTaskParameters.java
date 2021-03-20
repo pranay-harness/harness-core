@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.k8s.request;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.k8s.model.HelmVersion;
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class K8sScaleTaskParameters extends K8sTaskParameters {
   private String workload;
   private Integer instances;

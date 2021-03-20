@@ -4,7 +4,7 @@ import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.ff.FeatureFlagService;
@@ -23,7 +23,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateTaskBroadcastHelper {
   public static final String STREAM_DELEGATE_PATH = "/stream/delegate/";
   @Inject private AssignDelegateService assignDelegateService;

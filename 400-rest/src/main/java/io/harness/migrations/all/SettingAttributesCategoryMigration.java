@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * @author marklu on 9/4/19
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SettingAttributesCategoryMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 

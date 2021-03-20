@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.pcf;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PcfDelegateTaskHelper {
   @Inject private Map<String, PcfCommandTaskHandler> commandTaskTypeToTaskHandlerMap;
 

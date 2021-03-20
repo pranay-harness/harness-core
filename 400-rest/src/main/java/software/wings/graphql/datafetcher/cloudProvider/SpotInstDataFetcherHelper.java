@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -17,7 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 @OwnedBy(CDP)
 public class SpotInstDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;

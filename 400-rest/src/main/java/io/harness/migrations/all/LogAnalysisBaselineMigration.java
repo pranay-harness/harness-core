@@ -7,7 +7,7 @@ import static software.wings.service.impl.WorkflowExecutionBaselineServiceImpl.B
 
 import static java.time.Duration.ofMillis;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateResults;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class LogAnalysisBaselineMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Override

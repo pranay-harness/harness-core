@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.mongo.MongoUtils.setUnset;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -24,7 +24,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * @author rktummala on 10/07/18
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetIsDeletedFlagForInstances implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 

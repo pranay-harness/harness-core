@@ -13,7 +13,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.joda.time.Seconds.secondsBetween;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
@@ -51,7 +51,7 @@ import org.eclipse.jetty.server.Response;
 import org.joda.time.DateTime;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;

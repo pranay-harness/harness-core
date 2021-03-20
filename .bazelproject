@@ -114,6 +114,7 @@ directories:
   200-functional-test
   tools
   scripts
+  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml

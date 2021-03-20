@@ -18,7 +18,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
@@ -74,7 +74,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class K8sTaskHelper {
   @Inject protected DelegateLogService delegateLogService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;

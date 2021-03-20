@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -17,7 +17,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import com.google.inject.Inject;
 import java.util.List;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class EcsCommandTaskHandler {
   @Inject protected DelegateFileManager delegateFileManager;
   @Inject protected EncryptionService encryptionService;
