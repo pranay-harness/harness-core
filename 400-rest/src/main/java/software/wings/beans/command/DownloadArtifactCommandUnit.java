@@ -64,7 +64,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SimpleTimeZone;
 import java.util.stream.Collectors;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -247,25 +246,6 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Override
   public List<TailFilePatternEntry> getTailPatterns() {
     return super.getTailPatterns();
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("DOWNLOAD_ARTIFACT")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    private String artifactVariableName;
-
-    public Yaml() {
-      super(CommandUnitType.DOWNLOAD_ARTIFACT.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList, String artifactVariableName) {
-      super(name, CommandUnitType.DOWNLOAD_ARTIFACT.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-      this.artifactVariableName = artifactVariableName;
-    }
   }
 
   private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {

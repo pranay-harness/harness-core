@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
  * Created by anubhaw on 1/4/17.
@@ -44,21 +42,5 @@ public class DockerStopCommandUnit extends ExecCommandUnit {
   @Override
   public List<TailFilePatternEntry> getTailPatterns() {
     return super.getTailPatterns();
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("DOCKER_STOP")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    public Yaml() {
-      super(CommandUnitType.DOCKER_STOP.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.DOCKER_STOP.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
-    }
   }
 }

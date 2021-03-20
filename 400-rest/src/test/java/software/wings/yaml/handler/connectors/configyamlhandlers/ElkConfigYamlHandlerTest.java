@@ -15,6 +15,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.ElkConfig;
+import software.wings.beans.ElkConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.service.impl.analysis.ElkConnector;
@@ -38,7 +39,7 @@ public class ElkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
       + "harnessApiVersion: '1.0'\n"
       + "type: ELK";
 
-  private Class yamlClass = ElkConfig.Yaml.class;
+  private Class yamlClass = ElkConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)
@@ -73,7 +74,7 @@ public class ElkConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     ElkConfig config = ElkConfig.builder().elkUrl(url).accountId(accountId).validationType(null).build();
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(config);
-    ElkConfig.Yaml yaml = yamlHandler.toYaml(attribute, appId);
+    ElkConfigYaml yaml = yamlHandler.toYaml(attribute, appId);
 
     assertThat(yaml).isNotNull();
     assertThat(yaml.getElkUrl()).isEqualTo(url);

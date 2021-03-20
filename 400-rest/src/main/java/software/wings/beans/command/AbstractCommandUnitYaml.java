@@ -17,12 +17,12 @@ import lombok.EqualsAndHashCode;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "commandUnitType", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = SetupEnvCommandUnit.Yaml.class, name = "SETUP_ENV")
-  , @JsonSubTypes.Type(value = ExecCommandUnit.Yaml.class, name = "EXEC"),
+  , @JsonSubTypes.Type(value = ExecCommandUnitYaml.class, name = "EXEC"),
       @JsonSubTypes.Type(value = ScpCommandUnit.Yaml.class, name = "SCP"),
       @JsonSubTypes.Type(value = CopyConfigCommandUnitYaml.class, name = "COPY_CONFIGS"),
       @JsonSubTypes.Type(value = CommandRefYaml.class, name = "COMMAND"),
       @JsonSubTypes.Type(value = DockerStartCommandUnitYaml.class, name = "DOCKER_START"),
-      @JsonSubTypes.Type(value = DockerStopCommandUnit.Yaml.class, name = "DOCKER_STOP"),
+      @JsonSubTypes.Type(value = DockerStopCommandUnitYaml.class, name = "DOCKER_STOP"),
       @JsonSubTypes.Type(value = ProcessCheckRunningCommandUnit.Yaml.class, name = "PROCESS_CHECK_RUNNING"),
       @JsonSubTypes.Type(value = ProcessCheckStoppedCommandUnit.Yaml.class, name = "PROCESS_CHECK_STOPPED"),
       @JsonSubTypes.Type(value = PortCheckClearedCommandUnitYaml.class, name = "PORT_CHECK_CLEARED"),
@@ -33,8 +33,8 @@ import lombok.EqualsAndHashCode;
       @JsonSubTypes.Type(value = AmiCommandUnitYaml.class, name = "AWS_AMI"),
       @JsonSubTypes.Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES"),
       @JsonSubTypes.Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),
-      @JsonSubTypes.Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP"),
-      @JsonSubTypes.Type(value = DownloadArtifactCommandUnit.Yaml.class, name = "DOWNLOAD_ARTIFACT")
+      @JsonSubTypes.Type(value = EcsSetupCommandUnitYaml.class, name = "ECS_SETUP"),
+      @JsonSubTypes.Type(value = DownloadArtifactCommandUnitYaml.class, name = "DOWNLOAD_ARTIFACT")
 })
 
 public abstract class AbstractCommandUnitYaml extends BaseYaml {

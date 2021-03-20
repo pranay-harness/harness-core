@@ -51,10 +51,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.apache.commons.io.LineIterator;
 import org.apache.commons.lang3.StringUtils;
 /**
@@ -471,17 +468,6 @@ public class EcsContainerTask extends ContainerTask {
     ContainerTask newContainerTask = new EcsContainerTask();
     copyConfigToContainerTask(newContainerTask);
     return newContainerTask;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerTaskYaml {
-    @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinitionYaml containerDefinition) {
-      super(type, harnessApiVersion, advancedConfig, containerDefinition);
-    }
   }
 
   @Override

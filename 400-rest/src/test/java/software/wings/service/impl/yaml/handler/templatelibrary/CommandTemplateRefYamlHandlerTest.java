@@ -26,7 +26,7 @@ import io.harness.rule.Owner;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.command.Command;
-import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.ExecCommandUnitYaml;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateReference;
 import software.wings.beans.yaml.ChangeContext;
@@ -76,10 +76,10 @@ public class CommandTemplateRefYamlHandlerTest extends YamlHandlerTestBase {
     changeContext.setYaml(yamlObject);
     changeContext.getChange().setAccountId(GLOBAL_ACCOUNT_ID);
 
-    ChangeContext<ExecCommandUnit.Yaml> changeContextForSecond =
+    ChangeContext<ExecCommandUnitYaml> changeContextForSecond =
         getChangeContext(EXEC_COMMAND_UNIT, COMMAND_TEMPLATE_VALID_YAML_FILE_PATH, execCommandUnitYamlHandler);
-    ExecCommandUnit.Yaml yamlObjectForSecond =
-        (ExecCommandUnit.Yaml) getYaml(EXEC_COMMAND_UNIT, ExecCommandUnit.Yaml.class);
+    ExecCommandUnitYaml yamlObjectForSecond =
+        (ExecCommandUnitYaml) getYaml(EXEC_COMMAND_UNIT, ExecCommandUnitYaml.class);
     changeContextForSecond.setYaml(yamlObjectForSecond);
     changeContextForSecond.getChange().setAccountId(GLOBAL_ACCOUNT_ID);
 

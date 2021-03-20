@@ -18,8 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -274,22 +272,6 @@ public class ExecCommandUnit extends SshCommandUnit {
       execCommandUnit.setCommandString(commandString);
       execCommandUnit.setTailPatterns(tailPatterns);
       return execCommandUnit;
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("EXEC")
-  public static class Yaml extends ExecCommandUnitAbstractYaml {
-    public Yaml() {
-      super(CommandUnitType.EXEC.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String workingDirectory, String scriptType, String command,
-        List<TailFilePatternEntry.Yaml> filePatternEntryList) {
-      super(name, CommandUnitType.EXEC.name(), deploymentType, workingDirectory, scriptType, command,
-          filePatternEntryList);
     }
   }
 }

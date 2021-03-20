@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.setting.verificationprovider;
 
 import software.wings.beans.ElkConfig;
-import software.wings.beans.ElkConfig.Yaml;
+import software.wings.beans.ElkConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.analysis.ElkConnector;
@@ -14,32 +14,32 @@ import java.util.List;
  * @author rktummala on 11/19/17
  */
 @Singleton
-public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, ElkConfig> {
+public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<ElkConfigYaml, ElkConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public ElkConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     ElkConfig config = (ElkConfig) settingAttribute.getValue();
     String connectorType = Utils.getStringFromEnum(config.getElkConnector());
 
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .type(config.getType())
-                    .elkUrl(config.getElkUrl())
-                    .username(config.getUsername())
-                    .password(config.getEncryptedPassword() != null
-                            ? getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword())
-                            : null)
-                    .connectorType(connectorType)
-                    .validationType(config.getValidationType())
-                    .build();
+    ElkConfigYaml yaml = ElkConfigYaml.builder()
+                             .harnessApiVersion(getHarnessApiVersion())
+                             .type(config.getType())
+                             .elkUrl(config.getElkUrl())
+                             .username(config.getUsername())
+                             .password(config.getEncryptedPassword() != null
+                                     ? getEncryptedYamlRef(config.getAccountId(), config.getEncryptedPassword())
+                                     : null)
+                             .connectorType(connectorType)
+                             .validationType(config.getValidationType())
+                             .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
 
   @Override
   protected SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<ElkConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    ElkConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     ElkConnector elkConnector = Utils.getEnumFromString(ElkConnector.class, yaml.getConnectorType());
     ElkConfig config = ElkConfig.builder()
@@ -56,6 +56,6 @@ public class ElkConfigYamlHandler extends VerificationProviderYamlHandler<Yaml, 
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ElkConfigYaml.class;
   }
 }

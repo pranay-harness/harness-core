@@ -12,7 +12,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.EcsInfrastructureMapping.Yaml;
+import software.wings.beans.EcsInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -28,10 +28,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 public class EcsInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, EcsInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<EcsInfrastructureMappingYaml, EcsInfrastructureMapping> {
   @Override
-  public Yaml toYaml(EcsInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public EcsInfrastructureMappingYaml toYaml(EcsInfrastructureMapping bean, String appId) {
+    EcsInfrastructureMappingYaml yaml = EcsInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AWS_ECS.name());
     yaml.setRegion(bean.getRegion());
@@ -42,9 +42,9 @@ public class EcsInfraMappingYamlHandler
   }
 
   @Override
-  public EcsInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
-    Yaml infraMappingYaml = changeContext.getYaml();
+  public EcsInfrastructureMapping upsertFromYaml(ChangeContext<EcsInfrastructureMappingYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
+    EcsInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -66,9 +66,9 @@ public class EcsInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(EcsInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId) throws HarnessException {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(EcsInfrastructureMapping bean, ChangeContext<EcsInfrastructureMappingYaml> changeContext,
+      String appId, String envId, String computeProviderId, String serviceId) throws HarnessException {
+    EcsInfrastructureMappingYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setRegion(yaml.getRegion());
     bean.setClusterName(yaml.getCluster());
@@ -99,7 +99,7 @@ public class EcsInfraMappingYamlHandler
   }
 
   @VisibleForTesting
-  static void validateNetworkParameters(Yaml yaml, EcsInfrastructureMapping bean) {
+  static void validateNetworkParameters(EcsInfrastructureMappingYaml yaml, EcsInfrastructureMapping bean) {
     if (isBlank(yaml.getVpcId()) || isBlank(yaml.getSubnetIds()) || isBlank(yaml.getSecurityGroupIds())) {
       throw new InvalidArgumentsException(
           format("Failed to parse yaml for EcsInfraMapping: %s, App: %s, "
@@ -116,10 +116,10 @@ public class EcsInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return EcsInfrastructureMappingYaml.class;
   }
 
-  private void setFargateData(EcsInfrastructureMapping bean, Yaml yaml) {
+  private void setFargateData(EcsInfrastructureMapping bean, EcsInfrastructureMappingYaml yaml) {
     if (isBlank(bean.getLaunchType())) {
       yaml.setLaunchType(LaunchType.EC2.name());
     } else {

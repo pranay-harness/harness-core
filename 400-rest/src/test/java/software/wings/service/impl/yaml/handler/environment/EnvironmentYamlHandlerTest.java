@@ -39,7 +39,7 @@ import io.harness.rule.Owner;
 
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.Yaml;
+import software.wings.beans.EnvironmentYaml;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -162,12 +162,12 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(WingsTestConstants.ACCOUNT_ID);
 
-    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<EnvironmentYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.ENVIRONMENT);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    EnvironmentYaml yamlObject = (EnvironmentYaml) getYaml(validYamlContent, EnvironmentYaml.class);
     changeContext.setYaml(yamlObject);
 
     when(mockEnvironmentService.save(environment)).thenReturn(environment);
@@ -176,7 +176,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     Environment savedEnv = captor.getValue();
     compareEnv(environment, savedEnv);
 
-    Yaml yaml = yamlHandler.toYaml(this.environment, WingsTestConstants.APP_ID);
+    EnvironmentYaml yaml = yamlHandler.toYaml(this.environment, WingsTestConstants.APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isNotNull();
 
@@ -200,12 +200,12 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(invalidYamlFilePath);
     gitFileChange.setAccountId(WingsTestConstants.ACCOUNT_ID);
 
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<EnvironmentYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.ENVIRONMENT);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    EnvironmentYaml yamlObject = (EnvironmentYaml) getYaml(validYamlContent, EnvironmentYaml.class);
     changeContext.setYaml(yamlObject);
 
     thrown.expect(WingsException.class);
@@ -247,7 +247,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     final String expected_value_for_encrypted_var = "safeharness:some-secret";
     ArgumentCaptor<ServiceVariable> captor = ArgumentCaptor.forClass(ServiceVariable.class);
     Environment env = getDefaultEnvironment();
-    Yaml yaml = yamlHandler.toYaml(env, env.getAppId());
+    EnvironmentYaml yaml = yamlHandler.toYaml(env, env.getAppId());
     VariableOverrideYaml newVariableOverride_1 =
         VariableOverrideYaml.builder().name("var-1").value("value-1").valueType("TEXT").build();
     VariableOverrideYaml newVariableOverride_2 =
@@ -256,7 +256,7 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
         VariableOverrideYaml.builder().name("var-3").value(encryped_yaml_ref).valueType("ENCRYPTED_TEXT").build();
     yaml.setVariableOverrides(Arrays.asList(newVariableOverride_1, newVariableOverride_2, newVariableOverride_3));
 
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ChangeContext<EnvironmentYaml> changeContext = getChangeContext(yaml);
 
     when(mockEnvironmentService.save(env)).thenReturn(env);
     when(yamlHelper.extractEncryptedRecordId(eq(newVariableOverride_3.getValue()), anyString()))
@@ -323,9 +323,9 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     when(serviceResourceService.getWithDetails(APP_ID, SERVICE_ID)).thenReturn(parentService);
     when(secretManager.getEncryptedYamlRef(any(), any())).thenReturn(existing_1_override.getValue());
 
-    Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
+    EnvironmentYaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
     yaml.setVariableOverrides(Arrays.asList(existing_1_override));
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ChangeContext<EnvironmentYaml> changeContext = getChangeContext(yaml);
     yamlHandler.upsertFromYaml(changeContext, null);
     verify(mockServiceVariableService, times(1)).delete(anyString(), anyString(), anyBoolean());
     verify(mockServiceVariableService, times(1)).update(captor.capture(), anyBoolean());
@@ -338,17 +338,17 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
   @Category(UnitTests.class)
   public void testDelete() {
     Environment env = getDefaultEnvironment();
-    Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    EnvironmentYaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
+    ChangeContext<EnvironmentYaml> changeContext = getChangeContext(yaml);
     yamlHandler.delete(changeContext);
     verify(mockEnvironmentService, times(1)).delete(APP_ID, ENV_ID, false);
   }
 
-  private ChangeContext<Yaml> getChangeContext(Yaml yaml) {
+  private ChangeContext<EnvironmentYaml> getChangeContext(EnvironmentYaml yaml) {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<EnvironmentYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYaml(yaml);
     return changeContext;
@@ -395,9 +395,9 @@ public class EnvironmentYamlHandlerTest extends YamlHandlerTestBase {
     when(yamlHelper.getEnvironment(APP_ID, validYamlFilePath)).thenReturn(environment);
     when(secretManager.getEncryptedYamlRef(any(), any())).thenReturn(new_override.getValue());
 
-    Yaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
+    EnvironmentYaml yaml = yamlHandler.toYaml(environment, environment.getAppId());
     yaml.setVariableOverrides(Arrays.asList(new_override));
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ChangeContext<EnvironmentYaml> changeContext = getChangeContext(yaml);
 
     yamlHandler.upsertFromYaml(changeContext, null);
     verify(mockServiceVariableService, times(1)).save(captor.capture(), anyBoolean());

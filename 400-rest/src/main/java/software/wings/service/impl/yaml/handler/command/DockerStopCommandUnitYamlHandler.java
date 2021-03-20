@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
 import software.wings.beans.command.DockerStopCommandUnit;
-import software.wings.beans.command.DockerStopCommandUnit.Yaml;
+import software.wings.beans.command.DockerStopCommandUnitYaml;
 
 import com.google.inject.Singleton;
 
@@ -9,15 +9,16 @@ import com.google.inject.Singleton;
  * @author rktummala on 11/13/17
  */
 @Singleton
-public class DockerStopCommandUnitYamlHandler extends AbstractExecCommandUnitYamlHandler<Yaml, DockerStopCommandUnit> {
+public class DockerStopCommandUnitYamlHandler
+    extends AbstractExecCommandUnitYamlHandler<DockerStopCommandUnitYaml, DockerStopCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return DockerStopCommandUnitYaml.class;
   }
 
   @Override
-  public Yaml toYaml(DockerStopCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public DockerStopCommandUnitYaml toYaml(DockerStopCommandUnit bean, String appId) {
+    DockerStopCommandUnitYaml yaml = DockerStopCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     return yaml;
   }

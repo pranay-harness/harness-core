@@ -23,19 +23,16 @@ import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -482,29 +479,6 @@ public class Environment extends Base implements KeywordsAware, NameAccess, TagA
       environment.setLastUpdatedAt(lastUpdatedAt);
       environment.setSample(sample);
       return environment;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String description;
-    private String configMapYaml;
-    private Map<String, String> configMapYamlByServiceTemplateName;
-    private String environmentType = "NON_PROD";
-    private List<VariableOverrideYaml> variableOverrides = new ArrayList<>();
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, String configMapYaml,
-        Map<String, String> configMapYamlByServiceTemplateName, String environmentType,
-        List<VariableOverrideYaml> variableOverrides) {
-      super(EntityType.ENVIRONMENT.name(), harnessApiVersion);
-      this.description = description;
-      this.configMapYaml = configMapYaml;
-      this.configMapYamlByServiceTemplateName = configMapYamlByServiceTemplateName;
-      this.environmentType = environmentType;
-      this.variableOverrides = variableOverrides;
     }
   }
 

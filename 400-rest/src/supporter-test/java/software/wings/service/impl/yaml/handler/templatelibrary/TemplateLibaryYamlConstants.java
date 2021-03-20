@@ -15,6 +15,7 @@ import io.harness.shell.ScriptType;
 import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.command.ExecCommandUnit;
+import software.wings.beans.command.ExecCommandUnitYaml;
 import software.wings.beans.command.ProcessCheckRunningCommandUnit;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
@@ -216,7 +217,7 @@ public class TemplateLibaryYamlConstants {
                   .withCommandString("echo 0")
                   .withName("Process Running")
                   .build()))
-          .commands(Arrays.asList(ExecCommandUnit.Yaml.builder()
+          .commands(Arrays.asList(ExecCommandUnitYaml.builder()
                                       .workingDirectory("${RuntimePath}/tomcat/bin")
                                       .command("./startup.sh")
                                       .scriptType("BASH")

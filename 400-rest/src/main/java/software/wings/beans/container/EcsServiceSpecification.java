@@ -3,13 +3,11 @@ package software.wings.beans.container;
 import io.harness.annotation.HarnessEntity;
 
 import software.wings.beans.DeploymentSpecification;
-import software.wings.beans.DeploymentSpecificationYaml;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -47,21 +45,5 @@ public class EcsServiceSpecification extends DeploymentSpecification {
     specification.setAccountId(this.getAccountId());
     specification.setAppId(this.getAppId());
     return specification;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecificationYaml {
-    private String serviceSpecJson;
-    private String schedulingStrategy = ECS_REPLICA_SCHEDULING_STRATEGY;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceName, String manifestYaml, String serviceSpecJson,
-        String schedulingStrategy) {
-      super(type, harnessApiVersion);
-      this.schedulingStrategy = schedulingStrategy;
-      this.serviceSpecJson = serviceSpecJson;
-    }
   }
 }

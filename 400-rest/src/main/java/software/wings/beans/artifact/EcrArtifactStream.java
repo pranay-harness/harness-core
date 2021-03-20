@@ -17,7 +17,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -77,20 +76,5 @@ public class EcrArtifactStream extends ArtifactStream {
   @Override
   public boolean checkIfStreamParameterized() {
     return validateParameters(region, imageName);
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String imageName;
-    private String region;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, String imageName, String region) {
-      super(ECR.name(), harnessApiVersion, serverName);
-      this.imageName = imageName;
-      this.region = region;
-    }
   }
 }

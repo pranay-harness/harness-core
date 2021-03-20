@@ -12,11 +12,9 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.yaml.setting.LoadBalancerProviderYaml;
 
 import com.amazonaws.regions.Regions;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -27,7 +25,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -81,27 +78,5 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return emptyList();
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends LoadBalancerProviderYaml {
-    private String region;
-    private String loadBalancerName;
-    private String accessKey;
-    private String secretKey;
-    private boolean useEc2IamCredentials;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String region, String loadBalancerName, String accessKey,
-        String secretKey, UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.region = region;
-      this.loadBalancerName = loadBalancerName;
-      this.accessKey = accessKey;
-      this.secretKey = secretKey;
-      this.useEc2IamCredentials = useEc2IamCredentials;
-    }
   }
 }

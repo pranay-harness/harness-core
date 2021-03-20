@@ -20,9 +20,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Transient;
@@ -129,19 +126,5 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
                                                     .build(),
         encryptedDataDetails);
     return CommandExecutionStatus.SUCCESS;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("ECS_SETUP")
-  public static class Yaml extends ContainerSetupCommandUnitYaml {
-    public Yaml() {
-      super(CommandUnitType.ECS_SETUP.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.ECS_SETUP.name(), deploymentType);
-    }
   }
 }

@@ -4,11 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.Field;
 import io.harness.mongo.index.NgUniqueIndex;
-import io.harness.yaml.BaseYaml;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -150,9 +146,4 @@ public class EntityVersionCollection extends EntityVersion {
       return entityVersionCollection;
     }
   }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {}
 }
