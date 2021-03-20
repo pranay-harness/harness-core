@@ -13,6 +13,7 @@ public class AwsConfigToInternalMapper {
         .accessKey(awsConfig.getAccessKey())
         .secretKey(awsConfig.getSecretKey())
         .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
+        .assumeCrossAccountRole(awsConfig.isAssumeCrossAccountRole())
         .crossAccountAttributes(awsConfig.getCrossAccountAttributes())
         .defaultRegion(awsConfig.getDefaultRegion())
         .useIRSA(awsConfig.isUseIRSA())
