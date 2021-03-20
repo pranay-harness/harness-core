@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 /**
@@ -389,27 +388,6 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
       gcpKubernetesInfrastructureMapping.setAutoPopulate(autoPopulate);
       gcpKubernetesInfrastructureMapping.setAccountId(accountId);
       return gcpKubernetesInfrastructureMapping;
-    }
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
-    private String namespace;
-    private String releaseName;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String cluster, String namespace,
-        String releaseName, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, cluster, blueprints);
-      this.namespace = namespace;
-      this.releaseName = releaseName;
     }
   }
 }

@@ -22,7 +22,7 @@ import io.harness.interrupts.ExecutionInterruptType;
 import io.harness.rule.Owner;
 
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.FailureStrategy.Yaml;
+import software.wings.beans.FailureStrategyYaml;
 import software.wings.utils.Utils;
 
 import java.util.Arrays;
@@ -44,7 +44,7 @@ public class FailureStrategyYamlHandlerTest extends CategoryTest {
                                           .actionAfterTimeout(END_EXECUTION)
                                           .build();
 
-    Yaml yaml = failureStrategyYamlHandler.toYaml(failureStrategy, APP_ID);
+    FailureStrategyYaml yaml = failureStrategyYamlHandler.toYaml(failureStrategy, APP_ID);
     assertThat(yaml.getActionAfterTimeout()).isEqualTo(Utils.getStringFromEnum(END_EXECUTION));
     assertThat(yaml.getManualInterventionTimeout()).isEqualTo(60000L);
   }
@@ -53,11 +53,11 @@ public class FailureStrategyYamlHandlerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldReturnFailureStrategyWithTimeoutAndActionAfterTimeout() throws HarnessException {
-    Yaml yaml = Yaml.builder()
-                    .manualInterventionTimeout(60000L)
-                    .actionAfterTimeout("end_execution")
-                    .repairActionCode("manual_intervention")
-                    .build();
+    FailureStrategyYaml yaml = FailureStrategyYaml.builder()
+                                   .manualInterventionTimeout(60000L)
+                                   .actionAfterTimeout("end_execution")
+                                   .repairActionCode("manual_intervention")
+                                   .build();
 
     FailureStrategy failureStrategy = failureStrategyYamlHandler.upsertFromYaml(
         Builder.aChangeContext().withYaml(yaml).build(), Collections.emptyList());
@@ -69,11 +69,11 @@ public class FailureStrategyYamlHandlerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentsExceptionWhenTimeoutIsLessThanOneMinute() {
-    Yaml yaml = Yaml.builder()
-                    .manualInterventionTimeout(1L)
-                    .actionAfterTimeout("end_execution")
-                    .repairActionCode("manual_intervention")
-                    .build();
+    FailureStrategyYaml yaml = FailureStrategyYaml.builder()
+                                   .manualInterventionTimeout(1L)
+                                   .actionAfterTimeout("end_execution")
+                                   .repairActionCode("manual_intervention")
+                                   .build();
 
     assertThatThrownBy(()
                            -> failureStrategyYamlHandler.upsertFromYaml(
@@ -86,7 +86,8 @@ public class FailureStrategyYamlHandlerTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldThrowInvalidArgumentsExceptionWhenActionAfterTimeoutIsNotProvided() {
-    Yaml yaml = Yaml.builder().manualInterventionTimeout(60000L).repairActionCode("manual_intervention").build();
+    FailureStrategyYaml yaml =
+        FailureStrategyYaml.builder().manualInterventionTimeout(60000L).repairActionCode("manual_intervention").build();
 
     List<ExecutionInterruptType> allowedActions =
         Arrays.asList(ABORT_ALL, END_EXECUTION, IGNORE, MARK_SUCCESS, ROLLBACK);

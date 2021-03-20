@@ -4,6 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static software.wings.security.GenericEntityFilterYaml.GenericEntityFilterYamlBuilder;
+import static software.wings.security.GenericEntityFilterYaml.builder;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -15,6 +18,7 @@ import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.EnvFilterBuilder;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.GenericEntityFilterBuilder;
+import software.wings.security.GenericEntityFilterYaml;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.security.UsageRestrictions.UsageRestrictionsBuilder;
@@ -48,7 +52,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   }
 
   private AppEnvRestriction.Yaml constructAppEnvRestrictionYaml(AppEnvRestriction appEnvRestriction) {
-    GenericEntityFilter.Yaml appFilterYaml = constructGenericEntityFilterYaml(appEnvRestriction.getAppFilter());
+    GenericEntityFilterYaml appFilterYaml = constructGenericEntityFilterYaml(appEnvRestriction.getAppFilter());
     return AppEnvRestriction.Yaml.builder()
         .envFilter(constructEnvFilterYaml(appEnvRestriction.getAppFilter(), appEnvRestriction.getEnvFilter()))
         .appFilter(appFilterYaml)
@@ -115,7 +119,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterTypes(Lists.newArrayList(envFilter.getFilterTypes())).build();
   }
 
-  private GenericEntityFilter constructGenericEntityFilter(GenericEntityFilter.Yaml yaml, String accountId) {
+  private GenericEntityFilter constructGenericEntityFilter(GenericEntityFilterYaml yaml, String accountId) {
     GenericEntityFilterBuilder builder = GenericEntityFilter.builder();
 
     if (isNotEmpty(yaml.getEntityNames())) {
@@ -137,8 +141,8 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterType(yaml.getFilterType()).build();
   }
 
-  private GenericEntityFilter.Yaml constructGenericEntityFilterYaml(GenericEntityFilter appFilter) {
-    GenericEntityFilter.Yaml.YamlBuilder builder = GenericEntityFilter.Yaml.builder();
+  private GenericEntityFilterYaml constructGenericEntityFilterYaml(GenericEntityFilter appFilter) {
+    GenericEntityFilterYamlBuilder builder = builder();
 
     if (isNotEmpty(appFilter.getIds())) {
       List<String> names = appFilter.getIds()

@@ -13,9 +13,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
-import software.wings.yaml.setting.CloudProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -26,7 +24,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -76,26 +73,5 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   @Override
   public String fetchResourceCategory() {
     return ResourceType.CLOUD_PROVIDER.name();
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CloudProviderYaml {
-    private String serviceAccountKeyFileContent;
-    private boolean useDelegate;
-    private String delegateSelector;
-    private boolean skipValidation;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector,
-        boolean skipValidation) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
-      this.delegateSelector = delegateSelector;
-      this.useDelegate = useDelegate;
-      this.skipValidation = skipValidation;
-    }
   }
 }

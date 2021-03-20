@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.GcrArtifactStream;
+import software.wings.beans.artifact.GcrArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -57,7 +58,7 @@ public class GcrArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
                                            .build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    GcrArtifactStream.Yaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
+    GcrArtifactStreamYaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
     assertThat(yaml.getDockerImageName()).isEqualTo("hello-world");
     assertThat(yaml.getRegistryHostName()).isEqualTo("harness.gcr.io");
   }
@@ -69,12 +70,12 @@ public class GcrArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    GcrArtifactStream.Yaml baseYaml = GcrArtifactStream.Yaml.builder()
-                                          .dockerImageName("hello-world")
-                                          .registryHostName("harness.gcr.io")
-                                          .harnessApiVersion("1.0")
-                                          .serverName("test server")
-                                          .build();
+    GcrArtifactStreamYaml baseYaml = GcrArtifactStreamYaml.builder()
+                                         .dockerImageName("hello-world")
+                                         .registryHostName("harness.gcr.io")
+                                         .harnessApiVersion("1.0")
+                                         .serverName("test server")
+                                         .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -110,6 +111,6 @@ public class GcrArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(GcrArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(GcrArtifactStreamYaml.class);
   }
 }

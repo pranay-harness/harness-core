@@ -20,7 +20,7 @@ import io.harness.interrupts.RepairActionCode;
 
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.FailureStrategy.Yaml;
+import software.wings.beans.FailureStrategyYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.utils.Utils;
@@ -34,9 +34,9 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.Yaml, FailureStrategy> {
-  private FailureStrategy toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategyYaml, FailureStrategy> {
+  private FailureStrategy toBean(ChangeContext<FailureStrategyYaml> changeContext) {
+    FailureStrategyYaml yaml = changeContext.getYaml();
     RepairActionCode repairActionCode = Utils.getEnumFromString(RepairActionCode.class, yaml.getRepairActionCode());
     ExecutionScope executionScope = Utils.getEnumFromString(ExecutionScope.class, yaml.getExecutionScope());
     RepairActionCode repairActionCodeAfterRetry =
@@ -78,7 +78,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   }
 
   @Override
-  public Yaml toYaml(FailureStrategy bean, String appId) {
+  public FailureStrategyYaml toYaml(FailureStrategy bean, String appId) {
     List<String> failureTypeList = null;
     if (bean.getFailureTypes() != null) {
       failureTypeList = bean.getFailureTypes().stream().map(Enum::name).collect(toList());
@@ -88,7 +88,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
     String executionScope = Utils.getStringFromEnum(bean.getExecutionScope());
     String actionAfterTimeout = Utils.getStringFromEnum(bean.getActionAfterTimeout());
 
-    return FailureStrategy.Yaml.builder()
+    return FailureStrategyYaml.builder()
         .executionScope(executionScope)
         .failureTypes(failureTypeList)
         .repairActionCode(repairActionCode)
@@ -102,14 +102,14 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   }
 
   @Override
-  public FailureStrategy upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public FailureStrategy upsertFromYaml(
+      ChangeContext<FailureStrategyYaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return FailureStrategy.Yaml.class;
+    return FailureStrategyYaml.class;
   }
 
   @Override
@@ -118,7 +118,7 @@ public class FailureStrategyYamlHandler extends BaseYamlHandler<FailureStrategy.
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<FailureStrategyYaml> changeContext) {
     // DO nothing
   }
 }

@@ -18,7 +18,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -90,20 +89,5 @@ public class GcrArtifactStream extends ArtifactStream {
   @Override
   public boolean checkIfStreamParameterized() {
     return validateParameters(registryHostName, dockerImageName);
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String registryHostName;
-    private String dockerImageName;
-
-    @Builder
-    public Yaml(String harnessApiVersion, String serverName, String registryHostName, String dockerImageName) {
-      super(GCR.name(), harnessApiVersion, serverName);
-      this.registryHostName = registryHostName;
-      this.dockerImageName = dockerImageName;
-    }
   }
 }

@@ -12,6 +12,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.FailureStrategy;
+import software.wings.beans.FailureStrategyYaml;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
@@ -125,7 +126,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     FailureStrategyYamlHandler failureStrategyYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
     List<FailureStrategy> failureStrategies = bean.getFailureStrategies();
-    List<FailureStrategy.Yaml> failureStrategyYamlList =
+    List<FailureStrategyYaml> failureStrategyYamlList =
         failureStrategies.stream()
             .map(failureStrategy -> failureStrategyYamlHandler.toYaml(failureStrategy, appId))
             .collect(toList());

@@ -4,7 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.GcpKubernetesInfrastructureMapping.Yaml;
+import software.wings.beans.GcpKubernetesInfrastructureMappingYaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -16,10 +16,11 @@ import java.util.List;
  */
 @Singleton
 public class GcpKubernetesInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, GcpKubernetesInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<GcpKubernetesInfrastructureMappingYaml,
+        GcpKubernetesInfrastructureMapping> {
   @Override
-  public Yaml toYaml(GcpKubernetesInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public GcpKubernetesInfrastructureMappingYaml toYaml(GcpKubernetesInfrastructureMapping bean, String appId) {
+    GcpKubernetesInfrastructureMappingYaml yaml = GcpKubernetesInfrastructureMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.GCP_KUBERNETES.name());
     yaml.setNamespace(bean.getNamespace());
@@ -30,8 +31,8 @@ public class GcpKubernetesInfraMappingYamlHandler
 
   @Override
   public GcpKubernetesInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<GcpKubernetesInfrastructureMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    GcpKubernetesInfrastructureMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -53,9 +54,10 @@ public class GcpKubernetesInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(GcpKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,
-      String envId, String computeProviderId, String serviceId) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(GcpKubernetesInfrastructureMapping bean,
+      ChangeContext<GcpKubernetesInfrastructureMappingYaml> changeContext, String appId, String envId,
+      String computeProviderId, String serviceId) {
+    GcpKubernetesInfrastructureMappingYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
     bean.setNamespace(yaml.getNamespace());
     bean.setClusterName(yaml.getCluster());
@@ -69,6 +71,6 @@ public class GcpKubernetesInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return GcpKubernetesInfrastructureMappingYaml.class;
   }
 }

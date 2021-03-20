@@ -572,14 +572,14 @@ public class PhaseStep {
     private String statusForRollback;
     private boolean stepsInParallel;
     private List<StepYaml> steps = new ArrayList<>();
-    private List<FailureStrategy.Yaml> failureStrategies = new ArrayList<>();
+    private List<FailureStrategyYaml> failureStrategies = new ArrayList<>();
     private List<StepSkipStrategy.Yaml> stepSkipStrategies = new ArrayList<>();
     private String phaseStepNameForRollback;
     private Integer waitInterval;
 
     @lombok.Builder
     public Yaml(String type, String name, String statusForRollback, boolean stepsInParallel, List<StepYaml> steps,
-        List<FailureStrategy.Yaml> failureStrategies, List<StepSkipStrategy.Yaml> stepSkipStrategies,
+        List<FailureStrategyYaml> failureStrategies, List<StepSkipStrategy.Yaml> stepSkipStrategies,
         String phaseStepNameForRollback, Integer waitInterval) {
       super(type);
       this.name = name;

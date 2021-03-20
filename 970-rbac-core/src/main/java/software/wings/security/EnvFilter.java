@@ -47,7 +47,7 @@ public class EnvFilter extends Filter {
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends Filter.Yaml {
+  public static class Yaml extends FilterYaml {
     private List<String> filterTypes;
 
     @Builder

@@ -141,7 +141,7 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
-    private List<FailureStrategy.Yaml> failureStrategies;
+    private List<FailureStrategyYaml> failureStrategies;
 
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {

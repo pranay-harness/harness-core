@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GcpConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -60,7 +61,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
         .thenReturn(encryptedYamlRef);
     when(usageRestrictionsYamlHandler.toYaml(any(), any())).thenReturn(usageRestrictionsYaml);
 
-    GcpConfig.Yaml yaml = gcpConfigYamlHandler.toYaml(settingAttribute, appId);
+    GcpConfigYaml yaml = gcpConfigYamlHandler.toYaml(settingAttribute, appId);
 
     assertThat(yaml.getType()).isEqualTo(gcpConfig.getType());
     assertThat(yaml.getServiceAccountKeyFileContent()).isEqualTo(encryptedYamlRef);
@@ -85,14 +86,14 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     boolean useDelegate = true;
     String delegateSelector = "delegateSelector";
     boolean skipValidation = true;
-    GcpConfig.Yaml yaml = GcpConfig.Yaml.builder()
-                              .serviceAccountKeyFileContent(serviceAccountKeyFileContent)
-                              .useDelegate(useDelegate)
-                              .delegateSelector(delegateSelector)
-                              .skipValidation(skipValidation)
-                              .build();
+    GcpConfigYaml yaml = GcpConfigYaml.builder()
+                             .serviceAccountKeyFileContent(serviceAccountKeyFileContent)
+                             .useDelegate(useDelegate)
+                             .delegateSelector(delegateSelector)
+                             .skipValidation(skipValidation)
+                             .build();
 
-    ChangeContext<GcpConfig.Yaml> changeContext =
+    ChangeContext<GcpConfigYaml> changeContext =
         ChangeContext.Builder.aChangeContext().withChange(change).withYaml(yaml).build();
 
     SettingAttribute settingAttribute = gcpConfigYamlHandler.toBean(previous, changeContext, null);

@@ -29,11 +29,11 @@ public class UsageRestrictions {
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
     public static class Yaml extends BaseYaml {
-      private GenericEntityFilter.Yaml appFilter;
+      private GenericEntityFilterYaml appFilter;
       private EnvFilter.Yaml envFilter;
 
       @Builder
-      public Yaml(GenericEntityFilter.Yaml appFilter, EnvFilter.Yaml envFilter) {
+      public Yaml(GenericEntityFilterYaml appFilter, EnvFilter.Yaml envFilter) {
         this.appFilter = appFilter;
         this.envFilter = envFilter;
       }

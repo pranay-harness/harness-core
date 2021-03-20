@@ -15,10 +15,8 @@ import io.harness.shell.AuthenticationScheme;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.SourceRepoProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -32,7 +30,6 @@ import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Email;
@@ -133,36 +130,5 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     this.urlType = urlType;
     this.repoName = repoName;
     this.reference = reference;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends SourceRepoProviderYaml {
-    private String branch;
-    private String reference;
-    private boolean keyAuth;
-    private String sshKeyName;
-    private String description;
-    private String authorName;
-    private String authorEmailId;
-    private String commitMessage;
-    private UrlType urlType;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
-        String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshKeyName,
-        String description, String authorName, String authorEmailId, String commitMessage, UrlType urlType) {
-      super(type, harnessApiVersion, url, username, password, usageRestrictions);
-      this.branch = branch;
-      this.reference = reference;
-      this.keyAuth = keyAuth;
-      this.sshKeyName = sshKeyName;
-      this.description = description;
-      this.authorName = authorName;
-      this.authorEmailId = authorEmailId;
-      this.commitMessage = commitMessage;
-      this.urlType = urlType;
-    }
   }
 }
