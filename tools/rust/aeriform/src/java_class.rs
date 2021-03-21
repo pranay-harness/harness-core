@@ -19,6 +19,7 @@ pub struct JavaClass {
     pub team: Option<String>,
     pub target_module: Option<String>,
     pub break_dependencies_on: HashSet<String>,
+    pub deprecated: bool,
 }
 
 pub trait JavaClassTraits {
@@ -72,7 +73,7 @@ lazy_static! {
 pub fn populate_internal_info(
     location: &str,
     module_type: &str,
-) -> (Option<String>, Option<String>, HashSet<String>, Option<String>) {
+) -> (Option<String>, Option<String>, HashSet<String>, Option<String>, bool) {
     let code = fs::read_to_string(&format!("{}/{}", GIT_REPO_ROOT_DIR.as_str(), location)).expect(&format!(
         "failed to read file {}/{}",
         GIT_REPO_ROOT_DIR.as_str(),
@@ -117,7 +118,15 @@ pub fn populate_internal_info(
         .map(|break_dependency_on| break_dependency_on.unwrap().as_str().to_string())
         .collect::<HashSet<String>>();
 
-    (package, target_module, break_dependencies_on, team)
+    let class_name = &location[location.rfind('/').unwrap() + 1..location.len() - 5];
+    let deprecated_pattern = Regex::new(&format!(
+        r"@Deprecated[\s\S]+public (class|interface|@interface) {}",
+        class_name
+    ))
+    .unwrap();
+    let deprecated = deprecated_pattern.is_match(&code);
+
+    (package, target_module, break_dependencies_on, team, deprecated)
 }
 
 pub fn class_dependencies(name: &str, dependencies: &MultiMap<String, String>) -> HashSet<String> {
@@ -138,5 +147,6 @@ pub fn external_class(key: &str, dependencies: &MultiMap<String, String>, team: 
         target_module: Default::default(),
         team: team,
         break_dependencies_on: Default::default(),
+        deprecated: false,
     }
 }
