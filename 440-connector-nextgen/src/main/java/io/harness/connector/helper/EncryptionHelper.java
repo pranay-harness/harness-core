@@ -1,5 +1,8 @@
 package io.harness.connector.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -11,6 +14,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(DX)
 public class EncryptionHelper {
   @Inject private SecretManagerClientService ngSecretService;
 

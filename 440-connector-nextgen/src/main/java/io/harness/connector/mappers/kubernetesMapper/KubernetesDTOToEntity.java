@@ -1,5 +1,6 @@
 package io.harness.connector.mappers.kubernetesMapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.ConnectorType.KUBERNETES_CLUSTER;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.CLIENT_KEY_CERT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.OPEN_ID_CONNECT;
@@ -8,6 +9,7 @@ import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.INHERIT_FROM_DELEGATE;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType.MANUAL_CREDENTIALS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sClientKeyCert;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sOpenIdConnect;
 import io.harness.connector.entities.embedded.kubernetescluster.K8sServiceAccount;
@@ -35,6 +37,7 @@ import io.harness.exception.UnknownEnumTypeException;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class KubernetesDTOToEntity
     implements ConnectorDTOToEntityMapper<KubernetesClusterConfigDTO, KubernetesClusterConfig> {
   @Override

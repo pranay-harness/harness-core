@@ -1,7 +1,10 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.TaskType.VALIDATE_KUBERNETES_CONFIG;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class KubernetesConnectionValidator extends AbstractConnectorValidator {
   @Override
   public ConnectorValidationResult validate(ConnectorConfigDTO kubernetesClusterConfig, String accountIdentifier,

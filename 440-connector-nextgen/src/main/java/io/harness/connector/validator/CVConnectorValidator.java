@@ -1,7 +1,10 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.TaskType.CVNG_CONNECTOR_VALIDATE_TASK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class CVConnectorValidator extends AbstractConnectorValidator {
   @Inject private final SecretManagerClientService ngSecretService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;

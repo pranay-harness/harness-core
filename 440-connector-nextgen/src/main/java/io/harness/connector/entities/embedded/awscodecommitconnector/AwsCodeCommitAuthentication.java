@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.awscodecommitconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthType;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType;
 
@@ -15,6 +18,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "AwsCodeCommitAuthenticationKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication")
+@OwnedBy(DX)
 public class AwsCodeCommitAuthentication {
   AwsCodeCommitAuthType authType;
   AwsCodeCommitHttpsAuthType credentialsType;

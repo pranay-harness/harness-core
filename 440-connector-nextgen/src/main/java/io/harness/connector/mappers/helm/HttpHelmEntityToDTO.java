@@ -1,7 +1,9 @@
 package io.harness.connector.mappers.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.helm.HttpHelmAuthType.ANONYMOUS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.helm.HttpHelmConnector;
 import io.harness.connector.entities.embedded.helm.HttpHelmUsernamePasswordAuthentication;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -13,6 +15,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class HttpHelmEntityToDTO implements ConnectorEntityToDTOMapper<HttpHelmConnectorDTO, HttpHelmConnector> {
   @Override
   public HttpHelmConnectorDTO createConnectorDTO(HttpHelmConnector connector) {

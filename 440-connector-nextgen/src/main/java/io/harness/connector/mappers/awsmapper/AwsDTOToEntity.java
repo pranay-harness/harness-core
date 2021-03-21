@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.awsmapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig.AwsConfigBuilder;
@@ -14,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class AwsDTOToEntity implements ConnectorDTOToEntityMapper<AwsConnectorDTO, AwsConfig> {
   @Override
   public AwsConfig toConnectorEntity(AwsConnectorDTO connectorDTO) {

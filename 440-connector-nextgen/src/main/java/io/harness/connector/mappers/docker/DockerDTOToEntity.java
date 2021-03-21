@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector.DockerConnectorBuilder;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
@@ -13,6 +16,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class DockerDTOToEntity implements ConnectorDTOToEntityMapper<DockerConnectorDTO, DockerConnector> {
   @Override
   public DockerConnector toConnectorEntity(DockerConnectorDTO configDTO) {

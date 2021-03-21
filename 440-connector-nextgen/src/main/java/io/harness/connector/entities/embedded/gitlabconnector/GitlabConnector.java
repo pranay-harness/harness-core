@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.gitlabconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
@@ -19,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @Entity(value = "connectors", noClassnameStored = true)
 @TypeAlias("io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector")
+@OwnedBy(DX)
 public class GitlabConnector extends Connector {
   GitConnectionType connectionType;
   String url;

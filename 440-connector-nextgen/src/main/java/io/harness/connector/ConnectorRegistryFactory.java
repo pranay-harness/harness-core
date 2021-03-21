@@ -1,5 +1,8 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsValidationParamsProvider;
 import io.harness.connector.heartbeat.CEK8sConnectorValidationParamsProvider;
@@ -83,6 +86,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(DX)
 public class ConnectorRegistryFactory {
   private static Map<ConnectorType, ConnectorRegistrar> registrar = new HashMap<>();
 

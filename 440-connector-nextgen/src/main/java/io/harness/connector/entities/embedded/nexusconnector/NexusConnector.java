@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.nexusconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.nexusconnector.NexusAuthType;
 
@@ -21,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.nexusconnector.NexusConnector")
+@OwnedBy(DX)
 public class NexusConnector extends Connector {
   String url;
   NexusAuthType authType;

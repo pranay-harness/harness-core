@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.ceawsmapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -12,6 +15,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(DX)
 public class CEAwsEntityToDTO implements ConnectorEntityToDTOMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Override
   public CEAwsConnectorDTO createConnectorDTO(CEAwsConfig ceAwsConfig) {

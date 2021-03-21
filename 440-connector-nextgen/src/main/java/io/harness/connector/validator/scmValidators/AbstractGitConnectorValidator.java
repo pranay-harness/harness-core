@@ -1,9 +1,11 @@
 package io.harness.connector.validator.scmValidators;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
 
 import static software.wings.beans.TaskType.NG_GIT_COMMAND;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
@@ -26,6 +28,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 
+@OwnedBy(DX)
 public abstract class AbstractGitConnectorValidator extends AbstractConnectorValidator {
   @Inject GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
 

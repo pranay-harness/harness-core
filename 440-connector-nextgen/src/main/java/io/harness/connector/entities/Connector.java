@@ -1,6 +1,9 @@
 package io.harness.connector.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
@@ -49,6 +52,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(DbAliases.NG_MANAGER)
 @Document("connectors")
 @Persistent
+@OwnedBy(DX)
 public abstract class Connector implements PersistentEntity, NGAccountAccess {
   @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty @EntityIdentifier String identifier;

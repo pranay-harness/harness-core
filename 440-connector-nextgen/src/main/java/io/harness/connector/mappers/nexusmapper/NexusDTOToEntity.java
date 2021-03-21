@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.nexusmapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusConnector.NexusConnectorBuilder;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
@@ -12,6 +15,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class NexusDTOToEntity implements ConnectorDTOToEntityMapper<NexusConnectorDTO, NexusConnector> {
   @Override
   public NexusConnector toConnectorEntity(NexusConnectorDTO configDTO) {

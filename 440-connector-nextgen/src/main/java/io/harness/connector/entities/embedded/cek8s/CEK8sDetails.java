@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.cek8s;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 
 import javax.validation.constraints.NotNull;
@@ -18,6 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "CEK8sDetailsKeys")
 @Entity(value = "connectors", noClassnameStored = true)
 @TypeAlias("io.harness.connector.entities.embedded.cek8s.CEK8sDetails")
+@OwnedBy(DX)
 public class CEK8sDetails extends Connector {
   @NotNull String connectorRef;
 }

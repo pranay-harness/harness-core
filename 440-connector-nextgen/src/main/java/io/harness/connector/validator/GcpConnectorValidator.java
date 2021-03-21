@@ -1,7 +1,10 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.TaskType.GCP_TASK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
@@ -13,6 +16,7 @@ import io.harness.delegate.task.gcp.request.GcpValidationRequest;
 import io.harness.delegate.task.gcp.request.GcpValidationRequest.GcpValidationRequestBuilder;
 import io.harness.delegate.task.gcp.response.GcpValidationTaskResponse;
 import io.harness.exception.InvalidRequestException;
+@OwnedBy(DX)
 public class GcpConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(

@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerRegistryProviderType;
@@ -23,6 +26,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.docker.DockerConnector")
+@OwnedBy(DX)
 public class DockerConnector extends Connector {
   String url;
   @NotEmpty DockerAuthType authType;

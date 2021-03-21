@@ -2,9 +2,11 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.CONNECTORS;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.services.ConnectorActivityService;
@@ -31,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorActivityServiceImpl implements ConnectorActivityService {
   public static final String CREATION_DESCRIPTION = "Connector Created";
   public static final String UPDATE_DESCRIPTION = "Connector Updated";

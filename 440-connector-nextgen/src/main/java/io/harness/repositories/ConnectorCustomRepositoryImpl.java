@@ -1,8 +1,10 @@
 package io.harness.repositories;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.entities.Connector.CONNECTOR_COLLECTION_NAME;
 
 import io.harness.annotation.HarnessRepo;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 
 import com.mongodb.client.result.UpdateResult;
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @HarnessRepo
+@OwnedBy(DX)
 public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository {
   private final MongoTemplate mongoTemplate;
 

@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.gcpmappers;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.gcpconnector.GcpConfig;
 import io.harness.connector.entities.embedded.gcpconnector.GcpServiceAccountKey;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -14,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class GcpEntityToDTO implements ConnectorEntityToDTOMapper<GcpConnectorDTO, GcpConfig> {
   @Override
   public GcpConnectorDTO createConnectorDTO(GcpConfig connector) {

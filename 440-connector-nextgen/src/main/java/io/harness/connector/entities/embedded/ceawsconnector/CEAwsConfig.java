@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.ceawsconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
@@ -20,6 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig")
+@OwnedBy(DX)
 public class CEAwsConfig extends Connector {
   List<CEAwsFeatures> featuresEnabled;
   String awsAccountId;

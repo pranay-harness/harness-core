@@ -1,10 +1,15 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class ConnectorErrorMessagesHelper {
   public String createConnectorNotFoundMessage(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {

@@ -1,9 +1,11 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.artifactory.ArtifactoryTaskParams.TaskType.VALIDATE;
 
 import static software.wings.beans.TaskType.NG_ARTIFACTORY_TASK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class ArtifactoryConnectionValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(

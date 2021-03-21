@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.newrelicconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 
 import lombok.Builder;
@@ -17,6 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.newrelicconnector.NewRelicConnector")
+@OwnedBy(DX)
 public class NewRelicConnector extends Connector {
   private String url;
   private String apiKeyRef;

@@ -1,5 +1,8 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -12,6 +15,7 @@ import lombok.Value;
 @Value
 @AllArgsConstructor
 //@Builder -- do not add this
+@OwnedBy(DX)
 public class ConnectorRegistrar {
   /**
    * Category of the connector.

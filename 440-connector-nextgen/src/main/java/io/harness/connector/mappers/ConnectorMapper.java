@@ -1,7 +1,10 @@
 package io.harness.connector.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorConnectivityDetails;
 import io.harness.connector.ConnectorDTO;
@@ -34,6 +37,7 @@ import lombok.AllArgsConstructor;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class ConnectorMapper {
   KubernetesDTOToEntity kubernetesDTOToEntity;
   KubernetesEntityToDTO kubernetesEntityToDTO;

@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.ceawsmapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig;
 import io.harness.connector.entities.embedded.ceawsconnector.CEAwsConfig.CEAwsConfigBuilder;
@@ -26,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class CEAwsDTOToEntity implements ConnectorDTOToEntityMapper<CEAwsConnectorDTO, CEAwsConfig> {
   @Inject AwsClient awsClient;
   @Inject CEAwsSetupConfig ceAwsSetupConfig;

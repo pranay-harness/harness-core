@@ -1,5 +1,8 @@
 package io.harness.connector.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorCategory;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -24,6 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TypeAlias("io.harness.connector.entities.ConnectorFilterProperties")
+@OwnedBy(DX)
 public class ConnectorFilterProperties extends FilterProperties {
   List<String> connectorNames;
   List<String> connectorIdentifiers;

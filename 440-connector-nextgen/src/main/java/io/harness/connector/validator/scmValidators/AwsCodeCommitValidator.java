@@ -1,7 +1,10 @@
 package io.harness.connector.validator.scmValidators;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.TaskType.NG_AWS_CODE_COMMIT_TASK;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.validator.AbstractConnectorValidator;
@@ -13,6 +16,7 @@ import io.harness.delegate.task.TaskParameters;
 
 import java.util.List;
 
+@OwnedBy(DX)
 public class AwsCodeCommitValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(

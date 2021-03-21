@@ -1,5 +1,8 @@
 package io.harness.connector.heartbeat;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -14,6 +17,7 @@ import com.google.inject.name.Named;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(DX)
 public class CEK8sConnectorValidationParamsProvider extends K8sConnectorValidationParamsProvider {
   @Inject @Named("defaultConnectorService") ConnectorService connectorService;
 

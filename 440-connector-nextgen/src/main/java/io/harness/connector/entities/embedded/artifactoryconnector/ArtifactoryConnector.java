@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.artifactoryconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
 
@@ -21,6 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.artifactoryconnector.ArtifactoryConnector")
+@OwnedBy(DX)
 public class ArtifactoryConnector extends Connector {
   String url;
   ArtifactoryAuthType authType;

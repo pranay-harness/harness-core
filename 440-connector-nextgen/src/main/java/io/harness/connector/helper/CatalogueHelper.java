@@ -1,5 +1,8 @@
 package io.harness.connector.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueItem;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorRegistryFactory;
@@ -13,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
+@OwnedBy(DX)
 public class CatalogueHelper {
   public List<ConnectorCatalogueItem> getConnectorTypeToCategoryMapping() {
     final Map<ConnectorCategory, List<ConnectorType>> connectorCategoryListMap =

@@ -1,7 +1,10 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static software.wings.beans.TaskType.CE_VALIDATE_KUBERNETES_CONFIG;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorResponseDTO;
@@ -21,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class CEKubernetesConnectionValidator extends KubernetesConnectionValidator {
   @Inject @Named("defaultConnectorService") ConnectorService connectorService;
 

@@ -1,5 +1,9 @@
 package io.harness.connector.entities.embedded.nexusconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Value;
@@ -12,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "NexusUserNamePasswordAuthenticationKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication")
+@OwnedBy(DX)
 public class NexusUserNamePasswordAuthentication implements NexusAuthentication {
   String username;
   String usernameRef;

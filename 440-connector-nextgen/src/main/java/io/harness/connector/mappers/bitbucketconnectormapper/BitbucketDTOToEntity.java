@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.bitbucketconnectormapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketAuthentication;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuth;
@@ -24,6 +27,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
+@OwnedBy(DX)
 public class BitbucketDTOToEntity implements ConnectorDTOToEntityMapper<BitbucketConnectorDTO, BitbucketConnector> {
   @Override
   public BitbucketConnector toConnectorEntity(BitbucketConnectorDTO configDTO) {

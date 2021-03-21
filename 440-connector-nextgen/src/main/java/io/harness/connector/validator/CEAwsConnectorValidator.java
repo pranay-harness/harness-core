@@ -1,5 +1,8 @@
 package io.harness.connector.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -44,6 +47,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 @Singleton
+@OwnedBy(DX)
 public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   private static final String COMPRESSION = "GZIP";
   private static final String TIME_GRANULARITY = "HOURLY";

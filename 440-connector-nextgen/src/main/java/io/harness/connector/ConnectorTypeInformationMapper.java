@@ -1,5 +1,9 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,6 +17,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorTypeInformationMapper implements TypeInformationMapper {
   private Map<Class<?>, Alias> typeToAliasMap;
   private Map<Alias, Class<?>> aliasToTypeMap;

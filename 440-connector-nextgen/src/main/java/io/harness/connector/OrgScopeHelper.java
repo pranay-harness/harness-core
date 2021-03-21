@@ -1,8 +1,10 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.core.entities.Organization.OrganizationKeys;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.OrganizationService;
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class OrgScopeHelper {
   OrganizationService organizationService;
 

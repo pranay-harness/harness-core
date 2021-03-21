@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.ceazure;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.ceazure.BillingExportDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig.CEAzureConfigBuilder;
@@ -13,6 +16,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(DX)
 public class CEAzureDTOToEntity implements ConnectorDTOToEntityMapper<CEAzureConnectorDTO, CEAzureConfig> {
   @Override
   public CEAzureConfig toConnectorEntity(CEAzureConnectorDTO connectorDTO) {

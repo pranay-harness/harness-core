@@ -1,8 +1,10 @@
 package io.harness.connector.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class ConnectorEntityReferenceHelper {
   EntitySetupUsageHelper entityReferenceHelper;
   EntitySetupUsageClient entitySetupUsageClient;

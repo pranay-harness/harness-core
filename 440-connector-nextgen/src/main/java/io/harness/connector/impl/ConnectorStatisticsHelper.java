@@ -1,12 +1,14 @@
 package io.harness.connector.impl;
 
 import static io.harness.NGCommonEntityConstants.MONGODB_ID;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.facet;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.project;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector.ConnectorKeys;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.connector.stats.ConnectorStatistics.ConnectorStatisticsKeys;
@@ -29,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorStatisticsHelper {
   ConnectorRepository connectorRepository;
 

@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.githubconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.githubconnector.GithubApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubAuthentication;
@@ -29,6 +32,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
+@OwnedBy(DX)
 public class GithubDTOToEntity implements ConnectorDTOToEntityMapper<GithubConnectorDTO, GithubConnector> {
   @Override
   public GithubConnector toConnectorEntity(GithubConnectorDTO configDTO) {

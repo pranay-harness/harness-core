@@ -1,5 +1,8 @@
 package io.harness.connector.entities.embedded.awsconnector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.Connector;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
@@ -19,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Entity(value = "connectors", noClassnameStored = true)
 @Persistent
 @TypeAlias("io.harness.connector.entities.embedded.awsconnector.AwsConfig")
+@OwnedBy(DX)
 public class AwsConfig extends Connector {
   AwsCredentialType credentialType;
   CrossAccountAccessDTO crossAccountAccess;

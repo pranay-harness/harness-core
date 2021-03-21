@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.filter;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.entities.ConnectorFilterProperties;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -11,6 +14,7 @@ import com.google.inject.Singleton;
 import org.modelmapper.ModelMapper;
 
 @Singleton
+@OwnedBy(DX)
 public class ConnectorFilterPropertiesMapper
     implements FilterPropertiesMapper<ConnectorFilterPropertiesDTO, ConnectorFilterProperties> {
   @Override

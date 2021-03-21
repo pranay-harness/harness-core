@@ -6,10 +6,12 @@ import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
 import static io.harness.NGConstants.CONNECTOR_STRING;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.heartbeat.ConnectorValidationParamsProvider;
 import io.harness.connector.services.ConnectorHeartbeatService;
@@ -34,6 +36,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 
 @Singleton
+@OwnedBy(DX)
 public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService {
   private static final Logger log = org.slf4j.LoggerFactory.getLogger(ConnectorHeartbeatServiceImpl.class);
   private final long CONNECTIVITY_CHECK_INTERVAL = 10;

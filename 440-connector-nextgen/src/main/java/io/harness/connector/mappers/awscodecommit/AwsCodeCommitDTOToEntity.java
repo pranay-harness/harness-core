@@ -1,5 +1,8 @@
 package io.harness.connector.mappers.awscodecommit;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitAuthentication;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitConfig;
 import io.harness.connector.entities.embedded.awscodecommitconnector.AwsCodeCommitConfig.AwsCodeCommitConfigBuilder;
@@ -17,6 +20,7 @@ import io.harness.encryption.SecretRefHelper;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class AwsCodeCommitDTOToEntity
     implements ConnectorDTOToEntityMapper<AwsCodeCommitConnectorDTO, AwsCodeCommitConfig> {
   @Override
