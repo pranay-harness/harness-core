@@ -1,8 +1,10 @@
 use clap::Clap;
+use std::thread;
 
 use crate::analyze::{analyze, Analyze};
 use crate::execute::{execute, Execute};
 use crate::prepare::{prepare, Prepare};
+use core::time;
 
 mod analyze;
 #[path = "execute/execute.rs"]
@@ -40,6 +42,8 @@ enum SubCommand {
 }
 
 fn main() {
+    thread::sleep(time::Duration::from_secs(100));
+
     let opts: Opts = Opts::parse();
 
     // Vary the output based on how many times the user used the "verbose" flag
