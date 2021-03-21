@@ -138,12 +138,13 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {
-            let (target_module, break_dependencies_on, team) = populate_internal_info(&tuple.1, module_type);
+            let (package, target_module, break_dependencies_on, team) = populate_internal_info(&tuple.1, module_type);
             let class_dependencies = class_dependencies(&tuple.0, &dependencies);
             (
                 tuple.0.clone(),
                 JavaClass {
                     name: tuple.0,
+                    package: package,
                     location: tuple.1,
                     dependencies: class_dependencies,
                     target_module: target_module,
