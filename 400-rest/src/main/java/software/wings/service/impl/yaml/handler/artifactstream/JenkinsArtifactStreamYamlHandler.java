@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.beans.artifact.JenkinsArtifactStream.Yaml;
+import software.wings.beans.artifact.JenkinsArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
@@ -16,10 +16,10 @@ import com.google.inject.Singleton;
 @OwnedBy(CDC)
 @Singleton
 public class JenkinsArtifactStreamYamlHandler
-    extends ArtifactStreamYamlHandler<JenkinsArtifactStream.Yaml, JenkinsArtifactStream> {
+    extends ArtifactStreamYamlHandler<JenkinsArtifactStreamYaml, JenkinsArtifactStream> {
   @Override
-  public Yaml toYaml(JenkinsArtifactStream bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public JenkinsArtifactStreamYaml toYaml(JenkinsArtifactStream bean, String appId) {
+    JenkinsArtifactStreamYaml yaml = JenkinsArtifactStreamYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setArtifactPaths(bean.getArtifactPaths());
     yaml.setJobName(bean.getJobname());
@@ -33,9 +33,10 @@ public class JenkinsArtifactStreamYamlHandler
   }
 
   @Override
-  protected void toBean(JenkinsArtifactStream bean, ChangeContext<Yaml> changeContext, String appId) {
+  protected void toBean(
+      JenkinsArtifactStream bean, ChangeContext<JenkinsArtifactStreamYaml> changeContext, String appId) {
     super.toBean(bean, changeContext, appId);
-    Yaml yaml = changeContext.getYaml();
+    JenkinsArtifactStreamYaml yaml = changeContext.getYaml();
     bean.setArtifactPaths(yaml.getArtifactPaths());
     bean.setJobname(yaml.getJobName());
     bean.setMetadataOnly(yaml.isMetadataOnly());
@@ -43,6 +44,6 @@ public class JenkinsArtifactStreamYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return JenkinsArtifactStreamYaml.class;
   }
 }

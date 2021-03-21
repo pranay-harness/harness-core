@@ -10,6 +10,7 @@ import io.harness.ff.FeatureFlagService;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingYaml;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -32,7 +33,7 @@ import org.mongodb.morphia.Key;
 /**
  * @author rktummala on 10/15/17
  */
-public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Yaml, B extends InfrastructureMapping>
+public abstract class InfraMappingYamlHandler<Y extends InfrastructureMappingYaml, B extends InfrastructureMapping>
     extends BaseYamlHandler<Y, B> {
   @Inject SettingsService settingsService;
   @Inject EnvironmentService environmentService;

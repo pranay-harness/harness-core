@@ -14,6 +14,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.InstanaConfig;
+import software.wings.beans.InstanaConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 import software.wings.yaml.handler.connectors.configyamlhandlers.SettingValueYamlConfig;
@@ -32,7 +33,7 @@ public class InstanaConfigYamlHandlerTest extends SettingValueConfigYamlHandlerT
       + "harnessApiVersion: '1.0'\n"
       + "type: NEW_RELIC";
 
-  private Class yamlClass = InstanaConfig.Yaml.class;
+  private Class yamlClass = InstanaConfigYaml.class;
 
   @Test
   @Owner(developers = KAMAL)

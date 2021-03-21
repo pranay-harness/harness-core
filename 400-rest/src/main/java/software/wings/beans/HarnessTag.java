@@ -16,20 +16,16 @@ import io.harness.persistence.UuidAware;
 
 import software.wings.beans.HarnessTag.HarnessTagKeys;
 import software.wings.jersey.JsonViews;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -57,17 +53,4 @@ public class HarnessTag implements PersistentEntity, UuidAware, UpdatedAtAware, 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private long createdAt;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore @NotNull private long lastUpdatedAt;
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseEntityYaml {
-    private List<HarnessTagAbstractYaml> tag;
-
-    @Builder
-    public Yaml(String harnessApiVersion, List<HarnessTagAbstractYaml> tag) {
-      super(EntityType.TAG.name(), harnessApiVersion);
-      this.tag = tag;
-    }
-  }
 }

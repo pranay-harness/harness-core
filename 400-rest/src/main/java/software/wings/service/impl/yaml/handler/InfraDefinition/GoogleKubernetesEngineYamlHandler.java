@@ -9,7 +9,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.GoogleKubernetesEngine;
-import software.wings.infra.GoogleKubernetesEngine.Yaml;
+import software.wings.infra.GoogleKubernetesEngineYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;
@@ -20,21 +20,21 @@ import java.util.List;
 
 @Singleton
 public class GoogleKubernetesEngineYamlHandler
-    extends CloudProviderInfrastructureYamlHandler<Yaml, GoogleKubernetesEngine> {
+    extends CloudProviderInfrastructureYamlHandler<GoogleKubernetesEngineYaml, GoogleKubernetesEngine> {
   @Inject private YamlHelper yamlHelper;
   @Inject private SettingsService settingsService;
 
   @Override
-  public Yaml toYaml(GoogleKubernetesEngine bean, String appId) {
+  public GoogleKubernetesEngineYaml toYaml(GoogleKubernetesEngine bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
-    Yaml yaml = Yaml.builder()
-                    .clusterName(bean.getClusterName())
-                    .namespace(bean.getNamespace())
-                    .releaseName(bean.getReleaseName())
-                    .cloudProviderName(cloudProvider.getName())
-                    .type(InfrastructureType.GCP_KUBERNETES_ENGINE)
-                    .expressions(bean.getExpressions())
-                    .build();
+    GoogleKubernetesEngineYaml yaml = GoogleKubernetesEngineYaml.builder()
+                                          .clusterName(bean.getClusterName())
+                                          .namespace(bean.getNamespace())
+                                          .releaseName(bean.getReleaseName())
+                                          .cloudProviderName(cloudProvider.getName())
+                                          .type(InfrastructureType.GCP_KUBERNETES_ENGINE)
+                                          .expressions(bean.getExpressions())
+                                          .build();
 
     // To prevent default release name from showing in yaml when provisioner
     if (isNotEmpty(bean.getExpressions())) {
@@ -45,14 +45,14 @@ public class GoogleKubernetesEngineYamlHandler
 
   @Override
   public GoogleKubernetesEngine upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<GoogleKubernetesEngineYaml> changeContext, List<ChangeContext> changeSetContext) {
     GoogleKubernetesEngine current = GoogleKubernetesEngine.builder().build();
     toBean(current, changeContext);
     return current;
   }
 
-  private void toBean(GoogleKubernetesEngine bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(GoogleKubernetesEngine bean, ChangeContext<GoogleKubernetesEngineYaml> changeContext) {
+    GoogleKubernetesEngineYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     notNullCheck(format("Cloud Provider with name %s does not exist", yaml.getCloudProviderName()), cloudProvider);
@@ -65,6 +65,6 @@ public class GoogleKubernetesEngineYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return GoogleKubernetesEngineYaml.class;
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import static software.wings.security.EnvFilterYaml.EnvFilterYamlBuilder;
 import static software.wings.security.GenericEntityFilterYaml.GenericEntityFilterYamlBuilder;
 import static software.wings.security.GenericEntityFilterYaml.builder;
 
@@ -16,6 +17,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.EnvFilterBuilder;
+import software.wings.security.EnvFilterYaml;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.GenericEntityFilterBuilder;
 import software.wings.security.GenericEntityFilterYaml;
@@ -72,7 +74,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return appIds.toArray(new String[0])[0];
   }
 
-  private EnvFilter constructEnvFilter(GenericEntityFilter appFilter, EnvFilter.Yaml envFilterYaml) {
+  private EnvFilter constructEnvFilter(GenericEntityFilter appFilter, EnvFilterYaml envFilterYaml) {
     EnvFilterBuilder builder = EnvFilter.builder();
 
     if (isNotEmpty(envFilterYaml.getEntityNames())) {
@@ -96,8 +98,8 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     return builder.filterTypes(Sets.newHashSet(envFilterYaml.getFilterTypes())).build();
   }
 
-  private EnvFilter.Yaml constructEnvFilterYaml(GenericEntityFilter appFilter, EnvFilter envFilter) {
-    EnvFilter.Yaml.YamlBuilder builder = EnvFilter.Yaml.builder();
+  private EnvFilterYaml constructEnvFilterYaml(GenericEntityFilter appFilter, EnvFilter envFilter) {
+    EnvFilterYamlBuilder builder = EnvFilterYaml.builder();
 
     if (isNotEmpty(envFilter.getIds())) {
       String appId = getAppId(appFilter);

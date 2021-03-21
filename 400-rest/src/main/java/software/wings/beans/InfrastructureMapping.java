@@ -17,7 +17,6 @@ import io.harness.validation.Update;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -434,26 +433,7 @@ public abstract class InfrastructureMapping
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private String serviceName;
-    private String infraMappingType;
-    private String deploymentType;
-    private Map<String, Object> blueprints;
-
-    public Yaml(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion);
-      this.serviceName = serviceName;
-      this.infraMappingType = infraMappingType;
-      this.deploymentType = deploymentType;
-      this.blueprints = blueprints;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends Yaml {
+  public abstract static class YamlWithComputeProvider extends InfrastructureMappingYaml {
     private String computeProviderType;
     private String computeProviderName;
 

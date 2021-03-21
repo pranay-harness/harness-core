@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.tag;
 
 import software.wings.beans.HarnessTag;
-import software.wings.beans.HarnessTag.Yaml;
+import software.wings.beans.HarnessTagYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.HarnessTagService;
@@ -9,30 +9,31 @@ import software.wings.service.intfc.HarnessTagService;
 import com.google.inject.Inject;
 import java.util.List;
 
-public class HarnessTagYamlHandler extends BaseYamlHandler<Yaml, List<HarnessTag>> {
+public class HarnessTagYamlHandler extends BaseYamlHandler<HarnessTagYaml, List<HarnessTag>> {
   @Inject private HarnessTagService harnessTagService;
 
   @Override
-  public Yaml toYaml(List<HarnessTag> harnessTags, String appId) {
-    return Yaml.builder()
+  public HarnessTagYaml toYaml(List<HarnessTag> harnessTags, String appId) {
+    return HarnessTagYaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .tag(harnessTagYamlHelper.getHarnessTagsYamlList(harnessTags))
         .build();
   }
 
   @Override
-  public List<HarnessTag> upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public List<HarnessTag> upsertFromYaml(
+      ChangeContext<HarnessTagYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
-    Yaml yaml = changeContext.getYaml();
+    HarnessTagYaml yaml = changeContext.getYaml();
 
     harnessTagYamlHelper.upsertHarnessTags(yaml, accountId, changeContext.getChange().isSyncFromGit());
     return harnessTagService.listTags(accountId);
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<HarnessTagYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
-    Yaml yaml = changeContext.getYaml();
+    HarnessTagYaml yaml = changeContext.getYaml();
 
     harnessTagYamlHelper.deleteTags(yaml, accountId, changeContext.getChange().isSyncFromGit());
   }
@@ -44,6 +45,6 @@ public class HarnessTagYamlHandler extends BaseYamlHandler<Yaml, List<HarnessTag
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return HarnessTagYaml.class;
   }
 }

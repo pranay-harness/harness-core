@@ -7,6 +7,7 @@ import io.harness.exception.YamlException;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.governance.GovernanceConfigYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -19,15 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfig.Yaml, GovernanceConfig> {
+public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfigYaml, GovernanceConfig> {
   private static final String TIME_RANGE_BASED_YAML_TYPE = "TIME_RANGE_BASED_FREEZE_CONFIG";
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject GovernanceConfigService governanceConfigService;
   @Override
-  public void delete(ChangeContext<GovernanceConfig.Yaml> changeContext) throws HarnessException {}
+  public void delete(ChangeContext<GovernanceConfigYaml> changeContext) throws HarnessException {}
 
   @Override
-  public GovernanceConfig.Yaml toYaml(GovernanceConfig bean, String appId) {
+  public GovernanceConfigYaml toYaml(GovernanceConfig bean, String appId) {
     String accountId = bean.getAccountId();
 
     TimeRangeBasedFreezeConfigYamlHandler timeRangeBasedFreezeConfigYamlHandler =
@@ -41,7 +42,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
             })
             .collect(Collectors.toList());
 
-    return GovernanceConfig.Yaml.builder()
+    return GovernanceConfigYaml.builder()
         .type(YamlType.GOVERNANCE_CONFIG.name())
         .harnessApiVersion(getHarnessApiVersion())
         .disableAllDeployments(bean.isDeploymentFreeze())
@@ -50,8 +51,8 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
   }
 
   @Override
-  public GovernanceConfig upsertFromYaml(ChangeContext<GovernanceConfig.Yaml> changeContext,
-      List<ChangeContext> changeSetContext) throws HarnessException {
+  public GovernanceConfig upsertFromYaml(
+      ChangeContext<GovernanceConfigYaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     String accountId = changeContext.getChange().getAccountId();
 
     // recreate the object
@@ -64,7 +65,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
 
   @Override
   public Class getYamlClass() {
-    return GovernanceConfig.Yaml.class;
+    return GovernanceConfigYaml.class;
   }
 
   @Override
@@ -73,7 +74,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
   }
 
   private void toBean(
-      GovernanceConfig bean, ChangeContext<GovernanceConfig.Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      GovernanceConfig bean, ChangeContext<GovernanceConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     String entityId = "";
 
@@ -83,7 +84,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
 
     entityId = ((GitFileChange) changeContext.getChange()).getEntityId();
 
-    GovernanceConfig.Yaml yaml = changeContext.getYaml();
+    GovernanceConfigYaml yaml = changeContext.getYaml();
 
     TimeRangeBasedFreezeConfigYamlHandler timeRangeBasedFreezeConfigYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_FREEZE_CONFIG, TIME_RANGE_BASED_YAML_TYPE);

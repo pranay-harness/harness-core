@@ -12,10 +12,8 @@ import io.harness.k8s.model.HelmVersion;
 
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.HelmRepoYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -26,7 +24,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -78,23 +75,5 @@ public class HttpHelmRepoConfig extends SettingValue implements HelmRepoConfig {
     executionCapabilityList.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         chartRepoUrl, maskingEvaluator));
     return executionCapabilityList;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends HelmRepoYaml {
-    private String url;
-    private String username;
-    private String password;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.url = url;
-      this.username = username;
-      this.password = password;
-    }
   }
 }

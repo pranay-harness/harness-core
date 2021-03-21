@@ -30,10 +30,10 @@ public class UsageRestrictions {
     @EqualsAndHashCode(callSuper = true)
     public static class Yaml extends BaseYaml {
       private GenericEntityFilterYaml appFilter;
-      private EnvFilter.Yaml envFilter;
+      private EnvFilterYaml envFilter;
 
       @Builder
-      public Yaml(GenericEntityFilterYaml appFilter, EnvFilter.Yaml envFilter) {
+      public Yaml(GenericEntityFilterYaml appFilter, EnvFilterYaml envFilter) {
         this.appFilter = appFilter;
         this.envFilter = envFilter;
       }

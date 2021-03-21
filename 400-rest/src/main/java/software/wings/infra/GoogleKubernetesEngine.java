@@ -18,7 +18,6 @@ import software.wings.api.CloudProviderType;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.collect.ImmutableSet;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 
 @JsonTypeName("GCP_KUBERNETES")
@@ -101,32 +99,6 @@ public class GoogleKubernetesEngine
     }
     if (getClusterName() == null) {
       throw new InvalidRequestException("Cluster Name is mandatory");
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName(GCP_KUBERNETES_ENGINE)
-  public static final class Yaml extends CloudProviderInfrastructureYaml {
-    private String cloudProviderName;
-    private String clusterName;
-    private String namespace;
-    private String releaseName;
-    private Map<String, String> expressions;
-
-    @Builder
-    public Yaml(String type, String cloudProviderName, String clusterName, String namespace, String releaseName,
-        Map<String, String> expressions) {
-      super(type);
-      setCloudProviderName(cloudProviderName);
-      setClusterName(clusterName);
-      setNamespace(namespace);
-      setReleaseName(releaseName);
-      setExpressions(expressions);
-    }
-
-    public Yaml() {
-      super(GCP_KUBERNETES_ENGINE);
     }
   }
 }

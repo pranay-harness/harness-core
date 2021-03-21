@@ -19,20 +19,16 @@ import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.service.impl.yaml.handler.InfraDefinition.CloudProviderInfrastructureYaml;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
-import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -115,38 +111,5 @@ public class InfrastructureDefinition
   @Override
   public void setDeploymentTypeName(String theCustomDeploymentName) {
     customDeploymentName = theCustomDeploymentName;
-  }
-
-  /**
-   * The type Yaml.
-   */
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String name;
-    private CloudProviderType cloudProviderType;
-    private DeploymentType deploymentType;
-    @NotNull private List<CloudProviderInfrastructureYaml> infrastructure = new ArrayList<>();
-    private List<String> scopedServices;
-    private String provisioner;
-
-    /*
-     Support for Custom Deployment
-      */
-    private String deploymentTypeTemplateUri;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, CloudProviderType cloudProviderType,
-        DeploymentType deploymentType, List<CloudProviderInfrastructureYaml> infrastructure,
-        List<String> scopedServices, String provisioner, String deploymentTypeTemplateUri) {
-      super(type, harnessApiVersion);
-      setCloudProviderType(cloudProviderType);
-      setDeploymentType(deploymentType);
-      setInfrastructure(infrastructure);
-      setScopedServices(scopedServices);
-      setProvisioner(provisioner);
-      setDeploymentTypeTemplateUri(deploymentTypeTemplateUri);
-    }
   }
 }

@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public abstract class ContainerInfrastructureMappingYaml extends InfrastructureMapping.Yaml {
+public abstract class ContainerInfrastructureMappingYaml extends InfrastructureMappingYaml {
   private String cluster;
 
   public ContainerInfrastructureMappingYaml(String type, String harnessApiVersion, String serviceName,

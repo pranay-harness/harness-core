@@ -27,7 +27,7 @@ import software.wings.infra.AzureWebAppInfraYaml;
 import software.wings.infra.CodeDeployInfrastructureYaml;
 import software.wings.infra.CustomInfrastructureYaml;
 import software.wings.infra.DirectKubernetesInfrastructureYaml;
-import software.wings.infra.GoogleKubernetesEngine;
+import software.wings.infra.GoogleKubernetesEngineYaml;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
@@ -50,7 +50,7 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = AzureInstanceInfrastructureYaml.class, name = AZURE_SSH),
       @JsonSubTypes.Type(value = CodeDeployInfrastructureYaml.class, name = CODE_DEPLOY),
       @JsonSubTypes.Type(value = DirectKubernetesInfrastructureYaml.class, name = DIRECT_KUBERNETES),
-      @JsonSubTypes.Type(value = GoogleKubernetesEngine.Yaml.class, name = GCP_KUBERNETES_ENGINE),
+      @JsonSubTypes.Type(value = GoogleKubernetesEngineYaml.class, name = GCP_KUBERNETES_ENGINE),
       @JsonSubTypes.Type(value = PcfInfraStructure.Yaml.class, name = PCF_INFRASTRUCTURE),
       @JsonSubTypes.Type(value = PhysicalInfra.Yaml.class, name = PHYSICAL_INFRA),
       @JsonSubTypes.Type(value = PhysicalInfraWinrm.Yaml.class, name = PHYSICAL_INFRA_WINRM),

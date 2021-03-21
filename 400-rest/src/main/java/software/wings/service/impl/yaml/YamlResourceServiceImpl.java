@@ -66,11 +66,13 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.governance.GovernanceConfigYaml;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.InfrastructureDefinitionYaml;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -450,8 +452,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String accountId = appService.getAccountIdByAppId(appId);
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
     notNullCheck("InfraDefinition not found for appId:" + appId, infrastructureDefinition);
-    InfrastructureDefinition.Yaml infraDefinitionYaml =
-        (InfrastructureDefinition.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
+    InfrastructureDefinitionYaml infraDefinitionYaml =
+        (InfrastructureDefinitionYaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
             .toYaml(infrastructureDefinition, appId);
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureDefinition.getUuid(), accountId,
         infraDefinitionYaml, infrastructureDefinition.getName() + YAML_EXTENSION);
@@ -850,8 +852,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     GovernanceConfig governanceConfig = governanceConfigService.get(accountId);
 
     if (governanceConfig != null) {
-      GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_CONFIG)
-                                       .toYaml(governanceConfig, accountId);
+      GovernanceConfigYaml yaml = (GovernanceConfigYaml) yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_CONFIG)
+                                      .toYaml(governanceConfig, accountId);
       return YamlHelper.getYamlRestResponse(
           yamlGitSyncService, accountId, accountId, yaml, YamlConstants.DEPLOYMENT_GOVERNANCE_FOLDER + YAML_EXTENSION);
 

@@ -18,7 +18,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 
 import software.wings.beans.entityinterface.ApplicationAccess;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -129,21 +128,5 @@ public class GovernanceConfig
   @Override
   public String getAppId() {
     return GLOBAL_APP_ID;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static final class Yaml extends BaseEntityYaml {
-    private boolean disableAllDeployments;
-    private List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, boolean disableAllDeployments,
-        List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs) {
-      super(type, harnessApiVersion);
-      this.disableAllDeployments = disableAllDeployments;
-      this.timeRangeBasedFreezeConfigs = timeRangeBasedFreezeConfigs;
-    }
   }
 }

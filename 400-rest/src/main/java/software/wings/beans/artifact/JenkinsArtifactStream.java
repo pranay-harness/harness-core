@@ -22,7 +22,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -90,24 +89,6 @@ public class JenkinsArtifactStream extends ArtifactStream {
       return validateParameters(jobname, artifactPaths.get(0));
     } else {
       return validateParameters(jobname);
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ArtifactStreamYaml {
-    private String jobName;
-    private List<String> artifactPaths;
-    private boolean metadataOnly;
-
-    @lombok.Builder
-    public Yaml(
-        String harnessApiVersion, String serverName, boolean metadataOnly, String jobName, List<String> artifactPaths) {
-      super(JENKINS.name(), harnessApiVersion, serverName);
-      this.jobName = jobName;
-      this.artifactPaths = artifactPaths;
-      this.metadataOnly = metadataOnly;
     }
   }
 }

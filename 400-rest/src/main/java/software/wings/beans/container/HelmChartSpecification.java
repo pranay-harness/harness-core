@@ -5,13 +5,11 @@ import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.DeploymentSpecification;
-import software.wings.beans.DeploymentSpecificationYaml;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -38,22 +36,5 @@ public class HelmChartSpecification extends DeploymentSpecification implements A
     specification.setAccountId(this.getAccountId());
     specification.setAppId(this.getAppId());
     return specification;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecificationYaml {
-    private String chartUrl;
-    private String chartName;
-    private String chartVersion;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String chartUrl, String chartName, String chartVersion) {
-      super(type, harnessApiVersion);
-      this.chartUrl = chartUrl;
-      this.chartName = chartName;
-      this.chartVersion = chartVersion;
-    }
   }
 }

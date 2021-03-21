@@ -14,11 +14,9 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.ArtifactServerYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -30,7 +28,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -108,22 +105,6 @@ public class JenkinsConfig extends SettingValue
       return Collections.singletonList(encryptedToken);
     } else {
       return Collections.singletonList(encryptedPassword);
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends ArtifactServerYaml {
-    private String token;
-    private String authMechanism;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password, String token,
-        String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, url, username, password, usageRestrictions);
-      this.token = token;
-      this.authMechanism = authMechanism;
     }
   }
 }
