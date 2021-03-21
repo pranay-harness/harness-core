@@ -3,13 +3,13 @@ use enumset::{EnumSet, EnumSetType};
 use multimap::MultiMap;
 use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
+use std::process::exit;
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_TEAM};
 use crate::java_module::{modules, JavaModule};
-use std::process::exit;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
 enum Kind {
@@ -184,6 +184,7 @@ pub fn analyze(opts: Analyze) {
     });
 
     class_modules.iter().for_each(|tuple| {
+        results.extend(check_for_package(tuple.0, tuple.1));
         results.extend(check_for_team(tuple.0, tuple.1));
         results.extend(check_already_in_target(tuple.0, tuple.1));
         results.extend(check_for_extra_break(tuple.0, tuple.1));
@@ -812,6 +813,33 @@ fn target_module_needed(class: &JavaClass) -> Report {
         indirect_classes: Default::default(),
         for_modules: Default::default(),
     }
+}
+
+fn check_for_package(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
+    let mut results: Vec<Report> = Vec::new();
+
+    if class.package.is_some()
+        && !class
+            .directory_location()
+            .ends_with(&class.package.as_ref().unwrap().replace(".", "/"))
+    {
+        results.push(Report {
+            kind: Kind::Critical,
+            explanation: Explanation::Empty,
+            message: format!(
+                "{} package does not match the location {}",
+                class.package.as_ref().unwrap(),
+                class.location
+            ),
+            action: Default::default(),
+            for_class: class.name.clone(),
+            for_team: class.team(),
+            indirect_classes: Default::default(),
+            for_modules: [module.name.clone()].iter().cloned().collect(),
+        });
+    }
+
+    results
 }
 
 fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
