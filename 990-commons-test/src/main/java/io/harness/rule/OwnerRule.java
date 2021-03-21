@@ -62,6 +62,7 @@ public class OwnerRule implements TestRule {
   public static final String DX = "DX";
   public static final String PL = "PL";
   public static final String SWAT = "SWAT";
+  public static final String GTM = "GTM";
 
   public static final String AADITI = "aaditi.joag";
   public static final String ABHINAV = "abhinav.singh";
@@ -101,6 +102,7 @@ public class OwnerRule implements TestRule {
   public static final String MEHUL = "mehul.kasliwal";
   public static final String MILOS = "milos.paunovic";
   public static final String MOHIT = "mohit.kurani";
+  public static final String NATHAN = "nathan.nguyen";
   public static final String NATARAJA = "nataraja";
   public static final String NEMANJA = "nemanja.lukovic";
   public static final String NIKOLA = "nikola.obucina";
@@ -144,6 +146,7 @@ public class OwnerRule implements TestRule {
   public static final String VISTAAR = "vistaar.juneja";
   public static final String VOJIN = "vojin.djukic";
   public static final String VUK = "vuk.skobalj";
+  public static final String XIN = "xin.shao";
   public static final String YOGESH = "yogesh.chauhan";
   public static final String VARDAN_BANSAL = "vardan.bansal";
   public static final String NANDAN = "nandan.chandrashekar";
@@ -222,6 +225,7 @@ public class OwnerRule implements TestRule {
           .put(MEHUL, defaultUserInfo(MEHUL).slack("URYP18AHX").team(PL).build())
           .put(MILOS, defaultUserInfo(MILOS).slack("U014WS8CXEV").team(CDC).build())
           .put(MOHIT, defaultUserInfo(MOHIT).slack("USB6NTE22").team(PL).build())
+          .put(NATHAN, defaultUserInfo(NATHAN).slack("U01NNN1T4CV").team(GTM).build())
           .put(NATARAJA, defaultUserInfo(NATARAJA).slack("UDQAS9J5C").team(PL).build())
           .put(NEMANJA, defaultUserInfo(NEMANJA).slack("U016F8DDQSC").team(CV).build())
           .put(NICOLAS, defaultUserInfo(NICOLAS).slack("U01C8MPQVQE").team(DEL).build())
@@ -267,6 +271,7 @@ public class OwnerRule implements TestRule {
           .put(VOJIN, defaultUserInfo(VOJIN).slack("U015TFFL83G").team(PL).build())
           .put(VISTAAR, defaultUserInfo(VISTAAR).slack("U0138Q1JEHM").team(CI).build())
           .put(VUK, defaultUserInfo(VUK).slack("U0115RT3EQL").team(DEL).build())
+          .put(XIN, defaultUserInfo(XIN).slack("U01R3KSP3M1").team(DEL).build())
           .put(YOGESH, defaultUserInfo(YOGESH).slack("UJVLUUXAT").team(CDP).build())
           .put(VARDAN_BANSAL, defaultUserInfo(VARDAN_BANSAL).slack("UH8NYAAUU").team(DX).build())
           .put(NANDAN, defaultUserInfo(NANDAN).slack("UKMS5KCBS").team(CV).build())
@@ -308,6 +313,7 @@ public class OwnerRule implements TestRule {
           .put(DX, TeamInfo.builder().team(DX).leader(RAMA).build())
           .put(PL, TeamInfo.builder().team(PL).leader(ANKIT).leader(VIKAS).build())
           .put(SWAT, TeamInfo.builder().team(SWAT).leader(BRETT).build())
+          .put(GTM, TeamInfo.builder().team(GTM).leader(RAMA).build())
           .build();
 
   @Override

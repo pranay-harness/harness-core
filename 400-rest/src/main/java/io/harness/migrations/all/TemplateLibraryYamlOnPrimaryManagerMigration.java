@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TemplateLibraryYamlOnPrimaryManagerMigration implements OnPrimaryManagerMigration {
   private static final String DEBUG_LINE = "TEMPLATE_YAML_SUPPORT: ";
   private static final String FEATURE_FLAG_NAME = "TEMPLATE_YAML_SUPPORT";

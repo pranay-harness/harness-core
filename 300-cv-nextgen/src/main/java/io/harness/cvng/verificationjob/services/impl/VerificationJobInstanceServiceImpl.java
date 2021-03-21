@@ -22,7 +22,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVeri
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
-import io.harness.cvng.analysis.services.api.DeploymentAnalysisService;
+import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -43,7 +43,7 @@ import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
-import io.harness.cvng.verificationjob.beans.VerificationJobInstanceDTO;
+import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -51,7 +51,6 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
@@ -85,44 +84,18 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 public class VerificationJobInstanceServiceImpl implements VerificationJobInstanceService {
   @Inject private HPersistence hPersistence;
-  @Inject private VerificationJobService verificationJobService;
   @Inject private CVConfigService cvConfigService;
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private Injector injector;
   @Inject private MetricPackService metricPackService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private DeploymentAnalysisService deploymentAnalysisService;
+  @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private NextGenService nextGenService;
   @Inject private AlertRuleService alertRuleService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
-
-  // TODO: this is only used in test. Get rid of this API
-  @Override
-  public String create(String accountId, String orgIdentifier, String projectIdentifier,
-      VerificationJobInstanceDTO verificationJobInstanceDTO) {
-    // TODO: Is this API even needed anymore ?
-    VerificationJob verificationJob = verificationJobService.getVerificationJob(
-        accountId, orgIdentifier, projectIdentifier, verificationJobInstanceDTO.getVerificationJobIdentifier());
-    Preconditions.checkNotNull(verificationJob, "No Job exists for verificationJobIdentifier: '%s'",
-        verificationJobInstanceDTO.getVerificationJobIdentifier());
-    VerificationJobInstance verificationJobInstance =
-        VerificationJobInstance.builder()
-            .verificationJobIdentifier(verificationJobInstanceDTO.getVerificationJobIdentifier())
-            .accountId(accountId)
-            .executionStatus(ExecutionStatus.QUEUED)
-            .deploymentStartTime(verificationJobInstanceDTO.getDeploymentStartTime())
-            .startTime(verificationJobInstanceDTO.getVerificationStartTime())
-            .dataCollectionDelay(verificationJobInstanceDTO.getDataCollectionDelay())
-            .newVersionHosts(verificationJobInstanceDTO.getNewVersionHosts())
-            .oldVersionHosts(verificationJobInstanceDTO.getOldVersionHosts())
-            .newHostsTrafficSplitPercentage(verificationJobInstanceDTO.getNewHostsTrafficSplitPercentage())
-            .build();
-    hPersistence.save(verificationJobInstance);
-    return verificationJobInstance.getUuid();
-  }
 
   @Override
   public String create(VerificationJobInstance verificationJobInstance) {
@@ -156,13 +129,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
               .setOnInsert(VerificationJobInstanceKeys.uuid, jobInstanceId)
               .setOnInsert(VerificationJobInstanceKeys.accountId, verificationJobInstance.getAccountId())
               .setOnInsert(VerificationJobInstanceKeys.executionStatus, verificationJobInstance.getExecutionStatus())
-              .setOnInsert(VerificationJobInstanceKeys.verificationJobIdentifier,
-                  verificationJobInstance.getVerificationJobIdentifier())
               .setOnInsert(VerificationJobInstanceKeys.startTime, verificationJobInstance.getStartTime())
-              .setOnInsert(VerificationJobInstanceKeys.preActivityVerificationStartTime,
-                  verificationJobInstance.getPreActivityVerificationStartTime())
-              .setOnInsert(VerificationJobInstanceKeys.postActivityVerificationStartTime,
-                  verificationJobInstance.getPostActivityVerificationStartTime())
               .setOnInsert(VerificationJobInstanceKeys.resolvedJob, verificationJobInstance.getResolvedJob()),
           new FindAndModifyOptions().upsert(true));
       // only the activity which inserted should have verification associated.
@@ -174,10 +141,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   @Override
-  public VerificationJobInstanceDTO get(String verificationJobInstanceId) {
-    return getVerificationJobInstance(verificationJobInstanceId).toDTO();
-  }
-  @Override
   public List<VerificationJobInstance> get(List<String> verificationJobInstanceIds) {
     if (isEmpty(verificationJobInstanceIds)) {
       return Collections.emptyList();
@@ -188,18 +151,15 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .asList();
   }
 
-  public List<VerificationJobInstance> getNonDeploymentInstances(List<String> verificationJobInstanceIds) {
+  public List<VerificationJobInstance> getHealthVerificationJobInstances(List<String> verificationJobInstanceIds) {
     if (isEmpty(verificationJobInstanceIds)) {
       return Collections.emptyList();
     }
-    List<VerificationJobInstance> allInstances = get(verificationJobInstanceIds);
-    List<VerificationJobInstance> nonDeploymentInstances = new ArrayList<>();
-    allInstances.forEach(instance -> {
-      if (!VerificationJobType.getDeploymentJobTypes().contains(instance.getResolvedJob().getType())) {
-        nonDeploymentInstances.add(instance);
-      }
-    });
-    return nonDeploymentInstances;
+    return get(verificationJobInstanceIds)
+        .stream()
+        .filter(
+            verificationJobInstance -> verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -227,8 +187,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
       orchestrationService.queueAnalysis(verificationTaskId,
-          verificationJobInstance.getPreActivityVerificationStartTime(),
-          verificationJobInstance.getPreActivityVerificationStartTime().plus(verificationJob.getDuration()));
+          ((HealthVerificationJob) verificationJobInstance.getResolvedJob())
+              .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime(),
+                  verificationJobInstance.getPreActivityVerificationStartTime()),
+          verificationJobInstance.getStartTime());
     });
 
     markRunning(verificationJobInstance.getUuid(), cvConfigs);
@@ -471,16 +433,16 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   }
 
   //  TODO find the right place for this switch case
-  @Nullable
   private AdditionalInfo getAdditionalInfo(String accountId, VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getResolvedJob().getType()) {
       case CANARY:
       case BLUE_GREEN:
-        return deploymentAnalysisService.getCanaryBlueGreenAdditionalInfo(accountId, verificationJobInstance);
+        return verificationJobInstanceAnalysisService.getCanaryBlueGreenAdditionalInfo(
+            accountId, verificationJobInstance);
       case TEST:
-        return deploymentAnalysisService.getLoadTestAdditionalInfo(accountId, verificationJobInstance);
+        return verificationJobInstanceAnalysisService.getLoadTestAdditionalInfo(accountId, verificationJobInstance);
       case HEALTH:
-        return null;
+        return verificationJobInstanceAnalysisService.getHealthAdditionInfo(accountId, verificationJobInstance);
       default:
         throw new IllegalStateException(
             "Failed to get additional info due to unknown type: " + verificationJobInstance.getResolvedJob().getType());
@@ -515,12 +477,11 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     if (ExecutionStatus.noAnalysisStatuses().contains(verificationJobInstance.getExecutionStatus())) {
       return Optional.empty();
     }
-    if (verificationJobInstance != null
-        && VerificationJobType.getDeploymentJobTypes().contains(verificationJobInstance.getResolvedJob().getType())) {
-      return deploymentAnalysisService.getLatestRiskScore(
+    if (verificationJobInstance.getResolvedJob().getType() == VerificationJobType.HEALTH) {
+      return healthVerificationHeatMapService.getVerificationRisk(
           verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
     } else {
-      return healthVerificationHeatMapService.getVerificationRisk(
+      return verificationJobInstanceAnalysisService.getLatestRiskScore(
           verificationJobInstance.getAccountId(), verificationJobInstance.getUuid());
     }
   }

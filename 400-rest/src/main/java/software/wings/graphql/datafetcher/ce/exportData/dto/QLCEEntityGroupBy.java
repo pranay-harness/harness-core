@@ -1,11 +1,11 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.QLAggregationKind;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLCEEntityGroupBy {
   Application(QLAggregationKind.SIMPLE),
   Service(QLAggregationKind.SIMPLE),

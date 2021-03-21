@@ -8,6 +8,7 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorRegistryFactory;
 import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.DelegateSelectable;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.entities.embedded.gcpkmsconnector.GcpKmsConnector;
 import io.harness.connector.entities.embedded.localconnector.LocalConnector;
@@ -27,6 +28,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
@@ -60,6 +62,10 @@ public class ConnectorMapper {
     connector.setDescription(connectorInfo.getDescription());
     connector.setType(connectorInfo.getConnectorType());
     connector.setCategories(Arrays.asList(ConnectorRegistryFactory.getConnectorCategory(connector.getType())));
+    if (connectorInfo.getConnectorConfig() instanceof DelegateSelectable) {
+      Set<String> delegateSelectors = ((DelegateSelectable) connectorInfo.getConnectorConfig()).getDelegateSelectors();
+      connector.setDelegateSelectors(delegateSelectors);
+    }
     return connector;
   }
 
@@ -87,6 +93,7 @@ public class ConnectorMapper {
                                          .connectorType(connector.getType())
                                          .tags(TagMapper.convertToMap(connector.getTags()))
                                          .connectorType(connector.getType())
+
                                          .build();
     Long timeWhenConnectorIsLastUpdated =
         getTimeWhenTheConnectorWasUpdated(connector.getTimeWhenConnectorIsLastUpdated(), connector.getLastModifiedAt());
@@ -141,6 +148,11 @@ public class ConnectorMapper {
   private ConnectorConfigDTO createConnectorConfigDTO(Connector connector) {
     ConnectorEntityToDTOMapper connectorEntityToDTOMapper =
         connectorEntityToDTOMapperMap.get(connector.getType().toString());
-    return connectorEntityToDTOMapper.createConnectorDTO(connector);
+    ConnectorConfigDTO connectorDTO = connectorEntityToDTOMapper.createConnectorDTO(connector);
+    if (connectorDTO instanceof DelegateSelectable) {
+      Set<String> delegateSelectors = connector.getDelegateSelectors();
+      ((DelegateSelectable) connectorDTO).setDelegateSelectors(delegateSelectors);
+    }
+    return connectorDTO;
   }
 }

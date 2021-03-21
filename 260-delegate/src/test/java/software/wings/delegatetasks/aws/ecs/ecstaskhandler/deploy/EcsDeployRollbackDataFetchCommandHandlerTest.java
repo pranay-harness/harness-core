@@ -18,7 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
@@ -45,7 +45,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest {
   @Mock private EcsDeployCommandTaskHelper mockEcsDeployCommandTaskHelper;
   @Mock private AwsClusterService mockAwsClusterService;
@@ -70,7 +70,7 @@ public class EcsDeployRollbackDataFetchCommandHandlerTest extends WingsBaseTest 
         .when(mockEcsDeployCommandTaskHelper)
         .getEmptyEcsDeployRollbackDataFetchResponse();
 
-    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null);
+    EcsCommandRequest ecsCommandRequest = new EcsCommandRequest(null, null, null, null, null, null, null, null, false);
     EcsCommandExecutionResponse response = handler.executeTaskInternal(ecsCommandRequest, null, mockCallback);
     assertThat(response).isNotNull();
     assertThat(response.getErrorMessage()).isEqualTo("Invalid request Type, expected EcsDeployRollbackFetchRequest");

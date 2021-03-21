@@ -1,6 +1,9 @@
 package software.wings.beans.infrastructure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -28,6 +31,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "terraformConfig")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "TerraformConfigKeys")
+@OwnedBy(CDP)
 public class TerraformConfig implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;

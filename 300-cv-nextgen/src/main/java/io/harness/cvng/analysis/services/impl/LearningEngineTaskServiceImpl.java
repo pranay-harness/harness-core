@@ -46,6 +46,7 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
         hPersistence.createQuery(LearningEngineTask.class)
             .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
             .order(Sort.ascending(LearningEngineTaskKeys.taskPriority));
+    // TODO: add ordering based on createdAt.
 
     if (isNotEmpty(taskType)) {
       learningEngineTaskQuery.field(LearningEngineTaskKeys.analysisType).in(taskType);

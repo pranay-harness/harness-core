@@ -22,9 +22,9 @@ public class StepGroupStepParameters extends StepGroupElementConfig implements S
 
   @Builder(builderMethodName = "newBuilder")
   public StepGroupStepParameters(String uuid, String identifier, String name, ParameterField<String> skipCondition,
-      List<FailureStrategyConfig> failureStrategies, List<ExecutionWrapperConfig> steps,
+      ParameterField<String> when, List<FailureStrategyConfig> failureStrategies, List<ExecutionWrapperConfig> steps,
       List<ExecutionWrapperConfig> rollbackSteps, String childNodeID) {
-    super(uuid, identifier, name, skipCondition, failureStrategies, steps, rollbackSteps);
+    super(uuid, identifier, name, skipCondition, when, failureStrategies, steps, rollbackSteps);
     this.childNodeID = childNodeID;
   }
 
@@ -37,6 +37,7 @@ public class StepGroupStepParameters extends StepGroupElementConfig implements S
         .identifier(config.getIdentifier())
         .steps(config.getSteps())
         .skipCondition(config.getSkipCondition())
+        .when(config.getWhen())
         .failureStrategies(config.getFailureStrategies())
         .rollbackSteps(config.getRollbackSteps())
         .childNodeID(childNodeID)

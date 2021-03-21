@@ -2,7 +2,7 @@ package io.harness.migrations;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -22,7 +22,7 @@ import org.mongodb.morphia.Datastore;
  * Populate `limitCounters` collection with current value of applications an account has.
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class InitializeAppCounters implements Migration {
   @Inject AccountService accountService;
   @Inject WingsPersistence wingsPersistence;

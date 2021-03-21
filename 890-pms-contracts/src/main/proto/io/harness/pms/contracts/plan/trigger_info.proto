@@ -19,4 +19,5 @@ enum TriggerType {
   NOOP = 0;
   MANUAL = 1;
   WEBHOOK = 2;
+  WEBHOOK_CUSTOM = 3;
 }

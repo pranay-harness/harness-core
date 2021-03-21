@@ -11,21 +11,14 @@ import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
-import io.harness.pms.preflight.PreFlightCause;
 import io.harness.pms.preflight.PreFlightDTO;
-import io.harness.pms.preflight.PreFlightEntityErrorInfo;
-import io.harness.pms.preflight.PreFlightStatus;
-import io.harness.pms.preflight.connector.ConnectorCheckResponse;
-import io.harness.pms.preflight.connector.ConnectorWrapperResponse;
-import io.harness.pms.preflight.inputset.PipelineInputResponse;
-import io.harness.pms.preflight.inputset.PipelineWrapperResponse;
+import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.io.IOException;
-import java.util.Collections;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -53,6 +46,7 @@ public class PlanExecutionResource {
   @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
   @Inject private final PMSExecutionService pmsExecutionService;
   @Inject private final TriggeredByHelper triggeredByHelper;
+  @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
 
   @POST
   @Path("/{identifier}")
@@ -134,12 +128,13 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) String pipelineIdentifier,
-      @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse("dummyPreFlightCheckId");
+      @ApiParam(hidden = true) String inputSetPipelineYaml) throws IOException {
+    return ResponseDTO.newResponse(pipelineExecuteHelper.startPreflightCheck(
+        accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, inputSetPipelineYaml));
   }
 
   @GET
-  @ApiOperation(value = "initiate pre flight check", nickname = "getPreflightCheckResponse")
+  @ApiOperation(value = "get preflight check response", nickname = "getPreflightCheckResponse")
   @Path("/getPreflightCheckResponse")
   public ResponseDTO<PreFlightDTO> getPreflightCheckResponse(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
@@ -147,39 +142,14 @@ public class PlanExecutionResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
-    return ResponseDTO.newResponse(
-        PreFlightDTO.builder()
-            .pipelineInputWrapperResponse(
-                PipelineWrapperResponse.builder()
-                    .status(PreFlightStatus.FAILURE)
-                    .pipelineInputResponse(Collections.singletonList(
-                        PipelineInputResponse.builder()
-                            .fqn("pipeline.stages.s1.execution.steps.google.url")
-                            .stageName("s1")
-                            .stepName("google")
-                            .success(false)
-                            .errorInfo(
-                                PreFlightEntityErrorInfo.builder()
-                                    .causes(Collections.singletonList(
-                                        PreFlightCause.builder().cause("No value provided for runtime input").build()))
-                                    .build())
-                            .build()))
-                    .build())
-            .connectorWrapperResponse(
-                ConnectorWrapperResponse.builder()
-                    .status(PreFlightStatus.FAILURE)
-                    .checkResponses(Collections.singletonList(
-                        ConnectorCheckResponse.builder()
-                            .connectorIdentifier("conn1")
-                            .fqn("pipeline.stages.s1.infrastructure.connectorRef")
-                            .stageName("s1")
-                            .errorInfo(PreFlightEntityErrorInfo.builder()
-                                           .causes(Collections.singletonList(
-                                               PreFlightCause.builder().cause("Connector not reachable").build()))
-                                           .build())
-                            .build()))
-                    .build())
-            .status(PreFlightStatus.SUCCESS)
-            .build());
+    return ResponseDTO.newResponse(pipelineExecuteHelper.getPreflightCheckResponse(preflightCheckId));
+  }
+
+  @GET
+  @ApiOperation(value = "Run a schema on db.", nickname = "runSchemaOnDb")
+  @Path("/internal/runSchema")
+  public ResponseDTO<String> runASchemaMigration() {
+    orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
+    return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
   }
 }

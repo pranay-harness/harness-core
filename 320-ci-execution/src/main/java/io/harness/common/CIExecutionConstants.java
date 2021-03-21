@@ -39,8 +39,8 @@ public class CIExecutionConstants {
 
   // Constant for run/plugin step images
   public static final String STEP_COMMAND = "/step-exec/.harness/bin/ci-addon";
-  public static final Integer STEP_REQUEST_MEMORY_MIB = 1;
-  public static final Integer STEP_REQUEST_MILLI_CPU = 1;
+  public static final Integer STEP_REQUEST_MEMORY_MIB = 10;
+  public static final Integer STEP_REQUEST_MILLI_CPU = 10;
   public static final Integer PORT_STARTING_RANGE = 20002;
   public static final String PLUGIN_ENV_PREFIX = "PLUGIN_";
 

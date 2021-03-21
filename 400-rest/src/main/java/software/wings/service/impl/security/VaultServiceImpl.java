@@ -292,6 +292,11 @@ public class VaultServiceImpl extends BaseVaultServiceImpl implements VaultServi
   }
 
   @Override
+  public VaultConfig getVaultConfig(String accountId, String entityId) {
+    return (VaultConfig) getBaseVaultConfig(accountId, entityId);
+  }
+
+  @Override
   public Optional<SecretManagerConfig> updateRuntimeCredentials(
       SecretManagerConfig secretManagerConfig, Map<String, String> runtimeParameters, boolean shouldUpdateVaultConfig) {
     if (isEmpty(secretManagerConfig.getTemplatizedFields()) || isEmpty(runtimeParameters)) {

@@ -156,8 +156,13 @@ github.com/docker/go-connections v0.4.0/go.mod h1:Gbd7IOopHjR8Iph03tsViu4nIes5Xh
 github.com/docker/go-units v0.4.0/go.mod h1:fgPhTUdO+D/Jk86RDLlptpiXQzgHJF7gydDDbaIK4Dk=
 github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96/go.mod h1:Qh8CwZgvJUkLughtfhJv5dyTYa91l1fOUCrgjqmcifM=
 github.com/docopt/docopt-go v0.0.0-20180111231733-ee0de3bc6815/go.mod h1:WwZ+bS3ebgob9U8Nd0kOddGdZWjyMGR8Wziv+TBNwSE=
+github.com/drone/go-scm v1.8.0/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
 github.com/drone/go-scm v1.8.1-0.20210111143840-199eee180289 h1:4OeFha6WdntK0EnRRcZ1q02W8yAkC4uCidpIlYtTEi4=
 github.com/drone/go-scm v1.8.1-0.20210111143840-199eee180289/go.mod h1:lXwfbyrIJwFFME5TpzavkwO2T5X8yBK6t6cve7g91x0=
+github.com/drone/go-scm-codecommit v0.0.0-20210211141419-07505ec3c63f h1:doGZi6t4GWRAcJYGTqhu/pJaC/hPZCmfIH9s/1ms2Es=
+github.com/drone/go-scm-codecommit v0.0.0-20210211141419-07505ec3c63f/go.mod h1:NzMbLgUts8cAxLwSxMKRGESCkBON514HiEjxcA8VIgM=
+github.com/drone/go-scm-codecommit v0.0.0-20210315104920-2d8b9dc5ed8a h1:0i0YKhLdfnUvtB7UZstfbDslmhh1DXR+z3JsrNSwsG4=
+github.com/drone/go-scm-codecommit v0.0.0-20210315104920-2d8b9dc5ed8a/go.mod h1:NzMbLgUts8cAxLwSxMKRGESCkBON514HiEjxcA8VIgM=
 github.com/dustin/go-humanize v0.0.0-20171111073723-bb3d318650d4/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
@@ -509,6 +514,8 @@ github.com/prometheus/procfs v0.2.0/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4O
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/remyoudompheng/bigfft v0.0.0-20170806203942-52369c62f446/go.mod h1:uYEyJGbgTkfkS4+E/PavXkNJcbFIpEtjt2B0KDQ5+9M=
+github.com/robbiet480/go.sns v0.0.0-20181124163742-ca087b49e1da h1:oiuVamdP4LloTcrinlnYOxhLwhJCV3hE9D+NSxH0L4I=
+github.com/robbiet480/go.sns v0.0.0-20181124163742-ca087b49e1da/go.mod h1:9CDhL7uDVy8vEVDNPJzxq89dPaPBWP6hxQcC8woBHus=
 github.com/rogpeppe/fastuuid v0.0.0-20150106093220-6724a57986af/go.mod h1:XWv6SoW27p1b0cqNHllgS5HIMJraePCO15w5zCzIWYg=
 github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFRclV5y23lUDJ4=
 github.com/rogpeppe/go-internal v1.6.2/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
@@ -573,6 +580,7 @@ github.com/vdemeester/k8s-pkg-credentialprovider v1.18.1-0.20201019120933-f1d169
 github.com/vmware/govmomi v0.20.3/go.mod h1:URlwyTFZX72RmxtxuaFL2Uj3fD1JTvZdx59bHWk6aFU=
 github.com/wings-software/portal v0.0.0-20210305084455-298bbd5bd1fd h1:plEukc0pSYQjhhQMBcxy1SWNru+DOIrYBl9esuHbZrk=
 github.com/wings-software/portal v0.0.0-20210308082631-04401c58a9ae h1:4PyR6+3Jib0Ygdg6Kvcr1myzvj8FzSqd7Virfo3b++w=
+github.com/wings-software/portal v0.0.0-20210315104017-56fee3ebcdae h1:alVZKvTeUDHUrP27dweAKmFPykfP+mnusu3EzIqibXk=
 github.com/wings-software/portal/product/log-service v0.0.0-20210303173450-ffde6303e01f h1:TFJ9acHf+gQgzdVBFVvt4Hvw5Y562UuxQ3CPrcZAwrU=
 github.com/wings-software/portal/product/log-service v0.0.0-20210303173450-ffde6303e01f/go.mod h1:YJWGsWeA3Ki7cVC9OGzheZcWwGso9pCtXm9X+Bk68rE=
 github.com/wings-software/portal/product/log-service v0.0.0-20210305084455-298bbd5bd1fd h1:rnqAsP+LEd4EYkp1SNPKkLHDnnjVFVsYeJSYQ2/mjH0=

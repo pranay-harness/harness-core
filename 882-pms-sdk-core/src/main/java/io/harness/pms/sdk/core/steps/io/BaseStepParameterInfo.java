@@ -14,6 +14,7 @@ public class BaseStepParameterInfo {
   String identifier;
   String description;
   ParameterField<String> skipCondition;
+  ParameterField<String> when;
   RollbackInfo rollbackInfo;
   ParameterField<String> timeout;
 }

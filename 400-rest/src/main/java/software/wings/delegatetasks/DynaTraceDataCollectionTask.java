@@ -4,12 +4,11 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
-import static software.wings.common.VerificationConstants.PERIODIC_GAP_IN_DAYS;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.AbstractMetricAnalysisState.CANARY_DAYS_TO_COLLECT;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -56,7 +55,7 @@ import org.slf4j.Logger;
  * Created by rsingh on 2/6/18.
  */
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private DynaTraceDataCollectionInfo dataCollectionInfo;
 
@@ -279,8 +278,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
           for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
             String hostName = i == 0 ? DynatraceState.TEST_HOST_NAME : DynatraceState.CONTROL_HOST_NAME + i;
-            long startTimeStamp = startTime - TimeUnit.DAYS.toMillis(PERIODIC_GAP_IN_DAYS * i);
-            long endTimeStamp = endTime - TimeUnit.DAYS.toMillis(PERIODIC_GAP_IN_DAYS * i);
+            long startTimeStamp = startTime - TimeUnit.DAYS.toMillis(i);
+            long endTimeStamp = endTime - TimeUnit.DAYS.toMillis(i);
             hostStartTimeMap.put(hostName, startTimeStamp);
             for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
               callables.add(() -> {

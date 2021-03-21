@@ -5,7 +5,7 @@ import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVID
 import static software.wings.graphql.datafetcher.cloudProvider.CloudProviderController.populateCloudProvider;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CloudProviderDataFetcher
     extends AbstractObjectDataFetcher<QLCloudProvider, QLCloudProviderQueryParameters> {
   @Inject private SettingsService settingsService;

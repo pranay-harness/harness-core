@@ -1,8 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.appmanifest.StoreType.HelmSourceRepo;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 
@@ -15,6 +18,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.Getter;
 
+@OwnedBy(CDP)
 public final class HelmCommandFlagConstants {
   @Getter
   public enum HelmSubCommand {

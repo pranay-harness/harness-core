@@ -29,7 +29,6 @@ public class DataCollectionConnectorBundle implements ExecutionCapabilityDemande
   public ConnectorConfigDTO getConnectorConfigDTO() {
     return connectorDTO.getConnectorConfig();
   }
-
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return CVConnectorCapabilitiesHelper.fetchRequiredExecutionCapabilities(

@@ -6,8 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.DeploymentActivityDTO;
-import io.harness.cvng.beans.job.VerificationJobType;
-import io.harness.cvng.core.utils.DateTimeUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -64,20 +62,7 @@ public class DeploymentActivity extends Activity {
     verificationJobInstanceBuilder.newVersionHosts(this.getNewVersionHosts());
     verificationJobInstanceBuilder.newHostsTrafficSplitPercentage(this.getNewHostsTrafficSplitPercentage());
     verificationJobInstanceBuilder.dataCollectionDelay(this.getDataCollectionDelay());
-
-    // Set the properties needed for a health verification instance
-    Instant postActivityStart = DateTimeUtils.roundDownTo5MinBoundary(getVerificationStartTime());
-    Instant preActivityStart = postActivityStart.minus(verificationJobInstanceBuilder.getResolvedJob().getDuration());
-    // TODO: we can probably get rid of this logic by moving postActivityStart, preActivityStart inside the job
-    if (!VerificationJobType.getDeploymentJobTypes().contains(
-            verificationJobInstanceBuilder.getResolvedJob().getType())) {
-      verificationJobInstanceBuilder.startTime(preActivityStart);
-    } else {
-      verificationJobInstanceBuilder.startTime(this.getVerificationStartTime());
-    }
-    // TODO: These should be inferred from startTime and probably should be part of HealthVerification as methods
-    verificationJobInstanceBuilder.preActivityVerificationStartTime(preActivityStart);
-    verificationJobInstanceBuilder.postActivityVerificationStartTime(postActivityStart);
+    verificationJobInstanceBuilder.startTime(this.getVerificationStartTime());
   }
 
   @Override
@@ -107,8 +92,6 @@ public class DeploymentActivity extends Activity {
 
   @JsonIgnore
   public Instant getVerificationStartTime() {
-    return this.verificationStartTime == null
-        ? null
-        : DateTimeUtils.roundDownTo1MinBoundary(Instant.ofEpochMilli(this.verificationStartTime));
+    return Instant.ofEpochMilli(this.verificationStartTime);
   }
 }

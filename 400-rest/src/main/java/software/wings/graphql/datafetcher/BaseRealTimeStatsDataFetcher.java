@@ -7,7 +7,7 @@ import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
@@ -36,7 +36,7 @@ import org.mongodb.morphia.aggregation.Accumulator;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.query.Query;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
   default QLData getStackedData(NameService nameService, WingsPersistence wingsPersistence, List<String> groupBy,
       Class entityClass, Query query) {

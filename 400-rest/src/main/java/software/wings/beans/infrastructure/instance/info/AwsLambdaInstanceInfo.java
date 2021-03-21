@@ -1,6 +1,10 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.Tag;
 import software.wings.beans.infrastructure.instance.InvocationCount;
@@ -15,6 +19,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class AwsLambdaInstanceInfo extends ServerlessInstanceInfo {
   private String functionName;
   private String version;

@@ -12,6 +12,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -57,6 +58,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @NotEmpty @FdUniqueIndex private String planExecutionId;
   @NotEmpty private String name;
 
+  private Status internalStatus;
   private ExecutionStatus status;
 
   private String inputSetYaml;
@@ -76,6 +78,15 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
   @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
   @Version private Long version;
+
+  public ExecutionStatus getStatus() {
+    if (internalStatus == null) {
+      // For backwards compatibility when internalStatus was not there
+      return status;
+    }
+    return internalStatus == Status.NO_OP ? ExecutionStatus.NOT_STARTED
+                                          : ExecutionStatus.getExecutionStatus(internalStatus);
+  }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

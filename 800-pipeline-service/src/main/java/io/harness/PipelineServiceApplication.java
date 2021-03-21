@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import io.harness.delay.DelayEventListener;
 import io.harness.engine.events.OrchestrationEventListener;
 import io.harness.exception.GeneralException;
+import io.harness.execution.SdkResponseEventListener;
 import io.harness.govern.ProviderModule;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
@@ -239,6 +240,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
+
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);

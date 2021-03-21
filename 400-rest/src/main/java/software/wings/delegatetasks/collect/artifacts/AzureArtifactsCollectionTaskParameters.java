@@ -2,7 +2,7 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -26,7 +26,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureArtifactsCollectionTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   @NotNull private String accountId;
   @NotNull private AzureArtifactsConfig azureArtifactsConfig;

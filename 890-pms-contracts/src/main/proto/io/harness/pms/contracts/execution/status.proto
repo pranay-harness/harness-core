@@ -28,4 +28,6 @@ enum Status {
   SUCCEEDED = 16;
 
   IGNORE_FAILED = 17;  // This is when step is marked as Ignored.
+
+  APPROVAL_WAITING = 18;
 }

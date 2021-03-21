@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ServiceStatsDataFetcher extends RealTimeStatsDataFetcherWithTags<QLNoOpAggregateFunction, QLServiceFilter,
     QLServiceAggregation, QLNoOpSortCriteria, QLServiceTagType, QLServiceTagAggregation, QLServiceEntityAggregation> {
   @Inject ServiceQueryHelper serviceQueryHelper;

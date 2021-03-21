@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/drone/go-scm-codecommit/codecommit"
 	"github.com/drone/go-scm/scm"
 	"github.com/drone/go-scm/scm/driver/bitbucket"
 	"github.com/drone/go-scm/scm/driver/gitea"
@@ -136,6 +137,8 @@ func getClient(p pb.GitProvider) (*scm.Client, error) {
 		return gogs.New(gogsURI)
 	case pb.GitProvider_STASH:
 		return stash.NewDefault(), nil
+	case pb.GitProvider_CODECOMMIT:
+		return codecommit.NewDefault(), nil
 	default:
 		return nil, status.Errorf(codes.InvalidArgument,
 			fmt.Sprintf("Unsupported git provider %s", p.String()))

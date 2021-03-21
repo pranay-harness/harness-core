@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,6 +10,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
 
@@ -28,6 +30,7 @@ import software.wings.utils.Utils;
 import com.google.inject.Inject;
 import java.util.List;
 
+@OwnedBy(CDP)
 public class TerraformInfrastructureProvisionerYamlHandler
     extends InfrastructureProvisionerYamlHandler<Yaml, TerraformInfrastructureProvisioner> {
   @Inject SettingsService settingsService;

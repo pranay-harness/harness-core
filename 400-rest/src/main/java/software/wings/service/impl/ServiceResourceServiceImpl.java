@@ -850,6 +850,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
 
+    commands = overrideDefaultCommandsByDeploymentType(service, commands);
+
     // Default Commands are pushed to yaml only if it matches both the conditions
     // 1) pushToYaml is true 2) commands are not internal. (Check hasInternalCommands()).
     boolean shouldPushCommandsToYaml = pushToYaml && !hasInternalCommands(service);
@@ -868,6 +870,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return serviceToReturn;
+  }
+
+  private List<Command> overrideDefaultCommandsByDeploymentType(Service service, List<Command> commands) {
+    DeploymentType deploymentType = service.getDeploymentType();
+    if (DeploymentType.AZURE_WEBAPP == deploymentType || DeploymentType.AZURE_VMSS == deploymentType) {
+      commands = Collections.emptyList();
+    }
+    return commands;
   }
 
   /**

@@ -314,22 +314,27 @@ public class K8BuildSetupUtils {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
     }
-    return CIK8ContainerParams.builder()
-        .name(containerDefinitionInfo.getName())
-        .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
-        .containerType(containerDefinitionInfo.getContainerType())
-        .envVars(envVars)
-        .containerSecrets(ContainerSecrets.builder()
-                              .secretVariableDetails(containerSecretVariableDetails)
-                              .connectorDetailsMap(stepConnectorDetails)
-                              .build())
-        .commands(containerDefinitionInfo.getCommands())
-        .ports(containerDefinitionInfo.getPorts())
-        .args(containerDefinitionInfo.getArgs())
-        .imageDetailsWithConnector(imageDetailsWithConnector)
-        .volumeToMountPath(volumeToMountPath)
-        .workingDir(workDirPath)
-        .build();
+
+    CIK8ContainerParams cik8ContainerParams =
+        CIK8ContainerParams.builder()
+            .name(containerDefinitionInfo.getName())
+            .containerResourceParams(containerDefinitionInfo.getContainerResourceParams())
+            .containerType(containerDefinitionInfo.getContainerType())
+            .envVars(envVars)
+            .containerSecrets(ContainerSecrets.builder()
+                                  .secretVariableDetails(containerSecretVariableDetails)
+                                  .connectorDetailsMap(stepConnectorDetails)
+                                  .build())
+            .commands(containerDefinitionInfo.getCommands())
+            .ports(containerDefinitionInfo.getPorts())
+            .args(containerDefinitionInfo.getArgs())
+            .imageDetailsWithConnector(imageDetailsWithConnector)
+            .volumeToMountPath(volumeToMountPath)
+            .build();
+    if (containerDefinitionInfo.getContainerType() != CIContainerType.SERVICE) {
+      cik8ContainerParams.setWorkingDir(workDirPath);
+    }
+    return cik8ContainerParams;
   }
 
   private Map<String, String> createEnvVariableForSecret(List<SecretVariableDetails> secretVariableDetails) {

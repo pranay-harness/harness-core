@@ -80,6 +80,7 @@ import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.ng.gitsync.NgCoreGitChangeSetProcessorServiceImpl;
 import io.harness.ng.gitsync.handlers.ConnectorYamlHandler;
+import io.harness.outbox.OutboxEventIteratorConfiguration;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.UserProvider;
@@ -196,7 +197,15 @@ public class NextGenModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    return Jackson.newObjectMapper();
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+    NextGenApplication.configureObjectMapper(objectMapper);
+    return objectMapper;
+  }
+
+  @Provides
+  @Singleton
+  public OutboxEventIteratorConfiguration getOutboxEventIteratorConfiguration() {
+    return appConfig.getOutboxIteratorConfig();
   }
 
   @Override
@@ -341,7 +350,8 @@ public class NextGenModule extends AbstractModule {
         .annotatedWith(Names.named(EventsFrameworkMetadataConstants.SETUP_USAGE_ENTITY))
         .to(SetupUsageChangeEventMessageProcessor.class);
 
-    install(AccessControlClientModule.getInstance(appConfig.getAccessControlClientConfiguration(), "NextGenManager"));
+    install(AccessControlClientModule.getInstance(
+        appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
 
     registerEventsFrameworkMessageListeners();
   }

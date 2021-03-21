@@ -18,6 +18,7 @@ import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
@@ -110,17 +111,19 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     }
 
     if (stepElement.getStepSpecType() instanceof WithRollbackInfo) {
-      // Failure strategy should be present.
-      List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
-      if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
-        throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
-      }
+      if (((WithRollbackInfo) stepElement.getStepSpecType()).validateStageFailureStrategy()) {
+        // Failure strategy should be present.
+        List<FailureStrategyConfig> stageFailureStrategies = getFieldFailureStrategies(ctx.getCurrentField(), STAGE);
+        if (EmptyPredicate.isEmpty(stageFailureStrategies)) {
+          throw new InvalidRequestException("There should be atleast one failure strategy configured at stage level.");
+        }
 
-      // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no error
-      // type is involved
-      if (containsOnlyAnyOtherError(stageFailureStrategies) != true) {
-        throw new InvalidRequestException(
-            "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+        // checking stageFailureStrategies is having one strategy with error type as AnyOther and along with that no
+        // error type is involved
+        if (!containsOnlyAnyOtherError(stageFailureStrategies)) {
+          throw new InvalidRequestException(
+              "Failure strategy should contain one error type as Anyother or it is having more than one error type along with Anyother.");
+        }
       }
 
       String timeout = DEFAULT_TIMEOUT;
@@ -135,7 +138,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
               .description(stepElement.getDescription())
               .skipCondition(stepElement.getSkipCondition())
               .name(stepElement.getName())
-              .description(stepElement.getDescription())
+              .identifier(stepElement.getIdentifier())
               .build();
       stepParameters =
           ((WithRollbackInfo) stepElement.getStepSpecType()).getStepParametersWithRollbackInfo(baseStepParameterInfo);
@@ -155,6 +158,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                        .build())
             .adviserObtainments(adviserObtainmentFromMetaData)
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
+            .whenCondition(RunInfoUtils.getRunCondition(stepElement.getWhen()))
             .timeoutObtainment(
                 TimeoutObtainment.newBuilder()
                     .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
@@ -170,8 +174,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
       if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
           && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
-                 NGFailureTypeConstants.ANY_OTHER_ERRORS)
-              == true) {
+              NGFailureTypeConstants.ANY_OTHER_ERRORS)) {
         containsOnlyAnyOther = true;
       }
     }
@@ -264,7 +267,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
           FailureStrategyActionConfig actionUnderRetry = retryAction.getSpecConfig().getOnRetryFailure().getAction();
 
-          if (validateActionAfterRetryFailure(actionUnderRetry) != true) {
+          if (!validateActionAfterRetryFailure(actionUnderRetry)) {
             throw new InvalidRequestException("Retry action cannot have post retry failure action as Retry");
           }
           // validating Retry -> Manual Intervention -> Retry
@@ -355,28 +358,15 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
   }
 
   public boolean validateManualActionUnderRetryAction(RetryFailureSpecConfig retrySpecConfig) {
-    if (retrySpecConfig.getOnRetryFailure().getAction().getType().equals(NGFailureActionType.MANUAL_INTERVENTION)) {
-      return true;
-    } else {
-      return false;
-    }
+    return retrySpecConfig.getOnRetryFailure().getAction().getType().equals(NGFailureActionType.MANUAL_INTERVENTION);
   }
 
   public boolean validateRetryActionUnderManualAction(ManualFailureSpecConfig manualSpecConfig) {
-    if (manualSpecConfig.getOnTimeout().getAction().getType().equals(NGFailureActionType.RETRY)) {
-      return true;
-    } else {
-      return false;
-    }
+    return manualSpecConfig.getOnTimeout().getAction().getType().equals(NGFailureActionType.RETRY);
   }
 
   public boolean validateActionAfterRetryFailure(FailureStrategyActionConfig action) {
-    switch (action.getType()) {
-      case RETRY:
-        return false;
-      default:
-        return true;
-    }
+    return action.getType() != NGFailureActionType.RETRY;
   }
 
   private AdviserObtainment getOnSuccessAdviserObtainment(YamlField currentField) {

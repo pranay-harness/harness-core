@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -13,6 +14,7 @@ import static software.wings.service.impl.aws.model.AwsConstants.MIN_TRAFFIC_SHI
 
 import static java.util.Collections.emptyMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -32,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @ToString
 @Slf4j
+@OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbRollbackSwitchRoutesState extends SpotinstTrafficShiftAlbSwitchRoutesState {
   public SpotinstTrafficShiftAlbRollbackSwitchRoutesState(String name) {
     super(name, StateType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK.name());

@@ -38,4 +38,5 @@ public class PlanNode {
   boolean skipExpressionChain;
   @Builder.Default SkipType skipGraphType = SkipType.NOOP;
   String skipCondition;
+  String whenCondition;
 }
