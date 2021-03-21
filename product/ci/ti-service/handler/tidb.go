@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/wings-software/portal/product/ci/addon/ti"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"net/http"
@@ -118,8 +117,8 @@ func UploadCg( log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data []byte
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-			WriteBadRequest(w, err)
 			log.Errorw("could not unmarshal request body")
+			WriteBadRequest(w, err)
 		}
 		cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 		if err != nil {
@@ -140,10 +139,11 @@ func UploadCg( log *zap.SugaredLogger) http.HandlerFunc {
 			WriteInternalError(w, err)
 			return
 		}
-		writeCg()
+		writeCg(cg)
 	}
 }
 
-func writeCg () {
+//writeCg writes callgraph to db
+func writeCg (cg *ti.Callgraph) {
 	return
 }

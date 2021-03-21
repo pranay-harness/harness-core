@@ -96,6 +96,7 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 		e.log.Errorw("failed to process callgraph", zap.Error(cgErr))
 		return out, retries, cgErr
 	}
+	return out, retries, err
 }
 
 // validate the container port and language
@@ -159,7 +160,7 @@ func (e *runTestsStep) processCg() error {
 		e.log.Errorf("failed to read callgraph file", zap.Error(err))
 		return err
 	}
-	e.log.Infow(fmt.Sprintf("succesfully read callgraph files. size of nodes:[%d], size of relations:[%d]", len(cg.Nodes), len(cg.Relns)))
+	e.log.Infow(fmt.Sprintf("succesfully read callgraph files. size of nodes:[%d], size of relations:[%d]", len(cg.Nodes), len(cg.Relations)))
 	cgMap := cg.ToStringMap()
 	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
 	if err != nil {
@@ -171,7 +172,6 @@ func (e *runTestsStep) processCg() error {
 		e.log.Errorf("failed to encode callgraph", zap.Error(err))
 		return err
 	}
-	e.log.Infow(fmt.Sprintf("dsds %s", string(encBytes)))
 	client, err := remoteTiClient()
 	if err != nil {
 		e.log.Errorf("failed to create tiClient", zap.Error(err))

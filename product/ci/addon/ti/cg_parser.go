@@ -23,7 +23,7 @@ type CallGraphParser struct {
 	log *zap.SugaredLogger // logger
 }
 
-// NewCallGraphParser returns a new CallGraphParser client
+// NewCallGraphParser creates a new CallGraphParser client and returns it
 func NewCallGraphParser(log *zap.SugaredLogger) *CallGraphParser {
 	return &CallGraphParser{
 		log: log,
@@ -44,6 +44,7 @@ func (cg *CallGraphParser) Parse(file string) (*Callgraph, error) {
 	return parseInt(cgStr)
 }
 
+// parseInt reads the input callgraph file and converts it into callgraph object
 func parseInt(cgStr []string) (*Callgraph, error) {
 	var (
 		err error
@@ -65,7 +66,7 @@ func process(inps []Input) *Callgraph {
 	var nodes []Node
 
 	relMap, nodeMap := convCgph(inps)
-	// Updating the Relns map
+	// Updating the Relations map
 	for k, v := range relMap {
 		tRel := Relation{
 			Source: k,
@@ -79,8 +80,8 @@ func process(inps []Input) *Callgraph {
 		nodes = append(nodes, v)
 	}
 	return &Callgraph{
-		Nodes: nodes,
-		Relns: relns,
+		Nodes:     nodes,
+		Relations: relns,
 	}
 }
 
@@ -104,6 +105,9 @@ func convCgph(inps []Input) (map[int][]int, map[int]Node) {
 	return relMap, nodeMap
 }
 
+// rLine reads line in callgraph file which corresponds to one entry of callgraph
+// had to use bufio reader as the scanner.Scan() fn has limitation
+// over the number of bytes it can read and was not working on callgraph file.
 func rLine(r *bufio.Reader) (string, error) {
 	var (
 		isPrefix bool  = true
@@ -117,6 +121,7 @@ func rLine(r *bufio.Reader) (string, error) {
 	return string(ln), err
 }
 
+// rFile reads callgraph file
 func rFile(r *bufio.Reader) ([]string, error) {
 	var ret []string
 	s, e := rLine(r)

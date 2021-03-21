@@ -27,7 +27,7 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 				Type:    "test",
 			},
 		},
-		Relns: []Relation{
+		Relations: []Relation{
 			Relation{
 				Source: 0,
 				Tests:  []int{1, 2, 3, 4, 5},
@@ -42,8 +42,8 @@ func TestCallgraph_ToStringMap(t *testing.T) {
 
 	fNodes, fRelations := getCgObject(mp)
 	finalCg := Callgraph{
-		Nodes: fNodes,
-		Relns: fRelations,
+		Nodes:     fNodes,
+		Relations: fRelations,
 	}
 	assert.Equal(t, reflect.DeepEqual(finalCg, cg), true)
 }
@@ -77,7 +77,7 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 					fNodes = append(fNodes, node)
 				}
 			}
-		case "relns":
+		case "relations":
 			if relations, ok := v.([]interface{}); ok {
 				for _, reln := range relations {
 					var relation Relation
@@ -100,8 +100,4 @@ func getCgObject(mp map[string]interface{}) ([]Node, []Relation) {
 		}
 	}
 	return fNodes, fRelations
-}
-
-func TestFromStringMap(t *testing.T) {
-
 }

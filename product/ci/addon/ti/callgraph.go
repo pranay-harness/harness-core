@@ -5,15 +5,15 @@ import (
 	"fmt"
 )
 
-// Callgraph object used to upload data to TI server
+// Callgraph object used to for data trasnfer b/w ti service and lite-engine
 type Callgraph struct {
-	Nodes []Node
-	Relns []Relation
+	Nodes     []Node
+	Relations []Relation
 }
 
 //ToStringMap converts Callgraph to map[string]interface{} for encoding
 func (cg *Callgraph) ToStringMap() map[string]interface{} {
-	var nodes, relns []interface{}
+	var nodes, relations []interface{}
 	for _, v := range (*cg).Nodes {
 		data := map[string]interface{}{
 			"package": v.Package,
@@ -25,16 +25,16 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 		}
 		nodes = append(nodes, data)
 	}
-	for _, v := range (*cg).Relns {
+	for _, v := range (*cg).Relations {
 		data := map[string]interface{}{
 			"source": v.Source,
 			"tests":  v.Tests,
 		}
-		relns = append(relns, data)
+		relations = append(relations, data)
 	}
 	data := map[string]interface{}{
-		"nodes": nodes,
-		"relns": relns,
+		"nodes":      nodes,
+		"relations": relations,
 	}
 	return data
 }
@@ -73,7 +73,7 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 			} else {
 				return nil, errors.New("failed to parse nodes in callgraph")
 			}
-		case "relns":
+		case "relations":
 			if relns, ok := v.([]interface{}); ok {
 				for _, reln := range relns {
 					var relation Relation
@@ -100,8 +100,8 @@ func FromStringMap(data map[string]interface{}) (*Callgraph, error) {
 		}
 	}
 	return &Callgraph{
-		Relns: fRel,
-		Nodes: fNodes,
+		Relations: fRel,
+		Nodes:     fNodes,
 	}, nil
 }
 

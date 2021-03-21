@@ -25,7 +25,7 @@ func TestCallGraphParser_Parse(t *testing.T) {
 		2139952358:  []int{-1648419296},
 		330989721:   []int{-1648419296},
 	}
-	for _, v := range dto.Relns {
+	for _, v := range dto.Relations {
 		assert.Equal(t, v.Tests, exp[v.Source])
 	}
 
