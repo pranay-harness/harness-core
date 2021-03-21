@@ -5,13 +5,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"go.uber.org/zap"
 )
 
 func TestCallGraphParser_Parse(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	cgph := NewCallGraphParser(log.Sugar())
+	fs := filesystem.NewOSFileSystem(log.Sugar())
+	cgph := NewCallGraphParser(log.Sugar(), fs)
 	dto, _ := cgph.Parse("testdata/cg.json")
 
 	// Assert relations is as expected
@@ -53,7 +55,8 @@ func TestCallGraphParser_Parse(t *testing.T) {
 
 func TestCallGraphParser_ParseShouldFail(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	cgph := NewCallGraphParser(log.Sugar())
+	fs := filesystem.NewOSFileSystem(log.Sugar())
+	cgph := NewCallGraphParser(log.Sugar(), fs)
 	_, err := cgph.Parse("testdata/cg_invalid.json")
 
 	assert.NotEqual(t, nil, err)
@@ -62,11 +65,11 @@ func TestCallGraphParser_ParseShouldFail(t *testing.T) {
 
 func TestCallGraphParser_ParseShouldFailNoFile(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	cgph := NewCallGraphParser(log.Sugar())
+	fs := filesystem.NewOSFileSystem(log.Sugar())
+	cgph := NewCallGraphParser(log.Sugar(), fs)
 	_, err := cgph.Parse("testdata/cg_random.json")
 
 	assert.NotEqual(t, nil, err)
 	strings.Contains(err.Error(), "failed to open file")
 	assert.True(t, strings.Contains(err.Error(), "data unmarshalling to json failed for line"))
 }
-

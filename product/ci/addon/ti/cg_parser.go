@@ -4,11 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"os"
+	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
-
-	"go.uber.org/zap"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 )
 
 //Parser reads callgraph file, processes it to extract
@@ -20,19 +19,21 @@ type Parser interface {
 
 // CallGraphParser struct definition
 type CallGraphParser struct {
-	log *zap.SugaredLogger // logger
+	log *zap.SugaredLogger    // logger
+	fs  filesystem.FileSystem // filesystem handler
 }
 
 // NewCallGraphParser creates a new CallGraphParser client and returns it
-func NewCallGraphParser(log *zap.SugaredLogger) *CallGraphParser {
+func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallGraphParser {
 	return &CallGraphParser{
 		log: log,
+		fs:  fs,
 	}
 }
 
 // Parse callgraph and return nodes and relations
 func (cg *CallGraphParser) Parse(file string) (*Callgraph, error) {
-	f, err := os.Open(file)
+	f, err := cg.fs.Open(file)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
 	}

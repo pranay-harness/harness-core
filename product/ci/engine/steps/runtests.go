@@ -7,19 +7,20 @@ import (
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
+	fs "github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	addonpb "github.com/wings-software/portal/product/ci/addon/proto"
+	"github.com/wings-software/portal/product/ci/addon/ti"
+	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
-	"github.com/wings-software/portal/product/ci/common/avro"
-	"github.com/wings-software/portal/product/ci/addon/ti"
 )
 
 var (
-	getWrkspcPath = external.GetWrkspcPath
-	getChFiles    = external.GetChangedFiles
+	getWrkspcPath  = external.GetWrkspcPath
+	getChFiles     = external.GetChangedFiles
 	remoteTiClient = external.GetTiHTTPClient
 	getOrgId       = external.GetOrgId
 	getProjectId   = external.GetProjectId
@@ -29,8 +30,8 @@ var (
 )
 
 const (
-	cgDir                        = "/Users/amansingh/Desktop/f2.txt" // Discuss with Shiv - How to handle the deduping being done in job [TODO: Aman]
-	cgSchemaPath                 = "/Users/amansingh/code/portal/product/ci/common/avro/schema.avsc"        // the path of this needs to be decided [TODO: Aman]
+	cgDir        = "/Users/amansingh/Desktop/f2.txt"                                 // Discuss with Shiv - How to handle the deduping being done in job [TODO: Aman]
+	cgSchemaPath = "/Users/amansingh/code/portal/product/ci/common/avro/schema.avsc" // the path of this needs to be decided [TODO: Aman]
 )
 
 // RunTestsStep represents interface to execute a runTests step
@@ -154,7 +155,8 @@ func (e *runTestsStep) getExecuteStepArg(diffFiles []string) *addonpb.ExecuteSte
 }
 
 func (e *runTestsStep) processCg() error {
-	parser := ti.NewCallGraphParser(e.log)
+	fs := fs.NewOSFileSystem(e.log)
+	parser := ti.NewCallGraphParser(e.log, fs)
 	cg, err := parser.Parse(cgDir)
 	if err != nil {
 		e.log.Errorf("failed to read callgraph file", zap.Error(err))
