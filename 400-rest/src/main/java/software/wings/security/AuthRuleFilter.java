@@ -83,6 +83,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Created by anubhaw on 3/11/16.
@@ -267,16 +268,22 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       return;
     }
 
+    List<PermissionAttribute> requiredPermissionAttributes =
+        getAllRequiredPermissionAttributes(requestContext, isApiKeyAuthorized);
+
     if (user == null) {
       if (isExternalApi) {
         return;
       } else if (isApiKeyAuthorized) {
         String apiKey = requestContext.getHeaderString(API_KEY_HEADER);
         if (isEmpty(apiKey)) {
-          return;
+          if (skipApiKeyCheck()) {
+            return;
+          }
+          throw new AccessDeniedException("Api Key cannot be empty", USER);
         }
         user = setUserAndUserRequestContextUsingApiKey(
-            apiKey, accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest);
+            apiKey, accountId, requestContext, emptyAppIdsInReq, appIdsFromRequest, requiredPermissionAttributes);
       } else {
         log.warn("No user context in operation: {}", uriPath);
         throw new AccessDeniedException("No user context set", USER);
@@ -284,7 +291,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     }
 
     String httpMethod = requestContext.getMethod();
-    List<PermissionAttribute> requiredPermissionAttributes;
     boolean harnessSupportUser = false;
     if (!isApiKeyAuthorized && !userService.isUserAssignedToAccount(user, accountId)) {
       if (!isHarnessUserExemptedRequest && !httpMethod.equals(HttpMethod.GET.name())) {
@@ -308,7 +314,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (servletRequest != null && !graphQLRequest) {
       checkForWhitelisting(accountId, null, requestContext, user);
     }
-    requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
     if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
       if (isApiKeyAuthorized) {
@@ -525,6 +530,33 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     return requiredPermissionAttributes.stream().anyMatch(PermissionAttribute::isSkipAuth);
   }
 
+  private boolean skipApiKeyCheck() {
+    boolean methodSkipApiKeyCheck = false;
+    boolean classSkipApiKeyCheck = false;
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    ApiKeyAuthorized[] methodAnnotations = resourceMethod.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(methodAnnotations)) {
+      for (ApiKeyAuthorized methodAnnotation : methodAnnotations) {
+        methodSkipApiKeyCheck = methodAnnotation.skipApiKeyCheck() || methodSkipApiKeyCheck;
+      }
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    ApiKeyAuthorized[] classAnnotations = resourceClass.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(classAnnotations)) {
+      for (ApiKeyAuthorized classAnnotation : classAnnotations) {
+        classSkipApiKeyCheck = classAnnotation.skipApiKeyCheck() || classSkipApiKeyCheck;
+      }
+    }
+
+    if (isEmpty(methodAnnotations)) {
+      return classSkipApiKeyCheck;
+    } else {
+      return methodSkipApiKeyCheck;
+    }
+  }
+
   private boolean setAppIdFilterInUserRequestContext(
       UserRequestContextBuilder userRequestContextBuilder, boolean emptyAppIdsInReq, Set<String> allowedAppIds) {
     if (!emptyAppIdsInReq) {
@@ -675,7 +707,46 @@ public class AuthRuleFilter implements ContainerRequestFilter {
         authRule.parameterName(), authRule.dbFieldName(), authRule.dbCollectionName(), authRule.skipAuth());
   }
 
-  private List<PermissionAttribute> getAllRequiredPermissionAttributes(ContainerRequestContext requestContext) {
+  private List<PermissionAttribute> getApiKeyAuthorizedPermissionAttributes(ContainerRequestContext requestContext) {
+    List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
+    List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
+    String httpMethod = requestContext.getMethod();
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    ApiKeyAuthorized[] methodAnnotations = resourceMethod.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(methodAnnotations)) {
+      for (ApiKeyAuthorized methodAnnotation : methodAnnotations) {
+        methodPermissionAttributes.add(new PermissionAttribute(null, methodAnnotation.permissionType(),
+            getAction(methodAnnotation, requestContext.getMethod()), httpMethod));
+      }
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    ApiKeyAuthorized[] classAnnotations = resourceClass.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(classAnnotations)) {
+      for (ApiKeyAuthorized classAnnotation : classAnnotations) {
+        classPermissionAttributes.add(new PermissionAttribute(null, classAnnotation.permissionType(),
+            getAction(classAnnotation, requestContext.getMethod()), httpMethod));
+      }
+    }
+
+    if (methodPermissionAttributes.isEmpty()) {
+      return classPermissionAttributes;
+    } else {
+      return methodPermissionAttributes;
+    }
+  }
+
+  private List<PermissionAttribute> getAllRequiredPermissionAttributes(
+      ContainerRequestContext requestContext, boolean isApiKeyAuthorized) {
+    if (isApiKeyAuthorized) {
+      return getApiKeyAuthorizedPermissionAttributes(requestContext);
+    }
+    return getAuthRulePermissionAttributes(requestContext);
+  }
+
+  @NotNull
+  private List<PermissionAttribute> getAuthRulePermissionAttributes(ContainerRequestContext requestContext) {
     List<PermissionAttribute> methodPermissionAttributes = new ArrayList<>();
     List<PermissionAttribute> classPermissionAttributes = new ArrayList<>();
 
@@ -711,6 +782,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       action = getDefaultAction(method);
     } else {
       action = authRule.action();
+    }
+    return action;
+  }
+
+  private Action getAction(ApiKeyAuthorized apiKeyAuthorized, String method) {
+    Action action;
+    if (apiKeyAuthorized.action() == Action.DEFAULT) {
+      action = getDefaultAction(method);
+    } else {
+      action = apiKeyAuthorized.action();
     }
     return action;
   }
@@ -760,7 +841,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private User setUserAndUserRequestContextUsingApiKey(String apiKey, String accountId,
-      ContainerRequestContext requestContext, boolean emptyAppIdsInReq, List<String> appIdsFromRequest) {
+      ContainerRequestContext requestContext, boolean emptyAppIdsInReq, List<String> appIdsFromRequest,
+      List<PermissionAttribute> requiredPermissionAttributes) {
     if (accountId == null) {
       throw new InvalidRequestException("accountId not specified", USER);
     }
@@ -774,7 +856,6 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     UserPermissionInfo apiKeyPermissions = apiKeyService.getApiKeyPermissions(apiKeyEntry, accountId);
     UserRestrictionInfo apiKeyRestrictions =
         apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
-    List<PermissionAttribute> requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
     String httpMethod = requestContext.getMethod();
     List<ResourceType> requiredResourceTypes = getAllResourceTypes();
     boolean isScopedToApp = isPresent(requiredResourceTypes, ResourceType.APPLICATION);
