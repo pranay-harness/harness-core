@@ -5,7 +5,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.apache.commons.lang3.BooleanUtils.isTrue;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class AbstractStatsDataFetcherWithAggregationList<A, F, G, S>
     implements DataFetcher, BaseStatsDataFetcher, CEBaseStatsDataFetcher {
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";

@@ -40,6 +40,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -131,21 +132,29 @@ public class ImagePullSecretUtils {
                                                 .region(ecrArtifactOutcome.getRegion())
                                                 .build();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponseForImageUrl = ecrImagePullSecretHelper.executeSyncTask(
-        ecrRequest, ArtifactTaskType.GET_IMAGE_URL, baseNGAccess, "Ecr Get image URL failure due to error");
+        ambiance, ecrRequest, ArtifactTaskType.GET_IMAGE_URL, baseNGAccess, "Ecr Get image URL failure due to error");
     String imageUrl =
         ((EcrArtifactDelegateResponse) artifactTaskExecutionResponseForImageUrl.getArtifactDelegateResponses().get(0))
             .getImageUrl();
     ArtifactTaskExecutionResponse artifactTaskExecutionResponseForAuthToken = ecrImagePullSecretHelper.executeSyncTask(
-        ecrRequest, ArtifactTaskType.GET_AUTH_TOKEN, baseNGAccess, "Ecr Get Auth-token failure due to error");
+        ambiance, ecrRequest, ArtifactTaskType.GET_AUTH_TOKEN, baseNGAccess, "Ecr Get Auth-token failure due to error");
     String authToken =
         ((EcrArtifactDelegateResponse) artifactTaskExecutionResponseForAuthToken.getArtifactDelegateResponses().get(0))
             .getAuthToken();
-
+    String decoded = new String(Base64.getDecoder().decode(authToken));
+    String password = decoded.split(":")[1];
     imageDetailsBuilder.name(imageUrl)
         .sourceName(ArtifactSourceType.ECR.getDisplayName())
-        .registryUrl("https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/"))
+        .registryUrl(imageUrlToRegistryUrl(imageUrl))
         .username("AWS");
-    imageDetailsBuilder.password("\"" + authToken + "\"");
+    imageDetailsBuilder.password("\"" + password + "\"");
+  }
+
+  private String imageUrlToRegistryUrl(String imageUrl) {
+    String fullImageUrl = "https://" + imageUrl + (imageUrl.endsWith("/") ? "" : "/");
+    fullImageUrl = fullImageUrl.substring(0, fullImageUrl.length() - 1);
+    int index = fullImageUrl.lastIndexOf('/');
+    return fullImageUrl.substring(0, index + 1);
   }
 
   private ConnectorInfoDTO getConnector(String connectorIdentifierRef, Ambiance ambiance) {

@@ -66,7 +66,6 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
             .barrierGroupId(generateUuid())
             .identifier(generateUuid())
             .planExecutionId(ambiance.getPlanExecutionId())
-            .planNodeId(generateUuid())
             .setupInfo(BarrierSetupInfo.builder()
                            .stages(Sets.newSet(StageDetail.builder()
                                                    .name(stageNode.getNode().getName())
@@ -100,6 +99,47 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
                                                    .identifier(stageNode.getNode().getIdentifier())
                                                    .name(stageNode.getNode().getName())
                                                    .build()))
+                       .build());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGetBarrierExecutionInfo() {
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
+    String planNodeId = generateUuid();
+
+    BarrierExecutionInstance instance1 =
+        BarrierExecutionInstance.builder()
+            .uuid(generateUuid())
+            .name(generateUuid())
+            .planNodeId(planNodeId)
+            .barrierState(STANDING)
+            .barrierGroupId(generateUuid())
+            .identifier(generateUuid())
+            .planExecutionId(ambiance.getPlanExecutionId())
+            .setupInfo(BarrierSetupInfo.builder()
+                           .stages(Sets.newSet(
+                               StageDetail.builder().name("stage-name").identifier("stage-identifier").build()))
+                           .build())
+            .build();
+
+    when(barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, ambiance.getPlanExecutionId()))
+        .thenReturn(instance1);
+
+    BarrierExecutionInfo barrierExecutionInfo =
+        pmsBarrierService.getBarrierExecutionInfo(planNodeId, ambiance.getPlanExecutionId());
+
+    assertThat(barrierExecutionInfo).isNotNull();
+    assertThat(barrierExecutionInfo)
+        .isEqualTo(BarrierExecutionInfo.builder()
+                       .name(instance1.getName())
+                       .identifier(instance1.getIdentifier())
+                       .startedAt(0)
+                       .started(false)
+                       .timeoutIn(0)
+                       .stages(ImmutableSet.of(
+                           StageDetail.builder().identifier("stage-identifier").name("stage-name").build()))
                        .build());
   }
 }

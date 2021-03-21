@@ -11,10 +11,9 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
@@ -29,13 +28,14 @@ import software.wings.beans.infrastructure.instance.info.K8sContainerInfo;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class UpdateInstanceInfoWithLastArtifactIdMigrationTest extends WingsBaseTest {
   @Inject private HPersistence persistence;
 
@@ -63,8 +63,9 @@ public class UpdateInstanceInfoWithLastArtifactIdMigrationTest extends WingsBase
                              .appId(APP_ID)
                              .accountId(ACCOUNT_ID)
                              .build();
-    instance2.setInstanceInfo(
-        K8sPodInfo.builder().containers(asList(K8sContainerInfo.builder().image("image:latest").build())).build());
+    instance2.setInstanceInfo(K8sPodInfo.builder()
+                                  .containers(Arrays.asList(K8sContainerInfo.builder().image("image:latest").build()))
+                                  .build());
 
     Instance instance3 = Instance.builder()
                              .uuid("instance3")

@@ -14,7 +14,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -39,7 +39,7 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
 public class PipelineServiceHelperTest extends WingsBaseTest {
   @Test
   @Owner(developers = POOJA)

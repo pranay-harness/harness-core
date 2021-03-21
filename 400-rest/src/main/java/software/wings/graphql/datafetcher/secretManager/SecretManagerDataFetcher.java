@@ -4,7 +4,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.exception.InvalidRequestException;
@@ -20,7 +20,7 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class SecretManagerDataFetcher
     extends AbstractObjectDataFetcher<QLSecretManager, QLSecretManagerQueryParameters> {
   @Inject private HPersistence persistence;

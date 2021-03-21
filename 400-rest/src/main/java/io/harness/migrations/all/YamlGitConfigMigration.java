@@ -6,7 +6,7 @@ import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_ID_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_TYPE_KEY;
 import static software.wings.yaml.gitSync.YamlGitConfig.SYNC_MODE_KEY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class YamlGitConfigMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 

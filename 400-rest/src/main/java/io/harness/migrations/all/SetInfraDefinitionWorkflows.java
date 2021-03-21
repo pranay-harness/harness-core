@@ -5,7 +5,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.EntityType.INFRASTRUCTURE_DEFINITION;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.ExceptionUtils;
@@ -37,7 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetInfraDefinitionWorkflows {
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;

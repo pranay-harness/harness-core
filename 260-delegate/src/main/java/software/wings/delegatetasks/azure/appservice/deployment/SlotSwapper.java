@@ -7,7 +7,7 @@ import static io.harness.logging.LogLevel.INFO;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureWebClientContext;
@@ -15,7 +15,7 @@ import io.harness.logging.LogCallback;
 
 import software.wings.delegatetasks.azure.AzureServiceCallBack;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class SlotSwapper implements Runnable {
   private final String sourceSlotName;
   private final String targetSlotName;

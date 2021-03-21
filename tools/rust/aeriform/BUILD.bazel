@@ -8,6 +8,7 @@ rust_binary(
     ],
     deps = [
         "//tools/rust:clap",
+        "//tools/rust:enumset",
         "//tools/rust:glob",
         "//tools/rust:lazy_static",
         "//tools/rust:multimap",

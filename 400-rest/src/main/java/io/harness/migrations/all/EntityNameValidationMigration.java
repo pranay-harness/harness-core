@@ -7,7 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.data.validator.EntityNameValidator;
@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  * Finally we decided to go with option 3.
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public abstract class EntityNameValidationMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
 

@@ -11,7 +11,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 
 import io.harness.CategoryTest;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.model.AzureConfig;
@@ -44,7 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSyncTaskHandlerTest extends CategoryTest {
   private static final String RESOURCE_GROUP = "test-resourceGroup";
   private static final String SUBSCRIPTION_ID = "test-subscriptionId";

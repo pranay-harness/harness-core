@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.Integer.max;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import com.mongodb.DBCollection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
   private static final int BATCH_SIZE = 50;
   @Inject private WingsPersistence wingsPersistence;

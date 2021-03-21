@@ -1,5 +1,7 @@
 package io.harness.perpetualtask.instancesync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
@@ -15,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.spotinst.request.SpotInstListElastigroupInstancesParameters;
@@ -46,6 +49,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class SpotinstAmiInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   private static final String ELASTIGROUP_ID = "elasti-group-id";
 

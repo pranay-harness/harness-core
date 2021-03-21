@@ -6,7 +6,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SyncNewFolderForConfigFiles implements OnPrimaryManagerMigration {
   String DEBUG_LINE = "CONFIG_FILE_SYNC: ";
   @Inject YamlChangeSetHelper yamlChangeSetHelper;

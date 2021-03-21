@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -76,6 +77,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -227,6 +229,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
+@OwnedBy(CDP)
 public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";

@@ -8,7 +8,7 @@ import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
@@ -74,7 +74,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployCommandTaskHelper {
   private static final String DELIMITER = "__";
   private static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";

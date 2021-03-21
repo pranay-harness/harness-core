@@ -16,7 +16,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
@@ -40,7 +40,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSlotShiftTrafficTaskHandlerTest extends WingsBaseTest {
   public static final double TRAFFIC_WEIGHT_IN_PERCENTAGE = 50.0;
   public static final String SHIFT_TRAFFIC_SLOT_NAME = "slotName";

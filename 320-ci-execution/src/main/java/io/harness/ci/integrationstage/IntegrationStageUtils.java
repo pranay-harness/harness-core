@@ -1,5 +1,6 @@
 package io.harness.ci.integrationstage;
 
+import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
@@ -88,8 +89,31 @@ public class IntegrationStageUtils {
       } else {
         throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
       }
+    } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK_CUSTOM) {
+      return buildCustomExecutionSource(identifier, parameterFieldBuild);
     }
 
+    return null;
+  }
+
+  private CustomExecutionSource buildCustomExecutionSource(
+      String identifier, ParameterField<Build> parameterFieldBuild) {
+    if (parameterFieldBuild == null) {
+      return CustomExecutionSource.builder().build();
+    }
+    Build build = RunTimeInputHandler.resolveBuild(parameterFieldBuild);
+    if (build != null) {
+      if (build.getType().equals(BuildType.TAG)) {
+        ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
+        String buildString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", identifier, tag, false);
+        return CustomExecutionSource.builder().tag(buildString).build();
+      } else if (build.getType().equals(BuildType.BRANCH)) {
+        ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
+        String branchString =
+            RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", identifier, branch, false);
+        return CustomExecutionSource.builder().branch(branchString).build();
+      }
+    }
     return null;
   }
 }

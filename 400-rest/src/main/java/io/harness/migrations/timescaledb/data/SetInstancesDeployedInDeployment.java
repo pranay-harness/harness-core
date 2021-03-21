@@ -2,7 +2,7 @@ package io.harness.migrations.timescaledb.data;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.migrations.TimeScaleDBDataMigration;
@@ -31,7 +31,7 @@ import org.mongodb.morphia.query.FindOptions;
  */
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetInstancesDeployedInDeployment implements TimeScaleDBDataMigration {
   @Inject TimeScaleDBService timeScaleDBService;
 

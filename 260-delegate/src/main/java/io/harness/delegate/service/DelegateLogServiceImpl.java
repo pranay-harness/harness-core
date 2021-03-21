@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.right;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.logging.CommandExecutionStatus;
@@ -71,7 +71,7 @@ import retrofit2.Response;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class DelegateLogServiceImpl implements DelegateLogService {
   /**
    * The Size Limit For Final LogLine

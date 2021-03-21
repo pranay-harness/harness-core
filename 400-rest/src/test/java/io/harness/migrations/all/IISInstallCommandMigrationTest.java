@@ -7,7 +7,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.migrations.seedata.IISInstallCommandMigration;
@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class IISInstallCommandMigrationTest extends TemplateBaseTestHelper {
   @InjectMocks @Inject private IISInstallCommandMigration iisInstallCommandMigration;
 

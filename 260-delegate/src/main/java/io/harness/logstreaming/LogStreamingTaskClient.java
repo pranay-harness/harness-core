@@ -9,7 +9,7 @@ import static software.wings.beans.LogWeight.Bold;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.taskprogress.ITaskProgressClient;
@@ -30,7 +30,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @Builder
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   private final DelegateLogService logService;
   private final LogStreamingClient logStreamingClient;

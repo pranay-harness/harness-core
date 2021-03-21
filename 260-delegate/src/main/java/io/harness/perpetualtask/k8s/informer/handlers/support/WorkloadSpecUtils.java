@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.informer.handlers.support;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 
@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class WorkloadSpecUtils {
   private K8sWorkloadSpec.ContainerSpec makeContainerSpec(V1Container container) {
     K8sWorkloadSpec.ContainerSpec.Builder builder = K8sWorkloadSpec.ContainerSpec.newBuilder();

@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.logging.CommandExecutionStatus;
@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private AwsHelperService awsHelperService;

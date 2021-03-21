@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -7,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -18,6 +20,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class AwsCodeDeployStateTest extends WingsBaseTest {
   @Mock private AwsStateHelper awsStateHelper;
   @InjectMocks AwsCodeDeployState awsCodeDeployState = new AwsCodeDeployState("awsCodeDeployState");

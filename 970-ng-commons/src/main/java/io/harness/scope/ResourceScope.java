@@ -3,6 +3,7 @@ package io.harness.scope;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,14 +21,17 @@ public class ResourceScope {
   String orgIdentifier;
   String projectIdentifier;
 
+  @JsonIgnore
   public boolean isOrgScoped() {
     return isNotEmpty(accountIdentifier) && isNotEmpty(orgIdentifier) && isEmpty(projectIdentifier);
   }
 
+  @JsonIgnore
   public boolean isProjectScoped() {
     return isNotEmpty(accountIdentifier) && isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier);
   }
 
+  @JsonIgnore
   public boolean isAccountScoped() {
     return isNotEmpty(accountIdentifier) && isEmpty(orgIdentifier) && isEmpty(projectIdentifier);
   }

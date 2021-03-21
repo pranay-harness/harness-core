@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -28,6 +29,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -174,6 +176,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "HelmDeployStateKeys")
+@OwnedBy(CDP)
 public class HelmDeployState extends State {
   @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;

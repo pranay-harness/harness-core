@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.instance;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.artifact.QLArtifact;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLK8SPodInstance extends QLContainerInstance {
   private String releaseName;
   private String podName;

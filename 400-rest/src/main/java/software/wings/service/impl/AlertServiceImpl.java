@@ -30,7 +30,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -87,7 +87,7 @@ import org.mongodb.morphia.query.UpdateResults;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._955_ALERT_BEANS)
+@TargetModule(HarnessModule._955_ALERT_BEANS)
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
   private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = ImmutableList.of(NoActiveDelegates, DelegatesDown,

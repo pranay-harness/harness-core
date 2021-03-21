@@ -3,7 +3,8 @@ package software.wings.beans.alert;
 import static java.lang.String.format;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.KubernetesConvention;
 
@@ -13,7 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 
 @Data
 @Builder
-@TargetModule(Module._920_DELEGATE_SERVICE_BEANS)
+@TargetModule(HarnessModule._920_DELEGATE_SERVICE_BEANS)
+@BreakDependencyOn("io.harness.k8s.KubernetesConvention")
 public class DelegatesDownAlert implements AlertData {
   private String obfuscatedIpAddress;
   private String hostName;

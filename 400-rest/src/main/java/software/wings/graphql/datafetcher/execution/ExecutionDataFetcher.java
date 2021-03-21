@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ExecutionDataFetcher extends AbstractObjectDataFetcher<QLExecution, QLExecutionQueryParameters> {
   @Inject protected WingsPersistence persistence;
   @Inject private WorkflowExecutionController workflowExecutionController;

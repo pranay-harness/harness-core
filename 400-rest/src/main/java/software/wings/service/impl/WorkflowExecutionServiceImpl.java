@@ -87,7 +87,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ApiKeyInfo;
@@ -357,7 +357,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._800_PIPELINE_SERVICE)
+@TargetModule(HarnessModule._800_PIPELINE_SERVICE)
 public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private MainConfiguration mainConfiguration;
   @Inject private BarrierService barrierService;

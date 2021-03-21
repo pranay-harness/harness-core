@@ -7,7 +7,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -45,7 +45,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Slf4j
 @SuppressWarnings("deprecation")
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrateServiceLevelArtifactStreamsToConnectorLevel implements Migration {
   private static final String ACCOUNT_ID = "zEaak-FLS425IEO7OLzMUg"; // TODO: change this to reflect correct account
   private static final String SEPARATOR = "_";

@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.migrations.Migration;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddServiceIdToArtifactCollectionStates implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
