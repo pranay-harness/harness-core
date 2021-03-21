@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -8,6 +9,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
@@ -87,6 +89,7 @@ import org.jetbrains.annotations.NotNull;
 @Scope(DELEGATE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;

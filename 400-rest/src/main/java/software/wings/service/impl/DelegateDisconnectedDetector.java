@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -8,6 +9,7 @@ import static software.wings.beans.DelegateConnection.EXPIRY_TIME;
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.task.DelegateLogContext;
@@ -28,6 +30,7 @@ import org.mongodb.morphia.query.Query;
 
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateDisconnectedDetector implements Runnable {
   @Inject private DelegateService delegateService;
   @Inject private QueueController queueController;

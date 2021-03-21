@@ -1,6 +1,9 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -12,6 +15,7 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import java.util.List;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public interface DelegateProfileService extends OwnedByAccount {
   PageResponse<DelegateProfile> list(PageRequest<DelegateProfile> pageRequest);
   DelegateProfile get(String accountId, String delegateProfileId);

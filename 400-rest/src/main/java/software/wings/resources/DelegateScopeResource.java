@@ -1,11 +1,14 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -42,6 +45,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Scope(DELEGATE_SCOPE)
 @AuthRule(permissionType = LOGGED_IN)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateScopeResource {
   private DelegateScopeService delegateScopeService;
 
