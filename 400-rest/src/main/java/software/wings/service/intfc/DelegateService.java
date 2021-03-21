@@ -1,6 +1,9 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
@@ -44,6 +47,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 

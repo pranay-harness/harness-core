@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -17,6 +18,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -89,6 +91,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.beans.InfrastructureMapping")
 @BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
 @BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
+@OwnedBy(DEL)
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
