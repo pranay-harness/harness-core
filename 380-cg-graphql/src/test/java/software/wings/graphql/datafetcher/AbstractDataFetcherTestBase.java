@@ -4,6 +4,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.WorkflowType;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -26,6 +27,7 @@ import software.wings.beans.HarnessTagLink;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.Pipeline;
+import software.wings.beans.RollingOrchestrationWorkflow;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
@@ -239,6 +241,19 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
       String accountId, String appId, String serviceId, String serviceName, String tagKey, String tagValue) {
     Service service = serviceResourceService.save(
         Service.builder().name(serviceName).uuid(serviceId).appId(appId).accountId(accountId).build());
+    setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
+    return service;
+  }
+
+  public Service createService(String accountId, String appId, String serviceId, String serviceName, String tagKey,
+      String tagValue, DeploymentType deploymentType) {
+    Service service = serviceResourceService.save(Service.builder()
+                                                      .name(serviceName)
+                                                      .uuid(serviceId)
+                                                      .appId(appId)
+                                                      .accountId(accountId)
+                                                      .deploymentType(deploymentType)
+                                                      .build());
     setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
     return service;
   }
