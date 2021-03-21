@@ -154,18 +154,22 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   public OrchestrationGraph buildOrchestrationGraphBasedOnLogs(String planExecutionId) {
     OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
     List<OrchestrationEventLog> unprocessedEventLogs;
+    log.info("Getting Unprocessed orchestrationEventLogs for planExecutionId [{}]", planExecutionId);
     if (orchestrationGraph == null) {
       unprocessedEventLogs = orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId);
     } else {
       unprocessedEventLogs =
           orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, orchestrationGraph.getLastUpdatedAt());
     }
+    log.info("Found [{}] unprocessed events", unprocessedEventLogs.size());
     long lastUpdatedAt = 0L;
     if (orchestrationGraph != null) {
       lastUpdatedAt = orchestrationGraph.getLastUpdatedAt();
     }
     if (!unprocessedEventLogs.isEmpty()) {
       for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
+        log.info("Starting Processing Orchestration Event log with id [{}]", orchestrationEventLog.getId());
+
         OrchestrationEventType eventType = orchestrationEventLog.getEvent().getEventType();
         switch (eventType) {
           case NODE_EXECUTION_STATUS_UPDATE:
@@ -197,10 +201,11 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
       log.warn("More than 5 Events Processed at a time for given planExecutionId:[{}]", planExecutionId);
     }
     if (orchestrationGraph != null) {
+      orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
       orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
       cacheOrchestrationGraph(orchestrationGraph);
     }
-
+    log.info("Processing of [{}] orchestration event logs completed", unprocessedEventLogs.size());
     return orchestrationGraph;
   }
 
