@@ -1,10 +1,13 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE_SCOPE;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskSelectorMap;
 import io.harness.rest.RestResponse;
@@ -35,6 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AuthRule(permissionType = LOGGED_IN)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 // TODO: we should use this auth rule: @AuthRule(permissionType = MANAGE_TASK_SELECTORS)
+@OwnedBy(DEL)
 public class DelegateTaskSelectorMapResource {
   private DelegateTaskSelectorMapService selectorMapService;
 

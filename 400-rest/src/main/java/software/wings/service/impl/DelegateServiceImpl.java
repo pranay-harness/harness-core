@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.DelegateTask.Status.ABORTED;
 import static io.harness.beans.DelegateTask.Status.ERROR;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
@@ -71,6 +72,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -335,6 +337,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandRequest")
 @BreakDependencyOn("software.wings.helpers.ext.pcf.request.PcfCommandTaskParameters")
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
+@OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.

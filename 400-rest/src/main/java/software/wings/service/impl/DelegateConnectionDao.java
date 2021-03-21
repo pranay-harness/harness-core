@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HPersistence.upToOne;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -13,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 
@@ -37,6 +39,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @Slf4j
 @Singleton
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateConnectionDao {
   @Inject private HPersistence persistence;
 
