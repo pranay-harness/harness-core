@@ -169,6 +169,8 @@ public class EncryptedData
 
   @FdIndex private Long nextLocalToGcpKmsMigrationIteration;
 
+  @FdIndex private Long nextAwsKmsToGcpKmsMigrationIteration;
+
   @SchemaIgnore private boolean base64Encoded;
 
   @SchemaIgnore @Transient private transient String encryptedBy;
@@ -216,6 +218,9 @@ public class EncryptedData
     } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
       this.nextLocalToGcpKmsMigrationIteration = nextIteration;
       return;
+    } else if (EncryptedDataKeys.nextAwsKmsToGcpKmsMigrationIteration.equals(fieldName)) {
+      this.nextAwsKmsToGcpKmsMigrationIteration = nextIteration;
+      return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
@@ -228,6 +233,8 @@ public class EncryptedData
       return nextAwsToGcpKmsMigrationIteration;
     } else if (EncryptedDataKeys.nextLocalToGcpKmsMigrationIteration.equals(fieldName)) {
       return nextLocalToGcpKmsMigrationIteration;
+    } else if (EncryptedDataKeys.nextAwsKmsToGcpKmsMigrationIteration.equals(fieldName)) {
+      return nextAwsKmsToGcpKmsMigrationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
