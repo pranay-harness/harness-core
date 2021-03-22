@@ -6,7 +6,7 @@ import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.utility.AzureResourceUtility;
@@ -23,7 +23,7 @@ import io.harness.logging.LogCallback;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class AbstractAzureARMTaskHandler {
   AzureTaskExecutionResponse executeTask(AzureARMTaskParameters azureARMTaskParameters, AzureConfig azureConfig,
       ILogStreamingTaskClient logStreamingTaskClient) {

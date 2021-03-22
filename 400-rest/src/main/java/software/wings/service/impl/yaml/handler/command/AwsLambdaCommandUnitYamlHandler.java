@@ -1,5 +1,9 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit.Yaml;
 
@@ -9,6 +13,7 @@ import com.google.inject.Singleton;
  * @author rktummala on 11/13/17
  */
 @Singleton
+@OwnedBy(CDP)
 public class AwsLambdaCommandUnitYamlHandler
     extends CommandUnitYamlHandler<AwsLambdaCommandUnit.Yaml, AwsLambdaCommandUnit> {
   @Override

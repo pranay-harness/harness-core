@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.cloudefficiencyevents;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -17,7 +17,7 @@ import lombok.Value;
 @Value
 @Builder
 @ToString
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLEventsDataFilter {
   private QLIdFilter application;
   private QLIdFilter service;

@@ -1,9 +1,10 @@
 package io.harness.platform;
 
-import io.harness.grpc.client.GrpcClientConfig;
-import io.harness.mongo.MongoConfig;
-import io.harness.notification.SeedDataConfiguration;
-import io.harness.notification.SmtpConfig;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.platform.audit.AuditServiceConfiguration;
+import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.remote.client.ServiceHttpClientConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -25,25 +26,39 @@ import org.reflections.Reflections;
 
 @Getter
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(PL)
 public class PlatformConfiguration extends Configuration {
   public static final String SERVICE_ID = "platform-microservice";
   public static final String BASE_PACKAGE = "io.harness.platform";
   public static final String PLATFORM_RESOURCE_PACKAGE = "io.harness.platform.remote";
   public static final String NOTIFICATION_RESOURCE_PACKAGE = "io.harness.notification.remote.resources";
-  @JsonProperty("mongo") private MongoConfig mongoConfig;
+  public static final String AUDIT_RESOURCE_PACKAGE = "io.harness.audit.remote";
+  public static final String FILTER_RESOURCE_PACKAGE = "io.harness.filter";
+
+  @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
+  @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
+
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
   @JsonProperty("rbacServiceConfig") private ServiceHttpClientConfig rbacServiceConfig;
   @JsonProperty("secrets") private PlatformSecrets platformSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
-  @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
-  @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
-  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
 
-  public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(PLATFORM_RESOURCE_PACKAGE, NOTIFICATION_RESOURCE_PACKAGE);
+  public static Collection<Class<?>> getNotificationServiceResourceClasses() {
+    Reflections reflections = new Reflections(NOTIFICATION_RESOURCE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
+  }
+
+  public static Collection<Class<?>> getAuditServiceResourceClasses() {
+    Reflections reflections = new Reflections(AUDIT_RESOURCE_PACKAGE, FILTER_RESOURCE_PACKAGE);
+    return reflections.getTypesAnnotatedWith(Path.class);
+  }
+
+  public static Collection<Class<?>> getPlatformServiceCombinedResourceClasses() {
+    Collection<Class<?>> resources = getNotificationServiceResourceClasses();
+    resources.addAll(getAuditServiceResourceClasses());
+    return resources;
   }
 
   public PlatformConfiguration() {
@@ -53,7 +68,7 @@ public class PlatformConfiguration extends Configuration {
     super.setServerFactory(defaultServerFactory);
   }
 
-  private RequestLogFactory getDefaultlogbackAccessRequestLogFactory() {
+  private RequestLogFactory<?> getDefaultlogbackAccessRequestLogFactory() {
     LogbackAccessRequestLogFactory logbackAccessRequestLogFactory = new LogbackAccessRequestLogFactory();
     FileAppenderFactory<IAccessEvent> fileAppenderFactory = new FileAppenderFactory<>();
     fileAppenderFactory.setArchive(true);

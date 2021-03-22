@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -15,6 +16,7 @@ import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.TaskData;
@@ -59,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(CDP)
 public class AwsAmiTrafficShiftAlbSwitchRoutesState extends State {
   @Getter @Setter private boolean downsizeOldAsg;
   @Getter @Setter private String newAutoScalingGroupWeightExpr;

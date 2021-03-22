@@ -2,7 +2,7 @@ package software.wings.verification;
 
 import static java.lang.Boolean.parseBoolean;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.yaml.YamlConstants;
@@ -15,7 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@TargetModule(Module._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

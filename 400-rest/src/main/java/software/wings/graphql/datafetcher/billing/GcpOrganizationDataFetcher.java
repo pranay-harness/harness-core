@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.graphql.GcpOrganizationQueryArguments;
 import io.harness.ccm.config.GcpOrganization;
@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GcpOrganizationDataFetcher
     extends AbstractArrayDataFetcher<GcpOrganizationDTO, GcpOrganizationQueryArguments> {
   @Inject GcpOrganizationService gcpOrganizationService;

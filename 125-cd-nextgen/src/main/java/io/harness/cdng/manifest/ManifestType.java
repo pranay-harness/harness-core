@@ -7,4 +7,5 @@ public interface ManifestType {
   String HelmChart = "HelmChart";
   String Kustomize = "Kustomize";
   String OpenshiftTemplate = "OpenshiftTemplate";
+  String OpenshiftParam = "OpenshiftParam";
 }

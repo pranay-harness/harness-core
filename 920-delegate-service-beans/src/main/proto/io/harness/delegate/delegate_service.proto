@@ -40,7 +40,7 @@ service DelegateService {
   rpc ObtainDocument(ObtainDocumentRequest) returns (ObtainDocumentResponse);
 }
 
-// Next ID: 9
+// Next ID: 11
 message SubmitTaskRequest {
   callback.DelegateCallbackToken callback_token = 1;
 
@@ -56,6 +56,8 @@ message SubmitTaskRequest {
   // details.execution_timeout
   google.protobuf.Duration queue_timeout = 8;
   bool selectionTrackingLogEnabled = 9;
+
+  bool force_execute = 10;
 }
 
 message SubmitTaskResponse {

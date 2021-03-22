@@ -10,6 +10,7 @@ import (
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
+	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
 
@@ -43,7 +44,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		branch := r.FormValue(branchParam)
 		sha := r.FormValue(shaParam)
 
-		var files []string
+		var files []types.File
 		if err := json.NewDecoder(r.Body).Decode(&files); err != nil {
 			WriteBadRequest(w, err)
 			log.Errorw("api: could not unmarshal input for test selection",
@@ -61,6 +62,15 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 			return
 		}
 
+		// Write changed file information to timescaleDB
+		err = db.WriteDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, orgId,
+			projectId, pipelineId, buildId, stageId, stepId, files)
+		if err != nil {
+			WriteInternalError(w, err)
+			log.Errorw("api: could not write changed file information", "account_id", accountId,
+				"repo", repo, "branch", branch, "sha", sha, zap.Error(err))
+		}
+
 		// Classify and write the test selection stats to timescaleDB
 		err = db.WriteSelectedTests(ctx, config.TimeScaleDb.SelectionTable, accountId, orgId,
 			projectId, pipelineId, buildId, stageId, stepId, selected)
@@ -72,7 +82,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		}
 
 		// Write the selected tests back
-		WriteJSON(w, selected.Tests, 200)
+		WriteJSON(w, selected, 200)
 		log.Infow("completed test selection", "account_id", accountId,
 			"repo", repo, "branch", branch, "sha", sha, "tests", selected.Tests,
 			"num_tests", len(selected.Tests), "time_taken", time.Since(st))

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 12/18/18
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetLastLoginTimeToAllUsers implements Migration {
   @Inject private UserService userService;
   @Inject private WingsPersistence wingsPersistence;

@@ -1,7 +1,7 @@
 package io.harness.ccm.cluster.entities;
 
 import io.harness.annotation.StoreIn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -33,7 +33,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "BatchJobScheduledDataKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @StoreIn("events")
-@TargetModule(Module._280_BATCH_PROCESSING)
+@TargetModule(HarnessModule._280_BATCH_PROCESSING)
 public final class BatchJobScheduledData
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {

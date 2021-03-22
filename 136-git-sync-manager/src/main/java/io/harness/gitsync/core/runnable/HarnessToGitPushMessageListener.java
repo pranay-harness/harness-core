@@ -1,7 +1,9 @@
 package io.harness.gitsync.core.runnable;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.NgEventLogContext;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.logging.AutoLogContext;
@@ -12,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class HarnessToGitPushMessageListener implements MessageListener {
   @Override
   public boolean handleMessage(Message message) {

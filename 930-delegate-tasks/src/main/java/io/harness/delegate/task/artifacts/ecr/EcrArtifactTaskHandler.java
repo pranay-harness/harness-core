@@ -64,7 +64,10 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
         awsInternalConfig, attributesRequest.getRegion(), attributesRequest.getImagePath());
     boolean validateCredentials = ecrService.validateCredentials(
         awsInternalConfig, ecrimageUrl, attributesRequest.getRegion(), attributesRequest.getImagePath());
-    return ArtifactTaskExecutionResponse.builder().isArtifactServerValid(validateCredentials).build();
+    return ArtifactTaskExecutionResponse.builder()
+        .isArtifactServerValid(validateCredentials)
+        .artifactDelegateResponse(EcrArtifactDelegateResponse.builder().imageUrl(ecrimageUrl).build())
+        .build();
   }
 
   @Override

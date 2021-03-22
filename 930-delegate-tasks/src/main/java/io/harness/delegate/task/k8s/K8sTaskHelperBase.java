@@ -1868,7 +1868,7 @@ public class K8sTaskHelperBase {
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> valuesFiles,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> manifestHelperFiles,
       String releaseName, String namespace, LogCallback executionLogCallback, Integer timeoutInMin) throws Exception {
     ManifestType manifestType = manifestDelegateConfig.getManifestType();
     long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
@@ -1877,13 +1877,13 @@ public class K8sTaskHelperBase {
       case K8S_MANIFEST:
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+            k8sDelegateTaskParams, manifestFiles, manifestHelperFiles, executionLogCallback, timeoutInMillis);
 
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(),
-            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), valuesFiles, releaseName,
-            namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), manifestHelperFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
             helmChartManifest.getHelmCommandFlag());
 
       case KUSTOMIZE:
@@ -1894,13 +1894,12 @@ public class K8sTaskHelperBase {
             kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
 
       case OPENSHIFT_TEMPLATE:
-        final List<String> paramFilesContent = valuesFiles;
         OpenshiftManifestDelegateConfig openshiftManifestConfig =
             (OpenshiftManifestDelegateConfig) manifestDelegateConfig;
         GitStoreDelegateConfig otGitStoreDelegateConfig =
             (GitStoreDelegateConfig) openshiftManifestConfig.getStoreDelegateConfig();
         return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
-            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, paramFilesContent);
+            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, manifestHelperFiles);
 
       default:
         throw new UnsupportedOperationException(

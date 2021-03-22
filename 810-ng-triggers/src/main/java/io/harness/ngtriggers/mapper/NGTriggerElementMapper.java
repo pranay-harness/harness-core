@@ -32,6 +32,7 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
+import io.harness.ngtriggers.beans.entity.metadata.CronMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
@@ -40,6 +41,8 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata.WebhookMetadataBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GitRepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.RepoSpec;
@@ -122,21 +125,28 @@ public class NGTriggerElementMapper {
   }
 
   NGTriggerMetadata toMetadata(NGTriggerSource triggerSource) {
-    NGTriggerType type = triggerSource.getType();
-    if (type == NGTriggerType.WEBHOOK) {
-      WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) triggerSource.getSpec();
+    switch (triggerSource.getType()) {
+      case WEBHOOK:
+        WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) triggerSource.getSpec();
 
-      WebhookMetadataBuilder metadata = WebhookMetadata.builder();
-      if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
-        metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
-      } else if (isGitSpec(webhookTriggerConfig)) {
-        metadata.git(prepareGitMetadata(webhookTriggerConfig));
-      }
+        WebhookMetadataBuilder metadata = WebhookMetadata.builder();
+        if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
+          metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
+        } else if (isGitSpec(webhookTriggerConfig)) {
+          metadata.git(prepareGitMetadata(webhookTriggerConfig));
+        }
 
-      metadata.type(webhookTriggerConfig.getType());
-      return NGTriggerMetadata.builder().webhook(metadata.build()).build();
+        metadata.type(webhookTriggerConfig.getType());
+        return NGTriggerMetadata.builder().webhook(metadata.build()).build();
+      case SCHEDULED:
+        ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) triggerSource.getSpec();
+        CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
+        return NGTriggerMetadata.builder()
+            .cron(CronMetadata.builder().expression(cronTriggerSpec.getExpression()).build())
+            .build();
+      default:
+        throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");
     }
-    throw new InvalidRequestException("Type " + type.toString() + " is invalid");
   }
 
   @VisibleForTesting

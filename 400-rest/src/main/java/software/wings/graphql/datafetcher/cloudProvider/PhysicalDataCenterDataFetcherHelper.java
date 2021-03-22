@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.cloudProvider;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.PhysicalDataCenterConfig.Builder;
@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class PhysicalDataCenterDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 

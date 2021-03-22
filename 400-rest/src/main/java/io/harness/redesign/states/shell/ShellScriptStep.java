@@ -231,8 +231,8 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
                             .parameters(new Object[] {shellScriptParameters.build()})
                             .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                             .build();
-    return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1, Collections.emptyList(), true);
+    return StepUtils.prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V1,
+        Collections.emptyList(), true, TaskType.SCRIPT.name());
   }
 
   @Override

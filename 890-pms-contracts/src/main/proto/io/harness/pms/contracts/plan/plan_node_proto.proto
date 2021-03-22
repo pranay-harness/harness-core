@@ -27,4 +27,5 @@ message PlanNodeProto {
   string serviceName = 13;
   repeated io.harness.timeout.contracts.TimeoutObtainment timeoutObtainments = 14;
   string stepInputs = 15;
+  string whenCondition = 16;
 }

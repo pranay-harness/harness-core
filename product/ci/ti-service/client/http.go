@@ -74,11 +74,16 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 }
 
 // SelectTests returns a list of tests which should be run intelligently
-func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.RunnableTest, error) {
+func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change string) (types.SelectTestsResp, error) {
 	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
-	var tests []types.RunnableTest
-	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
-	return tests, err
+	var resp types.SelectTestsResp
+	var e []types.File
+	err := json.Unmarshal([]byte(change), &e)
+	if err != nil {
+		return types.SelectTestsResp{}, err
+	}
+	_, err = c.do(context.Background(), c.Endpoint+path, "POST", &e, &resp)
+	return resp, err
 }
 
 // UploadCg uploads avro encoded callgraph to server

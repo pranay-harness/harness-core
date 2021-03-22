@@ -8,7 +8,7 @@ import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_IN
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.migrations.SeedDataMigration;
@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class IISInstallCommandMigration implements SeedDataMigration {
   private static final String INSTALL_IIS_APPLICATION_TEMPLATE_NAME = "Install IIS Application";
   private static final String INSTALL_IIS_WEBSITE_TEMPLATE_NAME = "Install IIS Website";

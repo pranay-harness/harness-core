@@ -333,25 +333,11 @@ func (tdb *TimeScaleDb) GetTestSuites(
 }
 
 func (tdb *TimeScaleDb) WriteSelectedTests(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
-	buildId, stageId, stepId string, selected types.SelectTestsResp) error {
-	sel := 0
-	src := 0
-	new := 0
-	upd := 0
-	for _, t := range selected.Tests {
-		if t.Selection == types.SelectNewTest {
-			new += 1
-		} else if t.Selection == types.SelectUpdatedTest {
-			upd += 1
-		} else {
-			src += 1
-		}
-		sel += 1
-	}
+	buildId, stageId, stepId string, s types.SelectTestsResp) error {
 	entries := 12
 	valueArgs := make([]interface{}, 0, entries)
 	valueArgs = append(valueArgs, accountID, orgId, projectId, pipelineId, buildId, stageId, stepId,
-		selected.TotalTests, sel, src, new, upd)
+		s.TotalTests, s.SelectedTests, s.SrcCodeTests, s.NewTests, s.UpdatedTests)
 	stmt := fmt.Sprintf(
 		`
 					INSERT INTO %s
@@ -398,4 +384,9 @@ func (tdb *TimeScaleDb) GetSelectionOverview(ctx context.Context, table, account
 	}
 
 	return res, nil
+}
+
+func (tdb *TimeScaleDb) WriteDiffFiles(ctx context.Context, table, accountID, orgId, projectId, pipelineId,
+	buildId, stageId, stepId string, files []types.File) error {
+	return nil
 }

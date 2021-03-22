@@ -1,9 +1,11 @@
 package io.harness.gitsync.common.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.encryption.ScopeHelper.getScope;
 
 import static io.fabric8.utils.Strings.nullIfEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
@@ -18,6 +20,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 
+@OwnedBy(DX)
 public class YamlGitConfigMapper {
   public static final YamlGitConfig toYamlGitConfig(YamlGitConfigDTO yamlGitConfigDTO) {
     return YamlGitConfig.builder()

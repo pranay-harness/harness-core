@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.sm.StateExecutionData;
@@ -9,6 +12,7 @@ import java.util.Map;
 /**
  * Created by brett on 4/13/17
  */
+@OwnedBy(CDP)
 public class AwsClusterExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String clusterName;
   private String region;

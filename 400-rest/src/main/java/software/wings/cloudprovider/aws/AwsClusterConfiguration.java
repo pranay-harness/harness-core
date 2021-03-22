@@ -1,5 +1,9 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.cloudprovider.ClusterConfiguration;
 
 import java.util.List;
@@ -12,6 +16,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
+@OwnedBy(CDP)
 public class AwsClusterConfiguration extends ClusterConfiguration {
   private String serviceDefinition;
   private String launcherConfiguration;

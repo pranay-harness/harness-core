@@ -4,8 +4,10 @@ import io.harness.beans.KeyValuePair;
 import io.harness.encryption.Scope;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ArtifactoryServerException;
+import io.harness.exception.DelegateErrorHandlerException;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
 import io.harness.exception.VerificationOperationException;
@@ -33,5 +35,10 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(InvalidArtifactServerException.class, 7250);
     kryo.register(ShellExecutionException.class, 7473);
     kryo.register(LogLevel.class, 71103);
+
+    kryo.register(java.lang.StackTraceElement[].class, 31010);
+    kryo.register(java.lang.StackTraceElement.class, 31011);
+    kryo.register(DelegateErrorHandlerException.class, 31012);
+    kryo.register(KryoHandlerNotFoundException.class, 31013);
   }
 }

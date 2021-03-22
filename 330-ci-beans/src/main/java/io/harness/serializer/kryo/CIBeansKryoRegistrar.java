@@ -12,6 +12,7 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.execution.BranchWebhookEvent;
 import io.harness.beans.execution.CommitDetails;
+import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -165,5 +166,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(K8BuildJobEnvInfo.ConnectorConversionInfo.class, 100085);
     kryo.register(UploadToArtifactoryStepInfo.class, 100086);
     kryo.register(PodCleanupDetails.class, 100087);
+    kryo.register(CustomExecutionSource.class, 100088);
   }
 }

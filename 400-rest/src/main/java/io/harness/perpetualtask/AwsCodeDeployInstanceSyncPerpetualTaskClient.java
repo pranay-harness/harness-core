@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.perpetualtask.PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC;
@@ -11,6 +12,7 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.instancesync.AwsCodeDeployInstanceSyncPerpetualTaskParams;
@@ -43,6 +45,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.Builder;
 import lombok.Data;
 
+@OwnedBy(CDP)
 public class AwsCodeDeployInstanceSyncPerpetualTaskClient
     implements PerpetualTaskServiceClient,
                PerpetualTaskServiceInprocClient<AwsCodeDeployInstanceSyncPerpetualTaskClientParams> {

@@ -6,7 +6,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureVMData;
@@ -51,7 +51,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureVMSSSyncTaskHandler extends AzureVMSSTaskHandler {
   @Override
   protected AzureVMSSTaskExecutionResponse executeTaskInternal(

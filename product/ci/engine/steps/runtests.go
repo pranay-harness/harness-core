@@ -2,6 +2,7 @@ package steps
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/wings-software/portal/product/ci/common/external"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
+	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
 
@@ -25,6 +27,7 @@ type runTestsStep struct {
 	id            string           // Id of the step
 	runTestsInfo  *pb.RunTestsStep // Run tests step information
 	step          *pb.UnitStep
+	tmpFilePath   string
 	containerPort uint32
 	so            output.StageOutput // Output variables of the stage
 	log           *zap.SugaredLogger // Logger
@@ -36,9 +39,10 @@ type RunTestsStep interface {
 }
 
 // NewRunTestsStep creates a run step executor
-func NewRunTestsStep(step *pb.UnitStep, so output.StageOutput, log *zap.SugaredLogger) RunTestsStep {
+func NewRunTestsStep(step *pb.UnitStep, tmpFilePath string, so output.StageOutput, log *zap.SugaredLogger) RunTestsStep {
 	return &runTestsStep{
 		id:           step.GetId(),
+		tmpFilePath:  tmpFilePath,
 		runTestsInfo: step.GetRunTests(),
 		step:         step,
 		so:           so,
@@ -46,15 +50,15 @@ func NewRunTestsStep(step *pb.UnitStep, so output.StageOutput, log *zap.SugaredL
 	}
 }
 
-func (e *runTestsStep) getDiffFiles(ctx context.Context) ([]string, error) {
+func (e *runTestsStep) getDiffFiles(ctx context.Context) ([]types.File, error) {
 	workspace, err := getWrkspcPath()
 	if err != nil {
-		return []string{}, err
+		return []types.File{}, err
 	}
 	chFiles, err := getChFiles(ctx, workspace, e.log)
 	if err != nil {
 		e.log.Errorw("failed to get changed filed in runTests step", "step_id", e.id, zap.Error(err))
-		return []string{}, err
+		return []types.File{}, err
 	}
 
 	e.log.Infow(fmt.Sprintf("using changed files list %s to figure out which tests to run", chFiles), "step_id", e.id)
@@ -101,7 +105,13 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 	defer addonClient.CloseConn()
 
 	c := addonClient.Client()
-	arg := e.getExecuteStepArg(diffFiles)
+	// Marshal diff'ed files
+	b, err := json.Marshal(diffFiles)
+	if err != nil {
+		return nil, int32(1), errors.Wrap(err, "could not marshal changed file")
+	}
+
+	arg := e.getExecuteStepArg(string(b))
 	ret, err := c.ExecuteStep(ctx, arg, grpc_retry.WithMax(maxAddonRetries))
 	if err != nil {
 		e.log.Errorw("execute run tests step RPC failed", "step_id", e.id, "elapsed_time_ms",
@@ -114,13 +124,14 @@ func (e *runTestsStep) execute(ctx context.Context) (*output.StepOutput, int32, 
 	return stepOutput, ret.GetNumRetries(), nil
 }
 
-func (e *runTestsStep) getExecuteStepArg(diffFiles []string) *addonpb.ExecuteStepRequest {
+func (e *runTestsStep) getExecuteStepArg(diffFiles string) *addonpb.ExecuteStepRequest {
 	// not the best practice, can take up proxying git calls later
 	e.runTestsInfo.DiffFiles = diffFiles
 	e.step.Step = &pb.UnitStep_RunTests{
 		RunTests: e.runTestsInfo,
 	}
 	return &addonpb.ExecuteStepRequest{
-		Step: e.step,
+		Step:        e.step,
+		TmpFilePath: e.tmpFilePath,
 	}
 }

@@ -22,7 +22,7 @@ type Client interface {
 	Write(ctx context.Context, org, project, pipeline, build, stage, step, report string, tests []*types.TestCase) error
 
 	// SelectTests returns list of tests which should be run intelligently
-	SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.RunnableTest, error)
+	SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change string) (types.SelectTestsResp, error)
 
 	// UploadCg uploads avro encoded callgraph to ti server
 	UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch string, cg []byte) error

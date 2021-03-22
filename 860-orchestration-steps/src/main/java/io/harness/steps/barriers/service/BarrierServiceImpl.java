@@ -121,8 +121,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   @Override
-  public BarrierExecutionInstance findByPlanNodeId(String planNodeId) {
-    return barrierNodeRepository.findByPlanNodeId(planNodeId)
+  public BarrierExecutionInstance findByPlanNodeIdAndPlanExecutionId(String planNodeId, String planExecutionId) {
+    return barrierNodeRepository.findByPlanNodeIdAndPlanExecutionId(planNodeId, planExecutionId)
         .orElseThrow(() -> new InvalidRequestException("Barrier not found for planNodeId: " + planNodeId));
   }
 

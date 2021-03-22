@@ -1,6 +1,9 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.encryption.Scope;
 import io.harness.git.model.ChangeType;
@@ -44,6 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = false)
 @Document("gitSyncErrorNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitSyncError")
+@OwnedBy(DX)
 public class GitSyncError
     implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
                AccountAccess, OrganizationAccess, ProjectAccess, PersistentRegularIterable {

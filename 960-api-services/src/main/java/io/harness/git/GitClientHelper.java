@@ -165,7 +165,7 @@ public class GitClientHelper {
     }
   }
 
-  String getRepoDirectory(GitBaseRequest request) {
+  public String getRepoDirectory(GitBaseRequest request) {
     String repoName = getRepoName(request.getRepoUrl());
     String repoUrlHash = getRepoUrlHash(request.getRepoUrl());
     return buildGitRepoBaseDir(

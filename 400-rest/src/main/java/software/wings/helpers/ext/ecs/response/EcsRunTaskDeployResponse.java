@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.ecs.response;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsRunTaskDeployResponse extends EcsCommandResponse {
   private List<String> previousRegisteredRunTaskDefinitions;
   private List<String> previousRunTaskArns;
@@ -21,8 +21,8 @@ public class EcsRunTaskDeployResponse extends EcsCommandResponse {
   @Builder
   public EcsRunTaskDeployResponse(CommandExecutionStatus commandExecutionStatus, String output,
       List<String> newRunTaskArns, List<String> newRegisteredRunTaskDefinitions, List<String> previousRunTaskArns,
-      List<String> previousRegisteredRunTaskDefinitions) {
-    super(commandExecutionStatus, output);
+      List<String> previousRegisteredRunTaskDefinitions, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.newRegisteredRunTaskDefinitions = newRegisteredRunTaskDefinitions;
     this.previousRegisteredRunTaskDefinitions = previousRegisteredRunTaskDefinitions;
     this.newRunTaskArns = newRunTaskArns;

@@ -1,5 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -10,6 +13,7 @@ import software.wings.sm.StateType;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 
+@OwnedBy(CDP)
 public class AwsAmiRollbackSwitchRoutesState extends AwsAmiSwitchRoutesState {
   public AwsAmiRollbackSwitchRoutesState(String name) {
     super(name, StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES.name());

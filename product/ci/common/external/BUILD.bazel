@@ -9,6 +9,7 @@ go_library(
         "//commons/go/lib/exec:go_default_library",
         "//commons/go/lib/logs:go_default_library",
         "//product/ci/ti-service/client:go_default_library",
+        "//product/ci/ti-service/types:go_default_library",
         "//product/log-service/client:go_default_library",
         "@org_uber_go_zap//:go_default_library",
     ],

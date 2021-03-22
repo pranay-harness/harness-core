@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.cluster;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
@@ -16,7 +16,7 @@ import software.wings.security.annotations.AuthRule;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class ClusterDataFetcher extends AbstractObjectDataFetcher<QLCluster, QLClusterQueryParameters> {
   public static final String CLUSTERRECORD_DOES_NOT_EXIST_MSG = "Cluster record does not exist";
   @Inject ClusterRecordService clusterRecordService;

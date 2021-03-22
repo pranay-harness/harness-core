@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -18,7 +18,7 @@ import com.mongodb.DBCollection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class ServiceNameMigrationIfEmpty implements Migration {
   public static final String HARNESS_SERVICE = "HARNESS_SERVICE";
 

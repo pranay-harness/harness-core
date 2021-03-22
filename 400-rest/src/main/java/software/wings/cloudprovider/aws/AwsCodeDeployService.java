@@ -1,5 +1,8 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.SettingAttribute;
@@ -14,6 +17,7 @@ import java.util.List;
 /**
  * Created by anubhaw on 6/22/17.
  */
+@OwnedBy(CDP)
 public interface AwsCodeDeployService {
   /**
    * List applications list.

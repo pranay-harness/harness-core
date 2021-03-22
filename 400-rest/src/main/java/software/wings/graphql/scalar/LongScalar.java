@@ -1,6 +1,6 @@
 package software.wings.graphql.scalar;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import graphql.schema.Coercing;
@@ -12,7 +12,7 @@ import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class LongScalar {
   public static final GraphQLScalarType type =
       GraphQLScalarType.newScalar()

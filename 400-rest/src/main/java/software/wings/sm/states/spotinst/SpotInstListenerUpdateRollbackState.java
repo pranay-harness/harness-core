@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
@@ -9,6 +10,7 @@ import static io.harness.spotinst.model.SpotInstConstants.SWAP_ROUTES_COMMAND_UN
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.spotinst.request.SpotInstSwapRoutesTaskParameters;
 
 import software.wings.beans.Application;
@@ -24,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDP)
 public class SpotInstListenerUpdateRollbackState extends SpotInstListenerUpdateState {
   @Inject private transient SpotInstStateHelper spotInstStateHelper;
 
