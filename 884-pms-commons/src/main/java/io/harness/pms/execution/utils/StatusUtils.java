@@ -21,9 +21,9 @@ import static io.harness.pms.contracts.execution.Status.TIMED_WAITING;
 
 import io.harness.pms.contracts.execution.Status;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -124,9 +124,8 @@ public class StatusUtils {
     return FINAL_STATUSES.contains(status);
   }
 
-  public Status calculateEndStatus(List<Status> statuses, String planExecutionId) {
-    statuses =
-        statuses.stream().filter(s -> !StatusUtils.finalizableStatuses().contains(s)).collect(Collectors.toList());
+  // DO NOT Change order of the switch cases
+  public Status calculateStatus(List<Status> statuses, String planExecutionId) {
     if (StatusUtils.positiveStatuses().containsAll(statuses)) {
       return SUCCEEDED;
     } else if (statuses.stream().anyMatch(status -> status == ABORTED)) {
@@ -137,6 +136,16 @@ public class StatusUtils {
       return FAILED;
     } else if (statuses.stream().anyMatch(status -> status == EXPIRED)) {
       return EXPIRED;
+    } else if (statuses.stream().anyMatch(status -> status == INTERVENTION_WAITING)) {
+      return INTERVENTION_WAITING;
+    } else if (statuses.stream().anyMatch(status -> status == APPROVAL_WAITING)) {
+      return APPROVAL_WAITING;
+    } else if (statuses.stream().anyMatch(status -> status == PAUSED)) {
+      return PAUSED;
+    } else if (statuses.stream().anyMatch(status -> status == QUEUED)) {
+      return QUEUED;
+    } else if (!Collections.disjoint(statuses, FLOWING_STATUSES)) {
+      return RUNNING;
     } else {
       log.error("Cannot calculate the end status for PlanExecutionId : {}", planExecutionId);
       return ERRORED;
