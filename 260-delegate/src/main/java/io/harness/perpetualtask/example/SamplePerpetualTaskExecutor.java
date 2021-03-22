@@ -2,7 +2,7 @@ package io.harness.perpetualtask.example;
 
 import static java.lang.Thread.sleep;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.perpetualtask.PerpetualTaskExecutionParams;
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class SamplePerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Override
   public PerpetualTaskResponse runOnce(

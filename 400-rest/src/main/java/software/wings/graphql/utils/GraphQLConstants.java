@@ -1,12 +1,12 @@
 package software.wings.graphql.utils;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GraphQLConstants {
   public static final String APP_ID_ARG = "applicationId";
   public static final String MAX_PAGE_SIZE_STR = "20";

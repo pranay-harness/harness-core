@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.secretManager;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
@@ -13,7 +13,7 @@ import lombok.Value;
 @Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLCreateSecretManagerInput implements QLMutationInput {
   String clientMutationId;
   QLSecretManagerType secretManagerType;

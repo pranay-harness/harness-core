@@ -1,7 +1,6 @@
 package io.harness.steps.approval.step.harness.beans;
 
 import io.harness.beans.EmbeddedUser;
-import io.harness.steps.approval.step.beans.ApproverInput;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -27,6 +26,10 @@ public class HarnessApprovalActivity {
 
   public static HarnessApprovalActivity fromHarnessApprovalActivityRequestDTO(
       EmbeddedUser user, HarnessApprovalActivityRequestDTO request) {
+    if (user == null || request == null) {
+      return null;
+    }
+
     return HarnessApprovalActivity.builder()
         .user(user)
         .action(request.getAction())

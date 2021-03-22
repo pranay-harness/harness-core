@@ -1,7 +1,11 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.core.winrm.executors.WinRmSession;
 
@@ -16,6 +20,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(CDP)
 public class WinRmExecutorHelper {
   private static final int SPLITLISTOFCOMMANDSBY = 20;
 

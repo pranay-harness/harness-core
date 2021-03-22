@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.Action;
 import io.harness.limits.ActionType;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class InitServiceCounters implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;

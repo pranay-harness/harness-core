@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
@@ -66,6 +68,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class PcfRollbackStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;

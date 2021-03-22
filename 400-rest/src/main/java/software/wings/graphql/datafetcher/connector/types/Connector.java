@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.connector.types;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -10,7 +10,7 @@ import software.wings.graphql.schema.mutation.connector.input.QLUpdateConnectorI
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class Connector {
   public abstract SettingAttribute getSettingAttribute(QLConnectorInput input, String accountId);
 

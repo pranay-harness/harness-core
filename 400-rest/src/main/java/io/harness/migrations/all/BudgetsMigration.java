@@ -5,7 +5,7 @@ import static io.harness.ccm.budget.entities.BudgetScopeType.CLUSTER;
 import static io.harness.ccm.budget.entities.BudgetScopeType.PERSPECTIVE;
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.BudgetUtils;
 import io.harness.ccm.budget.dao.BudgetDao;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class BudgetsMigration implements Migration {
   private final WingsPersistence wingsPersistence;
   private final BudgetDao budgetDao;

@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.cloudProvider;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.health.CEHealthStatus;
 
@@ -16,7 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLPcfConfigKeys")
 @Scope(ResourceType.SETTING)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLPcfCloudProvider implements QLCloudProvider {
   private String id;
   private String name;

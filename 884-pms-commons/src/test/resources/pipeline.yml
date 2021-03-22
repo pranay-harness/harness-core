@@ -1,6 +1,6 @@
  infrastructure:
       inner1: kubernetes-direct
-      inner2: <+abc>
+      inner2: <+abc> == "def"
       inner3:  <+input>
       inner4: <+input>.allowedValues(dev, <+env>, <+env2>, stage)
       inner5: <+input>.allowedValues(jexl(<+env> == 'prod' ? 'dev, qa':'prod, stage'))

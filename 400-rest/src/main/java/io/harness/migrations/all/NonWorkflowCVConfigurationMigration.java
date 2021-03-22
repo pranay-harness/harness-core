@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -21,7 +21,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * Created by Pranjal on 06/13/2019
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class NonWorkflowCVConfigurationMigration implements Migration {
   @Inject WingsPersistence wingsPersistence;
 

@@ -31,6 +31,7 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
@@ -125,6 +126,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
         .stepType(IntegrationStageStepPMS.STEP_TYPE)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .skipCondition(SkipInfoUtils.getSkipCondition(stageElementConfig.getSkipCondition()))
+        .whenCondition(RunInfoUtils.getRunCondition(stageElementConfig.getWhen()))
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
   }
@@ -205,6 +207,7 @@ public class IntegrationStagePMSPlanCreator extends ChildrenPlanCreator<StageEle
       return BuildStatusUpdateParameter.builder()
           .sha(sha)
           .connectorIdentifier(codeBase.getConnectorRef())
+          .repoName(codeBase.getRepoName())
           .name(stageElementConfig.getName())
           .identifier(stageElementConfig.getIdentifier())
           .build();

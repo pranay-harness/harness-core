@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -19,7 +19,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class DatadogCustomMetricMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   private static final String GENERIC_GROUP_NAME = "TransactionGroup-1";

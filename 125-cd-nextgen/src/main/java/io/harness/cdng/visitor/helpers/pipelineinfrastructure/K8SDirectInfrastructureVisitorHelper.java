@@ -9,6 +9,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
@@ -46,7 +47,8 @@ public class K8SDirectInfrastructureVisitorHelper implements ConfigValidator, En
     }
     String fullQualifiedDomainName =
         VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-    Map<String, String> metadata = new HashMap<>(Collections.singletonMap("fqn", fullQualifiedDomainName));
+    Map<String, String> metadata =
+        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!k8SDirectInfrastructure.getConnectorRef().isExpression()) {
       String connectorRefString = k8SDirectInfrastructure.getConnectorRef().getValue();
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
@@ -58,7 +60,7 @@ public class K8SDirectInfrastructureVisitorHelper implements ConfigValidator, En
               .build();
       result.add(entityDetail);
     } else {
-      metadata.put("expression", k8SDirectInfrastructure.getConnectorRef().getExpressionValue());
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, k8SDirectInfrastructure.getConnectorRef().getExpressionValue());
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
           orgIdentifier, projectIdentifier, k8SDirectInfrastructure.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =

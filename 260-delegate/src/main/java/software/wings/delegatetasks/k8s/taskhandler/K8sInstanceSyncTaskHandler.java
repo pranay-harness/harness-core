@@ -1,10 +1,12 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.InvalidArgumentsException;
@@ -27,7 +29,8 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class K8sInstanceSyncTaskHandler extends K8sTaskHandler {
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private transient K8sTaskHelper k8sTaskHelper;

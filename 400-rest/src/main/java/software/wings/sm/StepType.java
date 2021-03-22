@@ -377,43 +377,43 @@ public enum StepType {
   // ECS
   ECS_SERVICE_SETUP(EcsServiceSetup.class, WorkflowServiceHelper.ECS_SERVICE_SETUP, asList(WorkflowStepType.ECS),
       asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK),
-      asList(BASIC, CANARY)),
+      asList(BASIC, CANARY), true),
   ECS_RUN_TASK(EcsRunTaskDeploy.class, WorkflowServiceHelper.ECS_RUN_TASK, asList(WorkflowStepType.ECS),
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, CONTAINER_SETUP, CONTAINER_DEPLOY, ECS_UPDATE_LISTENER_BG,
           ECS_UPDATE_ROUTE_53_DNS_WEIGHT, VERIFY_SERVICE, WRAP_UP),
-      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN)),
+      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK), asList(BASIC, CANARY, BLUE_GREEN), true),
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, WorkflowServiceHelper.ECS_DAEMON_SERVICE_SETUP,
       asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS),
-      asList(PhaseType.NON_ROLLBACK), asList(BASIC)),
+      asList(PhaseType.NON_ROLLBACK), asList(BASIC), true),
   ECS_BG_SERVICE_SETUP(EcsBlueGreenServiceSetup.class, ECS_BG_SERVICE_SETUP_ELB, asList(WorkflowStepType.ECS),
       asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK),
-      asList(BLUE_GREEN)),
+      asList(BLUE_GREEN), true),
   ECS_BG_SERVICE_SETUP_ROUTE53(EcsBlueGreenServiceSetupRoute53DNS.class, ECS_BG_SERVICE_SETUP_ROUTE_53,
       asList(WorkflowStepType.ECS), asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS),
-      asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
+      asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN), true),
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, ECS_UPGRADE_CONTAINERS, asList(WorkflowStepType.ECS),
       asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK),
-      asList(BASIC, CANARY, BLUE_GREEN)),
+      asList(BASIC, CANARY, BLUE_GREEN), true),
   ECS_STEADY_STATE_CHECK(EcsSteadyStateCheck.class, ECS_STEADY_STATE_CHK, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK)),
+      asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK), true),
   ECS_LISTENER_UPDATE(EcsBGUpdateListnerState.class, ECS_SWAP_TARGET_GROUPS, asList(WorkflowStepType.ECS),
       singletonList(ECS_UPDATE_LISTENER_BG), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK),
-      asList(BLUE_GREEN)),
+      asList(BLUE_GREEN), true),
   ECS_ROUTE53_DNS_WEIGHT_UPDATE(EcsBGUpdateRoute53DNSWeightState.class, ECS_ROUTE53_DNS_WEIGHTS,
       asList(WorkflowStepType.ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
-      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN)),
+      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.NON_ROLLBACK), asList(BLUE_GREEN), true),
 
   ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, ROLLBACK_ECS_SETUP, asList(WorkflowStepType.ECS),
-      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK), asList(BASIC)),
+      asList(CONTAINER_SETUP), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK), asList(BASIC), true),
   ECS_SERVICE_ROLLBACK(EcsServiceRollback.class, ECS_ROLLBACK_CONTAINERS, asList(WorkflowStepType.ECS),
       asList(CONTAINER_DEPLOY), Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK),
-      asList(BASIC, CANARY, BLUE_GREEN)),
+      asList(BASIC, CANARY, BLUE_GREEN), true),
   ECS_ROUTE53_DNS_WEIGHT_UPDATE_ROLLBACK(EcsBGRollbackRoute53DNSWeightState.class, ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS,
       asList(WorkflowStepType.ECS), singletonList(ECS_UPDATE_ROUTE_53_DNS_WEIGHT),
-      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK), asList(BLUE_GREEN)),
+      Lists.newArrayList(DeploymentType.ECS), asList(PhaseType.ROLLBACK), asList(BLUE_GREEN), true),
   ECS_LISTENER_UPDATE_ROLLBACK(EcsBGUpdateListnerRollbackState.class, ECS_SWAP_TARGET_GROUPS_ROLLBACK,
       asList(WorkflowStepType.ECS), singletonList(ECS_UPDATE_LISTENER_BG), Lists.newArrayList(DeploymentType.ECS),
-      asList(PhaseType.ROLLBACK), asList(BLUE_GREEN)),
+      asList(PhaseType.ROLLBACK), asList(BLUE_GREEN), true),
 
   // Spot Instance
   SPOTINST_SETUP(SpotInstServiceSetup.class, WorkflowServiceHelper.SPOTINST_SETUP, asList(WorkflowStepType.SPOTINST),
@@ -697,6 +697,7 @@ public enum StepType {
   private List<WorkflowStepType> workflowStepTypes = emptyList();
   private List<PhaseType> phaseTypes = emptyList();
   private Class<? extends StepCompletionYamlValidator> yamlValidatorClass;
+  private boolean supportsTimeoutFailure;
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
       List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes) {
@@ -710,6 +711,18 @@ public enum StepType {
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
       List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
+      boolean supportsTimeoutFailure) {
+    this.stateClass = stateClass;
+    this.displayName = displayName;
+    this.deploymentTypes = deploymentTypes;
+    this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
+    this.workflowStepTypes = workflowStepTypes;
+    this.phaseTypes = phaseTypes;
+    this.supportsTimeoutFailure = supportsTimeoutFailure;
+  }
+
+  StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
+      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
       Class<? extends StepCompletionYamlValidator> yamlValidatorClass) {
     this.stateClass = stateClass;
     this.displayName = displayName;
@@ -718,6 +731,19 @@ public enum StepType {
     this.workflowStepTypes = workflowStepTypes;
     this.phaseTypes = phaseTypes;
     this.yamlValidatorClass = yamlValidatorClass;
+  }
+
+  StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
+      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
+      List<OrchestrationWorkflowType> orchestrationWorkflowTypes, boolean supportsTimeoutFailure) {
+    this.stateClass = stateClass;
+    this.displayName = displayName;
+    this.deploymentTypes = deploymentTypes;
+    this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
+    this.workflowStepTypes = workflowStepTypes;
+    this.phaseTypes = phaseTypes;
+    this.orchestrationWorkflowTypes = orchestrationWorkflowTypes;
+    this.supportsTimeoutFailure = supportsTimeoutFailure;
   }
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,

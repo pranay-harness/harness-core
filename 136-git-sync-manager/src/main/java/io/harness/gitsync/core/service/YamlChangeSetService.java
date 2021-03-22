@@ -1,5 +1,8 @@
 package io.harness.gitsync.core.service;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.Status;
 import io.harness.validation.Create;
@@ -15,6 +18,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(DX)
 public interface YamlChangeSetService {
   @ValidationGroups(Create.class) YamlChangeSet save(@Valid YamlChangeSet yamlChangeSet);
 

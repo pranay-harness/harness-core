@@ -27,6 +27,7 @@ import io.harness.engine.pms.EngineAdviseCallback;
 import io.harness.engine.pms.EngineFacilitationCallback;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.resume.EngineWaitResumeCallback;
+import io.harness.engine.run.NodeRunCheck;
 import io.harness.engine.skip.SkipCheck;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.exception.ExceptionUtils;
@@ -44,6 +45,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
@@ -179,14 +181,33 @@ public class OrchestrationEngine {
         return;
       }
 
+      log.info("Checking If Node should be Run with When Condition.");
+      String whenCondition = nodeExecution.getNode().getWhenCondition();
+      if (EmptyPredicate.isNotEmpty(whenCondition)) {
+        NodeRunCheck nodeRunCheck =
+            OrchestrationUtils.shouldRunExecution(ambiance, whenCondition, engineExpressionService);
+        if (nodeRunCheck.isSuccessful()) {
+          nodeExecution = updateRunInfoAttribute(nodeExecution.getUuid(), nodeRunCheck);
+        } else {
+          failNodeExecution(nodeExecution.getUuid(), nodeRunCheck.getErrorMessage());
+        }
+        if (!nodeRunCheck.getEvaluatedWhenCondition()) {
+          skipNodeExecution(nodeExecution.getUuid(), nodeRunCheck);
+          return;
+        }
+      }
+
       log.info("Checking If Node should be Skipped");
       String skipCondition = nodeExecution.getNode().getSkipCondition();
       if (EmptyPredicate.isNotEmpty(skipCondition)) {
-        SkipCheck skipCheck = shouldSkipNodeExecution(ambiance, skipCondition);
+        SkipCheck skipCheck =
+            OrchestrationUtils.shouldSkipNodeExecution(ambiance, skipCondition, engineExpressionService);
         if (skipCheck.isSuccessful()) {
           nodeExecution = updateSkipInfoAttribute(nodeExecution.getUuid(), skipCheck);
+        } else {
+          failNodeExecution(nodeExecution.getUuid(), skipCheck.getErrorMessage());
         }
-        if (!skipCheck.isSuccessful() || skipCheck.getEvaluatedSkipCondition()) {
+        if (skipCheck.getEvaluatedSkipCondition()) {
           skipNodeExecution(nodeExecution.getUuid(), skipCheck);
           return;
         }
@@ -227,6 +248,16 @@ public class OrchestrationEngine {
           SkipInfo.newBuilder()
               .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
               .setSkipCondition(skipCheck.getSkipCondition())
+              .build());
+    });
+  }
+
+  private NodeExecution updateRunInfoAttribute(String nodeExecutionId, NodeRunCheck nodeRunCheck) {
+    return nodeExecutionService.update(nodeExecutionId, ops -> {
+      setUnset(ops, NodeExecutionKeys.nodeRunInfo,
+          NodeRunInfo.newBuilder()
+              .setEvaluatedCondition(nodeRunCheck.getEvaluatedWhenCondition())
+              .setWhenCondition(nodeRunCheck.getWhenCondition())
               .build());
     });
   }
@@ -439,7 +470,7 @@ public class OrchestrationEngine {
   // TODO (prashant) => Improve this with more clarity.
   private Status calculateEndStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    return OrchestrationUtils.calculateEndStatus(nodeExecutions, planExecutionId);
+    return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
   }
 
   private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull AdviserResponse adviserResponse) {
@@ -499,50 +530,40 @@ public class OrchestrationEngine {
     }
   }
 
-  public SkipCheck shouldSkipNodeExecution(Ambiance ambiance, String skipCondition) {
-    if (EmptyPredicate.isEmpty(skipCondition)) {
-      return SkipCheck.builder().isSuccessful(false).skipCondition(skipCondition).build();
-    }
-    try {
-      String evaluatedExpression = (String) engineExpressionService.evaluateExpression(ambiance, skipCondition);
-      boolean skipConditionValue = Boolean.parseBoolean(evaluatedExpression);
-      return SkipCheck.builder()
-          .skipCondition(skipCondition)
-          .isSuccessful(true)
-          .evaluatedSkipCondition(skipConditionValue)
-          .build();
-    } catch (Exception exception) {
-      return SkipCheck.builder()
-          .skipCondition(skipCondition)
-          .isSuccessful(false)
-          .errorMessage(String.format(
-              "The skip condition could not be evaluated because an expression [%s] is formatted incorrectly and the condition cannot be resolved true (skip) or false (do not skip).",
-              skipCondition))
-          .build();
-    }
+  private void skipNodeExecution(String nodeExecutionId, NodeRunCheck nodeRunCheck) {
+    log.info(String.format("Skipping node: %s", nodeExecutionId));
+    StepResponseProto response =
+        StepResponseProto.newBuilder()
+            .setStatus(Status.SKIPPED)
+            .setNodeRunInfo(NodeRunInfo.newBuilder()
+                                .setWhenCondition(nodeRunCheck.getWhenCondition())
+                                .setEvaluatedCondition(nodeRunCheck.getEvaluatedWhenCondition())
+                                .build())
+            .build();
+    handleStepResponse(nodeExecutionId, response);
   }
 
-  public void skipNodeExecution(String nodeExecutionId, SkipCheck skipCheck) {
-    StepResponseProto response;
-    if (skipCheck.isSuccessful()) {
-      log.info(String.format("Skipping node: %s", nodeExecutionId));
-      response = StepResponseProto.newBuilder()
-                     .setStatus(Status.SKIPPED)
-                     .setSkipInfo(SkipInfo.newBuilder()
-                                      .setSkipCondition(skipCheck.getSkipCondition())
-                                      .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
-                                      .build())
-                     .build();
-    } else {
-      response = StepResponseProto.newBuilder()
-                     .setStatus(FAILED)
-                     .setFailureInfo(FailureInfo.newBuilder()
-                                         .setErrorMessage(skipCheck.getErrorMessage())
-                                         .addFailureTypes(FailureType.SKIPPING_FAILURE)
-                                         .build())
-                     .build();
-    }
+  private void skipNodeExecution(String nodeExecutionId, SkipCheck skipCheck) {
+    log.info(String.format("Skipping node: %s", nodeExecutionId));
+    StepResponseProto response = StepResponseProto.newBuilder()
+                                     .setStatus(Status.SKIPPED)
+                                     .setSkipInfo(SkipInfo.newBuilder()
+                                                      .setSkipCondition(skipCheck.getSkipCondition())
+                                                      .setEvaluatedCondition(skipCheck.getEvaluatedSkipCondition())
+                                                      .build())
+                                     .build();
     handleStepResponse(nodeExecutionId, response);
+  }
+
+  private void failNodeExecution(String nodeExecutionId, String errorMessage) {
+    StepResponseProto stepResponseProto = StepResponseProto.newBuilder()
+                                              .setStatus(FAILED)
+                                              .setFailureInfo(FailureInfo.newBuilder()
+                                                                  .setErrorMessage(errorMessage)
+                                                                  .addFailureTypes(FailureType.SKIPPING_FAILURE)
+                                                                  .build())
+                                              .build();
+    handleStepResponse(nodeExecutionId, stepResponseProto);
   }
 
   public void handleAdvise(String nodeExecutionId, Status status, AdviserResponse adviserResponse) {

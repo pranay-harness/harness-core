@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -25,7 +25,7 @@ import software.wings.settings.SettingValue;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-@TargetModule(Module._910_DELEGATE_SERVICE_DRIVER)
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class DelegateInvocationHandler implements InvocationHandler {
   private DelegateService delegateService;

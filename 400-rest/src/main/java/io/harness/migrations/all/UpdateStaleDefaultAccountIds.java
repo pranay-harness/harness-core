@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -26,7 +26,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class UpdateStaleDefaultAccountIds implements Migration {
   @Inject private WingsPersistence persistence;
   @Inject private UserService userService;

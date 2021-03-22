@@ -406,8 +406,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .or(resourceInfoAndRequest
             -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/version")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("/swagger.json")
                 || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
-                    "/swagger.json"));
+                    "/swagger.yaml"));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(

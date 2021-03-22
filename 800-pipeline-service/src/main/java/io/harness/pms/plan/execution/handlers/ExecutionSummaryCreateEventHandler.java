@@ -3,6 +3,7 @@ package io.harness.pms.plan.execution.handlers;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
@@ -79,6 +80,7 @@ public class ExecutionSummaryCreateEventHandler implements SyncOrchestrationEven
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
             .inputSetYaml(metadata.getInputSetYaml())
+            .internalStatus(Status.NO_OP)
             .status(ExecutionStatus.NOT_STARTED)
             .startTs(planExecution.getStartTs())
             .startingNodeId(startingNodeId)

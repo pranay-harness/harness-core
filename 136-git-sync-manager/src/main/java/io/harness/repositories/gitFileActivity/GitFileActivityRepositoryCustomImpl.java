@@ -1,8 +1,11 @@
 package io.harness.repositories.gitFileActivity;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity.GitFileActivityKeys;
 
@@ -20,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 
+@OwnedBy(DX)
 public class GitFileActivityRepositoryCustomImpl implements GitFileActivityRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 

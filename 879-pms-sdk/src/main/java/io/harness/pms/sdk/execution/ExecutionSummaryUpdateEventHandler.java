@@ -15,8 +15,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
+@Slf4j
 public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEventHandler {
   @Inject(optional = true) PmsExecutionGrpcClient pmsClient;
   @Inject(optional = true) ExecutionSummaryModuleInfoProvider executionSummaryModuleInfoProvider;
@@ -26,6 +28,10 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
 
   @Override
   public void handleEvent(OrchestrationEvent orchestrationEvent) {
+    if (orchestrationEvent.getNodeExecutionProto() != null) {
+      log.info("Starting ExecutionSummaryUpdateEvent handler orchestration event of type [{}] for nodeExecutionId [{}]",
+          orchestrationEvent.getEventType(), orchestrationEvent.getNodeExecutionProto().getStatus());
+    }
     NodeExecutionProto nodeExecutionProto = orchestrationEvent.getNodeExecutionProto();
     ExecutionSummaryUpdateRequest.Builder executionSummaryUpdateRequest =
         ExecutionSummaryUpdateRequest.newBuilder()
@@ -55,5 +61,7 @@ public class ExecutionSummaryUpdateEventHandler implements AsyncOrchestrationEve
     } catch (Exception ex) {
       throw ex;
     }
+    log.info("Completed ExecutionSummaryUpdateEvent handler orchestration event of type [{}] for nodeExecutionId [{}]",
+        orchestrationEvent.getEventType(), orchestrationEvent.getNodeExecutionProto().getStatus());
   }
 }

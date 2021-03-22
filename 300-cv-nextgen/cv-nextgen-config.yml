@@ -90,6 +90,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
     password: ""
 
 portalUrl: https://localhost:8181/

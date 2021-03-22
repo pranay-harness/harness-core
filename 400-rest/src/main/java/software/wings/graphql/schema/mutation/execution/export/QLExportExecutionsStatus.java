@@ -2,7 +2,7 @@ package software.wings.graphql.schema.mutation.execution.export;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.execution.export.request.ExportExecutionsRequest.Status;
@@ -10,7 +10,7 @@ import io.harness.execution.export.request.ExportExecutionsRequest.Status;
 import software.wings.graphql.schema.type.QLEnum;
 
 @OwnedBy(CDC)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLExportExecutionsStatus implements QLEnum {
   QUEUED,
   READY,

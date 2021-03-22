@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Optional.ofNullable;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.Cluster;
@@ -58,7 +58,7 @@ import org.yaml.snakeyaml.Yaml;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class K8sWorkloadRecommendationsDataFetcher extends AbstractConnectionV2DataFetcher<QLK8sWorkloadFilter,
     QLNoOpSortCriteria, QLK8SWorkloadRecommendationConnection> {
   private final LoadingCache<String, String> clusterNameCache;

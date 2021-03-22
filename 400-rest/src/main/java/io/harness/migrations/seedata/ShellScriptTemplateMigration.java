@@ -9,7 +9,7 @@ import static software.wings.common.TemplateConstants.SHELL_SCRIPT_EXAMPLE;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.SeedDataMigration;
 
@@ -25,7 +25,7 @@ import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class ShellScriptTemplateMigration implements SeedDataMigration {
   @Inject private TemplateGalleryService templateGalleryService;
   private TemplateService templateService;

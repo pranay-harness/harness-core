@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -109,7 +110,12 @@ public class NodeExecutionMap extends LateBindingMap {
       return Optional.empty();
     }
     List<NodeExecution> allChildren = nodeExecutionsCache.findAllChildren(nodeExecution.getUuid());
-    Status status = OrchestrationUtils.calculateEndStatus(allChildren, ambiance.getPlanExecutionId());
+    List<NodeExecution> childrenNodesWithoutCurrentNodeList =
+        allChildren.stream()
+            .filter(node -> node.getUuid().equals(nodeExecution.getUuid()))
+            .collect(Collectors.toList());
+    Status status =
+        OrchestrationUtils.calculateStatus(childrenNodesWithoutCurrentNodeList, ambiance.getPlanExecutionId());
     return Optional.of(status.name());
   }
 

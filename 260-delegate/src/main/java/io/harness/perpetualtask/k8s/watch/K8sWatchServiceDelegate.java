@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8sWatchServiceDelegate {
   private static final Map<String, Class<?>> KNOWN_WORKLOAD_TYPES = ImmutableMap.<String, Class<?>>builder()
                                                                         .put("Deployment", V1Deployment.class)

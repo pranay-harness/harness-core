@@ -1,11 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
@@ -56,11 +58,12 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Application")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.Service")
+@OwnedBy(DEL)
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
   @Inject private HPersistence persistence;
   @Inject private FeatureFlagService featureFlagService;

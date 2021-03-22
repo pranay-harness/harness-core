@@ -1,5 +1,9 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(CDP)
 public final class HelmTestConstants {
   public static final String HELM_RELEASE_NAME_KEY = "helm-release-name";
   public static final String HELM_KUBE_CONFIG_LOCATION_KEY = "helm-kube-config-location";

@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
@@ -42,6 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(CDP)
 public class HelmClientImplTest extends WingsBaseTest {
   @Mock private K8sGlobalConfigService k8sGlobalConfigService;
   @InjectMocks private HelmClientImpl helmClient = Mockito.spy(HelmClientImpl.class);

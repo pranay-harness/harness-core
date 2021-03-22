@@ -2,8 +2,10 @@ package io.harness.pms.plan.execution;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.connector.ConnectorResourceClient;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
+import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.Plan;
@@ -44,6 +46,8 @@ public class PipelineExecuteHelper {
   private final ValidateAndMergeHelper validateAndMergeHelper;
   private final PreFlightRepository preFlightRepository;
   private static final ExecutorService executorService = Executors.newFixedThreadPool(1);
+  private final EntitySetupUsageClient entitySetupUsageClient;
+  private final ConnectorResourceClient connectorResourceClient;
 
   public PlanExecution runPipelineWithInputSetPipelineYaml(@NotNull String accountId, @NotNull String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String pipelineIdentifier, String inputSetPipelineYaml,
@@ -141,7 +145,11 @@ public class PipelineExecuteHelper {
   }
 
   private void startAsyncHandling(PreFlightEntity entity) {
-    executorService.submit(
-        AsyncPreFlightHandler.builder().entity(entity).preFlightRepository(preFlightRepository).build());
+    executorService.submit(AsyncPreFlightHandler.builder()
+                               .entity(entity)
+                               .preFlightRepository(preFlightRepository)
+                               .entitySetupUsageClient(entitySetupUsageClient)
+                               .connectorResourceClient(connectorResourceClient)
+                               .build());
   }
 }

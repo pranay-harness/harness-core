@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.TimeSeriesDataPoints;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CloudTimeSeriesStatsDataFetcher
     extends AbstractStatsDataFetcherWithAggregationListAndLimit<CloudBillingAggregate, CloudBillingFilter,
         CloudBillingGroupBy, CloudBillingSortCriteria> {

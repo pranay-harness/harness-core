@@ -16,7 +16,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -56,7 +56,7 @@ import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class CustomLogDataCollectionTaskTest extends CategoryTest {
   CustomLogDataCollectionInfo dataCollectionInfo;
   @Mock private LogAnalysisStoreService logAnalysisStoreService;

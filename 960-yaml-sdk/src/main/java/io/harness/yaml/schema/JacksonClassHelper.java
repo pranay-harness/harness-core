@@ -1,10 +1,12 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
 import io.harness.yaml.YamlSchemaTypes;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class JacksonClassHelper {
   /**
    * @param aClass                         Class which will be traversed.

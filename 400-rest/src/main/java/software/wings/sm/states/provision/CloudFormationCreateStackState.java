@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -14,6 +15,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -87,6 +89,7 @@ import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
+@OwnedBy(CDP)
 public class CloudFormationCreateStackState extends CloudFormationState {
   private static final String CREATE_STACK_COMMAND_UNIT = "Create Stack";
   private static final String FETCH_FILES_COMMAND_UNIT = "Fetch Files";

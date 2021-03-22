@@ -45,7 +45,7 @@ import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.CreatedByType;
@@ -176,7 +176,7 @@ import org.quartz.TriggerKey;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class TriggerServiceImpl implements TriggerService {
   public static final String TRIGGER_SLOWNESS_ERROR_MESSAGE = "Trigger rejected due to slowness in the product";
   @Inject private WingsPersistence wingsPersistence;

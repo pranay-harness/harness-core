@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -19,7 +19,7 @@ import java.util.Collection;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class ConvertRestrictedTagsToNonRestrictedTagsForUnsupportedAccountTypes implements Migration {
   @Inject HarnessTagService tagService;
   @Inject WingsPersistence wingsPersistence;

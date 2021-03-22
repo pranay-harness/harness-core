@@ -1,6 +1,6 @@
 package io.harness.migrations.timescaledb;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.TimeScaleDBMigration;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.jdbc.ScriptRunner;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public abstract class AbstractTimeScaleDBMigration implements TimeScaleDBMigration {
   @Inject TimeScaleDBService timeScaleDBService;
 

@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.metrics.client.impl;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.apiclient.GenericKubernetesApi;
 import io.harness.k8s.apiclient.NodeStatsClient;
@@ -14,7 +14,7 @@ import io.harness.perpetualtask.k8s.metrics.client.model.pod.PodMetricsList;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class DefaultK8sMetricsClient extends CoreV1Api implements K8sMetricsClient {
   public DefaultK8sMetricsClient(ApiClient apiClient) {
     super(apiClient);

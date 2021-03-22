@@ -1,5 +1,6 @@
 package software.wings.service.impl.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.exception.WingsException.USER;
@@ -12,6 +13,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class SpotinstHelperServiceManager {
   @Inject private DelegateService delegateService;
 

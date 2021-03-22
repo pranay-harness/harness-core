@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -19,7 +19,7 @@ import org.mongodb.morphia.query.Query;
  * @author rktummala on 10/08/2018
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddInstanceStatsCollectionJobToAllAccounts implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;

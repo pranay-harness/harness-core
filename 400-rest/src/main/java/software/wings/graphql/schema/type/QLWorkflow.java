@@ -2,7 +2,7 @@ package software.wings.graphql.schema.type;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -18,7 +18,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLWorkflowKeys")
 @Scope(ResourceType.APPLICATION)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLWorkflow implements QLObject {
   private String id;
   private String applicationId;

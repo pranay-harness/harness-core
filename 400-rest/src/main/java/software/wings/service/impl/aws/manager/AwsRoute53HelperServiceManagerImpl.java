@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -7,6 +8,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
@@ -31,6 +33,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class AwsRoute53HelperServiceManagerImpl implements AwsRoute53HelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;

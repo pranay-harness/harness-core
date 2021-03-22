@@ -14,7 +14,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
@@ -68,7 +68,7 @@ import org.mockito.MockitoAnnotations;
 /**
  * @author praveen
  */
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class StackDriverDataCollectionTaskTest extends WingsBaseTest {
   @Mock private DataCollectionExecutorService dataCollectionService;
   @Mock private StackDriverDelegateService stackDriverDelegateService;

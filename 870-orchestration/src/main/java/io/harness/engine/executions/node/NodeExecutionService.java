@@ -62,8 +62,8 @@ public interface NodeExecutionService {
 
   List<NodeExecution> findByParentIdAndStatusIn(String parentId, EnumSet<Status> flowingStatuses);
 
-  default List<NodeExecution> findAllChildren(String planExecutionId, String parentId) {
-    return findAllChildrenWithStatusIn(planExecutionId, parentId, EnumSet.noneOf(Status.class), true);
+  default List<NodeExecution> findAllChildren(String planExecutionId, String parentId, boolean includeParent) {
+    return findAllChildrenWithStatusIn(planExecutionId, parentId, EnumSet.noneOf(Status.class), includeParent);
   }
 
   List<NodeExecution> findAllChildrenWithStatusIn(

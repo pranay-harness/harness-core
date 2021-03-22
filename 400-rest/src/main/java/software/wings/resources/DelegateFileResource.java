@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.delegate.beans.DelegateFile.Builder.aDelegateFile;
 
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
@@ -9,7 +10,8 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateFile;
@@ -57,7 +59,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Scope(DELEGATE)
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class DelegateFileResource {
   @Inject private FileService fileService;
   @Inject private MainConfiguration configuration;

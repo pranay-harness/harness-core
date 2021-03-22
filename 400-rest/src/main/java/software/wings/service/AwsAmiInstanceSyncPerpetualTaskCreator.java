@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -7,6 +8,7 @@ import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPIN
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
 import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -37,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(CDP)
 public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject InstanceService instanceService;

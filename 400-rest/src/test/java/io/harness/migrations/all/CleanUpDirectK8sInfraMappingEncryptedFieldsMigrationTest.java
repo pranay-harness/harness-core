@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class CleanUpDirectK8sInfraMappingEncryptedFieldsMigrationTest extends WingsBaseTest {
   private static final int GENERATED_ENTITIES_COUNT = 10;
   @Inject WingsPersistence wingsPersistence;

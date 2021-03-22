@@ -1,11 +1,13 @@
 package io.harness.yaml.snippets;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
 import static io.harness.packages.HarnessPackages.SOFTWARE_WINGS;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.YamlSdkInitConstants;
 import io.harness.yaml.schema.JacksonClassHelper;
@@ -44,6 +46,7 @@ import org.reflections.Reflections;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class AbstractSnippetChecker {
   List<YamlSchemaRootClass> yamlSchemaRootClasses;
   ObjectMapper objectMapper;

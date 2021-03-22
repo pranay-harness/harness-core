@@ -5,7 +5,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import static software.wings.security.PermissionAttribute.PermissionType.APPLICATION_CREATE_DELETE;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class RemoveDeprecatedApplicationsCreatePermission implements Migration {
   private static final String debugMessage = "REMOVE_APPLICATION_CREATE_DELETE: ";
 

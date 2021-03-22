@@ -1,6 +1,9 @@
 package software.wings.service.intfc.aws.delegate;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -10,7 +13,8 @@ import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 import com.amazonaws.services.ec2.model.Instance;
 import java.util.List;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public interface AwsCodeDeployHelperServiceDelegate {
   List<String> listApplications(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
   List<String> listDeploymentConfiguration(
