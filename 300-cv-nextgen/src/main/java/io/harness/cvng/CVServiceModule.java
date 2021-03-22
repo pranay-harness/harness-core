@@ -90,6 +90,7 @@ import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
+import io.harness.cvng.core.services.impl.NewRelicCVConfigTransformer;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.SplunkCVConfigTransformer;
@@ -228,6 +229,9 @@ public class CVServiceModule extends AbstractModule {
       bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.APP_DYNAMICS.name()))
           .to(AppDynamicsCVConfigTransformer.class);
+      bind(CVConfigTransformer.class)
+          .annotatedWith(Names.named(DataSourceType.NEW_RELIC.name()))
+          .to(NewRelicCVConfigTransformer.class);
       bind(CVConfigTransformer.class)
           .annotatedWith(Names.named(DataSourceType.SPLUNK.name()))
           .to(SplunkCVConfigTransformer.class);

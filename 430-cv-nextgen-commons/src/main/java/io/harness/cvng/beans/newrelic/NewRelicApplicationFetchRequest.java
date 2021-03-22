@@ -9,10 +9,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 @JsonTypeName("NEWRELIC_APPS_REQUEST")
+@Data
 @SuperBuilder
 @NoArgsConstructor
 public class NewRelicApplicationFetchRequest extends DataCollectionRequest<NewRelicConnectorDTO> {

@@ -8,13 +8,18 @@ import io.harness.cvng.core.entities.NewRelicCVConfig;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Value;
 
 @Data
 @JsonTypeName("NEW_RELIC")
@@ -30,7 +35,37 @@ public class NewRelicDSConfig extends DSConfig {
 
   @Override
   public CVConfigUpdateResult getCVConfigUpdateResult(List<CVConfig> existingCVConfigs) {
-    return CVConfigUpdateResult.builder().added((List<CVConfig>) (List<?>) toCVConfigs()).build();
+    Map<Key, NewRelicCVConfig> mapExistingConfigs = new HashMap<>();
+    existingCVConfigs.forEach(cvConfig
+        -> mapExistingConfigs.put(getKeyFromCVConfig((NewRelicCVConfig) cvConfig), (NewRelicCVConfig) cvConfig));
+
+    Map<Key, NewRelicCVConfig> mapConfigsFromThisObj = new HashMap<>();
+    List<NewRelicCVConfig> cvConfigList = toCVConfigs();
+    cvConfigList.forEach(config -> mapConfigsFromThisObj.put(getKeyFromCVConfig(config), config));
+
+    Set<Key> deleted = Sets.difference(mapExistingConfigs.keySet(), mapConfigsFromThisObj.keySet());
+    Set<Key> added = Sets.difference(mapConfigsFromThisObj.keySet(), mapExistingConfigs.keySet());
+    Set<Key> updated = Sets.intersection(mapExistingConfigs.keySet(), mapConfigsFromThisObj.keySet());
+
+    List<CVConfig> deletedConfigs =
+        deleted.stream().map(key -> mapExistingConfigs.get(key)).collect(Collectors.toList());
+    List<CVConfig> addedConfigs =
+        added.stream().map(key -> mapConfigsFromThisObj.get(key)).collect(Collectors.toList());
+
+    List<CVConfig> updatedWithoutUuid =
+        updated.stream().map(key -> mapConfigsFromThisObj.get(key)).collect(Collectors.toList());
+    List<CVConfig> updatedWithUuid =
+        updated.stream().map(key -> mapExistingConfigs.get(key)).collect(Collectors.toList());
+
+    for (int i = 0; i < updatedWithoutUuid.size(); i++) {
+      updatedWithoutUuid.get(i).setUuid(updatedWithUuid.get(i).getUuid());
+    }
+
+    return CVConfigUpdateResult.builder()
+        .added(addedConfigs)
+        .deleted(deletedConfigs)
+        .updated(updatedWithoutUuid)
+        .build();
   }
 
   @Override
@@ -63,6 +98,26 @@ public class NewRelicDSConfig extends DSConfig {
       cvConfigs.add(cvConfig);
     }));
     return cvConfigs;
+  }
+
+  private Key getKeyFromCVConfig(NewRelicCVConfig cvConfig) {
+    return Key.builder()
+        .applicationId(cvConfig.getApplicationId())
+        .applicationName(cvConfig.getApplicationName())
+        .envIdentifier(cvConfig.getEnvIdentifier())
+        .serviceIdentifier(cvConfig.getServiceIdentifier())
+        .metricPack(cvConfig.getMetricPack())
+        .build();
+  }
+
+  @Value
+  @Builder
+  private static class Key {
+    private String applicationName;
+    private String applicationId;
+    private String envIdentifier;
+    private String serviceIdentifier;
+    MetricPack metricPack;
   }
 
   @Data

@@ -4,17 +4,26 @@ metrics:
   - name: Average Response Time (ms)
     type: RESP_TIME
     path: SELECT average('apm.service.transaction.duration') FROM Metric
-    validationPath: Overall Application Performance|__tier_name__|Average Response Time (ms)
+    validationPath: SELECT average(`apm.service.transaction.duration`) FROM Metric
+    jsonPath: total.results.[0].average
     included: true
   - name: Calls per Minute
     type: THROUGHPUT
-    path: Business Transaction Performance|Business Transactions|__tier_name__|__metric_filter__|Calls per Minute
-    validationPath: Overall Application Performance|__tier_name__|Calls per Minute
+    path: SELECT rate(count(apm.service.transaction.duration), 1 minute) FROM Metric
+    validationPath: SELECT rate(count(apm.service.transaction.duration), 1 minute) FROM Metric
+    jsonPath: total.results.[0].result
     included: true
   - name: Errors per Minute
     type: ERROR
     path: SELECT count(`apm.service.transaction.error.count`) FROM Metric FACET transactionName TIMESERIES
-    validationPath: Overall Application Performance|__tier_name__|Errors per Minute
+    validationPath: SELECT average(`apm.service.transaction.error.count`) FROM Metric
+    jsonPath: total.results.[0].average
+    included: true
+  - name: Apdex
+    type: APDEX
+    path: SELECT average(`apm.service.transaction.apdex`) FROM Metric
+    validationPath: SELECT average(`apm.service.transaction.apdex`) FROM Metric
+    jsonPath: total.results.[0].average
     included: true
 
 

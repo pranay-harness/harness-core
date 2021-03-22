@@ -39,6 +39,7 @@ import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
+import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.beans.splunk.SplunkDataCollectionRequest;
 import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
@@ -104,5 +105,6 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(ApiCallLogDTOField.class, 9049);
     kryo.register(ApiCallLogDTO.FieldType.class, 9050);
     kryo.register(NewRelicApplicationFetchRequest.class, 9051);
+    kryo.register(NewRelicMetricPackValidationRequest.class, 9052);
   }
 }
