@@ -83,7 +83,7 @@ public class GraphStatusUpdateHelper {
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
         newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToDocument(
             pmsOutcomeService.findAllByRuntimeId(planExecutionId, nodeExecutionId, true)));
-        newValue.setDelegateSelectionLogParams(
+        newValue.setGraphDelegateSelectionLogParams(
             delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
                 nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance())));
       }

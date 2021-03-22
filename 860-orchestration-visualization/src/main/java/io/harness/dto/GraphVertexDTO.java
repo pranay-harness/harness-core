@@ -1,6 +1,5 @@
 package io.harness.dto;
 
-import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
@@ -44,7 +43,7 @@ public class GraphVertexDTO {
   Document stepParameters;
   ExecutionMode mode;
 
-  List<DelegateSelectionLogParams> delegateSelectionLogParams;
+  List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
   List<Document> outcomes;
