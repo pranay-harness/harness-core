@@ -1,4 +1,4 @@
-package io.harness.cvng.beans;
+package io.harness.cvng;
 
 public enum DataCollectionRequestType {
   SPLUNK_SAVED_SEARCHES,

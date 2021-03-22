@@ -1,5 +1,8 @@
 package io.harness.cvng;
 
+import io.harness.callback.DelegateCallback;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.callback.MongoDatabase;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -125,13 +128,19 @@ import io.harness.cvng.verificationjob.services.impl.VerificationJobInstanceServ
 import io.harness.cvng.verificationjob.services.impl.VerificationJobServiceImpl;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secrets.SecretNGManagerClientModule;
+import io.harness.service.DelegateServiceDriverModule;
 import io.harness.threading.ThreadPool;
 import io.harness.version.VersionInfoManager;
 
+import com.google.common.base.Suppliers;
 import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -146,6 +155,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 
@@ -162,9 +172,13 @@ public class CVServiceModule extends AbstractModule {
     this.verificationConfiguration = verificationConfiguration;
   }
 
-  /* (non-Javadoc)
-   * @see com.google.inject.AbstractModule#configure()
-   */
+  @Provides
+  @Singleton
+  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
+      DelegateServiceGrpcClient delegateServiceGrpcClient) {
+    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, verificationConfiguration));
+  }
+
   @Override
   protected void configure() {
     install(FeatureFlagModule.getInstance());
@@ -191,6 +205,16 @@ public class CVServiceModule extends AbstractModule {
           return false;
         }
       });
+      install(new DelegateServiceDriverGrpcClientModule(
+          verificationConfiguration.getNgManagerServiceConfig().getManagerServiceSecret(),
+          verificationConfiguration.getGrpcClientConfig().getTarget(),
+          verificationConfiguration.getGrpcClientConfig().getAuthority()));
+      install(new SecretNGManagerClientModule(
+          ServiceHttpClientConfig.builder()
+              .baseUrl(verificationConfiguration.getNgManagerServiceConfig().getNgManagerUrl())
+              .build(),
+          verificationConfiguration.getNgManagerServiceConfig().getManagerServiceSecret(), "ng-manager"));
+      install(DelegateServiceDriverModule.getInstance());
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
       bind(HPersistence.class).to(MongoPersistence.class);
       bind(TimeSeriesRecordService.class).to(TimeSeriesRecordServiceImpl.class);
@@ -340,5 +364,19 @@ public class CVServiceModule extends AbstractModule {
         new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> cvngParallelExecutor.shutdownNow()));
     return cvngParallelExecutor;
+  }
+
+  private DelegateCallbackToken getDelegateCallbackToken(
+      DelegateServiceGrpcClient delegateServiceClient, VerificationConfiguration verificationConfiguration) {
+    log.info("Generating Delegate callback token");
+    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
+        DelegateCallback.newBuilder()
+            .setMongoDatabase(MongoDatabase.newBuilder()
+                                  .setCollectionNamePrefix("cvng")
+                                  .setConnection(verificationConfiguration.getMongoConnectionFactory().getUri())
+                                  .build())
+            .build());
+    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
+    return delegateCallbackToken;
   }
 }

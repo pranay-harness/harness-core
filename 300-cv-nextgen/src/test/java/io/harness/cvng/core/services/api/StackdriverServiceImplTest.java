@@ -10,8 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
-import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.DataCollectionRequest;
+import io.harness.cvng.DataCollectionRequestType;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDTO;

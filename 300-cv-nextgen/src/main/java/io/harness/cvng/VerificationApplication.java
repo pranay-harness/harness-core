@@ -247,8 +247,8 @@ public class VerificationApplication extends Application<VerificationConfigurati
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(new VerificationManagerClientModule(configuration.getManagerClientConfig().getBaseUrl()));
     modules.add(new NextGenClientModule(configuration.getNgManagerServiceConfig()));
-    modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
-        configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
+        modules.add(new SecretManagementClientModule(configuration.getManagerClientConfig(),
+            configuration.getNgManagerServiceConfig().getManagerServiceSecret(), "NextGenManager"));
     modules.add(new CVNextGenCommonsServiceModule());
     modules.add(new NotificationClientModule(configuration.getNotificationClientConfiguration()));
     modules.add(new NotificationClientPersistenceModule());

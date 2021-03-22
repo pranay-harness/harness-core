@@ -3,8 +3,8 @@ package io.harness.cvng.client;
 import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
 
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionRequest;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

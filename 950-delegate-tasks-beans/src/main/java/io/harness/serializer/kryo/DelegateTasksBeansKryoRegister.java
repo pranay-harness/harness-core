@@ -13,6 +13,10 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
+import io.harness.cvng.DataCollectionRequest;
+import io.harness.cvng.DataCollectionRequestType;
+import io.harness.cvng.OnboardingTaskParameters;
+import io.harness.cvng.OnboardingTaskResponse;
 import io.harness.delegate.beans.ChecksumType;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateStringProgressData;
@@ -663,5 +667,9 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
     kryo.register(DecryptGitAPIAccessTaskResponse.class, 543267);
+    kryo.register(DataCollectionRequest.class, 543268);
+    kryo.register(DataCollectionRequestType.class, 543269);
+    kryo.register(OnboardingTaskParameters.class, 543270);
+    kryo.register(OnboardingTaskResponse.class, 543271);
   }
 }

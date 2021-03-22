@@ -1,5 +1,6 @@
 package io.harness.cvng.beans;
 
+import com.esotericsoftware.kryo.serializers.TaggedFieldSerializer;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -8,8 +9,8 @@ import lombok.Value;
 @Value
 @Builder
 public class MetricPackDTO {
-  String uuid;
-  String accountId;
+  @TaggedFieldSerializer.Tag(1) String uuid;
+  @TaggedFieldSerializer.Tag(2) String accountId;
   String orgIdentifier;
   String projectIdentifier;
   DataSourceType dataSourceType;

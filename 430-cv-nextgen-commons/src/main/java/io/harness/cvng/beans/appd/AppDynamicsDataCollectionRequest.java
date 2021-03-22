@@ -1,6 +1,6 @@
 package io.harness.cvng.beans.appd;
 
-import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

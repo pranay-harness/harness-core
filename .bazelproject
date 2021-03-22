@@ -76,7 +76,6 @@ directories:
   940-resource-group-beans
   940-secret-manager-client
   945-ng-audit-client
-  946-cvng-delegate-tasks-beans
   949-git-sync-sdk
   950-command-library-common
   950-log-client

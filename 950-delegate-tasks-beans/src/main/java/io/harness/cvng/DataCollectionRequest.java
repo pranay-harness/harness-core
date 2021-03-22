@@ -1,4 +1,4 @@
-package io.harness.cvng.beans;
+package io.harness.cvng;
 
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;

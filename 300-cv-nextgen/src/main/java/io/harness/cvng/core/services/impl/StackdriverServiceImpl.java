@@ -2,8 +2,8 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.cvng.beans.DataCollectionRequest;
-import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.DataCollectionRequest;
+import io.harness.cvng.DataCollectionRequestType;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;

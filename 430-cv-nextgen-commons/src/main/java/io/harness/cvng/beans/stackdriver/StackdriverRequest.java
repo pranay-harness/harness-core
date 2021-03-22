@@ -1,6 +1,6 @@
 package io.harness.cvng.beans.stackdriver;
 
-import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 

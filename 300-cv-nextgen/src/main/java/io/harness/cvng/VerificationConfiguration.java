@@ -4,6 +4,7 @@ import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 
 import io.harness.cvng.core.NGManagerServiceConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.remote.ManagerAuthConfig;
@@ -39,6 +40,7 @@ public class VerificationConfiguration extends Configuration {
   @JsonProperty("nextGen") private NGManagerServiceConfig ngManagerServiceConfig;
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   private String portalUrl;
   /**
    * Instantiates a new Main configuration.

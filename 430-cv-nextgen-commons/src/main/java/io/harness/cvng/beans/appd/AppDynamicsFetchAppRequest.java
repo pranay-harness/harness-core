@@ -1,6 +1,6 @@
 package io.harness.cvng.beans.appd;
 
-import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.DataCollectionRequestType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.experimental.SuperBuilder;

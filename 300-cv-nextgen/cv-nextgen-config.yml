@@ -77,6 +77,10 @@ notificationClient:
   secrets:
     notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+grpcClient:
+  target: localhost:9880
+  authority: localhost
+
 eventsFramework:
   redis:
     sentinel: false

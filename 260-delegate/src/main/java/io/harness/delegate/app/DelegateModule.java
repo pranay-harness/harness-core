@@ -38,6 +38,7 @@ import io.harness.cistatus.service.gitlab.GitlabService;
 import io.harness.cistatus.service.gitlab.GitlabServiceImpl;
 import io.harness.cvng.CVNGDataCollectionDelegateServiceImpl;
 import io.harness.cvng.K8InfoDataServiceImpl;
+import io.harness.cvng.beans.delegate.CVNGTaskType;
 import io.harness.cvng.connectiontask.CVNGConnectorValidationDelegateTask;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.datacollection.DataCollectionDSLService;
@@ -100,6 +101,7 @@ import io.harness.delegate.task.ci.CIBuildStatusPushTask;
 import io.harness.delegate.task.citasks.CIBuildCommandTask;
 import io.harness.delegate.task.citasks.CICleanupTask;
 import io.harness.delegate.task.citasks.ExecuteCommandTask;
+import io.harness.delegate.task.cvng.OnboardingTaskNG;
 import io.harness.delegate.task.docker.DockerTestConnectionDelegateTask;
 import io.harness.delegate.task.docker.DockerValidationHandler;
 import io.harness.delegate.task.executioncapability.BatchCapabilityCheckTask;
@@ -1289,6 +1291,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.CI_CLEANUP).toInstance(CICleanupTask.class);
     mapBinder.addBinding(TaskType.AWS_S3_TASK).toInstance(AwsS3Task.class);
     mapBinder.addBinding(TaskType.CUSTOM_MANIFEST_VALUES_FETCH_TASK).toInstance(CustomManifestValuesFetchTask.class);
+    mapBinder.addBinding(TaskType.valueOf(CVNGTaskType.ONBOARDING_DATA_COLLECTION_RESULT.name()))
+        .toInstance(OnboardingTaskNG.class);
 
     // Add all NG tasks below this.
     mapBinder.addBinding(TaskType.GCP_TASK).toInstance(GcpTask.class);

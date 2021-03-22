@@ -6,10 +6,10 @@ import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_P
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEARCH_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
 
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;

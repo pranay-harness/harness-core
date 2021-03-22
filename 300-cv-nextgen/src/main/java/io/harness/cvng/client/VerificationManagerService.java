@@ -1,7 +1,7 @@
 package io.harness.cvng.client;
 
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionRequest;
 
 import java.util.List;
 

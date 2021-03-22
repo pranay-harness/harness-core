@@ -3,9 +3,9 @@ package software.wings.resources.cvng;
 import static io.harness.cvng.core.services.CVNextGenConstants.CV_DATA_COLLECTION_PATH;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.LearningEngineAuth;

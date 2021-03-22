@@ -1,6 +1,6 @@
 package io.harness.cvng.beans.splunk;
 
-import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.DataCollectionRequest;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
