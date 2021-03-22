@@ -129,7 +129,7 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	}
 	if err != nil {
 		// Run step did not execute successfully
-		// Try and collect callgraph, reports, ignore any errors during report collection itself
+		// Try and collect callgraph and reports, ignore any errors during collection steps itself
 		errCg = collectCg(ctx, r.id, r.log)
 		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
@@ -305,7 +305,6 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 }
 
 func (r *runTestsTask) execute(ctx context.Context, retryCount int32) error {
-	return nil
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
 	defer cancel()

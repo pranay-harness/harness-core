@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Callgraph object used to for data trasnfer b/w ti service and lite-engine
+// Callgraph object us used to for data transfer b/w ti service and lite-engine
 type Callgraph struct {
 	Nodes     []Node
 	Relations []Relation
