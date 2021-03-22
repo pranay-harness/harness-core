@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -23,6 +23,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.StepUtils;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -35,7 +36,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
   public static final String SKIP_BG_SWAP_SERVICES_STEP_EXECUTION =
       "Services were not swapped in the forward phase. Skipping swapping in rollback.";
 
-  @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
 
   @Override
@@ -62,7 +63,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .commandName(K8S_BG_SWAP_SERVICES_COMMAND_NAME)
             .taskType(K8sTaskType.SWAP_SERVICE_SELECTORS)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(io.harness.steps.shellScript.k8s.K8sStepHelper.getTimeout(stepParameters))
             .build();
 
     return k8sStepHelper.queueK8sTask(stepParameters, swapServiceSelectorsRequest, ambiance, infrastructure)
@@ -74,7 +75,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
       Ambiance ambiance, K8sBGSwapServicesStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }

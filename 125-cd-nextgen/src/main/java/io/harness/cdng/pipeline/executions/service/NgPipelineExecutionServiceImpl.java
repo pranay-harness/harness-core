@@ -7,7 +7,7 @@ import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper;
 import io.harness.cdng.pipeline.executions.PipelineExecutionHelper.StageIndex;

@@ -5,6 +5,7 @@ import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

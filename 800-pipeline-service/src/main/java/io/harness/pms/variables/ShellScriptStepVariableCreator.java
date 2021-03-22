@@ -1,0 +1,94 @@
+package io.harness.pms.variables;
+
+import io.harness.exception.InvalidRequestException;
+import io.harness.executions.steps.StepSpecTypeConstants;
+import io.harness.pms.contracts.plan.YamlProperties;
+import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
+import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlNode;
+import io.harness.steps.shellScript.ShellScriptSourceType;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
+  @Override
+  public Set<String> getSupportedStepTypes() {
+    return Collections.singleton(StepSpecTypeConstants.SHELL_SCRIPT);
+  }
+
+  @Override
+  protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
+    List<String> complexFields = new ArrayList<>();
+    complexFields.add(YAMLFieldNameConstants.SOURCE);
+    complexFields.add(YAMLFieldNameConstants.EXECUTION_TARGET);
+    complexFields.add(YAMLFieldNameConstants.ENVIRONMENT_VARIABLES);
+    complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
+
+    List<YamlField> fields = yamlNode.fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
+        addFieldToPropertiesMapUnderStep(field, yamlNode, yamlPropertiesMap);
+      }
+    });
+
+    YamlField sourceField = yamlNode.getField(YAMLFieldNameConstants.SOURCE);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(sourceField)) {
+      addVariablesForSourceField(sourceField, yamlPropertiesMap);
+    }
+
+    YamlField executionTargetField = yamlNode.getField(YAMLFieldNameConstants.EXECUTION_TARGET);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(executionTargetField)) {
+      addVariablesForExecutionTargetField(executionTargetField, yamlPropertiesMap);
+    }
+
+    YamlField environmentVariablesField = yamlNode.getField(YAMLFieldNameConstants.ENVIRONMENT_VARIABLES);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(environmentVariablesField)) {
+      VariableCreatorHelper.addVariablesForVariables(
+          environmentVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
+    }
+
+    YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
+    if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
+      VariableCreatorHelper.addVariablesForVariables(
+          outputVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
+    }
+  }
+
+  private void addVariablesForSourceField(YamlField sourceField, Map<String, YamlProperties> yamlPropertiesMap) {
+    YamlField typeField = sourceField.getNode().getField(YamlNode.TYPE_FIELD_NAME);
+    if (typeField != null) {
+      YamlField specField = sourceField.getNode().getField(YAMLFieldNameConstants.SPEC);
+      switch (typeField.getNode().getCurrJsonNode().textValue()) {
+        case ShellScriptSourceType.GIT:
+        case ShellScriptSourceType.INLINE:
+          if (specField != null) {
+            List<YamlField> fields = specField.getNode().fields();
+            fields.forEach(field -> {
+              if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
+                addFieldToPropertiesMapUnderStep(field, specField.getNode(), yamlPropertiesMap);
+              }
+            });
+          }
+          break;
+        default:
+          throw new InvalidRequestException("Invalid source type");
+      }
+    }
+  }
+
+  private void addVariablesForExecutionTargetField(
+      YamlField executionTargetField, Map<String, YamlProperties> yamlPropertiesMap) {
+    List<YamlField> fields = executionTargetField.getNode().fields();
+    fields.forEach(field -> {
+      if (!field.getName().equals(YAMLFieldNameConstants.UUID)) {
+        addFieldToPropertiesMapUnderStep(field, executionTargetField.getNode(), yamlPropertiesMap);
+      }
+    });
+  }
+}

@@ -3,7 +3,7 @@ package io.harness.cdng.manifest.yaml;
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
 
-import io.harness.cdng.manifest.ManifestType;
+import io.harness.steps.shellScript.manifest.ManifestType;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.KustomizeManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;

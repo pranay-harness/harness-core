@@ -1,6 +1,6 @@
 package io.harness.cdng.visitor;
 
-import io.harness.cdng.manifest.ManifestType;
+import io.harness.steps.shellScript.manifest.ManifestType;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 

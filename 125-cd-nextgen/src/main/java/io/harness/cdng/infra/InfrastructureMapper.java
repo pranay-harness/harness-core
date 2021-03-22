@@ -2,11 +2,11 @@ package io.harness.cdng.infra;
 
 import static java.lang.String.format;
 
-import io.harness.cdng.environment.EnvironmentOutcome;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
-import io.harness.cdng.infra.yaml.InfrastructureKind;
+import io.harness.steps.shellScript.yaml.InfrastructureKind;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.exception.InvalidArgumentsException;
 

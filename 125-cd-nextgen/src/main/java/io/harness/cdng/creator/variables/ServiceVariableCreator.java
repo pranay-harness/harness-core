@@ -1,7 +1,7 @@
 package io.harness.cdng.creator.variables;
 
-import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.manifest.ManifestType;
+import io.harness.steps.shellScript.manifest.ManifestStoreType;
+import io.harness.steps.shellScript.manifest.ManifestType;
 import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;

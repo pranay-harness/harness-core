@@ -1,8 +1,8 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -20,6 +20,9 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.shellScript.k8s.K8sStepExecutor;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -31,7 +34,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
       StepType.newBuilder().setType(ExecutionNodeType.K8S_APPLY.getYamlType()).build();
   private final String K8S_APPLY_COMMAND_NAME = "K8s Apply";
 
-  @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
 
   @Override
   public Class<K8sApplyStepParameters> getStepParametersClass() {
@@ -51,7 +54,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
   }
 
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+                                          K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     K8sApplyStepParameters k8sApplyStepParameters = (K8sApplyStepParameters) stepParameters;
     boolean skipDryRun =
@@ -66,7 +69,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .releaseName(releaseName)
             .commandName(K8S_APPLY_COMMAND_NAME)
             .taskType(K8sTaskType.APPLY)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(io.harness.steps.shellScript.k8s.K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
@@ -88,7 +91,7 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
 
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(k8sApplyStepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }

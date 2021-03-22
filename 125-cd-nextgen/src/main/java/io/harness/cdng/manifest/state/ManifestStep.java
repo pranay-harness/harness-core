@@ -1,11 +1,11 @@
 package io.harness.cdng.manifest.state;
 
-import static io.harness.cdng.manifest.ManifestConstants.MANIFESTS;
+import static io.harness.steps.shellScript.manifest.ManifestConstants.MANIFESTS;
 
 import io.harness.cdng.manifest.mappers.ManifestOutcomeMapper;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;

@@ -20,7 +20,7 @@ import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.cdng.manifest.state.ManifestStep;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;

@@ -1,6 +1,6 @@
 package io.harness.cdng.service.beans;
 
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 

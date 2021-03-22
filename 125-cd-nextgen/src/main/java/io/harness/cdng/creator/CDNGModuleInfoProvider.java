@@ -1,7 +1,7 @@
 package io.harness.cdng.creator;
 
-import io.harness.cdng.environment.EnvironmentOutcome;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo;
 import io.harness.cdng.pipeline.executions.beans.CDPipelineModuleInfo.CDPipelineModuleInfoBuilder;

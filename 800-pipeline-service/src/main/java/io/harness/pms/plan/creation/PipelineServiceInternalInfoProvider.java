@@ -1,5 +1,6 @@
 package io.harness.pms.plan.creation;
 
+import io.harness.pms.variables.ShellScriptStepVariableCreator;
 import io.harness.plancreator.approval.ApprovalStageFilterJsonCreator;
 import io.harness.plancreator.approval.ApprovalStagePlanCreator;
 import io.harness.plancreator.execution.ExecutionPlanCreator;
@@ -56,6 +57,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     List<VariableCreator> variableCreators = new ArrayList<>();
     variableCreators.add(new PipelineVariableCreator());
     variableCreators.add(new HTTPStepVariableCreator());
+    variableCreators.add(new ShellScriptStepVariableCreator());
     injectorUtils.injectMembers(variableCreators);
     return variableCreators;
   }

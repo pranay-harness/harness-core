@@ -1,7 +1,7 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.DeleteResourcesType;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -21,6 +21,9 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.shellScript.k8s.K8sStepExecutor;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -33,7 +36,7 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
   public static final String K8S_DELETE_COMMAND_NAME = "Delete";
 
   @Inject private OutcomeService outcomeService;
-  @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
 
   @Override
   public TaskChainResponse startChainLink(
@@ -58,7 +61,7 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+                                          K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     K8sDeleteStepParameters deleteStepParameters = (K8sDeleteStepParameters) stepParameters;
     boolean isResourceName = io.harness.delegate.task.k8s.DeleteResourcesType.ResourceName
         == deleteStepParameters.getDeleteResources().getType();
@@ -78,7 +81,7 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
             .filePaths(isManifestFiles ? deleteStepParameters.getDeleteResources().getSpec().getManifestPaths() : "")
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .taskType(K8sTaskType.DELETE)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(io.harness.steps.shellScript.k8s.K8sStepHelper.getTimeout(stepParameters))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .build();
@@ -97,7 +100,7 @@ public class K8sDeleteStep implements TaskChainExecutable<K8sDeleteStepParameter
       PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }

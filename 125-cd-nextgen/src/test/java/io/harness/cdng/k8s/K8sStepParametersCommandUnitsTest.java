@@ -12,6 +12,7 @@ import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 

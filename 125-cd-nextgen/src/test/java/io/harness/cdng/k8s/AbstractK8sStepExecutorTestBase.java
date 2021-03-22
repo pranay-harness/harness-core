@@ -7,14 +7,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 
+import io.harness.steps.shellScript.k8s.K8sStepExecutor;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import org.junit.Before;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;

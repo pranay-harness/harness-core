@@ -1,7 +1,7 @@
 package io.harness.cdng.stepsdependency.utils;
 
 import io.harness.cdng.executionplan.CDStepDependencyKey;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.exception.InvalidArgumentsException;

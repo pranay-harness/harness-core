@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.executions.service.NgPipelineExecutionService;
 import io.harness.cdng.service.beans.ServiceOutcome;

@@ -8,8 +8,8 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.k8s.K8sRollingOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.exception.InvalidArgumentsException;

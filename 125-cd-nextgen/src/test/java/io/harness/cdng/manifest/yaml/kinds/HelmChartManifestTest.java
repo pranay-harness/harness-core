@@ -1,8 +1,8 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Fetch;
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Template;
-import static io.harness.cdng.manifest.yaml.HelmCommandFlagType.Version;
+import static io.harness.steps.shellScript.manifest.yaml.HelmCommandFlagType.Fetch;
+import static io.harness.steps.shellScript.manifest.yaml.HelmCommandFlagType.Template;
+import static io.harness.steps.shellScript.manifest.yaml.HelmCommandFlagType.Version;
 import static io.harness.rule.OwnerRule.ABOSII;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,7 +10,7 @@ import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
+import io.harness.steps.shellScript.manifest.yaml.HelmManifestCommandFlag;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.pms.yaml.ParameterField;

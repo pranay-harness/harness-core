@@ -2,7 +2,7 @@ package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 
-import io.harness.cdng.manifest.ManifestType;
+import io.harness.steps.shellScript.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;

@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -22,6 +22,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
 import io.harness.tasks.ResponseData;
 
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
@@ -33,7 +34,8 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_ROLLBACK_ROLLING.getYamlType()).build();
 
-  @Inject K8sStepHelper k8sStepHelper;
+  @Inject
+  io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
 
   @Override
@@ -79,7 +81,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }

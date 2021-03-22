@@ -1,6 +1,6 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -20,6 +20,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -31,7 +32,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
   public static final String K8S_CANARY_DELETE_COMMAND_NAME = "Canary Delete";
 
   @Inject private OutcomeService outcomeService;
-  @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
 
   @Override
   public TaskRequest obtainTask(
@@ -61,7 +62,7 @@ public class K8sCanaryDeleteStep implements TaskExecutable<K8sCanaryDeleteStepPa
       Ambiance ambiance, K8sCanaryDeleteStepParameters stepParameters, Map<String, ResponseData> responseDataMap) {
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }

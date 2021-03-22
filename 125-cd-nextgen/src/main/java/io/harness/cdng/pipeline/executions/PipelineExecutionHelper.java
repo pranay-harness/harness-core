@@ -2,7 +2,7 @@ package io.harness.cdng.pipeline.executions;
 
 import static io.harness.pms.execution.ExecutionStatus.getExecutionStatus;
 
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.UnknownStageElementWrapperException;

@@ -9,6 +9,6 @@ import java.util.Set;
 public class PMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet(StepSpecTypeConstants.BARRIER, "HarnessApproval", StepSpecTypeConstants.HTTP);
+    return Sets.newHashSet(StepSpecTypeConstants.BARRIER, StepSpecTypeConstants.HARNESS_APPROVAL, StepSpecTypeConstants.HTTP, StepSpecTypeConstants.SHELL_SCRIPT);
   }
 }

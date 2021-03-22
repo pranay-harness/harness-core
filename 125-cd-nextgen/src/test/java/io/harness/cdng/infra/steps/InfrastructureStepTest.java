@@ -8,7 +8,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;

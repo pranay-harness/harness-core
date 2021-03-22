@@ -14,7 +14,7 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeleteRequest;
@@ -31,6 +31,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.collect.ImmutableMap;

@@ -9,7 +9,7 @@ import io.harness.cdng.k8s.K8sDeleteStepInfo;
 import io.harness.cdng.k8s.K8sRollingRollbackStepInfo;
 import io.harness.cdng.k8s.K8sRollingStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepInfo;
-import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
+import io.harness.plancreator.steps.shell.ShellScriptStepInfo;
 import io.harness.executionplan.plancreator.beans.GenericStepInfo;
 import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.yaml.core.StepSpecType;

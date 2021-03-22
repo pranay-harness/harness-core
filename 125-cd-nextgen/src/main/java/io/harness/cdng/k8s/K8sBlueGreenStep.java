@@ -1,8 +1,8 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sBGDeployRequest;
@@ -23,6 +23,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.shellScript.k8s.K8sStepExecutor;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -34,7 +37,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
       StepType.newBuilder().setType(ExecutionNodeType.K8S_BLUE_GREEN.getYamlType()).build();
   public static final String K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME = "Blue/Green Deployment";
 
-  @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
 
   @Override
   public Class<K8sBlueGreenStepParameters> getStepParametersClass() {
@@ -54,7 +57,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
   }
 
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+                                          K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     boolean skipDryRun =
         !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
@@ -66,7 +69,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .releaseName(releaseName)
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(io.harness.steps.shellScript.k8s.K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
@@ -86,7 +89,7 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
 
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(k8sBlueGreenStepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }

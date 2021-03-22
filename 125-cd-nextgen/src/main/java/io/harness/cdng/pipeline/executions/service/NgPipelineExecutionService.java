@@ -1,6 +1,6 @@
 package io.harness.cdng.pipeline.executions.service;
 
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.executions.beans.PipelineExecutionDetail;
 import io.harness.cdng.service.beans.ServiceOutcome;

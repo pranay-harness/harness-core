@@ -6,6 +6,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.shellScript.yaml.InfrastructureKind;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -20,7 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
-@JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
+@JsonTypeName(io.harness.steps.shellScript.yaml.InfrastructureKind.KUBERNETES_DIRECT)
 @SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
 @TypeAlias("k8sDirectInfrastructure")
 public class K8SDirectInfrastructure implements Infrastructure, Visitable {

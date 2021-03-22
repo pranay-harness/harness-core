@@ -3,11 +3,11 @@ package io.harness.cdng.infra.steps;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 
 import io.harness.cdng.environment.EnvironmentMapper;
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureMapper;
 import io.harness.cdng.infra.beans.InfraMapping;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;

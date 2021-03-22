@@ -1,11 +1,12 @@
 package io.harness.cdng.manifest.yaml;
 
-import io.harness.cdng.manifest.ManifestStoreType;
+import io.harness.steps.shellScript.manifest.ManifestStoreType;
 import io.harness.cdng.visitor.helper.GitStoreVisitorHelper;
 import io.harness.common.SwaggerConstants;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.steps.shellScript.manifest.yaml.GitStoreConfig;
 import io.harness.validation.OneOfField;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;

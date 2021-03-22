@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGTestBase;
-import io.harness.cdng.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;

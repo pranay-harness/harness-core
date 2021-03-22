@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.environment.EnvironmentOutcome;
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.steps.shellScript.environment.EnvironmentOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;

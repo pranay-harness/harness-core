@@ -7,6 +7,7 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;

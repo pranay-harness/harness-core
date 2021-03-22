@@ -1,23 +1,23 @@
 package io.harness.cdng.manifest.mappers;
 
-import static io.harness.cdng.manifest.ManifestType.HelmChart;
-import static io.harness.cdng.manifest.ManifestType.K8Manifest;
-import static io.harness.cdng.manifest.ManifestType.Kustomize;
-import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
-import static io.harness.cdng.manifest.ManifestType.VALUES;
+import static io.harness.steps.shellScript.manifest.ManifestType.HelmChart;
+import static io.harness.steps.shellScript.manifest.ManifestType.K8Manifest;
+import static io.harness.steps.shellScript.manifest.ManifestType.Kustomize;
+import static io.harness.steps.shellScript.manifest.ManifestType.OpenshiftTemplate;
+import static io.harness.steps.shellScript.manifest.ManifestType.VALUES;
 
 import static java.lang.String.format;
 
-import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.steps.shellScript.manifest.ManifestStoreType;
+import io.harness.steps.shellScript.manifest.yaml.HelmChartManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifest;
-import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifest;
-import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
-import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;

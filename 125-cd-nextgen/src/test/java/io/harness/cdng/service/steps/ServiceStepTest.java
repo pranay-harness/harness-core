@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cdng.manifest.ManifestConstants;
+import io.harness.steps.shellScript.manifest.ManifestConstants;
 import io.harness.cdng.manifest.yaml.GitStore;
-import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.steps.shellScript.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;

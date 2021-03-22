@@ -1,6 +1,6 @@
 package io.harness.cdng.creator.variables;
 
-import io.harness.cdng.infra.yaml.InfrastructureKind;
+import io.harness.steps.shellScript.yaml.InfrastructureKind;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlProperties;

@@ -1,8 +1,8 @@
 package io.harness.cdng.k8s;
 
-import io.harness.cdng.infra.beans.InfrastructureOutcome;
-import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
-import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.steps.shellScript.beans.InfrastructureOutcome;
+import io.harness.steps.shellScript.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.steps.shellScript.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
@@ -25,6 +25,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepOutcomeGroup;
+import io.harness.steps.shellScript.k8s.K8sStepExecutor;
+import io.harness.steps.shellScript.k8s.K8sStepHelper;
+import io.harness.steps.shellScript.k8s.K8sStepParameters;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
@@ -36,7 +39,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
   private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deployment";
 
-  @Inject private K8sStepHelper k8sStepHelper;
+  @Inject private io.harness.steps.shellScript.k8s.K8sStepHelper k8sStepHelper;
 
   @Override
   public TaskChainResponse startChainLink(
@@ -53,7 +56,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
 
   @Override
   public TaskChainResponse executeK8sTask(ManifestOutcome k8sManifestOutcome, Ambiance ambiance,
-      K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
+                                          K8sStepParameters stepParameters, List<String> valuesFileContents, InfrastructureOutcome infrastructure) {
     final String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     final K8sCanaryStepParameters canaryStepParameters = (K8sCanaryStepParameters) stepParameters;
     final Integer instancesValue = canaryStepParameters.getInstanceSelection().getSpec().getInstances();
@@ -69,7 +72,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .taskType(K8sTaskType.CANARY_DEPLOY)
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
             .instances(instancesValue)
-            .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
+            .timeoutIntervalInMin(io.harness.steps.shellScript.k8s.K8sStepHelper.getTimeout(stepParameters))
             .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
@@ -88,7 +91,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
 
     ResponseData responseData = responseDataMap.values().iterator().next();
     if (responseData instanceof ErrorNotifyResponseData) {
-      return K8sStepHelper
+      return io.harness.steps.shellScript.k8s.K8sStepHelper
           .getDelegateErrorFailureResponseBuilder(stepParameters, (ErrorNotifyResponseData) responseData)
           .build();
     }
