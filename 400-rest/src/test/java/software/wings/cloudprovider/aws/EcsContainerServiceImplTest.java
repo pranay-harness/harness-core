@@ -21,17 +21,20 @@ import static com.amazonaws.regions.Regions.US_EAST_1;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,6 +46,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.WingsBaseTest;
@@ -77,11 +81,13 @@ import com.amazonaws.services.ecs.model.DescribeTasksResult;
 import com.amazonaws.services.ecs.model.LaunchType;
 import com.amazonaws.services.ecs.model.ListServicesRequest;
 import com.amazonaws.services.ecs.model.ListServicesResult;
+import com.amazonaws.services.ecs.model.ListTasksResult;
 import com.amazonaws.services.ecs.model.NetworkInterface;
 import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.ServiceEvent;
 import com.amazonaws.services.ecs.model.Task;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
+import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -209,7 +215,7 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
     when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
         .thenReturn(new DescribeTasksResult());
     ecsContainerService.provisionTasks(US_EAST_1.getName(), connectorConfig, Collections.emptyList(), CLUSTER_NAME,
-        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback());
+        SERVICE_NAME, 0, DESIRED_COUNT, 10, new ExecutionLogCallback(), false);
     verify(awsHelperService)
         .updateService(US_EAST_1.getName(), awsConfig, Collections.emptyList(),
             new UpdateServiceRequest()
@@ -286,6 +292,94 @@ public class EcsContainerServiceImplTest extends WingsBaseTest {
         .callWithTimeout(any(), anyLong(), any(), anyBoolean());
     assertThatExceptionOfType(WingsException.class)
         .isThrownBy(() -> ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(requestData));
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testProvisionTasks() throws Exception {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    String region = "REGION";
+    ArrayList<EncryptedDataDetail> encryptionDetails = new ArrayList<>();
+
+    doReturn(new ListTasksResult().withTaskArns("T1", "T2", "T3", "T4", "T5"))
+        .when(awsHelperService)
+        .listTasks(eq(region), eq(awsConfig), any(), any(), anyBoolean());
+    Service service = new Service().withServiceName(SERVICE_NAME).withDesiredCount(5).withRunningCount(5);
+    Service updatedService = new Service().withServiceName(SERVICE_NAME).withDesiredCount(15).withRunningCount(6);
+
+    doReturn(new DescribeServicesResult().withServices(Lists.newArrayList(service)))
+        .when(awsHelperService)
+        .describeServices(region, awsConfig, encryptionDetails,
+            new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(SERVICE_NAME));
+
+    doReturn(new UpdateServiceResult().withService(updatedService))
+        .when(awsHelperService)
+        .updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
+        .thenReturn(new DescribeTasksResult());
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 15, 10 * 1000, logCallback, false);
+
+    verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
+    doThrow(TimeoutException.class).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatThrownBy(()
+                           -> ecsContainerService.provisionTasks(region, connectorConfig, encryptionDetails,
+                               CLUSTER_NAME, SERVICE_NAME, 5, 15, 10 * 1000, logCallback, false))
+        .isInstanceOf(TimeoutException.class);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testProvisionTasks_Retry() throws Exception {
+    ExecutionLogCallback logCallback = mock(ExecutionLogCallback.class);
+    String region = "REGION";
+    ArrayList<EncryptedDataDetail> encryptionDetails = new ArrayList<>();
+
+    doReturn(new ListTasksResult().withTaskArns("T1", "T2", "T3", "T4", "T5"))
+        .when(awsHelperService)
+        .listTasks(eq(region), eq(awsConfig), any(), any(), anyBoolean());
+    Service service = new Service().withServiceName(SERVICE_NAME).withDesiredCount(5).withRunningCount(4);
+    Service updatedService = new Service().withServiceName(SERVICE_NAME).withDesiredCount(5).withRunningCount(4);
+
+    doReturn(new DescribeServicesResult().withServices(Lists.newArrayList(service)))
+        .when(awsHelperService)
+        .describeServices(region, awsConfig, encryptionDetails,
+            new DescribeServicesRequest().withCluster(CLUSTER_NAME).withServices(SERVICE_NAME));
+
+    doReturn(new UpdateServiceResult().withService(updatedService))
+        .when(awsHelperService)
+        .updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    when(awsHelperService.describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean()))
+        .thenReturn(new DescribeTasksResult());
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);
+
+    // logic to check if exception is being thrown
+    verify(awsHelperService).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
+    doThrow(TimeoutException.class).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    assertThatThrownBy(()
+                           -> ecsContainerService.provisionTasks(region, connectorConfig, encryptionDetails,
+                               CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true))
+        .isInstanceOf(TimeoutException.class);
+    verify(awsHelperService, times(1)).describeTasks(anyString(), any(AwsConfig.class), any(), any(), anyBoolean());
+    verify(awsHelperService, times(2)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+
+    // logic to check desired == running == 5 and deployment.size() = 1, shouldn't retry
+    doReturn(null).when(timeLimiter).callWithTimeout(any(), anyLong(), any(), anyBoolean());
+    service.withDeployments(new Deployment()).setRunningCount(5);
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);
+    verify(awsHelperService, times(2)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
+
+    // logic to check desired == running == 5 and deployment.size() = 0, should retry
+    service.setDeployments(null);
+    ecsContainerService.provisionTasks(
+        region, connectorConfig, encryptionDetails, CLUSTER_NAME, SERVICE_NAME, 5, 5, 10 * 1000, logCallback, true);
+    verify(awsHelperService, times(3)).updateService(eq(region), eq(awsConfig), eq(encryptionDetails), any());
   }
 
   @Test

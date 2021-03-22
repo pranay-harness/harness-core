@@ -1215,9 +1215,10 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
         .when(mockEcsContainerService)
         .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
-    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback);
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback, false);
     verify(awsClusterService)
-        .resizeCluster(anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), anyBoolean());
   }
 
   @Test
