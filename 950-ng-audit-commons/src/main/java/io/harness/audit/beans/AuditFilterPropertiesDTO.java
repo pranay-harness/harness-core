@@ -6,7 +6,7 @@ import io.harness.ModuleType;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.ResourceScope;
+import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;

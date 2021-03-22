@@ -5,6 +5,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
+import io.harness.audit.beans.Principal.PrincipalKeys;
 import io.harness.audit.beans.YamlDiff;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -17,7 +18,6 @@ import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestMetadata;
 import io.harness.scope.ResourceScope;
 import io.harness.scope.ResourceScope.ResourceScopeKeys;
-import io.harness.security.dto.Principal.PrincipalKeys;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -77,7 +77,7 @@ public class AuditEvent {
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditEventPrincipalIdx")
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
-                 .field(AuditEventKeys.PRINCIPAL_NAME_KEY)
+                 .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                  .build())
         .add(CompoundMongoIndex.builder().name("ngAuditEventModuleTypeIdx").field(AuditEventKeys.moduleType).build())
         .add(CompoundMongoIndex.builder()
@@ -108,8 +108,8 @@ public class AuditEvent {
 
     public static final String PRINCIPAL_TYPE_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.type;
-    public static final String PRINCIPAL_NAME_KEY =
-        AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.name;
+    public static final String PRINCIPAL_IDENTIFIER_KEY =
+        AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.identifier;
 
     public static final String RESOURCE_TYPE_KEY = AuditEventKeys.resource + "." + ResourceKeys.type;
     public static final String RESOURCE_IDENTIFIER_KEY = AuditEventKeys.resource + "." + ResourceKeys.identifier;

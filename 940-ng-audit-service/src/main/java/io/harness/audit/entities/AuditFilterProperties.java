@@ -4,7 +4,7 @@ import io.harness.ModuleType;
 import io.harness.audit.beans.Principal;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.ResourceScope;
+import io.harness.scope.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
