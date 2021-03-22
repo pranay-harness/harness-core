@@ -1,9 +1,9 @@
 package io.harness.accesscontrol.acl;
 
 import io.harness.accesscontrol.acl.daos.ACLDAO;
-import io.harness.accesscontrol.acl.daos.HACLDAOImpl;
+import io.harness.accesscontrol.acl.daos.ACLDAOImpl;
 import io.harness.accesscontrol.acl.services.ACLService;
-import io.harness.accesscontrol.acl.services.HACLServiceImpl;
+import io.harness.accesscontrol.acl.services.ACLServiceImpl;
 
 import com.google.inject.AbstractModule;
 
@@ -19,7 +19,7 @@ public class ACLModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(ACLService.class).to(HACLServiceImpl.class);
-    bind(ACLDAO.class).to(HACLDAOImpl.class);
+    bind(ACLService.class).to(ACLServiceImpl.class);
+    bind(ACLDAO.class).to(ACLDAOImpl.class);
   }
 }
