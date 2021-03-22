@@ -1,5 +1,8 @@
 package io.harness.filter;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.impl.FilterServiceImpl;
 import io.harness.filter.mapper.FilterPropertiesMapper;
 import io.harness.filter.service.FilterService;
@@ -9,8 +12,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.MapBinder;
 import java.util.concurrent.atomic.AtomicReference;
 
+@OwnedBy(DX)
 public class FiltersModule extends AbstractModule {
   private static final AtomicReference<FiltersModule> instanceRef = new AtomicReference();
+
   public FiltersModule() {}
 
   @Override

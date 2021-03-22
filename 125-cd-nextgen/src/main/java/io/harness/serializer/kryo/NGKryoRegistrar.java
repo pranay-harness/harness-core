@@ -61,7 +61,6 @@ import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
-import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
@@ -81,7 +80,6 @@ import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
 import io.harness.cdng.variables.beans.NGVariableOverrideSetWrapper;
-import io.harness.http.HttpOutcome;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -119,7 +117,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
 
     kryo.register(CDPipelineSetupParameters.class, 8046);
     kryo.register(DeploymentStageStepParameters.class, 8047);
-    kryo.register(HttpStepInfo.class, 8048);
     kryo.register(K8sRollingRollbackStepInfo.class, 8049);
     kryo.register(K8sRollingRollbackStepParameters.class, 8050);
     kryo.register(K8sRollingStepInfo.class, 8051);
@@ -143,7 +140,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
 
     // Starting using 12500 series as 8100 series is also used in 400-rest
     kryo.register(K8sBlueGreenOutcome.class, 12500);
-    kryo.register(HttpOutcome.class, 12501);
     kryo.register(K8sManifestOutcome.class, 12502);
     kryo.register(ValuesManifestOutcome.class, 12503);
     kryo.register(StageOverridesOutcome.class, 12504);

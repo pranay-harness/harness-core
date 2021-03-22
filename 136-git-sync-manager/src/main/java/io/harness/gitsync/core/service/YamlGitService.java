@@ -1,5 +1,8 @@
 package io.harness.gitsync.core.service;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.beans.YamlChangeSet;
@@ -7,6 +10,7 @@ import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
 
 import java.util.List;
 
+@OwnedBy(DX)
 public interface YamlGitService {
   YamlGitConfigDTO weNeedToPushChanges(
       String accountId, String orgIdentifier, String projectIdentifier, String rootFolder);

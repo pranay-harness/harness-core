@@ -1,5 +1,8 @@
 package io.harness.ng.core.entitysetupusage.entity;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -33,6 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("entitySetupUsage")
 @TypeAlias("io.harness.ng.core.entityReference.entity.EntitySetupUsage")
+@OwnedBy(DX)
 public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

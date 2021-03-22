@@ -470,7 +470,7 @@ public class OrchestrationEngine {
   // TODO (prashant) => Improve this with more clarity.
   private Status calculateEndStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    return OrchestrationUtils.calculateEndStatus(nodeExecutions, planExecutionId);
+    return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
   }
 
   private void handleAdvise(@NotNull NodeExecution nodeExecution, @NotNull AdviserResponse adviserResponse) {

@@ -3333,6 +3333,10 @@ public class DelegateServiceImpl implements DelegateService {
           return null;
         }
 
+        if (delegateId != null && delegateId.equals(delegateTask.getMustExecuteOnDelegateId())) {
+          return assignTask(delegateId, taskId, delegateTask);
+        }
+
         if (featureFlagService.isEnabled(FeatureName.PER_AGENT_CAPABILITIES, accountId)) {
           return assignTask(delegateId, taskId, delegateTask);
         }
@@ -3359,6 +3363,12 @@ public class DelegateServiceImpl implements DelegateService {
       log.info("Task not found or was already assigned");
       return;
     }
+
+    if (delegateTask.isForceExecute()) {
+      log.info("Task is set for force execution");
+      return;
+    }
+
     try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
              TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       if (!isValidationComplete(delegateTask)) {

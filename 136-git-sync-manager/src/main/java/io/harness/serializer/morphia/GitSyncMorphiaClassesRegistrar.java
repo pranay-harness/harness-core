@@ -1,5 +1,8 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlGitConfig;
@@ -12,6 +15,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 
 import java.util.Set;
 
+@OwnedBy(DX)
 public class GitSyncMorphiaClassesRegistrar implements MorphiaRegistrar {
   @Override
   public void registerClasses(Set<Class> set) {

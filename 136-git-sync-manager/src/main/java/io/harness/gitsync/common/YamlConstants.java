@@ -1,5 +1,9 @@
 package io.harness.gitsync.common;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(DX)
 public class YamlConstants {
   public static final String PATH_DELIMITER = "/";
   public static final String YAML_EXTENSION = "yaml";

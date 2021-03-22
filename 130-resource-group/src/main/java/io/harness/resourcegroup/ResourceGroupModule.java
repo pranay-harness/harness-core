@@ -2,6 +2,7 @@ package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -67,6 +68,7 @@ public class ResourceGroupModule extends AbstractModule {
         .annotatedWith(Names.named("DynamicResourceValidator"))
         .to(DynamicResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(NG_MANAGER.getServiceId());
+    requireBinding(AccessControlAdminClient.class);
     installResourceValidators();
     addResourceValidatorConstraints();
   }

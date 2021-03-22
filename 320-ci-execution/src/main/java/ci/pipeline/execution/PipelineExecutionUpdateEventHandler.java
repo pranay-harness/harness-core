@@ -17,6 +17,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.steps.StepOutcomeGroup;
 
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,7 +62,7 @@ public class PipelineExecutionUpdateEventHandler implements AsyncOrchestrationEv
                 .taskDescription("CI cleanup pod task")
                 .build();
 
-        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted cleanup request  with taskId {} for Integration stage  {}", taskId,
             integrationStageStepParameters.getIdentifier());
       }

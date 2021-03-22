@@ -121,6 +121,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
               .executionCapabilities(capabilities)
               .tags(taskSelectors)
               .selectionLogsTrackingEnabled(request.getSelectionTrackingLogEnabled())
+              .forceExecute(request.getForceExecute())
               .data(TaskData.builder()
                         .parked(taskDetails.getParked())
                         .async(taskDetails.getMode() == TaskMode.ASYNC)
