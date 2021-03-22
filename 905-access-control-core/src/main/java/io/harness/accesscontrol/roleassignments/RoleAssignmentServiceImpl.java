@@ -1,7 +1,7 @@
 package io.harness.accesscontrol.roleassignments;
 
-import static lombok.AccessLevel.PRIVATE;
-
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
@@ -10,14 +10,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.utils.RetryUtils;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import javax.validation.executable.ValidateOnExecution;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -26,6 +18,14 @@ import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.validation.executable.ValidateOnExecution;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static lombok.AccessLevel.PRIVATE;
 
 @ValidateOnExecution
 @FieldDefaults(level = PRIVATE, makeFinal = true)
@@ -57,10 +57,10 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
       throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
     }
     if (!result.getResourceGroupValidationResult().isValid()) {
-      throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
+      throw new InvalidRequestException(result.getResourceGroupValidationResult().getErrorMessage());
     }
     if (!result.getRoleValidationResult().isValid()) {
-      throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
+      throw new InvalidRequestException(result.getRoleValidationResult().getErrorMessage());
     }
     return roleAssignmentDao.create(roleAssignment);
   }

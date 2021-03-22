@@ -1,20 +1,18 @@
 package software.wings.resources;
 
-import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
-
+import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
-
+import io.swagger.annotations.Api;
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.service.intfc.UserService;
 
-import com.google.inject.Inject;
-import io.swagger.annotations.Api;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -23,9 +21,11 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 @Api(value = "/ng/users", hidden = true)
 @Path("/ng/users")
@@ -44,7 +44,13 @@ public class UserResourceNG {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
+    List<User> userList;
+
+    if(!StringUtils.isEmpty(searchTerm)) {
+     userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
+    } else {
+      userList = userService.listUsers(pageRequest, accountId, null, offset, pageSize, true);
+    }
 
     PageResponse<User> pageResponse = aPageResponse()
                                           .withOffset(offset.toString())
@@ -52,20 +58,6 @@ public class UserResourceNG {
                                           .withResponse(userList)
                                           .withTotal(userService.getTotalUserCount(accountId, true))
                                           .build();
-
-    return new RestResponse<>(pageResponse);
-  }
-
-  @GET
-  public RestResponse<PageResponse<User>> listUsersInAccount(
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
-    Integer offset = 0;
-    Integer pageSize = 100000;
-
-    List<User> userList = userService.listUsers(new PageRequest<User>(), accountId, searchTerm, offset, pageSize, true);
-
-    PageResponse<User> pageResponse =
-        aPageResponse().withOffset(offset.toString()).withLimit(pageSize.toString()).withResponse(userList).build();
 
     return new RestResponse<>(pageResponse);
   }

@@ -1,12 +1,11 @@
-package io.harness.resourcegroup.framework.remote.dto;
-
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+package io.harness.resourcegroup.remote.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor

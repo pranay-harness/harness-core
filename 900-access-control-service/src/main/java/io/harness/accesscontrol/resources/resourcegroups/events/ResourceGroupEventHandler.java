@@ -1,5 +1,8 @@
 package io.harness.accesscontrol.resources.resourcegroups.events;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
@@ -8,12 +11,11 @@ import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.resourcegroup.ResourceGroupEntityChangeDTO;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.protobuf.InvalidProtocolBufferException;
-import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Objects;
+
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 
 @Singleton
 @Slf4j
@@ -35,9 +37,12 @@ public class ResourceGroupEventHandler implements EventHandler {
     } catch (InvalidProtocolBufferException e) {
       log.error("Exception in unpacking ResourceGroupEntityChangeDTO for key {}", message.getId(), e);
     }
+    String action = message.getMessage().getMetadataMap().get(ACTION);
+
     if (Objects.isNull(resourceGroupEntityChangeDTO)) {
       return true;
     }
+
     try {
       ScopeParams scopeParams = HarnessScopeParams.builder()
                                     .accountIdentifier(resourceGroupEntityChangeDTO.getAccountIdentifier())

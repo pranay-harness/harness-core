@@ -1,19 +1,19 @@
 package io.harness.ng.core.user.remote;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.User;
 import io.harness.rest.RestResponse;
-
-import java.util.List;
-import java.util.Optional;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
+
+import java.util.List;
+import java.util.Optional;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 public interface UserClient {
@@ -28,10 +28,11 @@ public interface UserClient {
 
   @GET(USERS_SEARCH_API)
   Call<RestResponse<PageResponse<User>>> list(@Query(value = "accountId") String accountId,
-      @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm);
+      @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm,
+      @Query("loadUserGroups") boolean loadUserGroups);
 
   @GET(USERS_API)
-  Call<RestResponse<PageResponse<User>>> listUsersInWithUserGroups(
+  Call<RestResponse<PageResponse<User>>> listUsersWithUserGroups(
       @Query(value = "accountId") String accountId, @Query("searchTerm") String searchTerm);
 
   @GET(USERNAME_API)

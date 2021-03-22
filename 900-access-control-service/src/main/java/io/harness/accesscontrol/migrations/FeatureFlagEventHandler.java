@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.migrations;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.inject.Inject;
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
@@ -16,17 +18,24 @@ import io.harness.ng.core.user.User;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.projectmanagerclient.remote.ProjectManagerClient;
+import io.harness.remote.client.NGRestUtils;
+import io.harness.remote.client.RestClientUtils;
+import io.harness.resourcegroup.model.DynamicResourceSelector;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroup.remote.dto.ResourceTypeDTO;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.CryptoUtils;
-
-import com.google.inject.Inject;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -44,10 +53,15 @@ public class FeatureFlagEventHandler implements EventHandler {
   private final ProjectManagerClient projectClient;
   private final OrganizationManagerClient orgClient;
   private final RoleAssignmentService roleAssignmentService;
+  private final ResourceGroupClient resourceGroupClient;
   private final ScopeService scopeService;
 
-  private void handleNGRBACEnabledFlag(String accountId) throws IOException {
-    PageResponse<User> users = userClient.listUsersInWithUserGroups(accountId, "").execute().body().getResource();
+  private void handleNGRBACEnabledFlag(String accountId) throws IOException, InterruptedException {
+    PageResponse<User> users = RestClientUtils.getResponse(userClient.list(accountId, "0", "100000", null, true));
+    if (users == null) {
+      log.info("No user present in account: {}", accountId);
+      return;
+    }
     for (User user : users) {
       if (user.getUserGroups() == null) {
         user.setUserGroups(new ArrayList<>());
@@ -56,30 +70,46 @@ public class FeatureFlagEventHandler implements EventHandler {
       boolean admin =
           user.getUserGroups().stream().anyMatch(x -> CG_ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(x.getName()));
       if (admin) {
-        addRoleToUser(accountId, null, null, user.getUuid(), ACCOUNT_ADMIN_ROLE_IDENTIFIER);
-        List<OrganizationResponse> orgs = orgClient.listOrganization(accountId, "", 0, 100000, new ArrayList<>())
-                                              .execute()
-                                              .body()
-                                              .getData()
-                                              .getContent();
-        for (OrganizationResponse org : orgs) {
-          addRoleToUser(
-              accountId, org.getOrganization().getIdentifier(), null, principalIdentifier, ORG_ADMIN_ROLE_IDENTIFIER);
-          List<ProjectResponse> projects = projectClient
-                                               .listProject(accountId, org.getOrganization().getIdentifier(), false,
-                                                   null, "", 0, 10000, new ArrayList<>())
-                                               .execute()
-                                               .body()
-                                               .getData()
-                                               .getContent();
-          for (ProjectResponse project : projects) {
-            addRoleToUser(accountId, org.getOrganization().getIdentifier(), project.getProject().getIdentifier(),
-                principalIdentifier, ORG_ADMIN_ROLE_IDENTIFIER);
+        boolean accountResourceGroupCreationStatus =
+            upsertResourceGroup(accountId, null, null, ALL_RESOURCES_RESOURCE_GROUP);
+
+        List<RoleAssignment> roleAssignments = new ArrayList<>();
+        if (accountResourceGroupCreationStatus) {
+          roleAssignments.add(getRoleAssignment(accountId, null, null, user.getUuid(), ACCOUNT_ADMIN_ROLE_IDENTIFIER));
+          List<OrganizationResponse> orgs = orgClient.listOrganization(accountId, "", 0, 100000, new ArrayList<>())
+                                                .execute()
+                                                .body()
+                                                .getData()
+                                                .getContent();
+          for (OrganizationResponse org : orgs) {
+            upsertResourceGroup(accountId, org.getOrganization().getIdentifier(), null, ALL_RESOURCES_RESOURCE_GROUP);
+            roleAssignments.add(getRoleAssignment(accountId, org.getOrganization().getIdentifier(), null,
+                principalIdentifier, ORG_ADMIN_ROLE_IDENTIFIER));
+            List<ProjectResponse> projects = projectClient
+                                                 .listProject(accountId, org.getOrganization().getIdentifier(), false,
+                                                     null, "", 0, 10000, new ArrayList<>())
+                                                 .execute()
+                                                 .body()
+                                                 .getData()
+                                                 .getContent();
+            for (ProjectResponse project : projects) {
+              upsertResourceGroup(accountId, org.getOrganization().getIdentifier(),
+                  project.getProject().getIdentifier(), ALL_RESOURCES_RESOURCE_GROUP);
+              roleAssignments.add(getRoleAssignment(accountId, org.getOrganization().getIdentifier(),
+                  project.getProject().getIdentifier(), principalIdentifier, ORG_ADMIN_ROLE_IDENTIFIER));
+            }
           }
         }
+        Thread.sleep(3000);
+        createRoleAssignments(roleAssignments);
       }
     }
   }
+
+  private void createRoleAssignments(List<RoleAssignment> roleAssignments) {
+    roleAssignments.forEach(roleAssignmentService::create);
+  }
+
   @SneakyThrows
   @Override
   public boolean handle(Message message) {
@@ -90,12 +120,11 @@ public class FeatureFlagEventHandler implements EventHandler {
       if (NG_RBAC_ENABLED.equals(featureName)) {
         handleNGRBACEnabledFlag(accountId);
       }
-      throw new UnsupportedOperationException("This feature flag is not supported.");
     }
     return true;
   }
 
-  private void addRoleToUser(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+  private RoleAssignment getRoleAssignment(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String principalIdentifier, String roleIdentifier) {
     HarnessScopeParams.HarnessScopeParamsBuilder scopeParamsBuilder =
         HarnessScopeParams.builder().accountIdentifier(accountIdentifier);
@@ -106,16 +135,48 @@ public class FeatureFlagEventHandler implements EventHandler {
       scopeParamsBuilder.projectIdentifier(projectIdentifier);
     }
     Scope scope = scopeService.buildScopeFromParams(scopeParamsBuilder.build());
-    RoleAssignment roleAssignment = RoleAssignment.builder()
-                                        .disabled(false)
-                                        .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
-                                        .managed(false)
-                                        .roleIdentifier(roleIdentifier)
-                                        .principalType(PrincipalType.USER)
-                                        .principalIdentifier(principalIdentifier)
-                                        .resourceGroupIdentifier(ALL_RESOURCES_RESOURCE_GROUP)
-                                        .scopeIdentifier(scope.toString())
-                                        .build();
-    roleAssignmentService.create(roleAssignment);
+    return RoleAssignment.builder()
+        .disabled(false)
+        .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
+        .managed(false)
+        .roleIdentifier(roleIdentifier)
+        .principalType(PrincipalType.USER)
+        .principalIdentifier(principalIdentifier)
+        .resourceGroupIdentifier(ALL_RESOURCES_RESOURCE_GROUP)
+        .scopeIdentifier(scope.toString())
+        .build();
+  }
+
+  private boolean upsertResourceGroup(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String resourceGroupIdentifier) {
+    ResourceTypeDTO resourceTypeDTO = NGRestUtils.getResponse(
+        resourceGroupClient.getResourceTypes(accountIdentifier, orgIdentifier, projectIdentifier));
+    ResourceGroupDTO resourceGroupDTO =
+        ResourceGroupDTO.builder()
+            .accountIdentifier(accountIdentifier)
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
+            .identifier(ALL_RESOURCES_RESOURCE_GROUP)
+            .fullScopeSelected(false)
+            .resourceSelectors(resourceTypeDTO.getResourceTypes()
+                                   .stream()
+                                   .map(x -> DynamicResourceSelector.builder().resourceType(x.getName()).build())
+                                   .collect(Collectors.toList()))
+            .name("All Resources")
+            .description("Resource Group containing all resources")
+            .color("#0061fc")
+            .tags(ImmutableMap.of("predefined", "true"))
+            .build();
+    try {
+      ResourceGroupResponse resourceGroupResponse = NGRestUtils.getResponse(
+          resourceGroupClient.upsert(accountIdentifier, orgIdentifier, projectIdentifier, resourceGroupDTO));
+      if (resourceGroupResponse == null) {
+        log.info("Resource group already exists: {}", resourceGroupDTO);
+      }
+      return true;
+    } catch (Exception exception) {
+      log.error("Error while creating default resource group: {}", resourceGroupDTO, exception);
+      return false;
+    }
   }
 }

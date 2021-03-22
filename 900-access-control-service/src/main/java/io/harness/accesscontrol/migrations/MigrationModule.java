@@ -1,9 +1,10 @@
 package io.harness.accesscontrol.migrations;
 
-import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
-import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
-import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
-
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
@@ -16,14 +17,12 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
 import io.harness.remote.client.ServiceHttpClientConfig;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import java.time.Duration;
 import lombok.AllArgsConstructor;
+
+import java.time.Duration;
+
+import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 
 @AllArgsConstructor
 public class MigrationModule extends AbstractModule {
@@ -66,8 +65,8 @@ public class MigrationModule extends AbstractModule {
     if (!eventsConfig.isEnabled()) {
       return NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(
-        ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), eventsConfig.getRedisConfig(), Duration.ofMinutes(2L), 3);
+    return RedisConsumer.of(FEATURE_FLAG_STREAM, ACCESS_CONTROL_SERVICE.getServiceId(), eventsConfig.getRedisConfig(),
+        Duration.ofMinutes(10L), 2);
   }
 
   public void requireBindings() {

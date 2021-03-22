@@ -1,7 +1,8 @@
 package io.harness.ng.core.user.services.api.impl;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.invites.entities.Invite;
@@ -11,18 +12,17 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.UserProjectMapRepository;
-
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import java.util.List;
-import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+
+import java.util.List;
+import java.util.Optional;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -35,8 +35,8 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public Page<User> list(String accountIdentifier, String searchString, Pageable pageable) {
     //  @Ankush remove the offset and limit from the following statement because it is redundant pagination
-    PageResponse<User> userPageResponse = RestClientUtils.getResponse(userClient.list(
-        accountIdentifier, String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString));
+    PageResponse<User> userPageResponse = RestClientUtils.getResponse(userClient.list(accountIdentifier,
+        String.valueOf(pageable.getOffset()), String.valueOf(pageable.getPageSize()), searchString, false));
     List<User> users = userPageResponse.getResponse();
     return new PageImpl<>(users, pageable, users.size());
   }

@@ -1,7 +1,6 @@
 package io.harness.resourcegroup.framework.remote.resource;
 
-import static io.harness.utils.PageUtils.getNGPageResponse;
-
+import com.google.inject.Inject;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.ng.beans.PageRequest;
@@ -9,17 +8,19 @@ import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.resourcegroup.framework.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
-
-import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -32,8 +33,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import java.util.Optional;
+
+import static io.harness.utils.PageUtils.getNGPageResponse;
 
 @Api("/resourcegroup")
 @Path("resourcegroup")
@@ -81,6 +83,24 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid ResourceGroupRequest resourceGroupRequest) {
     ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
+    return ResponseDTO.newResponse(resourceGroupResponse);
+  }
+
+  @POST
+  @Path("/upsert")
+  @InternalApi
+  @ApiOperation(value = "Creates a resource group", nickname = "createResourceGroup")
+  public ResponseDTO<ResourceGroupResponse> upsert(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Valid ResourceGroupDTO resourceGroupDTO) {
+    ResourceGroupResponse resourceGroupResponse = null;
+    if (!resourceGroupService
+             .find(resourceGroupDTO.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier)
+             .isPresent()) {
+      resourceGroupResponse = resourceGroupService.create(resourceGroupDTO);
+    }
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
 
