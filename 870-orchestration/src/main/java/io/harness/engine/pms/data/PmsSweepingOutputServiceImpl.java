@@ -16,8 +16,6 @@ import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
-import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
@@ -59,7 +57,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   }
 
   @Override
-  public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
+  public RawOptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
     if (!refObject.getName().contains(".")) {
       // It is not an expression-like ref-object.
       return resolveOptionalUsingRuntimeId(ambiance, refObject);
@@ -69,18 +67,20 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null
-        ? OptionalSweepingOutput.builder().found(false).build()
-        : OptionalSweepingOutput.builder().found(true).output(RecastOrchestrationUtils.toDocumentJson(value)).build();
+    return value == null ? RawOptionalSweepingOutput.builder().found(false).build()
+                         : RawOptionalSweepingOutput.builder()
+                               .found(true)
+                               .output(RecastOrchestrationUtils.toDocumentJson(value))
+                               .build();
   }
 
-  private OptionalSweepingOutput resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
+  private RawOptionalSweepingOutput resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
     String name = refObject.getName();
     ExecutionSweepingOutputInstance instance = getInstance(ambiance, refObject);
     if (instance == null) {
-      return OptionalSweepingOutput.builder().found(false).build();
+      return RawOptionalSweepingOutput.builder().found(false).build();
     }
-    return OptionalSweepingOutput.builder()
+    return RawOptionalSweepingOutput.builder()
         .found(true)
         .output(RecastOrchestrationUtils.toDocumentJson(instance.getValue()))
         .build();

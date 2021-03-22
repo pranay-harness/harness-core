@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.pms.data.RawOptionalSweepingOutput;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
@@ -23,7 +24,11 @@ public class ExecutionSweepingOutputServiceImpl implements ExecutionSweepingOutp
 
   @Override
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
-    return pmsSweepingOutputService.resolveOptional(ambiance, refObject);
+    RawOptionalSweepingOutput sweepingOutput = pmsSweepingOutputService.resolveOptional(ambiance, refObject);
+    return OptionalSweepingOutput.builder()
+        .found(sweepingOutput.isFound())
+        .output(RecastOrchestrationUtils.fromDocumentJson(sweepingOutput.getOutput(), SweepingOutput.class))
+        .build();
   }
 
   @Override

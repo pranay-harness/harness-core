@@ -4,7 +4,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
-import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 
@@ -37,7 +36,7 @@ public interface PmsSweepingOutputService {
     throw new GroupNotFoundException(groupName);
   }
 
-  OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject);
+  RawOptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject);
 
   String consumeInternal(@NotNull Ambiance ambiance, @NotNull String name, String value, int levelsToKeep);
 }

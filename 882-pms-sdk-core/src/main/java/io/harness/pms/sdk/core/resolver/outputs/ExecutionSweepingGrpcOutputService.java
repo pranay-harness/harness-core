@@ -56,6 +56,9 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
     OptionalSweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
         SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
-    return RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), OptionalSweepingOutput.class);
+    return OptionalSweepingOutput.builder()
+        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), SweepingOutput.class))
+        .found(resolve.getFound())
+        .build();
   }
 }

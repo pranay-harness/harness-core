@@ -1,13 +1,13 @@
 package io.harness.pms.plan.execution.data.service.outputs;
 
 import io.harness.engine.pms.data.PmsSweepingOutputService;
+import io.harness.engine.pms.data.RawOptionalSweepingOutput;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceImplBase;
-import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
@@ -25,7 +25,7 @@ public class SweepingOutputServiceImpl extends SweepingOutputServiceImplBase {
   @Override
   public void resolveOptional(SweepingOutputResolveBlobRequest request,
       StreamObserver<OptionalSweepingOutputResolveBlobResponse> responseObserver) {
-    OptionalSweepingOutput resolve =
+    RawOptionalSweepingOutput resolve =
         pmsSweepingOutputService.resolveOptional(request.getAmbiance(), request.getRefObject());
     responseObserver.onNext(OptionalSweepingOutputResolveBlobResponse.newBuilder()
                                 .setStepTransput(resolve.getOutput())
