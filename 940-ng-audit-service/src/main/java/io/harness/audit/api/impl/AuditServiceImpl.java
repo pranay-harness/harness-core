@@ -144,12 +144,21 @@ public class AuditServiceImpl implements AuditService {
   }
 
   private void validateFilterRequest(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+    if (isEmpty(accountIdentifier)) {
+      throw new InvalidRequestException("Missing accountIdentifier in the audit filter request");
+    }
     if (auditFilterPropertiesDTO == null) {
       return;
     }
-    verifyScopes(accountIdentifier, auditFilterPropertiesDTO.getScopes());
-    verifyResources(auditFilterPropertiesDTO.getResources());
-    verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
+    if (isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
+      verifyScopes(accountIdentifier, auditFilterPropertiesDTO.getScopes());
+    }
+    if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
+      verifyResources(auditFilterPropertiesDTO.getResources());
+    }
+    if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
+      verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
+    }
 
     if (auditFilterPropertiesDTO.getStartTime() != null && auditFilterPropertiesDTO.getEndTime() != null
         && auditFilterPropertiesDTO.getStartTime() > auditFilterPropertiesDTO.getEndTime()) {
