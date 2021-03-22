@@ -14,6 +14,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.beans.SortOrder;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -24,7 +27,9 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.repositories.spring.ResourceGroupRepository;
 import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
@@ -71,6 +76,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   ResourceGroupRepository resourceGroupRepository;
   Producer eventProducer;
   Map<String, ResourceValidator> resourceValidators;
+  AccessControlAdminClient accessControlAdminClient;
 
   @Inject
   public ResourceGroupServiceImpl(
@@ -78,12 +84,14 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       @Named("DynamicResourceValidator") ResourceGroupValidatorService dynamicResourceGroupValidatorService,
       @Named("resourceValidatorMap") Map<String, ResourceValidator> resourceValidators,
       ResourceGroupRepository resourceGroupRepository,
-      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
+      AccessControlAdminClient accessControlAdminClient) {
     this.staticResourceGroupValidatorService = staticResourceGroupValidatorService;
     this.dynamicResourceGroupValidatorService = dynamicResourceGroupValidatorService;
     this.resourceValidators = resourceValidators;
     this.resourceGroupRepository = resourceGroupRepository;
     this.eventProducer = eventProducer;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Override
@@ -167,11 +175,11 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   }
 
   private boolean validate(ResourceGroup resourceGroup) {
-    if (resourceGroup.getFullScopeSelected() && isNotEmpty(resourceGroup.getResourceSelectors())) {
-      return false;
-    } else if (!resourceGroup.getFullScopeSelected() && isEmpty(resourceGroup.getResourceSelectors())) {
+    if ((resourceGroup.getFullScopeSelected() && isNotEmpty(resourceGroup.getResourceSelectors()))
+        || (!resourceGroup.getFullScopeSelected() && isEmpty(resourceGroup.getResourceSelectors()))) {
       return false;
     }
+
     boolean isValid = staticResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     isValid = isValid && dynamicResourceGroupValidatorService.isResourceGroupValid(resourceGroup);
     return isValid;
@@ -185,6 +193,17 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
                 identifier, accountIdentifier, orgIdentifier, projectIdentifier, false);
     if (resourceGroupOpt.isPresent()) {
       ResourceGroup resourceGroup = resourceGroupOpt.get();
+      RoleAssignmentFilterDTO roleAssignmentFilterDTO =
+          RoleAssignmentFilterDTO.builder()
+              .resourceGroupFilter(Collections.singleton(resourceGroup.getIdentifier()))
+              .build();
+      PageResponse<RoleAssignmentResponseDTO> pageResponse =
+          NGRestUtils.getResponse(accessControlAdminClient.getFilteredRoleAssignments(
+              accountIdentifier, orgIdentifier, projectIdentifier, 0, 10, roleAssignmentFilterDTO));
+      if (pageResponse.getPageItemCount() > 0) {
+        throw new InvalidRequestException(
+            "There exists role assignments with this resource group. Please delete them first and then try again");
+      }
       resourceGroup.setDeleted(true);
       resourceGroupRepository.save(resourceGroup);
       publishEvent(resourceGroupOpt.get(), EventsFrameworkMetadataConstants.DELETE_ACTION);
