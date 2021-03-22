@@ -7,6 +7,7 @@ import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
+import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
@@ -83,14 +84,17 @@ public class NewRelicServiceImpl implements NewRelicService {
 
       OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
       final Gson gson = new Gson();
-      Type type = new TypeToken<MetricPackValidationResponse>() {}.getType();
-      MetricPackValidationResponse validationResponse = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+      Type type = new TypeToken<List<MetricValidationResponse>>() {}.getType();
+      List<MetricValidationResponse> metricValidationResponseList =
+          gson.fromJson(JsonUtils.asJson(response.getResult()), type);
+      MetricPackValidationResponse validationResponse =
+          MetricPackValidationResponse.builder().metricValidationResponses(metricValidationResponseList).build();
       validationResponse.setOverallStatus(ThirdPartyApiResponseStatus.SUCCESS);
       validationResponse.updateStatus();
+      return validationResponse;
     } catch (DataCollectionException ex) {
       return MetricPackValidationResponse.builder().overallStatus(ThirdPartyApiResponseStatus.FAILED).build();
     }
-    return null;
   }
 
   @Override

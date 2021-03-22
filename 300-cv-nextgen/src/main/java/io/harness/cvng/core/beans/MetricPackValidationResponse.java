@@ -40,6 +40,16 @@ public class MetricPackValidationResponse {
   public static class MetricValidationResponse {
     private String metricName;
     private Double value;
-    private ThirdPartyApiResponseStatus status;
+    @Builder.Default private ThirdPartyApiResponseStatus status = ThirdPartyApiResponseStatus.SUCCESS;
+
+    public ThirdPartyApiResponseStatus getStatus() {
+      if (status == null && value != null) {
+        status = ThirdPartyApiResponseStatus.SUCCESS;
+        return status;
+      } else if (value == null) {
+        status = ThirdPartyApiResponseStatus.NO_DATA;
+      }
+      return status;
+    }
   }
 }
