@@ -14,6 +14,14 @@ events-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+cdc-mongo:
+  uri: mongodb://localhost:30001/change-data-capture
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessccmdev"
   timescaledbUsername: "harnessappdev"

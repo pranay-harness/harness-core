@@ -9,11 +9,14 @@ import io.harness.persistence.PersistentEntity;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
 import java.util.HashSet;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Singleton
 class ChangeDataCaptureHelper {
   @Inject private ChangeTracker changeTracker;
   @Inject private Set<CDCEntity<?>> cdcEntities;

@@ -36,6 +36,8 @@ import org.mongodb.morphia.converters.TypeConverter;
 public class ChangeDataCaptureApplication extends Application<ChangeDataCaptureServiceConfig> {
   public static final String EVENTS_DB = "events";
   public static final Store EVENTS_STORE = Store.builder().name(EVENTS_DB).build();
+  public static final String CDC_DB = "change-data-capture";
+  public static final Store CDC_STORE = Store.builder().name(CDC_DB).build();
 
   public static void main(String[] args) throws Exception {
     log.info("Starting Change Data Capture Application...");
@@ -93,9 +95,14 @@ public class ChangeDataCaptureApplication extends Application<ChangeDataCaptureS
 
   private static void registerStores(ChangeDataCaptureServiceConfig config, Injector injector) {
     final String eventsMongoUri = config.getEventsMongo().getUri();
+    final String cdcMongoUri = config.getCdcMongo().getUri();
     if (isNotEmpty(eventsMongoUri) && !eventsMongoUri.equals(config.getHarnessMongo().getUri())) {
       final HPersistence hPersistence = injector.getInstance(HPersistence.class);
       hPersistence.register(EVENTS_STORE, config.getEventsMongo().getUri());
+    }
+    if (isNotEmpty(cdcMongoUri) && !cdcMongoUri.equals(config.getHarnessMongo().getUri())) {
+      final HPersistence hPersistence = injector.getInstance(HPersistence.class);
+      hPersistence.register(CDC_STORE, config.getCdcMongo().getUri());
     }
   }
 

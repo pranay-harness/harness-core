@@ -15,5 +15,6 @@ import lombok.EqualsAndHashCode;
 public class ChangeDataCaptureServiceConfig extends Configuration {
   @JsonProperty("harness-mongo") private MongoConfig harnessMongo = MongoConfig.builder().build();
   @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().build();
+  @JsonProperty("cdc-mongo") private MongoConfig cdcMongo = MongoConfig.builder().build();
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
 }
