@@ -439,7 +439,7 @@ public class AuditServiceImpl implements AuditService {
     if (auditHeaderId == null) {
       return;
     }
-    AuditHeader header = auditHelper.get();
+    AuditHeader header = getAuditHeaderById(auditHeaderId);
     if (header == null) {
       return;
     }
@@ -470,23 +470,6 @@ public class AuditServiceImpl implements AuditService {
       updateOperation.set(AuditHeaderKeys.details, details);
       wingsPersistence.update(header, updateOperation);
       updateOperation.set(AuditHeaderKeys.createdBy, EmbeddedUser.builder().name("API").build());
-      wingsPersistence.update(header, updateOperation);
-    } else if (entity instanceof SSOSettings) {
-      SSOSettings ssoSettings = (SSOSettings) entity;
-      if (!ssoSettings.getType().equals(SSOType.OAUTH) && (type.equals(Type.CREATE) || type.equals(Type.DELETE))) {
-        return;
-      }
-      String userUuid = header.getCreatedBy().getUuid();
-      User user = userService.get(userUuid);
-      Account account = accountService.get(accountId);
-      details.put("Authentication", account.getAuthenticationMechanism());
-      details.put("MFA", user.isTwoFactorAuthenticationEnabled());
-      List<UserGroup> userGroupList = userService.getUserGroupsOfUserAudit(accountId, user.getUuid());
-      List<String> userGroupNamesList = new ArrayList<>();
-      userGroupList.forEach(userGroup -> userGroupNamesList.add(userGroup.getName()));
-      details.put("Groups", userGroupNamesList);
-      UpdateOperations<AuditHeader> updateOperation = wingsPersistence.createUpdateOperations(AuditHeader.class);
-      updateOperation.set(AuditHeaderKeys.details, details);
       wingsPersistence.update(header, updateOperation);
     } else {
       if (header.getCreatedBy() != null) {
