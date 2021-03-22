@@ -29,6 +29,7 @@ public class YAMLFieldNameConstants {
   public final String UUID = "uuid";
   public final String TIMEOUT = "timeout";
   public final String OUTPUT_VARIABLES = "outputVariables";
-  public static final String HEADERS = "headers";
-  public static final String OUTPUT = "output";
+  public final String HEADERS = "headers";
+  public final String OUTPUT = "output";
+  public final String ENVIRONMENT = "environment";
 }
