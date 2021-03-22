@@ -3,14 +3,12 @@ package io.harness.perpetualtask.instancesync;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
+
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
-import com.google.inject.Inject;
-
-import io.harness.connector.ConnectorInfoDTO;
-import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesConfig;
@@ -19,25 +17,19 @@ import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.ContainerInstanceSyncPerpetualTaskParamsNG;
-import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.ContainerServicePerpetualTaskParamsNG;
 import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.K8sContainerInstanceSyncPerpetualTaskParamsNG;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.jetty.server.Response;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.infrastructure.instance.info.ContainerInfo;
+
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.ContainerService;
 
+import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jetty.server.Response;
 
 @Slf4j
 public class ContainerInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExecutor {
@@ -45,9 +37,11 @@ public class ContainerInstanceSyncPerpetualTaskExecutorNG implements PerpetualTa
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private transient ContainerService containerService;
+  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
 
   @Override
-  public PerpetualTaskResponse runOnce(PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
+  public PerpetualTaskResponse runOnce(
+      PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
     ContainerInstanceSyncPerpetualTaskParamsNG taskParams =
         AnyUtils.unpack(params.getCustomizedParams(), ContainerInstanceSyncPerpetualTaskParamsNG.class);
@@ -55,76 +49,18 @@ public class ContainerInstanceSyncPerpetualTaskExecutorNG implements PerpetualTa
     return K8S.name().equals(taskParams.getContainerType())
         ? executeK8sContainerSyncTask(taskId, taskParams.getK8SContainerPerpetualTaskParams())
         : null;
-//        executeContainerServiceSyncTask(taskId, taskParams.getContainerServicePerpetualTaskParams());
   }
 
-//  private PerpetualTaskResponse executeContainerServiceSyncTask(PerpetualTaskId taskId, ContainerServicePerpetualTaskParamsNG containerServicePerpetualTaskParams) {
-//    final ConnectorInfoDTO connector = (ConnectorInfoDTO) kryoSerializer.asObject(
-//        containerServicePerpetualTaskParams.getConnector().toByteArray());
-//
-////    ContainerSyncResponse responseData =
-////        getContainerSyncResponse(containerServicePerpetualTaskParams, connector);
-//
-////    publishInstanceSyncResult(
-////        taskId, settingAttribute.getAccountId(), containerServicePerpetualTaskParams.getNamespace(), responseData);
-//
-//    boolean isFailureResponse = FAILURE == responseData.getCommandExecutionStatus();
-//    return PerpetualTaskResponse.builder()
-//        .responseCode(Response.SC_OK)
-//        .responseMessage(isFailureResponse ? responseData.getErrorMessage() : "success")
-//        .build();
-//  }
-//
-//  private ContainerSyncResponse getContainerSyncResponse(ContainerServicePerpetualTaskParamsNG containerServicePerpetualTaskParams, ConnectorInfoDTO connector) {
-//    @SuppressWarnings("unchecked")
-//    final List<EncryptedDataDetail> encryptedDataDetails = (List<EncryptedDataDetail>) kryoSerializer.asObject(
-//        containerServicePerpetualTaskParams.getEncryptionDetails().toByteArray());
-//
-//    ContainerServiceParams request =
-//        ContainerServiceParams.builder()
-//            .settingAttribute(connector)
-//            .containerServiceName(containerServicePerpetualTaskParams.getContainerSvcName())
-//            .encryptionDetails(encryptedDataDetails)
-//            .clusterName(containerServicePerpetualTaskParams.getClusterName())
-//            .namespace(containerServicePerpetualTaskParams.getNamespace())
-//            .region(containerServicePerpetualTaskParams.getRegion())
-//            .subscriptionId(containerServicePerpetualTaskParams.getSubscriptionId())
-//            .resourceGroup(containerServicePerpetualTaskParams.getResourceGroup())
-//            .masterUrl(containerServicePerpetualTaskParams.getMasterUrl())
-//            .releaseName(containerServicePerpetualTaskParams.getReleaseName())
-//            .build();
-//
-//    try {
-//      List<ContainerInfo> containerInfos = containerService.getContainerInfos(request, true);
-//      return ContainerSyncResponse.builder()
-//          .containerInfoList(containerInfos)
-//          .commandExecutionStatus((containerInfos != null) ? SUCCESS : FAILURE)
-//          .controllerName(request.getContainerServiceName())
-//          .build();
-//    } catch (Exception exception) {
-//      log.error(String.format("Failed to fetch containers info for namespace: [%s] and svc:[%s] ",
-//          containerServicePerpetualTaskParams.getNamespace(),
-//          containerServicePerpetualTaskParams.getContainerSvcName()),
-//          exception);
-//
-//      return ContainerSyncResponse.builder()
-//          .commandExecutionStatus(FAILURE)
-//          .errorMessage(exception.getMessage())
-//          .build();
-//    }
-//  }
-
-  private PerpetualTaskResponse executeK8sContainerSyncTask(PerpetualTaskId taskId, K8sContainerInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams) {
-    final ConnectorConfigDTO k8sClusterConfig = (ConnectorConfigDTO) kryoSerializer.asObject(
+  private PerpetualTaskResponse executeK8sContainerSyncTask(
+      PerpetualTaskId taskId, K8sContainerInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams) {
+    final KubernetesClusterConfigDTO k8sClusterConfig = (KubernetesClusterConfigDTO) kryoSerializer.asObject(
         k8SContainerPerpetualTaskParams.getK8SClusterConfig().toByteArray());
-//    KubernetesConfig kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, true);
-    KubernetesConfig kubernetesConfig = k8sTaskHelperBase.getKubernetesConfig(k8sClusterConfig, k8sClusterConfig.getDecryptableEntities());
+    KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
+        k8sClusterConfig, k8SContainerPerpetualTaskParams.getNamespace());
 
-
-    K8sTaskExecutionResponse responseData =
-        getK8sTaskResponse(k8SContainerPerpetualTaskParams, kubernetesConfig);
-//     publishInstanceSyncResult(taskId, k8sContainerInstanceSyncPerpetualTaskParams.getAccountId(),
-//        k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(), responseData);
+    K8sTaskExecutionResponse responseData = getK8sTaskResponse(k8SContainerPerpetualTaskParams, kubernetesConfig);
+    //     publishInstanceSyncResult(taskId, k8sContainerInstanceSyncPerpetualTaskParams.getAccountId(),
+    //        k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(), responseData);
 
     boolean isFailureResponse = FAILURE == responseData.getCommandExecutionStatus();
     return PerpetualTaskResponse.builder()
@@ -149,8 +85,7 @@ public class ContainerInstanceSyncPerpetualTaskExecutorNG implements PerpetualTa
 
     } catch (Exception exception) {
       log.error(String.format("Failed to fetch k8s pod list for namespace: [%s] and releaseName:[%s] ",
-          k8SContainerPerpetualTaskParams.getNamespace(),
-          k8SContainerPerpetualTaskParams.getReleaseName()),
+                    k8SContainerPerpetualTaskParams.getNamespace(), k8SContainerPerpetualTaskParams.getReleaseName()),
           exception);
       return K8sTaskExecutionResponse.builder()
           .commandExecutionStatus(FAILURE)
@@ -158,7 +93,6 @@ public class ContainerInstanceSyncPerpetualTaskExecutorNG implements PerpetualTa
           .build();
     }
   }
-
 
   @Override
   public boolean cleanup(PerpetualTaskId taskId, PerpetualTaskExecutionParams params) {
