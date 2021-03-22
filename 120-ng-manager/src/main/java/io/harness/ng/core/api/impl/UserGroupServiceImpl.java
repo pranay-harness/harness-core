@@ -96,25 +96,12 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup update(UserGroupDTO userGroupDTO) {
-    Optional<UserGroup> userGroupOptional = get(userGroupDTO.getAccountIdentifier(), userGroupDTO.getOrgIdentifier(),
+    UserGroup savedUserGroup = getOrThrow(userGroupDTO.getAccountIdentifier(), userGroupDTO.getOrgIdentifier(),
         userGroupDTO.getProjectIdentifier(), userGroupDTO.getIdentifier());
-    if (!userGroupOptional.isPresent()) {
-      throw new InvalidArgumentsException("User Group in the given scope does not exist");
-    }
-    UserGroup savedUserGroup = userGroupOptional.get();
     UserGroup userGroup = toEntity(userGroupDTO);
     userGroup.setId(savedUserGroup.getId());
     userGroup.setVersion(savedUserGroup.getVersion());
-    validate(userGroup);
-    try {
-      UserGroup updatedUserGroup = userGroupRepository.save(userGroup);
-      publishEvent(updatedUserGroup, EventsFrameworkMetadataConstants.UPDATE_ACTION);
-      return updatedUserGroup;
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format("Try using different user group identifier, [%s] cannot be used", userGroupDTO.getIdentifier()),
-          USER_SRE, ex);
-    }
+    return updateInternal(userGroup);
   }
 
   @Override
@@ -134,14 +121,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     } else if (isNotEmpty(userGroupFilterDTO.getIdentifierFilter())) {
       criteria.and(UserGroupKeys.identifier).in(userGroupFilterDTO.getIdentifierFilter());
     }
-    return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
-  }
-
-  @Override
-  public List<UserGroup> list(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Set<String> userGroupIdentifiers) {
-    Criteria criteria = createScopeCriteria(accountIdentifier, orgIdentifier, projectIdentifier);
-    criteria.and(UserGroupKeys.identifier).in(userGroupIdentifiers);
+    if (isNotEmpty(userGroupFilterDTO.getUserIdentifierFilter())) {
+      criteria.and(UserGroupKeys.users).in(userGroupFilterDTO.getUserIdentifierFilter());
+    }
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
   }
 
@@ -151,6 +133,51 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = userGroupRepository.delete(criteria);
     publishEvent(userGroup, EventsFrameworkMetadataConstants.DELETE_ACTION);
     return userGroup;
+  }
+
+  @Override
+  public boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    return existingUserGroup.getUsers().contains(userIdentifier);
+  }
+
+  @Override
+  public UserGroup addMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    existingUserGroup.getUsers().add(userIdentifier);
+    return updateInternal(existingUserGroup);
+  }
+
+  @Override
+  public UserGroup removeMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    existingUserGroup.getUsers().remove(userIdentifier);
+    return updateInternal(existingUserGroup);
+  }
+
+  private UserGroup getOrThrow(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    Optional<UserGroup> userGroupOptional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (!userGroupOptional.isPresent()) {
+      throw new InvalidArgumentsException("User Group in the given scope does not exist");
+    }
+    return userGroupOptional.get();
+  }
+
+  private UserGroup updateInternal(UserGroup userGroupUpdate) {
+    validate(userGroupUpdate);
+    try {
+      UserGroup updatedUserGroup = userGroupRepository.save(userGroupUpdate);
+      publishEvent(updatedUserGroup, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      return updatedUserGroup;
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(String.format("Try using different user group identifier, [%s] cannot be used",
+                                            userGroupUpdate.getIdentifier()),
+          USER_SRE, ex);
+    }
   }
 
   private void validate(UserGroup userGroup) {
