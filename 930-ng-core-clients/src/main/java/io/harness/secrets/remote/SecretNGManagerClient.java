@@ -8,6 +8,8 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.secrets.SecretResponseWrapper;
 import io.harness.rest.RestResponse;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.serializer.kryo.KryoRequest;
+import io.harness.serializer.kryo.KryoResponse;
 
 import java.util.List;
 import retrofit2.Call;
@@ -37,6 +39,8 @@ public interface SecretNGManagerClient {
       @Query(value = NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size);
 
   @POST(SECRETS_API + "/encryption-details")
+  @KryoRequest
+  @KryoResponse
   Call<RestResponse<List<EncryptedDataDetail>>> getEncryptionDetails(
       @Body NGAccessWithEncryptionConsumer ngAccessWithEncryptionConsumer);
 }

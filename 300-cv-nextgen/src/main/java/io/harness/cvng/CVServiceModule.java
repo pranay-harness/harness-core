@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -213,7 +214,8 @@ public class CVServiceModule extends AbstractModule {
           ServiceHttpClientConfig.builder()
               .baseUrl(verificationConfiguration.getNgManagerServiceConfig().getNgManagerUrl())
               .build(),
-          verificationConfiguration.getNgManagerServiceConfig().getManagerServiceSecret(), "ng-manager"));
+          verificationConfiguration.getNgManagerServiceConfig().getManagerServiceSecret(),
+          AuthorizationServiceHeader.CV_NEXT_GEN.name()));
       install(DelegateServiceDriverModule.getInstance());
       bind(VersionInfoManager.class).toInstance(versionInfoManager);
       bind(HPersistence.class).to(MongoPersistence.class);

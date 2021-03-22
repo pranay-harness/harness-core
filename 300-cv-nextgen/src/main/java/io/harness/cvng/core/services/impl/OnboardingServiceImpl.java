@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.secrets.SecretNGManagerClientModule.SECRET_NG_MANAGER_CLIENT_SERVICE;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nonnull;
+import javax.inject.Named;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -39,7 +41,7 @@ public class OnboardingServiceImpl implements OnboardingService {
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private NextGenService nextGenService;
   @Inject private Map<DataSourceType, DataSourceConnectivityChecker> dataSourceTypeToServiceMapBinder;
-  @Inject private SecretManagerClientService secretManagerClientService;
+  @Inject @Named(SECRET_NG_MANAGER_CLIENT_SERVICE) private SecretManagerClientService secretManagerClientService;
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
 
   @Override
@@ -71,9 +73,6 @@ public class OnboardingServiceImpl implements OnboardingService {
             .build();
     OnboardingTaskResponse delegateResponseData =
         (OnboardingTaskResponse) delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    //	  String response =
-    //        verificationManagerService.getDataCollectionResponse(accountId, onboardingRequestDTO.getOrgIdentifier(),
-    //            onboardingRequestDTO.getProjectIdentifier(), onboardingRequestDTO.getDataCollectionRequest());
     log.debug("response", delegateResponseData);
     return OnboardingResponseDTO.builder()
         .accountId(accountId)
