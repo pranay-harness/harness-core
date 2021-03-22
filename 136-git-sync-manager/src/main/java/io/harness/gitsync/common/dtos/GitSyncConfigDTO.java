@@ -1,5 +1,8 @@
 package io.harness.gitsync.common.dtos;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 
 import java.util.List;
@@ -12,6 +15,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(DX)
 public class GitSyncConfigDTO {
   private String identifier;
   @Trimmed private String projectId;

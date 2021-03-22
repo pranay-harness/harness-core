@@ -1,10 +1,12 @@
 package io.harness.gitsync.core.remote;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.core.service.GitSyncTriggerService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.PublicApiWithWhitelist;
@@ -28,6 +30,7 @@ import lombok.AllArgsConstructor;
 @Produces({"application/json", "text/yaml", "text/html"})
 @Consumes({"application/json", "text/yaml", "text/html", "text/plain"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class GitSyncTriggerResource {
   GitSyncTriggerService gitSyncTriggerService;
 

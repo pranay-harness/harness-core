@@ -1,7 +1,9 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.encryption.ScopeHelper.getScope;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class GitSyncManagerInterfaceImpl implements GitSyncManagerInterface {
   private GitFileLocationRepository gitFileLocationRepository;
   private YamlGitConfigService yamlGitConfigService;
