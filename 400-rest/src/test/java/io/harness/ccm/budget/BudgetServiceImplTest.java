@@ -16,6 +16,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.Budget.BudgetBuilder;
 import io.harness.ccm.budget.dao.BudgetDao;
@@ -58,6 +60,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetServiceImplTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private BudgetDao budgetDao;

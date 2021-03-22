@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetAlertsQueryMetadata {
   private static final BudgetAlertsTableSchema schema = new BudgetAlertsTableSchema();
   enum DataType { STRING, INTEGER, TIMESTAMP, DOUBLE }

@@ -12,6 +12,8 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.ApplicationBudgetScope;
@@ -41,6 +43,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetTrendStatsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock BudgetService budgetService;
   @Mock private DataFetcherUtils utils;

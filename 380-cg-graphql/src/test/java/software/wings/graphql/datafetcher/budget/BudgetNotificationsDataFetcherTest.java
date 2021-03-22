@@ -11,6 +11,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.ApplicationBudgetScope;
@@ -46,6 +48,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@TargetModule(Module._375_CE_GRAPHQL)
 public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
   @Mock BudgetService budgetService;
