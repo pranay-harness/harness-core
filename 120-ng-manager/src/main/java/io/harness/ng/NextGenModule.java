@@ -197,7 +197,9 @@ public class NextGenModule extends AbstractModule {
   @Named("yaml-schema-mapper")
   @Singleton
   public ObjectMapper getYamlSchemaObjectMapper() {
-    return Jackson.newObjectMapper();
+    ObjectMapper objectMapper = Jackson.newObjectMapper();
+    NextGenApplication.configureObjectMapper(objectMapper);
+    return objectMapper;
   }
 
   @Provides

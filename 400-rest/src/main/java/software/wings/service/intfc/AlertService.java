@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.alert.AlertData;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.concurrent.Future;
 import javax.ws.rs.QueryParam;
 
-@TargetModule(Module._470_ALERT)
+@TargetModule(HarnessModule._470_ALERT)
 public interface AlertService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Alert> list(PageRequest<Alert> pageRequest);
 

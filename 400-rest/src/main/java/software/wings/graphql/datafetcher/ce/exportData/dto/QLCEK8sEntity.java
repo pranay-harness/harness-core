@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.ce.exportData.dto;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "CEK8sEntityKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLCEK8sEntity {
   String namespace;
   String workload;

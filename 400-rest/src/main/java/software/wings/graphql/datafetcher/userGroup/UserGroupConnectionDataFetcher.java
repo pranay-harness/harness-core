@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.userGroup;
 
 import static software.wings.graphql.utils.nameservice.NameService.user;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.GraphQLException;
 import io.harness.exception.WingsException;
@@ -30,7 +30,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UserGroupConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLUserGroupFilter, QLNoOpSortCriteria, QLUserGroupConnection> {
   @Inject UserGroupController userGroupController;

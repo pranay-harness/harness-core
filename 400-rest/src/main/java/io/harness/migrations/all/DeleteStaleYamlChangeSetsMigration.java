@@ -6,7 +6,7 @@ import static software.wings.yaml.gitSync.YamlChangeSet.Status.COMPLETED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.FAILED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -21,7 +21,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class DeleteStaleYamlChangeSetsMigration implements Migration {
   public static final String BATCH_SIZE = "500";
   public static final int RETENTION_PERIOD_IN_DAYS = 30;

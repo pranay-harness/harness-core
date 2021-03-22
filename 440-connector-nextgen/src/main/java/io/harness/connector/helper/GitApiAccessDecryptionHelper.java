@@ -1,5 +1,8 @@
 package io.harness.connector.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -9,6 +12,7 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Singleton;
 
 @Singleton
+@OwnedBy(DX)
 public class GitApiAccessDecryptionHelper {
   public DecryptableEntity getAPIAccessDecryptableEntity(GithubConnectorDTO githubConnectorDTO) {
     if (githubConnectorDTO == null || githubConnectorDTO.getApiAccess() == null) {

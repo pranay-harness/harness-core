@@ -1,8 +1,10 @@
 package io.harness.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaHelper;
 import io.harness.yaml.snippets.helper.YamlSnippetHelper;
@@ -16,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(DX)
 public class YamlSdkInitHelper {
   public static void initialize(Injector injector, YamlSdkConfiguration yamlSdkConfiguration) {
     YamlSchemaGenerator yamlSchemaGenerator = injector.getInstance(YamlSchemaGenerator.class);

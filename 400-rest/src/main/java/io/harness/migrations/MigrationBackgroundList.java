@@ -1,6 +1,6 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
 import io.harness.migrations.all.AddAccountIdToBarrierInstanceCollection;
@@ -116,7 +116,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrationBackgroundList {
   /**
    * Add your background migrations to the end of the list with the next sequence number.

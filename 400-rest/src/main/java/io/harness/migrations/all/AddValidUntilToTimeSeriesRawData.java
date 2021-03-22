@@ -7,7 +7,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddValidUntilToTimeSeriesRawData implements Migration {
   @Inject private DataStoreService dataStoreService;
 

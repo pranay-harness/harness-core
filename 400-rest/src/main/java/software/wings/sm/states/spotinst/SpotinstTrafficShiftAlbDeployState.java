@@ -1,5 +1,6 @@
 package software.wings.sm.states.spotinst;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.spotinst.model.SpotInstConstants.DEPLOYMENT_ERROR;
 import static io.harness.spotinst.model.SpotInstConstants.PHASE_PARAM;
@@ -13,6 +14,7 @@ import static software.wings.sm.states.spotinst.SpotInstDeployState.SPOTINST_DEP
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
@@ -56,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @ToString
 @Slf4j
+@OwnedBy(CDP)
 public class SpotinstTrafficShiftAlbDeployState extends State {
   @Getter @Setter private InstanceUnitType instanceUnitType = PERCENTAGE;
   @Getter @Setter private String instanceCountExpr = "100";

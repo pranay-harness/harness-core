@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.ContextElementType;
 
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -16,6 +19,7 @@ import lombok.Value;
  */
 @Value
 @Builder
+@OwnedBy(CDP)
 public class AwsLambdaFunctionElement implements ContextElement {
   private String uuid;
   private String name;

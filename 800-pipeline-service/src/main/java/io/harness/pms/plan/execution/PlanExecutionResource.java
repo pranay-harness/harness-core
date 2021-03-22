@@ -12,6 +12,7 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTO
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -45,6 +46,7 @@ public class PlanExecutionResource {
   @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
   @Inject private final PMSExecutionService pmsExecutionService;
   @Inject private final TriggeredByHelper triggeredByHelper;
+  @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
 
   @POST
   @Path("/{identifier}")
@@ -141,5 +143,13 @@ public class PlanExecutionResource {
       @NotNull @QueryParam("preflightCheckId") String preflightCheckId,
       @ApiParam(hidden = true) String inputSetPipelineYaml) {
     return ResponseDTO.newResponse(pipelineExecuteHelper.getPreflightCheckResponse(preflightCheckId));
+  }
+
+  @GET
+  @ApiOperation(value = "Run a schema on db.", nickname = "runSchemaOnDb")
+  @Path("/internal/runSchema")
+  public ResponseDTO<String> runASchemaMigration() {
+    orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
+    return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
   }
 }

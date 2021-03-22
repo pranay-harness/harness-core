@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.gitsync.common.beans.YamlChangeSet.MAX_RETRY_COUNT_EXCEEDED_CODE;
@@ -9,6 +10,7 @@ import static io.harness.gitsync.common.beans.YamlChangeSet.Status.SKIPPED;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.NoResultFoundException;
 import io.harness.exception.WingsException;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(DX)
 public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private YamlGitService yamlGitService;
   @Inject private YamlChangeSetRepository yamlChangeSetRepository;

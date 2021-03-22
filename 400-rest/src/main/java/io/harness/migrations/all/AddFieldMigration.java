@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static software.wings.beans.Base.ID_KEY2;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 /**
  * Created by rsingh on 3/26/18.
  */
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public abstract class AddFieldMigration implements Migration {
   @Inject WingsPersistence wingsPersistence;
 

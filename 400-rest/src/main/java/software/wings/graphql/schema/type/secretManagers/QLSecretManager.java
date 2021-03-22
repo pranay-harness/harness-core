@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.secretManagers;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLObject;
@@ -16,7 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLSecretManagerKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLSecretManager implements QLObject {
   String id;
   String name;

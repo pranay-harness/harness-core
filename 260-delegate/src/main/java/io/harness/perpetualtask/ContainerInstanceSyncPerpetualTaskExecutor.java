@@ -7,7 +7,7 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private transient K8sTaskHelper k8sTaskHelper;

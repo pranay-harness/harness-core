@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.beans.Base.ID_KEY2;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by rsingh on 3/26/18.
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TimeSeriesAnalysisRecordsMigration implements Migration {
   @Inject WingsPersistence wingsPersistence;
 

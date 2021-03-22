@@ -1,9 +1,11 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * Created by Pranjal on 01/29/2019
  */
 @Slf4j
+@OwnedBy(CDP)
 public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;

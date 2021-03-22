@@ -95,11 +95,12 @@ public class PmsDelegateAsyncServiceImpl implements DelegateAsyncService {
           .build());
 
   @Override
-  public void setupTimeoutForTask(String taskId, long expiry) {
+  public void setupTimeoutForTask(String taskId, long expiry, long holdUntil) {
     persistence.save(DelegateAsyncTaskResponse.builder()
                          .uuid(taskId)
                          .responseData(getTimeoutMessage())
                          .processAfter(expiry)
+                         .holdUntil(holdUntil)
                          .build());
   }
 }

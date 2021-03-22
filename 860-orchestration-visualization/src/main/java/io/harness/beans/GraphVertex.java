@@ -11,6 +11,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.beans.RepresentationStrategy;
@@ -58,6 +59,7 @@ public class GraphVertex implements Serializable {
   private Map<String, List<ProgressData>> progressDataMap;
 
   private SkipInfo skipInfo;
+  private NodeRunInfo nodeRunInfo;
   // skip
   private SkipType skipType;
 

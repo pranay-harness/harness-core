@@ -1,6 +1,6 @@
 package io.harness.delegate.beans;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.Set;
@@ -11,7 +11,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ScopingRuleDetailsKeys")
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class ScopingRuleDetails {
   private String description;
 

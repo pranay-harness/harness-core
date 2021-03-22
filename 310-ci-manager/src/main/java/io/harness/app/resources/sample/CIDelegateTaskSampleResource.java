@@ -14,6 +14,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.time.Duration;
 import java.util.Map;
 import java.util.function.Supplier;
 import javax.ws.rs.Consumes;
@@ -60,7 +61,8 @@ public class CIDelegateTaskSampleResource {
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
 
-    String taskId = delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken);
+    String taskId =
+        delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken, Duration.ZERO);
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, new SampleNotifyCallback(), taskId);
     return String.format("{\"accountId\": \"%s\", \"taskId\": \"%s\", \"token\": \"%s\"}", accountId, taskId,
         delegateCallbackToken.getToken());
@@ -84,7 +86,8 @@ public class CIDelegateTaskSampleResource {
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
     DelegateCallbackToken delegateCallbackToken = delegateCallbackTokenSupplier.get();
-    final String taskId = delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken);
+    final String taskId =
+        delegateServiceGrpcClient.submitAsyncTask(delegateTaskRequest, delegateCallbackToken, Duration.ZERO);
 
     waitNotifyEngine.waitForAllOn(ORCHESTRATION, new SampleNotifyCallback(), taskId);
     return String.format("{\"accountId\": \"%s\", \"taskId\": \"%s\", \"token\": \"%s\"}", accountId, taskId,

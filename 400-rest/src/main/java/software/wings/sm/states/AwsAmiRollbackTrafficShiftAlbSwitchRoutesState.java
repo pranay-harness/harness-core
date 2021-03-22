@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.spotinst.model.SpotInstConstants.DOWN_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 import static io.harness.spotinst.model.SpotInstConstants.UP_SCALE_STEADY_STATE_WAIT_COMMAND_UNIT;
 
@@ -8,6 +9,7 @@ import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING
 
 import static java.util.Collections.emptyMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -24,6 +26,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(CDP)
 public class AwsAmiRollbackTrafficShiftAlbSwitchRoutesState extends AwsAmiTrafficShiftAlbSwitchRoutesState {
   public AwsAmiRollbackTrafficShiftAlbSwitchRoutesState(String name) {
     super(name, StateType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES.name());

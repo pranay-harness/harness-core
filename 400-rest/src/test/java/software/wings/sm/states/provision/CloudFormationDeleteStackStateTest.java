@@ -1,5 +1,6 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.BOJANA;
 
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
@@ -70,6 +72,7 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDP)
 public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
   @Mock private ExecutionContextImpl mockContext;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;

@@ -18,7 +18,7 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -104,7 +104,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Attributes(title = "Env")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvStateKeys")
-@TargetModule(Module._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
 public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 

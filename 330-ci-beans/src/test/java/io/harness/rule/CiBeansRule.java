@@ -21,6 +21,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +31,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import io.dropwizard.jackson.Jackson;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
@@ -115,6 +117,13 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       @Singleton
       List<YamlSchemaRootClass> yamlSchemaRootClass() {
         return ImmutableList.<YamlSchemaRootClass>builder().addAll(CiBeansRegistrars.yamlSchemaRegistrars).build();
+      }
+
+      @Provides
+      @Named("yaml-schema-mapper")
+      @Singleton
+      public ObjectMapper getYamlSchemaObjectMapper() {
+        return Jackson.newObjectMapper();
       }
     });
 

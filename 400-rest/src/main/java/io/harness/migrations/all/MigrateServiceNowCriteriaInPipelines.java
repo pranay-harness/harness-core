@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.migrations.Migration;
@@ -23,7 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrateServiceNowCriteriaInPipelines implements Migration {
   @Inject private PipelineService pipelineService;
   @Inject private AppService appService;

@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRecordKeys;
@@ -8,7 +8,7 @@ import software.wings.service.impl.analysis.LogMLAnalysisRecord.LogMLAnalysisRec
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddAccountIdToLogAnalysisRecordsMigration extends AddAccountIdToCollectionUsingAppIdMigration {
   @Override
   protected String getCollectionName() {

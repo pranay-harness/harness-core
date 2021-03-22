@@ -1,5 +1,7 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.utils.EcsConvention.getRevisionFromServiceName;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
@@ -7,7 +9,8 @@ import static java.lang.String.format;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.WingsException;
@@ -40,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(CDP)
 public class AwsClusterServiceImpl implements AwsClusterService {
   @Inject private EcsContainerService ecsContainerService;
 

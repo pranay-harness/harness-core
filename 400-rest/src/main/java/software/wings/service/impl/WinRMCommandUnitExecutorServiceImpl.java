@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
@@ -12,6 +13,7 @@ import static software.wings.common.Constants.WINDOWS_HOME_DIR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -51,6 +53,7 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorService {
   @Inject private DelegateLogService logService;
   @Inject private TimeLimiter timeLimiter;

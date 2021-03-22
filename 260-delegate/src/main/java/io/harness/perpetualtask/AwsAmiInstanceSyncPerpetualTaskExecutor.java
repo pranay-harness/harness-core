@@ -1,8 +1,10 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.network.SafeHttpCall.execute;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.grpc.utils.AnyUtils;
@@ -23,7 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class AwsAmiInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
