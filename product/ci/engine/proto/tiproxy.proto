@@ -18,14 +18,15 @@ message SelectTestsRequest {
   string repo = 2;
   string sha = 3;
   string branch = 4;
-  repeated string diff_files = 5;  // List of files which have been modified in the PR.
+  // List of files which have been modified in the PR. This is marshalled form of types.File{}
+  string diff_files = 5;
 }
 
 // (TODO): `tests` should ideally be a protobuf defined in a single place.
 // Needs to be changed in other places as well. Right now proxy interaction
 // is done using JSON.
 message SelectTestsResponse {
-  repeated string tests = 1;
+  string selected = 1;
 }
 
 service TiProxy {

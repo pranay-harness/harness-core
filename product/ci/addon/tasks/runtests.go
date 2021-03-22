@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"os"
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -21,7 +22,10 @@ const (
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
 	bazelCmd                     = "bazel"
-	mvnAgentArg                  = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s/config.ini"
+	outDir                       = "%s/ti/callgraph/" // path passed as outDir in the config.ini file
+	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
+	// as it is also used in init container.
+	javaAgentArg = "-DargLine=-javaagent:=/step-exec/.harness/bin/java-agent.jar:%s"
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -31,11 +35,13 @@ type RunTestsTask interface {
 
 type runTestsTask struct {
 	id                   string
+	fs                   filesystem.FileSystem
 	displayName          string
 	reports              []*pb.Report
-	diffFiles            []string
+	diffFiles            string
 	timeoutSecs          int64
 	numRetries           int32
+	tmpFilePath          string
 	preCommand           string // command to run before the actual tests
 	postCommand          string // command to run after the test execution
 	args                 string // custom flags to run the tests
@@ -51,9 +57,10 @@ type runTestsTask struct {
 	cmdContextFactory    exec.CmdContextFactory
 }
 
-func NewRunTestsTask(step *pb.UnitStep, log *zap.SugaredLogger,
+func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogger,
 	w io.Writer, logMetrics bool, addonLogger *zap.SugaredLogger) RunTestsTask {
 	r := step.GetRunTests()
+	fs := filesystem.NewOSFileSystem(log)
 	timeoutSecs := r.GetContext().GetExecutionTimeoutSecs()
 	if timeoutSecs == 0 {
 		timeoutSecs = defaultRunTestsTimeout
@@ -65,9 +72,11 @@ func NewRunTestsTask(step *pb.UnitStep, log *zap.SugaredLogger,
 	}
 	return &runTestsTask{
 		id:                   step.GetId(),
+		fs:                   fs,
 		displayName:          step.GetDisplayName(),
 		timeoutSecs:          timeoutSecs,
 		diffFiles:            r.GetDiffFiles(),
+		tmpFilePath:          tmpFilePath,
 		numRetries:           numRetries,
 		reports:              r.GetReports(),
 		preCommand:           r.GetPreTestCommand(),
@@ -117,11 +126,44 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	return r.numRetries, err
 }
 
+// createJavaAgentArg creates the ini file which is required as input to the java agent
+// and returns back the arg to be added to the test command for generation of partial
+// call graph.
+func (r *runTestsTask) createJavaAgentArg() (string, error) {
+	// Create config file
+	dir := fmt.Sprintf(outDir, r.tmpFilePath)
+	err := os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
+		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
+		return "", err
+	}
+	data := fmt.Sprintf(`
+outDir: %s
+logLevel: 0
+logConsole: false
+writeTo: COVERAGE_JSON
+instrPackages: %s
+testAnnotations: %s`, dir, r.packages, r.annotations)
+	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
+	r.log.Infow(fmt.Sprintf("attempting to write %s to %s", data, iniFile))
+	err = ioutil.WriteFile(iniFile, []byte(data), 0644)
+	if err != nil {
+		r.log.Errorw(fmt.Sprintf("could not write %s to file %s", data, iniFile), zap.Error(err))
+		return "", err
+	}
+	// Return java agent arg
+	return fmt.Sprintf(javaAgentArg, iniFile), nil
+}
+
 func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
+	instrArg, err := r.createJavaAgentArg()
+	if err != nil {
+		return "", err
+	}
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		// TODO -- Aman - check if instumentation is required here too.
-		return fmt.Sprintf("%s %s -am", mvnCmd, r.args), nil
+		return fmt.Sprintf("%s %s -am %s", mvnCmd, r.args, instrArg), nil
 	}
 	if len(tests) == 0 {
 		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
@@ -139,22 +181,22 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 		ut = append(ut, t.Class)
 	}
 	testStr := strings.Join(ut, ",")
-	wrkspcPath, err := external.GetWrkspcPath()
-	if err != nil {
-		return "", errors.Wrap(err, "error while getting maven command")
-	}
-	fAgentArg := fmt.Sprintf(mvnAgentArg, wrkspcPath)
-	return fmt.Sprintf("%s %s -Dtest=%s -am %s", mvnCmd, r.args, testStr, fAgentArg), nil
+	return fmt.Sprintf("%s %s -Dtest=%s -am %s", mvnCmd, r.args, testStr, instrArg), nil
 }
 
-func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) string {
-	defaultCmd := fmt.Sprintf("%s %s //...", bazelCmd, r.args) // run all the tests
+func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
+	instrArg, err := r.createJavaAgentArg()
+	if err != nil {
+		return "", err
+	}
+	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
+	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
 	if !r.runOnlySelectedTests {
 		// Run all the tests
-		return defaultCmd
+		return defaultCmd, nil
 	}
 	if len(tests) == 0 {
-		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\"")
+		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
 	}
 	// Use only unique classes
 	pkgs := []string{}
@@ -180,12 +222,12 @@ func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTe
 			r.log.Errorw(fmt.Sprintf("could not find an appropriate rule for pkgs %s and class %s", pkgs[i], clss[i]),
 				"index", i, "command", c, zap.Error(err))
 			// Run all the tests
-			return defaultCmd
+			return defaultCmd, nil
 		}
 		rules = append(rules, strings.TrimSuffix(string(resp), "\n"))
 	}
 	testList := strings.Join(rules, " ")
-	return fmt.Sprintf("%s %s %s", bazelCmd, r.args, testList)
+	return fmt.Sprintf("%s %s %s %s", bazelCmd, r.args, bazelInstrArg, testList), nil
 }
 
 func valid(tests []types.RunnableTest) bool {
@@ -200,17 +242,21 @@ func valid(tests []types.RunnableTest) bool {
 func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	// Get the tests that need to be run if we are running selected tests
 	var err error
-	tests := []types.RunnableTest{}
+	var selection types.SelectTestsResp
 	if r.runOnlySelectedTests {
-		tests, err = selectTests(ctx, r.diffFiles, r.id, r.log)
+		selection, err = selectTests(ctx, r.diffFiles, r.id, r.log)
 		if err != nil {
 			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
 			// Set run only selected tests to false if there was some issue in the response
 			r.runOnlySelectedTests = false
-		}
-		if !valid(tests) {
-			r.log.Warnw("did not receive accurate test list from TI service. This may be because TI service wants to run all the tests to be sure. Running all the tests")
+		} else if selection.SelectAll == true {
+			r.log.Infow("TI service wants to run all the tests to be sure")
 			r.runOnlySelectedTests = false
+		} else if !valid(selection.Tests) { // This shouldn't happen
+			r.log.Warnw("did not receive accurate test list from TI service.")
+			r.runOnlySelectedTests = false
+		} else {
+			r.log.Infow(fmt.Sprintf("got tests list: %s from TI service", selection.Tests))
 		}
 	}
 
@@ -218,13 +264,16 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	switch r.buildTool {
 	case "maven":
 		r.log.Infow("setting up maven as the build tool")
-		testCmd, err = r.getMavenCmd(tests)
+		testCmd, err = r.getMavenCmd(selection.Tests)
 		if err != nil {
 			return "", err
 		}
 	case "bazel":
 		r.log.Infow("setting up bazel as the build tool")
-		testCmd = r.getBazelCmd(ctx, tests)
+		testCmd, err = r.getBazelCmd(ctx, selection.Tests)
+		if err != nil {
+			return "", err
+		}
 	default:
 		return "", fmt.Errorf("build tool %s is not suported", r.buildTool)
 	}

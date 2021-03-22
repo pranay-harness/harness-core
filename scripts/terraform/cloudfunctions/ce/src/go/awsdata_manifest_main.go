@@ -46,18 +46,18 @@ type AdditionalArtifact struct {
 
 //ManifestJson : The Json Structure AWS publishes in the CUR report
 type manifestJSON struct {
-	AssemblyID             string                   `json:"assemblyId"`
-	Account                string                   `json:"account"`
-	Columns                []Column                 `json:"columns"`
-	Charset                string                   `json:"charset"`
-	Compression            string                   `json:"compression"`
-	ContentType            string                   `json:"contentType"`
-	ReportID               string                   `json:"reportId"`
-	ReportName             string                   `json:"reportName"`
-	BillingPeriod          BillingPeriod            `json:"billingPeriod"`
-	Bucket                 string                   `json:"bucket"`
-	ReportKeys             []string                 `json:"reportKeys"`
-	AdditionalArtifactKeys []AdditionalArtifact     `json:"additionalArtifactKeys"`
+	AssemblyID             string               `json:"assemblyId"`
+	Account                string               `json:"account"`
+	Columns                []Column             `json:"columns"`
+	Charset                string               `json:"charset"`
+	Compression            string               `json:"compression"`
+	ContentType            string               `json:"contentType"`
+	ReportID               string               `json:"reportId"`
+	ReportName             string               `json:"reportName"`
+	BillingPeriod          BillingPeriod        `json:"billingPeriod"`
+	Bucket                 string               `json:"bucket"`
+	ReportKeys             []string             `json:"reportKeys"`
+	AdditionalArtifactKeys []AdditionalArtifact `json:"additionalArtifactKeys"`
 }
 
 //CreateTable : is responsible for creating a Table in BigQuery
@@ -112,9 +112,9 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 		fmt.Println("Could not Deserialise Manifest File: {}", readingErr.Error())
 		return nil
 	} else if jsonData.Columns == nil {
-	  fmt.Println("Could not Deserialise Manifest File. No columns found. Exiting")
-	  return nil
-  }
+		fmt.Println("Could not Deserialise Manifest File. No columns found. Exiting")
+		return nil
+	}
 
 	createDataSet := true
 	datasetsIterator := client.Datasets(ctxBack)
@@ -284,7 +284,7 @@ func getMappedDataColumn(dataType string) bigquery.FieldType {
 	case "BigDecimal":
 		modifiedDataType = bigquery.FloatFieldType
 	case "OptionalBigDecimal":
-      modifiedDataType = bigquery.FloatFieldType
+		modifiedDataType = bigquery.FloatFieldType
 	default:
 		modifiedDataType = bigquery.StringFieldType
 	}
