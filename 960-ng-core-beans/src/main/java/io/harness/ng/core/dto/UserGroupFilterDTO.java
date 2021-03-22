@@ -9,6 +9,7 @@ import lombok.Value;
 public class UserGroupFilterDTO {
   Set<String> databaseIdFilter;
   Set<String> identifierFilter;
+  Set<String> userIdentifierFilter;
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
