@@ -19,6 +19,9 @@ message SelectTestsRequest {
   string sha = 3;
   string branch = 4;
   // List of files which have been modified in the PR. This is marshalled form of types.File{}
+  // This is done to avoid redefining the structs in code as well as proto.
+  // Calls via lite engine use json encoded structs and can be decoded
+  // on the TI service.
   string diff_files = 5;
 }
 

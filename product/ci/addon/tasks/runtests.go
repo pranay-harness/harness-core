@@ -34,11 +34,15 @@ type RunTestsTask interface {
 }
 
 type runTestsTask struct {
-	id                   string
-	fs                   filesystem.FileSystem
-	displayName          string
-	reports              []*pb.Report
-	diffFiles            string
+	id          string
+	fs          filesystem.FileSystem
+	displayName string
+	reports     []*pb.Report
+	// List of files which have been modified in the PR. This is marshalled form of types.File{}
+	// This is done to avoid redefining the structs in code as well as proto.
+	// Calls via lite engine use json encoded structs and can be decoded
+	// on the TI service.
+	diffFiles            string // JSON encoded string of a types.File{} object
 	timeoutSecs          int64
 	numRetries           int32
 	tmpFilePath          string
