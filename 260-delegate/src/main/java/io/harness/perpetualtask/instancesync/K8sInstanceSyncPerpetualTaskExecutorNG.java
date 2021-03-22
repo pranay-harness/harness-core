@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.server.Response;
 
 @Slf4j
-public class ContainerInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExecutor {
+public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExecutor {
   @Inject private transient KryoSerializer kryoSerializer;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;

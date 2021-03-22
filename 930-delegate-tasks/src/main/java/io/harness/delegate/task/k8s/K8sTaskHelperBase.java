@@ -2076,7 +2076,7 @@ public class K8sTaskHelperBase {
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
   }
 
-  public KubernetesConfig getKubernetesConfig(
+  private KubernetesConfig getKubernetesConfig(
       ConnectorConfigDTO connector, List<EncryptedDataDetail> encryptionDetailList) {
     KubernetesClusterConfigDTO kubernetesClusterConfig = (KubernetesClusterConfigDTO) connector;
     if (kubernetesClusterConfig.getCredential().getKubernetesCredentialType()
