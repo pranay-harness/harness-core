@@ -1,5 +1,6 @@
 package io.harness.delegate.k8s;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.K8sCommandUnitConstants.Apply;
@@ -153,11 +154,12 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
     k8sCanaryHandlerConfig.setReleaseHistory(releaseHistory);
     try {
       k8sTaskHelperBase.deleteSkippedManifestFiles(k8sCanaryHandlerConfig.getManifestFilesDirectory(), logCallback);
-
+      List<String> manifestHelperFiles =
+          isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
       List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplate(k8sDelegateTaskParams,
-          request.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-          request.getValuesYamlList(), request.getReleaseName(),
-          k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace(), logCallback, request.getTimeoutIntervalInMin());
+          request.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(), manifestHelperFiles,
+          request.getReleaseName(), k8sCanaryHandlerConfig.getKubernetesConfig().getNamespace(), logCallback,
+          request.getTimeoutIntervalInMin());
 
       List<KubernetesResource> resources = k8sTaskHelperBase.readManifests(manifestFiles, logCallback);
       k8sTaskHelperBase.setNamespaceToKubernetesResourcesIfRequired(

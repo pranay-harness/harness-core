@@ -29,6 +29,7 @@ import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -194,6 +195,22 @@ public class K8sStepHelperTest extends CategoryTest {
         k8sStepHelper.getAggregatedValuesManifests(serviceManifestOutcomes);
     assertThat(aggregatedValuesManifests).hasSize(1);
     assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifestOutcome);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetOpenshiftParamManifests() {
+    OpenshiftManifestOutcome openshiftManifestOutcome = OpenshiftManifestOutcome.builder().build();
+    OpenshiftParamManifestOutcome openshiftParamManifestOutcome = OpenshiftParamManifestOutcome.builder().build();
+    List<ManifestOutcome> serviceManifestOutcomes = new ArrayList<>();
+    serviceManifestOutcomes.add(openshiftManifestOutcome);
+    serviceManifestOutcomes.add(openshiftParamManifestOutcome);
+
+    List<OpenshiftParamManifestOutcome> openshiftParamManifests =
+        k8sStepHelper.getOpenshiftParamManifests(serviceManifestOutcomes);
+    assertThat(openshiftParamManifests).hasSize(1);
+    assertThat(openshiftParamManifests.get(0)).isEqualTo(openshiftParamManifestOutcome);
   }
 
   @Test

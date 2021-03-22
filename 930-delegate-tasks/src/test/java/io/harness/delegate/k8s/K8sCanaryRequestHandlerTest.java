@@ -125,6 +125,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   public void testDryRun(boolean skipDryRun) throws Exception {
     String releaseName = "releaseName";
     List<String> valuesYamlList = emptyList();
+    List<String> openshiftParamList = emptyList();
     List<FileData> manifestFiles = emptyList();
     List<KubernetesResource> kubernetesResources = emptyList();
     K8sCanaryDeployRequest k8sCanaryDeployRequest = K8sCanaryDeployRequest.builder()
@@ -132,6 +133,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
                                                         .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
                                                         .manifestDelegateConfig(manifestDelegateConfig)
                                                         .valuesYamlList(valuesYamlList)
+                                                        .openshiftParamList(openshiftParamList)
                                                         .skipDryRun(skipDryRun)
                                                         .timeoutIntervalInMin(timeoutIntervalInMin)
                                                         .build();
@@ -277,12 +279,14 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
     List<KubernetesResource> deployment = ManifestHelper.processYaml(K8sTestConstants.DEPLOYMENT_YAML);
     List<FileData> manifestFiles = emptyList();
     List<String> valuesYamlList = emptyList();
+    List<String> openshiftParamList = emptyList();
     K8sCanaryDeployRequest canaryDeployRequest = K8sCanaryDeployRequest.builder()
                                                      .timeoutIntervalInMin(timeoutIntervalInMin)
                                                      .releaseName(releaseName)
                                                      .manifestDelegateConfig(manifestDelegateConfig)
                                                      .k8sInfraDelegateConfig(k8sInfraDelegateConfig)
                                                      .valuesYamlList(valuesYamlList)
+                                                     .openshiftParamList(openshiftParamList)
                                                      .build();
     K8sDelegateTaskParams delegateTaskParams =
         K8sDelegateTaskParams.builder().workingDirectory(workingDirectory).build();
