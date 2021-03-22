@@ -5,7 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.QLEnum;
 
-@TargetModule(HarnessModule._380_CG_GRAPHQL._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public enum QLOrchestrationWorkflowType implements QLEnum {
   BUILD,
   BASIC,

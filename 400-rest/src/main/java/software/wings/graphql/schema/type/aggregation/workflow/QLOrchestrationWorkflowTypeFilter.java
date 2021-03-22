@@ -11,7 +11,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(HarnessModule._380_CG_GRAPHQL._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLOrchestrationWorkflowTypeFilter implements Filter {
   private QLEnumOperator operator;
   private QLOrchestrationWorkflowType[] values;
