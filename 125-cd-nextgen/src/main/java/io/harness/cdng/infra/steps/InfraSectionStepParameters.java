@@ -5,6 +5,7 @@ import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.ParameterField;
 
 import lombok.Builder;
 import lombok.Data;
@@ -21,14 +22,15 @@ public class InfraSectionStepParameters extends PipelineInfrastructure implement
 
   @Builder(builderMethodName = "newBuilder")
   public InfraSectionStepParameters(InfrastructureDef infrastructureDefinition, InfraUseFromStage useFromStage,
-      EnvironmentYaml environment, String metadata, String childNodeID) {
-    super(infrastructureDefinition, useFromStage, environment, null, metadata);
+      EnvironmentYaml environment, ParameterField<String> environmentRef, String metadata, String childNodeID) {
+    super(infrastructureDefinition, useFromStage, environment, environmentRef, metadata);
     this.childNodeID = childNodeID;
   }
 
   public static InfraSectionStepParameters getStepParameters(
       PipelineInfrastructure infrastructure, String childNodeID) {
     return new InfraSectionStepParameters(infrastructure.getInfrastructureDefinition(),
-        infrastructure.getUseFromStage(), infrastructure.getEnvironment(), infrastructure.getMetadata(), childNodeID);
+        infrastructure.getUseFromStage(), infrastructure.getEnvironment(), infrastructure.getEnvironmentRef(),
+        infrastructure.getMetadata(), childNodeID);
   }
 }
