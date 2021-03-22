@@ -2,6 +2,7 @@ package io.harness.yaml.schema;
 
 import static io.harness.NGCommonEntityConstants.ORG_KEY;
 import static io.harness.NGCommonEntityConstants.PROJECT_KEY;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.yaml.schema.beans.SchemaConstants.CONST_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
@@ -10,6 +11,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.REQUIRED_NODE;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class YamlSchemaProvider {
   YamlSchemaHelper yamlSchemaHelper;
 
