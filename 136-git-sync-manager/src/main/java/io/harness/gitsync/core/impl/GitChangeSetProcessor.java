@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
@@ -12,6 +13,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.DiffResult;
 import io.harness.git.model.GitFileChange;
@@ -45,6 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class GitChangeSetProcessor {
   private final GitSyncService gitSyncService;
   private final GitCommitService gitCommitService;

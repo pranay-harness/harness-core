@@ -1,10 +1,12 @@
 package io.harness.repositories.gitSyncError;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
 import static org.springframework.data.mongodb.core.query.Update.update;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
@@ -25,6 +27,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 

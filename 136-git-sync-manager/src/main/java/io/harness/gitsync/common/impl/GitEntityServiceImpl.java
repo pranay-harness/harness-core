@@ -1,11 +1,13 @@
 package io.harness.gitsync.common.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.encryption.ScopeHelper.getScope;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.GitFileLocation;
 import io.harness.gitsync.common.beans.GitFileLocation.GitFileLocationKeys;
@@ -38,6 +40,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class GitEntityServiceImpl implements GitEntityService {
   private GitFileLocationRepository gitFileLocationRepository;
 

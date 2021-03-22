@@ -1,5 +1,8 @@
 package io.harness.repositories.yamlChangeSet;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 
 import com.mongodb.client.result.UpdateResult;
@@ -12,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(DX)
 public interface YamlChangeSetRepositoryCustom {
   UpdateResult updateYamlChangeSetStatus(YamlChangeSet.Status status, String yamlChangeSetId);
 

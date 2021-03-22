@@ -1,5 +1,8 @@
 package io.harness.gitsync.server;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.sdk.HarnessToGitPushInfoGrpcService;
 import io.harness.grpc.server.GrpcServer;
 
@@ -20,6 +23,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DX)
 public class GitSyncGrpcModule extends AbstractModule {
   private static GitSyncGrpcModule instance;
   private final String deployMode = System.getenv().get("DEPLOY_MODE");

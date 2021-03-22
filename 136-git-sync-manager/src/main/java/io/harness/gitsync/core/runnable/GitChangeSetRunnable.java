@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.runnable;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -12,6 +13,7 @@ import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.gitsync.common.YamlProcessingLogContext;
 import io.harness.gitsync.common.beans.YamlChangeSet;
@@ -50,6 +52,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class GitChangeSetRunnable implements Runnable {
   public static final List<Status> RUNNING_STATUS_LIST = singletonList(Status.RUNNING);
   public static final int MAX_RUNNING_CHANGESETS_FOR_ACCOUNT = 5;

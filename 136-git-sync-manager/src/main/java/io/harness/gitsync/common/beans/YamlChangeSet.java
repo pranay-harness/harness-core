@@ -1,5 +1,8 @@
 package io.harness.gitsync.common.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Scope;
@@ -42,6 +45,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("yamlChangeSetNG")
 @TypeAlias("io.harness.gitsync.common.beans.yamlChangeSet")
 @Entity(value = "yamlChangeSetNG", noClassnameStored = true)
+@OwnedBy(DX)
 public class YamlChangeSet implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                       UpdatedByAware, AccountAccess, OrganizationAccess, ProjectAccess {
   public static final String MAX_RETRY_COUNT_EXCEEDED_CODE = "MAX_RETRY_COUNT_EXCEEDED";
