@@ -67,7 +67,12 @@ public class DelegateExceptionManager {
       }
 
       if (exception.getCause() != null) {
-        setExceptionCause(handledException, handleException((Exception) exception.getCause()));
+        WingsException cascadedException = handledException;
+        while (cascadedException.getCause() != null) {
+          // 3rd party exception can't be allowed as cause in already handled exception
+          cascadedException = (WingsException) cascadedException.getCause();
+        }
+        setExceptionCause(cascadedException, handleException((Exception) exception.getCause()));
       }
       return handledException;
 

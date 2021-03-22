@@ -1,7 +1,11 @@
 package io.harness.delegate.task.aws;
 
+import static io.harness.aws.AwsExceptionHandler.handleAmazonServiceException;
+
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsConfig;
+import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -10,6 +14,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskType;
+import io.harness.delegate.beans.connector.awsconnector.AwsValidateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
@@ -17,6 +22,7 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.function.BooleanSupplier;
@@ -74,22 +80,25 @@ public class AwsDelegateTask extends AbstractDelegateRunnableTask {
     final AwsCredentialType awsCredentialType = credential.getAwsCredentialType();
     final AwsConfig awsConfig =
         awsNgConfigMapper.mapAwsConfigWithDecryption(credential, awsCredentialType, encryptionDetails);
-    //    try {
-    //    throw new AmazonCodeDeployException("Error Message");
-    awsClient.validateAwsAccountCredential(awsConfig);
-    //      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
-    //                                                                .status(ConnectivityStatus.SUCCESS)
-    //                                                                .delegateId(getDelegateId())
-    //                                                                .testedAt(System.currentTimeMillis())
-    //                                                                .build();
-    //      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
-    //    } catch (AmazonEC2Exception amazonEC2Exception) {
-    //      handleAmazonServiceException(amazonEC2Exception);
+    try {
+      awsClient.validateAwsAccountCredential(awsConfig);
+      ConnectorValidationResult connectorValidationResult = ConnectorValidationResult.builder()
+                                                                .status(ConnectivityStatus.SUCCESS)
+                                                                .delegateId(getDelegateId())
+                                                                .testedAt(System.currentTimeMillis())
+                                                                .build();
+      return AwsValidateTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
+    } catch (AmazonEC2Exception amazonEC2Exception) {
+      handleAmazonServiceException(amazonEC2Exception);
+    }
     //    } catch (AmazonClientException amazonClientException) {
     //      handleAmazonClientException(amazonClientException);
     //    }
-    //    throw new InvalidRequestException("Unsuccessful validation");
+    throw new InvalidRequestException("Unsuccessful validation");
+  }
 
-    return null;
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }
