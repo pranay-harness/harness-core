@@ -22,7 +22,7 @@
             }
         },
         {
-            "name":"relns",
+            "name":"relations",
             "type":{
                 "type": "array",  
                 "items":{

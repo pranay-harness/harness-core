@@ -1,10 +1,10 @@
 package avro
 
 import (
-	"io/ioutil"
-
 	"github.com/linkedin/goavro/v2"
 	"github.com/pkg/errors"
+
+	"github.com/wings-software/portal/product/ci/common/avro/schema"
 )
 
 //Serialzer is the interface for encoding and decoding structs
@@ -23,7 +23,7 @@ type CgphSerialzer struct {
 // NewCgphSerialzer returns new CgphSerialzer object with the codec
 // based on the schema received in the input
 func NewCgphSerialzer(file string) (*CgphSerialzer, error) {
-	schema, err := ioutil.ReadFile(file)
+	schema, err := schema.Asset(file)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read schema file")
 	}

@@ -15,7 +15,7 @@ import (
 
 const (
 	// path of this needs to be decided [TODO: Aman]
-	cgSchemaPath = "/Users/amansingh/code/portal/product/ci/common/avro/schema.avsc" 
+	cgSchemaPath = "callgraph.avsc"
 )
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
@@ -140,6 +140,7 @@ func UploadCg( log *zap.SugaredLogger) http.HandlerFunc {
 			return
 		}
 		writeCg(cg)
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

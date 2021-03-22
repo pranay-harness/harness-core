@@ -84,8 +84,7 @@ func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, rep
 // UploadCg uploads avro encoded callgraph to server
 func (c *HTTPClient) UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch string, cg []byte) error {
 	path := fmt.Sprintf(cgEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
-	var tests string
-	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, &tests)
+	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &cg, nil)
 	return err
 }
 

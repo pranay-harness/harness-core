@@ -31,7 +31,7 @@ var (
 
 const (
 	cgDir        = "/Users/amansingh/Desktop/f2.txt"                                 // Discuss with Shiv - How to handle the deduping being done in job [TODO: Aman]
-	cgSchemaPath = "/Users/amansingh/code/portal/product/ci/common/avro/schema.avsc" // the path of this needs to be decided [TODO: Aman]
+	cgSchemaPath = "callgraph.avsc" // the path of this needs to be decided [TODO: Aman]
 )
 
 // RunTestsStep represents interface to execute a runTests step
@@ -87,12 +87,12 @@ func (e *runTestsStep) Run(ctx context.Context) (*output.StepOutput, int32, erro
 	// for instance the script could error out in post steps or somewhere halfway through running tests
 	// If execute has errored out, return of this step would be err.
 	// If execute completed successfully but processCg() failed still the step will be marked as error.
-	cgErr := e.processCg()
 	// if the runTests step failed, then overall step status will be failure
 	if err != nil {
 		return out, retries, err
 	}
-	// if the runTests step passed, then overall step status will be failure
+	cgErr := e.processCg()
+	// if the runTests step passed but the cg generation failed, then overall step status will be failure
 	if cgErr != nil {
 		e.log.Errorw("failed to process callgraph", zap.Error(cgErr))
 		return out, retries, cgErr

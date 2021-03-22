@@ -6,6 +6,7 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/common/avro",
     visibility = ["//visibility:public"],
     deps = [
+        "//product/ci/common/avro/schema:go_default_library",
         "@com_github_linkedin_goavro_v2//:go_default_library",
         "@com_github_pkg_errors//:go_default_library",
     ],
