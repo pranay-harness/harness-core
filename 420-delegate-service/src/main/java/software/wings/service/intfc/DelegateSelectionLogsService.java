@@ -1,5 +1,8 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
@@ -9,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@OwnedBy(DEL)
 public interface DelegateSelectionLogsService {
   void save(BatchDelegateSelectionLog batch);
 

@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -13,6 +15,7 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner.CloudFormati
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class CloudFormationInfrastructureProvisionerTest extends CategoryTest {
   @Test
   @Owner(developers = SATYAM)

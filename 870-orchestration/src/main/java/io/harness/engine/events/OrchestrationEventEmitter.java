@@ -14,6 +14,9 @@ import io.harness.queue.QueuePublisher;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
 import com.google.inject.Inject;
+import java.sql.Date;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +35,13 @@ public class OrchestrationEventEmitter {
       Set<OrchestrationEventHandler> handlers = handlerRegistry.obtain(event.getEventType());
       subject.registerAll(handlers);
       subject.handleEventSync(event);
-      orchestrationEventLogRepository.save(OrchestrationEventLog.builder()
-                                               .createdAt(System.currentTimeMillis())
-                                               .event(event)
-                                               .planExecutionId(event.getAmbiance().getPlanExecutionId())
-                                               .build());
+      orchestrationEventLogRepository.save(
+          OrchestrationEventLog.builder()
+              .createdAt(System.currentTimeMillis())
+              .event(event)
+              .planExecutionId(event.getAmbiance().getPlanExecutionId())
+              .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(10)).toInstant()))
+              .build());
       if (stepTypeLookupService == null || event.getNodeExecutionProto() == null) {
         orchestrationEventQueue.send(Collections.singletonList(PmsConstants.INTERNAL_SERVICE_NAME), event);
       } else {

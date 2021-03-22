@@ -9,6 +9,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
@@ -36,7 +37,8 @@ public class GcrArtifactConfigVisitorHelper implements ConfigValidator, EntityRe
     }
     String fullQualifiedDomainName =
         VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-    Map<String, String> metadata = new HashMap<>(Collections.singletonMap("fqn", fullQualifiedDomainName));
+    Map<String, String> metadata =
+        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!gcrArtifactConfig.getConnectorRef().isExpression()) {
       String connectorRefString = gcrArtifactConfig.getConnectorRef().getValue();
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
@@ -48,7 +50,7 @@ public class GcrArtifactConfigVisitorHelper implements ConfigValidator, EntityRe
               .build();
       result.add(entityDetail);
     } else {
-      metadata.put("expression", gcrArtifactConfig.getConnectorRef().getExpressionValue());
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, gcrArtifactConfig.getConnectorRef().getExpressionValue());
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
           orgIdentifier, projectIdentifier, gcrArtifactConfig.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =

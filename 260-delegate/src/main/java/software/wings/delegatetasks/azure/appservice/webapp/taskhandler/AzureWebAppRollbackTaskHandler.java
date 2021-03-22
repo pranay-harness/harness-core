@@ -11,7 +11,7 @@ import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDep
 import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress.UPDATE_SLOT_CONFIGURATIONS;
 import static software.wings.delegatetasks.azure.appservice.webapp.AppServiceDeploymentProgress.UPDATE_SLOT_CONTAINER_SETTINGS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureConfig;
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppRollbackTaskHandler extends AbstractAzureWebAppTaskHandler {
   @Override
   protected AzureAppServiceTaskResponse executeTaskInternal(AzureAppServiceTaskParameters azureAppServiceTaskParameters,

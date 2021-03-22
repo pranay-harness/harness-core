@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_AWS_CODE_DEPLOY_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_CODE_DEPLOY_DEPLOYMENTS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -9,6 +10,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.util.Collections.singletonList;
 import static java.util.function.Function.identity;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -59,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 01/30/18
  */
 @Slf4j
+@OwnedBy(CDP)
 public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
   @Inject private AwsCodeDeployInstanceSyncPerpetualTaskCreator taskCreator;

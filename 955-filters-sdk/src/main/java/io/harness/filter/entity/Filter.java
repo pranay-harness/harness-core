@@ -1,5 +1,8 @@
 package io.harness.filter.entity;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterVisibility;
@@ -42,6 +45,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Document("filters")
 @TypeAlias("io.harness.entity.Filter")
+@OwnedBy(DX)
 public class Filter implements PersistentEntity {
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String id;
   @JsonIgnore String accountIdentifier;

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -37,6 +38,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -93,6 +95,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(CDP)
 public class AwsAmiServiceRollbackTest extends WingsBaseTest {
   @Mock private SweepingOutputService mockSweepingOutputService;
   @Mock private SecretManager mockSecretManager;

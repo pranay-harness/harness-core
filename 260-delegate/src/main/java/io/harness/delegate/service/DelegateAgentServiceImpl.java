@@ -78,7 +78,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.configuration.DeployMode;
@@ -246,7 +246,7 @@ import retrofit2.Response;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
 @BreakDependencyOn("io.harness.delegate.beans.Delegate")
 public class DelegateAgentServiceImpl implements DelegateAgentService {

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INIT_TIMEOUT;
@@ -20,7 +21,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.eraro.ErrorCode;
@@ -198,7 +200,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(CDP)
 public class AwsHelperService {
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;

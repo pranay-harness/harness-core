@@ -1,6 +1,6 @@
 package io.harness.grpc.util;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.google.common.collect.ImmutableMultimap;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class RestartableServiceManager {
   @Inject private Injector injector;
   private ServiceManager serviceManager;

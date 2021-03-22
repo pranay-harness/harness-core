@@ -6,7 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private SecretDecryptionService secretDecryptionService;

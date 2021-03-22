@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.ce.activePods;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
@@ -36,7 +36,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CeActivePodCountDataFetcher extends AbstractStatsDataFetcherWithAggregationList<QLCCMAggregationFunction,
     QLBillingDataFilter, QLCCMGroupBy, QLBillingSortCriteria> {
   @Inject private TimeScaleDBService timeScaleDBService;

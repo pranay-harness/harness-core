@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 
@@ -26,7 +26,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * Created by Pranjal on 05/27/2019
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class DatadogCVServiceConfigurationMigration implements Migration {
   @Inject WingsPersistence wingsPersistence;
 

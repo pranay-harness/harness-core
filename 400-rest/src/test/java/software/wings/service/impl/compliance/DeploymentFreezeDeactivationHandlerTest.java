@@ -9,7 +9,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
@@ -34,7 +34,7 @@ import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-@TargetModule(Module._950_EVENTS_API)
+@TargetModule(HarnessModule._950_EVENTS_API)
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({System.class, DeploymentFreezeDeactivationHandler.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})

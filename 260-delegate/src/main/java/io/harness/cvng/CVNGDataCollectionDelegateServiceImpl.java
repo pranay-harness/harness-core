@@ -2,7 +2,7 @@ package io.harness.cvng;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
@@ -23,7 +23,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollectionDelegateService {
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject private SecretDecryptionService secretDecryptionService;

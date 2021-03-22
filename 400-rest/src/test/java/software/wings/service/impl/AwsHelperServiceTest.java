@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsCallTracker;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.category.element.UnitTests;
@@ -112,6 +114,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WebIdentityTokenCredentialsProvider.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*", "javax.management.*", "javax.crypto.*"})
+@OwnedBy(CDP)
 public class AwsHelperServiceTest extends WingsBaseTest {
   @Rule public WireMockRule wireMockRule = new WireMockRule(9877);
   @Mock AwsConfig awsConfig;

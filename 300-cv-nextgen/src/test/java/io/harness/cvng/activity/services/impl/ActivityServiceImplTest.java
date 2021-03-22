@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
@@ -64,7 +65,6 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
@@ -112,7 +112,6 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   @Mock private VerificationJobInstanceService verificationJobInstanceService;
   @Mock private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Mock private NextGenService nextGenService;
-  @Mock private VerificationTaskService verificationTaskService;
   @Inject private ActivitySourceService activitySourceService;
   @Mock private AlertRuleService alertRuleService;
 
@@ -123,16 +122,18 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
   private String serviceIdentifier;
   private String envIdentifier;
   private String deploymentTag;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
+    builderFactory = BuilderFactory.getDefault();
     instant = Instant.parse("2020-07-27T10:44:06.390Z");
-    projectIdentifier = generateUuid();
-    orgIdentifier = generateUuid();
-    accountId = generateUuid();
-    serviceIdentifier = generateUuid();
-    envIdentifier = generateUuid();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    accountId = builderFactory.getContext().getAccountId();
+    serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
+    envIdentifier = builderFactory.getContext().getEnvIdentifier();
     deploymentTag = "build#1";
 
     FieldUtils.writeField(activityService, "webhookService", mockWebhookService, true);
@@ -1044,7 +1045,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
             .type(VerificationJobType.HEALTH)
             .build();
     realVerificationJobService.save(healthVerificationJob);
-    realVerificationJobInstanceService.create(VerificationJobInstance.builder()
+    realVerificationJobInstanceService.create(builderFactory.verificationJobInstanceBuilder()
                                                   .accountId(kubernetesActivity.getAccountId())
                                                   .deploymentStartTime(Instant.now())
                                                   .startTime(Instant.now())
@@ -1086,15 +1087,12 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
             .identifier(generateUuid())
             .build();
     realVerificationJobService.save(healthVerificationJob);
-    realVerificationJobInstanceService.create(VerificationJobInstance.builder()
+    realVerificationJobInstanceService.create(builderFactory.verificationJobInstanceBuilder()
                                                   .accountId(kubernetesActivity.getAccountId())
                                                   .resolvedJob(healthVerificationJob)
-                                                  .deploymentStartTime(Instant.now())
-                                                  .startTime(Instant.now())
                                                   .executionStatus(ExecutionStatus.SUCCESS)
-                                                  .startTime(Instant.now())
                                                   .build());
-    assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity).size()).isEqualTo(1);
+    assertThat(activityService.createVerificationJobInstancesForActivity(kubernetesActivity)).hasSize(1);
   }
 
   @Test
@@ -1122,7 +1120,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     summary.setPassed(1);
     summary.setProgress(0);
 
-    List<VerificationJobInstance> jobInstances1 = Arrays.asList(VerificationJobInstance.builder()
+    List<VerificationJobInstance> jobInstances1 = Arrays.asList(builderFactory.verificationJobInstanceBuilder()
                                                                     .deploymentStartTime(Instant.now())
                                                                     .startTime(Instant.now())
                                                                     .uuid("jobId1")
@@ -1166,7 +1164,7 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     summary.setPassed(1);
     summary.setProgress(0);
 
-    List<VerificationJobInstance> jobInstances1 = Arrays.asList(VerificationJobInstance.builder()
+    List<VerificationJobInstance> jobInstances1 = Arrays.asList(builderFactory.verificationJobInstanceBuilder()
                                                                     .deploymentStartTime(Instant.now())
                                                                     .startTime(Instant.now())
                                                                     .uuid("jobId1")

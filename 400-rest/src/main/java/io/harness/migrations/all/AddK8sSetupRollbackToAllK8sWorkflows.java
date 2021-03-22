@@ -10,7 +10,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
@@ -33,7 +33,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddK8sSetupRollbackToAllK8sWorkflows implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;

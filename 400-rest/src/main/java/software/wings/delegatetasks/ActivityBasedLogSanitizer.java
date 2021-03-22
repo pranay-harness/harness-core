@@ -2,7 +2,7 @@ package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.Set;
@@ -13,7 +13,7 @@ import org.apache.commons.lang3.StringUtils;
  * Replace secret values with mask for safe display
  */
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ActivityBasedLogSanitizer extends LogSanitizer {
   private final String activityId;
   private final Set<String> secretLines;

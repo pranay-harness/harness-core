@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
@@ -30,6 +31,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
@@ -70,6 +72,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 
+@OwnedBy(CDP)
 public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private ActivityService activityService;

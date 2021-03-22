@@ -1,8 +1,11 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
@@ -17,6 +20,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class AwsInstanceInfrastructureYamlHandler
     extends CloudProviderInfrastructureYamlHandler<Yaml, AwsInstanceInfrastructure> {
   @Inject private SettingsService settingsService;

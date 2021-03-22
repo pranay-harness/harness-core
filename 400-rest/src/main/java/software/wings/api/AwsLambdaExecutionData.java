@@ -1,5 +1,8 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.sm.StateExecutionData;
@@ -17,6 +20,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(CDP)
 public class AwsLambdaExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String functionName;
   private String functionArn;

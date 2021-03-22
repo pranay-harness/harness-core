@@ -1,5 +1,6 @@
 package io.harness.ccm.setup.service.support.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
 import io.harness.ccm.setup.service.support.impl.pojo.BucketPolicyJson;
@@ -44,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AWSCEConfigValidationServiceImplTest {
   @Spy @InjectMocks AWSCEConfigValidationServiceImpl awsceConfigValidationService;
   @Mock private AwsCredentialHelper awsCredentialHelper;

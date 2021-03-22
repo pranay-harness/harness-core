@@ -136,6 +136,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
+import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -733,6 +734,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (!injector.getInstance(FeatureFlagService.class).isGlobalEnabled(GLOBAL_DISABLE_HEALTH_CHECK)) {
       healthService.registerMonitor(injector.getInstance(HPersistence.class));
       healthService.registerMonitor((HealthMonitor) injector.getInstance(PersistentLocker.class));
+      TimeScaleDBService timeScaleDBService = injector.getInstance(TimeScaleDBService.class);
+      if (timeScaleDBService.getTimeScaleDBConfig().isHealthCheckNeeded()) {
+        healthService.registerMonitor(injector.getInstance(TimeScaleDBService.class));
+      }
     }
   }
 

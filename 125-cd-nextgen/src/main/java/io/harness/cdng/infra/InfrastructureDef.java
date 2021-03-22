@@ -6,11 +6,11 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 import io.harness.cdng.infra.yaml.Infrastructure;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfrastructureDefVisitorHelper;
+import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.ExecutionElement;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -32,14 +32,14 @@ public class InfrastructureDef implements Visitable {
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   Infrastructure infrastructure;
 
-  @JsonProperty("provisioner") @Nullable ExecutionElement provisioner;
+  @JsonProperty("provisioner") @Nullable ExecutionElementConfig provisioner;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   // Use Builder as Constructor then only external property(visible) will be filled.
   @Builder
-  public InfrastructureDef(String type, Infrastructure infrastructure, ExecutionElement provisioner) {
+  public InfrastructureDef(String type, Infrastructure infrastructure, ExecutionElementConfig provisioner) {
     this.type = type;
     this.infrastructure = infrastructure;
     this.provisioner = provisioner;

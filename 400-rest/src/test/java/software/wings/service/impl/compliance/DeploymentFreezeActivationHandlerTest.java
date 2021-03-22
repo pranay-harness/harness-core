@@ -6,7 +6,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.mockito.Matchers.any;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
@@ -26,7 +26,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-@TargetModule(Module._950_EVENTS_API)
+@TargetModule(HarnessModule._950_EVENTS_API)
 public class DeploymentFreezeActivationHandlerTest extends WingsBaseTest {
   @Mock DeploymentFreezeUtils deploymentFreezeUtils;
   @Inject @InjectMocks DeploymentFreezeActivationHandler deploymentFreezeActivationHandler;

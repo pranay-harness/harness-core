@@ -6,7 +6,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 import io.harness.exception.ExceptionUtils;
@@ -34,7 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetInfraDefinitionTriggers {
   @Inject private TriggerService triggerService;
   @Inject private WorkflowService workflowService;

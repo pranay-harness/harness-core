@@ -8,7 +8,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.SecretManagementCoreModule;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
 import io.harness.annotations.retry.RetryOnException;
@@ -748,7 +748,7 @@ import org.jetbrains.annotations.NotNull;
  * Guice Module for initializing all beans.
  */
 @Slf4j
-@TargetModule(Module._360_CG_MANGER)
+@TargetModule(HarnessModule._360_CG_MANGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;

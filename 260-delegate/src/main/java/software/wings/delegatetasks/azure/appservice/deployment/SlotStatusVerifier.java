@@ -2,7 +2,7 @@ package software.wings.delegatetasks.azure.appservice.deployment;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureWebClient;
@@ -15,7 +15,7 @@ import software.wings.delegatetasks.azure.AzureServiceCallBack;
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import java.util.Optional;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class SlotStatusVerifier {
   private final String slotName;
   private final AzureWebClient azureWebClient;

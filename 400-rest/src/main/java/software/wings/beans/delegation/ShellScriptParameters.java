@@ -5,7 +5,7 @@ import static io.harness.expression.Expression.DISALLOW_SECRETS;
 import static io.harness.k8s.K8sConstants.HARNESS_KUBE_CONFIG_PATH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -53,7 +53,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Value
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class ShellScriptParameters implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
   public static final String CommandUnit = "Execute";
 

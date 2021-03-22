@@ -1,10 +1,10 @@
-/**
- *
- */
 
 package software.wings.beans;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -20,7 +20,8 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("SSH")
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._970_API_SERVICES_BEANS)
+@TargetModule(HarnessModule._970_API_SERVICES_BEANS)
+@OwnedBy(CDP)
 public class SSHExecutionCredential extends ExecutionCredential {
   private String sshUser;
   private char[] sshPassword;

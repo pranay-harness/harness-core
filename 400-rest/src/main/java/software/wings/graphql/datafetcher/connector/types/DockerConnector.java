@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.connector.types;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.RequestField;
@@ -22,7 +22,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DockerConnector extends Connector {
   private SecretManager secretManager;
   private ConnectorsController connectorsController;

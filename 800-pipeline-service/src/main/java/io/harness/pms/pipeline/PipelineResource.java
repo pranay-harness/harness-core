@@ -17,6 +17,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.pms.annotations.PipelineServiceAuth;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -231,10 +232,12 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("searchTerm") String searchTerm, @QueryParam("pipelineIdentifier") String pipelineIdentifier,
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
-      @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties) {
+      @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
+      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments) {
     log.info("Get List of executions");
-    Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm);
+    Criteria criteria =
+        pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier, filterIdentifier,
+            (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status, myDeployments);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.createdAt));

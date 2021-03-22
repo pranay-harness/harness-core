@@ -1,6 +1,6 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.timescaledb.AddAccountIdStatusIndexToDeployment;
 import io.harness.migrations.timescaledb.AddAlertTypeColumnToBudgetAlerts;
@@ -55,7 +55,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.Pair;
 
 @UtilityClass
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TimescaleDBMigrationList {
   public static List<Pair<Integer, Class<? extends TimeScaleDBMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends TimeScaleDBMigration>>>()

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.beans.security.UserGroup.DEFAULT_USER_GROUPS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddIsDefaultFlagToUserGroup extends AddFieldMigration {
   @Override
   protected org.slf4j.Logger getLogger() {

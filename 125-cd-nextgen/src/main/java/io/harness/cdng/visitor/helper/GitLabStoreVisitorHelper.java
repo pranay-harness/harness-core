@@ -9,6 +9,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
@@ -46,7 +47,8 @@ public class GitLabStoreVisitorHelper implements ConfigValidator, EntityReferenc
     }
     String fullQualifiedDomainName =
         VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-    Map<String, String> metadata = new HashMap<>(Collections.singletonMap("fqn", fullQualifiedDomainName));
+    Map<String, String> metadata =
+        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!gitLabStore.getConnectorRef().isExpression()) {
       String connectorRefString = gitLabStore.getConnectorRef().getValue();
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
@@ -58,7 +60,7 @@ public class GitLabStoreVisitorHelper implements ConfigValidator, EntityReferenc
               .build();
       result.add(entityDetail);
     } else {
-      metadata.put("expression", gitLabStore.getConnectorRef().getExpressionValue());
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, gitLabStore.getConnectorRef().getExpressionValue());
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
           orgIdentifier, projectIdentifier, gitLabStore.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =

@@ -4,7 +4,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.sm.StepType.HTTP;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.KeyValuePair;
 import io.harness.exception.ExceptionUtils;
@@ -38,7 +38,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class ConvertHttpHeadersStringTypeToList implements Migration {
   private static final String LOG_PREFIX = "CONVERT_HTTP_HEADER_TO_LIST_MIGRATION:";
   private static final Splitter HEADERS_SPLITTER = Splitter.on(",").trimResults().omitEmptyStrings();

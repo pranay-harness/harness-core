@@ -1,6 +1,9 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
 
@@ -27,6 +30,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -173,6 +177,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     assertThat(request.getEcsSetupParams().getClusterName()).isEqualTo(CLUSTER_NAME);
     assertThat(request.getEcsSetupParams().getServiceName()).isEqualTo("EcsSvc");
     assertThat(request.getCluster()).isEqualTo(CLUSTER_NAME);
+    verify(mockFeatureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
   }
 
   @Test
@@ -214,6 +219,50 @@ public class EcsServiceSetupTest extends WingsBaseTest {
         .buildContainerServiceElement(
             any(), any(), any(), any(), anyString(), anyString(), anyString(), any(), anyInt(), any());
     verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
+    assertThat(response.getFailureTypes()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponse_TimeoutFailure() {
+    ExecutionContextImpl mockContext = mock(ExecutionContextImpl.class);
+    EcsCommandExecutionResponse delegateResponse =
+        EcsCommandExecutionResponse.builder()
+            .commandExecutionStatus(SUCCESS)
+            .ecsCommandResponse(EcsServiceSetupResponse.builder()
+                                    .isBlueGreen(false)
+                                    .timeoutFailure(true)
+                                    .setupData(ContainerSetupCommandUnitExecutionData.builder()
+                                                   .containerServiceName("ContainerServiceName")
+                                                   .instanceCountForLatestVersion(2)
+                                                   .build())
+                                    .build())
+            .build();
+    CommandStateExecutionData executionData = aCommandStateExecutionData().build();
+    doReturn(executionData).when(mockContext).getStateExecutionData();
+    PhaseElement phaseElement =
+        PhaseElement.builder().serviceElement(ServiceElement.builder().uuid(SERVICE_ID).build()).build();
+    doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
+    Artifact artifact = anArtifact().withRevision("rev").build();
+    doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());
+    ImageDetails details = ImageDetails.builder().name("imgName").tag("imgTag").build();
+    doReturn(details).when(mockArtifactCollectionUtils).fetchContainerImageDetails(any(), anyString());
+    ContainerServiceElement containerServiceElement = ContainerServiceElement.builder().build();
+    doReturn(containerServiceElement)
+        .when(mockEcsStateHelper)
+        .buildContainerServiceElement(
+            any(), any(), any(), any(), anyString(), anyString(), anyString(), any(), anyInt(), any());
+    SweepingOutputInstanceBuilder builder = SweepingOutputInstance.builder();
+    doReturn(builder).when(mockContext).prepareSweepingOutputBuilder(any());
+    doReturn("foo").when(mockEcsStateHelper).getSweepingOutputName(any(), anyBoolean(), anyString());
+    doReturn(null).when(mockSweepingOutputService).save(any());
+    ExecutionResponse response = state.handleAsyncResponse(mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse));
+    verify(mockEcsStateHelper)
+        .buildContainerServiceElement(
+            any(), any(), any(), any(), anyString(), anyString(), anyString(), any(), anyInt(), any());
+    verify(mockEcsStateHelper).populateFromDelegateResponse(any(), any(), any());
+    assertThat(response.getFailureTypes()).isEqualTo(TIMEOUT);
   }
 
   @Test(expected = WingsException.class)

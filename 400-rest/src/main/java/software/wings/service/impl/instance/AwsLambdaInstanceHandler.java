@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.MOVE_AWS_LAMBDA_INSTANCE_SYNC_TO_PERPETUAL_TASK;
 import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_AWS_LAMBDA_DEPLOYMENTS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -22,6 +23,7 @@ import static org.apache.commons.collections4.CollectionUtils.emptyIfNull;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.joda.time.Seconds.secondsBetween;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -100,6 +102,7 @@ import org.joda.time.DateTime;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class AwsLambdaInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private AwsLambdaInstanceSyncPerpetualTaskCreator perpetualTaskCreator;
   @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;

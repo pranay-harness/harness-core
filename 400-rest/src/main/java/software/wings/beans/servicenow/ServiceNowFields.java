@@ -1,11 +1,11 @@
 package software.wings.beans.servicenow;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Getter;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public enum ServiceNowFields {
   PRIORITY("priority"),
   IMPACT("impact"),

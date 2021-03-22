@@ -54,6 +54,8 @@ applicationManifests {"name": "createdAt_1", "background": true} {"createdAt": 1
 applications {"name": "appId_1", "background": true} {"appId": 1}
 applications {"name": "createdAt_1", "background": true} {"createdAt": 1}
 applications {"name": "yaml", "unique": true} {"accountId": 1, "name": 1}
+approvalInstances {"name": "nodeExecutionId_1", "background": true} {"nodeExecutionId": 1}
+approvalInstances {"name": "status_deadline", "background": true} {"status": 1, "deadline": 1}
 approvalPollingJob {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 artifactStream {"name": "appId_1", "background": true} {"appId": 1}
 artifactStream {"name": "artifactStream_cleanup", "background": true} {"artifactStreamType": 1, "nextCleanupIteration": 1}
@@ -507,6 +509,9 @@ notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
 notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+orchestrationEventLog {"name": "createdAt", "background": true} {"createdAt": 1}
+orchestrationEventLog {"name": "planExecutionId_createdAt", "background": true} {"planExecutionId": 1, "createdAt": 1}
+orchestrationEventLog {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 orchestrationEventQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 orchestrationEventQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 outcomeInstances {"name": "levelRuntimeIdUniqueIdx", "unique": true} {"planExecutionId": 1, "levelRuntimeIdIdx": 1, "name": 1}

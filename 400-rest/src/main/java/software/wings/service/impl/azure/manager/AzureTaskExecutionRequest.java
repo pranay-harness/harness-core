@@ -2,7 +2,7 @@ package software.wings.service.impl.azure.manager;
 
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -26,7 +26,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class AzureTaskExecutionRequest
     implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess, Cd1ApplicationAccess {
   private AzureConfigDTO azureConfigDTO;

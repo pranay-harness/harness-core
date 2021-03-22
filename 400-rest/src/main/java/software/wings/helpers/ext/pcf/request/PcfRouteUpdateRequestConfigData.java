@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.pcf.request;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -11,7 +14,8 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class PcfRouteUpdateRequestConfigData {
   private String newApplicatiaonName;
   private List<PcfAppSetupTimeDetails> existingApplicationDetails;

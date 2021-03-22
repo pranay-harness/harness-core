@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.terraform;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -9,7 +10,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -53,7 +55,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FileUtils.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock GitService gitService;

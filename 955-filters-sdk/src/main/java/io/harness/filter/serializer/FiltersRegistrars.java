@@ -1,5 +1,8 @@
 package io.harness.filter.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.serializer.morphia.FiltersMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.KryoRegistrar;
@@ -10,6 +13,7 @@ import lombok.experimental.UtilityClass;
 import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
+@OwnedBy(DX)
 public class FiltersRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder().build();

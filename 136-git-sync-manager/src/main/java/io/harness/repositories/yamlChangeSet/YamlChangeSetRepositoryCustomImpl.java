@@ -1,7 +1,10 @@
 package io.harness.repositories.yamlChangeSet;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlChangeSet.YamlChangeSetKeys;
 
@@ -20,6 +23,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class YamlChangeSetRepositoryCustomImpl implements YamlChangeSetRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 

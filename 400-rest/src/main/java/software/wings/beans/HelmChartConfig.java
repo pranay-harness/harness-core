@@ -1,5 +1,8 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.Trimmed;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,6 +15,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "HelmChartConfigKeys")
+@OwnedBy(CDP)
 public class HelmChartConfig {
   @Trimmed private String connectorId;
   @Trimmed private String chartName;

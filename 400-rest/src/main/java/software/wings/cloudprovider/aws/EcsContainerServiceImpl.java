@@ -975,7 +975,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   }
 
   @Override
-  public void waitForTasksToBeInRunningStateButDontThrowException(UpdateServiceCountRequestData requestData) {
+  public void waitForTasksToBeInRunningStateWithHandledExceptions(UpdateServiceCountRequestData requestData) {
     try {
       waitForTasksToBeInRunningState(requestData);
     } catch (TimeoutException | InvalidRequestException e) {
@@ -1034,7 +1034,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                                                                 .serviceEvents(getEventsFromService(service))
                                                                 .build();
 
-    waitForTasksToBeInRunningStateButDontThrowException(serviceCountRequestData);
+    waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountRequestData);
     waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
     return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
         Collections.EMPTY_LIST, executionLogCallback);
@@ -1075,7 +1075,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
         updateServiceCount(serviceCountRequestData);
         executionLogCallback.saveExecutionLog("Service update request successfully submitted.", LogLevel.INFO);
-        waitForTasksToBeInRunningStateButDontThrowException(serviceCountRequestData);
+        waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountRequestData);
         if (desiredCount > service.getDesiredCount()) { // don't do it for downsize.
           waitForServiceToReachSteadyState(serviceSteadyStateTimeout, serviceCountRequestData);
         }

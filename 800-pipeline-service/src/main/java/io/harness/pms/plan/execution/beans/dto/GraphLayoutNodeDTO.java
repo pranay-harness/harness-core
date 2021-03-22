@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution.beans.dto;
 
+import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.execution.ExecutionStatus;
 
@@ -32,4 +33,5 @@ public class GraphLayoutNodeDTO {
   private Long endTs;
   EdgeLayoutListDTO edgeLayoutList;
   SkipInfo skipInfo;
+  NodeRunInfo nodeRunInfo;
 }

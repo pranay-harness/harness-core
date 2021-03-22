@@ -5,7 +5,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.migrations.Migration;
@@ -34,7 +34,7 @@ import org.apache.commons.math3.util.Pair;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrateTimeSeriesRawDataToGoogle implements Migration {
   @Inject private AccountService accountService;
   @Inject private AppService appService;

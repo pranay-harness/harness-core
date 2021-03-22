@@ -1,6 +1,6 @@
 package software.wings.alerts;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
-@TargetModule(Module._955_ALERT_BEANS) public enum AlertStatus { Open, Closed, Pending }
+@TargetModule(HarnessModule._955_ALERT_BEANS) public enum AlertStatus { Open, Closed, Pending }

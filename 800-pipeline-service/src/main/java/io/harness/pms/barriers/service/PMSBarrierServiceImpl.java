@@ -55,4 +55,16 @@ public class PMSBarrierServiceImpl implements PMSBarrierService {
         })
         .collect(Collectors.toList());
   }
+
+  @Override
+  public BarrierExecutionInfo getBarrierExecutionInfo(String barrierSetupId, String planExecutionId) {
+    BarrierExecutionInstance barrierInstance =
+        barrierService.findByPlanNodeIdAndPlanExecutionId(barrierSetupId, planExecutionId);
+    return BarrierExecutionInfo.builder()
+        .name(barrierInstance.getName())
+        .identifier(barrierInstance.getIdentifier())
+        .stages(barrierInstance.getSetupInfo().getStages())
+        .timeoutIn(barrierInstance.getSetupInfo().getTimeout())
+        .build();
+  }
 }
