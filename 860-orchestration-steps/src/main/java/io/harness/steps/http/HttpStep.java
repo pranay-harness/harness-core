@@ -1,10 +1,8 @@
-package io.harness.cdng.pipeline.steps;
+package io.harness.steps.http;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.expressions.HttpExpressionEvaluator;
-import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
@@ -14,11 +12,8 @@ import io.harness.delegate.task.http.HttpStepResponse;
 import io.harness.delegate.task.http.HttpTaskParametersNg;
 import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBuilder;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
-import io.harness.http.HttpOutcome;
-import io.harness.http.HttpStepParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
@@ -32,7 +27,9 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
 
@@ -47,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class HttpStep implements TaskExecutable<HttpStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(ExecutionNodeType.HTTP.getYamlType()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
 
   @Inject private KryoSerializer kryoSerializer;
 
@@ -144,7 +141,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
         responseBuilder.status(Status.SUCCEEDED);
       }
       responseBuilder.stepOutcome(
-          StepOutcome.builder().name(OutcomeExpressionConstants.OUTPUT).outcome(executionData).build());
+          StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
     }
     return responseBuilder.build();
   }

@@ -1,14 +1,14 @@
-package io.harness.http;
+package io.harness.steps.http;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
-import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.sdk.core.steps.io.RollbackInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepSpecTypeConstants;
 
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Map;

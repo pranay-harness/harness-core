@@ -1,18 +1,17 @@
-package io.harness.cdng.pipeline.stepinfo;
+package io.harness.plancreator.steps.http;
 
-import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.pipeline.steps.HttpStep;
-import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.cdstepinfo.HttpStepInfoVisitorHelper;
-import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.http.HttpBaseStepInfo;
 import io.harness.http.HttpHeaderConfig;
-import io.harness.http.HttpStepParameters;
+import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.sdk.core.steps.io.WithRollbackInfo;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.http.HttpBaseStepInfo;
+import io.harness.steps.http.HttpStep;
+import io.harness.steps.http.HttpStepParameters;
 import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -38,7 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.HTTP)
 @SimpleVisitorHelper(helperClass = HttpStepInfoVisitorHelper.class)
 @TypeAlias("httpStepInfo")
-public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visitable {
+public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visitable, WithRollbackInfo {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String name;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String identifier;
 
@@ -61,11 +60,6 @@ public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visita
   }
 
   @Override
-  public String getDisplayName() {
-    return name;
-  }
-
-  @Override
   @JsonIgnore
   public StepType getStepType() {
     return HttpStep.STEP_TYPE;
@@ -84,7 +78,7 @@ public class HttpStepInfo extends HttpBaseStepInfo implements CDStepInfo, Visita
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.HTTP_STEP).isPartOfFQN(false).build();
+    return LevelNode.builder().qualifierName(StepSpecTypeConstants.HTTP).isPartOfFQN(false).build();
   }
 
   @Override

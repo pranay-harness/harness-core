@@ -1,4 +1,4 @@
-package io.harness.http;
+package io.harness.steps.http;
 
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.pms.sdk.core.data.Outcome;

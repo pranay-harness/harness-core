@@ -1,14 +1,13 @@
-package io.harness.cdng.creator.variables;
+package io.harness.pms.variables;
 
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
-import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.contracts.plan.YamlProperties;
 import io.harness.pms.sdk.core.pipeline.variables.GenericStepVariableCreator;
 import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.steps.StepSpecTypeConstants;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,8 +24,8 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
   @Override
   protected void addVariablesInComplexObject(Map<String, YamlProperties> yamlPropertiesMap, YamlNode yamlNode) {
     List<String> complexFields = new ArrayList<>();
-    complexFields.add(YamlTypes.OUTPUT_VARIABLES);
-    complexFields.add(YamlTypes.HEADERS);
+    complexFields.add(YAMLFieldNameConstants.OUTPUT_VARIABLES);
+    complexFields.add(YAMLFieldNameConstants.HEADERS);
 
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
@@ -35,12 +34,12 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
       }
     });
 
-    YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
+    YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
       VariableCreatorHelper.addVariablesForVariables(
           outputVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
     }
-    YamlField headersField = yamlNode.getField(YamlTypes.HEADERS);
+    YamlField headersField = yamlNode.getField(YAMLFieldNameConstants.HEADERS);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(headersField)) {
       addHeaderVariables(headersField, yamlPropertiesMap);
     }
