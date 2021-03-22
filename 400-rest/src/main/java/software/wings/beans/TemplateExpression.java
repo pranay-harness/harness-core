@@ -34,12 +34,12 @@ public class TemplateExpression {
   public static final class Yaml extends BaseYaml {
     private String fieldName;
     private String expression;
-    private List<NameValuePair.Yaml> metadata = Lists.newArrayList();
+    private List<NameValuePairYaml> metadata = Lists.newArrayList();
 
     public static final class Builder {
       private String fieldName;
       private String expression;
-      private List<NameValuePair.Yaml> metadata = Lists.newArrayList();
+      private List<NameValuePairYaml> metadata = Lists.newArrayList();
 
       private Builder() {}
 
@@ -57,7 +57,7 @@ public class TemplateExpression {
         return this;
       }
 
-      public Builder withMetadata(List<NameValuePair.Yaml> metadata) {
+      public Builder withMetadata(List<NameValuePairYaml> metadata) {
         this.metadata = metadata;
         return this;
       }

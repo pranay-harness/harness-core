@@ -9,10 +9,8 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
-import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -23,7 +21,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -67,21 +64,5 @@ public class LogzConfig extends SettingValue implements EncryptableSetting, Exec
   @Override
   public String fetchResourceCategory() {
     return ResourceType.VERIFICATION_PROVIDER.name();
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends VerificationProviderYaml {
-    private String logzUrl;
-    private String token;
-
-    @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String logzUrl, String token, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.logzUrl = logzUrl;
-      this.token = token;
-    }
   }
 }

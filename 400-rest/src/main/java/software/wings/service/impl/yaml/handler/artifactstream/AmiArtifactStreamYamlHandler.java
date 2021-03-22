@@ -8,7 +8,7 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream.FilterClass;
 import software.wings.beans.artifact.AmiArtifactStream.Tag;
@@ -58,16 +58,16 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<AmiA
     return new AmiArtifactStream();
   }
 
-  private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {
+  private List<NameValuePairYaml> getTagsYaml(List<Tag> tagList) {
     if (isEmpty(tagList)) {
       return Lists.newArrayList();
     }
     return tagList.stream()
-        .map(tag -> NameValuePair.Yaml.builder().name(tag.getKey()).value(tag.getValue()).build())
+        .map(tag -> NameValuePairYaml.builder().name(tag.getKey()).value(tag.getValue()).build())
         .collect(toList());
   }
 
-  private List<Tag> getTags(List<NameValuePair.Yaml> tagYamlList) {
+  private List<Tag> getTags(List<NameValuePairYaml> tagYamlList) {
     return tagYamlList.stream()
         .map(tagYaml -> {
           Tag tag = new Tag();
@@ -78,17 +78,17 @@ public class AmiArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<AmiA
         .collect(toList());
   }
 
-  private List<NameValuePair.Yaml> getFiltersYaml(List<FilterClass> filterClassList) {
+  private List<NameValuePairYaml> getFiltersYaml(List<FilterClass> filterClassList) {
     if (isEmpty(filterClassList)) {
       return Lists.newArrayList();
     }
     return filterClassList.stream()
-        .map(filterClass
-            -> NameValuePair.Yaml.builder().name(filterClass.getKey()).value(filterClass.getValue()).build())
+        .map(
+            filterClass -> NameValuePairYaml.builder().name(filterClass.getKey()).value(filterClass.getValue()).build())
         .collect(toList());
   }
 
-  private List<FilterClass> getFilters(List<NameValuePair.Yaml> filterYamlList) {
+  private List<FilterClass> getFilters(List<NameValuePairYaml> filterYamlList) {
     return filterYamlList.stream()
         .map(filterYaml -> {
           FilterClass filterClass = new FilterClass();

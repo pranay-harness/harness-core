@@ -6,6 +6,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -51,7 +52,7 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   @Override
   public Yaml toYaml(TemplateExpression bean, String appId) {
     NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
-    List<NameValuePair.Yaml> nameValuePairYamlList =
+    List<NameValuePairYaml> nameValuePairYamlList =
         Utils.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
 
     return Yaml.Builder.aYaml()

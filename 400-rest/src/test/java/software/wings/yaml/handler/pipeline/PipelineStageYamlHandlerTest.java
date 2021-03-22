@@ -21,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.PipelineStage;
+import software.wings.beans.PipelineStageYaml;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.VariableType;
@@ -124,13 +125,13 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
 
-    ChangeContext<PipelineStage.Yaml> changeContext = getChangeContext(yamlString);
-    PipelineStage.Yaml yaml = (PipelineStage.Yaml) getYaml(yamlString, PipelineStage.Yaml.class);
+    ChangeContext<PipelineStageYaml> changeContext = getChangeContext(yamlString);
+    PipelineStageYaml yaml = (PipelineStageYaml) getYaml(yamlString, PipelineStageYaml.class);
     changeContext.setYaml(yaml);
     PipelineStage pipelineStage = pipelineStageYamlHandler.toBean(changeContext);
     assertThat(pipelineStage).isNotNull();
 
-    PipelineStage.Yaml displayYaml = pipelineStageYamlHandler.toYaml(pipelineStage, APP_ID);
+    PipelineStageYaml displayYaml = pipelineStageYamlHandler.toYaml(pipelineStage, APP_ID);
     assertThat(displayYaml).isNotNull();
 
     String yamlContent = getYamlContent(displayYaml);
@@ -139,14 +140,14 @@ public class PipelineStageYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(yamlContent).isEqualTo(yamlString);
   }
 
-  private ChangeContext<PipelineStage.Yaml> getChangeContext(String validYamlContent) {
+  private ChangeContext<PipelineStageYaml> getChangeContext(String validYamlContent) {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<PipelineStage.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<PipelineStageYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.PIPELINE_STAGE);
     changeContext.setYamlSyncHandler(pipelineStageYamlHandler);

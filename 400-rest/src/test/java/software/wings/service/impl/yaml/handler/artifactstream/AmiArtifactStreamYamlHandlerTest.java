@@ -22,7 +22,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Application;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AmiArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStreamYaml;
@@ -85,10 +85,9 @@ public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    List<NameValuePair.Yaml> amiTags =
-        asList(NameValuePair.Yaml.builder().name("image_version").value("1.0.0").build());
-    List<NameValuePair.Yaml> amiFilter =
-        asList(NameValuePair.Yaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
+    List<NameValuePairYaml> amiTags = asList(NameValuePairYaml.builder().name("image_version").value("1.0.0").build());
+    List<NameValuePairYaml> amiFilter =
+        asList(NameValuePairYaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
     AmiArtifactStreamYaml baseYaml = AmiArtifactStreamYaml.builder()
                                          .region("us-east-1")
                                          .amiTags(amiTags)
@@ -151,10 +150,9 @@ public class AmiArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    List<NameValuePair.Yaml> amiTags =
-        asList(NameValuePair.Yaml.builder().name("image_version").value("1.0.0").build());
-    List<NameValuePair.Yaml> amiFilter =
-        asList(NameValuePair.Yaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
+    List<NameValuePairYaml> amiTags = asList(NameValuePairYaml.builder().name("image_version").value("1.0.0").build());
+    List<NameValuePairYaml> amiFilter =
+        asList(NameValuePairYaml.builder().name("ami-image-id").value("ami-023385617116e27c0").build());
     AmiArtifactStreamYaml baseYaml = AmiArtifactStreamYaml.builder()
                                          .amiTags(amiTags)
                                          .amiFilters(amiFilter)

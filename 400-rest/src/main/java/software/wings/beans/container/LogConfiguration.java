@@ -1,15 +1,9 @@
 package software.wings.beans.container;
 
-import io.harness.yaml.BaseYaml;
-
-import software.wings.beans.NameValuePair;
-
 import com.github.reinert.jjschema.Attributes;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
@@ -35,20 +29,6 @@ public class LogConfiguration {
 
     public void setValue(String value) {
       this.value = value;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    private String logDriver;
-    private List<NameValuePair.Yaml> options;
-
-    @Builder
-    public Yaml(String logDriver, List<NameValuePair.Yaml> options) {
-      this.logDriver = logDriver;
-      this.options = options;
     }
   }
 }

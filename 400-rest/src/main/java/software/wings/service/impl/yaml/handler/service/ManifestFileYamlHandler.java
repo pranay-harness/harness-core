@@ -8,7 +8,7 @@ import io.harness.exception.WingsException;
 
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.appmanifest.ManifestFile.Yaml;
+import software.wings.beans.appmanifest.ManifestFileYaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -26,18 +26,22 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile> {
+public class ManifestFileYamlHandler extends BaseYamlHandler<ManifestFileYaml, ManifestFile> {
   @Inject YamlHelper yamlHelper;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ApplicationManifestService applicationManifestService;
 
   @Override
-  public Yaml toYaml(ManifestFile manifestFile, String appId) {
-    return Yaml.builder().harnessApiVersion(getHarnessApiVersion()).fileContent(manifestFile.getFileContent()).build();
+  public ManifestFileYaml toYaml(ManifestFile manifestFile, String appId) {
+    return ManifestFileYaml.builder()
+        .harnessApiVersion(getHarnessApiVersion())
+        .fileContent(manifestFile.getFileContent())
+        .build();
   }
 
   @Override
-  public ManifestFile upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public ManifestFile upsertFromYaml(
+      ChangeContext<ManifestFileYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -80,7 +84,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
     return yamlFilePath.substring(prefix.length());
   }
 
-  private ManifestFile toBean(ChangeContext<Yaml> changeContext, String fileName) {
+  private ManifestFile toBean(ChangeContext<ManifestFileYaml> changeContext, String fileName) {
     Change change = changeContext.getChange();
 
     String yamlFilePath = changeContext.getChange().getFilePath();
@@ -102,7 +106,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ManifestFileYaml.class;
   }
 
   @Override
@@ -119,7 +123,7 @@ public class ManifestFileYamlHandler extends BaseYamlHandler<Yaml, ManifestFile>
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<ManifestFileYaml> changeContext) {
     Change change = changeContext.getChange();
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
 

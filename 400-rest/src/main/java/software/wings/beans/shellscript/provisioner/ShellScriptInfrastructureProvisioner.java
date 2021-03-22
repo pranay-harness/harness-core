@@ -8,6 +8,7 @@ import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -52,7 +53,7 @@ public class ShellScriptInfrastructureProvisioner extends InfrastructureProvisio
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
-        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
+        List<NameValuePairYaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
         String scriptBody) {
       super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.scriptBody = scriptBody;

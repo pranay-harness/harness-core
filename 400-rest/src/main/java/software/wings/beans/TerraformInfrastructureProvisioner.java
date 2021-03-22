@@ -90,17 +90,17 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
     private String commitId;
     private String path;
     private String normalizedPath;
-    private List<NameValuePair.Yaml> backendConfigs;
-    private List<NameValuePair.Yaml> environmentVariables;
+    private List<NameValuePairYaml> backendConfigs;
+    private List<NameValuePairYaml> environmentVariables;
     private String repoName;
     private String secretMangerName;
     private boolean skipRefreshBeforeApplyingPlan;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String description, String infrastructureProvisionerType,
-        List<NameValuePair.Yaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
-        String sourceRepoSettingName, String sourceRepoBranch, String path, List<NameValuePair.Yaml> backendConfigs,
-        String repoName, List<NameValuePair.Yaml> environmentVariables, String commitId,
+        List<NameValuePairYaml> variables, List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints,
+        String sourceRepoSettingName, String sourceRepoBranch, String path, List<NameValuePairYaml> backendConfigs,
+        String repoName, List<NameValuePairYaml> environmentVariables, String commitId,
         boolean skipRefreshBeforeApplyingPlan, String secretMangerName) {
       super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceRepoSettingName = sourceRepoSettingName;

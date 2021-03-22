@@ -9,7 +9,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.defaults.DefaultsYaml;
@@ -37,7 +37,7 @@ public class DefaultVariablesHelper {
   @Inject SettingsService settingsService;
   @Inject private YamlPushService yamlPushService;
 
-  public List<NameValuePair.Yaml> convertToNameValuePairYamlList(List<SettingAttribute> settingAttributes) {
+  public List<NameValuePairYaml> convertToNameValuePairYamlList(List<SettingAttribute> settingAttributes) {
     if (CollectionUtils.isEmpty(settingAttributes)) {
       return Lists.newArrayList();
     }
@@ -50,7 +50,7 @@ public class DefaultVariablesHelper {
             value = ((StringValue) settingValue).getValue();
           }
 
-          return NameValuePair.Yaml.builder().name(settingAttribute.getName()).value(value).build();
+          return NameValuePairYaml.builder().name(settingAttribute.getName()).value(value).build();
         })
         .collect(toList());
   }
@@ -58,14 +58,14 @@ public class DefaultVariablesHelper {
   public void saveOrUpdateDefaults(DefaultsYaml updatedYaml, String appId, String accountId, boolean syncFromGit)
       throws HarnessException {
     List<SettingAttribute> previousDefaultValues = getCurrentDefaultVariables(appId, accountId);
-    List<NameValuePair.Yaml> previousDefaultYamls = convertToNameValuePairYamlList(previousDefaultValues);
+    List<NameValuePairYaml> previousDefaultYamls = convertToNameValuePairYamlList(previousDefaultValues);
 
     // what are the defaults changes? Which are additions and which are deletions?
-    List<NameValuePair.Yaml> varsToAdd = new ArrayList<>();
-    List<NameValuePair.Yaml> varsToDelete = new ArrayList<>();
-    List<NameValuePair.Yaml> varsToUpdate = new ArrayList<>();
+    List<NameValuePairYaml> varsToAdd = new ArrayList<>();
+    List<NameValuePairYaml> varsToDelete = new ArrayList<>();
+    List<NameValuePairYaml> varsToUpdate = new ArrayList<>();
 
-    List<NameValuePair.Yaml> defaults = updatedYaml.getDefaults();
+    List<NameValuePairYaml> defaults = updatedYaml.getDefaults();
 
     if (defaults != null) {
       // initialize the defaults to add from the after
@@ -74,7 +74,7 @@ public class DefaultVariablesHelper {
 
     if (previousDefaultYamls != null) {
       // initialize the defaults to delete from the before, and remove the befores from the defaults to add list
-      for (NameValuePair.Yaml cv : previousDefaultYamls) {
+      for (NameValuePairYaml cv : previousDefaultYamls) {
         varsToDelete.add(cv);
         varsToAdd.remove(cv);
       }
@@ -82,12 +82,12 @@ public class DefaultVariablesHelper {
 
     if (defaults != null) {
       // remove the afters from the defaults to delete list
-      for (NameValuePair.Yaml cv : defaults) {
+      for (NameValuePairYaml cv : defaults) {
         varsToDelete.remove(cv);
 
         if (previousDefaultYamls != null && previousDefaultYamls.contains(cv)) {
-          NameValuePair.Yaml beforeCV = null;
-          for (NameValuePair.Yaml bcv : previousDefaultYamls) {
+          NameValuePairYaml beforeCV = null;
+          for (NameValuePairYaml bcv : previousDefaultYamls) {
             if (bcv.equals(cv)) {
               beforeCV = bcv;
               break;
@@ -104,20 +104,20 @@ public class DefaultVariablesHelper {
         previousDefaultValues.stream().collect(Collectors.toMap(SettingAttribute::getName, identity()));
 
     // do deletions
-    for (NameValuePair.Yaml defaultVar1 : varsToDelete) {
+    for (NameValuePairYaml defaultVar1 : varsToDelete) {
       if (defaultVarMap.containsKey(defaultVar1.getName())) {
         settingsService.delete(appId, defaultVarMap.get(defaultVar1.getName()).getUuid(), false, syncFromGit);
       }
     }
 
     // save the new variables
-    for (NameValuePair.Yaml yaml : varsToAdd) {
+    for (NameValuePairYaml yaml : varsToAdd) {
       settingsService.save(createNewSettingAttribute(accountId, appId, yaml), false);
     }
 
     try {
       // update the existing variables
-      for (NameValuePair.Yaml defaultVar : varsToUpdate) {
+      for (NameValuePairYaml defaultVar : varsToUpdate) {
         SettingAttribute settingAttribute = defaultVarMap.get(defaultVar.getName());
         if (settingAttribute != null) {
           SettingValue settingValue = settingAttribute.getValue();
@@ -135,7 +135,7 @@ public class DefaultVariablesHelper {
     yamlPushService.pushYamlChangeSet(accountId, appId, ChangeType.MODIFY, syncFromGit);
   }
 
-  private SettingAttribute createNewSettingAttribute(String accountId, String appId, NameValuePair.Yaml defaultVar) {
+  private SettingAttribute createNewSettingAttribute(String accountId, String appId, NameValuePairYaml defaultVar) {
     SettingValue settingValue = StringValue.Builder.aStringValue().withValue(defaultVar.getValue()).build();
     return SettingAttribute.Builder.aSettingAttribute()
         .withAppId(appId)

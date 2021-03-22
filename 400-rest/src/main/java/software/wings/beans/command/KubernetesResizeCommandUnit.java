@@ -41,9 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
@@ -327,19 +324,5 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     }
     virtualServiceHttpNested.endHttp();
     return virtualServiceSpecNested.endSpec().build();
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("RESIZE_KUBERNETES")
-  public static class Yaml extends CommandExecutionStatusYaml {
-    public Yaml() {
-      super(CommandUnitType.RESIZE_KUBERNETES.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.RESIZE_KUBERNETES.name(), deploymentType);
-    }
   }
 }

@@ -12,7 +12,9 @@ import io.harness.exception.WingsException;
 import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ContainerDefinitionYaml;
 import software.wings.beans.container.LogConfiguration;
+import software.wings.beans.container.LogConfigurationYaml;
 import software.wings.beans.container.PortMapping;
+import software.wings.beans.container.PortMappingYaml;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -35,13 +37,13 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
   public ContainerDefinitionYaml toYaml(ContainerDefinition containerDefinition, String appId) {
     // Log Configuration
     LogConfigurationYamlHandler logConfigYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION);
-    LogConfiguration.Yaml logConfigYaml = null;
+    LogConfigurationYaml logConfigYaml = null;
     if (containerDefinition.getLogConfiguration() != null) {
       logConfigYaml = logConfigYamlHandler.toYaml(containerDefinition.getLogConfiguration(), appId);
     }
 
     // Port Mappings
-    List<PortMapping.Yaml> portMappingYamlList = Collections.emptyList();
+    List<PortMappingYaml> portMappingYamlList = Collections.emptyList();
     PortMappingYamlHandler portMappingYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PORT_MAPPING);
     List<PortMapping> portMappings = containerDefinition.getPortMappings();
     if (isNotEmpty(portMappings)) {
@@ -123,7 +125,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
 
     // log configuration
     LogConfiguration logConfig = null;
-    LogConfiguration.Yaml logConfigYaml = yaml.getLogConfiguration();
+    LogConfigurationYaml logConfigYaml = yaml.getLogConfiguration();
     if (logConfigYaml != null) {
       LogConfigurationYamlHandler logConfigYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.LOG_CONFIGURATION);
       ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, logConfigYaml);

@@ -93,7 +93,7 @@ import software.wings.beans.defaults.Defaults;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.ArtifactSelectionYaml;
-import software.wings.beans.trigger.ManifestSelection;
+import software.wings.beans.trigger.ManifestSelectionYaml;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.infra.CloudProviderInfrastructure;
@@ -509,7 +509,7 @@ public enum YamlType {
   TRIGGER_VARIABLE(ObjectType.TRIGGER_VARIABLE, "", "", TriggerVariableYaml.class),
   TRIGGER_ARTIFACT_VALUE(ObjectType.TRIGGER_ARTIFACT_VALUE, "", "", TriggerArtifactSelectionValueYaml.class),
   ARTIFACT_SELECTION(ObjectType.ARTIFACT_SELECTION, "", "", ArtifactSelectionYaml.class),
-  MANIFEST_SELECTION(ObjectType.MANIFEST_SELECTION, "", "", ManifestSelection.Yaml.class),
+  MANIFEST_SELECTION(ObjectType.MANIFEST_SELECTION, "", "", ManifestSelectionYaml.class),
   TAG(EntityType.TAG.name(), generatePath(PATH_DELIMITER, false, SETUP_FOLDER, TAGS_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, ANY), HarnessTag.class),
   CLOUD_PROVIDER_INFRASTRUCTURE(ObjectType.CLOUD_PROVIDER_INFRASTRUCTURE, "", "", CloudProviderInfrastructure.class),

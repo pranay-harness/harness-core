@@ -3,13 +3,13 @@ package software.wings.service.impl.yaml.handler.inframapping;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import software.wings.beans.PhysicalInfrastructureMappingBase;
-import software.wings.beans.PhysicalInfrastructureMappingBase.Yaml;
+import software.wings.beans.PhysicalInfrastructureMappingBaseYaml;
 import software.wings.beans.yaml.ChangeContext;
 
 import com.google.inject.Singleton;
 
 @Singleton
-public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfrastructureMappingBase.Yaml, B
+public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfrastructureMappingBaseYaml, B
                                                               extends PhysicalInfrastructureMappingBase>
     extends InfraMappingYamlWithComputeProviderHandler<Y, B> {
   @Override
@@ -22,7 +22,7 @@ public abstract class PhysicalInfraMappingBaseYamlHandler<Y extends PhysicalInfr
   @Override
   protected void toBean(ChangeContext<Y> changeContext, B bean, String appId, String envId, String computeProviderId,
       String serviceId, String provisionerId) {
-    Yaml yaml = changeContext.getYaml();
+    PhysicalInfrastructureMappingBaseYaml yaml = changeContext.getYaml();
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, provisionerId);
     if (isNotBlank(yaml.getLoadBalancer())) {
       bean.setLoadBalancerId(getSettingId(bean.getAccountId(), appId, yaml.getLoadBalancer()));

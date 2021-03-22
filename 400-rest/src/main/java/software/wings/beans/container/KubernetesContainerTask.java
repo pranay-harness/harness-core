@@ -39,10 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.LineIterator;
 
@@ -326,16 +323,5 @@ public class KubernetesContainerTask extends ContainerTask {
   @Override
   public void validate() {
     // Do Nothing
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends ContainerTaskYaml {
-    @Builder
-    public Yaml(
-        String type, String harnessApiVersion, String advancedConfig, ContainerDefinitionYaml containerDefinition) {
-      super(type, harnessApiVersion, advancedConfig, containerDefinition);
-    }
   }
 }

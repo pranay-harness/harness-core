@@ -33,6 +33,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelectionYaml;
 import software.wings.beans.trigger.ManifestSelection;
+import software.wings.beans.trigger.ManifestSelectionYaml;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.Trigger.Yaml;
 import software.wings.beans.trigger.Trigger.Yaml.TriggerVariable;
@@ -132,7 +133,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
             .map(artifactSelection -> { return artifactSelectionYamlHandler.toYaml(artifactSelection, appId); })
             .collect(Collectors.toList());
 
-    List<ManifestSelection.Yaml> manifestSelectionList =
+    List<ManifestSelectionYaml> manifestSelectionList =
         featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, bean.getAccountId())
         ? bean.getManifestSelections()
               .stream()

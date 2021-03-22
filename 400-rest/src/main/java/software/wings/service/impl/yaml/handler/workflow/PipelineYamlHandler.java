@@ -5,8 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import static software.wings.beans.Pipeline.Yaml;
-
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -17,6 +15,8 @@ import software.wings.beans.Application;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineStageYaml;
+import software.wings.beans.PipelineYaml;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -38,13 +38,14 @@ import java.util.Optional;
  */
 @OwnedBy(CDC)
 @Singleton
-public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
+public class PipelineYamlHandler extends BaseYamlHandler<PipelineYaml, Pipeline> {
   @Inject private YamlHelper yamlHelper;
   @Inject private PipelineService pipelineService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
-  private Pipeline toBean(ChangeContext<Yaml> context, List<ChangeContext> changeSetContext, Pipeline previous) {
-    Yaml yaml = context.getYaml();
+  private Pipeline toBean(
+      ChangeContext<PipelineYaml> context, List<ChangeContext> changeSetContext, Pipeline previous) {
+    PipelineYaml yaml = context.getYaml();
     Change change = context.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
@@ -106,26 +107,26 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   }
 
   @Override
-  public Yaml toYaml(Pipeline bean, String appId) {
+  public PipelineYaml toYaml(Pipeline bean, String appId) {
     PipelineStageYamlHandler pipelineStageYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE_STAGE);
     List<PipelineStage> pipelineStages = bean.getPipelineStages();
-    List<PipelineStage.Yaml> pipelineStageYamlList =
+    List<PipelineStageYaml> pipelineStageYamlList =
         pipelineStages.stream()
             .map(pipelineStage -> pipelineStageYamlHandler.toYaml(pipelineStage, bean.getAppId()))
             .collect(toList());
 
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .description(bean.getDescription())
-                    .pipelineStages(pipelineStageYamlList)
-                    .build();
+    PipelineYaml yaml = PipelineYaml.builder()
+                            .harnessApiVersion(getHarnessApiVersion())
+                            .description(bean.getDescription())
+                            .pipelineStages(pipelineStageYamlList)
+                            .build();
 
     updateYamlWithAdditionalInfo(bean, appId, yaml);
     return yaml;
   }
 
   @Override
-  public Pipeline upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public Pipeline upsertFromYaml(ChangeContext<PipelineYaml> changeContext, List<ChangeContext> changeSetContext) {
     Pipeline previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
     Pipeline current = toBean(changeContext, changeSetContext, previous);
@@ -145,7 +146,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PipelineYaml.class;
   }
 
   @Override
@@ -154,7 +155,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<PipelineYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String filePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, filePath);

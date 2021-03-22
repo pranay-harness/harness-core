@@ -6,11 +6,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.base.MoreObjects;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -23,25 +19,6 @@ public abstract class PhysicalInfrastructureMappingBase extends InfrastructureMa
 
   public PhysicalInfrastructureMappingBase(InfrastructureMappingType infrastructureMappingType) {
     super(infrastructureMappingType.name());
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends InfrastructureMapping.YamlWithComputeProvider {
-    private List<String> hostNames;
-    private List<Host> hosts;
-    private String loadBalancer;
-
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, List<Host> hosts, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, blueprints);
-      this.hostNames = hostNames;
-      this.loadBalancer = loadBalancer;
-      this.hosts = hosts;
-    }
   }
 
   public List<String> getHostNames() {

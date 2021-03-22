@@ -8,7 +8,7 @@ import software.wings.beans.InfrastructureType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.infra.PhysicalInfra;
-import software.wings.infra.PhysicalInfra.Yaml;
+import software.wings.infra.PhysicalInfraYaml;
 import software.wings.service.impl.yaml.handler.CloudProviderInfrastructure.CloudProviderInfrastructureYamlHandler;
 import software.wings.service.intfc.SettingsService;
 
@@ -17,13 +17,13 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-public class PhysicalInfraYamlHandler extends CloudProviderInfrastructureYamlHandler<Yaml, PhysicalInfra> {
+public class PhysicalInfraYamlHandler extends CloudProviderInfrastructureYamlHandler<PhysicalInfraYaml, PhysicalInfra> {
   @Inject private SettingsService settingsService;
   @Override
-  public Yaml toYaml(PhysicalInfra bean, String appId) {
+  public PhysicalInfraYaml toYaml(PhysicalInfra bean, String appId) {
     SettingAttribute cloudProvider = settingsService.get(bean.getCloudProviderId());
     SettingAttribute hostNameConnectionAttr = settingsService.get(bean.getHostConnectionAttrs());
-    return Yaml.builder()
+    return PhysicalInfraYaml.builder()
         .hosts(bean.getHosts())
         .hostNames(bean.getHostNames())
         .hostConnectionAttrsName(hostNameConnectionAttr.getName())
@@ -35,14 +35,15 @@ public class PhysicalInfraYamlHandler extends CloudProviderInfrastructureYamlHan
   }
 
   @Override
-  public PhysicalInfra upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public PhysicalInfra upsertFromYaml(
+      ChangeContext<PhysicalInfraYaml> changeContext, List<ChangeContext> changeSetContext) {
     PhysicalInfra bean = PhysicalInfra.builder().build();
     toBean(bean, changeContext);
     return bean;
   }
 
-  private void toBean(PhysicalInfra bean, ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private void toBean(PhysicalInfra bean, ChangeContext<PhysicalInfraYaml> changeContext) {
+    PhysicalInfraYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     SettingAttribute cloudProvider = settingsService.getSettingAttributeByName(accountId, yaml.getCloudProviderName());
     SettingAttribute hostConnectionAttr =
@@ -58,6 +59,6 @@ public class PhysicalInfraYamlHandler extends CloudProviderInfrastructureYamlHan
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PhysicalInfraYaml.class;
   }
 }

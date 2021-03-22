@@ -27,7 +27,7 @@ public final class CloudFormationInfrastructureProvisionerYaml extends InfraProv
   // TODO: check usage of yaml constructor
   @Builder
   public CloudFormationInfrastructureProvisionerYaml(String type, String harnessApiVersion, String description,
-      String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
+      String infrastructureProvisionerType, List<NameValuePairYaml> variables,
       List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String sourceType, String templateBody,
       String templateFilePath, GitFileConfig gitFileConfig) {
     super(type, harnessApiVersion, description, infrastructureProvisionerType, variables, mappingBlueprints);

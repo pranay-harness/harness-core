@@ -17,11 +17,11 @@ import lombok.NoArgsConstructor;
 public abstract class InfraProvisionerYaml extends BaseEntityYaml {
   private String description;
   private String infrastructureProvisionerType;
-  private List<NameValuePair.Yaml> variables;
+  private List<NameValuePairYaml> variables;
   private List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints;
 
   public InfraProvisionerYaml(String type, String harnessApiVersion, String description,
-      String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
+      String infrastructureProvisionerType, List<NameValuePairYaml> variables,
       List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints) {
     super(type, harnessApiVersion);
     this.description = description;

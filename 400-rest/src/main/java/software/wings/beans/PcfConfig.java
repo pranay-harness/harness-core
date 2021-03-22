@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
-
 import static java.util.Collections.emptyList;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -11,10 +9,8 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.CloudProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -24,7 +20,6 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -76,27 +71,5 @@ public class PcfConfig extends SettingValue implements EncryptableSetting {
      * connectivity.
      */
     return emptyList();
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends CloudProviderYaml {
-    private String endpointUrl;
-    private String username;
-    private String usernameSecretId;
-    private String password = ENCRYPTED_VALUE_STR;
-    private boolean skipValidation;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String endpointUrl, String username, String usernameSecretId,
-        String password, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.endpointUrl = endpointUrl;
-      this.username = username;
-      this.usernameSecretId = usernameSecretId;
-      this.password = password;
-      this.skipValidation = skipValidation;
-    }
   }
 }

@@ -25,7 +25,7 @@ import software.wings.beans.AllowedValueYaml;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Yaml;
 import software.wings.beans.Service.Yaml.YamlBuilder;
@@ -78,7 +78,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
   @Override
   public Yaml toYaml(Service service, String appId) {
-    List<NameValuePair.Yaml> nameValuePairList =
+    List<NameValuePairYaml> nameValuePairList =
         convertToNameValuePair(service.getServiceVariables(), service.getAccountId());
     AppContainer appContainer = service.getAppContainer();
     String applicationStack = appContainer != null ? appContainer.getName() : null;
@@ -104,7 +104,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return yaml;
   }
 
-  private List<NameValuePair.Yaml> convertToNameValuePair(List<ServiceVariable> serviceVariables, String accountId) {
+  private List<NameValuePairYaml> convertToNameValuePair(List<ServiceVariable> serviceVariables, String accountId) {
     if (serviceVariables == null) {
       return Lists.newArrayList();
     }
@@ -127,7 +127,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
             log.warn("Variable type {} not supported, skipping the processing of value", variableType);
           }
 
-          return NameValuePair.Yaml.builder()
+          return NameValuePairYaml.builder()
               .valueType(variableType.name())
               .value(value)
               .name(serviceVariable.getName())
@@ -250,15 +250,14 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return yamlHelper.getService(appId, yamlFilePath);
   }
 
-  private List<NameValuePair.Yaml> getConfigVariablesToAdd(
-      Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
-    List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
+  private List<NameValuePairYaml> getConfigVariablesToAdd(Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
+    List<NameValuePairYaml> configVarsToAdd = new ArrayList<>();
 
     if (isEmpty(yaml.getConfigVariables())) {
       return configVarsToAdd;
     }
 
-    for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
+    for (NameValuePairYaml configVar : yaml.getConfigVariables()) {
       String configVarName = configVar.getName();
       // Check only if new variables contain hyphens. Old variables should not be checked for backward compatibility
       if (!serviceVariablesMap.containsKey(configVarName)) {
@@ -273,15 +272,15 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return configVarsToAdd;
   }
 
-  private List<NameValuePair.Yaml> getConfigVariablesToUpdate(
+  private List<NameValuePairYaml> getConfigVariablesToUpdate(
       Yaml yaml, Map<String, ServiceVariable> serviceVariablesMap) {
-    List<NameValuePair.Yaml> configVarsToUpdate = new ArrayList<>();
+    List<NameValuePairYaml> configVarsToUpdate = new ArrayList<>();
 
     if (isEmpty(yaml.getConfigVariables())) {
       return configVarsToUpdate;
     }
 
-    for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
+    for (NameValuePairYaml configVar : yaml.getConfigVariables()) {
       if (serviceVariablesMap.containsKey(configVar.getName())) {
         ServiceVariable serviceVariable = serviceVariablesMap.get(configVar.getName());
 
@@ -315,9 +314,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       return configVarsToDelete;
     }
 
-    Map<String, NameValuePair.Yaml> configVariablesFromYamlMap = new HashMap<>();
+    Map<String, NameValuePairYaml> configVariablesFromYamlMap = new HashMap<>();
     if (isNotEmpty(yaml.getConfigVariables())) {
-      for (NameValuePair.Yaml configVar : yaml.getConfigVariables()) {
+      for (NameValuePairYaml configVar : yaml.getConfigVariables()) {
         configVariablesFromYamlMap.put(configVar.getName(), configVar);
       }
     }
@@ -336,9 +335,9 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     Map<String, ServiceVariable> serviceVariableMap =
         previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, identity()));
 
-    List<NameValuePair.Yaml> configVarsToAdd = getConfigVariablesToAdd(updatedYaml, serviceVariableMap);
+    List<NameValuePairYaml> configVarsToAdd = getConfigVariablesToAdd(updatedYaml, serviceVariableMap);
     List<ServiceVariable> configVarsToDelete = getConfigVariablesToDelete(updatedYaml, serviceVariableMap);
-    List<NameValuePair.Yaml> configVarsToUpdate = getConfigVariablesToUpdate(updatedYaml, serviceVariableMap);
+    List<NameValuePairYaml> configVarsToUpdate = getConfigVariablesToUpdate(updatedYaml, serviceVariableMap);
 
     // We are passing true for syncFromGit because we don't want to generate multiple yaml change sets if user is adding
     // many service variables through yaml. After performing all add/update/delete, we will call pushToGit which will
@@ -351,7 +350,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     }
 
     // Add service variables
-    for (NameValuePair.Yaml yaml : configVarsToAdd) {
+    for (NameValuePairYaml yaml : configVarsToAdd) {
       serviceVariableService.save(createNewServiceVariable(accountId, appId, serviceId, yaml), true);
     }
 
@@ -360,8 +359,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   private void updateServiceVariables(
-      String accountId, List<NameValuePair.Yaml> configVarsToUpdate, Map<String, ServiceVariable> serviceVariableMap) {
-    for (NameValuePair.Yaml configVar : configVarsToUpdate) {
+      String accountId, List<NameValuePairYaml> configVarsToUpdate, Map<String, ServiceVariable> serviceVariableMap) {
+    for (NameValuePairYaml configVar : configVarsToUpdate) {
       ServiceVariable serviceVariable = serviceVariableMap.get(configVar.getName());
       String value = configVar.getValue();
 
@@ -397,7 +396,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
   }
 
   private ServiceVariable createNewServiceVariable(
-      String accountId, String appId, String serviceId, NameValuePair.Yaml cv) {
+      String accountId, String appId, String serviceId, NameValuePairYaml cv) {
     notNullCheck("Value type is not set for variable: " + cv.getName(), cv.getValueType(), USER);
 
     ServiceVariableBuilder serviceVariableBuilder = ServiceVariable.builder()

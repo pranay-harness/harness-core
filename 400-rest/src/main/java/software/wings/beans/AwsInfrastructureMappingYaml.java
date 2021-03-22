@@ -38,14 +38,14 @@ public final class AwsInfrastructureMappingYaml extends InfrastructureMapping.Ya
 
   // These four fields map to AwsInstanceFilter
   private List<String> vpcs = new ArrayList<>();
-  private List<NameValuePair.Yaml> awsTags = new ArrayList<>();
+  private List<NameValuePairYaml> awsTags = new ArrayList<>();
 
   @lombok.Builder
   public AwsInfrastructureMappingYaml(String type, String harnessApiVersion, String computeProviderType,
       String serviceName, String infraMappingType, String deploymentType, String computeProviderName, String name,
       String restrictions, String expression, String region, String provisionerName, String connectionType,
       String loadBalancer, boolean usePublicDns, String hostConnectionType, boolean provisionInstances,
-      String autoScalingGroup, int desiredCapacity, List<String> vpcs, List<NameValuePair.Yaml> awsTags,
+      String autoScalingGroup, int desiredCapacity, List<String> vpcs, List<NameValuePairYaml> awsTags,
       String hostNameConvention, Map<String, Object> blueprints) {
     super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
         computeProviderName, blueprints);

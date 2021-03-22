@@ -564,14 +564,14 @@ public class WorkflowPhase implements UuidAccess {
     private boolean statefulSet;
     private String phaseNameForRollback;
     private List<TemplateExpression.Yaml> templateExpressions;
-    private List<PhaseStep.Yaml> phaseSteps = new ArrayList<>();
+    private List<PhaseStepYaml> phaseSteps = new ArrayList<>();
     private List<NameValuePair> serviceVariableOverrides = new ArrayList<>();
     //  private DeploymentType deploymentType;
 
     @lombok.Builder
     public Yaml(String type, String name, String infraMappingName, String infraDefinitionName, String serviceName,
         String computeProviderName, boolean provisionNodes, String phaseNameForRollback,
-        List<TemplateExpression.Yaml> templateExpressions, List<PhaseStep.Yaml> phaseSteps, boolean daemonSet,
+        List<TemplateExpression.Yaml> templateExpressions, List<PhaseStepYaml> phaseSteps, boolean daemonSet,
         boolean statefulSet, List<NameValuePair> serviceVariableOverrides) {
       super(type);
       this.name = name;

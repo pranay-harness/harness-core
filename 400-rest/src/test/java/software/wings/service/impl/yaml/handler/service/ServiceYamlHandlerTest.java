@@ -33,7 +33,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.Service;
 import software.wings.beans.Service.Yaml;
 import software.wings.beans.ServiceVariable;
@@ -139,7 +139,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   public void toYaml() {
     final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
     final List<String> varNames =
-        yaml.getConfigVariables().stream().map(NameValuePair.Yaml::getValue).collect(Collectors.toList());
+        yaml.getConfigVariables().stream().map(NameValuePairYaml::getValue).collect(Collectors.toList());
     assertThat(varNames).containsExactlyInAnyOrder("safeharness:some-secret", "amazonkms:other-secret", "var");
     assertThat(yaml.getDeploymentTypeTemplateUri()).isEqualTo("template-uri");
   }
@@ -251,11 +251,11 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
     ChangeContext<Yaml> changeContext = getChangeContext(yaml);
 
-    NameValuePair.Yaml newServiceVar = NameValuePair.Yaml.builder()
-                                           .name("enc_3")
-                                           .value("safeharness:new-secret")
-                                           .valueType(Type.ENCRYPTED_TEXT.name())
-                                           .build();
+    NameValuePairYaml newServiceVar = NameValuePairYaml.builder()
+                                          .name("enc_3")
+                                          .value("safeharness:new-secret")
+                                          .valueType(Type.ENCRYPTED_TEXT.name())
+                                          .build();
     yaml.getConfigVariables().add(newServiceVar);
     when(yamlHelper.extractEncryptedRecordId(eq("safeharness:new-secret"), anyString())).thenReturn("new-secret");
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
@@ -275,11 +275,11 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
     ChangeContext<Yaml> changeContext = getChangeContext(yaml);
 
-    NameValuePair.Yaml newServiceVar = NameValuePair.Yaml.builder()
-                                           .name("enc-4")
-                                           .value("safeharness:new-secret")
-                                           .valueType(Type.ENCRYPTED_TEXT.name())
-                                           .build();
+    NameValuePairYaml newServiceVar = NameValuePairYaml.builder()
+                                          .name("enc-4")
+                                          .value("safeharness:new-secret")
+                                          .valueType(Type.ENCRYPTED_TEXT.name())
+                                          .build();
     yaml.getConfigVariables().add(newServiceVar);
     when(yamlHelper.extractEncryptedRecordId(eq("safeharness:new-secret"), anyString())).thenReturn("new-secret");
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);

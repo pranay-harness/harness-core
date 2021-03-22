@@ -22,6 +22,6 @@ public class BlueprintProperty {
     @NotEmpty @Trimmed private String name;
     @NotNull private String value;
     private String valueType;
-    private List<NameValuePair.Yaml> fields;
+    private List<NameValuePairYaml> fields;
   }
 }

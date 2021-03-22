@@ -6,7 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.PcfConfig;
-import software.wings.beans.PcfConfig.Yaml;
+import software.wings.beans.PcfConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -15,22 +15,22 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConfig> {
+public class PcfConfigYamlHandler extends CloudProviderYamlHandler<PcfConfigYaml, PcfConfig> {
   @Override
-  public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
+  public PcfConfigYaml toYaml(SettingAttribute settingAttribute, String appId) {
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
     boolean useEncryptedUsername = pcfConfig.isUseEncryptedUsername();
-    Yaml yaml = Yaml.builder()
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .username(useEncryptedUsername ? null : String.valueOf(pcfConfig.getUsername()))
-                    .usernameSecretId(useEncryptedUsername
-                            ? getEncryptedYamlRef(pcfConfig.getAccountId(), pcfConfig.getEncryptedUsername())
-                            : null)
-                    .endpointUrl(pcfConfig.getEndpointUrl())
-                    .password(getEncryptedYamlRef(pcfConfig.getAccountId(), pcfConfig.getEncryptedPassword()))
-                    .type(pcfConfig.getType())
-                    .skipValidation(pcfConfig.isSkipValidation())
-                    .build();
+    PcfConfigYaml yaml = PcfConfigYaml.builder()
+                             .harnessApiVersion(getHarnessApiVersion())
+                             .username(useEncryptedUsername ? null : String.valueOf(pcfConfig.getUsername()))
+                             .usernameSecretId(useEncryptedUsername
+                                     ? getEncryptedYamlRef(pcfConfig.getAccountId(), pcfConfig.getEncryptedUsername())
+                                     : null)
+                             .endpointUrl(pcfConfig.getEndpointUrl())
+                             .password(getEncryptedYamlRef(pcfConfig.getAccountId(), pcfConfig.getEncryptedPassword()))
+                             .type(pcfConfig.getType())
+                             .skipValidation(pcfConfig.isSkipValidation())
+                             .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
   }
@@ -38,9 +38,9 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
   @Override
   @VisibleForTesting
   public SettingAttribute toBean(
-      SettingAttribute previous, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      SettingAttribute previous, ChangeContext<PcfConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String uuid = previous != null ? previous.getUuid() : null;
-    Yaml yaml = changeContext.getYaml();
+    PcfConfigYaml yaml = changeContext.getYaml();
     String accountId = changeContext.getChange().getAccountId();
     if (isNotEmpty(yaml.getUsername()) && isNotEmpty(yaml.getUsernameSecretId())) {
       throw new InvalidRequestException("Cannot set both value and secret reference for username field", USER);
@@ -61,6 +61,6 @@ public class PcfConfigYamlHandler extends CloudProviderYamlHandler<Yaml, PcfConf
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PcfConfigYaml.class;
   }
 }

@@ -9,7 +9,6 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ccm.config.CCMConfig;
-import io.harness.ccm.config.CCMConfigYaml;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -26,11 +25,9 @@ import io.harness.k8s.model.OidcGrantType;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
-import software.wings.yaml.setting.CloudProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -46,7 +43,6 @@ import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -272,66 +268,5 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
 
     return Collections.singletonList(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(masterUrl, maskingEvaluator));
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = false)
-  public static class Yaml extends CloudProviderYaml {
-    private boolean useKubernetesDelegate;
-    private String delegateName;
-    private List<String> delegateSelectors;
-    private String masterUrl;
-    private String username;
-    private String usernameSecretId;
-    private String password;
-    private String caCert;
-    private String clientCert;
-    private String clientKey;
-    private String clientKeyPassphrase;
-    private String serviceAccountToken;
-    private String clientKeyAlgo;
-    private boolean skipValidation;
-    private KubernetesClusterAuthType authType;
-    private String oidcIdentityProviderUrl;
-    private String oidcUsername;
-    private OidcGrantType oidcGrantType;
-    private String oidcScopes;
-    private String oidcSecret;
-    private String oidcPassword;
-    private String oidcClientId;
-    private CCMConfigYaml continuousEfficiencyConfig;
-
-    @lombok.Builder
-    public Yaml(boolean useKubernetesDelegate, String delegateName, List<String> delegateSelectors, String type,
-        String harnessApiVersion, String masterUrl, String username, String usernameSecretId, String password,
-        String caCert, String clientCert, String clientKey, String clientKeyPassphrase, String serviceAccountToken,
-        String clientKeyAlgo, boolean skipValidation, UsageRestrictions.Yaml usageRestrictions, CCMConfigYaml ccmConfig,
-        KubernetesClusterAuthType authType, String oidcIdentityProviderUrl, String oidcUsername,
-        OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword, String oidcClientId) {
-      super(type, harnessApiVersion, usageRestrictions);
-      this.useKubernetesDelegate = useKubernetesDelegate;
-      this.delegateName = delegateName;
-      this.delegateSelectors = delegateSelectors;
-      this.masterUrl = masterUrl;
-      this.username = username;
-      this.usernameSecretId = usernameSecretId;
-      this.password = password;
-      this.caCert = caCert;
-      this.clientCert = clientCert;
-      this.clientKey = clientKey;
-      this.clientKeyPassphrase = clientKeyPassphrase;
-      this.serviceAccountToken = serviceAccountToken;
-      this.clientKeyAlgo = clientKeyAlgo;
-      this.skipValidation = skipValidation;
-      this.continuousEfficiencyConfig = ccmConfig;
-      this.authType = authType;
-      this.oidcIdentityProviderUrl = oidcIdentityProviderUrl;
-      this.oidcUsername = oidcUsername;
-      this.oidcPassword = oidcPassword;
-      this.oidcClientId = oidcClientId;
-      this.oidcGrantType = oidcGrantType;
-      this.oidcSecret = oidcSecret;
-    }
   }
 }

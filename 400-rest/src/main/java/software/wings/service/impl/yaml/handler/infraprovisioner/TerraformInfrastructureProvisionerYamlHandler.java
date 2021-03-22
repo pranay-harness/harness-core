@@ -15,6 +15,7 @@ import io.harness.exception.InvalidRequestException;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
@@ -73,10 +74,9 @@ public class TerraformInfrastructureProvisionerYamlHandler
     return yaml;
   }
 
-  private List<software.wings.beans.NameValuePair.Yaml> getSortedNameValuePairYamlList(
-      List<NameValuePair> nameValuePairList, String appId) {
+  private List<NameValuePairYaml> getSortedNameValuePairYamlList(List<NameValuePair> nameValuePairList, String appId) {
     NameValuePairYamlHandler nameValuePairYamlHandler = getNameValuePairYamlHandler();
-    List<NameValuePair.Yaml> nvpYamlList =
+    List<NameValuePairYaml> nvpYamlList =
         nameValuePairList.stream()
             .map(nameValuePair -> nameValuePairYamlHandler.toYaml(nameValuePair, appId))
             .collect(toList());
@@ -136,7 +136,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     }
   }
 
-  private List<NameValuePair> getNameValuePairList(List<NameValuePair.Yaml> nameValuePairList) {
+  private List<NameValuePair> getNameValuePairList(List<NameValuePairYaml> nameValuePairList) {
     return nameValuePairList.stream()
         .map(nvpYaml
             -> NameValuePair.builder()

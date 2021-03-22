@@ -16,8 +16,8 @@ import software.wings.beans.FailureStrategyYaml;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
-import software.wings.beans.PhaseStep.Yaml;
 import software.wings.beans.PhaseStepType;
+import software.wings.beans.PhaseStepYaml;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
@@ -38,13 +38,13 @@ import java.util.List;
  */
 @OwnedBy(CDC)
 @Singleton
-public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseStep> {
+public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStepYaml, PhaseStep> {
   public static final String PHASE_STEP_PROPERTY_NAME = "PHASE_STEP";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml yaml = changeContext.getYaml();
+  private PhaseStep toBean(ChangeContext<PhaseStepYaml> changeContext, List<ChangeContext> changeSetContext) {
+    PhaseStepYaml yaml = changeContext.getYaml();
     PhaseStepType phaseStepType = Utils.getEnumFromString(PhaseStepType.class, yaml.getType());
     String phaseStepUuid = generateUuid();
     PhaseStepBuilder phaseStepBuilder = PhaseStepBuilder.aPhaseStep(phaseStepType, yaml.getName(), phaseStepUuid);
@@ -121,7 +121,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   }
 
   @Override
-  public Yaml toYaml(PhaseStep bean, String appId) {
+  public PhaseStepYaml toYaml(PhaseStep bean, String appId) {
     // Failure strategies
     FailureStrategyYamlHandler failureStrategyYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FAILURE_STRATEGY);
@@ -148,7 +148,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
     List<StepYaml> stepsYamlList =
         bean.getSteps().stream().map(step -> stepYamlHandler.toYaml(step, appId)).collect(toList());
 
-    return Yaml.builder()
+    return PhaseStepYaml.builder()
         .failureStrategies(failureStrategyYamlList)
         .stepSkipStrategies(stepSkipStrategyYamlList)
         .name(bean.getName())
@@ -162,14 +162,14 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   }
 
   @Override
-  public PhaseStep upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
+  public PhaseStep upsertFromYaml(ChangeContext<PhaseStepYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
     return toBean(changeContext, changeSetContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return PhaseStep.Yaml.class;
+    return PhaseStepYaml.class;
   }
 
   @Override
@@ -178,7 +178,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<PhaseStepYaml> changeContext) {
     // Do nothing
   }
 }

@@ -7,7 +7,7 @@ import io.harness.exception.HarnessException;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Service;
 import software.wings.beans.container.PcfServiceSpecification;
-import software.wings.beans.container.PcfServiceSpecification.Yaml;
+import software.wings.beans.container.PcfServiceSpecificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
@@ -20,15 +20,15 @@ import java.util.List;
 
 @Singleton
 public class PcfServiceSpecificationYamlHandler
-    extends DeploymentSpecificationYamlHandler<Yaml, PcfServiceSpecification> {
+    extends DeploymentSpecificationYamlHandler<PcfServiceSpecificationYaml, PcfServiceSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
-  public Yaml toYaml(PcfServiceSpecification bean, String appId) {
+  public PcfServiceSpecificationYaml toYaml(PcfServiceSpecification bean, String appId) {
     Service service = serviceResourceService.getWithDetails(appId, bean.getServiceId());
-    return Yaml.builder()
+    return PcfServiceSpecificationYaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .type(DeploymentType.PCF.name())
         .serviceName(service.getName())
@@ -37,8 +37,8 @@ public class PcfServiceSpecificationYamlHandler
   }
 
   @Override
-  public PcfServiceSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public PcfServiceSpecification upsertFromYaml(ChangeContext<PcfServiceSpecificationYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
     PcfServiceSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
@@ -53,8 +53,8 @@ public class PcfServiceSpecificationYamlHandler
     }
   }
 
-  private PcfServiceSpecification toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private PcfServiceSpecification toBean(ChangeContext<PcfServiceSpecificationYaml> changeContext) {
+    PcfServiceSpecificationYaml yaml = changeContext.getYaml();
 
     String filePath = changeContext.getChange().getFilePath();
     String appId = yamlHelper.getAppId(changeContext.getChange().getAccountId(), filePath);
@@ -71,7 +71,7 @@ public class PcfServiceSpecificationYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PcfServiceSpecificationYaml.class;
   }
 
   @Override
@@ -86,7 +86,7 @@ public class PcfServiceSpecificationYamlHandler
   }
 
   @Override
-  public void delete(ChangeContext<PcfServiceSpecification.Yaml> changeContext) {
+  public void delete(ChangeContext<PcfServiceSpecificationYaml> changeContext) {
     PcfServiceSpecification pcfServiceSpecification =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (pcfServiceSpecification != null) {

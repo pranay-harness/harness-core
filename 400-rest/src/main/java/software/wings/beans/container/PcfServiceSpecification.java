@@ -6,13 +6,11 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.DeploymentSpecification;
-import software.wings.beans.DeploymentSpecificationYaml;
 
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -62,20 +60,5 @@ public class PcfServiceSpecification extends DeploymentSpecification implements 
     specification.setAppId(this.getAppId());
     specification.setAccountId(this.getAccountId());
     return specification;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecificationYaml {
-    private String maniefstYaml;
-    private String serviceName;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, String serviceName, String manifestYaml) {
-      super(type, harnessApiVersion);
-      this.maniefstYaml = manifestYaml;
-      this.serviceName = serviceName;
-    }
   }
 }

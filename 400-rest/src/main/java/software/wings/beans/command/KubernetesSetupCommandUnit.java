@@ -136,9 +136,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
@@ -1963,20 +1960,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         kubernetesContainerService.setControllerPodCount(kubernetesConfig, clusterName, newControllerName,
             controllerPodCount.get(), 0, serviceSteadyStateTimeout, executionLogCallback);
       }
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("KUBERNETES_SETUP")
-  public static class Yaml extends ContainerSetupCommandUnitYaml {
-    public Yaml() {
-      super(CommandUnitType.KUBERNETES_SETUP.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.KUBERNETES_SETUP.name(), deploymentType);
     }
   }
 }

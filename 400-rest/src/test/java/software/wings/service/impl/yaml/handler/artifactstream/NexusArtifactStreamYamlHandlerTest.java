@@ -27,6 +27,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -61,13 +62,13 @@ public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "nexus 2 dev")).thenReturn(settingAttribute);
-    NexusArtifactStream.Yaml baseYaml = NexusArtifactStream.Yaml.builder()
-                                            .repositoryFormat(RepositoryFormat.maven.name())
-                                            .groupId("mygroup")
-                                            .artifactPaths(asList("todolist"))
-                                            .harnessApiVersion("1.0")
-                                            .serverName("nexus 2 dev")
-                                            .build();
+    NexusArtifactStreamYaml baseYaml = NexusArtifactStreamYaml.builder()
+                                           .repositoryFormat(RepositoryFormat.maven.name())
+                                           .groupId("mygroup")
+                                           .artifactPaths(asList("todolist"))
+                                           .harnessApiVersion("1.0")
+                                           .serverName("nexus 2 dev")
+                                           .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -103,13 +104,13 @@ public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "nexus 2 dev")).thenReturn(settingAttribute);
-    NexusArtifactStream.Yaml baseYaml = NexusArtifactStream.Yaml.builder()
-                                            .repositoryName("releases")
-                                            .groupId("mygroup")
-                                            .artifactPaths(asList("todolist"))
-                                            .harnessApiVersion("1.0")
-                                            .serverName("nexus 2 dev")
-                                            .build();
+    NexusArtifactStreamYaml baseYaml = NexusArtifactStreamYaml.builder()
+                                           .repositoryName("releases")
+                                           .groupId("mygroup")
+                                           .artifactPaths(asList("todolist"))
+                                           .harnessApiVersion("1.0")
+                                           .serverName("nexus 2 dev")
+                                           .build();
     ChangeContext changeContext = ChangeContext.Builder.aChangeContext()
                                       .withYamlType(YamlType.ARTIFACT_STREAM)
                                       .withYaml(baseYaml)
@@ -148,15 +149,15 @@ public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, settingName)).thenReturn(settingAttribute);
-    NexusArtifactStream.Yaml baseYaml = NexusArtifactStream.Yaml.builder()
-                                            .repositoryFormat(RepositoryFormat.maven.name())
-                                            .repositoryName("${repo}")
-                                            .groupId("${groupId}")
-                                            .artifactPaths(asList("${artifactId}"))
-                                            .harnessApiVersion("1.0")
-                                            .serverName(settingName)
-                                            .metadataOnly(true)
-                                            .build();
+    NexusArtifactStreamYaml baseYaml = NexusArtifactStreamYaml.builder()
+                                           .repositoryFormat(RepositoryFormat.maven.name())
+                                           .repositoryName("${repo}")
+                                           .groupId("${groupId}")
+                                           .artifactPaths(asList("${artifactId}"))
+                                           .harnessApiVersion("1.0")
+                                           .serverName(settingName)
+                                           .metadataOnly(true)
+                                           .build();
     ChangeContext changeContext =
         ChangeContext.Builder.aChangeContext()
             .withYamlType(YamlType.ARTIFACT_STREAM)
@@ -217,7 +218,7 @@ public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
                                                 .build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    NexusArtifactStream.Yaml yaml = yamlHandler.toYaml(acrArtifactStream, APP_ID);
+    NexusArtifactStreamYaml yaml = yamlHandler.toYaml(acrArtifactStream, APP_ID);
     assertThat(yaml.getRepositoryFormat()).isEqualTo(RepositoryType.maven.name());
     assertThat(yaml.getRepositoryName()).isEqualTo("harness");
     assertThat(yaml.getGroupId()).isEqualTo("com.harness.tgz");
@@ -232,6 +233,6 @@ public class NexusArtifactStreamYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(NexusArtifactStream.Yaml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(NexusArtifactStreamYaml.class);
   }
 }

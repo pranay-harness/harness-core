@@ -9,7 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.NameValuePair;
-import software.wings.beans.NameValuePair.Yaml;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,7 +53,7 @@ public class Utils {
     }
   }
 
-  public static List<NameValuePair.Yaml> toNameValuePairYamlList(
+  public static List<NameValuePairYaml> toNameValuePairYamlList(
       Map<String, Object> properties, String appId, NameValuePairYamlHandler nameValuePairYamlHandler) {
     return properties.entrySet()
         .stream()
@@ -74,15 +74,15 @@ public class Utils {
         HashMap::new, (m, v) -> m.put(v.getName(), v.getValue()), HashMap::putAll);
   }
 
-  public static List<NameValuePair.Yaml> getSortedNameValuePairYamlList(List<NameValuePair.Yaml> yamlList) {
+  public static List<NameValuePairYaml> getSortedNameValuePairYamlList(List<NameValuePairYaml> yamlList) {
     if (isEmpty(yamlList)) {
       return yamlList;
     }
 
     return yamlList.stream()
-        .sorted(new Comparator<Yaml>() {
+        .sorted(new Comparator<NameValuePairYaml>() {
           @Override
-          public int compare(Yaml o1, Yaml o2) {
+          public int compare(NameValuePairYaml o1, NameValuePairYaml o2) {
             return o1.getName().compareTo(o2.getName());
           }
         })

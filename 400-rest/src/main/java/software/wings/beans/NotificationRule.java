@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.yaml.BaseYaml;
 
 import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
@@ -12,11 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class NotificationRule {
@@ -339,33 +334,6 @@ public class NotificationRule {
       notificationRule.setUserGroupExpression(userGroupExpression);
       notificationRule.setNotificationGroupAsExpression(notificationGroupAsExpression);
       return notificationRule;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    private List<String> conditions = new ArrayList<>();
-    private String executionScope;
-    private List<String> notificationGroups = new ArrayList<>();
-    private boolean notificationGroupAsExpression;
-    private boolean userGroupAsExpression;
-    private String userGroupExpression;
-
-    private List<String> userGroupIds = new ArrayList<>();
-
-    @Builder
-    public Yaml(List<String> conditions, String executionScope, List<String> notificationGroups,
-        boolean notificationGroupAsExpression, boolean userGroupAsExpression, List<String> userGroupIds,
-        String userGroupExpression) {
-      this.conditions = conditions;
-      this.executionScope = executionScope;
-      this.notificationGroups = notificationGroups;
-      this.notificationGroupAsExpression = notificationGroupAsExpression;
-      this.userGroupAsExpression = userGroupAsExpression;
-      this.userGroupIds = userGroupIds;
-      this.userGroupExpression = userGroupExpression;
     }
   }
 }

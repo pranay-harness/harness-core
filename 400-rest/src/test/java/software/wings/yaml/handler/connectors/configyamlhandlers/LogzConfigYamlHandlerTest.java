@@ -15,6 +15,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.config.LogzConfig;
+import software.wings.beans.config.LogzConfigYaml;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.LogzConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 
@@ -33,7 +34,7 @@ public class LogzConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTest
       + "harnessApiVersion: '1.0'\n"
       + "type: Logz";
 
-  private Class yamlClass = LogzConfig.Yaml.class;
+  private Class yamlClass = LogzConfigYaml.class;
 
   @Test
   @Owner(developers = ADWAIT)

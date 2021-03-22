@@ -25,6 +25,7 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureStrategyYaml;
 import software.wings.beans.GraphNode;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.NotificationRuleYaml;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.PhaseStep.PhaseStepBuilder;
 import software.wings.beans.PhaseStepType;
@@ -454,7 +455,7 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     NotificationRulesYamlHandler notificationRuleYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_RULE);
     List<NotificationRule> notificationRules = orchestrationWorkflow.getNotificationRules();
-    List<NotificationRule.Yaml> notificationRuleYamlList =
+    List<NotificationRuleYaml> notificationRuleYamlList =
         notificationRules.stream()
             .map(notificationRule -> notificationRuleYamlHandler.toYaml(notificationRule, appId))
             .collect(toList());

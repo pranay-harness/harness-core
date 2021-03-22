@@ -9,7 +9,6 @@ import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
 import software.wings.beans.notification.SlackNotificationSetting;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
@@ -20,10 +19,6 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
@@ -391,22 +386,6 @@ public class NotificationGroup extends Base implements NotificationReceiverInfo,
       notificationGroup.setEditable(editable);
       notificationGroup.setDefaultNotificationGroupForAccount(defaultNotificationGroupForAccount);
       return notificationGroup;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private List<NotificationGroupAddressYaml> addresses;
-    private String defaultNotificationGroupForAccount;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, List<NotificationGroupAddressYaml> addresses,
-        String defaultNotificationGroupForAccount) {
-      super(type, harnessApiVersion);
-      this.addresses = addresses;
-      this.defaultNotificationGroupForAccount = defaultNotificationGroupForAccount;
     }
   }
 }

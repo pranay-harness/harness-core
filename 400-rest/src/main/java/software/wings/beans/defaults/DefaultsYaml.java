@@ -3,7 +3,7 @@ package software.wings.beans.defaults;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
@@ -17,10 +17,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class DefaultsYaml extends BaseEntityYaml {
-  private List<NameValuePair.Yaml> defaults;
+  private List<NameValuePairYaml> defaults;
 
   @Builder
-  public DefaultsYaml(String type, String harnessApiVersion, List<NameValuePair.Yaml> defaults) {
+  public DefaultsYaml(String type, String harnessApiVersion, List<NameValuePairYaml> defaults) {
     super(type, harnessApiVersion);
     this.defaults = defaults;
   }

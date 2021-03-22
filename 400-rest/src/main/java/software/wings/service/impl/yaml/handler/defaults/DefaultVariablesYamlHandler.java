@@ -6,7 +6,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.Application;
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.defaults.DefaultsYaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -53,8 +53,7 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<DefaultsYaml, L
 
   @Override
   public DefaultsYaml toYaml(List<SettingAttribute> settingAttributeList, String appId) {
-    List<NameValuePair.Yaml> nameValuePairYamlList =
-        defaultsHelper.convertToNameValuePairYamlList(settingAttributeList);
+    List<NameValuePairYaml> nameValuePairYamlList = defaultsHelper.convertToNameValuePairYamlList(settingAttributeList);
 
     YamlType yamlType = GLOBAL_APP_ID.equals(appId) ? YamlType.ACCOUNT_DEFAULTS : YamlType.APPLICATION_DEFAULTS;
 

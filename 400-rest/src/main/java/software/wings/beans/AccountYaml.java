@@ -16,10 +16,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public final class AccountYaml extends BaseEntityYaml {
-  private List<NameValuePair.Yaml> defaults = new ArrayList<>();
+  private List<NameValuePairYaml> defaults = new ArrayList<>();
 
   @lombok.Builder
-  public AccountYaml(String type, String harnessApiVersion, List<NameValuePair.Yaml> defaults) {
+  public AccountYaml(String type, String harnessApiVersion, List<NameValuePairYaml> defaults) {
     super(type, harnessApiVersion);
     this.defaults = defaults;
   }

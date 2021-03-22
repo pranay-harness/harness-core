@@ -4,9 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import software.wings.yaml.BaseYamlWithType;
-
-import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +11,6 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.NotSaved;
 
@@ -57,35 +53,6 @@ public class PipelineStage {
 
     public boolean checkDisableAssertion() {
       return disableAssertion != null && disableAssertion.equals("true");
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYamlWithType {
-    private String name;
-    private String stageName;
-    private SkipCondition skipCondition;
-    private boolean parallel;
-    private String workflowName;
-    private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
-    private Map<String, Object> properties = new HashMap<>();
-    private RuntimeInputsConfig.Yaml runtimeInputs;
-
-    @Builder
-    public Yaml(String type, String name, String stageName, boolean parallel, String workflowName,
-        List<WorkflowVariable> workflowVariables, Map<String, Object> properties, SkipCondition skipCondition,
-        RuntimeInputsConfig.Yaml runtimeInputs) {
-      super(type);
-      this.name = name;
-      this.stageName = stageName;
-      this.parallel = parallel;
-      this.workflowName = workflowName;
-      this.workflowVariables = workflowVariables;
-      this.properties = properties;
-      this.skipCondition = skipCondition;
-      this.runtimeInputs = runtimeInputs;
     }
   }
 }

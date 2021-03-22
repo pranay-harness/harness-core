@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import io.harness.beans.EmbeddedUser;
 
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.beans.infrastructure.Host;
 import software.wings.utils.Utils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -13,9 +12,6 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -47,22 +43,6 @@ public class PhysicalInfrastructureMappingWinRm extends PhysicalInfrastructureMa
 
   public void setWinRmConnectionAttributes(String winRmConnectionAttributes) {
     this.winRmConnectionAttributes = winRmConnectionAttributes;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends PhysicalInfrastructureMappingBase.Yaml {
-    private String winRmProfile;
-
-    @lombok.Builder
-    public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
-        String infraMappingType, String deploymentType, String computeProviderName, String name, List<String> hostNames,
-        String loadBalancer, String winRmProfile, List<Host> hosts, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
-          computeProviderName, name, hostNames, loadBalancer, hosts, blueprints);
-      this.winRmProfile = winRmProfile;
-    }
   }
 
   public static final class Builder {

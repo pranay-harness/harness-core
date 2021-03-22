@@ -56,22 +56,6 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
   }
 
   @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends DeploymentSpecificationYaml {
-    private DefaultSpecification.Yaml defaults;
-    private List<FunctionSpecification.Yaml> functions;
-
-    @Builder
-    public Yaml(String type, String harnessApiVersion, DefaultSpecification.Yaml defaults,
-        List<FunctionSpecification.Yaml> functions) {
-      super(type, harnessApiVersion);
-      this.defaults = defaults;
-      this.functions = functions;
-    }
-  }
-
-  @Data
   @Builder
   public static class DefaultSpecification {
     private String runtime;

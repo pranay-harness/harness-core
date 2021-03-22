@@ -7,7 +7,6 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.EntityType.ENVIRONMENT;
-import static software.wings.beans.PipelineStage.Yaml;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABLE;
 
@@ -24,6 +23,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineStageYaml;
 import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SkipCondition;
 import software.wings.beans.Variable;
@@ -65,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
+public class PipelineStageYamlHandler extends BaseYamlHandler<PipelineStageYaml, PipelineStage> {
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;
@@ -78,8 +78,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           EnvStateKeys.pipelineStageElementId, EnvStateKeys.pipelineStageParallelIndex);
 
   @VisibleForTesting
-  public PipelineStage toBean(ChangeContext<Yaml> context) {
-    Yaml yaml = context.getYaml();
+  public PipelineStage toBean(ChangeContext<PipelineStageYaml> context) {
+    PipelineStageYaml yaml = context.getYaml();
     Change change = context.getChange();
 
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
@@ -135,7 +135,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     return stage;
   }
 
-  private void generateBeanForApprovalStage(Yaml yaml, String appId, Map<String, Object> properties) {
+  private void generateBeanForApprovalStage(PipelineStageYaml yaml, String appId, Map<String, Object> properties) {
     Map<String, Object> yamlProperties = yaml.getProperties();
 
     if (yamlProperties != null) {
@@ -150,7 +150,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     }
   }
 
-  private void generateBeanForEnvStage(Yaml yaml, Change change, String appId, boolean skipAlways,
+  private void generateBeanForEnvStage(PipelineStageYaml yaml, Change change, String appId, boolean skipAlways,
       Map<String, Object> properties, Map<String, String> workflowVariablesPse) {
     Workflow workflow;
     workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
@@ -201,7 +201,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     return userGroupUuids;
   }
 
-  private String resolveEnvironmentId(Yaml yaml, String appId, Map<String, Object> properties, Workflow workflow) {
+  private String resolveEnvironmentId(
+      PipelineStageYaml yaml, String appId, Map<String, Object> properties, Workflow workflow) {
     String envId = null;
 
     if (workflow.checkEnvironmentTemplatized()) {
@@ -241,7 +242,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   }
 
   @Override
-  public Yaml toYaml(PipelineStage bean, String appId) {
+  public PipelineStageYaml toYaml(PipelineStage bean, String appId) {
     String accountId = appService.getAccountIdByAppId(appId);
     PipelineStageElement stageElement = bean.getPipelineStageElements().get(0);
     notNullCheck("Pipeline stage element is null", stageElement, USER);
@@ -267,7 +268,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                        .build();
     }
 
-    return Yaml.builder()
+    return PipelineStageYaml.builder()
         .name(stageElement.getName())
         .stageName(bean.getName())
         .skipCondition(SkipCondition.getInstanceForAssertion(stageElement.getDisableAssertion()))
@@ -375,14 +376,14 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   }
 
   @Override
-  public PipelineStage upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public PipelineStage upsertFromYaml(
+      ChangeContext<PipelineStageYaml> changeContext, List<ChangeContext> changeSetContext) throws HarnessException {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return PipelineStageYaml.class;
   }
 
   @Override
@@ -391,7 +392,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<PipelineStageYaml> changeContext) {
     // Do nothing
   }
 }

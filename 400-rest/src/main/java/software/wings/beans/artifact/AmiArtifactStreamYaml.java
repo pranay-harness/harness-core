@@ -5,7 +5,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.beans.NameValuePair;
+import software.wings.beans.NameValuePairYaml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,12 +20,12 @@ import lombok.NoArgsConstructor;
 public class AmiArtifactStreamYaml extends ArtifactStreamYaml {
   private String platform;
   private String region;
-  private List<NameValuePair.Yaml> amiTags = new ArrayList<>();
-  private List<NameValuePair.Yaml> amiFilters = new ArrayList<>();
+  private List<NameValuePairYaml> amiTags = new ArrayList<>();
+  private List<NameValuePairYaml> amiFilters = new ArrayList<>();
 
   @lombok.Builder
-  public AmiArtifactStreamYaml(String harnessApiVersion, String serverName, List<NameValuePair.Yaml> amiTags,
-      String region, String platform, List<NameValuePair.Yaml> amiFilters) {
+  public AmiArtifactStreamYaml(String harnessApiVersion, String serverName, List<NameValuePairYaml> amiTags,
+      String region, String platform, List<NameValuePairYaml> amiFilters) {
     super(AMI.name(), harnessApiVersion, serverName);
     this.amiTags = amiTags;
     this.region = region;

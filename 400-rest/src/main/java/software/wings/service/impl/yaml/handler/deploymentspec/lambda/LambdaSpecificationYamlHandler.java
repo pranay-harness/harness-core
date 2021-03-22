@@ -13,7 +13,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
-import software.wings.beans.LambdaSpecification.Yaml;
+import software.wings.beans.LambdaSpecificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -30,13 +30,14 @@ import java.util.List;
  * @author rktummala on 11/15/17
  */
 @Singleton
-public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlHandler<Yaml, LambdaSpecification> {
+public class LambdaSpecificationYamlHandler
+    extends DeploymentSpecificationYamlHandler<LambdaSpecificationYaml, LambdaSpecification> {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private YamlHelper yamlHelper;
   @Inject private ServiceResourceService serviceResourceService;
 
   @Override
-  public Yaml toYaml(LambdaSpecification lambdaSpecification, String appId) {
+  public LambdaSpecificationYaml toYaml(LambdaSpecification lambdaSpecification, String appId) {
     // default specification
     DefaultSpecificationYamlHandler defaultSpecYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION);
@@ -58,7 +59,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
               .collect(toList());
     }
 
-    return Yaml.builder()
+    return LambdaSpecificationYaml.builder()
         .harnessApiVersion(getHarnessApiVersion())
         .type(DeploymentType.AWS_LAMBDA.name())
         .functions(functionSpecYamlList)
@@ -67,8 +68,8 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
   }
 
   @Override
-  public LambdaSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public LambdaSpecification upsertFromYaml(ChangeContext<LambdaSpecificationYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
     LambdaSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     LambdaSpecification lambdaSpecification = toBean(changeContext, changeSetContext);
@@ -82,9 +83,9 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     }
   }
 
-  private LambdaSpecification toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
-    Yaml yaml = changeContext.getYaml();
+  private LambdaSpecification toBean(ChangeContext<LambdaSpecificationYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
+    LambdaSpecificationYaml yaml = changeContext.getYaml();
 
     // default specification
     DefaultSpecification defaultSpec = null;
@@ -131,7 +132,7 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return LambdaSpecificationYaml.class;
   }
 
   @Override

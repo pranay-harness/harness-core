@@ -28,8 +28,6 @@ import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.common.WorkflowConstants;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
-import software.wings.yaml.BaseYamlWithType;
-import software.wings.yaml.workflow.StepYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
@@ -42,9 +40,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
@@ -561,35 +556,6 @@ public class PhaseStep {
       phaseStep.setArtifactNeeded(artifactNeeded);
       phaseStep.setWaitInterval(waitInterval);
       return phaseStep;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYamlWithType {
-    private String name;
-    private String statusForRollback;
-    private boolean stepsInParallel;
-    private List<StepYaml> steps = new ArrayList<>();
-    private List<FailureStrategyYaml> failureStrategies = new ArrayList<>();
-    private List<StepSkipStrategy.Yaml> stepSkipStrategies = new ArrayList<>();
-    private String phaseStepNameForRollback;
-    private Integer waitInterval;
-
-    @lombok.Builder
-    public Yaml(String type, String name, String statusForRollback, boolean stepsInParallel, List<StepYaml> steps,
-        List<FailureStrategyYaml> failureStrategies, List<StepSkipStrategy.Yaml> stepSkipStrategies,
-        String phaseStepNameForRollback, Integer waitInterval) {
-      super(type);
-      this.name = name;
-      this.statusForRollback = statusForRollback;
-      this.stepsInParallel = stepsInParallel;
-      this.steps = steps;
-      this.failureStrategies = failureStrategies;
-      this.stepSkipStrategies = stepSkipStrategies;
-      this.phaseStepNameForRollback = phaseStepNameForRollback;
-      this.waitInterval = waitInterval;
     }
   }
 }

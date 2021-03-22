@@ -47,7 +47,9 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
+import software.wings.beans.NotificationGroupYaml;
 import software.wings.beans.Pipeline;
+import software.wings.beans.PipelineYaml;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
@@ -55,6 +57,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ApplicationManifestYaml;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.ManifestFileYaml;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.beans.command.Command;
@@ -187,8 +190,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     notNullCheck("No account found for appId:" + appId, accountId);
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, false);
     notNullCheck("No pipeline with the given id:" + pipelineId, pipeline);
-    Pipeline.Yaml pipelineYaml =
-        (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE).toYaml(pipeline, appId);
+    PipelineYaml pipelineYaml =
+        (PipelineYaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE).toYaml(pipeline, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, pipeline.getUuid(), accountId, pipelineYaml, pipeline.getName() + YAML_EXTENSION);
   }
@@ -223,8 +226,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         notificationSetupService.readNotificationGroup(accountId, notificationGroupId);
     notNullCheck("No notification group exists with the given id:" + notificationGroupId, notificationGroup);
 
-    NotificationGroup.Yaml notificationGroupYaml =
-        (NotificationGroup.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP)
+    NotificationGroupYaml notificationGroupYaml =
+        (NotificationGroupYaml) yamlHandlerFactory.getYamlHandler(YamlType.NOTIFICATION_GROUP)
             .toYaml(notificationGroup, GLOBAL_APP_ID);
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, notificationGroup.getUuid(), accountId,
         notificationGroupYaml, notificationGroup.getName() + YAML_EXTENSION);
@@ -701,7 +704,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         applicationManifestService.getById(manifestFile.getAppId(), manifestFile.getApplicationManifestId());
     YamlType yamlType = getYamlTypeFromAppManifest(applicationManifest);
 
-    ManifestFile.Yaml yaml = (ManifestFile.Yaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
+    ManifestFileYaml yaml = (ManifestFileYaml) yamlHandlerFactory.getYamlHandler(yamlType).toYaml(
         applicationManifest, applicationManifest.getAppId());
 
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,

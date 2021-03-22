@@ -3,12 +3,10 @@ package software.wings.beans.trigger;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.yaml.BaseYaml;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -36,25 +34,5 @@ public class ManifestSelection {
     LAST_DEPLOYED,
     PIPELINE_SOURCE,
     WEBHOOK_VARIABLE
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYaml {
-    String type;
-    private String versionRegex;
-    String workflowName;
-    String pipelineName;
-    String serviceName;
-
-    @lombok.Builder
-    public Yaml(String type, String workflowName, String versionRegex, String serviceName, String pipelineName) {
-      this.workflowName = workflowName;
-      this.pipelineName = pipelineName;
-      this.versionRegex = versionRegex;
-      this.type = type;
-      this.serviceName = serviceName;
-    }
   }
 }

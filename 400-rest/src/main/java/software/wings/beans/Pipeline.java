@@ -26,7 +26,6 @@ import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -133,22 +132,6 @@ public class Pipeline extends Base implements KeywordsAware, NameAccess, TagAwar
     Set<String> keywords = KeywordsAware.super.generateKeywords();
     keywords.addAll(asList(name, description, PIPELINE.name()));
     return keywords;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseEntityYaml {
-    private String description;
-    private List<PipelineStage.Yaml> pipelineStages = new ArrayList<>();
-    private List<FailureStrategyYaml> failureStrategies;
-
-    @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, List<PipelineStage.Yaml> pipelineStages) {
-      super(EntityType.PIPELINE.name(), harnessApiVersion);
-      this.description = description;
-      this.pipelineStages = pipelineStages;
-    }
   }
 
   @UtilityClass

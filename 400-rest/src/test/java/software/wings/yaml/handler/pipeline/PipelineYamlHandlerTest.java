@@ -40,9 +40,9 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Pipeline;
-import software.wings.beans.Pipeline.Yaml;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.PipelineYaml;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.yaml.ChangeContext;
@@ -228,18 +228,18 @@ public class PipelineYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<PipelineYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.PIPELINE);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    PipelineYaml yamlObject = (PipelineYaml) getYaml(validYamlContent, PipelineYaml.class);
     changeContext.setYaml(yamlObject);
 
     Pipeline savedPipeline = yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
     comparePipeline(pipeline, savedPipeline);
 
-    Yaml yaml = yamlHandler.toYaml(savedPipeline, APP_ID);
+    PipelineYaml yaml = yamlHandler.toYaml(savedPipeline, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isNotNull();
 
@@ -267,12 +267,12 @@ public class PipelineYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(invalidYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
 
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<PipelineYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.APPLICATION);
     changeContext.setYamlSyncHandler(yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    PipelineYaml yamlObject = (PipelineYaml) getYaml(validYamlContent, PipelineYaml.class);
     changeContext.setYaml(yamlObject);
 
     try {
@@ -287,7 +287,7 @@ public class PipelineYamlHandlerTest extends YamlHandlerTestBase {
     gitFileChange.setFilePath(validYamlFilePath);
 
     try {
-      yamlObject = (Yaml) getYaml(invalidYamlContent, Yaml.class);
+      yamlObject = (PipelineYaml) getYaml(invalidYamlContent, PipelineYaml.class);
       changeContext.setYaml(yamlObject);
 
       yamlHandler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
