@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
+import static io.harness.eraro.ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
@@ -15,6 +16,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptionType;
@@ -22,12 +24,14 @@ import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AwsSecretsManagerConfig.AwsSecretsManagerConfigKeys;
+import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
@@ -139,6 +143,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   @Override
   public void validateSecretsManagerConfig(String accountId, AwsSecretsManagerConfig secretsManagerConfig) {
+    validateUserInput(secretsManagerConfig);
     vaultEncryptorsRegistry.getVaultEncryptor(EncryptionType.AWS_SECRETS_MANAGER)
         .validateSecretManagerConfiguration(accountId, secretsManagerConfig);
   }
@@ -217,5 +222,27 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     }
 
     return deleteSecretManagerAndGenerateAudit(accountId, secretsManagerConfig);
+  }
+
+  private void validateUserInput(AwsSecretsManagerConfig awsSecretsManagerConfig) {
+    Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
+    if (EmptyPredicate.isEmpty(awsSecretsManagerConfig.getName())
+        || !nameValidator.matcher(awsSecretsManagerConfig.getName()).find()) {
+      String message =
+          "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
+      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
+    }
+    if (awsSecretsManagerConfig.isAssumeStsRoleOnDelegate() || awsSecretsManagerConfig.isAssumeIamRoleOnDelegate()) {
+      if (EmptyPredicate.isEmpty(awsSecretsManagerConfig.getDelegateSelectors())) {
+        String message = "Delegate Selectors cannot be empty if you're Assuming AWS Role";
+        throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
+      }
+    }
+    if (awsSecretsManagerConfig.isAssumeStsRoleOnDelegate()) {
+      if (EmptyPredicate.isEmpty(awsSecretsManagerConfig.getRoleArn())) {
+        String message = "Role ARN cannot be empty if you're Assuming AWS Role using STS";
+        throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
+      }
+    }
   }
 }

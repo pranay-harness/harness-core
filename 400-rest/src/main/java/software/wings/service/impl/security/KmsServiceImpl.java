@@ -21,12 +21,14 @@ import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
+import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.service.intfc.security.KmsService;
@@ -36,6 +38,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
@@ -264,7 +267,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
     if (isNotEmpty(kmsConfig.getAccessKey())) {
       EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
-      // checkNotNull(accessKeyData, "Access key reference is null for KMS secret manager " + kmsConfig.getUuid());
       kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
     }
     if (maskSecret) {
@@ -272,7 +274,6 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     } else {
       if (isNotEmpty(kmsConfig.getSecretKey())) {
         EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
-        // checkNotNull(secretData, "Secret Key reference is null for KMS secret manager " + kmsConfig.getUuid());
         kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
       }
       EncryptedData arnData = wingsPersistence.get(EncryptedData.class, kmsConfig.getKmsArn());
@@ -282,15 +283,34 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void validateKms(String accountId, KmsConfig kmsConfig) {
-    if (isEmpty(kmsConfig.getName())) {
-      throw new SecretManagementException(KMS_OPERATION_ERROR, "Name can not be empty", USER);
-    }
+    validateUserInput(kmsConfig);
     try {
       kmsEncryptorsRegistry.getKmsEncryptor(kmsConfig).encryptSecret(
           accountId, UUID.randomUUID().toString(), kmsConfig);
     } catch (WingsException e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message + e.getMessage(), USER);
+    }
+  }
+
+  private void validateUserInput(KmsConfig kmsConfig) {
+    Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
+    if (EmptyPredicate.isEmpty(kmsConfig.getName()) || !nameValidator.matcher(kmsConfig.getName()).find()) {
+      String message =
+          "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
+      throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
+    }
+    if (kmsConfig.isAssumeStsRoleOnDelegate() || kmsConfig.isAssumeIamRoleOnDelegate()) {
+      if (EmptyPredicate.isEmpty(kmsConfig.getDelegateSelectors())) {
+        String message = "Delegate Selectors cannot be empty if you're Assuming AWS Role";
+        throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
+      }
+    }
+    if (kmsConfig.isAssumeStsRoleOnDelegate()) {
+      if (EmptyPredicate.isEmpty(kmsConfig.getRoleArn())) {
+        String message = "Role ARN cannot be empty if you're Assuming AWS Role using STS";
+        throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
+      }
     }
   }
 
