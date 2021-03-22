@@ -145,27 +145,27 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 
 // selectTests takes a list of files which were changed as input and gets the tests
 // to be run corresponding to that.
-func selectTests(ctx context.Context, diffFiles []string, stepID string, log *zap.SugaredLogger) ([]types.RunnableTest, error) {
-	if len(diffFiles) == 0 {
+func selectTests(ctx context.Context, diffFiles string, stepID string, log *zap.SugaredLogger) (types.SelectTestsResp, error) {
+	if diffFiles == "" {
 		// No files changed, don't do anything
-		return []types.RunnableTest{}, nil
+		return types.SelectTestsResp{}, nil
 	}
 	repo, err := external.GetRepo()
 	if err != nil {
-		return []types.RunnableTest{}, err
+		return types.SelectTestsResp{}, err
 	}
 	sha, err := external.GetSha()
 	if err != nil {
-		return []types.RunnableTest{}, err
+		return types.SelectTestsResp{}, err
 	}
 	branch, err := external.GetSourceBranch()
 	if err != nil {
-		return []types.RunnableTest{}, err
+		return types.SelectTestsResp{}, err
 	}
 	// Create TI proxy client (lite engine)
 	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
 	if err != nil {
-		return []types.RunnableTest{}, err
+		return types.SelectTestsResp{}, err
 	}
 	defer client.CloseConn()
 	req := &pb.SelectTestsRequest{
@@ -177,16 +177,13 @@ func selectTests(ctx context.Context, diffFiles []string, stepID string, log *za
 	}
 	resp, err := client.Client().SelectTests(ctx, req)
 	if err != nil {
-		return []types.RunnableTest{}, err
+		return types.SelectTestsResp{}, err
 	}
-	tests := []types.RunnableTest{}
-	for _, t := range resp.GetTests() {
-		ut := types.RunnableTest{}
-		if err := json.Unmarshal([]byte(t), &ut); err != nil {
-			log.Errorw("could not unmarshal received test", zap.Error(err))
-			return []types.RunnableTest{}, err
-		}
-		tests = append(tests, ut)
+	var selection types.SelectTestsResp
+	err = json.Unmarshal([]byte(resp.Selected), &selection)
+	if err != nil {
+		log.Errorw("could not unmarshal select tests response on addon", zap.Error(err))
+		return types.SelectTestsResp{}, err
 	}
-	return tests, nil
+	return selection, nil
 }
