@@ -5,11 +5,14 @@ import static java.util.stream.Collectors.toSet;
 import io.harness.AccessControlClientConfiguration;
 import io.harness.Microservice;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.accesscontrol.migrations.AccessControlMigrationConfiguration;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
@@ -33,6 +36,7 @@ import lombok.Getter;
 import org.reflections.Reflections;
 
 @Getter
+@OwnedBy(HarnessTeam.PL)
 public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
@@ -49,7 +53,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
-  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
+  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
@@ -79,6 +83,10 @@ public class NextGenConfiguration extends Configuration {
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxIteratorConfig") private OutboxEventIteratorConfiguration outboxIteratorConfig;
   @JsonProperty("scmConnectionConfig") private ScmConnectionConfig scmConnectionConfig;
+  @JsonProperty("accessControlMigrationConfig")
+  private AccessControlMigrationConfiguration accessControlMigrationConfig;
+  @JsonProperty("resourceGroupClientConfig") private ServiceHttpClientConfig resourceGroupClientConfig;
+  @JsonProperty("resourceGroupClientSecret") private String resourceGroupClientSecret;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

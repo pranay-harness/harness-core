@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.user.UserInfo;
@@ -29,6 +31,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Api(value = "/ng/users", hidden = true)
@@ -38,6 +41,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NextGenManagerAuth
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class UserResourceNG {
   private final UserService userService;
 
@@ -48,13 +52,21 @@ public class UserResourceNG {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
-    PageResponse<UserInfo> pageResponse = aPageResponse()
-                                              .withOffset(offset.toString())
-                                              .withLimit(pageSize.toString())
-                                              .withResponse(convertUserToNgUser(userList))
-                                              .withTotal(userService.getTotalUserCount(accountId, true))
-                                              .build();
+    List<User> userList;
+
+    if (!StringUtils.isEmpty(searchTerm)) {
+      userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
+    } else {
+      userList = userService.listUsers(pageRequest, accountId, null, offset, pageSize, true);
+    }
+
+    PageResponse<User> pageResponse = aPageResponse()
+                                          .withOffset(offset.toString())
+                                          .withLimit(pageSize.toString())
+                                          .withResponse(userList)
+                                          .withTotal(userService.getTotalUserCount(accountId, true))
+                                          .build();
+
     return new RestResponse<>(pageResponse);
   }
 

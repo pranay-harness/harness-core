@@ -1,15 +1,13 @@
-package io.harness.resourcegroup.framework.remote.dto;
-
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+package io.harness.resourcegroup.remote.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
+@Builder
 public class ResourceGroupRequest {
   @Valid @NotNull @JsonProperty("resourcegroup") private ResourceGroupDTO resourceGroup;
 }

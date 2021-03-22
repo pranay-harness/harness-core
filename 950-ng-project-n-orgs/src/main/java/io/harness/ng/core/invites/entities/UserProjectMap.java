@@ -41,7 +41,6 @@ public class UserProjectMap implements PersistentEntity {
                  .field(UserProjectMapKeys.accountIdentifier)
                  .field(UserProjectMapKeys.orgIdentifier)
                  .field(UserProjectMapKeys.projectIdentifier)
-                 .field(UserProjectMapKeys.roles)
                  .build())
         .build();
   }
