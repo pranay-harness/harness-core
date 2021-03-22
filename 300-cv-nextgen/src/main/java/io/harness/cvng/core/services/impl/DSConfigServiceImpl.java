@@ -74,7 +74,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   public void create(DSConfig dsConfig) {
     List<CVConfig> existingMapping = cvConfigService.getExistingMappedConfigs(dsConfig.getAccountId(),
         dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), dsConfig.getIdentifier());
-    dsConfig.validate(existingMapping);
+    // dsConfig.validate(existingMapping);
     List<CVConfig> saved = cvConfigService.list(dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(),
         dsConfig.getProductName(), dsConfig.getIdentifier());
     if (saved != null && saved.size() > 0) {
@@ -92,7 +92,7 @@ public class DSConfigServiceImpl implements DSConfigService {
   public void update(String identifier, DSConfig dsConfig) {
     List<CVConfig> existingMapping = cvConfigService.getExistingMappedConfigs(
         dsConfig.getAccountId(), dsConfig.getOrgIdentifier(), dsConfig.getProjectIdentifier(), identifier);
-    dsConfig.validate(existingMapping);
+    // dsConfig.validate(existingMapping);
     List<CVConfig> saved = cvConfigService.list(
         dsConfig.getAccountId(), dsConfig.getConnectorIdentifier(), dsConfig.getProductName(), identifier);
     CVConfigUpdateResult cvConfigUpdateResult = dsConfig.getCVConfigUpdateResult(saved);
