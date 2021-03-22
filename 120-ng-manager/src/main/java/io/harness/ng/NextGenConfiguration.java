@@ -3,6 +3,7 @@ package io.harness.ng;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
@@ -62,11 +63,13 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("ngManagerPublicBaseUrl") private String ngManagerPublicBaseUrl;
   @JsonProperty("baseUrls") private BaseUrls baseUrls;
-  @JsonProperty("ResoureGroupConfig") private ResourceGroupConfig resoureGroupConfig;
+  @JsonProperty("resourceGroupConfig") private ResourceGroupConfig resoureGroupConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
   @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
+  @JsonProperty("accessControlAdminClient")
+  private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxIteratorConfig") private OutboxEventIteratorConfiguration outboxIteratorConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
