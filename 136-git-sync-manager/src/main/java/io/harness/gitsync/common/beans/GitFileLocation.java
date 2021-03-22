@@ -1,5 +1,8 @@
 package io.harness.gitsync.common.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Scope;
@@ -34,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "gitFileLocation", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "GitFileLocationKeys")
+@OwnedBy(DX)
 public class GitFileLocation implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess, ProjectAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;

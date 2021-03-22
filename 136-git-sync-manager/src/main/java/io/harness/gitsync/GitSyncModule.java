@@ -1,5 +1,8 @@
 package io.harness.gitsync;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.service.GitEntityService;
@@ -24,6 +27,7 @@ import com.google.inject.name.Names;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
+@OwnedBy(DX)
 public class GitSyncModule extends AbstractModule {
   private static final AtomicReference<GitSyncModule> instanceRef = new AtomicReference<>();
 

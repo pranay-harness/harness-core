@@ -1,5 +1,8 @@
 package io.harness.tasks;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.FeatureName;
@@ -29,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class DecryptGitApiAccessHelper {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject private EncryptionHelper encryptionHelper;
