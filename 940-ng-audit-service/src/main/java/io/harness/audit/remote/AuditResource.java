@@ -60,12 +60,9 @@ public class AuditResource {
   @ApiOperation(value = "Get Audit list", nickname = "getAuditList")
   public ResponseDTO<PageResponse<AuditEventDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
-      AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+      @BeanParam PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
     Page<AuditEventDTO> audits =
-        auditService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, auditFilterPropertiesDTO)
-            .map(AuditEventMapper::toDTO);
+        auditService.list(accountIdentifier, pageRequest, auditFilterPropertiesDTO).map(AuditEventMapper::toDTO);
     return ResponseDTO.newResponse(getNGPageResponse(audits));
   }
 }

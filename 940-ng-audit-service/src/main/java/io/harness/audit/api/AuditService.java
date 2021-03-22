@@ -14,6 +14,6 @@ import org.springframework.data.domain.Page;
 public interface AuditService {
   AuditEvent create(AuditEventDTO auditEventDTO);
 
-  Page<AuditEvent> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO);
+  Page<AuditEvent> list(
+      String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO);
 }

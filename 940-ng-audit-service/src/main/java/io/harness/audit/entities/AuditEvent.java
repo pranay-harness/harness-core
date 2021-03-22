@@ -73,6 +73,8 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditEventPrincipalIdx")
@@ -88,7 +90,7 @@ public class AuditEvent {
                  .field(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("ngAuditEventUniqueIdx")
+                 .name("uniqueNgAuditEventIdx")
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.insertId)
                  .field(AuditEventKeys.timestamp)
@@ -105,6 +107,10 @@ public class AuditEvent {
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.orgIdentifier;
     public static final String PROJECT_IDENTIFIER_KEY =
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.projectIdentifier;
+    public static final String RESOURCE_SCOPE_LABEL_KEYS_KEY =
+        AuditEventKeys.resourceScope + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;
+    public static final String RESOURCE_SCOPE_LABEL_VALUES_KEY =
+        AuditEventKeys.resourceScope + "." + ResourceKeys.labels + "." + KeyValuePairKeys.value;
 
     public static final String PRINCIPAL_TYPE_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.type;

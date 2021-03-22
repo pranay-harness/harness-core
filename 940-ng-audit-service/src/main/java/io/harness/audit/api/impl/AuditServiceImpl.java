@@ -40,18 +40,16 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
-  public Page<AuditEvent> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
-    validateFilterRequest(accountIdentifier, orgIdentifier, projectIdentifier, auditFilterPropertiesDTO);
-    Criteria criteria =
-        getFilterCriteria(accountIdentifier, orgIdentifier, projectIdentifier, auditFilterPropertiesDTO);
+  public Page<AuditEvent> list(
+      String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+    validateFilterRequest(accountIdentifier, auditFilterPropertiesDTO);
+    Criteria criteria = getFilterCriteria(accountIdentifier, auditFilterPropertiesDTO);
     return auditRepository.findAll(criteria, getPageRequest(pageRequest));
   }
 
-  private Criteria getFilterCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+  private Criteria getFilterCriteria(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
     List<Criteria> criteriaList = new ArrayList<>();
-    criteriaList.add(getBaseScopeCriteria(accountIdentifier, orgIdentifier, projectIdentifier));
+    criteriaList.add(getBaseScopeCriteria(accountIdentifier));
     if (auditFilterPropertiesDTO == null) {
       return criteriaList.get(0);
     }
@@ -85,15 +83,8 @@ public class AuditServiceImpl implements AuditService {
     return new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
   }
 
-  private Criteria getBaseScopeCriteria(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    Criteria criteria = Criteria.where(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(accountIdentifier);
-    if (isNotEmpty(orgIdentifier)) {
-      criteria.and(AuditEventKeys.ORG_IDENTIFIER_KEY).is(orgIdentifier);
-      if (isNotEmpty(projectIdentifier)) {
-        criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(projectIdentifier);
-      }
-    }
-    return criteria;
+  private Criteria getBaseScopeCriteria(String accountIdentifier) {
+    return Criteria.where(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(accountIdentifier);
   }
 
   private Criteria getScopeCriteria(List<ResourceScope> resourceScopes) {
@@ -106,6 +97,14 @@ public class AuditServiceImpl implements AuditService {
         if (isNotEmpty(resourceScope.getProjectIdentifier())) {
           criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(resourceScope.getProjectIdentifier());
         }
+      }
+      List<KeyValuePair> labels = resourceScope.getLabels();
+      if (isNotEmpty(labels)) {
+        labels.forEach(label
+            -> criteria.and(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
+                   .is(label.getKey())
+                   .and(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
+                   .is(label.getValue()));
       }
       criteriaList.add(criteria);
     });
@@ -144,12 +143,11 @@ public class AuditServiceImpl implements AuditService {
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
   }
 
-  private void validateFilterRequest(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+  private void validateFilterRequest(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
     if (auditFilterPropertiesDTO == null) {
       return;
     }
-    verifyScopes(accountIdentifier, orgIdentifier, projectIdentifier, auditFilterPropertiesDTO.getScopes());
+    verifyScopes(accountIdentifier, auditFilterPropertiesDTO.getScopes());
     verifyResources(auditFilterPropertiesDTO.getResources());
     verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
 
@@ -168,41 +166,28 @@ public class AuditServiceImpl implements AuditService {
     });
   }
 
-  private void verifyScopes(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<ResourceScope> resourceScopes) {
+  private void verifyScopes(String accountIdentifier, List<ResourceScope> resourceScopes) {
     if (isNotEmpty(resourceScopes)) {
-      resourceScopes.forEach(
-          resourceScope -> verifyScope(accountIdentifier, orgIdentifier, projectIdentifier, resourceScope));
+      resourceScopes.forEach(resourceScope -> verifyScope(accountIdentifier, resourceScope));
     }
   }
 
-  private void verifyScope(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, ResourceScope resourceScope) {
-    if (isEmpty(resourceScope.getAccountIdentifier())) {
+  private void verifyScope(String accountIdentifier, ResourceScope resourceScope) {
+    if (!accountIdentifier.equals(resourceScope.getAccountIdentifier())) {
       throw new InvalidRequestException(
-          String.format("Invalid resource scope filter with missing accountIdentifier %s.", accountIdentifier));
+          String.format("Invalid resource scope filter with accountIdentifier %s.", accountIdentifier));
     }
-    if (isNotEmpty(orgIdentifier)) {
-      if (isEmpty(resourceScope.getOrgIdentifier())) {
-        throw new InvalidRequestException(
-            String.format("Invalid resource scope filter with missing orgIdentifier %s.", orgIdentifier));
-      }
-      if (!orgIdentifier.equals(resourceScope.getOrgIdentifier())) {
-        throw new InvalidRequestException(
-            String.format("Invalid resource scope filter with orgIdentifier mismatch [expected: %s actual: %s].",
-                orgIdentifier, resourceScope.getOrgIdentifier()));
-      }
-    }
-    if (isNotEmpty(projectIdentifier)) {
-      if (isEmpty(resourceScope.getProjectIdentifier())) {
-        throw new InvalidRequestException(
-            String.format("Invalid resource scope filter with missing projectIdentifier %s.", projectIdentifier));
-      }
-      if (!orgIdentifier.equals(resourceScope.getProjectIdentifier())) {
-        throw new InvalidRequestException(
-            String.format("Invalid resource scope filter with projectIdentifier mismatch [expected: %s actual: %s].",
-                projectIdentifier, resourceScope.getProjectIdentifier()));
-      }
+    List<KeyValuePair> labels = resourceScope.getLabels();
+    if (isNotEmpty(labels)) {
+      labels.forEach(label -> {
+        if (isEmpty(label.getKey())) {
+          throw new InvalidRequestException("Invalid resource scope filter with missing key in resource scope labels.");
+        }
+        if (isEmpty(label.getValue())) {
+          throw new InvalidRequestException(
+              "Invalid resource scope filter with missing value in resource scope labels.");
+        }
+      });
     }
   }
 
