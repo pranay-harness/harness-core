@@ -128,14 +128,15 @@ public class DelegateServiceGrpcClient {
 
   public SubmitTaskResponse submitTask(DelegateCallbackToken delegateCallbackToken, AccountId accountId,
       TaskSetupAbstractions taskSetupAbstractions, TaskLogAbstractions taskLogAbstractions, TaskDetails taskDetails,
-      List<ExecutionCapability> capabilities, List<String> taskSelectors, Duration holdFor) {
+      List<ExecutionCapability> capabilities, List<String> taskSelectors, Duration holdFor, boolean forceExecute) {
     try {
       SubmitTaskRequest.Builder submitTaskRequestBuilder = SubmitTaskRequest.newBuilder()
                                                                .setCallbackToken(delegateCallbackToken)
                                                                .setAccountId(accountId)
                                                                .setSetupAbstractions(taskSetupAbstractions)
                                                                .setLogAbstractions(taskLogAbstractions)
-                                                               .setDetails(taskDetails);
+                                                               .setDetails(taskDetails)
+                                                               .setForceExecute(forceExecute);
 
       if (isNotEmpty(capabilities)) {
         submitTaskRequestBuilder.addAllCapabilities(
@@ -190,7 +191,7 @@ public class DelegateServiceGrpcClient {
             .setKryoParameters(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(taskParameters)))
             .setExecutionTimeout(Durations.fromSeconds(taskRequest.getExecutionTimeout().getSeconds()))
             .build(),
-        capabilities, taskRequest.getTaskSelectors(), holdFor);
+        capabilities, taskRequest.getTaskSelectors(), holdFor, taskRequest.isForceExecute());
   }
 
   public TaskExecutionStage cancelTask(AccountId accountId, TaskId taskId) {
