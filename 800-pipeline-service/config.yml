@@ -86,6 +86,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
     password: ""
 
 managerClientConfig:

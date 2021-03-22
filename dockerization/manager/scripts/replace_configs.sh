@@ -761,6 +761,10 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.userName "$EVENTS_FRAMEWORK_REDIS_USERNAME"
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE eventsFramework.redis.password "$EVENTS_FRAMEWORK_REDIS_PASSWORD"
 fi

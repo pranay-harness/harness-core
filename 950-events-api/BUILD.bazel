@@ -294,6 +294,7 @@ java_library(
         "//:lombok",
         "//950-events-api/src/main/proto:950_events_api_java_proto",
         "//950-events-api/src/main/proto:950_events_api_proto",
+        "@maven//:io_netty_netty_all",
     ],
 )
 
