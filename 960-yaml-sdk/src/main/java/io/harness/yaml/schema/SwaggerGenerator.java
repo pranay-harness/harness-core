@@ -1,5 +1,8 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonView;
@@ -17,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(DX)
 public class SwaggerGenerator {
   private final ObjectMapper objectMapper;
 

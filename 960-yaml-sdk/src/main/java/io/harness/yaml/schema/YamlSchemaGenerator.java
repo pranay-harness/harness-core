@@ -1,5 +1,6 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
@@ -15,6 +16,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.STRING_TYPE_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.TYPE_NODE;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.reflection.CodeUtils;
 import io.harness.yaml.schema.beans.FieldEnumData;
@@ -66,6 +68,7 @@ import org.apache.commons.io.FileUtils;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class YamlSchemaGenerator {
   JacksonClassHelper jacksonSubtypeHelper;
   SwaggerGenerator swaggerGenerator;
