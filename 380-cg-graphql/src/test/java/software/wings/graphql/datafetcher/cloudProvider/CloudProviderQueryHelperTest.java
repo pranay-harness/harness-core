@@ -9,26 +9,20 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
+import software.wings.WingsBaseTest;
 import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCEEnabledFilter;
 import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProviderFilter;
-import software.wings.rules.WingsRule;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 import org.mongodb.morphia.query.Query;
 
-public class CloudProviderQueryHelperTest {
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
-  @Rule public WingsRule wingsRule = new WingsRule();
-
+public class CloudProviderQueryHelperTest extends WingsBaseTest {
   @InjectMocks CloudProviderQueryHelper helper;
 
   @Mock Query queryMock;
