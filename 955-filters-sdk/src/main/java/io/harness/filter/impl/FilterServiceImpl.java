@@ -1,11 +1,13 @@
 package io.harness.filter.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.filter.dto.FilterVisibility.EVERYONE;
 import static io.harness.filter.dto.FilterVisibility.ONLY_CREATOR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.ScopeHelper;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +39,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class FilterServiceImpl implements FilterService {
   private FilterRepository filterRepository;
   private FilterMapper filterMapper;

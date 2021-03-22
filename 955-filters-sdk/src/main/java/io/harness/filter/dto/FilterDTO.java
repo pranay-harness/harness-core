@@ -1,7 +1,9 @@
 package io.harness.filter.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.filter.dto.FilterVisibility.EVERYONE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.persistence.PersistentEntity;
 
@@ -22,6 +24,7 @@ import lombok.experimental.FieldNameConstants;
 @AllArgsConstructor
 @FieldNameConstants(innerTypeName = "FilterKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(DX)
 public class FilterDTO implements PersistentEntity {
   @NotNull String name;
   @NotNull @EntityIdentifier String identifier;

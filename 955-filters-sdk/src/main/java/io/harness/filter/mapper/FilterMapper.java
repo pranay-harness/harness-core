@@ -1,5 +1,8 @@
 package io.harness.filter.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.dto.FilterDTO.FilterDTOBuilder;
@@ -18,6 +21,7 @@ import com.google.inject.Singleton;
 import java.util.Map;
 
 @Singleton
+@OwnedBy(DX)
 public class FilterMapper {
   @Inject Map<String, FilterPropertiesMapper> filterPropertiesMapperMap;
 
