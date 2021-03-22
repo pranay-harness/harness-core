@@ -31,12 +31,13 @@ const (
 
 // handler is used to implement EngineServer
 type tiProxyHandler struct {
-	log *zap.SugaredLogger
+	log     *zap.SugaredLogger
+	tmpPath string
 }
 
 // NewTiProxyHandler returns a GRPC handler that implements pb.TiProxyServer
-func NewTiProxyHandler(log *zap.SugaredLogger) pb.TiProxyServer {
-	return &tiProxyHandler{log}
+func NewTiProxyHandler(log *zap.SugaredLogger, tmpPath string) pb.TiProxyServer {
+	return &tiProxyHandler{log, tmpPath}
 }
 
 // SelectTests gets the list of selected tests to be run.
@@ -186,8 +187,8 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if branch == "" {
 		return res, fmt.Errorf("branch not present in request")
 	}
-
-	cgDir := "/Users/amansingh/Desktop/f2.txt"
+	// cgDir will be something like /step-exec/.harness/tmp/ti/callgraph.json
+	cgDir := h.tmpPath + "ti/callgraph"
 	fs := fs.NewOSFileSystem(h.log)
 	parser := ti.NewCallGraphParser(h.log, fs)
 	cg, err := parser.Parse(cgDir)

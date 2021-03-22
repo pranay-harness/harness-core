@@ -28,10 +28,11 @@ type engineServer struct {
 	grpcServer *grpc.Server
 	log        *zap.SugaredLogger
 	stopCh     chan bool
+	tmpPath    string
 }
 
 //NewEngineServer constructs a new EngineServer
-func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
+func NewEngineServer(port uint, log *zap.SugaredLogger, tmpPath string) (EngineServer, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil, err
@@ -39,9 +40,10 @@ func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
 
 	stopCh := make(chan bool, 1)
 	server := engineServer{
-		port:   port,
-		log:    log,
-		stopCh: stopCh,
+		port:    port,
+		log:     log,
+		stopCh:  stopCh,
+		tmpPath: tmpPath,
 	}
 	server.grpcServer = grpc.NewServer()
 	server.listener = listener
@@ -52,7 +54,7 @@ func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
 func (s *engineServer) Start() error {
 	pb.RegisterLiteEngineServer(s.grpcServer, NewEngineHandler(s.log))
 	pb.RegisterLogProxyServer(s.grpcServer, NewLogProxyHandler(s.log))
-	pb.RegisterTiProxyServer(s.grpcServer, NewTiProxyHandler(s.log))
+	pb.RegisterTiProxyServer(s.grpcServer, NewTiProxyHandler(s.log, s.tmpPath))
 	err := s.grpcServer.Serve(s.listener)
 	if err != nil {
 		s.log.Errorw("error starting gRPC server", "error_msg", zap.Error(err))

@@ -3,8 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"errors"
-	"fmt"
+	"github.com/pkg/errors"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -104,7 +103,7 @@ func collectCg(ctx context.Context, stepID string, log *zap.SugaredLogger) error
 	}
 	_, err = client.Client().UploadCg(ctx, req)
 	if err != nil {
-		return fmt.Errorf("failed to upload cg to ti server", zap.Error(err))
+		return errors.Wrap(err, "failed to upload cg to ti server")
 	}
 	return nil
 }
