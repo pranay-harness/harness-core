@@ -2,7 +2,6 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.EncryptedData.PARENT_ID_KEY;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
@@ -28,7 +27,6 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.KmsConfig.KmsConfigKeys;
 import software.wings.service.intfc.security.KmsService;

@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.GCP_SECRET_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
@@ -24,7 +23,6 @@ import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.AwsSecretsManagerConfig;
 import software.wings.beans.AwsSecretsManagerConfig.AwsSecretsManagerConfigKeys;
-import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.service.intfc.security.AwsSecretsManagerService;
 
 import com.google.inject.Inject;
