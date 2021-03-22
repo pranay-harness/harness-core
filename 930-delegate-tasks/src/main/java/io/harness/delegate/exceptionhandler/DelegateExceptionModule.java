@@ -1,8 +1,10 @@
 package io.harness.delegate.exceptionhandler;
 
+import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.DelegateExceptionHandler;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
@@ -25,5 +27,6 @@ public class DelegateExceptionModule extends AbstractModule {
             binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<DelegateExceptionHandler>() {});
 
     delegateExceptionHandlerMapBinder.addBinding(AmazonServiceException.class).to(AmazonServiceExceptionHandler.class);
+    delegateExceptionHandlerMapBinder.addBinding(AmazonClientException.class).to(AmazonClientExceptionHandler.class);
   }
 }
