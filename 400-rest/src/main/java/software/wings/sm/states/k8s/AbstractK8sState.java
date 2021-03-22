@@ -123,6 +123,7 @@ import software.wings.sm.StateExecutionContext;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
+import com.github.reinert.jjschema.Attributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -142,6 +143,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -173,6 +176,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   @Inject private EnvironmentService environmentService;
   @Inject public K8sStateHelper k8sStateHelper;
   private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
+
+  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
   public AbstractK8sState(String name, String stateType) {
     super(name, stateType);
@@ -518,6 +523,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
     k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
+    k8sTaskParameters.setDelegateSelectors(new HashSet<>(delegateSelectors));
     Set<String> renderedAndTrimmedSelectors = getRenderedAndTrimmedSelectors(context);
     k8sTaskParameters.setDelegateSelectors(renderedAndTrimmedSelectors);
 
@@ -571,6 +577,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
             .releaseName(k8sTaskParameters.getReleaseName())
             .currentTaskType(TaskType.K8S_COMMAND_TASK)
+            .delegateSelectors(new HashSet<>(delegateSelectors))
             .build();
 
     prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);

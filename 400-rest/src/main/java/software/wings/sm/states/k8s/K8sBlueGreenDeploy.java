@@ -62,7 +62,7 @@ public class K8sBlueGreenDeploy extends AbstractK8sState {
 
   @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") @Getter @Setter private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
-  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+  //  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
   @Override
   public List<String> getDelegateSelectors(ExecutionContext context) {

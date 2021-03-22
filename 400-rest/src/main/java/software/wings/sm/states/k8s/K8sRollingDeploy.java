@@ -66,7 +66,7 @@ public class K8sRollingDeploy extends AbstractK8sState {
 
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
-  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+  //  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
   @Override
   public List<String> getDelegateSelectors(ExecutionContext context) {

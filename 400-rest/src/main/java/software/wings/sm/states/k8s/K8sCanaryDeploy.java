@@ -47,6 +47,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -76,7 +77,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
-  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
+  //  @Getter @Setter @Attributes(title = "delegateSelectors") private List<String> delegateSelectors;
 
   @Override
   public List<String> getDelegateSelectors(ExecutionContext context) {
@@ -130,6 +131,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
                 appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
+            //            .delegateSelectors(new HashSet<>(delegateSelectors))
             .build();
 
     return queueK8sDelegateTask(context, k8sTaskParameters);
