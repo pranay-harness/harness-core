@@ -1,8 +1,11 @@
-package io.harness.cdng.manifest.yaml;
+package io.harness.cdng.manifest.yaml.kinds;
 
 import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
 
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.yaml.ManifestAttributes;
+import io.harness.cdng.manifest.yaml.StoreConfig;
+import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.manifest.OpenshiftManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
@@ -46,7 +49,7 @@ public class OpenshiftManifest implements ManifestAttributes, Visitable {
 
   @Override
   public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.OPENSHIFT_MANIFEST).build();
+    return LevelNode.builder().qualifierName(YamlTypes.OPENSHIFT_MANIFEST).isPartOfFQN(false).build();
   }
 
   @Override

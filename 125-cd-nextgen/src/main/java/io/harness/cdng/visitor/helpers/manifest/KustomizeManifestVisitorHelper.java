@@ -1,6 +1,6 @@
 package io.harness.cdng.visitor.helpers.manifest;
 
-import io.harness.cdng.manifest.yaml.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
 import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
