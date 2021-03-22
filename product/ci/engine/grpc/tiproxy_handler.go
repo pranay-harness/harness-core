@@ -3,8 +3,11 @@ package grpc
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"github.com/pkg/errors"
+	fs "github.com/wings-software/portal/commons/go/lib/filesystem"
+	"github.com/wings-software/portal/product/ci/addon/ti"
+	"github.com/wings-software/portal/product/ci/common/avro"
 	"io"
 
 	"github.com/wings-software/portal/product/ci/common/external"
@@ -20,6 +23,10 @@ var (
 	getPipelineId  = external.GetPipelineId
 	getBuildId     = external.GetBuildId
 	getStageId     = external.GetStageId
+)
+
+const (
+	cgSchemaPath = "callgraph.avsc"
 )
 
 // handler is used to implement EngineServer
@@ -162,4 +169,71 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	}
 	h.log.Infow("parsed test cases", "num_cases", len(tests))
 	return nil
+}
+
+func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) (*pb.UploadCgResponse, error) {
+	step := req.GetStepId()
+	res := &pb.UploadCgResponse{}
+	if step == "" {
+		return res, fmt.Errorf("step ID not present in request")
+		return res, nil
+	}
+	sha := req.GetSha()
+	if sha == "" {
+		return res, fmt.Errorf("commit ID not present in request")
+	}
+	repo := req.GetRepo()
+	if repo == "" {
+		return res, fmt.Errorf("repo not present in request")
+	}
+	branch := req.GetBranch()
+	if branch == "" {
+		return res, fmt.Errorf("branch not present in request")
+	}
+
+	cgDir := "/Users/amansingh/Desktop/f2.txt"
+	fs := fs.NewOSFileSystem(h.log)
+	parser := ti.NewCallGraphParser(h.log, fs)
+	cg, err := parser.Parse(cgDir)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to parse callgraph directory")
+	}
+	cgMap := cg.ToStringMap()
+	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to create serializer")
+	}
+	encBytes, err := cgSer.Serialize(cgMap)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to encode callgraph")
+	}
+	client, err := remoteTiClient()
+	if err != nil {
+		return res, errors.Wrap(err, "failed to create tiClient")
+	}
+	org, err := getOrgId()
+	if err != nil {
+		return res, errors.Wrap(err, "org id not found")
+	}
+	project, err := getProjectId()
+	if err != nil {
+		return res, errors.Wrap(err, "project id not found")
+	}
+	pipeline, err := getPipelineId()
+	if err != nil {
+		return res, errors.Wrap(err, "pipeline id not found")
+	}
+	build, err := getBuildId()
+	if err != nil {
+		return res, errors.Wrap(err, "build id not found")
+	}
+	stage, err := getStageId()
+	if err != nil {
+		return res, errors.Wrap(err, "stage id not found")
+	}
+	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch, encBytes)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to upload cg to ti server")
+	}
+	return res, nil
 }

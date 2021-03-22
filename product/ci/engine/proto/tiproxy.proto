@@ -5,6 +5,14 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
+// Callgraph upload request object
+message UploadCgRequest {
+  string step_id = 1;
+  string repo = 2;
+  string sha = 3;
+  string branch = 4;
+}
+
 // Definitions to interact with TI service
 message WriteTestsRequest {
   string step_id = 1;
@@ -12,6 +20,8 @@ message WriteTestsRequest {
 }
 
 message WriteTestsResponse {}
+
+message UploadCgResponse {}
 
 message SelectTestsRequest {
   string step_id = 1;
@@ -37,4 +47,7 @@ service TiProxy {
   // However the list of tests received may be quite large and might need streaming.
   // TODO: Convert the response to a streaming response.
   rpc SelectTests(SelectTestsRequest) returns (SelectTestsResponse);
+
+  // Upload callgraph to lite engine which forwards the call to ti service.
+  rpc UploadCg(UploadCgRequest) returns (UploadCgResponse);
 }

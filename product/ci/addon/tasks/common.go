@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
@@ -72,6 +73,38 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 			"elapsed_time_ms", utils.TimeSince(startTime),
 			zap.Error(err))
 		return err
+	}
+	return nil
+}
+
+func collectCg(ctx context.Context, stepID string, log *zap.SugaredLogger) error {
+	repo, err := external.GetRepo()
+	if err != nil {
+		return err
+	}
+	sha, err := external.GetSha()
+	if err != nil {
+		return err
+	}
+	branch, err := external.GetSourceBranch()
+	if err != nil {
+		return err
+	}
+	// Create TI proxy client (lite engine)
+	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
+	if err != nil {
+		return err
+	}
+	defer client.CloseConn()
+	req := &pb.UploadCgRequest{
+		StepId: stepID,
+		Repo:   repo,
+		Sha:    sha,
+		Branch: branch,
+	}
+	_, err = client.Client().UploadCg(ctx, req)
+	if err != nil {
+		return fmt.Errorf("failed to upload cg to ti server", zap.Error(err))
 	}
 	return nil
 }
