@@ -34,6 +34,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -399,9 +400,9 @@ public class AuthRuleFilterTest extends WingsBaseTest {
     when(requestContext.getMethod()).thenReturn("GET");
     mockUriInfo(PATH, uriInfo);
 
-    authRuleFilter.filter(requestContext);
-    assertThat(requestContext.getMethod()).isEqualTo("GET");
-    verify(requestContext).getHeaderString(API_KEY_HEADER);
+    assertThatThrownBy(() -> authRuleFilter.filter(requestContext))
+        .isInstanceOf(AccessDeniedException.class)
+        .hasMessage("Api Key cannot be empty");
   }
 
   @Test

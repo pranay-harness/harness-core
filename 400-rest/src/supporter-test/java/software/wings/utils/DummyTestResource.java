@@ -23,7 +23,7 @@ public class DummyTestResource {
     return new RestResponse<>();
   }
 
-  @ApiKeyAuthorized
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Void> testApiKeyAuthorizationAnnotation() {
     return new RestResponse<>();
   }
