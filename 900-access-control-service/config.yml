@@ -84,6 +84,13 @@ resourceGroupClient:
     readTimeOutSeconds: 15
   resourceGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+projectOrgsClient:
+  projectOrgsServiceConfig:
+    baseUrl: https://localhost:7090
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  projectOrgsServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 userClient:
   userServiceConfig:
     baseUrl: http://localhost:3457/api/
@@ -108,6 +115,11 @@ aggregatorModuleConfig:
     database.include.list: "accesscontrol"
     collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups"
   enabled: true
+
+migrationConfig:
+  enabled: true
+  migrationTypes:
+    - INTERNAL
 
 enableAuth: true
 defaultServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

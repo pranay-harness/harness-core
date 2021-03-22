@@ -23,6 +23,7 @@ java_binary(
         "//903-decision-module:module",
         "//905-access-control-core:module",
         "//950-events-api:module",
+        "//950-ng-project-n-orgs:module",
         "//970-ng-commons:module",
         "//980-commons:module",
         "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",

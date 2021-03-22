@@ -17,7 +17,8 @@ import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
-import io.harness.accesscontrol.commons.events.EventListenerService;
+import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
+import io.harness.accesscontrol.migrations.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;
@@ -143,7 +144,11 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   private void registerManagedBeans(
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.getEventsConfig().isEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(EventListenerService.class));
+      environment.lifecycle().manage(injector.getInstance(EntityCrudEventListenerService.class));
+
+      if (configuration.getMigrationConfiguration().isEnabled()) {
+        environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
+      }
     }
   }
 

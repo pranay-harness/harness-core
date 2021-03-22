@@ -7,21 +7,21 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class EventListenerService implements Managed {
-  private final EventListener eventListener;
+public class EntityCrudEventListenerService implements Managed {
+  private final EntityCrudEventListener entityCrudEventListener;
   private final ExecutorService executorService;
   private Future<?> eventListenerFuture;
 
   @Inject
-  public EventListenerService(EventListener eventListener) {
-    this.eventListener = eventListener;
+  public EntityCrudEventListenerService(EntityCrudEventListener entityCrudEventListener) {
+    this.entityCrudEventListener = entityCrudEventListener;
     executorService = Executors.newSingleThreadExecutor(
-        new ThreadFactoryBuilder().setNameFormat("event-listener-main-thread").build());
+        new ThreadFactoryBuilder().setNameFormat("entity-crud-event-listener-main-thread").build());
   }
 
   @Override
   public void start() throws Exception {
-    eventListenerFuture = executorService.submit(eventListener);
+    eventListenerFuture = executorService.submit(entityCrudEventListener);
   }
 
   @Override

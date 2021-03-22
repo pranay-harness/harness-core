@@ -18,26 +18,31 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EventListener implements Runnable {
+public class EntityCrudEventListener implements Runnable {
   private final Consumer redisConsumer;
   private final Set<EventConsumer> eventConsumers;
 
+  public String getConsumerName() {
+    return ENTITY_CRUD;
+  }
+
   @Inject
-  public EventListener(@Named(ENTITY_CRUD) Consumer redisConsumer, Set<EventConsumer> eventConsumers) {
+  public EntityCrudEventListener(
+      @Named(ENTITY_CRUD) Consumer redisConsumer, @Named(ENTITY_CRUD) Set<EventConsumer> eventConsumers) {
     this.redisConsumer = redisConsumer;
     this.eventConsumers = eventConsumers;
   }
 
   @Override
   public void run() {
-    log.info("Started the consumer for entity crud stream");
+    log.info("Started the consumer: {}", getConsumerName());
     SecurityContextBuilder.setContext(new ServicePrincipal(ACCESS_CONTROL_SERVICE.getServiceId()));
     try {
       while (!Thread.currentThread().isInterrupted()) {
         pollAndProcessMessages();
       }
     } catch (Exception ex) {
-      log.error("Entity crud stream consumer unexpectedly stopped", ex);
+      log.error("{} unexpectedly stopped", getConsumerName(), ex);
     }
     SecurityContextBuilder.unsetCompleteContext();
   }

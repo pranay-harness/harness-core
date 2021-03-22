@@ -56,6 +56,20 @@ public class UserResourceNG {
     return new RestResponse<>(pageResponse);
   }
 
+  @GET
+  public RestResponse<PageResponse<User>> listUsersInAccount(
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
+    Integer offset = 0;
+    Integer pageSize = 100000;
+
+    List<User> userList = userService.listUsers(new PageRequest<User>(), accountId, searchTerm, offset, pageSize, true);
+
+    PageResponse<User> pageResponse =
+        aPageResponse().withOffset(offset.toString()).withLimit(pageSize.toString()).withResponse(userList).build();
+
+    return new RestResponse<>(pageResponse);
+  }
+
   @POST
   @Path("/batch")
   public RestResponse<List<User>> listUsersByIds(List<String> userIds) {

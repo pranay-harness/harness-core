@@ -5,11 +5,13 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
+import io.harness.accesscontrol.migrations.MigrationModule;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.user.UserValidator;
@@ -33,6 +35,7 @@ import com.google.inject.Provides;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -54,13 +57,13 @@ public class AccessControlModule extends AbstractModule {
   }
 
   @Provides
-  @Named(EventsFrameworkConstants.ENTITY_CRUD)
+  @Named(ENTITY_CRUD)
   public Consumer getConsumer() {
     RedisConfig redisConfig = config.getEventsConfig().getRedisConfig();
     if (!config.getEventsConfig().isEnabled()) {
       return NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME);
     }
-    return RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig,
+    return RedisConsumer.of(ENTITY_CRUD, ACCESS_CONTROL_SERVICE.getServiceId(), redisConfig,
         EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME, EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE);
   }
 
@@ -103,9 +106,17 @@ public class AccessControlModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);
     validatorByPrincipalType.addBinding(USER).to(UserValidator.class);
 
-    Multibinder<EventConsumer> eventConsumers = Multibinder.newSetBinder(binder(), EventConsumer.class);
+    Multibinder<EventConsumer> eventConsumers =
+        Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     eventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
 
+    if (config.getMigrationConfiguration().isEnabled()) {
+      install(MigrationModule.getInstance(config.getMigrationConfiguration(), config.getEventsConfig(),
+          config.getUserClientConfiguration().getUserServiceConfig(),
+          config.getUserClientConfiguration().getUserServiceSecret(),
+          config.getProjectOrgsClientConfiguration().getProjectOrgsServiceConfig(),
+          config.getProjectOrgsClientConfiguration().getProjectOrgsServiceSecret()));
+    }
     registerRequiredBindings();
   }
 

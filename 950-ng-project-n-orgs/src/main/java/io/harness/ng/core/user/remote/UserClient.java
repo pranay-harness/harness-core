@@ -30,6 +30,10 @@ public interface UserClient {
   Call<RestResponse<PageResponse<User>>> list(@Query(value = "accountId") String accountId,
       @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm);
 
+  @GET(USERS_API)
+  Call<RestResponse<PageResponse<User>>> listUsersInWithUserGroups(
+      @Query(value = "accountId") String accountId, @Query("searchTerm") String searchTerm);
+
   @GET(USERNAME_API)
   Call<RestResponse<List<String>>> getUsernameFromEmail(
       @Query(value = "accountId") String accountId, @Query(value = "emailList") List<String> emailList);
