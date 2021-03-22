@@ -7,5 +7,5 @@ import org.springframework.data.annotation.TypeAlias;
 public enum NGTriggerType {
   @JsonProperty("Webhook") WEBHOOK,
   @JsonProperty("NewArtifact") NEW_ARTIFACT,
-  @JsonProperty("Scheduled") SCHEDULED,
+  @JsonProperty("Scheduled") SCHEDULED
 }
