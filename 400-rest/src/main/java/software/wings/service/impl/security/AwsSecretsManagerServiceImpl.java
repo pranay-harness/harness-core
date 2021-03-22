@@ -29,7 +29,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
@@ -223,11 +222,9 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   private void validateUserInput(AwsSecretsManagerConfig awsSecretsManagerConfig) {
-    Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
-    if (EmptyPredicate.isEmpty(awsSecretsManagerConfig.getName())
-        || !nameValidator.matcher(awsSecretsManagerConfig.getName()).find()) {
+    if (EmptyPredicate.isEmptyAfterTrimming(awsSecretsManagerConfig.getName())) {
       String message =
-          "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
+          "Secret Manager Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
     }
     if (awsSecretsManagerConfig.isAssumeStsRoleOnDelegate() || awsSecretsManagerConfig.isAssumeIamRoleOnDelegate()) {
@@ -237,7 +234,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       }
     }
     if (awsSecretsManagerConfig.isAssumeStsRoleOnDelegate()) {
-      if (EmptyPredicate.isEmpty(awsSecretsManagerConfig.getRoleArn())) {
+      if (EmptyPredicate.isEmptyAfterTrimming(awsSecretsManagerConfig.getRoleArn())) {
         String message = "Role ARN cannot be empty if you're Assuming AWS Role using STS";
         throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
       }

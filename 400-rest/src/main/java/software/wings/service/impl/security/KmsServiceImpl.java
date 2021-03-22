@@ -36,7 +36,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
@@ -50,6 +49,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public static final String ACCESS_KEY_SUFFIX = "_accessKey";
   public static final String SECRET_KEY_SUFFIX = "_secretKey";
   public static final String ARN_SUFFIX = "_arn";
+  public static final String KMS_NAME_PATTERN = "^[0-9a-zA-Z-' _!]+$";
   @Inject private KryoSerializer kryoSerializer;
   @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
 
@@ -292,10 +292,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void validateUserInput(KmsConfig kmsConfig) {
-    Pattern nameValidator = Pattern.compile("^[0-9a-zA-Z-' !]+$");
-    if (EmptyPredicate.isEmpty(kmsConfig.getName()) || !nameValidator.matcher(kmsConfig.getName()).find()) {
-      String message =
-          "Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
+    if (EmptyPredicate.isEmptyAfterTrimming(kmsConfig.getName())) {
+      String message = "KMS Name cannot be empty";
       throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
     }
     if (kmsConfig.isAssumeStsRoleOnDelegate() || kmsConfig.isAssumeIamRoleOnDelegate()) {
@@ -305,7 +303,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       }
     }
     if (kmsConfig.isAssumeStsRoleOnDelegate()) {
-      if (EmptyPredicate.isEmpty(kmsConfig.getRoleArn())) {
+      if (EmptyPredicate.isEmptyAfterTrimming(kmsConfig.getRoleArn())) {
         String message = "Role ARN cannot be empty if you're Assuming AWS Role using STS";
         throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
       }

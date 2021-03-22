@@ -29,6 +29,10 @@ public class EmptyPredicate {
     return string == null || string.isEmpty();
   }
 
+  public static boolean isEmptyAfterTrimming(String string) {
+    return string == null || string.trim().isEmpty();
+  }
+
   public static boolean isEmpty(Object[] array) {
     return array == null || array.length == 0;
   }
