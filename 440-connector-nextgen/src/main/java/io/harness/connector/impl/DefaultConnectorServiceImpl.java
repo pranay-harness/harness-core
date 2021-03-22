@@ -448,25 +448,6 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     //    try {
     validationResult = connectionValidator.validate(
         connectorInfo.getConnectorConfig(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    //    } catch (ConnectorValidationException | DelegateServiceDriverException ex) {
-    //      log.info("Test Connection failed for connector with identifier[{}] in account[{}] with error [{}]",
-    //          connectorInfo.getIdentifier(), accountIdentifier, ex.getMessage());
-    //      ConnectorValidationResultBuilder validationFailureBuilder = ConnectorValidationResult.builder();
-    //      validationFailureBuilder.status(FAILURE).testedAt(System.currentTimeMillis());
-    //      String errorMessage = ex.getMessage();
-    //      if (isNotEmpty(errorMessage)) {
-    //        String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
-    //        List<ErrorDetail> errorDetail = Collections.singletonList(ngErrorHelper.createErrorDetail(errorMessage));
-    //        validationFailureBuilder.errorSummary(errorSummary).errors(errorDetail);
-    //      }
-    //      return validationFailureBuilder.build();
-    //    } catch (Exception ex) {
-    //      log.info("Encountered Error while validating the connector {}",
-    //          String.format(CONNECTOR_STRING, connectorInfo.getIdentifier(), accountIdentifier,
-    //              connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier()),
-    //          ex);
-    //      return createValidationResultWithGenericError(ex);
-    //    }
     return validationResult;
   }
 

@@ -5,7 +5,6 @@ import io.harness.beans.DelegateTaskRequest;
 import io.harness.connector.DelegateSelectable;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.delegate.beans.DelegateResponseData;
-import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorTaskParams;
@@ -39,12 +38,7 @@ public abstract class AbstractConnectorValidator implements ConnectionValidator 
                                                   .build();
 
     DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
-    if (responseData instanceof ErrorNotifyResponseData) {
-      ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
-      log.info("Error in validation task for connector : [{}] with failure types [{}]",
-          errorNotifyResponseData.getErrorMessage(), errorNotifyResponseData.getFailureTypes());
-      throw new ConnectorValidationException(errorNotifyResponseData.getErrorMessage());
-    } else if (responseData instanceof RemoteMethodReturnValueData
+    if (responseData instanceof RemoteMethodReturnValueData
         && (((RemoteMethodReturnValueData) responseData).getException() instanceof InvalidRequestException)) {
       String errorMessage =
           ((InvalidRequestException) ((RemoteMethodReturnValueData) responseData).getException()).getMessage();
