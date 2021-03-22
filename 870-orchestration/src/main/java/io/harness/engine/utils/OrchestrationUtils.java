@@ -19,12 +19,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class OrchestrationUtils {
-  public Status calculateEndStatus(List<NodeExecution> nodeExecutions, String planExecutionId) {
-    List<Status> statuses = nodeExecutions.stream()
-                                .map(NodeExecution::getStatus)
-                                .filter(s -> !StatusUtils.finalizableStatuses().contains(s))
-                                .collect(Collectors.toList());
-    return StatusUtils.calculateEndStatus(statuses, planExecutionId);
+  public Status calculateStatus(List<NodeExecution> nodeExecutions, String planExecutionId) {
+    List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
+    return StatusUtils.calculateStatus(statuses, planExecutionId);
   }
 
   public NodeRunCheck shouldRunExecution(

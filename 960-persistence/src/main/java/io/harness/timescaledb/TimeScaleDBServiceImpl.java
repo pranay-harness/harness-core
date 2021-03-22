@@ -1,6 +1,10 @@
 package io.harness.timescaledb;
 
+import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
+
 import io.harness.annotations.retry.RetryOnException;
+import io.harness.health.HealthException;
 import io.harness.timescaledb.TimeScaleDBConfig.TimeScaleDBConfigFields;
 
 import com.google.common.base.Strings;
@@ -12,6 +16,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.Duration;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbcp.BasicDataSource;
@@ -119,5 +124,33 @@ public class TimeScaleDBServiceImpl implements TimeScaleDBService {
     }
     log.debug("Active connections : [{}],Idle connections : [{}]", ds.getNumActive(), ds.getNumIdle());
     return ds.getConnection();
+  }
+
+  @Override
+  public Duration healthExpectedResponseTimeout() {
+    return ofSeconds(20);
+  }
+
+  @Override
+  public Duration healthValidFor() {
+    return ofSeconds(5);
+  }
+
+  @Override
+  public void isHealthy() {
+    try (Connection connection = ds.getConnection(); Statement statement = connection.createStatement();
+         ResultSet rs = statement.executeQuery("SELECT VERSION()");) {
+      if (rs.next()) {
+        log.info(rs.getString(1));
+      }
+      log.debug("Timescaledb Health Check - Passed,  Active connections : [{}],Idle connections : [{}]",
+          ds.getNumActive(), ds.getNumIdle());
+    } catch (Exception exception) {
+      log.debug("Timescaledb Health Check - Failed,  Active connections : [{}],Idle connections : [{}]",
+          ds.getNumActive(), ds.getNumIdle());
+      throw new HealthException(
+          format("Monitor %s did not respond on time. %s", this.getClass().getName(), exception.getMessage()),
+          exception);
+    }
   }
 }

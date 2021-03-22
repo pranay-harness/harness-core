@@ -1,5 +1,8 @@
 package io.harness.gitsync.gitfileactivity.service;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.core.beans.ChangeWithErrorMsg;
@@ -10,6 +13,7 @@ import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 
 import java.util.List;
 
+@OwnedBy(DX)
 public interface GitSyncService {
   Iterable<GitFileActivity> logActivityForGitOperation(List<GitFileChange> changeList, Status status,
       boolean isGitToHarness, boolean isFullSync, String message, String commitId, String commitMessage,

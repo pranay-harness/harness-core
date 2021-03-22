@@ -1,5 +1,9 @@
 package io.harness.yaml.snippets.bean;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -12,6 +16,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(DX)
 public class YamlSnippetMetaData {
   String name;
   String description;

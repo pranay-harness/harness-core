@@ -4,10 +4,12 @@ import static io.harness.NGConstants.REFERRED_BY_ENTITY_FQN;
 import static io.harness.NGConstants.REFERRED_BY_ENTITY_TYPE;
 import static io.harness.NGConstants.REFERRED_ENTITY_FQN;
 import static io.harness.NGConstants.REFERRED_ENTITY_TYPE;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.EntityType;
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
@@ -37,6 +39,7 @@ import org.springframework.data.domain.Page;
 @Consumes({"application/json"})
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
+@OwnedBy(DX)
 public class EntitySetupUsageResource {
   EntitySetupUsageService entitySetupUsageService;
 

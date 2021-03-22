@@ -204,6 +204,13 @@ pub fn analyze(opts: Analyze) {
             &class_modules,
         ));
         results.extend(check_for_deprecated_module(tuple.0, tuple.1));
+        results.extend(check_for_deprecation(
+            tuple.0,
+            class_dependees.get_vec(&tuple.0.name),
+            tuple.1,
+            &classes,
+            &class_modules,
+        ));
     });
 
     let mut total = vec![0, 0, 0, 0, 0, 0];
@@ -477,6 +484,10 @@ fn check_for_promotion(
 ) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
+    if class.deprecated {
+        return results;
+    }
+
     let target_module_name = class.target_module.as_ref();
     if target_module_name.is_none() {
         return results;
@@ -641,6 +652,10 @@ fn check_for_demotion(
     class_modules: &HashMap<&JavaClass, &JavaModule>,
 ) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
+
+    if class.deprecated {
+        return results;
+    }
 
     let target_module_name = class.target_module.as_ref();
     if target_module_name.is_none() {
@@ -845,6 +860,10 @@ fn check_for_package(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
 fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
+    if class.deprecated {
+        return results;
+    }
+
     if class.team.is_none() {
         results.push(Report {
             kind: Kind::ToDo,
@@ -864,6 +883,10 @@ fn check_for_team(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
 fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Report> {
     let mut results: Vec<Report> = Vec::new();
 
+    if class.deprecated {
+        return results;
+    }
+
     if class.target_module.is_none() && module.deprecated {
         results.push(Report {
             kind: Kind::ToDo,
@@ -877,6 +900,56 @@ fn check_for_deprecated_module(class: &JavaClass, module: &JavaModule) -> Vec<Re
             for_team: class.team(),
             indirect_classes: Default::default(),
             for_modules: [module.name.clone()].iter().cloned().collect(),
+        });
+    }
+
+    results
+}
+
+fn check_for_deprecation(
+    class: &JavaClass,
+    dependees: Option<&Vec<&String>>,
+    module: &JavaModule,
+    classes: &HashMap<String, &JavaClass>,
+    class_modules: &HashMap<&JavaClass, &JavaModule>,
+) -> Vec<Report> {
+    let mut results: Vec<Report> = Vec::new();
+
+    if !class.deprecated {
+        return results;
+    }
+    results.push(Report {
+        kind: match dependees {
+            None => Kind::AutoAction,
+            Some(_) => Kind::Blocked,
+        },
+        explanation: Explanation::Empty,
+        message: format!("{} is deprecated, remove it", class.name),
+        // TODO: add action for this
+        action: Default::default(),
+        for_class: class.name.clone(),
+        for_team: class.team(),
+        indirect_classes: Default::default(),
+        for_modules: [module.name.clone()].iter().cloned().collect(),
+    });
+
+    if dependees.is_some() {
+        dependees.unwrap().iter().for_each(|&dependee| {
+            let dependent_class = classes.get(dependee).expect(&format!("unknown class {}", dependee));
+            let dependent_module = *class_modules.get(dependent_class).unwrap();
+            results.push(Report {
+                kind: Kind::DevAction,
+                explanation: Explanation::Empty,
+                message: format!(
+                    "{} break dependency on deprecated class {}",
+                    dependent_class.name, class.name
+                ),
+                action: Default::default(),
+                for_class: dependent_class.name.clone(),
+                for_team: dependent_class.team(),
+                indirect_classes: [class.name.clone()].iter().cloned().collect(),
+                for_modules: [dependent_module.name.clone()].iter().cloned().collect(),
+            });
         });
     }
 

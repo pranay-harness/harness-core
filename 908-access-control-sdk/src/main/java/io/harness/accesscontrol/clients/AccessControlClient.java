@@ -14,7 +14,7 @@ public interface AccessControlClient {
    * @return principal for which permissions were checked and list of AccessControlDTO, which contains permission and a
    * field named accessible denoting whether aforementioned principal has the given permission
    */
-  HAccessCheckResponseDTO checkForAccess(
+  AccessCheckResponseDTO checkForAccess(
       String principal, PrincipalType principalType, List<PermissionCheckDTO> permissionCheckDTOList);
 
   /**
@@ -24,8 +24,7 @@ public interface AccessControlClient {
    * @return a single AccessControlDTO, which contains a field named accessible denoting whether principal has the said
    * permission
    */
-  HAccessControlDTO checkForAccess(
-      String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO);
+  AccessControlDTO checkForAccess(String principal, PrincipalType principalType, PermissionCheckDTO permissionCheckDTO);
 
   /**
    * Since this API takes no principal, it is picked up from the request context
@@ -33,7 +32,7 @@ public interface AccessControlClient {
    * @return principal for which permissions were checked for, and list of AccessControlDTO, which contains permission
    * and a field named accessible denoting * whether aforementioned principal has the given permission
    */
-  HAccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList);
+  AccessCheckResponseDTO checkForAccess(List<PermissionCheckDTO> permissionCheckDTOList);
 
   /**
    * Since this API takes no principal, it is picked up from the request context
@@ -41,7 +40,7 @@ public interface AccessControlClient {
    * @return single AccessControlDTO, which contains principal for which permission was checked and a
    * field called accessible denoting whether principal has said permission
    */
-  HAccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO);
+  AccessControlDTO checkForAccess(PermissionCheckDTO permissionCheckDTO);
 
   /**
    * @param principal identifier of the principal for which permission is to be checked

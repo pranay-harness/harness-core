@@ -1,5 +1,9 @@
 package io.harness.yaml.schema.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+@OwnedBy(DX)
 public class SchemaConstants {
   public static final String IF_NODE = "if";
   public static final String THEN_NODE = "then";
