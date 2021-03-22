@@ -65,6 +65,7 @@ message TaskChainExecutableResponse {
   bytes passThroughData = 4;
   repeated string logKeys = 5;
   repeated string units = 6;
+  string taskName = 7;
 }
 
 message TaskExecutableResponse {
@@ -72,6 +73,7 @@ message TaskExecutableResponse {
   io.harness.pms.contracts.execution.tasks.TaskCategory taskCategory = 2;
   repeated string logKeys = 3;
   repeated string units = 4;
+  string taskName = 5;
 }
 
 message SkipTaskExecutableResponse {

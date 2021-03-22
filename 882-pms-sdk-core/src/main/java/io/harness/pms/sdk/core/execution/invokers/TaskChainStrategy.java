@@ -120,6 +120,7 @@ public class TaskChainStrategy implements ExecuteStrategy {
                         ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
+                    .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())
                     .build())
             .build(),
         Collections.emptyList());
