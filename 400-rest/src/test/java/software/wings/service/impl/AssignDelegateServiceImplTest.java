@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -22,6 +23,7 @@ import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aG
 import static software.wings.service.impl.AssignDelegateServiceImpl.BLACKLIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImpl.ERROR_MESSAGE;
 import static software.wings.service.impl.AssignDelegateServiceImpl.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 import static software.wings.service.impl.AssignDelegateServiceImpl.WHITELIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.MATCHING_CRITERIA;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.NOT_MATCHING_CRITERIA;
@@ -49,7 +51,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -67,6 +69,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.http.HttpTaskParameters;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
@@ -121,13 +124,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mongodb.morphia.query.Query;
 
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private DelegateService delegateService;
   @Mock private DelegateCache delegateCache;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private DelegateSelectionLogsService delegateSelectionLogsService;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock
   private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>> delegateConnectionResultCache;
   @Mock private LoadingCache<String, List<Delegate>> accountDelegatesCache;
@@ -252,6 +256,42 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfExcludeScopeMatchedInvocations()))
           .logExcludeScopeMatched(eq(batch), anyString(), anyString(), anyString());
     }
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testAssignByDelegateScopesWithWildcard() {
+    DelegateTaskBuilder delegateTaskBuilder =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
+            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+
+    Delegate delegate = delegateBuilder
+                            .includeScopes(ImmutableList.of(
+                                DelegateScope.builder().applications(ImmutableList.of("APPLICATION_ID")).build()))
+                            .build();
+    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
+
+    BatchDelegateSelectionLog batch =
+        BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+
+    delegate = delegateBuilder
+                   .includeScopes(ImmutableList.of(
+                       DelegateScope.builder().environments(ImmutableList.of("ENVIRONMENT_ID")).build()))
+                   .build();
+    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+    delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, SCOPE_WILDCARD);
+
+    batch = BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
+    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
   }
 
   @Value

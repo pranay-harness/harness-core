@@ -235,6 +235,7 @@ timescaledb:
   instanceStatsMigrationQueryBatchSize: 100
   deploymentDataMigrationRowLimit: 1000
   deploymentDataMigrationQueryBatchSize: 100
+  isHealthCheckNeeded: false
 
 grpcServerConfig:
   connectors:

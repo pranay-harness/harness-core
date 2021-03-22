@@ -1,9 +1,13 @@
 package io.harness.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 /**
  * Base configs required to use SDK.
  * Fixing config as convention.
  */
+@OwnedBy(DX)
 public class YamlSdkInitConstants {
   /**
    * Snippets base path.

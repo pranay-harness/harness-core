@@ -1,6 +1,6 @@
 package io.harness.migrations.all;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class MigrateArtifactStreamBindingsToServiceVariable implements Migration {
   // NOTE: Pre-requisite: MigrateServiceLevelArtifactStreamsToConnectorLevel
   private static final String ACCOUNT_ID = "zEaak-FLS425IEO7OLzMUg"; // TODO: change this to reflect correct account

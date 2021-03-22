@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.activity.ActivityType;
-import io.harness.ng.core.dto.NotificationSettingType;
+import io.harness.notification.NotificationSettingType;
 
 import com.google.common.collect.Lists;
 import java.util.List;

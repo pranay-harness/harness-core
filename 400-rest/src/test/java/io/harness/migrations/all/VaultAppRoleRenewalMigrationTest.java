@@ -5,7 +5,7 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.persistence.HPersistence;
@@ -18,7 +18,7 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class VaultAppRoleRenewalMigrationTest extends WingsBaseTest {
   @Inject private VaultAppRoleRenewalMigration vaultAppRoleRenewalMigration;
   @Inject private HPersistence persistence;

@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.trigger;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
@@ -17,7 +17,7 @@ import lombok.Value;
 @Builder
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLTriggerActionInput {
   QLExecutionType executionType;
   String entityId;

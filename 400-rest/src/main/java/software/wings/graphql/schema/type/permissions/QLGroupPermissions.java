@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.permissions;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.security.PermissionAttribute;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLUserGroupPermissionsKeys")
 @Scope(PermissionAttribute.ResourceType.USER) // Change the scope
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLGroupPermissions {
   QLAccountPermissions accountPermissions;
   List<QLAppPermission> appPermissions; // Can have this as a set too

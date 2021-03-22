@@ -173,22 +173,22 @@ public class StepUtils {
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
     return prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), true);
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), true, null);
   }
 
   public static TaskRequest prepareTaskRequestWithoutLogs(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
     return prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), false);
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), false, null);
   }
 
   public static TaskRequest prepareTaskRequest(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<String> units) {
-    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true);
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, null);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
-      TaskCategory taskCategory, List<String> units, boolean withLogs) {
+      TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName) {
     String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
     TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -220,7 +220,8 @@ public class StepUtils {
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
                                       .putAllValues(MapUtils.emptyIfNull(ambiance.getSetupAbstractionsMap()))
                                       .build())
-            .setSelectionTrackingLogEnabled(true);
+            .setSelectionTrackingLogEnabled(true)
+            .setTaskName(taskName == null ? taskData.getTaskType() : taskName);
 
     if (isNotEmpty(capabilities)) {
       requestBuilder.addAllCapabilities(
@@ -245,7 +246,7 @@ public class StepUtils {
     return generateLogKeys(logAbstractionMap, units);
   }
 
-  private static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
+  public static List<String> generateLogKeys(LinkedHashMap<String, String> logAbstractionMap, List<String> units) {
     if (isEmpty(logAbstractionMap)) {
       return Collections.emptyList();
     }

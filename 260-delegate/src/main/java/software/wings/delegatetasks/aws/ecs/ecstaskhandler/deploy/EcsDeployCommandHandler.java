@@ -8,7 +8,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsClusterService awsClusterService;
@@ -77,13 +77,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       List<ContainerServiceData> newInstanceDataList;
       List<ContainerServiceData> oldInstanceDataList;
 
-      if (!resizeParams.isRollback()) {
-        newInstanceDataList = new ArrayList<>();
-        ContainerServiceData newInstanceData =
-            ecsDeployCommandTaskHelper.getNewInstanceData(contextData, executionLogCallback);
-        newInstanceDataList.add(newInstanceData);
-        oldInstanceDataList = ecsDeployCommandTaskHelper.getOldInstanceData(contextData, newInstanceData);
-      } else {
+      if (resizeParams.isRollback()) {
         // Rollback
         Map<String, Integer> originalServiceCounts =
             ecsDeployCommandTaskHelper.listOfStringArrayToMap(resizeParams.getOriginalServiceCounts());
@@ -105,6 +99,12 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
             ecsDeployCommandTaskHelper.setDesiredToOriginal(oldInstanceDataList, originalServiceCounts);
           }
         }
+      } else {
+        newInstanceDataList = new ArrayList<>();
+        ContainerServiceData newInstanceData =
+            ecsDeployCommandTaskHelper.getNewInstanceData(contextData, executionLogCallback);
+        newInstanceDataList.add(newInstanceData);
+        oldInstanceDataList = ecsDeployCommandTaskHelper.getOldInstanceData(contextData, newInstanceData);
       }
 
       executionDataBuilder.newInstanceData(newInstanceDataList).oldInstanceData(oldInstanceDataList);
@@ -115,14 +115,16 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
       if (contextData.getResizeParams().isEcsAutoscalarRedesignEnabled()) {
         handleAutoScalarBeforeResize(contextData, executionLogCallback);
-        resizeInstancesRedesigned(
-            contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
-        resizeInstancesRedesigned(
-            contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+        resizeInstancesRedesigned(contextData, firstDataList, executionDataBuilder, executionLogCallback,
+            resizeNewFirst, ecsCommandRequest.isTimeoutErrorSupported());
+        resizeInstancesRedesigned(contextData, secondDataList, executionDataBuilder, executionLogCallback,
+            !resizeNewFirst, ecsCommandRequest.isTimeoutErrorSupported());
         handleAutoScalarAfterResize(contextData, executionLogCallback, newInstanceDataList);
       } else {
-        resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst);
-        resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst);
+        resizeInstances(contextData, firstDataList, executionDataBuilder, executionLogCallback, resizeNewFirst,
+            ecsCommandRequest.isTimeoutErrorSupported());
+        resizeInstances(contextData, secondDataList, executionDataBuilder, executionLogCallback, !resizeNewFirst,
+            ecsCommandRequest.isTimeoutErrorSupported());
       }
     } catch (TimeoutException ex) {
       log.error(ex.getMessage());
@@ -130,6 +132,9 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
       executionLogCallback.saveExecutionLog(ex.getMessage(), ERROR);
       ecsServiceDeployResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
       ecsServiceDeployResponse.setOutput(ex.getMessage());
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsServiceDeployResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
       Misc.logAllMessages(ex, executionLogCallback);
@@ -181,11 +186,11 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
   private void resizeInstances(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
-      boolean isUpsize) {
+      boolean isUpsize, boolean timeoutErrorSupported) {
     if (isNotEmpty(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
-              .flatMap(data -> executeResize(contextData, data, executionLogCallback).stream())
+              .flatMap(data -> executeResize(contextData, data, executionLogCallback, timeoutErrorSupported).stream())
               .collect(toList());
       if (isUpsize) {
         executionDataBuilder.containerInfos(
@@ -202,11 +207,12 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
 
   private void resizeInstancesRedesigned(ContextData contextData, List<ContainerServiceData> instanceData,
       ResizeCommandUnitExecutionDataBuilder executionDataBuilder, ExecutionLogCallback executionLogCallback,
-      boolean isUpsize) {
+      boolean isUpsize, boolean timeoutErrorSupported) {
     if (isNotEmpty(instanceData)) {
       List<ContainerInfo> containerInfos =
           instanceData.stream()
-              .flatMap(data -> executeResizeRedesigned(contextData, data, executionLogCallback).stream())
+              .flatMap(data
+                  -> executeResizeRedesigned(contextData, data, executionLogCallback, timeoutErrorSupported).stream())
               .collect(toList());
       if (isUpsize) {
         executionDataBuilder.containerInfos(
@@ -221,17 +227,18 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     }
   }
 
-  private List<ContainerInfo> executeResizeRedesigned(
-      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+  private List<ContainerInfo> executeResizeRedesigned(ContextData contextData,
+      ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
     return awsClusterService.resizeCluster(resizeParams.getRegion(), contextData.getSettingAttribute(),
         contextData.getEncryptedDataDetails(), resizeParams.getClusterName(), containerServiceData.getName(),
         containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
-        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback, timeoutErrorSupported);
   }
 
-  public List<ContainerInfo> executeResize(
-      ContextData contextData, ContainerServiceData containerServiceData, ExecutionLogCallback executionLogCallback) {
+  public List<ContainerInfo> executeResize(ContextData contextData, ContainerServiceData containerServiceData,
+      ExecutionLogCallback executionLogCallback, boolean timeoutErrorSupported) {
     EcsResizeParams resizeParams = contextData.getResizeParams();
 
     // As a part of Rollback, restore AutoScalingConfig if required
@@ -244,7 +251,7 @@ public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
     List<ContainerInfo> containerInfos = awsClusterService.resizeCluster(resizeParams.getRegion(),
         contextData.getSettingAttribute(), contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
         containerServiceData.getName(), containerServiceData.getPreviousCount(), containerServiceData.getDesiredCount(),
-        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback);
+        resizeParams.getServiceSteadyStateTimeout(), executionLogCallback, timeoutErrorSupported);
 
     ecsDeployCommandTaskHelper.createAutoScalarConfigIfServiceReachedMaxSize(
         contextData, containerServiceData, executionLogCallback);

@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.connectors.configyamlhandlers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SAINATH;
@@ -8,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -27,6 +29,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class AwsConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestBase {
   @InjectMocks @Inject private AwsConfigYamlHandler yamlHandler;
   @Mock SecretManager secretManager;

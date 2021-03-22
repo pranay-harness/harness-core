@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.mutation.tag;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.mutation.QLMutationInput;
@@ -13,7 +13,7 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "QLAttachTagInputKeys")
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLAttachTagInput implements QLMutationInput {
   private String clientMutationId;
   private String entityId;

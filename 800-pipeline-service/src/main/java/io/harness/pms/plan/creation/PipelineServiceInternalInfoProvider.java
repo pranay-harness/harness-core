@@ -16,6 +16,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.variables.VariableCreator;
 import io.harness.pms.utils.InjectorUtils;
+import io.harness.pms.variables.HTTPStepVariableCreator;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,6 +55,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
   public List<VariableCreator> getVariableCreators() {
     List<VariableCreator> variableCreators = new ArrayList<>();
     variableCreators.add(new PipelineVariableCreator());
+    variableCreators.add(new HTTPStepVariableCreator());
     injectorUtils.injectMembers(variableCreators);
     return variableCreators;
   }

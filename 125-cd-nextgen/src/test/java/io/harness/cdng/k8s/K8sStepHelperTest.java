@@ -7,6 +7,7 @@ import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -15,6 +16,8 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GithubStore;
@@ -26,6 +29,7 @@ import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -44,6 +48,7 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
@@ -190,6 +195,22 @@ public class K8sStepHelperTest extends CategoryTest {
         k8sStepHelper.getAggregatedValuesManifests(serviceManifestOutcomes);
     assertThat(aggregatedValuesManifests).hasSize(1);
     assertThat(aggregatedValuesManifests.get(0)).isEqualTo(valuesManifestOutcome);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetOpenshiftParamManifests() {
+    OpenshiftManifestOutcome openshiftManifestOutcome = OpenshiftManifestOutcome.builder().build();
+    OpenshiftParamManifestOutcome openshiftParamManifestOutcome = OpenshiftParamManifestOutcome.builder().build();
+    List<ManifestOutcome> serviceManifestOutcomes = new ArrayList<>();
+    serviceManifestOutcomes.add(openshiftManifestOutcome);
+    serviceManifestOutcomes.add(openshiftParamManifestOutcome);
+
+    List<OpenshiftParamManifestOutcome> openshiftParamManifests =
+        k8sStepHelper.getOpenshiftParamManifests(serviceManifestOutcomes);
+    assertThat(openshiftParamManifests).hasSize(1);
+    assertThat(openshiftParamManifests.get(0)).isEqualTo(openshiftParamManifestOutcome);
   }
 
   @Test
@@ -466,5 +487,45 @@ public class K8sStepHelperTest extends CategoryTest {
         OpenshiftManifestOutcome.builder().build(), Ambiance.newBuilder().build(), valuesFiles);
     assertThat(renderedValuesFiles).isNotEmpty();
     assertThat(renderedValuesFiles).containsExactly(valueFile2, valueFile1);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testNamespaceValidation() {
+    Ambiance ambiance = getAmbiance();
+    ConnectorInfoDTO connectorDTO = ConnectorInfoDTO.builder().build();
+    Optional<ConnectorResponseDTO> connectorDTOOptional =
+        Optional.of(ConnectorResponseDTO.builder().connector(connectorDTO).build());
+    doReturn(connectorDTOOptional).when(connectorService).get("account1", "org1", "project1", "abcConnector");
+
+    K8sDirectInfrastructureOutcomeBuilder outcomeBuilder =
+        K8sDirectInfrastructureOutcome.builder().connectorRef("abcConnector").namespace("namespace test");
+
+    try {
+      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
+      fail("Should not reach here.");
+    } catch (InvalidArgumentsException ex) {
+      assertThat(ex.getParams().get("args"))
+          .isEqualTo(
+              "Namespace: \"namespace test\" is an invalid name. Namespaces may only contain lowercase letters, numbers, and '-'.");
+    }
+
+    try {
+      outcomeBuilder.namespace("");
+      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
+      fail("Should not reach here.");
+    } catch (InvalidArgumentsException ex) {
+      assertThat(ex.getParams().get("args")).isEqualTo("Namespace: Namespace cannot be empty");
+    }
+
+    try {
+      outcomeBuilder.namespace(" namespace test ");
+      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
+      fail("Should not reach here.");
+    } catch (InvalidArgumentsException ex) {
+      assertThat(ex.getParams().get("args"))
+          .isEqualTo("Namespace: [ namespace test ] contains leading or trailing whitespaces");
+    }
   }
 }

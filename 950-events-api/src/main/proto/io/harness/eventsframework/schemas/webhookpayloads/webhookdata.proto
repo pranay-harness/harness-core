@@ -1,0 +1,24 @@
+syntax = "proto3";
+import "google/protobuf/any.proto";
+import "product/ci/scm/proto/scm.proto";
+
+package io.harness.eventsframework.webhookpayloads.webhookdata;
+
+option java_multiple_files = true;
+
+message WebhookDTO {
+  string jsonPayload = 1;
+  WebhookTriggerType webhookTriggerType = 2;
+  WebhookEventType webhookEventType = 3;
+  product.ci.scm.proto.ParseWebhookResponse parsedResponse = 4;
+}
+
+enum WebhookEventType {
+  PUSH = 0;
+  PR = 1;
+}
+
+enum WebhookTriggerType {
+  GIT = 0;
+  CUSTOM = 1;
+}

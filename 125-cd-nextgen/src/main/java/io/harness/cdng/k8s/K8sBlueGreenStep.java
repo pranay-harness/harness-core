@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -26,6 +27,7 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -58,6 +60,8 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
     String releaseName = k8sStepHelper.getReleaseName(infrastructure);
     boolean skipDryRun =
         !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
+    List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
+    boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
 
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     K8sBGDeployRequest k8sBGDeployRequest =
@@ -67,7 +71,8 @@ public class K8sBlueGreenStep implements TaskChainExecutable<K8sBlueGreenStepPar
             .commandName(K8S_BLUE_GREEN_DEPLOY_COMMAND_NAME)
             .taskType(K8sTaskType.BLUE_GREEN_DEPLOY)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
-            .valuesYamlList(k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents))
+            .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
+            .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)

@@ -1,5 +1,9 @@
 package software.wings.api.lambda;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.api.DeploymentInfo;
 import software.wings.beans.Tag;
 
@@ -13,6 +17,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
 public class AwsLambdaDeploymentInfo extends DeploymentInfo {
   private String functionName;
   private String functionArn;

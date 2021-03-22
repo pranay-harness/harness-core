@@ -208,8 +208,10 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
 
       k8sTaskHelperBase.deleteSkippedManifestFiles(manifestFilesDirectory, executionLogCallback);
 
+      List<String> manifestHelperFiles =
+          isEmpty(request.getValuesYamlList()) ? request.getOpenshiftParamList() : request.getValuesYamlList();
       List<FileData> manifestFiles = k8sTaskHelperBase.renderTemplate(k8sDelegateTaskParams,
-          request.getManifestDelegateConfig(), manifestFilesDirectory, request.getValuesYamlList(), releaseName,
+          request.getManifestDelegateConfig(), manifestFilesDirectory, manifestHelperFiles, releaseName,
           kubernetesConfig.getNamespace(), executionLogCallback, request.getTimeoutIntervalInMin());
 
       resources = k8sTaskHelperBase.readManifestAndOverrideLocalSecrets(

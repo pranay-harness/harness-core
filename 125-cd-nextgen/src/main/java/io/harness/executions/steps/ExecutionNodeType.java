@@ -21,7 +21,6 @@ public enum ExecutionNodeType {
 
   ROLLBACK_SECTION("ROLLBACK_SECTION", "rollbackSection"),
   GENERIC_SECTION("GENERIC_SECTION", "genericSection"),
-  HTTP("HTTP", YamlTypes.HTTP_STEP),
   SHELL_SCRIPT("SHELL_SCRIPT", YamlTypes.SHELL_SCRIPT_STEP);
 
   private final String name;

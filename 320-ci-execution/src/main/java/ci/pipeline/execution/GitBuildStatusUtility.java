@@ -32,6 +32,7 @@ import io.harness.steps.StepOutcomeGroup;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.time.Duration;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,7 +97,7 @@ public class GitBuildStatusUtility {
                                                       .taskDescription("CI git build status task")
                                                       .build();
 
-        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+        String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
             buildStatusUpdateParameter.getIdentifier(), nodeExecution.getStatus().name(),
             buildStatusUpdateParameter.getSha(), buildStatusUpdateParameter.getState(), taskId);

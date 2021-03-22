@@ -517,6 +517,10 @@ if [[ "" != "$TIMESCALEDB_LOGGERLEVEL" ]]; then
   yq write -i $CONFIG_FILE timescaledb.loggerLevel "$TIMESCALEDB_LOGGERLEVEL"
 fi
 
+if [[ "" != "$TIMESCALEDB_HEALTH_CHECK_NEEDED" ]]; then
+  yq write -i $CONFIG_FILE timescaledb.isHealthCheckNeeded "$TIMESCALEDB_HEALTH_CHECK_NEEDED"
+fi
+
 if [[ "$SEARCH_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE searchEnabled true
 fi
@@ -755,6 +759,10 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
     yq write -i $CONFIG_FILE eventsFramework.redis.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
+fi
+
+if [[ "" != "$EVENTS_FRAMEWORK_REDIS_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE eventsFramework.redis.userName "$EVENTS_FRAMEWORK_REDIS_USERNAME"
 fi
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_PASSWORD" ]]; then

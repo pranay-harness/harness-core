@@ -1,5 +1,9 @@
 package io.harness.yaml.schema.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.Set;
 import javax.annotation.Nullable;
 import lombok.AccessLevel;
@@ -10,6 +14,7 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(DX)
 public class PossibleFieldTypes {
   String fieldName;
 

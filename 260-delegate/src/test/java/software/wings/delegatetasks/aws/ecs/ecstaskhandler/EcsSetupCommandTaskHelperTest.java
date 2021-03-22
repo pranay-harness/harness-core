@@ -3,6 +3,7 @@ package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 import static io.harness.container.ContainerInfo.Status.FAILURE;
 import static io.harness.container.ContainerInfo.Status.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -20,6 +21,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -29,16 +31,18 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static wiremock.com.google.common.collect.Lists.newArrayList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.rule.Owner;
@@ -105,7 +109,7 @@ import org.mockito.Spy;
 import org.slf4j.Logger;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   public static final String SECURITY_GROUP_ID_1 = "sg-id";
   public static final String CLUSTER_NAME = "clusterName";
@@ -1107,7 +1111,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     assertThat(data.getEcsServiceArn()).isEqualTo("svcArn");
     assertThat(data.getContainerServiceName()).isEqualTo("foo__1");
     verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
-    verify(mockEcsContainerService).waitForTasksToBeInRunningStateButDontThrowException(any());
+    verify(mockEcsContainerService).waitForTasksToBeInRunningStateWithHandledExceptions(any());
     verify(mockEcsContainerService).waitForServiceToReachSteadyState(anyInt(), any());
   }
 
@@ -1127,6 +1131,41 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
     ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback);
     verify(mockAwsHelperService).deleteService(anyString(), any(), anyList(), any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleRollback_ThrowTimeoutException() {
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withClusterName("cluster")
+                                .withIsDaemonSchedulingStrategy(true)
+                                .withPreviousEcsServiceSnapshotJson("PrevJson")
+                                .withServiceSteadyStateTimeout(10)
+                                .build();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    doReturn(new Service().withServiceName("foo__1").withServiceArn("svcArn"))
+        .when(ecsSetupCommandTaskHelper)
+        .getAwsServiceFromJson(anyString(), any());
+    doReturn(AwsConfig.builder().build())
+        .when(mockAwsHelperService)
+        .validateAndGetAwsConfig(any(), anyList(), anyBoolean());
+    doReturn(new DescribeServicesResult().withServices(
+                 new Service().withDesiredCount(2).withEvents(new ServiceEvent().withId("evId"))))
+        .when(mockAwsHelperService)
+        .describeServices(anyString(), any(), anyList(), any());
+    doThrow(TimeoutException.class)
+        .when(mockEcsContainerService)
+        .waitForTasksToBeInRunningStateWithHandledExceptions(any());
+
+    assertThatExceptionOfType(TimeoutException.class)
+        .isThrownBy(
+            () -> ecsSetupCommandTaskHelper.handleRollback(params, attribute, builder, emptyList(), mockCallback));
+    verify(mockAwsHelperService).updateService(anyString(), any(), anyList(), any());
   }
 
   @Test
@@ -1176,9 +1215,10 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
         .when(mockEcsContainerService)
         .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
-    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback);
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback, false);
     verify(awsClusterService)
-        .resizeCluster(anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any());
+        .resizeCluster(
+            anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), anyBoolean());
   }
 
   @Test

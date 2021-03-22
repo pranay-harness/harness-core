@@ -82,7 +82,7 @@ public class InterruptServiceImpl implements InterruptService {
       return true;
     }
     List<NodeExecution> targetExecutions =
-        nodeExecutionService.findAllChildren(interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId());
+        nodeExecutionService.findAllChildren(interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), true);
     return targetExecutions.stream().anyMatch(ne -> ne.getUuid().equals(nodeExecutionId));
   }
 

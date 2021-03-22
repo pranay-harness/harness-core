@@ -2,8 +2,8 @@ package io.harness.perpetualtask.manifest;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.exception.ManifestCollectionException;
@@ -21,7 +21,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class HelmRepositoryService implements ManifestRepositoryService {
   private static final String MANIFEST_COLLECTION_DIR = "manifest-collection";
   private static final long TIMEOUT_IN_MILLIS = 90L * 1000;

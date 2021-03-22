@@ -7,7 +7,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.persistence.HIterator;
@@ -29,7 +29,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class CleanupOrphanInfraMappings implements Migration {
   @Inject private AccountService accountService;
   @Inject private WingsPersistence wingsPersistence;

@@ -1,12 +1,12 @@
 package software.wings.graphql.datafetcher;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.concurrent.CompletionStage;
 import org.dataloader.DataLoader;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public abstract class AbstractBatchDataFetcher<T, P, K> extends AbstractObjectDataFetcher<T, P> {
   protected abstract CompletionStage<T> load(P parameters, DataLoader<K, T> dataLoader);
 

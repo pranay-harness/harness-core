@@ -14,7 +14,7 @@ import static software.wings.security.AuthRuleFilter.getAllowedAppIds;
 
 import static java.util.Arrays.asList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -68,7 +68,7 @@ import org.dataloader.DataLoader;
  */
 @Slf4j
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class AuthRuleGraphQL<P, T, B extends PersistentEntity> {
   private static final Set<String> apisToEvictUserPermissionRestrictionCache =
       ImmutableSet.of(CREATE_APPLICATION_API, DELETE_APPLICATION_API, CREATE_USERGROUP_API, DELETE_USERGROUP_API,

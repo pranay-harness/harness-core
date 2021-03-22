@@ -524,7 +524,6 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   private VerificationJobInstance newVerificationJobInstance() {
     return VerificationJobInstance.builder()
         .accountId(accountId)
-        .verificationJobIdentifier(verificationJobIdentifier)
         .deploymentStartTime(instant)
         .startTime(instant.plus(Duration.ofMinutes(2)))
         .dataCollectionDelay(Duration.ofMinutes(5))

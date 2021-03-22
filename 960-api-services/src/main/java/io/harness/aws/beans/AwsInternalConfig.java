@@ -6,10 +6,8 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.settings.SettingVariableTypes;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
-import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,7 +27,6 @@ public class AwsInternalConfig implements EncryptableSetting {
   private String defaultRegion;
   private boolean assumeCrossAccountRole;
   private boolean useIRSA;
-  @JsonIgnore @SchemaIgnore private boolean isCertValidationRequired;
 
   @Override
   public SettingVariableTypes getSettingType() {

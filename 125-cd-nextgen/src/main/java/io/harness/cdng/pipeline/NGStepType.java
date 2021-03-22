@@ -77,8 +77,6 @@ public enum NGStepType {
   @JsonProperty(StepSpecTypeConstants.SHELL_SCRIPT)
   SHELL_SCRIPT("Shell Script", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted",
       StepSpecTypeConstants.SHELL_SCRIPT),
-  @JsonProperty(StepSpecTypeConstants.HTTP)
-  HTTP("Http", Arrays.asList(ServiceDefinitionType.values()), "Utilites/Scripted/", StepSpecTypeConstants.HTTP),
   @JsonProperty(StepSpecTypeConstants.PLACEHOLDER)
   NEW_RELIC_DEPLOYMENT_MAKER("New Relic Deployment Maker", Arrays.asList(ServiceDefinitionType.values()),
       "Utilites/Non-Scripted/", StepSpecTypeConstants.PLACEHOLDER),

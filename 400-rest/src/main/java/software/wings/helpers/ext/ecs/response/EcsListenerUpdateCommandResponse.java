@@ -1,6 +1,6 @@
 package software.wings.helpers.ext.ecs.response;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -10,15 +10,15 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class EcsListenerUpdateCommandResponse extends EcsCommandResponse {
   private String downsizedServiceName;
   private int downsizedServiceCount;
 
   @Builder
   public EcsListenerUpdateCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
-      String downsizedServiceName, int downsizedServiceCount) {
-    super(commandExecutionStatus, output);
+      String downsizedServiceName, int downsizedServiceCount, boolean timeoutFailure) {
+    super(commandExecutionStatus, output, timeoutFailure);
     this.downsizedServiceName = downsizedServiceName;
     this.downsizedServiceCount = downsizedServiceCount;
   }

@@ -1,5 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.delegatetasks.terraform.TerraformConfigInspectClient;
 import software.wings.service.intfc.TerraformConfigInspectService;
 
@@ -9,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 public class TerraformConfigInspectServiceImpl implements TerraformConfigInspectService {
   @Inject private TerraformConfigInspectClient terraformConfigInspectClient;
 

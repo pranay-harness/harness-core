@@ -2,7 +2,7 @@ package software.wings.graphql.schema.type.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
@@ -20,7 +20,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLOnScheduleKeys")
 @Scope(PermissionAttribute.ResourceType.APPLICATION)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLOnSchedule implements QLTriggerCondition {
   private QLTriggerConditionType triggerConditionType;
   private String cronExpression;

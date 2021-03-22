@@ -5,6 +5,7 @@ import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -571,6 +572,12 @@ public class EcsStateHelperTest extends CategoryTest {
     assertThat(listParam.getInstanceElements().size()).isEqualTo(1);
     assertThat(listParam.getInstanceElements().get(0).getHostName()).isEqualTo("HostName");
     assertThat(listParam.getInstanceElements().get(0).getDockerId()).isEqualTo("DockerId");
+    assertThat(response.getFailureTypes()).isNull();
+
+    delegateResponse.getEcsCommandResponse().setTimeoutFailure(true);
+    response = helper.handleDelegateResponseForEcsDeploy(
+        mockContext, ImmutableMap.of(ACTIVITY_ID, delegateResponse), false, mockService, false, mockHelper);
+    assertThat(response.getFailureTypes()).isEqualTo(TIMEOUT);
   }
 
   @Test

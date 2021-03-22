@@ -3,7 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HIterator;
 
@@ -17,7 +17,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.mongodb.morphia.Key;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddAccountIdToTriggerExecutions extends AddAccountIdToAppEntities {
   @Override
   public void migrate() {

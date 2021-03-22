@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.user;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
@@ -12,7 +12,7 @@ import lombok.Value;
 
 @Value
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLUpdateUserInput implements QLMutationInput {
   private String id;
   private String clientMutationId;

@@ -45,7 +45,7 @@ public class HarnessApprovalStepInfo extends ApprovalBaseStepInfo {
 
   @Override
   public String getFacilitatorType() {
-    return OrchestrationFacilitatorType.SYNC;
+    return OrchestrationFacilitatorType.ASYNC;
   }
 
   @Override

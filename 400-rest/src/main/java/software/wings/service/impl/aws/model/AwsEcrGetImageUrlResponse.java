@@ -2,7 +2,7 @@ package software.wings.service.impl.aws.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -14,7 +14,7 @@ import lombok.Data;
 @OwnedBy(CDC)
 @Data
 @Builder
-@TargetModule(Module._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class AwsEcrGetImageUrlResponse implements AwsResponse {
   private DelegateMetaInfo delegateMetaInfo;
   private ExecutionStatus executionStatus;

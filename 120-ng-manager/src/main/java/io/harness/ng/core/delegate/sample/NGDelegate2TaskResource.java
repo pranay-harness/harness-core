@@ -11,6 +11,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import java.time.Duration;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -68,7 +69,7 @@ public class NGDelegate2TaskResource {
                                                         .taskSetupAbstraction("orgIdentifier", orgIdentifier)
                                                         .taskSetupAbstraction("projectIdentifier", projectIdentifier)
                                                         .build();
-    final String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest);
+    final String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
 
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION, new SimpleNotifyCallback(), taskId);
     return taskId;
