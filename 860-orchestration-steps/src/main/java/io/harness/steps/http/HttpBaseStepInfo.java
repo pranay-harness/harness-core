@@ -1,4 +1,4 @@
-package io.harness.http;
+package io.harness.steps.http;
 
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;

@@ -1,4 +1,4 @@
-package io.harness.cdng.pipeline.steps;
+package io.harness.steps.http;
 
 import static io.harness.rule.OwnerRule.NAMAN;
 
@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.http.HttpStepResponse;
-import io.harness.http.HttpStepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 

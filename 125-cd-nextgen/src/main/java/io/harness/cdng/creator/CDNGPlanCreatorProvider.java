@@ -5,7 +5,6 @@ import io.harness.cdng.creator.plan.execution.CDExecutionPMSPlanCreator;
 import io.harness.cdng.creator.plan.stage.DeploymentStagePMSPlanCreator;
 import io.harness.cdng.creator.plan.steps.CDPMSStepPlanCreator;
 import io.harness.cdng.creator.variables.DeploymentStageVariableCreator;
-import io.harness.cdng.creator.variables.HTTPStepVariableCreator;
 import io.harness.cdng.creator.variables.K8sStepVariableCreator;
 import io.harness.cdng.creator.variables.ShellScriptStepVariableCreator;
 import io.harness.executions.steps.StepSpecTypeConstants;
@@ -56,7 +55,6 @@ public class CDNGPlanCreatorProvider implements PipelineServiceInfoProvider {
     variableCreators.add(new ExecutionVariableCreator());
     variableCreators.add(new StepGroupVariableCreator());
     variableCreators.add(new K8sStepVariableCreator());
-    variableCreators.add(new HTTPStepVariableCreator());
     variableCreators.add(new ShellScriptStepVariableCreator());
     return variableCreators;
   }

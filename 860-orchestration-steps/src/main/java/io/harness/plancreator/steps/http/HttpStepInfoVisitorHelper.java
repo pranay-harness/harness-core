@@ -1,6 +1,5 @@
-package io.harness.cdng.visitor.helpers.cdstepinfo;
+package io.harness.plancreator.steps.http;
 
-import io.harness.cdng.pipeline.stepinfo.HttpStepInfo;
 import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
