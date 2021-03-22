@@ -232,6 +232,7 @@ encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 encryptedRecords {"name": "encryptionKey_1", "background": true} {"encryptionKey": 1}
 encryptedRecords {"name": "keywords_1", "background": true} {"keywords": 1}
 encryptedRecords {"name": "name_1", "background": true} {"name": 1}
+encryptedRecords {"name": "nextAwsKmsToGcpKmsMigrationIteration_1", "background": true} {"nextAwsKmsToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextAwsToGcpKmsMigrationIteration_1", "background": true} {"nextAwsToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextLocalToGcpKmsMigrationIteration_1", "background": true} {"nextLocalToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextMigrationIteration_1", "background": true} {"nextMigrationIteration": 1}
