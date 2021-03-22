@@ -1,7 +1,10 @@
 package io.harness.audit.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditEventData;
 import io.harness.audit.beans.AuthenticationInfo;
 import io.harness.audit.beans.AuthenticationInfo.AuthenticationInfoKeys;
@@ -34,6 +37,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AuditEventKeys")

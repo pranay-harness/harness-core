@@ -1,6 +1,9 @@
 package io.harness.audit.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.Principal;
 import io.harness.filter.entity.FilterProperties;
 import io.harness.ng.core.Resource;
@@ -16,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

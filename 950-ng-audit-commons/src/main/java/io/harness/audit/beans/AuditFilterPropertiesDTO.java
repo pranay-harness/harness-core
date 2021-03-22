@@ -1,8 +1,10 @@
 package io.harness.audit.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.filter.FilterConstants.AUDIT_FILTER;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.Resource;
@@ -20,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName(AUDIT_FILTER)
 @Data

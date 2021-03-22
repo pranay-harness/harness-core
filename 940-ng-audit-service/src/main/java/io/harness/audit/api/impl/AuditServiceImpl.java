@@ -186,6 +186,11 @@ public class AuditServiceImpl implements AuditService {
       throw new InvalidRequestException(
           String.format("Invalid resource scope filter with accountIdentifier %s.", accountIdentifier));
     }
+    if (isEmpty(resourceScope.getOrgIdentifier()) && isNotEmpty(resourceScope.getProjectIdentifier())) {
+      throw new InvalidRequestException(
+          String.format("Invalid resource scope filter with projectIdentifier %s but missing orgIdentifier.",
+              resourceScope.getProjectIdentifier()));
+    }
     List<KeyValuePair> labels = resourceScope.getLabels();
     if (isNotEmpty(labels)) {
       labels.forEach(label -> {

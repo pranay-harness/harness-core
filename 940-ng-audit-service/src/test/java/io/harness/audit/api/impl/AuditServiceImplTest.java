@@ -1,6 +1,7 @@
 package io.harness.audit.api.impl;
 
 import static io.harness.NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.utils.PageTestUtils.getPage;
 
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
 import io.harness.audit.beans.Principal;
@@ -45,6 +47,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 public class AuditServiceImplTest extends CategoryTest {
   private AuditRepository auditRepository;
   private AuditService auditService;
