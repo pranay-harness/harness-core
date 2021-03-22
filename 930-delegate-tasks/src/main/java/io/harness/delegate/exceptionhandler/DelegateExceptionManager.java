@@ -88,7 +88,7 @@ public class DelegateExceptionManager {
       log.error("Kyro handler not found for exception", unhandledException);
       unhandledException = new KryoHandlerNotFoundException(unhandledException.getMessage());
     }
-    return new DelegateErrorHandlerException("Unable to handle delegate exception", unhandledException);
+    return new DelegateErrorHandlerException(unhandledException.getMessage());
   }
 
   private ErrorNotifyResponseDataBuilder prepareErrorResponse(
