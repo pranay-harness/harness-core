@@ -253,3 +253,4 @@ timescaledb:
   logUnclosedConnections: false
   loggerLevel: OFF
   instanceDataRetentionDays: 210
+  isHealthCheckNeeded: false
