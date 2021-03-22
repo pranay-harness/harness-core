@@ -30,6 +30,8 @@ public interface NameService {
   String user = "User";
 
   String infrastructureDefinition = "InfrastructureDefinition";
+  String deploymentType = "DeploymentType";
+  String orchestrationWorkflowType = "OrchestrationWorkflowType";
 
   NameResult getNames(@NotNull Set<String> ids, @NotNull String type);
 }

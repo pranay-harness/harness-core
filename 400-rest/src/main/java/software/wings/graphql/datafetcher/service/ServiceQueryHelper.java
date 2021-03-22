@@ -14,6 +14,7 @@ import software.wings.beans.Service;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceTagFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceTagType;
@@ -56,6 +57,12 @@ public class ServiceQueryHelper {
         field = query.field("_id");
         QLIdFilter serviceFilter = filter.getService();
         utils.setIdFilter(field, serviceFilter);
+      }
+
+      if (filter.getDeploymentType() != null) {
+        field = query.field("deploymentType");
+        QLDeploymentTypeFilter deploymentTypeFilter = filter.getDeploymentType();
+        utils.setEnumFilter(field, deploymentTypeFilter);
       }
 
       if (filter.getTag() != null) {

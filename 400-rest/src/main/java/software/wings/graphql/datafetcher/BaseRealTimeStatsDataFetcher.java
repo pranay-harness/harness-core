@@ -49,7 +49,7 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
     wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(entityClass)
         .match(query)
-        .group(Group.id(getFirstLevelGrouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),
+        .group(Group.id(getFirstLevelGrouping(entityIdColumn), getFirstLevelGrouping(secondLevelEntityIdColumn)),
             grouping("count", new Accumulator("$sum", 1)),
             grouping("firstLevelInfo",
                 grouping("$first", projection("id", entityIdColumn), projection("name", entityIdColumn))),

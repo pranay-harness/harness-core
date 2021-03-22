@@ -16,4 +16,5 @@ public class QLServiceFilter implements EntityFilter {
   QLIdFilter application;
   QLIdFilter service;
   QLServiceTagFilter tag;
+  QLDeploymentTypeFilter deploymentType;
 }

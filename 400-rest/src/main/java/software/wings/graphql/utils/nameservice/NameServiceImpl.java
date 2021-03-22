@@ -51,6 +51,8 @@ public class NameServiceImpl implements NameService {
       case artifactType:
       case environmentType:
       case Type:
+      case deploymentType:
+      case orchestrationWorkflowType:
         return nameResultBuilder.type(type)
             .idNameMap(ids.stream().collect(Collectors.toMap(identity(), identity())))
             .build();
