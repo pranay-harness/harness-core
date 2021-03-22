@@ -99,15 +99,15 @@ aggregatorModuleConfig:
     offset.storage.file.filename: "mongodb://127.0.0.1:27018,127.0.0.1:27019,127.0.0.1:27020/accesscontrol?replicaSet=rs0"
     key.converter.schemas.enable: false
     value.converter.schemas.enable: false
-    offset.flush.interval.ms: 50
+    offset.flush.interval.ms: 5000
     mongodb.hosts: rs0/localhost:27018
     mongodb.name: access_control_db
     mongodb.user: ""
     mongodb.password: ""
     mongodb.ssl.enabled: false
     database.include.list: "accesscontrol"
-    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments"
-  enabled: false
+    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups"
+  enabled: true
 
 enableAuth: true
 defaultServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

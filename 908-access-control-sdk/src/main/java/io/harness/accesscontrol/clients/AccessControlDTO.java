@@ -1,10 +1,25 @@
 package io.harness.accesscontrol.clients;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
+import io.harness.scope.ResourceScope;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.annotations.ApiModel;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = PROPERTY)
-@JsonSubTypes({ @JsonSubTypes.Type(value = HAccessControlDTO.class) })
-public interface AccessControlDTO {}
+@Data
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel(value = "AccessControl")
+@JsonTypeName("AccessControl")
+public class AccessControlDTO {
+  String permission;
+  ResourceScope resourceScope;
+  String resourceType;
+  String resourceIdentifier;
+  boolean permitted;
+}
