@@ -150,16 +150,29 @@ def ingestDataToPreaggregatedTable(client, jsonData):
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s preAggregated table..." % tableName)
-    query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s' AND cloudProvider = "AZURE";
-           INSERT INTO `%s.preAggregated` (startTime, azureResourceRate, cost,
-                                           azureServiceName, region, azureSubscriptionGuid,
-					                        cloudProvider)
-           SELECT TIMESTAMP(UsageDateTime) as startTime, min(ResourceRate) AS azureResourceRate, sum(PreTaxCost) AS cost,
-                MeterCategory AS azureServiceName, ResourceLocation as region, SubscriptionGuid as azureSubscriptionGuid,
+    if jsonData.get("accountIdOrig") == "sUF9l2F_T5-sjXm6h6Jxog":
+        print_("This is for account id %s" % jsonData.get("accountIdOrig"))
+        query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s' AND cloudProvider = "AZURE";
+                INSERT INTO `%s.preAggregated` (startTime, azureResourceRate, cost,
+                                                azureServiceName, region, azureSubscriptionGuid,
+                                                cloudProvider)
+                SELECT TIMESTAMP(Date) as startTime, min(UnitPrice ) AS azureResourceRate, sum(CostInBillingCurrency) AS cost,
+                MeterCategory AS azureServiceName, ResourceLocation as region, SubscriptionId  as azureSubscriptionGuid,
                 "AZURE" AS cloudProvider
-           FROM `%s.azureBilling_%s`
-           GROUP BY azureServiceName, region, azureSubscriptionGuid, startTime;
-    """ % (ds, date_start, date_end, ds, ds, jsonData["tableSuffix"])
+                FROM `%s.azureBilling_%s`
+                GROUP BY azureServiceName, region, azureSubscriptionGuid, startTime;
+                """ % (ds, date_start, date_end, ds, ds, jsonData["tableSuffix"])
+    else:
+        query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s' AND cloudProvider = "AZURE";
+               INSERT INTO `%s.preAggregated` (startTime, azureResourceRate, cost,
+                                               azureServiceName, region, azureSubscriptionGuid,
+                                                cloudProvider)
+               SELECT TIMESTAMP(UsageDateTime) as startTime, min(ResourceRate) AS azureResourceRate, sum(PreTaxCost) AS cost,
+                    MeterCategory AS azureServiceName, ResourceLocation as region, SubscriptionGuid as azureSubscriptionGuid,
+                    "AZURE" AS cloudProvider
+               FROM `%s.azureBilling_%s`
+               GROUP BY azureServiceName, region, azureSubscriptionGuid, startTime;
+        """ % (ds, date_start, date_end, ds, ds, jsonData["tableSuffix"])
     #print(query)
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -183,22 +196,41 @@ def ingestDataInUnifiedTableTable(client, jsonData):
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)
-    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AZURE";
-           INSERT INTO `%s.unifiedTable`
-                (product, startTime, cost,
-                azureMeterCategory, azureMeterSubcategory, azureMeterId,
-                azureMeterName, azureResourceType,
-                azureInstanceId, region, azureResourceGroup,
-                azureSubscriptionGuid, azureServiceName,
-                cloudProvider, labels)
-           SELECT MeterCategory AS product, TIMESTAMP(UsageDateTime) as startTime, PreTaxCost AS cost,
-                MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
-                MeterName as azureMeterName, ResourceType as azureResourceType,
-                InstanceId as azureInstanceId, ResourceLocation as region,  ResourceGroup as azureResourceGroup,
-                SubscriptionGuid as azureSubscriptionGuid, MeterCategory as azureServiceName,
-                "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels
-           FROM `%s.azureBilling_%s` ;
-     """ % (ds, date_start, date_end, ds, jsonData["projectName"], ds, jsonData["tableSuffix"])
+    if jsonData.get("accountIdOrig") == "sUF9l2F_T5-sjXm6h6Jxog":
+        print_("This is for account id %s" % jsonData.get("accountIdOrig"))
+        query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AZURE";
+               INSERT INTO `%s.unifiedTable`
+                    (product, startTime, cost,
+                    azureMeterCategory, azureMeterSubcategory, azureMeterId,
+                    azureMeterName,
+                    azureInstanceId, region, azureResourceGroup,
+                    azureSubscriptionGuid, azureServiceName,
+                    cloudProvider, labels)
+               SELECT MeterCategory AS product, TIMESTAMP(Date) as startTime, CostInBillingCurrency  AS cost,
+                    MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
+                    MeterName as azureMeterName,
+                    ResourceId  as azureInstanceId, ResourceLocation as region,  ResourceGroup as azureResourceGroup,
+                    SubscriptionId  as azureSubscriptionGuid, MeterCategory as azureServiceName,
+                    "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels
+               FROM `%s.azureBilling_%s` ;
+                """ % (ds, date_start, date_end, ds, jsonData["projectName"], ds, jsonData["tableSuffix"])
+    else:
+        query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AZURE";
+               INSERT INTO `%s.unifiedTable`
+                    (product, startTime, cost,
+                    azureMeterCategory, azureMeterSubcategory, azureMeterId,
+                    azureMeterName, azureResourceType,
+                    azureInstanceId, region, azureResourceGroup,
+                    azureSubscriptionGuid, azureServiceName,
+                    cloudProvider, labels)
+               SELECT MeterCategory AS product, TIMESTAMP(UsageDateTime) as startTime, PreTaxCost AS cost,
+                    MeterCategory as azureMeterCategory,MeterSubcategory as azureMeterSubcategory,MeterId as azureMeterId,
+                    MeterName as azureMeterName, ResourceType as azureResourceType,
+                    InstanceId as azureInstanceId, ResourceLocation as region,  ResourceGroup as azureResourceGroup,
+                    SubscriptionGuid as azureSubscriptionGuid, MeterCategory as azureServiceName,
+                    "AZURE" AS cloudProvider, `%s.CE_INTERNAL.jsonStringToLabelsStruct`(Tags) as labels
+               FROM `%s.azureBilling_%s` ;
+         """ % (ds, date_start, date_end, ds, jsonData["projectName"], ds, jsonData["tableSuffix"])
     #print(query)
     # Configure the query job.
     job_config = bigquery.QueryJobConfig(
