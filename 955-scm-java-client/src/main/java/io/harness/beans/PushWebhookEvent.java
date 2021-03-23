@@ -10,7 +10,7 @@ import lombok.Value;
 @Value
 @Builder
 @JsonTypeName("Branch")
-public class BranchWebhookEvent implements WebhookEvent {
+public class PushWebhookEvent implements WebhookEvent {
   private String branchName;
   private String link;
   private List<CommitDetails> commitDetailsList;
