@@ -9,6 +9,8 @@ import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeService;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -25,6 +27,8 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
   @Inject private ACLService aclService;
   @Inject private RoleService roleService;
   @Inject private ResourceGroupService resourceGroupService;
+  @Inject private ScopeService scopeService;
+  private static final String DELIMITER = "/";
 
   private ACL getACL(RoleAssignmentDBO roleAssignmentDBO, String permission, String resourceSelector) {
     String principalType = Optional.ofNullable(roleAssignmentDBO.getPrincipalType()).map(Enum::name).orElse(null);
@@ -68,6 +72,10 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
     return count;
   }
 
+  private String getResourceSelector(String resourceType, String resourceIdentifier) {
+    return DELIMITER.concat(resourceType).concat(DELIMITER).concat(resourceIdentifier);
+  }
+
   @Override
   public long consumeCreateEvent(String id, RoleAssignmentDBO roleAssignmentDBO) {
     Optional<Role> roleOptional = roleService.get(
@@ -84,9 +92,16 @@ public class RoleAssignmentChangeConsumerImpl implements ChangeConsumer<RoleAssi
     ResourceGroup resourceGroup = resourceGroupOptional.get();
 
     List<ACL> acls = new ArrayList<>();
-    role.getPermissions().forEach(permission
-        -> resourceGroup.getResourceSelectors().forEach(
-            resourceSelector -> acls.add(getACL(roleAssignmentDBO, permission, resourceSelector))));
+    role.getPermissions().forEach(permission -> {
+      if (resourceGroup.isFullScopeSelected()) {
+        Scope scope = scopeService.buildScopeFromScopeIdentifier(resourceGroup.getScopeIdentifier());
+        acls.add(getACL(roleAssignmentDBO, permission,
+            getResourceSelector(scope.getLevel().getResourceType(), scope.getInstanceId())));
+      } else {
+        resourceGroup.getResourceSelectors().forEach(
+            resourceSelector -> acls.add(getACL(roleAssignmentDBO, permission, resourceSelector)));
+      }
+    });
 
     long count = 0;
     if (!acls.isEmpty()) {

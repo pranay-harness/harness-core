@@ -1,12 +1,15 @@
 package io.harness.accesscontrol.migrations;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Named;
-import com.google.inject.name.Names;
+import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+
 import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.events.EventsConfig;
+import io.harness.accesscontrol.migrations.dao.MigrationDAO;
+import io.harness.accesscontrol.migrations.dao.MigrationDAOImpl;
+import io.harness.accesscontrol.migrations.events.FeatureFlagEventConsumer;
+import io.harness.accesscontrol.migrations.services.MigrationService;
+import io.harness.accesscontrol.migrations.services.MigrationServiceImpl;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentModule;
 import io.harness.accesscontrol.scopes.ScopeModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
@@ -17,12 +20,15 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.projectmanagerclient.ProjectManagementClientModule;
 import io.harness.remote.client.ServiceHttpClientConfig;
-import lombok.AllArgsConstructor;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import java.time.Duration;
-
-import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
-import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class MigrationModule extends AbstractModule {
@@ -53,6 +59,8 @@ public class MigrationModule extends AbstractModule {
         projectOrgsClientConfig, projectOrgsClientSecret, ACCESS_CONTROL_SERVICE.getServiceId()));
     install(new OrganizationManagementClientModule(
         projectOrgsClientConfig, projectOrgsClientSecret, ACCESS_CONTROL_SERVICE.getServiceId()));
+    bind(MigrationService.class).to(MigrationServiceImpl.class).in(Scopes.SINGLETON);
+    bind(MigrationDAO.class).to(MigrationDAOImpl.class).in(Scopes.SINGLETON);
 
     Multibinder<EventConsumer> eventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(FEATURE_FLAG_STREAM));

@@ -67,7 +67,7 @@ eventsConfig:
 iteratorsConfig:
   resourceGroupIteratorConfig:
     enabled: true
-    targetIntervalInSeconds: 1
+    targetIntervalInSeconds: 60
 
 accessControlClient:
   enableAccessControl: true

@@ -8,7 +8,6 @@ import java.util.Map;
 
 import static io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer.RESOURCE_GROUP_ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
@@ -24,6 +23,6 @@ public class ResourceGroupEventFilter implements EventFilter {
     String entityType = metadataMap.get(ENTITY_TYPE);
     String action = metadataMap.get(ACTION);
     return RESOURCE_GROUP_ENTITY_TYPE.equals(entityType)
-        && (UPDATE_ACTION.equals(action) || DELETE_ACTION.equals(action) || CREATE_ACTION.equals(action));
+        && (UPDATE_ACTION.equals(action) || DELETE_ACTION.equals(action));
   }
 }

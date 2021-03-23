@@ -18,7 +18,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
-import io.harness.accesscontrol.migrations.FeatureFlagEventListenerService;
+import io.harness.accesscontrol.migrations.events.FeatureFlagEventListenerService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;

@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.migrations;
+package io.harness.accesscontrol.migrations.events;
 
 import io.harness.accesscontrol.commons.events.EventFilter;
 import io.harness.eventsframework.consumer.Message;

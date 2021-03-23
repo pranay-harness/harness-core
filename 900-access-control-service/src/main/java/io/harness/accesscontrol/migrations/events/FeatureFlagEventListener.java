@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.migrations;
+package io.harness.accesscontrol.migrations.events;
 
 import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 
