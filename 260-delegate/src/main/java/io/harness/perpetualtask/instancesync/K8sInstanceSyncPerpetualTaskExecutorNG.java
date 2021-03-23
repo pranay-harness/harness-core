@@ -36,9 +36,9 @@ import org.eclipse.jetty.server.Response;
 public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExecutor {
   @Inject private transient KryoSerializer kryoSerializer;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Inject private K8sTaskHelperBase k8sTaskHelperBase;
+  @Inject private transient K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private transient ContainerService containerService;
-  @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
+  @Inject private transient K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -62,7 +62,6 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
     K8sDeployResponse responseData = getK8sTaskResponse(k8SContainerPerpetualTaskParams, kubernetesConfig);
     //     publishInstanceSyncResult(taskId, k8sContainerInstanceSyncPerpetualTaskParams.getAccountId(),
     //        k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(), responseData);
-
     boolean isFailureResponse = FAILURE == responseData.getCommandExecutionStatus();
     return PerpetualTaskResponse.builder()
         .responseCode(Response.SC_OK)
