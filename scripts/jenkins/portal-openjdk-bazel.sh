@@ -126,6 +126,21 @@ then
 fi
 cd ../..
 
+mkdir -p dist/change-data-capture ;
+cd dist/event-server
+cp ${HOME}/.bazel-dirs/bin/110-change-data-capture/module_deploy.jar change-data-capture.jar
+cp ../../350-event-server/config.yml .
+cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-openjdk Dockerfile
+cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-gcr-openjdk Dockerfile-gcr
+cp -r ../../dockerization/change-data-capture/scripts/ .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+cd ../..
+
 MODULE_NAME="340-ce-nextgen";
 FOLDER_NAME="ce-nextgen";
 mkdir -p dist/${FOLDER_NAME} ;
