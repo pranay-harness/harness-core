@@ -21,7 +21,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @EqualsAndHashCode(callSuper = true)
 public class NewRelicCVConfig extends MetricCVConfig {
   private String applicationName;
-  private String applicationId;
+  private long applicationId;
 
   @Override
   public DataSourceType getType() {

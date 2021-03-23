@@ -75,7 +75,7 @@ public class NewRelicDSConfig extends DSConfig {
       getNewRelicServiceConfigList().forEach(newRelicServiceConfig -> {
         NewRelicCVConfig newRelicCVConfig = (NewRelicCVConfig) cvConfig;
         Preconditions.checkState(
-            !(newRelicCVConfig.getApplicationId().equals(newRelicServiceConfig.getApplicationId())
+            !(newRelicCVConfig.getApplicationId() == newRelicServiceConfig.getApplicationId()
                 && newRelicCVConfig.getApplicationName().equals(newRelicServiceConfig.getApplicationName())
                 && newRelicCVConfig.getEnvIdentifier().equals(newRelicServiceConfig.getEnvIdentifier())
                 && newRelicCVConfig.getServiceIdentifier().equals(newRelicServiceConfig.getServiceIdentifier())),
@@ -114,7 +114,7 @@ public class NewRelicDSConfig extends DSConfig {
   @Builder
   private static class Key {
     private String applicationName;
-    private String applicationId;
+    private long applicationId;
     private String envIdentifier;
     private String serviceIdentifier;
     MetricPack metricPack;
@@ -124,7 +124,7 @@ public class NewRelicDSConfig extends DSConfig {
   @Builder
   public static class NewRelicServiceConfig {
     private String applicationName;
-    private String applicationId;
+    private long applicationId;
     private String envIdentifier;
     private String serviceIdentifier;
     private Set<MetricPack> metricPacks;

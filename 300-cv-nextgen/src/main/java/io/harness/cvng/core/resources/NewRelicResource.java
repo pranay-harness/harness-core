@@ -2,6 +2,7 @@ package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.entities.MetricPack;
@@ -78,7 +79,7 @@ public class NewRelicResource {
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
       @QueryParam("appName") @NotNull String appName, @QueryParam("appId") @NotNull String appId,
-      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPack> metricPacks) {
+      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
     return ResponseDTO.newResponse(newRelicService.validateData(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, appId, metricPacks));
   }

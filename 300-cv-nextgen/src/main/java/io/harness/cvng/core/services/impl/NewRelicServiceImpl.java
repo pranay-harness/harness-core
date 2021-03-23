@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
@@ -26,6 +27,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.assertj.core.util.Sets;
 
 public class NewRelicServiceImpl implements NewRelicService {
   private static final List<String> NEW_RELIC_ENDPOINTS =
@@ -64,15 +66,14 @@ public class NewRelicServiceImpl implements NewRelicService {
 
   @Override
   public MetricPackValidationResponse validateData(String accountId, String connectorIdentifier, String orgIdentifier,
-      String projectIdentifier, String appName, String appId, List<MetricPack> metricPacks) {
+      String projectIdentifier, String appName, String appId, List<MetricPackDTO> metricPacks) {
     try {
-      DataCollectionRequest request =
-          NewRelicMetricPackValidationRequest.builder()
-              .type(DataCollectionRequestType.NEWRELIC_VALIDATION_REQUEST)
-              .applicationName(appName)
-              .applicationId(appId)
-              .metricPackDTOSet(metricPacks.stream().map(MetricPack::toDTO).collect(Collectors.toSet()))
-              .build();
+      DataCollectionRequest request = NewRelicMetricPackValidationRequest.builder()
+                                          .type(DataCollectionRequestType.NEWRELIC_VALIDATION_REQUEST)
+                                          .applicationName(appName)
+                                          .applicationId(appId)
+                                          .metricPackDTOSet(Sets.newHashSet(metricPacks))
+                                          .build();
       OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
                                                       .dataCollectionRequest(request)
                                                       .connectorIdentifier(connectorIdentifier)
