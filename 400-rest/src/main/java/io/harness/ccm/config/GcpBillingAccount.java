@@ -1,14 +1,15 @@
 package io.harness.ccm.config;
 
-import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -22,10 +23,17 @@ import org.mongodb.morphia.annotations.Id;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GcpBillingAccountKeys")
 @Entity(value = "gcpBillingAccount", noClassnameStored = true)
-@NgUniqueIndex(name = "no_dup",
-    fields = { @Field(GcpBillingAccountKeys.accountId)
-               , @Field(GcpBillingAccountKeys.organizationSettingId) })
 public class GcpBillingAccount implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("no_dup")
+                 .unique(true)
+                 .field(GcpBillingAccountKeys.accountId)
+                 .field(GcpBillingAccountKeys.organizationSettingId)
+                 .build())
+        .build();
+  }
   @Id String uuid;
   String accountId;
   String organizationSettingId;
