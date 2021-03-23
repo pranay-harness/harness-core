@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.PIYUSH;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -64,12 +65,11 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     initMocks(this);
-
     Account account = getAccount(AccountType.PAID);
     accountId = account.getUuid();
     when(accountService.get(accountId)).thenReturn(account);
 
-    doNothing().when(awsSecretsManagerService).validateSecretsManagerConfig(any());
+    doNothing().when(awsSecretsManagerService).validateSecretsManagerConfig(any(), any());
     when(secretsManagementFeature.isAvailableForAccount(accountId)).thenReturn(true);
   }
 
@@ -80,6 +80,34 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
     AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
     awsSecretManagerConfig.setAccountId(accountId);
 
+    String savedConfigId = awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, awsSecretManagerConfig);
+    assertEquals(awsSecretManagerConfig.getName(),
+        awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId).getName());
+  }
+
+  @Test
+  @Owner(developers = PIYUSH)
+  @Category(UnitTests.class)
+  public void saveAwsSecretManagerConfig_AssumeIAMRole_shouldPass() {
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
+    awsSecretManagerConfig.setAccountId(accountId);
+    awsSecretManagerConfig.setAssumeIamRoleOnDelegate(true);
+    awsSecretManagerConfig.setSecretKey(null);
+    awsSecretManagerConfig.setAccessKey(null);
+    String savedConfigId = awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, awsSecretManagerConfig);
+    assertEquals(awsSecretManagerConfig.getName(),
+        awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId).getName());
+  }
+
+  @Test
+  @Owner(developers = PIYUSH)
+  @Category(UnitTests.class)
+  public void saveAwsSecretManagerConfig_AssumeSTSRole_shouldPass() {
+    AwsSecretsManagerConfig awsSecretManagerConfig = secretManagementTestHelper.getAwsSecretManagerConfig();
+    awsSecretManagerConfig.setAccountId(accountId);
+    awsSecretManagerConfig.setAssumeStsRoleOnDelegate(true);
+    awsSecretManagerConfig.setSecretKey(null);
+    awsSecretManagerConfig.setAccessKey(null);
     String savedConfigId = awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, awsSecretManagerConfig);
     assertEquals(awsSecretManagerConfig.getName(),
         awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId).getName());
