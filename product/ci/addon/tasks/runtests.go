@@ -254,7 +254,7 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		selection, err = selectTests(ctx, files, r.id, r.log)
+		selection, err = selectTests(ctx, files, r.id, r.log, r.fs)
 		if err != nil {
 			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
 			// Set run only selected tests to false if there was some issue in the response

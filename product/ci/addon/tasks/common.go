@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"time"
@@ -12,6 +13,7 @@ import (
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/testreports"
@@ -149,7 +151,7 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 
 // selectTests takes a list of files which were changed as input and gets the tests
 // to be run corresponding to that.
-func selectTests(ctx context.Context, files []types.File, stepID string, log *zap.SugaredLogger) (types.SelectTestsResp, error) {
+func selectTests(ctx context.Context, files []types.File, stepID string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
 	res := types.SelectTestsResp{}
 	if len(files) == 0 {
 		// No files changed, don't do anything
@@ -174,7 +176,7 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 	}
 	defer client.CloseConn()
 	// Get TI config
-	ticonfig, err := getTiConfig()
+	ticonfig, err := getTiConfig(fs)
 	if err != nil {
 		return res, err
 	}
@@ -202,7 +204,7 @@ func selectTests(ctx context.Context, files []types.File, stepID string, log *za
 	return selection, nil
 }
 
-func getTiConfig() (types.TiConfig, error) {
+func getTiConfig(fs filesystem.FileSystem) (types.TiConfig, error) {
 	wrkspcPath, err := external.GetWrkspcPath()
 	res := types.TiConfig{}
 	if err != nil {
@@ -213,11 +215,14 @@ func getTiConfig() (types.TiConfig, error) {
 	if os.IsNotExist(err) {
 		return res, nil
 	}
-	data, err := ioutil.ReadFile(path)
+	var data []byte
+	err = fs.ReadFile(path, func(r io.Reader) error {
+		data, err = ioutil.ReadAll(r)
+		return err
+	})
 	if err != nil {
 		return res, errors.Wrap(err, "could not read .ticonfig file")
 	}
-	// Unmarshal the data in .ticonfig
 	err = yaml.Unmarshal(data, &res)
 	if err != nil {
 		return res, errors.Wrap(err, "could not unmarshal .ticonfig file")
