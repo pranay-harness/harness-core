@@ -3,13 +3,12 @@ package io.harness.ng.core.environment.beans;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
-import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
 import io.harness.persistence.PersistentEntity;
 
+import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -28,19 +27,23 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @Builder
-@NgUniqueIndex(name = "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier",
-    fields =
-    {
-      @Field(EnvironmentKeys.accountId)
-      , @Field(EnvironmentKeys.orgIdentifier), @Field(EnvironmentKeys.projectIdentifier),
-          @Field(EnvironmentKeys.identifier)
-    })
-@CdIndex(name = "accountIdIndex", fields = { @Field(EnvironmentKeys.accountId) })
 @Entity(value = "environmentsNG", noClassnameStored = true)
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 @Document("environmentsNG")
 @TypeAlias("io.harness.ng.core.environment.beans.Environment")
 public class Environment implements PersistentEntity {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier")
+                 .unique(true)
+                 .field(EnvironmentKeys.accountId)
+                 .field(EnvironmentKeys.orgIdentifier)
+                 .field(EnvironmentKeys.projectIdentifier)
+                 .field(EnvironmentKeys.identifier)
+                 .build())
+        .build();
+  }
   @Wither @Id @org.mongodb.morphia.annotations.Id private String id;
 
   @Trimmed @NotEmpty private String accountId;

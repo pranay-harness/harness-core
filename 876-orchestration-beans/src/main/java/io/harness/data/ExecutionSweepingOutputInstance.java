@@ -3,15 +3,15 @@ package io.harness.data;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.ExecutionSweepingOutputInstance.ExecutionSweepingOutputKeys;
 import io.harness.data.validator.Trimmed;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
 
+import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -32,17 +32,22 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(CDC)
 @Value
 @Builder
-@NgUniqueIndex(name = "levelRuntimeIdUniqueIdx2",
-    fields =
-    {
-      @Field(ExecutionSweepingOutputKeys.planExecutionId)
-      , @Field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx), @Field(ExecutionSweepingOutputKeys.name)
-    })
-@Entity(value = "executionSweepingOutput")
+@Entity(value = "executionSweepingOutput", noClassnameStored = true)
 @Document("executionSweepingOutput")
 @FieldNameConstants(innerTypeName = "ExecutionSweepingOutputKeys")
 @TypeAlias("executionSweepingOutput")
 public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_levelRuntimeIdUniqueIdx2")
+                 .unique(true)
+                 .field(ExecutionSweepingOutputKeys.planExecutionId)
+                 .field(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
+                 .field(ExecutionSweepingOutputKeys.name)
+                 .build())
+        .build();
+  }
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull String planExecutionId;
   @Singular List<Level> levels;

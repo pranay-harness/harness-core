@@ -25,7 +25,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "SdkResponseEventKeys")
-@Entity(value = "SdkResponseEvent")
+@Entity(value = "SdkResponseEvent", noClassnameStored = true)
 @Document("SdkResponseEvent")
 @HarnessEntity(exportable = false)
 @TypeAlias("SdkResponseEvent")
