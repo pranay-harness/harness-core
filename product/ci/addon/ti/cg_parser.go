@@ -33,18 +33,24 @@ func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallG
 	}
 }
 
-// Parse callgraph and return nodes and relations
-func (cg *CallGraphParser) Parse(file string) (*Callgraph, error) {
-	f, err := cg.fs.Open(file)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))
+// iterate through all the cg files in the directory, parse each of them and return Callgraph object
+func (cg *CallGraphParser) Parse(cgDir string, files []string) (*Callgraph, error) {
+	var finalCg []string
+	for _, file := range files {
+		fName := cgDir + file
+		f, err := cg.fs.Open(fName)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", fName))
+		}
+		r := bufio.NewReader(f)
+		cgStr, err := rFile(r)
+		if err != nil {
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse file %s", fName))
+		}
+		cg.log.Infow(fmt.Sprintf("successfully parsed cg file %s", fName))
+		finalCg = append(finalCg, cgStr...)
 	}
-	r := bufio.NewReader(f)
-	cgStr, err := rFile(r)
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("failed to read file %s", file))
-	}
-	return parseInt(cgStr)
+	return parseInt(finalCg)
 }
 
 // parseInt reads the input callgraph file and converts it into callgraph object
