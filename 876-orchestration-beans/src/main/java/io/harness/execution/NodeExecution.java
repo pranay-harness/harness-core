@@ -49,7 +49,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
-@Entity(value = "nodeExecutions")
+@Entity(value = "nodeExecutions", noClassnameStored = true)
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
 public final class NodeExecution implements PersistentEntity, UuidAware {
@@ -150,7 +150,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
-        .add(CompoundMongoIndex.builder().name("planExecutionId_idx").field(NodeExecutionKeys.planExecutionId).build())
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_planNodeId_idx")
                  .field(NodeExecutionKeys.planExecutionId)
@@ -165,11 +164,6 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("planExecutionId_oldRetry_idx")
                  .field(NodeExecutionKeys.planExecutionId)
                  .field(NodeExecutionKeys.oldRetry)
-                 .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("planExecutionId_parentId_idx")
-                 .field(NodeExecutionKeys.planExecutionId)
-                 .field(NodeExecutionKeys.parentId)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("planExecutionId_notifyId_idx")
