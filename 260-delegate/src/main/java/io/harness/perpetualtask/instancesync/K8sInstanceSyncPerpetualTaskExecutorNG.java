@@ -7,6 +7,8 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.delegate.task.k8s.K8sYamlToDelegateDTOMapper;
 import io.harness.grpc.utils.AnyUtils;
@@ -21,8 +23,6 @@ import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.K
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
-import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ContainerService;
 
 import com.google.inject.Inject;
@@ -58,7 +58,7 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
     KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
         k8sClusterConfig, k8SContainerPerpetualTaskParams.getNamespace());
 
-    K8sTaskExecutionResponse responseData = getK8sTaskResponse(k8SContainerPerpetualTaskParams, kubernetesConfig);
+    K8sDeployResponse responseData = getK8sTaskResponse(k8SContainerPerpetualTaskParams, kubernetesConfig);
     //     publishInstanceSyncResult(taskId, k8sContainerInstanceSyncPerpetualTaskParams.getAccountId(),
     //        k8sContainerInstanceSyncPerpetualTaskParams.getNamespace(), responseData);
 
@@ -68,7 +68,7 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
         .responseMessage(isFailureResponse ? responseData.getErrorMessage() : "success")
         .build();
   }
-  private K8sTaskExecutionResponse getK8sTaskResponse(
+  private K8sDeployResponse getK8sTaskResponse(
       K8sContainerInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams,
       KubernetesConfig kubernetesConfig) {
     try {
@@ -78,8 +78,8 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
       List<K8sPod> k8sPodList =
           k8sTaskHelperBase.getPodDetails(kubernetesConfig, namespace, releaseName, timeoutMillis);
 
-      return K8sTaskExecutionResponse.builder()
-          .k8sTaskResponse(K8sInstanceSyncResponse.builder().k8sPodInfoList(k8sPodList).build())
+      return K8sDeployResponse.builder()
+          .k8sNGTaskResponse(K8sScaleResponse.builder().k8sPodList(k8sPodList).build())
           .commandExecutionStatus((k8sPodList != null) ? SUCCESS : FAILURE)
           .build();
 
@@ -87,10 +87,7 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
       log.error(String.format("Failed to fetch k8s pod list for namespace: [%s] and releaseName:[%s] ",
                     k8SContainerPerpetualTaskParams.getNamespace(), k8SContainerPerpetualTaskParams.getReleaseName()),
           exception);
-      return K8sTaskExecutionResponse.builder()
-          .commandExecutionStatus(FAILURE)
-          .errorMessage(exception.getMessage())
-          .build();
+      return K8sDeployResponse.builder().commandExecutionStatus(FAILURE).errorMessage(exception.getMessage()).build();
     }
   }
 

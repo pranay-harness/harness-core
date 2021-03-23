@@ -10,7 +10,6 @@ message K8sContainerInstanceSyncPerpetualTaskParamsNG {
   string release_name = 5;
 }
 
-
 message ContainerServicePerpetualTaskParamsNG {
   bytes connector = 1;
   string container_svc_name = 2;
