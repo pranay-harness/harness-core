@@ -53,32 +53,34 @@ public class DelegateExceptionManager {
   }
 
   private WingsException handleException(Exception exception) {
-    WingsException handledException;
-    DelegateExceptionHandler delegateExceptionHandler = getExceptionHandler(exception);
     try {
-      if (delegateExceptionHandler != null) {
-        handledException = delegateExceptionHandler.handleException(exception);
+      WingsException handledException;
+      if (exception instanceof WingsException) {
+        handledException = (WingsException) exception;
+        if (handledException.getCause() != null) {
+          setExceptionCause(handledException, handleException((Exception) handledException.getCause()));
+        }
       } else {
-        if (exception instanceof WingsException) {
-          handledException = (WingsException) exception;
+        DelegateExceptionHandler delegateExceptionHandler = getExceptionHandler(exception);
+        if (delegateExceptionHandler != null) {
+          handledException = delegateExceptionHandler.handleException(exception);
         } else {
-          throw new DelegateErrorHandlerException("Delegate exception handler not registered");
+          throw new DelegateErrorHandlerException(
+              "Delegate exception handler not registered for exception : " + exception);
         }
-      }
-
-      if (exception.getCause() != null) {
-        WingsException cascadedException = handledException;
-        while (cascadedException.getCause() != null) {
-          // 3rd party exception can't be allowed as cause in already handled exception
-          cascadedException = (WingsException) cascadedException.getCause();
+        if (exception.getCause() != null) {
+          WingsException cascadedException = handledException;
+          while (cascadedException.getCause() != null) {
+            // 3rd party exception can't be allowed as cause in already handled exception
+            cascadedException = (WingsException) cascadedException.getCause();
+          }
+          setExceptionCause(cascadedException, handleException((Exception) exception.getCause()));
         }
-        setExceptionCause(cascadedException, handleException((Exception) exception.getCause()));
       }
       return handledException;
-
     } catch (Exception e) {
       log.error("Exception occured while handling delegate exception : {}", exception, e);
-      return prepareUnhandledExceptionResponse(exception);
+      return prepareUnhandledExceptionResponse(e);
     }
   }
 
