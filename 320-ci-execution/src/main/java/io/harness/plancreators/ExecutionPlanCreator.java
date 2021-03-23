@@ -11,7 +11,6 @@ import io.harness.executionplan.core.ExecutionPlanCreatorResponse;
 import io.harness.executionplan.core.PlanCreatorSearchContext;
 import io.harness.executionplan.core.SupportDefinedExecutorPlanCreator;
 import io.harness.executionplan.service.ExecutionPlanCreatorHelper;
-import io.harness.node.BasicStepToExecutionNodeConverter;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -23,7 +22,6 @@ import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import graph.StepInfoGraphConverter;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,8 +32,6 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 public class ExecutionPlanCreator implements SupportDefinedExecutorPlanCreator<ExecutionElement> {
   @Inject private ExecutionPlanCreatorHelper planCreatorHelper;
-  @Inject private StepInfoGraphConverter graphConverter;
-  @Inject private BasicStepToExecutionNodeConverter basicStepToExecutionNodeConverter;
 
   @Override
   public ExecutionPlanCreatorResponse createPlan(ExecutionElement execution, ExecutionPlanCreationContext context) {
