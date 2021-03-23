@@ -58,8 +58,8 @@ public class AuditFilterPropertiesValidator {
 
   private void verifyScope(String accountIdentifier, ResourceScope resourceScope) {
     if (!accountIdentifier.equals(resourceScope.getAccountIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("Invalid resource scope filter with accountIdentifier %s.", accountIdentifier));
+      throw new InvalidRequestException(String.format(
+          "Invalid resource scope filter with accountIdentifier %s.", resourceScope.getAccountIdentifier()));
     }
     if (isEmpty(resourceScope.getOrgIdentifier()) && isNotEmpty(resourceScope.getProjectIdentifier())) {
       throw new InvalidRequestException(

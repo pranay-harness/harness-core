@@ -19,6 +19,7 @@ import io.harness.audit.repositories.AuditRepository;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.common.beans.KeyValuePair;
+import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.scope.ResourceScope;
 
 import com.google.inject.Inject;
@@ -67,10 +68,11 @@ public class AuditServiceImpl implements AuditService {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getEnvironmentIdentifiers())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                           .is(ENVIRONMENT_IDENTIFIER_KEY)
-                           .and(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
-                           .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers()));
+      criteriaList.add(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEY)
+                           .elemMatch(Criteria.where(KeyValuePairKeys.key)
+                                          .is(ENVIRONMENT_IDENTIFIER_KEY)
+                                          .and(KeyValuePairKeys.value)
+                                          .in(auditFilterPropertiesDTO.getEnvironmentIdentifiers())));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
@@ -115,9 +117,9 @@ public class AuditServiceImpl implements AuditService {
       if (isNotEmpty(labels)) {
         labels.forEach(label
             -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
-                   .elemMatch(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
+                   .elemMatch(Criteria.where(KeyValuePairKeys.key)
                                   .is(label.getKey())
-                                  .and(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                                  .and(KeyValuePairKeys.value)
                                   .is(label.getValue())));
       }
       criteriaList.add(criteria);

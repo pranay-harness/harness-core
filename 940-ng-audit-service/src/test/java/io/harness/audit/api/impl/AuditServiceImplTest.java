@@ -31,6 +31,7 @@ import io.harness.audit.repositories.AuditRepository;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
+import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
 import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
@@ -96,7 +97,7 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(criteria);
     BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
     assertNotNull(andList);
-    assertEquals(2, andList.size());
+    assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
@@ -129,7 +130,7 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(criteria);
     BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
     assertNotNull(andList);
-    assertEquals(2, andList.size());
+    assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
@@ -162,7 +163,7 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(criteria);
     BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
     assertNotNull(andList);
-    assertEquals(2, andList.size());
+    assertEquals(4, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
@@ -228,7 +229,7 @@ public class AuditServiceImplTest extends CategoryTest {
     assertNotNull(criteria);
     BasicDBList andList = (BasicDBList) criteria.getCriteriaObject().get("$and");
     assertNotNull(andList);
-    assertEquals(4, andList.size());
+    assertEquals(6, andList.size());
     Document accountDocument = (Document) andList.get(0);
     assertEquals(accountIdentifier, accountDocument.getString(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY));
 
@@ -250,11 +251,13 @@ public class AuditServiceImplTest extends CategoryTest {
 
     Document environmentIdentifierDocument = (Document) andList.get(3);
     assertNotNull(environmentIdentifierDocument);
-    String environmentIdentifierKey = environmentIdentifierDocument.getString(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY);
-    assertNotNull(environmentIdentifierKey);
+    Document environmentIdentifierLabelsDocument =
+        (Document) environmentIdentifierDocument.get(AuditEventKeys.RESOURCE_LABEL_KEY);
+    assertNotNull(environmentIdentifierLabelsDocument);
+    Document elemMatchDocument = (Document) environmentIdentifierLabelsDocument.get("$elemMatch");
+    String environmentIdentifierKey = elemMatchDocument.getString(KeyValuePairKeys.key);
     assertEquals(ENVIRONMENT_IDENTIFIER_KEY, environmentIdentifierKey);
-    Document environmentIdentifierValueDocument =
-        (Document) environmentIdentifierDocument.get(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY);
+    Document environmentIdentifierValueDocument = (Document) elemMatchDocument.get(KeyValuePairKeys.value);
     List<String> environmentIdentifierValueList = (List<String>) environmentIdentifierValueDocument.get("$in");
     assertEquals(1, environmentIdentifierValueList.size());
     assertEquals(environmentIdentifier, environmentIdentifierValueList.get(0));
