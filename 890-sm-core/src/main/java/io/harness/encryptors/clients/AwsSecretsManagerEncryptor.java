@@ -52,6 +52,7 @@ import com.google.inject.Singleton;
 import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @ValidateOnExecution
 @Singleton
@@ -263,7 +264,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
 
     final String secretName;
     String refKeyName = null;
-    if (isNotEmpty(data.getPath())) {
+    if (StringUtils.isNotBlank(data.getPath())) {
       String path = data.getPath();
       ParsedSecretRef secretRef = parsedSecretRef(path);
       secretName = secretRef.secretPath;
@@ -278,7 +279,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     String secretValue = result.getSecretString();
 
     char[] decryptedValue = null;
-    if (isNotEmpty(refKeyName)) {
+    if (StringUtils.isNotBlank(refKeyName)) {
       JsonElement element = JSON_PARSER.parse(secretValue);
       if (element.getAsJsonObject().has(refKeyName)) {
         JsonElement refKeyedElement = element.getAsJsonObject().get(refKeyName);
@@ -314,7 +315,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
     } else if (secretsManagerConfig.isAssumeStsRoleOnDelegate()) {
       log.info("Assuming STS role on delegate : Instantiating STSAssumeRoleSessionCredentialsProvider with config:"
           + secretsManagerConfig);
-      if (isEmpty(secretsManagerConfig.getRoleArn())) {
+      if (StringUtils.isBlank(secretsManagerConfig.getRoleArn())) {
         throw new SecretManagementDelegateException(
             AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide RoleARN if AssumeStsRole is selected", USER);
       }
@@ -328,11 +329,11 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
       sessionCredentialsProviderBuilder.withExternalId(secretsManagerConfig.getExternalName());
       return sessionCredentialsProviderBuilder.build();
     } else {
-      if (isEmpty(secretsManagerConfig.getAccessKey())) {
+      if (StringUtils.isBlank(secretsManagerConfig.getAccessKey())) {
         throw new SecretManagementDelegateException(
             AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide an AccessKey if AssumeIAMRole is not enabled", USER);
       }
-      if (isEmpty(secretsManagerConfig.getSecretKey())) {
+      if (StringUtils.isBlank(secretsManagerConfig.getSecretKey())) {
         throw new SecretManagementDelegateException(
             AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide a SecretKey if AssumeIAMRole is not enabled", USER);
       }

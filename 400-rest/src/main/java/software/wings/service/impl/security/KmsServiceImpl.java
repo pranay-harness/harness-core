@@ -13,9 +13,6 @@ import static io.harness.persistence.HPersistence.upToOne;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.settings.SettingVariableTypes.KMS;
 
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -38,6 +35,7 @@ import com.google.inject.Singleton;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 
 /**
@@ -86,7 +84,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     KmsConfig oldConfigForAudit = null;
     KmsConfig savedKmsConfig = null;
     boolean credentialChanged = true;
-    if (isNotBlank(kmsConfig.getUuid())) {
+    if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
       savedKmsConfig = getKmsConfig(accountId, kmsConfig.getUuid());
       // Replaced masked secrets with the real secret value.
       if (SECRET_MASK.equals(kmsConfig.getSecretKey())) {
@@ -116,9 +114,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     }
 
     EncryptedData accessKeyData = null;
-    if (isNotBlank(kmsConfig.getAccessKey())) {
+    if (StringUtils.isNotBlank(kmsConfig.getAccessKey())) {
       accessKeyData = encryptLocal(kmsConfig.getAccessKey().toCharArray());
-      if (isNotBlank(kmsConfig.getUuid())) {
+      if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedAccessKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getAccessKey());
         if (savedAccessKey != null) {
           savedAccessKey.setEncryptionKey(accessKeyData.getEncryptionKey());
@@ -139,9 +137,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       }
     }
     EncryptedData secretKeyData = null;
-    if (isNotBlank(kmsConfig.getSecretKey())) {
+    if (StringUtils.isNotBlank(kmsConfig.getSecretKey())) {
       secretKeyData = encryptLocal(kmsConfig.getSecretKey().toCharArray());
-      if (isNotBlank(kmsConfig.getUuid())) {
+      if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedSecretKey = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getSecretKey());
         if (savedSecretKey != null) {
           savedSecretKey.setEncryptionKey(secretKeyData.getEncryptionKey());
@@ -162,9 +160,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       }
     }
     EncryptedData arnKeyData = null;
-    if (isNotBlank(kmsConfig.getKmsArn())) {
+    if (StringUtils.isNotBlank(kmsConfig.getKmsArn())) {
       arnKeyData = encryptLocal(kmsConfig.getKmsArn().toCharArray());
-      if (isNotBlank(kmsConfig.getUuid())) {
+      if (StringUtils.isNotBlank(kmsConfig.getUuid())) {
         EncryptedData savedArn = wingsPersistence.get(EncryptedData.class, savedKmsConfig.getKmsArn());
         checkNotNull(savedArn, "ARN reference is null for KMS secret manager " + kmsConfig.getUuid());
         savedArn.setEncryptionKey(arnKeyData.getEncryptionKey());
@@ -264,14 +262,14 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   @Override
   public void decryptKmsConfigSecrets(String accountId, KmsConfig kmsConfig, boolean maskSecret) {
-    if (isNotBlank(kmsConfig.getAccessKey())) {
+    if (StringUtils.isNotBlank(kmsConfig.getAccessKey())) {
       EncryptedData accessKeyData = wingsPersistence.get(EncryptedData.class, kmsConfig.getAccessKey());
       kmsConfig.setAccessKey(new String(decryptLocal(accessKeyData)));
     }
     if (maskSecret) {
       kmsConfig.maskSecrets();
     } else {
-      if (isNotBlank(kmsConfig.getSecretKey())) {
+      if (StringUtils.isNotBlank(kmsConfig.getSecretKey())) {
         EncryptedData secretData = wingsPersistence.get(EncryptedData.class, kmsConfig.getSecretKey());
         kmsConfig.setSecretKey(new String(decryptLocal(secretData)));
       }
@@ -293,7 +291,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   }
 
   private void validateUserInput(KmsConfig kmsConfig) {
-    if (isBlank(kmsConfig.getName())) {
+    if (StringUtils.isBlank(kmsConfig.getName())) {
       String message = "KMS Name cannot be empty";
       throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
     }
@@ -304,7 +302,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       }
     }
     if (kmsConfig.isAssumeStsRoleOnDelegate()) {
-      if (isBlank(kmsConfig.getRoleArn())) {
+      if (StringUtils.isBlank(kmsConfig.getRoleArn())) {
         String message = "Role ARN cannot be empty if you're Assuming AWS Role using STS";
         throw new SecretManagementException(KMS_OPERATION_ERROR, message, USER_SRE);
       }
@@ -327,13 +325,13 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
 
   private void decryptKmsConfigSecrets(KmsConfig kmsConfig) {
     if (kmsConfig != null) {
-      if (isNotBlank(kmsConfig.getAccessKey())) {
+      if (StringUtils.isNotBlank(kmsConfig.getAccessKey())) {
         kmsConfig.setAccessKey(new String(decryptKey(kmsConfig.getAccessKey().toCharArray())));
       }
-      if (isNotBlank(kmsConfig.getSecretKey())) {
+      if (StringUtils.isNotBlank(kmsConfig.getSecretKey())) {
         kmsConfig.setSecretKey(new String(decryptKey(kmsConfig.getSecretKey().toCharArray())));
       }
-      if (isNotBlank(kmsConfig.getKmsArn())) {
+      if (StringUtils.isNotBlank(kmsConfig.getKmsArn())) {
         kmsConfig.setKmsArn(new String(decryptKey(kmsConfig.getKmsArn().toCharArray())));
       }
     }

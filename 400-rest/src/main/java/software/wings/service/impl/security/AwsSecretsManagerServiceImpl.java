@@ -1,16 +1,12 @@
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HPersistence.upToOne;
 
 import static software.wings.settings.SettingVariableTypes.AWS_SECRETS_MANAGER;
-
-import static org.apache.commons.lang.StringUtils.isBlank;
-import static org.apache.commons.lang.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
@@ -32,6 +28,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(PL)
@@ -65,7 +62,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     AwsSecretsManagerConfig oldConfigForAudit = null;
     AwsSecretsManagerConfig savedSecretsManagerConfig = null;
     boolean credentialChanged = true;
-    if (isNotBlank(secretsManagerConfig.getUuid())) {
+    if (StringUtils.isNotBlank(secretsManagerConfig.getUuid())) {
       savedSecretsManagerConfig = getAwsSecretsManagerConfig(accountId, secretsManagerConfig.getUuid());
       if (SECRET_MASK.equals(secretsManagerConfig.getSecretKey())) {
         secretsManagerConfig.setSecretKey(savedSecretsManagerConfig.getSecretKey());
@@ -104,8 +101,8 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
           "Another AWS Secrets Manager configuration with the same name or URL exists", e, USER_SRE);
     }
 
-    if (isBlank(secretsManagerConfig.getSecretKey())) {
-      if (savedSecretsManagerConfig != null && isNotEmpty(savedSecretsManagerConfig.getSecretKey())) {
+    if (StringUtils.isBlank(secretsManagerConfig.getSecretKey())) {
+      if (savedSecretsManagerConfig != null && StringUtils.isNotBlank(savedSecretsManagerConfig.getSecretKey())) {
         wingsPersistence.delete(EncryptedData.class, savedSecretsManagerConfig.getSecretKey());
         log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
             savedSecretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
@@ -165,7 +162,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
 
   private EncryptedData getEncryptedDataForSecretField(AwsSecretsManagerConfig savedSecretsManagerConfig,
       AwsSecretsManagerConfig secretsManagerConfig, String secretValue, String secretNameSuffix) {
-    EncryptedData encryptedData = isNotEmpty(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
+    EncryptedData encryptedData = StringUtils.isNotBlank(secretValue) ? encryptLocal(secretValue.toCharArray()) : null;
     if (savedSecretsManagerConfig != null && encryptedData != null) {
       // Get by auth token encrypted record by Id or name.
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -214,7 +211,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
     AwsSecretsManagerConfig secretsManagerConfig = wingsPersistence.get(AwsSecretsManagerConfig.class, configId);
     checkNotNull(secretsManagerConfig, "No Aws Secrets Manager configuration found with id " + configId);
 
-    if (isNotBlank(secretsManagerConfig.getSecretKey())) {
+    if (StringUtils.isNotBlank(secretsManagerConfig.getSecretKey())) {
       wingsPersistence.delete(EncryptedData.class, secretsManagerConfig.getSecretKey());
       log.info("Deleted encrypted auth token record {} associated with Aws Secrets Manager '{}'",
           secretsManagerConfig.getSecretKey(), secretsManagerConfig.getName());
@@ -224,7 +221,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
   }
 
   private void validateUserInput(AwsSecretsManagerConfig awsSecretsManagerConfig) {
-    if (isBlank(awsSecretsManagerConfig.getName())) {
+    if (StringUtils.isBlank(awsSecretsManagerConfig.getName())) {
       String message =
           "Secret Manager Name cannot be empty and can only have alphanumeric, hyphen, single inverted comma, space and exclamation mark characters.";
       throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
@@ -236,7 +233,7 @@ public class AwsSecretsManagerServiceImpl extends AbstractSecretServiceImpl impl
       }
     }
     if (awsSecretsManagerConfig.isAssumeStsRoleOnDelegate()) {
-      if (isBlank(awsSecretsManagerConfig.getRoleArn())) {
+      if (StringUtils.isBlank(awsSecretsManagerConfig.getRoleArn())) {
         String message = "Role ARN cannot be empty if you're Assuming AWS Role using STS";
         throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, USER_SRE);
       }

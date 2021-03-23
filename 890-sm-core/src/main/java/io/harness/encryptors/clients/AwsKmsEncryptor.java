@@ -3,7 +3,6 @@ package io.harness.encryptors.clients;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
@@ -65,6 +64,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 @ValidateOnExecution
 @Singleton
@@ -208,7 +208,7 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     } else if (kmsConfig.isAssumeStsRoleOnDelegate()) {
       log.info("Assuming STS role on delegate : Instantiating STSAssumeRoleSessionCredentialsProvider with config:"
           + kmsConfig);
-      if (isEmpty(kmsConfig.getRoleArn())) {
+      if (StringUtils.isBlank(kmsConfig.getRoleArn())) {
         throw new SecretManagementDelegateException(
             AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide RoleARN if AssumeStsRole is selected", USER);
       }
@@ -220,11 +220,11 @@ public class AwsKmsEncryptor implements KmsEncryptor {
       sessionCredentialsProviderBuilder.withExternalId(kmsConfig.getExternalName());
       return sessionCredentialsProviderBuilder.build();
     } else {
-      if (isEmpty(kmsConfig.getAccessKey())) {
+      if (StringUtils.isBlank(kmsConfig.getAccessKey())) {
         throw new SecretManagementDelegateException(
             AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide an AccessKey if AssumeIAMRole is not enabled", USER);
       }
-      if (isEmpty(kmsConfig.getSecretKey())) {
+      if (StringUtils.isBlank(kmsConfig.getSecretKey())) {
         throw new SecretManagementDelegateException(
             AWS_SECRETS_MANAGER_OPERATION_ERROR, "You must provide a SecretKey if AssumeIAMRole is not enabled", USER);
       }
