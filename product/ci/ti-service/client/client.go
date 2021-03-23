@@ -22,5 +22,5 @@ type Client interface {
 	Write(ctx context.Context, org, project, pipeline, build, stage, step, report string, tests []*types.TestCase) error
 
 	// SelectTests returns list of tests which should be run intelligently
-	SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change string) (types.SelectTestsResp, error)
+	SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, req string) (types.SelectTestsResp, error)
 }

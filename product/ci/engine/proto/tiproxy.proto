@@ -18,11 +18,13 @@ message SelectTestsRequest {
   string repo = 2;
   string sha = 3;
   string branch = 4;
-  // List of files which have been modified in the PR. This is marshalled form of types.File{}
+  // This is marshalled form of types.SelectTestsReq{} which contains changed
+  // files and the configuration object. This is sent as the body of the
+  // HTTP request to TI service by the lite engine.
   // This is done to avoid redefining the structs in code as well as proto.
   // Calls via lite engine use json encoded structs and can be decoded
   // on the TI service.
-  string diff_files = 5;
+  string body = 5;
 }
 
 // (TODO): `tests` should ideally be a protobuf defined in a single place.
