@@ -27,7 +27,7 @@ const (
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
 	javaAgentArg = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
-	tiConfigPath = ".ticonfig"
+	tiConfigPath = ".ticonfig.yaml"
 )
 
 // RunTestsTask represents an interface to run tests intelligently

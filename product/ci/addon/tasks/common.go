@@ -221,11 +221,11 @@ func getTiConfig(fs filesystem.FileSystem) (types.TiConfig, error) {
 		return err
 	})
 	if err != nil {
-		return res, errors.Wrap(err, "could not read .ticonfig file")
+		return res, errors.Wrap(err, "could not read ticonfig file")
 	}
 	err = yaml.Unmarshal(data, &res)
 	if err != nil {
-		return res, errors.Wrap(err, "could not unmarshal .ticonfig file")
+		return res, errors.Wrap(err, "could not unmarshal ticonfig file")
 	}
 	return res, nil
 }
