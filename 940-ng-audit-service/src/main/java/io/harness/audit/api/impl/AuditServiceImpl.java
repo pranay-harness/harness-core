@@ -6,6 +6,8 @@ import static io.harness.audit.mapper.AuditEventMapper.fromDTO;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import static java.lang.System.currentTimeMillis;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditEventDTO;
@@ -73,12 +75,12 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       criteriaList.add(getPrincipalCriteria(auditFilterPropertiesDTO.getPrincipals()));
     }
-    if (auditFilterPropertiesDTO.getStartTime() != null) {
-      criteriaList.add(Criteria.where(AuditEventKeys.timestamp).gte(auditFilterPropertiesDTO.getStartTime()));
-    }
-    if (auditFilterPropertiesDTO.getEndTime() != null) {
-      criteriaList.add(Criteria.where(AuditEventKeys.timestamp).lte(auditFilterPropertiesDTO.getEndTime()));
-    }
+    criteriaList.add(
+        Criteria.where(AuditEventKeys.timestamp)
+            .gte(auditFilterPropertiesDTO.getStartTime() == null ? 0 : auditFilterPropertiesDTO.getStartTime()));
+    criteriaList.add(Criteria.where(AuditEventKeys.timestamp)
+                         .lte(auditFilterPropertiesDTO.getEndTime() == null ? currentTimeMillis()
+                                                                            : auditFilterPropertiesDTO.getEndTime()));
     return new Criteria().andOperator(criteriaList.toArray(new Criteria[0]));
   }
 

@@ -39,12 +39,7 @@ public class AuditFilterPropertiesValidator {
     if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
       verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
     }
-
-    if (auditFilterPropertiesDTO.getStartTime() != null && auditFilterPropertiesDTO.getEndTime() != null
-        && auditFilterPropertiesDTO.getStartTime() > auditFilterPropertiesDTO.getEndTime()) {
-      throw new InvalidRequestException(String.format("Invalid time filter with start time %d after end time %d.",
-          auditFilterPropertiesDTO.getStartTime(), auditFilterPropertiesDTO.getEndTime()));
-    }
+    verifyTimeFilter(auditFilterPropertiesDTO.getStartTime(), auditFilterPropertiesDTO.getEndTime());
   }
 
   private void verifyPrincipals(List<Principal> principals) {
@@ -93,6 +88,20 @@ public class AuditFilterPropertiesValidator {
           throw new InvalidRequestException("Invalid resource filter with missing value in resource labels.");
         }
       });
+    }
+  }
+
+  private void verifyTimeFilter(Long startTime, Long endTime) {
+    if (startTime != null && startTime < 0) {
+      throw new InvalidRequestException(
+          String.format("Invalid time filter with start time %d less than zero.", startTime));
+    }
+    if (endTime != null && endTime < 0) {
+      throw new InvalidRequestException(String.format("Invalid time filter with end time %d less than zero.", endTime));
+    }
+    if (startTime != null && endTime != null && startTime > endTime) {
+      throw new InvalidRequestException(
+          String.format("Invalid time filter with start time %d after end time %d.", startTime, endTime));
     }
   }
 }
