@@ -2,7 +2,6 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -524,9 +523,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
     k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
-//    if (isNotEmpty(delegateSelectors)){
-//      k8sTaskParameters.setDelegateSelectors(new HashSet<>(delegateSelectors));
-//    }
     Set<String> renderedAndTrimmedSelectors = getRenderedAndTrimmedSelectors(context);
     k8sTaskParameters.setDelegateSelectors(renderedAndTrimmedSelectors);
 
