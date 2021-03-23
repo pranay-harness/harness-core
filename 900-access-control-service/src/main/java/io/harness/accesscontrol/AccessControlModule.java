@@ -2,9 +2,11 @@ package io.harness.accesscontrol;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ACCOUNT;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.ORGANIZATION;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeLevel.PROJECT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
@@ -13,6 +15,10 @@ import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.user.UserValidator;
+import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
+import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupServiceImpl;
+import io.harness.accesscontrol.principals.usergroups.UserGroupValidator;
+import io.harness.accesscontrol.principals.usergroups.events.UserGroupEventConsumer;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
@@ -20,6 +26,7 @@ import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.aggregator.AggregatorModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
@@ -27,6 +34,7 @@ import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.ng.core.UserClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
+import io.harness.usergroups.UserGroupClientModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -38,6 +46,7 @@ import javax.validation.ValidatorFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import ru.vyarus.guice.validator.ValidationModule;
 
+@OwnedBy(PL)
 public class AccessControlModule extends AbstractModule {
   private static AccessControlModule instance;
   private final AccessControlConfiguration config;
@@ -88,6 +97,10 @@ public class AccessControlModule extends AbstractModule {
     install(new ResourceGroupClientModule(config.getResourceGroupClientConfiguration().getResourceGroupServiceConfig(),
         config.getResourceGroupClientConfiguration().getResourceGroupServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId()));
+
+    install(new UserGroupClientModule(config.getUserGroupClientConfiguration().getUserGroupServiceConfig(),
+        config.getUserGroupClientConfiguration().getUserGroupServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
+
     install(new UserClientModule(config.getUserClientConfiguration().getUserServiceConfig(),
         config.getUserClientConfiguration().getUserServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
 
@@ -98,13 +111,16 @@ public class AccessControlModule extends AbstractModule {
     bind(ScopeParamsFactory.class).to(HarnessScopeParamsFactory.class);
 
     bind(HarnessResourceGroupService.class).to(HarnessResourceGroupServiceImpl.class);
+    bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
 
     MapBinder<PrincipalType, PrincipalValidator> validatorByPrincipalType =
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);
     validatorByPrincipalType.addBinding(USER).to(UserValidator.class);
+    validatorByPrincipalType.addBinding(USER_GROUP).to(UserGroupValidator.class);
 
     Multibinder<EventConsumer> eventConsumers = Multibinder.newSetBinder(binder(), EventConsumer.class);
     eventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
+    eventConsumers.addBinding().to(UserGroupEventConsumer.class);
 
     registerRequiredBindings();
   }
