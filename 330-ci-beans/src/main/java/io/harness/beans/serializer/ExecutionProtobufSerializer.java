@@ -32,9 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class ExecutionProtobufSerializer implements ProtobufSerializer<ExecutionElementConfig> {
   @Inject private RunStepProtobufSerializer runStepProtobufSerializer;
-  @Inject private PublishStepProtobufSerializer publishStepProtobufSerializer;
-  @Inject private SaveCacheStepProtobufSerializer saveCacheStepProtobufSerializer;
-  @Inject private RestoreCacheStepProtobufSerializer restoreCacheStepProtobufSerializer;
   @Inject private PluginStepProtobufSerializer pluginStepProtobufSerializer;
   @Inject private RunTestsStepProtobufSerializer runTestsStepProtobufSerializer;
   @Inject private PluginCompatibleStepSerializer pluginCompatibleStepSerializer;
@@ -128,15 +125,6 @@ public class ExecutionProtobufSerializer implements ProtobufSerializer<Execution
         case PLUGIN:
           return pluginStepProtobufSerializer.serializeStep(step, getPort(liteEngineTaskStepInfo, step.getIdentifier()),
               taskIds.get(step.getIdentifier()), stepLogKeys.get(step.getIdentifier()));
-        case SAVE_CACHE:
-          return saveCacheStepProtobufSerializer.serializeStep(
-              step, null, taskIds.get(step.getIdentifier()), stepLogKeys.get(step.getIdentifier()));
-        case RESTORE_CACHE:
-          return restoreCacheStepProtobufSerializer.serializeStep(
-              step, null, taskIds.get(step.getIdentifier()), stepLogKeys.get(step.getIdentifier()));
-        case PUBLISH:
-          return publishStepProtobufSerializer.serializeStep(
-              step, null, taskIds.get(step.getIdentifier()), stepLogKeys.get(step.getIdentifier()));
         case GCR:
         case DOCKER:
         case ECR:

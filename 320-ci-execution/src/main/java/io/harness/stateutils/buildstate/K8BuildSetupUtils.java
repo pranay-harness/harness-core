@@ -121,7 +121,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -251,18 +250,16 @@ public class K8BuildSetupUtils {
         k8PodDetails, logEnvVars, tiEnvVars, gitEnvVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
-    Set<String> publishArtifactStepIds =
-        ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getPublishArtifactStepIds();
 
     LiteEngineSecretEvaluator liteEngineSecretEvaluator =
         LiteEngineSecretEvaluator.builder().secretUtils(secretUtils).build();
     List<SecretVariableDetails> secretVariableDetails =
         liteEngineSecretEvaluator.resolve(liteEngineTaskStepInfo, ngAccess, ambiance.getExpressionFunctorToken());
     CIK8ContainerParams liteEngineContainerParams = createLiteEngineContainerParams(ngAccess,
-        harnessInternalImageRegistryConnectorDetails, stepConnectors, publishArtifactStepIds, liteEngineTaskStepInfo,
-        k8PodDetails, podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(),
-        podSetupInfo.getServiceGrpcPortList(), logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(),
-        podSetupInfo.getWorkDirPath(), taskIds, logPrefix, stepLogKeys, ambiance);
+        harnessInternalImageRegistryConnectorDetails, stepConnectors, liteEngineTaskStepInfo, k8PodDetails,
+        podSetupInfo.getStageCpuRequest(), podSetupInfo.getStageMemoryRequest(), podSetupInfo.getServiceGrpcPortList(),
+        logEnvVars, tiEnvVars, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath(), taskIds, logPrefix,
+        stepLogKeys, ambiance);
 
     List<CIK8ContainerParams> containerParams = new ArrayList<>();
     containerParams.add(liteEngineContainerParams);
@@ -351,19 +348,13 @@ public class K8BuildSetupUtils {
   }
 
   private CIK8ContainerParams createLiteEngineContainerParams(NGAccess ngAccess, ConnectorDetails connectorDetails,
-      Map<String, ConnectorConversionInfo> connectorRefs, Set<String> publishArtifactStepIds,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, K8PodDetails k8PodDetails, Integer stageCpuRequest,
-      Integer stageMemoryRequest, List<Integer> serviceGrpcPortList, Map<String, String> logEnvVars,
-      Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath, String workDirPath,
-      Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys, Ambiance ambiance) {
+      Map<String, ConnectorConversionInfo> connectorRefs, LiteEngineTaskStepInfo liteEngineTaskStepInfo,
+      K8PodDetails k8PodDetails, Integer stageCpuRequest, Integer stageMemoryRequest, List<Integer> serviceGrpcPortList,
+      Map<String, String> logEnvVars, Map<String, String> tiEnvVars, Map<String, String> volumeToMountPath,
+      String workDirPath, Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys,
+      Ambiance ambiance) {
     Map<String, ConnectorDetails> stepConnectorDetails = new HashMap<>();
-    if (isNotEmpty(publishArtifactStepIds)) {
-      for (String publishArtifactStepId : publishArtifactStepIds) {
-        ConnectorDetails publishArtifactConnector =
-            connectorUtils.getConnectorDetailsWithConversionInfo(ngAccess, connectorRefs.get(publishArtifactStepId));
-        stepConnectorDetails.put(publishArtifactConnector.getIdentifier(), publishArtifactConnector);
-      }
-    }
+
     String accountId = AmbianceHelper.getAccountId(ambiance);
     String serializedLiteEngineStepInfo =
         getSerializedLiteEngineStepInfo(liteEngineTaskStepInfo, taskIds, accountId, stepLogKeys);
