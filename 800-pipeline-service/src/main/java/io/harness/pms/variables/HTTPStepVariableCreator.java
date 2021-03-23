@@ -30,14 +30,13 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
     List<YamlField> fields = yamlNode.fields();
     fields.forEach(field -> {
       if (!field.getName().equals(YAMLFieldNameConstants.UUID) && !complexFields.contains(field.getName())) {
-        addFieldToPropertiesMapUnderStep(field, yamlNode, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(field, yamlPropertiesMap);
       }
     });
 
     YamlField outputVariablesField = yamlNode.getField(YAMLFieldNameConstants.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      VariableCreatorHelper.addVariablesForVariables(
-          outputVariablesField, yamlPropertiesMap, findFieldNameForLocalName(yamlNode));
+      addVariablesForVariables(outputVariablesField, yamlPropertiesMap);
     }
     YamlField headersField = yamlNode.getField(YAMLFieldNameConstants.HEADERS);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(headersField)) {
@@ -50,7 +49,7 @@ public class HTTPStepVariableCreator extends GenericStepVariableCreator {
     headerNodes.forEach(headerNode -> {
       YamlField keyField = headerNode.getField(YAMLFieldNameConstants.KEY);
       if (keyField != null) {
-        addFieldToPropertiesMapUnderStep(keyField, headerNode, yamlPropertiesMap);
+        addFieldToPropertiesMapUnderStep(keyField, yamlPropertiesMap);
       } else {
         throw new InvalidRequestException("Key in header field cannot be null or empty");
       }
