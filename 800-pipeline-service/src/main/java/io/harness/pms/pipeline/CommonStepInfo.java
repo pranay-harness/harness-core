@@ -46,6 +46,12 @@ public class CommonStepInfo {
           .setType("Barrier")
           .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Barrier").build())
           .build();
+  StepInfo resourceConstraintStepInfo =
+      StepInfo.newBuilder()
+          .setName("Resource Constraint")
+          .setType("ResourceConstraint")
+          .setStepMetaData(StepMetaData.newBuilder().setFolderPath("FlowControl/Resource-Constraint").build())
+          .build();
 
   public List<StepInfo> getCommonSteps(String accountId) {
     List<StepInfo> stepInfos = new ArrayList<>();
@@ -67,6 +73,11 @@ public class CommonStepInfo {
       featureName = FeatureName.NG_BARRIERS.name();
       if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_BARRIERS)) {
         stepInfos.add(barrierStepInfo);
+      }
+
+      featureName = FeatureName.NG_RESOURCE_CONSTRAINT.name();
+      if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_RESOURCE_CONSTRAINT)) {
+        stepInfos.add(resourceConstraintStepInfo);
       }
     } catch (Exception ex) {
       log.warn("Exception While checking Feature Flag. accountId: {} flag: {}", accountId, featureName, ex);
