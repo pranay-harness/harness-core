@@ -23,8 +23,6 @@ import io.harness.perpetualtask.instancesync.AzureVmssInstanceSyncPerpetualTaskP
 import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualProtoTaskParams;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
-import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.ContainerInstanceSyncPerpetualTaskParamsNG;
-import io.harness.perpetualtask.instancesync.K8sInstanceSyncPerpetualTaskExecutorNG;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
@@ -84,8 +82,6 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     mapBinder.addBinding(ManifestCollectionTaskParams.class.getSimpleName()).to(ManifestPerpetualTaskExecutor.class);
     mapBinder.addBinding(ConnectorHeartbeatTaskParams.class.getSimpleName())
         .to(ConnectorHeartbeatPerpetualTaskExecutor.class);
-    mapBinder.addBinding(ContainerInstanceSyncPerpetualTaskParamsNG.class.getSimpleName())
-        .to(K8sInstanceSyncPerpetualTaskExecutorNG.class);
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)
