@@ -5,6 +5,11 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
@@ -14,10 +19,12 @@ import io.harness.delegate.task.k8s.K8sRollingDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.collect.ImmutableMap;
@@ -25,9 +32,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
+  @Mock ExecutionSweepingOutputService executionSweepingOutputService;
   @InjectMocks private K8sRollingStep k8sRollingStep;
 
   @Test
@@ -74,18 +84,22 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
             .commandUnitsProgress(UnitProgressData.builder().build())
             .commandExecutionStatus(SUCCESS)
             .build());
+    when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
+
     StepResponse response = k8sRollingStep.finalizeExecution(ambiance, stepParameters, null, responseDataMap);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
-    assertThat(response.getStepOutcomes()).hasSize(2);
+    assertThat(response.getStepOutcomes()).hasSize(1);
 
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sRollingOutcome.class);
-    assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.K8S_ROLL_OUT);
-
-    outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(1);
-    assertThat(outcome.getOutcome()).isInstanceOf(K8sRollingOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.OUTPUT);
     assertThat(outcome.getGroup()).isNull();
+
+    ArgumentCaptor<K8sRollingOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sRollingOutcome.class);
+    verify(executionSweepingOutputService, times(1))
+        .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_ROLL_OUT), argumentCaptor.capture(),
+            eq(StepOutcomeGroup.STAGE.name()));
+    assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
   }
 
   @Override
