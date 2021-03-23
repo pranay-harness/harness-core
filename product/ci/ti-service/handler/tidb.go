@@ -122,8 +122,7 @@ func HandleOverview(db db.Db, config config.Config, log *zap.SugaredLogger) http
 	}
 }
 
-
-func UploadCg( log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(log *zap.SugaredLogger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data []byte
 		if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -155,6 +154,6 @@ func UploadCg( log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 //writeCg writes callgraph to db
-func writeCg (cg *ti.Callgraph) {
+func writeCg(cg *ti.Callgraph) {
 	return
 }

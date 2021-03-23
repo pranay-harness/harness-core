@@ -1,3 +1,5 @@
+// This file implements a parser for callgraph file. It reads all the files
+// in the callgraph directory, dedupes the data, and then returns Callgraph object
 package ti
 
 import (
@@ -32,7 +34,7 @@ func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallG
 }
 
 // Parse callgraph and return nodes and relations
-func (cg *CallGraphParser) Parse(file string) (*Callgraph, error) {
+func (cg *CallGraphParser) Parse(file string) (*Callgraph, c) {
 	f, err := cg.fs.Open(file)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))

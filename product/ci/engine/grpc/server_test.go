@@ -11,7 +11,7 @@ import (
 
 func TestServerFailToListen(t *testing.T) {
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewEngineServer(65536, log.Sugar(), "/tmp")
+	_, err := NewEngineServer(65536, log.Sugar())
 	assert.Error(t, err)
 }
 
@@ -43,6 +43,6 @@ func TestStopRunningServer(t *testing.T) {
 func TestNewEngineServer(t *testing.T) {
 	port := uint(5000)
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
-	_, err := NewEngineServer(port, log.Sugar(), "/tmp")
+	_, err := NewEngineServer(port, log.Sugar())
 	assert.Equal(t, err, nil)
 }

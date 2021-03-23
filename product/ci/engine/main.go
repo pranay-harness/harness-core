@@ -70,7 +70,7 @@ func main() {
 		metrics.Log(int32(os.Getpid()), "engine", log)
 	}
 
-	startServer(remoteLogger, args.Stage)
+	startServer(remoteLogger)
 
 	log.Infow("Starting stage execution")
 	switch {
@@ -92,17 +92,11 @@ func main() {
 }
 
 // starts grpc server in background
-func startServer(rl *logs.RemoteLogger, stage *stageSchema) {
+func startServer(rl *logs.RemoteLogger) {
 	log := rl.BaseLogger
-	if stage == nil {
-		log.Errorw("stage is nil")
-		rl.Writer.Close()
-		os.Exit(1) // Exit engine with exit code 1
-	}
-	tmpPath := stage.TmpFilePath
 
 	log.Infow("Starting CI engine server", "port", consts.LiteEnginePort)
-	s, err := engineServer(consts.LiteEnginePort, log, tmpPath)
+	s, err := engineServer(consts.LiteEnginePort, log)
 	if err != nil {
 		log.Errorw("error on running CI engine server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
 		rl.Writer.Close()

@@ -63,7 +63,7 @@ func TestMainEmptyStage(t *testing.T) {
 	m := &mockServer{err: nil}
 	oldServer := engineServer
 	defer func() { engineServer = oldServer }()
-	engineServer = func(port uint, log *zap.SugaredLogger, tmpPath string) (grpc.EngineServer, error) {
+	engineServer = func(port uint, log *zap.SugaredLogger) (grpc.EngineServer, error) {
 		return m, nil
 	}
 
@@ -112,7 +112,7 @@ func TestMainEmptyStageMultiWorkers(t *testing.T) {
 	m := &mockServer{err: nil}
 	oldServer := engineServer
 	defer func() { engineServer = oldServer }()
-	engineServer = func(port uint, log *zap.SugaredLogger, tmpPath string) (grpc.EngineServer, error) {
+	engineServer = func(port uint, log *zap.SugaredLogger) (grpc.EngineServer, error) {
 		return m, nil
 	}
 

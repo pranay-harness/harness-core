@@ -1,3 +1,8 @@
+// This file has a Callgraph object which is used to upload callgraph from
+// addon to ti server. It also contains helper functions, FromStringMap which
+// takes avro decoded output and returns a Callgraph function. ToStringMap fn
+// takes a callgraph object as input and converts it in map[string]interface{} format
+// for avro encoding.
 package ti
 
 import (
@@ -5,7 +10,7 @@ import (
 	"fmt"
 )
 
-// Callgraph object us used to for data transfer b/w ti service and lite-engine
+// Callgraph object is used for data transfer b/w ti service and lite-engine
 type Callgraph struct {
 	Nodes     []Node
 	Relations []Relation
@@ -33,7 +38,7 @@ func (cg *Callgraph) ToStringMap() map[string]interface{} {
 		relations = append(relations, data)
 	}
 	data := map[string]interface{}{
-		"nodes":      nodes,
+		"nodes":     nodes,
 		"relations": relations,
 	}
 	return data

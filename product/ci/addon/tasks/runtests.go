@@ -107,12 +107,15 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 			st := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails.
-			errCg = collectCg(ctx, r.id, r.log)
+			errCg = collectCg(ctx, r.id, outDir, r.log)
 			err = collectTestReports(ctx, r.reports, r.id, r.log)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
 				// the step will be marked as an error
 				r.log.Errorw("unable to collect callgraph", zap.Error(errCg))
+				if err != nil {
+					r.log.Errorw("unable to collect tests reports", zap.Error(err))
+				}
 				return r.numRetries, errCg
 			}
 			if err != nil {
@@ -130,7 +133,7 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 	if err != nil {
 		// Run step did not execute successfully
 		// Try and collect callgraph and reports, ignore any errors during collection steps itself
-		errCg = collectCg(ctx, r.id, r.log)
+		errCg = collectCg(ctx, r.id, outDir, r.log)
 		errc := collectTestReports(ctx, r.reports, r.id, r.log)
 		if errc != nil {
 			r.log.Errorw("error while collecting test reports", zap.Error(errc))
