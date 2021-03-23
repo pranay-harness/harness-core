@@ -71,5 +71,5 @@ func TestCallGraphParser_ParseShouldFailNoFile(t *testing.T) {
 
 	assert.NotEqual(t, nil, err)
 	strings.Contains(err.Error(), "failed to open file")
-	assert.True(t, strings.Contains(err.Error(), "data unmarshalling to json failed for line"))
+	assert.True(t, strings.Contains(err.Error(), "failed to open file"))
 }
