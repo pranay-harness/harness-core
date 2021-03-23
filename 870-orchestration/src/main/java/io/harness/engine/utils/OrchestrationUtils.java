@@ -19,12 +19,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(CDC)
 @UtilityClass
 public class OrchestrationUtils {
-  public Status calculateEndStatus(List<NodeExecution> nodeExecutions, String planExecutionId) {
-    List<Status> statuses = nodeExecutions.stream()
-                                .map(NodeExecution::getStatus)
-                                .filter(s -> !StatusUtils.finalizableStatuses().contains(s))
-                                .collect(Collectors.toList());
-    return StatusUtils.calculateEndStatus(statuses, planExecutionId);
+  public Status calculateStatus(List<NodeExecution> nodeExecutions, String planExecutionId) {
+    List<Status> statuses = nodeExecutions.stream().map(NodeExecution::getStatus).collect(Collectors.toList());
+    return StatusUtils.calculateStatus(statuses, planExecutionId);
   }
 
   public NodeRunCheck shouldRunExecution(
@@ -33,8 +30,7 @@ public class OrchestrationUtils {
       return NodeRunCheck.builder().isSuccessful(false).whenCondition(whenCondition).build();
     }
     try {
-      String evaluatedExpression = (String) engineExpressionService.evaluateExpression(ambiance, whenCondition);
-      boolean whenConditionValue = Boolean.parseBoolean(evaluatedExpression);
+      boolean whenConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, whenCondition);
       return NodeRunCheck.builder()
           .whenCondition(whenCondition)
           .isSuccessful(true)
@@ -57,8 +53,7 @@ public class OrchestrationUtils {
       return SkipCheck.builder().isSuccessful(false).skipCondition(skipCondition).build();
     }
     try {
-      String evaluatedExpression = (String) engineExpressionService.evaluateExpression(ambiance, skipCondition);
-      boolean skipConditionValue = Boolean.parseBoolean(evaluatedExpression);
+      boolean skipConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, skipCondition);
       return SkipCheck.builder()
           .skipCondition(skipCondition)
           .isSuccessful(true)

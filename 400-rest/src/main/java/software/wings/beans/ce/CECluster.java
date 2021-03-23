@@ -3,19 +3,19 @@ package software.wings.beans.ce;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.harness.annotation.StoreIn;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
-import software.wings.beans.ce.CECluster.CEClusterKeys;
-
+import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import java.util.Base64;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,15 +27,21 @@ import org.mongodb.morphia.annotations.Id;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceCluster", noClassnameStored = true)
-@NgUniqueIndex(name = "no_dup",
-    fields =
-    {
-      @Field(CEClusterKeys.accountId)
-      , @Field(CEClusterKeys.infraAccountId), @Field(CEClusterKeys.region), @Field(CEClusterKeys.clusterName)
-    })
 @FieldNameConstants(innerTypeName = "CEClusterKeys")
 @StoreIn("events")
 public final class CECluster implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("no_dup")
+                 .unique(true)
+                 .field(CEClusterKeys.accountId)
+                 .field(CEClusterKeys.infraAccountId)
+                 .field(CEClusterKeys.region)
+                 .field(CEClusterKeys.clusterName)
+                 .build())
+        .build();
+  }
   @Id String uuid;
   String accountId;
   String clusterName;

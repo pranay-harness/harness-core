@@ -2,6 +2,7 @@ package io.harness.accesscontrol.roles.persistence;
 
 import static io.harness.ng.DbAliases.ACCESS_CONTROL;
 
+import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
@@ -46,7 +47,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("roles")
 @TypeAlias("roles")
 @StoreIn(ACCESS_CONTROL)
-public class RoleDBO implements PersistentEntity {
+public class RoleDBO implements PersistentEntity, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @EntityIdentifier final String identifier;
   final String scopeIdentifier;

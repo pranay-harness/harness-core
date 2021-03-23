@@ -7,6 +7,12 @@ import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.eventsframework.EventsFrameworkConstants;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.Producer;
+import io.harness.eventsframework.api.ProducerShutdownException;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.producer.Message;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -23,10 +29,14 @@ import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
 import io.harness.utils.RetryUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.StringValue;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,6 +57,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class UserGroupServiceImpl implements UserGroupService {
   private final UserGroupRepository userGroupRepository;
   private final UserClient userClient;
+  private final Producer eventProducer;
 
   private static final RetryPolicy<Object> retryPolicy =
       RetryUtils.getRetryPolicy("Could not find the user with the given identifier on attempt %s",
@@ -54,9 +65,11 @@ public class UserGroupServiceImpl implements UserGroupService {
           Duration.ofSeconds(5), 3, log);
 
   @Inject
-  public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient) {
+  public UserGroupServiceImpl(UserGroupRepository userGroupRepository, UserClient userClient,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer) {
     this.userGroupRepository = userGroupRepository;
     this.userClient = userClient;
+    this.eventProducer = eventProducer;
   }
 
   @Override
@@ -64,7 +77,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     try {
       UserGroup userGroup = toEntity(userGroupDTO);
       validate(userGroup);
-      return userGroupRepository.save(userGroup);
+      UserGroup savedUserGroup = userGroupRepository.save(userGroup);
+      publishEvent(savedUserGroup, EventsFrameworkMetadataConstants.CREATE_ACTION);
+      return savedUserGroup;
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format("Try using different user group identifier, [%s] cannot be used", userGroupDTO.getIdentifier()),
@@ -81,23 +96,12 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup update(UserGroupDTO userGroupDTO) {
-    Optional<UserGroup> userGroupOptional = get(userGroupDTO.getAccountIdentifier(), userGroupDTO.getOrgIdentifier(),
+    UserGroup savedUserGroup = getOrThrow(userGroupDTO.getAccountIdentifier(), userGroupDTO.getOrgIdentifier(),
         userGroupDTO.getProjectIdentifier(), userGroupDTO.getIdentifier());
-    if (!userGroupOptional.isPresent()) {
-      throw new InvalidArgumentsException("User Group in the given scope does not exist");
-    }
-    UserGroup savedUserGroup = userGroupOptional.get();
     UserGroup userGroup = toEntity(userGroupDTO);
     userGroup.setId(savedUserGroup.getId());
     userGroup.setVersion(savedUserGroup.getVersion());
-    validate(userGroup);
-    try {
-      return userGroupRepository.save(userGroup);
-    } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(
-          String.format("Try using different user group identifier, [%s] cannot be used", userGroupDTO.getIdentifier()),
-          USER_SRE, ex);
-    }
+    return updateInternal(userGroup);
   }
 
   @Override
@@ -117,21 +121,63 @@ public class UserGroupServiceImpl implements UserGroupService {
     } else if (isNotEmpty(userGroupFilterDTO.getIdentifierFilter())) {
       criteria.and(UserGroupKeys.identifier).in(userGroupFilterDTO.getIdentifierFilter());
     }
-    return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
-  }
-
-  @Override
-  public List<UserGroup> list(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Set<String> userGroupIdentifiers) {
-    Criteria criteria = createScopeCriteria(accountIdentifier, orgIdentifier, projectIdentifier);
-    criteria.and(UserGroupKeys.identifier).in(userGroupIdentifiers);
+    if (isNotEmpty(userGroupFilterDTO.getUserIdentifierFilter())) {
+      criteria.and(UserGroupKeys.users).in(userGroupFilterDTO.getUserIdentifierFilter());
+    }
     return userGroupRepository.findAll(criteria, Pageable.unpaged()).getContent();
   }
 
   @Override
   public UserGroup delete(String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     Criteria criteria = createUserGroupFetchCriteria(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    return userGroupRepository.delete(criteria);
+    UserGroup userGroup = userGroupRepository.delete(criteria);
+    publishEvent(userGroup, EventsFrameworkMetadataConstants.DELETE_ACTION);
+    return userGroup;
+  }
+
+  @Override
+  public boolean checkMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    return existingUserGroup.getUsers().contains(userIdentifier);
+  }
+
+  @Override
+  public UserGroup addMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    existingUserGroup.getUsers().add(userIdentifier);
+    return updateInternal(existingUserGroup);
+  }
+
+  @Override
+  public UserGroup removeMember(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String userGroupIdentifier, String userIdentifier) {
+    UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    existingUserGroup.getUsers().remove(userIdentifier);
+    return updateInternal(existingUserGroup);
+  }
+
+  private UserGroup getOrThrow(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    Optional<UserGroup> userGroupOptional = get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (!userGroupOptional.isPresent()) {
+      throw new InvalidArgumentsException("User Group in the given scope does not exist");
+    }
+    return userGroupOptional.get();
+  }
+
+  private UserGroup updateInternal(UserGroup userGroupUpdate) {
+    validate(userGroupUpdate);
+    try {
+      UserGroup updatedUserGroup = userGroupRepository.save(userGroupUpdate);
+      publishEvent(updatedUserGroup, EventsFrameworkMetadataConstants.UPDATE_ACTION);
+      return updatedUserGroup;
+    } catch (DuplicateKeyException ex) {
+      throw new DuplicateFieldException(String.format("Try using different user group identifier, [%s] cannot be used",
+                                            userGroupUpdate.getIdentifier()),
+          USER_SRE, ex);
+    }
   }
 
   private void validate(UserGroup userGroup) {
@@ -141,6 +187,33 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup.getUsers() != null) {
       validateUsers(userGroup.getUsers());
     }
+  }
+
+  private void publishEvent(UserGroup userGroup, String action) {
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", userGroup.getAccountIdentifier(),
+                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.USER_GROUP,
+                  EventsFrameworkMetadataConstants.ACTION, action))
+              .setData(getUserGroupPayload(userGroup))
+              .build());
+    } catch (ProducerShutdownException e) {
+      log.error("Failed to send event to events framework for user group identifier {}", userGroup.getIdentifier(), e);
+    }
+  }
+
+  private ByteString getUserGroupPayload(UserGroup userGroup) {
+    EntityChangeDTO.Builder builder = EntityChangeDTO.newBuilder()
+                                          .setAccountIdentifier(StringValue.of(userGroup.getAccountIdentifier()))
+                                          .setIdentifier(StringValue.of(userGroup.getIdentifier()));
+    if (isNotEmpty(userGroup.getOrgIdentifier())) {
+      builder.setOrgIdentifier(StringValue.of(userGroup.getOrgIdentifier()));
+    }
+    if (isNotEmpty(userGroup.getProjectIdentifier())) {
+      builder.setProjectIdentifier(StringValue.of(userGroup.getProjectIdentifier()));
+    }
+    return builder.build().toByteString();
   }
 
   private void validateFilter(UserGroupFilterDTO filter) {

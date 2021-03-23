@@ -68,7 +68,7 @@ artifactStream {"name": "templateUuid_1", "background": true} {"templateUuid": 1
 artifactStream {"name": "yaml", "unique": true} {"appId": 1, "serviceId": 1, "name": 1}
 artifacts {"name": "accountId_1", "background": true} {"accountId": 1}
 artifacts {"name": "appId_1", "background": true} {"appId": 1}
-artifacts {"name": "appId_artifactStreamId_createdAt_status", "background": true} {"appId": 1, "artifactStreamId": 1, "createdAt": -1, "status": 1}
+artifacts {"name": "appId_artifactStreamId_status_createdAt", "background": true} {"appId": 1, "artifactStreamId": 1, "status": 1, "createdAt": -1}
 artifacts {"name": "artifactStream_artifactPath", "background": true} {"artifactStreamId": 1, "metadata.artifactPath": 1}
 artifacts {"name": "artifactStream_buildNo", "background": true} {"artifactStreamId": 1, "metadata.buildNo": 1}
 artifacts {"name": "artifactStream_revision", "background": true} {"artifactStreamId": 1, "revision": 1}
@@ -232,6 +232,7 @@ encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
 encryptedRecords {"name": "encryptionKey_1", "background": true} {"encryptionKey": 1}
 encryptedRecords {"name": "keywords_1", "background": true} {"keywords": 1}
 encryptedRecords {"name": "name_1", "background": true} {"name": 1}
+encryptedRecords {"name": "nextAwsKmsToGcpKmsMigrationIteration_1", "background": true} {"nextAwsKmsToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextAwsToGcpKmsMigrationIteration_1", "background": true} {"nextAwsToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextLocalToGcpKmsMigrationIteration_1", "background": true} {"nextLocalToGcpKmsMigrationIteration": 1}
 encryptedRecords {"name": "nextMigrationIteration_1", "background": true} {"nextMigrationIteration": 1}

@@ -42,7 +42,7 @@ message RunTestsStep {
   repeated string envVarOutputs = 12;  // produced output variables
   // This is added on by the lite engine specifically. Ideally we should just forward
   // to addon and have it calculate this, this proxy can be added later.
-  repeated string diff_files = 13;
+  string diff_files = 13;
 }
 
 message RunStep {

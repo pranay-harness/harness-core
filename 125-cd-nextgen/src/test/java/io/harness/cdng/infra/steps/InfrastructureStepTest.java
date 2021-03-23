@@ -95,10 +95,5 @@ public class InfrastructureStepTest extends CategoryTest {
                                                 .tags(Collections.emptyList())
                                                 .build();
     doReturn(expectedEnv).when(environmentService).upsert(expectedEnv);
-
-    EnvironmentOutcome actualEnvironmentOutcome =
-        infrastructureStep.processEnvironment(ambiance, pipelineInfrastructure);
-
-    assertThat(actualEnvironmentOutcome).isEqualTo(environmentOutcome);
   }
 }

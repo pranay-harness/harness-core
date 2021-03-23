@@ -1,5 +1,6 @@
 package io.harness.ngtriggers.mapper;
 
+import static io.harness.constants.Constants.AMZ_SUBSCRIPTION_CONFIRMATION_TYPE;
 import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
@@ -32,6 +33,7 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
+import io.harness.ngtriggers.beans.entity.metadata.CronMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomWebhookInlineAuthToken;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
@@ -40,6 +42,8 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata.WebhookMetadataBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
+import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.CustomWebhookTriggerSpec;
 import io.harness.ngtriggers.beans.source.webhook.GitRepoSpec;
 import io.harness.ngtriggers.beans.source.webhook.RepoSpec;
@@ -59,8 +63,8 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -122,21 +126,28 @@ public class NGTriggerElementMapper {
   }
 
   NGTriggerMetadata toMetadata(NGTriggerSource triggerSource) {
-    NGTriggerType type = triggerSource.getType();
-    if (type == NGTriggerType.WEBHOOK) {
-      WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) triggerSource.getSpec();
+    switch (triggerSource.getType()) {
+      case WEBHOOK:
+        WebhookTriggerConfig webhookTriggerConfig = (WebhookTriggerConfig) triggerSource.getSpec();
 
-      WebhookMetadataBuilder metadata = WebhookMetadata.builder();
-      if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
-        metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
-      } else if (isGitSpec(webhookTriggerConfig)) {
-        metadata.git(prepareGitMetadata(webhookTriggerConfig));
-      }
+        WebhookMetadataBuilder metadata = WebhookMetadata.builder();
+        if (webhookTriggerConfig.getSpec().getType() == CUSTOM) {
+          metadata.custom(prepareCustomMetadata(webhookTriggerConfig));
+        } else if (isGitSpec(webhookTriggerConfig)) {
+          metadata.git(prepareGitMetadata(webhookTriggerConfig));
+        }
 
-      metadata.type(webhookTriggerConfig.getType());
-      return NGTriggerMetadata.builder().webhook(metadata.build()).build();
+        metadata.type(webhookTriggerConfig.getType());
+        return NGTriggerMetadata.builder().webhook(metadata.build()).build();
+      case SCHEDULED:
+        ScheduledTriggerConfig scheduledTriggerConfig = (ScheduledTriggerConfig) triggerSource.getSpec();
+        CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
+        return NGTriggerMetadata.builder()
+            .cron(CronMetadata.builder().expression(cronTriggerSpec.getExpression()).build())
+            .build();
+      default:
+        throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");
     }
-    throw new InvalidRequestException("Type " + type.toString() + " is invalid");
   }
 
   @VisibleForTesting
@@ -198,18 +209,22 @@ public class NGTriggerElementMapper {
   public TriggerWebhookEvent toNGTriggerWebhookEvent(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String payload, List<HeaderConfig> headerConfigs) {
     WebhookSourceRepo webhookSourceRepo;
-    Set<String> headerKeys =
-        headerConfigs.stream().map(headerConfig -> headerConfig.getKey()).collect(Collectors.toSet());
-    if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_GIT_HUB_EVENT)) {
+    Map<String, List<String>> headers =
+        headerConfigs.stream().collect(Collectors.toMap(HeaderConfig::getKey, HeaderConfig::getValues));
+    boolean isConfirmationMessage = false;
+    if (webhookEventPayloadParser.containsHeaderKey(headers, X_GIT_HUB_EVENT)) {
       webhookSourceRepo = GITHUB;
-    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_GIT_LAB_EVENT)) {
+    } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_GIT_LAB_EVENT)) {
       webhookSourceRepo = GITLAB;
-    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
+    } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_BIT_BUCKET_EVENT)) {
       webhookSourceRepo = BITBUCKET;
-    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
+    } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_BIT_BUCKET_EVENT)) {
       webhookSourceRepo = BITBUCKET;
-    } else if (webhookEventPayloadParser.containsHeaderKey(headerKeys, X_AMZ_SNS_MESSAGE_TYPE)) {
+    } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_AMZ_SNS_MESSAGE_TYPE)) {
       webhookSourceRepo = AWS_CODECOMMIT;
+      if (headers.get(X_AMZ_SNS_MESSAGE_TYPE).contains(AMZ_SUBSCRIPTION_CONFIRMATION_TYPE)) {
+        isConfirmationMessage = true;
+      }
     } else {
       webhookSourceRepo = CUSTOM;
     }
@@ -220,7 +235,8 @@ public class NGTriggerElementMapper {
                                                                 .projectIdentifier(projectIdentifier)
                                                                 .sourceRepoType(webhookSourceRepo.name())
                                                                 .headers(headerConfigs)
-                                                                .payload(payload);
+                                                                .payload(payload)
+                                                                .isSubscriptionConfirmation(isConfirmationMessage);
 
     HeaderConfig customTriggerIdentifier = headerConfigs.stream()
                                                .filter(header -> header.getKey().equalsIgnoreCase(X_HARNESS_TRIGGER_ID))
@@ -260,9 +276,8 @@ public class NGTriggerElementMapper {
               Base64.decodeBase64(ngTriggerEntity.getMetadata().getWebhook().getCustom().getCustomAuthTokenValue()),
               StandardCharsets.UTF_8));
         }
-
-        ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
       }
+      ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
     }
 
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);

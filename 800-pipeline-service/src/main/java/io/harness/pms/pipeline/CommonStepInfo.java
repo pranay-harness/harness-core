@@ -34,6 +34,12 @@ public class CommonStepInfo {
           .setType("HarnessApproval")
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
           .build();
+  StepInfo jiraApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("Jira Approval")
+          .setType("JiraApproval")
+          .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
+          .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
@@ -55,6 +61,7 @@ public class CommonStepInfo {
       featureName = FeatureName.NG_HARNESS_APPROVAL.name();
       if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_HARNESS_APPROVAL)) {
         stepInfos.add(harnessApprovalStepInfo);
+        stepInfos.add(jiraApprovalStepInfo);
       }
 
       featureName = FeatureName.NG_BARRIERS.name();

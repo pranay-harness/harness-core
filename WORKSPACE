@@ -1052,6 +1052,14 @@ maven_install(
         ),
         maven.artifact(
             group = "com.amazonaws",
+            artifact = "aws-java-sdk-sns",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
             artifact = "aws-java-sdk-codedeploy",
             version = "1.11.834",
             exclusions = [
@@ -1510,6 +1518,7 @@ maven_install(
         "io.cloudsoft.windows:winrm4j:0.9.0-SNAPSHOT",
         "io.debezium:debezium-api:1.4.1.Final",
         "io.debezium:debezium-connector-mongodb:1.4.1.Final",
+        "io.debezium:debezium-core:1.4.1.Final",
         "io.debezium:debezium-embedded:1.4.1.Final",
         "org.apache.kafka:connect-api:2.6.1",
         "org.apache.kafka:kafka-clients:2.6.1",

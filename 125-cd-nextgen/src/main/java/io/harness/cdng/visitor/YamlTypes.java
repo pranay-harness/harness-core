@@ -36,7 +36,6 @@ public interface YamlTypes {
   String OPENSHIFT_MANIFEST = ManifestType.OpenshiftTemplate;
   String SPEC = "spec";
   String PIPELINE_INFRASTRUCTURE = "infrastructure";
-  String HTTP_STEP = StepSpecTypeConstants.HTTP;
   String SHELL_SCRIPT_STEP = StepSpecTypeConstants.SHELL_SCRIPT;
   String SERVICE_CONFIG = "serviceConfig";
   String SERVICE_ENTITY = "service";

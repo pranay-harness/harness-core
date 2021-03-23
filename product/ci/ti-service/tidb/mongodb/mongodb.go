@@ -173,11 +173,15 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []types.File) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
+	fileNames := []string{}
+	for _, f := range files {
+		fileNames = append(fileNames, f.Name)
+	}
 	res := types.SelectTestsResp{}
 	totalTests := 0
-	nodes, err := utils.ParseFileNames(files)
+	nodes, err := utils.ParseFileNames(fileNames)
 	if err != nil {
 		return res, err
 	}
@@ -205,11 +209,14 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 	l := []types.RunnableTest{}
 	var pkgs []string
 	var cls []string
+	var selectAll bool
+	new := 0
+	updated := 0
 	for _, node := range nodes {
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
 			// A list with a single empty element indicates that all tests need to be run
-			return types.SelectTestsResp{}, nil
+			selectAll = true
 		} else if utils.IsTest(node) {
 			t := types.RunnableTest{Pkg: node.Pkg, Class: node.Class}
 			if !isValid(t) {
@@ -221,8 +228,10 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 					if _, ok2 := allm[t]; !ok2 {
 						// Doesn't exist in existing callgraph
 						totalTests += 1
+						new += 1
 						t.Selection = types.SelectNewTest
 					} else {
+						updated += 1
 						t.Selection = types.SelectUpdatedTest
 					}
 					l = append(l, t)
@@ -234,6 +243,16 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 			pkgs = append(pkgs, node.Pkg)
 			cls = append(cls, node.Class)
 		}
+	}
+	if selectAll == true {
+		return types.SelectTestsResp{
+			SelectAll:     true,
+			TotalTests:    totalTests,
+			SelectedTests: totalTests,
+			NewTests:      new,
+			UpdatedTests:  updated,
+			SrcCodeTests:  totalTests - new - updated,
+		}, nil
 	}
 	tests, err := mdb.queryHelper(pkgs, cls)
 	if err != nil {
@@ -251,7 +270,12 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 			}
 		}
 	}
-	res.TotalTests = totalTests
-	res.Tests = l
-	return res, nil
+	return types.SelectTestsResp{
+		TotalTests:    totalTests,
+		SelectedTests: len(l),
+		NewTests:      new,
+		UpdatedTests:  updated,
+		SrcCodeTests:  len(l) - new - updated,
+		Tests:         l,
+	}, nil
 }

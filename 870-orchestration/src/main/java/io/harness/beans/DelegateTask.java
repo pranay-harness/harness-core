@@ -73,6 +73,7 @@ public class DelegateTask
         .build();
   }
 
+  private static final Long DEFAULT_FORCE_EXECUTE_TIMEOUT = Duration.ofSeconds(5).toMillis();
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
 
   @NotNull private TaskData data;
@@ -148,10 +149,18 @@ public class DelegateTask
   private Long lastBroadcastAt;
   private int broadcastCount;
   private long nextBroadcast;
+  private boolean forceExecute;
 
   private long expiry;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(2).toInstant());
+
+  public Long fetchExtraTimeoutForForceExecution() {
+    if (forceExecute) {
+      return DEFAULT_FORCE_EXECUTE_TIMEOUT;
+    }
+    return 0L;
+  }
 
   // Following getters, setters have been added temporarily because of backward compatibility
 

@@ -28,7 +28,7 @@ public class OrchestrationUtilsTest extends OrchestrationTestBase {
   public void testShouldRunExecution() {
     Ambiance ambiance = Ambiance.newBuilder().build();
     String whenCondition = "WHENCONDITION";
-    doReturn("true").when(engineExpressionService).evaluateExpression(ambiance, whenCondition);
+    doReturn(true).when(engineExpressionService).evaluateExpression(ambiance, whenCondition);
     NodeRunCheck nodeRunCheck = OrchestrationUtils.shouldRunExecution(ambiance, whenCondition, engineExpressionService);
     assertThat(nodeRunCheck.isSuccessful()).isTrue();
     assertThat(nodeRunCheck.getEvaluatedWhenCondition()).isTrue();
@@ -48,7 +48,7 @@ public class OrchestrationUtilsTest extends OrchestrationTestBase {
   public void shouldSkipNodeExecution() {
     Ambiance ambiance = Ambiance.newBuilder().build();
     String skipCondition = "SKIPCONDITION";
-    doReturn("true").when(engineExpressionService).evaluateExpression(ambiance, skipCondition);
+    doReturn(true).when(engineExpressionService).evaluateExpression(ambiance, skipCondition);
     SkipCheck skipCheck = OrchestrationUtils.shouldSkipNodeExecution(ambiance, skipCondition, engineExpressionService);
     assertThat(skipCheck.isSuccessful()).isTrue();
     assertThat(skipCheck.getEvaluatedSkipCondition()).isTrue();

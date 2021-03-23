@@ -36,9 +36,9 @@ public class TriggerWebhookEvent implements PersistentEntity, UuidAccess, Persis
   String orgIdentifier;
   String projectIdentifier;
   String sourceRepoType;
+  @Builder.Default boolean isSubscriptionConfirmation = Boolean.FALSE;
 
   @Builder.Default boolean processing = Boolean.FALSE;
-
   @Builder.Default Integer attemptCount = 0;
 
   @FdTtlIndex @Default private Date validUntil = Date.from(OffsetDateTime.now().plusDays(7).toInstant());

@@ -28,7 +28,8 @@ public class GraphVertexDTOConverter {
              .stepParameters(graphVertex.getStepParameters())
              .mode(graphVertex.getMode())
              .executableResponses(CollectionUtils.emptyIfNull(graphVertex.getExecutableResponses()))
-             .delegateSelectionLogParams(CollectionUtils.emptyIfNull(graphVertex.getDelegateSelectionLogParams()))
+             .graphDelegateSelectionLogParams(
+                 CollectionUtils.emptyIfNull(graphVertex.getGraphDelegateSelectionLogParams()))
              .interruptHistories(graphVertex.getInterruptHistories())
              .retryIds(graphVertex.getRetryIds())
              .skipType(graphVertex.getSkipType())

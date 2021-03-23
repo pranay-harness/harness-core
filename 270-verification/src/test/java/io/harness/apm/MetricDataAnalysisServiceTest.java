@@ -8,6 +8,7 @@ import static io.harness.rest.RestResponse.Builder.aRestResponse;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SOWMYA;
+import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -20,6 +21,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 
+import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
@@ -40,6 +42,7 @@ import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 
+import software.wings.alerts.AlertStatus;
 import software.wings.beans.Application;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.cv.ContinuousVerificationAlertData;
@@ -104,6 +107,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mongodb.morphia.query.Query;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -365,10 +369,25 @@ public class MetricDataAnalysisServiceTest extends VerificationBase {
         learningEngineAnalysisTask.getState_execution_id(), null, DEFAULT_GROUP_NAME, 10, taskId, null, cvConfigId,
         timeSeriesMLAnalysisRecord, null);
     alerts = wingsPersistence.createQuery(Alert.class, excludeAuthority).asList();
+    waitForAlert(1, Optional.empty());
     assertThat(alerts.size()).isEqualTo(1);
     ContinuousVerificationAlertData alertData = (ContinuousVerificationAlertData) alerts.get(0).getAlertData();
     assertThat(alertData.getMlAnalysisType()).isEqualTo(MLAnalysisType.TIME_SERIES);
     assertThat(alertData.getRiskScore()).isEqualTo(riskScore, offset(0.0001));
+  }
+
+  private void waitForAlert(int expectedNumOfAlerts, Optional<AlertStatus> alertStatus) {
+    int tryCount = 0;
+    long numOfAlerts;
+    do {
+      Query<Alert> alertQuery = wingsPersistence.createQuery(Alert.class, excludeAuthority);
+      if (alertStatus.isPresent()) {
+        alertQuery.filter(Alert.AlertKeys.status, alertStatus.get());
+      }
+      numOfAlerts = alertQuery.count();
+      tryCount++;
+      sleep(ofMillis(500));
+    } while (numOfAlerts < expectedNumOfAlerts && tryCount < 10);
   }
 
   private void verifyAnalysisOffsetPageSizeAndSorting(int total) {

@@ -15,6 +15,7 @@ import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
+import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -321,7 +322,7 @@ public class NextGenModule extends AbstractModule {
     install(OrchestrationVisualizationModule.getInstance());
     install(ExecutionPlanModule.getInstance());
     install(EntitySetupUsageModule.getInstance());
-
+    install(new AccessControlAdminClientModule(appConfig.getAccessControlAdminClientConfiguration(), "NextGenManager"));
     install(new ResourceGroupModule(
         appConfig.getResoureGroupConfig(), this.appConfig.getEventsFrameworkConfiguration().getRedisConfig()));
     install(PersistentLockModule.getInstance());
