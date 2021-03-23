@@ -16,6 +16,5 @@ import lombok.Value;
 public class QLCloudProviderFilter implements EntityFilter {
   QLIdFilter cloudProvider;
   QLCloudProviderTypeFilter cloudProviderType;
-  QLCEEnabledFilter isCEEnabled;
   QLTimeFilter createdAt;
 }
