@@ -1052,6 +1052,14 @@ maven_install(
         ),
         maven.artifact(
             group = "com.amazonaws",
+            artifact = "aws-java-sdk-sns",
+            version = "1.11.834",
+            exclusions = [
+                "commons-logging:commons-logging",
+            ],
+        ),
+        maven.artifact(
+            group = "com.amazonaws",
             artifact = "aws-java-sdk-codedeploy",
             version = "1.11.834",
             exclusions = [

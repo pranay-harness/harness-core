@@ -26,6 +26,7 @@ java_library(
         "@maven//:com_amazonaws_aws_java_sdk_lambda",
         "@maven//:com_amazonaws_aws_java_sdk_s3",
         "@maven//:com_amazonaws_aws_java_sdk_servicediscovery",
+        "@maven//:com_amazonaws_aws_java_sdk_sns",
         "@maven//:com_amazonaws_aws_java_sdk_sts",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",

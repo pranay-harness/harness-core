@@ -1,6 +1,7 @@
 package io.harness.utils;
 
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
@@ -30,6 +31,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
+import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -46,6 +48,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -95,16 +98,10 @@ public class ConnectorUtils {
       case KUBERNETES_CLUSTER:
         connectorDetails = getK8sConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
-      case GIT:
-        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
-        break;
       case GITHUB:
-        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
-        break;
       case GITLAB:
-        connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
-        break;
       case BITBUCKET:
+      case CODECOMMIT:
         connectorDetails = getGitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
       case GCP:
@@ -180,6 +177,8 @@ public class ConnectorUtils {
       return buildGitlabConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else if (connectorDTO.getConnectorInfo().getConnectorType() == BITBUCKET) {
       return buildBitBucketConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
+    } else if (connectorDTO.getConnectorInfo().getConnectorType() == CODECOMMIT) {
+      return buildAwsCodeCommitConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
     } else {
       throw new CIStageExecutionException(
           "Unsupported git connector " + connectorDTO.getConnectorInfo().getConnectorType());
@@ -240,6 +239,17 @@ public class ConnectorUtils {
       throw new InvalidArgumentsException(
           "Unsupported git connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
+  }
+
+  private ConnectorDetails buildAwsCodeCommitConnectorDetails(
+      NGAccess ngAccess, ConnectorDTO connectorDTO, ConnectorDetailsBuilder connectorDetailsBuilder) {
+    AwsCodeCommitConnectorDTO gitConfigDTO =
+        (AwsCodeCommitConnectorDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    gitConfigDTO.getDecryptableEntities().forEach(decryptableEntity
+        -> encryptedDataDetails.addAll(secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntity)));
+    connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails);
+    return connectorDetailsBuilder.build();
   }
 
   private ConnectorDetails getDockerConnectorDetails(
