@@ -30,7 +30,6 @@ public class JiraTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
     JiraTaskNGParameters taskParameters = (JiraTaskNGParameters) parameters;
-
     return jiraTaskNGHelper.getJiraTaskResponse(taskParameters);
   }
 }

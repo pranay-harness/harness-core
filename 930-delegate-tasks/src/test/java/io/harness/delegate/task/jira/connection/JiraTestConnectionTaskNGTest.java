@@ -15,8 +15,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
 import io.harness.delegate.task.jira.JiraTaskNGHelper;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
-import io.harness.logging.CommandExecutionStatus;
+import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.rule.Owner;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -51,8 +50,7 @@ public class JiraTestConnectionTaskNGTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void testRun() {
-    JiraTaskNGResponse taskResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
+    JiraTaskNGResponse taskResponse = JiraTaskNGResponse.builder().build();
     when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenReturn(taskResponse);
     DelegateResponseData response = jiraTestConnectionTaskNG.run(JiraConnectionTaskParams.builder().build());
 
@@ -65,9 +63,7 @@ public class JiraTestConnectionTaskNGTest {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void testRunWhenCantConnect() {
-    JiraTaskNGResponse taskResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.FAILURE).build();
-    when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenReturn(taskResponse);
+    when(jiraTaskNGHelper.getJiraTaskResponse(any())).thenThrow(new RuntimeException("exception"));
     DelegateResponseData response = jiraTestConnectionTaskNG.run(JiraConnectionTaskParams.builder().build());
 
     assertThat(((JiraTestConnectionTaskNGResponse) response).getCanConnect()).isEqualTo(false);
