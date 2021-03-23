@@ -72,7 +72,7 @@ public class ApprovalStagePlanCreator extends ChildrenPlanCreator<StageElementCo
         .stepParameters(stepParameters)
         .stepType(ApprovalStageStep.STEP_TYPE)
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
+        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), true))
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .build();
