@@ -580,7 +580,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
             .cloudProvider(k8sTaskParameters.getK8sClusterConfig().getCloudProviderName())
             .releaseName(k8sTaskParameters.getReleaseName())
             .currentTaskType(TaskType.K8S_COMMAND_TASK)
-            .delegateSelectors(new HashSet<>(delegateSelectors))
+            .delegateSelectors(renderedAndTrimmedSelectors)
             .build();
 
     prepareDelegateTask(context, stateExecutionData, delegateTask, expressionFunctorToken);
