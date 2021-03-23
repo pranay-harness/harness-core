@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -25,7 +26,8 @@ const (
 	outDir                       = "%s/ti/callgraph/" // path passed as outDir in the config.ini file
 	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
 	// as it is also used in init container.
-	javaAgentArg = "-DargLine=-javaagent:=/step-exec/.harness/bin/java-agent.jar:%s"
+	javaAgentArg = "-DargLine=-javaagent:/step-exec/.harness/bin/java-agent.jar=%s"
+	tiConfigPath = ".ticonfig.yaml"
 )
 
 // RunTestsTask represents an interface to run tests intelligently
@@ -141,8 +143,7 @@ func (r *runTestsTask) createJavaAgentArg() (string, error) {
 		r.log.Errorw(fmt.Sprintf("could not create nested directory %s", dir), zap.Error(err))
 		return "", err
 	}
-	data := fmt.Sprintf(`
-outDir: %s
+	data := fmt.Sprintf(`outDir: %s
 logLevel: 0
 logConsole: false
 writeTo: COVERAGE_JSON
@@ -248,7 +249,12 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	var err error
 	var selection types.SelectTestsResp
 	if r.runOnlySelectedTests {
-		selection, err = selectTests(ctx, r.diffFiles, r.id, r.log)
+		var files []types.File
+		err := json.Unmarshal([]byte(r.diffFiles), &files)
+		if err != nil {
+			return "", err
+		}
+		selection, err = selectTests(ctx, files, r.id, r.log, r.fs)
 		if err != nil {
 			r.log.Errorw("there was some issue in trying to figure out tests to run. Running all the tests", zap.Error(err))
 			// Set run only selected tests to false if there was some issue in the response
