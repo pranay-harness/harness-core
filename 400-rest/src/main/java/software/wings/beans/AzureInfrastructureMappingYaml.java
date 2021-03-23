@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AzureInfrastructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public final class AzureInfrastructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   private String subscriptionId;
   private String resourceGroup;
   private List<AzureTag> azureTags;

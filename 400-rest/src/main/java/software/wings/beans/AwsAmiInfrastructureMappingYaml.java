@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AwsAmiInfrastructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public final class AwsAmiInfrastructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   private String region;
   private String autoScalingGroupName;
   private List<String> classicLoadBalancers;

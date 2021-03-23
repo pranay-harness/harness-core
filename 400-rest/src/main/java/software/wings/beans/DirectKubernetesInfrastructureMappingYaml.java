@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class DirectKubernetesInfrastructureMappingYaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
+public class DirectKubernetesInfrastructureMappingYaml extends ContainerInfrastructureMappingYamlWithComputeProvider {
   private String masterUrl;
   private String username;
   private String password;

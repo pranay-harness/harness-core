@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class EcsInfrastructureMappingYaml extends ContainerInfrastructureMapping.YamlWithComputeProvider {
+public final class EcsInfrastructureMappingYaml extends ContainerInfrastructureMappingYamlWithComputeProvider {
   private String region = AWS_DEFAULT_REGION;
   private String vpcId;
   private String subnetIds;

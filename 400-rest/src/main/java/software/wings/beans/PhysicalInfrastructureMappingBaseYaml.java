@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class PhysicalInfrastructureMappingBaseYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public class PhysicalInfrastructureMappingBaseYaml extends InfrastructureMappingYamlWithComputeProvider {
   private List<String> hostNames;
   private List<Host> hosts;
   private String loadBalancer;

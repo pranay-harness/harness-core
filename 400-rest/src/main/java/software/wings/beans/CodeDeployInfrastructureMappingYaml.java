@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class CodeDeployInfrastructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public class CodeDeployInfrastructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   private String region;
   private String applicationName;
   private String deploymentGroup;

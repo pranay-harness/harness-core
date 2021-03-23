@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AwsLambdaInfraStructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public final class AwsLambdaInfraStructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   private String region;
   private String vpcId;
   private List<String> subnetIds = new ArrayList<>();

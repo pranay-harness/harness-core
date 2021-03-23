@@ -106,24 +106,6 @@ public class AzureMachineImageArtifactStream extends ArtifactStream {
   }
 
   @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yml extends ArtifactStreamYaml {
-    private ImageType imageType;
-    private String subscriptionId;
-    private ImageDefinition imageDefinition;
-
-    @Builder
-    public Yml(String harnessApiVersion, String serverName, ImageType imageType, String subscriptionId,
-        ImageDefinition imageDefinition) {
-      super(AZURE_MACHINE_IMAGE.name(), harnessApiVersion, serverName);
-      this.imageType = imageType;
-      this.subscriptionId = subscriptionId;
-      this.imageDefinition = imageDefinition;
-    }
-  }
-
-  @Data
   @Builder
   @NoArgsConstructor
   @AllArgsConstructor

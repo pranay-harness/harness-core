@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @JsonPropertyOrder({"type", "harnessApiVersion", "connectionType"})
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AwsInfrastructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public final class AwsInfrastructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   // maps to restrictionType
   private String restrictions;
   // maps to restrictionExpression

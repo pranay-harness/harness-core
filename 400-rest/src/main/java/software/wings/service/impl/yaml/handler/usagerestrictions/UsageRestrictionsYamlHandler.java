@@ -24,6 +24,7 @@ import software.wings.security.GenericEntityFilterYaml;
 import software.wings.security.UsageRestrictions;
 import software.wings.security.UsageRestrictions.AppEnvRestriction;
 import software.wings.security.UsageRestrictions.UsageRestrictionsBuilder;
+import software.wings.security.UsageRestrictionsAppEnvRestrictionYaml;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -45,7 +46,7 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
   @Inject AppService appService;
   @Inject EnvironmentService environmentService;
 
-  private AppEnvRestriction constructAppEnvRestriction(AppEnvRestriction.Yaml yaml, String accountId) {
+  private AppEnvRestriction constructAppEnvRestriction(UsageRestrictionsAppEnvRestrictionYaml yaml, String accountId) {
     GenericEntityFilter appFilter = constructGenericEntityFilter(yaml.getAppFilter(), accountId);
     return AppEnvRestriction.builder()
         .envFilter(constructEnvFilter(appFilter, yaml.getEnvFilter()))
@@ -53,9 +54,9 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
         .build();
   }
 
-  private AppEnvRestriction.Yaml constructAppEnvRestrictionYaml(AppEnvRestriction appEnvRestriction) {
+  private UsageRestrictionsAppEnvRestrictionYaml constructAppEnvRestrictionYaml(AppEnvRestriction appEnvRestriction) {
     GenericEntityFilterYaml appFilterYaml = constructGenericEntityFilterYaml(appEnvRestriction.getAppFilter());
-    return AppEnvRestriction.Yaml.builder()
+    return UsageRestrictionsAppEnvRestrictionYaml.builder()
         .envFilter(constructEnvFilterYaml(appEnvRestriction.getAppFilter(), appEnvRestriction.getEnvFilter()))
         .appFilter(appFilterYaml)
         .build();
@@ -198,10 +199,11 @@ public class UsageRestrictionsYamlHandler extends BaseYamlHandler<UsageRestricti
     }
 
     UsageRestrictions.Yaml.YamlBuilder usageRestrictionsYamlBuilder = UsageRestrictions.Yaml.builder();
-    List<AppEnvRestriction.Yaml> appEnvRestrictionYamlList = usageRestrictions.getAppEnvRestrictions()
-                                                                 .stream()
-                                                                 .map(this::constructAppEnvRestrictionYaml)
-                                                                 .collect(Collectors.toList());
+    List<UsageRestrictionsAppEnvRestrictionYaml> appEnvRestrictionYamlList =
+        usageRestrictions.getAppEnvRestrictions()
+            .stream()
+            .map(this::constructAppEnvRestrictionYaml)
+            .collect(Collectors.toList());
     usageRestrictionsYamlBuilder.appEnvRestrictions(appEnvRestrictionYamlList);
     return usageRestrictionsYamlBuilder.build();
   }

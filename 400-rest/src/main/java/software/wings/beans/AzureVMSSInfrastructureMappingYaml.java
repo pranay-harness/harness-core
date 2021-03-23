@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class AzureVMSSInfrastructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public final class AzureVMSSInfrastructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   private String baseVMSSName;
   private String userName;
   private String resourceGroupName;

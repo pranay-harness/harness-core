@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public final class PcfInfrastructureMappingYaml extends InfrastructureMapping.YamlWithComputeProvider {
+public final class PcfInfrastructureMappingYaml extends InfrastructureMappingYamlWithComputeProvider {
   private String organization;
   private String space;
   private List<String> tempRouteMap;

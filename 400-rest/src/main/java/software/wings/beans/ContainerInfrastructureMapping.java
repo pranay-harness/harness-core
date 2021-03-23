@@ -7,9 +7,6 @@ import software.wings.annotation.Blueprint;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.Map;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 
 /**
@@ -64,21 +61,6 @@ public abstract class ContainerInfrastructureMapping extends InfrastructureMappi
   @Attributes(title = "Connection Type")
   public String getHostConnectionAttrs() {
     return null;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends InfrastructureMapping.YamlWithComputeProvider {
-    private String cluster;
-
-    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, String cluster,
-        Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, computeProviderType,
-          computeProviderName, blueprints);
-      this.cluster = cluster;
-    }
   }
 
   public abstract String getNamespace();

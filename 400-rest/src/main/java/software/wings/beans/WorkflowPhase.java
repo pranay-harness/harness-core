@@ -21,7 +21,6 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.TransitionType;
-import software.wings.yaml.BaseYamlWithType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
@@ -31,10 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -547,45 +543,6 @@ public class WorkflowPhase implements UuidAccess {
       workflowPhase.setStatefulSet(statefulSet);
       workflowPhase.setVariableOverrides(variableOverrides);
       return workflowPhase;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static final class Yaml extends BaseYamlWithType {
-    private String name;
-    private String infraMappingName;
-    private String infraDefinitionName;
-    private String serviceName;
-    private String computeProviderName;
-    private boolean provisionNodes;
-    private boolean daemonSet;
-    private boolean statefulSet;
-    private String phaseNameForRollback;
-    private List<TemplateExpression.Yaml> templateExpressions;
-    private List<PhaseStepYaml> phaseSteps = new ArrayList<>();
-    private List<NameValuePair> serviceVariableOverrides = new ArrayList<>();
-    //  private DeploymentType deploymentType;
-
-    @lombok.Builder
-    public Yaml(String type, String name, String infraMappingName, String infraDefinitionName, String serviceName,
-        String computeProviderName, boolean provisionNodes, String phaseNameForRollback,
-        List<TemplateExpression.Yaml> templateExpressions, List<PhaseStepYaml> phaseSteps, boolean daemonSet,
-        boolean statefulSet, List<NameValuePair> serviceVariableOverrides) {
-      super(type);
-      this.name = name;
-      this.infraMappingName = infraMappingName;
-      this.infraDefinitionName = infraDefinitionName;
-      this.serviceName = serviceName;
-      this.computeProviderName = computeProviderName;
-      this.provisionNodes = provisionNodes;
-      this.phaseNameForRollback = phaseNameForRollback;
-      this.templateExpressions = templateExpressions;
-      this.phaseSteps = phaseSteps;
-      this.daemonSet = daemonSet;
-      this.statefulSet = statefulSet;
-      this.serviceVariableOverrides = serviceVariableOverrides;
     }
   }
 }

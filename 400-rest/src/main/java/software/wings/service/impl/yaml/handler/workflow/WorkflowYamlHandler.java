@@ -35,7 +35,7 @@ import software.wings.beans.VariableYaml;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase;
-import software.wings.beans.WorkflowPhase.Yaml;
+import software.wings.beans.WorkflowPhaseYaml;
 import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -399,16 +399,16 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     // phases
     WorkflowPhaseYamlHandler phaseYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.PHASE);
-    List<WorkflowPhase.Yaml> phaseYamlList =
+    List<WorkflowPhaseYaml> phaseYamlList =
         workflowPhases.stream().map(workflowPhase -> phaseYamlHandler.toYaml(workflowPhase, appId)).collect(toList());
 
     // rollback phases
     Map<String, WorkflowPhase> rollbackWorkflowPhaseIdMap = orchestrationWorkflow.getRollbackWorkflowPhaseIdMap();
-    List<WorkflowPhase.Yaml> rollbackPhaseYamlList = Lists.newArrayList();
+    List<WorkflowPhaseYaml> rollbackPhaseYamlList = Lists.newArrayList();
     orchestrationWorkflow.getWorkflowPhaseIds().forEach(workflowPhaseId -> {
       WorkflowPhase rollbackPhase = rollbackWorkflowPhaseIdMap.get(workflowPhaseId);
       if (rollbackPhase != null) {
-        Yaml rollbackPhaseYaml = phaseYamlHandler.toYaml(rollbackPhase, appId);
+        WorkflowPhaseYaml rollbackPhaseYaml = phaseYamlHandler.toYaml(rollbackPhase, appId);
         rollbackPhaseYamlList.add(rollbackPhaseYaml);
       }
     });

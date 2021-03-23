@@ -24,30 +24,16 @@ public class UsageRestrictions {
   public static class AppEnvRestriction {
     private GenericEntityFilter appFilter;
     private EnvFilter envFilter;
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
-    public static class Yaml extends BaseYaml {
-      private GenericEntityFilterYaml appFilter;
-      private EnvFilterYaml envFilter;
-
-      @Builder
-      public Yaml(GenericEntityFilterYaml appFilter, EnvFilterYaml envFilter) {
-        this.appFilter = appFilter;
-        this.envFilter = envFilter;
-      }
-    }
   }
 
   @Data
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public static class Yaml extends BaseYaml {
-    private List<AppEnvRestriction.Yaml> appEnvRestrictions;
+    private List<UsageRestrictionsAppEnvRestrictionYaml> appEnvRestrictions;
 
     @Builder
-    public Yaml(List<AppEnvRestriction.Yaml> appEnvRestrictions) {
+    public Yaml(List<UsageRestrictionsAppEnvRestrictionYaml> appEnvRestrictions) {
       this.appEnvRestrictions = appEnvRestrictions;
     }
   }

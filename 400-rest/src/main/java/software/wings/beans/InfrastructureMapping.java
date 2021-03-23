@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.NonNull;
@@ -428,21 +426,6 @@ public abstract class InfrastructureMapping
 
   public String getDisplayName() {
     return isNotEmpty(displayName) ? displayName : name;
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class YamlWithComputeProvider extends InfrastructureMappingYaml {
-    private String computeProviderType;
-    private String computeProviderName;
-
-    public YamlWithComputeProvider(String type, String harnessApiVersion, String serviceName, String infraMappingType,
-        String deploymentType, String computeProviderType, String computeProviderName, Map<String, Object> blueprints) {
-      super(type, harnessApiVersion, serviceName, infraMappingType, deploymentType, blueprints);
-      this.computeProviderType = computeProviderType;
-      this.computeProviderName = computeProviderName;
-    }
   }
 
   protected List<String> getList(Object input) {

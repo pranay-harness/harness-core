@@ -26,6 +26,7 @@ import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamYaml;
 import software.wings.beans.artifact.AzureMachineImageArtifactStream;
+import software.wings.beans.artifact.AzureMachineImageArtifactStreamYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -67,7 +68,7 @@ public class AzureMachineImageArtifactStreamYamlHandlerTest extends YamlHandlerT
             .build();
     when(settingsService.get(eq(SETTING_ID)))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).build());
-    AzureMachineImageArtifactStream.Yml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
+    AzureMachineImageArtifactStreamYaml yaml = yamlHandler.toYaml(artifactStream, APP_ID);
     assertThat(yaml.getImageType()).isEqualTo(IMAGE_GALLERY);
     assertThat(yaml.getSubscriptionId()).isEqualTo("subId");
     assertThat(yaml.getImageDefinition()).isNotNull();
@@ -83,7 +84,7 @@ public class AzureMachineImageArtifactStreamYamlHandlerTest extends YamlHandlerT
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(settingsService.getByName(ACCOUNT_ID, APP_ID, "test server")).thenReturn(settingAttribute);
-    ArtifactStreamYaml baseYaml = AzureMachineImageArtifactStream.Yml.builder()
+    ArtifactStreamYaml baseYaml = AzureMachineImageArtifactStreamYaml.builder()
                                       .subscriptionId("subId")
                                       .imageType(IMAGE_GALLERY)
                                       .imageDefinition(AzureMachineImageArtifactStream.ImageDefinition.builder()
@@ -137,6 +138,6 @@ public class AzureMachineImageArtifactStreamYamlHandlerTest extends YamlHandlerT
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
   public void testGetYamlClass() {
-    assertThat(yamlHandler.getYamlClass()).isEqualTo(AzureMachineImageArtifactStream.Yml.class);
+    assertThat(yamlHandler.getYamlClass()).isEqualTo(AzureMachineImageArtifactStreamYaml.class);
   }
 }

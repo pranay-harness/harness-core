@@ -1,13 +1,14 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingYamlWithComputeProvider;
 import software.wings.beans.yaml.ChangeContext;
 
 /**
  * @author rktummala on 10/15/17
  */
-public abstract class InfraMappingYamlWithComputeProviderHandler<
-    Y extends InfrastructureMapping.YamlWithComputeProvider, B extends InfrastructureMapping>
+public abstract class InfraMappingYamlWithComputeProviderHandler<Y extends InfrastructureMappingYamlWithComputeProvider,
+                                                                 B extends InfrastructureMapping>
     extends InfraMappingYamlHandler<Y, B> {
   @Override
   protected void toYaml(Y yaml, B infraMapping) {

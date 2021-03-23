@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public final class AzureKubernetesInfrastructureMappingYaml
-    extends ContainerInfrastructureMapping.YamlWithComputeProvider {
+    extends ContainerInfrastructureMappingYamlWithComputeProvider {
   private String subscriptionId;
   private String resourceGroup;
   private String namespace;

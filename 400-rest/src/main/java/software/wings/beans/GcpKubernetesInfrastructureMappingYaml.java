@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public final class GcpKubernetesInfrastructureMappingYaml
-    extends ContainerInfrastructureMapping.YamlWithComputeProvider {
+    extends ContainerInfrastructureMappingYamlWithComputeProvider {
   private String namespace;
   private String releaseName;
 
