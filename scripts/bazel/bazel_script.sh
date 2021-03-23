@@ -409,6 +409,7 @@ build_bazel_module 950-walktree-visitor
 build_bazel_module 954-connector-beans
 build_bazel_module 955-filters-sdk
 build_bazel_module 955-setup-usage-sdk
+build_bazel_module 955-scm-java-client
 build_bazel_module 960-api-services
 build_bazel_module 960-continuous-features
 build_bazel_module 960-expression-service
