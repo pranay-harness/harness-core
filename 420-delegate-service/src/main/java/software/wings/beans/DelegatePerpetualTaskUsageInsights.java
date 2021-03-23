@@ -25,5 +25,5 @@ public class DelegatePerpetualTaskUsageInsights implements PersistentEntity, Uui
   private String taskId;
   private DelegatePerpetualTaskUsageInsightsEventType eventType;
   private String delegateId;
-  private String delegateGroup;
+  private String delegateGroupId;
 }

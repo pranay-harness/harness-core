@@ -965,6 +965,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         (PerpetualTaskServiceImpl) injector.getInstance(Key.get(PerpetualTaskService.class));
     perpetualTaskService.getPerpetualTaskCrudSubject().register(
         injector.getInstance(Key.get(PerpetualTaskRecordHandler.class)));
+    perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
     DelegateServiceImpl delegateServiceImpl =
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));

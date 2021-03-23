@@ -8,7 +8,7 @@ import software.wings.beans.DelegateTaskUsageInsightsEventType;
 
 @OwnedBy(DEL)
 public interface DelegateTaskStatusObserver {
-  void onTaskAssigned(String accountId, String taskId, String delegateId, String delegateGroupId);
+  void onTaskAssigned(String accountId, String taskId, String delegateId);
   void onTaskCompleted(
       String accountId, String taskId, String delegateId, DelegateTaskUsageInsightsEventType eventType);
 }
