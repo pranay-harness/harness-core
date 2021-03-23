@@ -6,12 +6,14 @@ import (
 	"github.com/kamva/mgm/v3"
 	"time"
 
+	"github.com/mattn/go-zglob"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+
 	"go.uber.org/zap"
 )
 
@@ -173,11 +175,26 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []types.File) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
 	fileNames := []string{}
-	for _, f := range files {
-		fileNames = append(fileNames, f.Name)
+	for _, f := range req.Files {
+		// Check if the filename matches any of the regexes in the ignore config. If so, remove them
+		// from consideration
+		var remove bool
+		for _, ignore := range req.TiConfig.Config.Ignore {
+			matched, _ := zglob.Match(ignore, f.Name)
+			if matched == true {
+				// TODO: (Vistaar) Remove this warning message in prod since it has no context
+				// Keeping for debugging help for now
+				mdb.Log.Warnw(fmt.Sprintf("removing %s from consideration as it matches %s", f, ignore))
+				remove = true
+				break
+			}
+		}
+		if !remove {
+			fileNames = append(fileNames, f.Name)
+		}
 	}
 	res := types.SelectTestsResp{}
 	totalTests := 0
@@ -254,6 +271,7 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []types.File) (type
 			SrcCodeTests:  totalTests - new - updated,
 		}, nil
 	}
+
 	tests, err := mdb.queryHelper(pkgs, cls)
 	if err != nil {
 		return res, err
