@@ -1,5 +1,6 @@
 package io.harness.cdng.creator.plan.execution;
 
+import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.PlanCreationConstants;
@@ -26,7 +27,6 @@ import com.google.common.base.Preconditions;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -103,21 +103,8 @@ public class CDExecutionPMSPlanCreator extends ChildrenPlanCreator<ExecutionElem
                                            .getNode()
                                            .asArray())
                                    .orElse(Collections.emptyList());
-    List<YamlField> stepFields = new LinkedList<>();
 
-    yamlNodes.forEach(yamlNode -> {
-      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
-      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
-      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
-      if (stepField != null) {
-        stepFields.add(stepField);
-      } else if (stepGroupField != null) {
-        stepFields.add(stepGroupField);
-      } else if (parallelStepField != null) {
-        stepFields.add(parallelStepField);
-      }
-    });
-    return stepFields;
+    return InfrastructurePmsPlanCreator.getStepYamlFields(yamlNodes);
   }
 
   PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
