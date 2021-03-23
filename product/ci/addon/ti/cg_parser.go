@@ -34,7 +34,7 @@ func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallG
 }
 
 // Parse callgraph and return nodes and relations
-func (cg *CallGraphParser) Parse(file string) (*Callgraph, c) {
+func (cg *CallGraphParser) Parse(file string) (*Callgraph, error) {
 	f, err := cg.fs.Open(file)
 	if err != nil {
 		return nil, errors.Wrap(err, fmt.Sprintf("failed to open file %s", file))

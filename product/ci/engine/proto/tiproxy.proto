@@ -11,7 +11,7 @@ message UploadCgRequest {
   string repo = 2;
   string sha = 3;
   string branch = 4;
-  string cgDir = 5;
+  string cg_dir = 5;
 }
 
 message UploadCgResponse {}

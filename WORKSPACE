@@ -5292,7 +5292,6 @@ go_repository(
 )
 
 go_repository(
-
     name = "com_github_linkedin_goavro_v2",
     importpath = "github.com/linkedin/goavro/v2",
     sum = "h1:eTBIRoInBM88gITGXYtUSqqxLTFXfOsJBiX8ZMW0o4U=",

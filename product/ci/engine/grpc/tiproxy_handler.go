@@ -27,6 +27,7 @@ var (
 
 const (
 	cgSchemaPath = "callgraph.avsc"
+	cgFile = "callgraph.json"
 )
 
 // handler is used to implement EngineServer
@@ -190,7 +191,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if cgDir == "" {
 		return res, fmt.Errorf("cgDir not present in request")
 	}
-	cgPath := cgDir + "callgraph.json"
+	cgPath := cgDir + cgFile
 	fs := fs.NewOSFileSystem(h.log)
 	parser := ti.NewCallGraphParser(h.log, fs)
 	cg, err := parser.Parse(cgPath)
