@@ -1,6 +1,8 @@
 package software.wings.beans;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -9,6 +11,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.DEL)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Value
