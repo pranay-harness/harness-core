@@ -60,6 +60,11 @@
     },
     "Approvers": {
       "type": "object",
+      "required": [
+        "disallowPipelineExecutor",
+        "minimumCount",
+        "userGroups"
+      ],
       "properties": {
         "disallowPipelineExecutor": {
           "type": "boolean"
