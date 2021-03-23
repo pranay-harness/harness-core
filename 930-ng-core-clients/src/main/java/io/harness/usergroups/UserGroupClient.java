@@ -20,6 +20,12 @@ import retrofit2.http.Query;
 public interface UserGroupClient {
   String USER_GROUP_BASEURI = "/user-groups";
 
+  @GET(USER_GROUP_BASEURI + "/{identifier}")
+  Call<ResponseDTO<UserGroupDTO>> getUserGroup(@Path("identifier") String identifier,
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
   @POST(USER_GROUP_BASEURI + "/batch")
   Call<ResponseDTO<List<UserGroupDTO>>> getFilteredUserGroups(@Body UserGroupFilterDTO userGroupFilter);
 

@@ -11,6 +11,7 @@ import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.AuthorizationServiceHeader.NOTIFICATION_SERVICE;
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.accesscontrol.AccessControlConfiguration.getResourceClasses;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -18,7 +19,9 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EventListenerService;
+import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
@@ -60,6 +63,7 @@ import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
+@OwnedBy(PL)
 @Slf4j
 public class AccessControlApplication extends Application<AccessControlConfiguration> {
   private static final String APPLICATION_NAME = "Access Control Service";
@@ -117,6 +121,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
+    injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
   }
 
   private void registerJerseyFeatures(Environment environment) {
