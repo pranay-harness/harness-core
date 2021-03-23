@@ -1,4 +1,4 @@
-package io.harness.perpetualtask.instancesync;
+package io.harness.perpetualtask.instancesyncng;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -18,8 +18,8 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.ContainerInstanceSyncPerpetualTaskParamsNG;
-import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.K8sContainerInstanceSyncPerpetualTaskParamsNG;
+import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.InstanceSyncPerpetualTaskParamsNG;
+import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.K8sInstanceSyncPerpetualTaskParamsNG;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -44,16 +44,16 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
   public PerpetualTaskResponse runOnce(
       PerpetualTaskId taskId, PerpetualTaskExecutionParams params, Instant heartbeatTime) {
     log.info("Running the InstanceSync perpetual task executor for task id: {}", taskId);
-    ContainerInstanceSyncPerpetualTaskParamsNG taskParams =
-        AnyUtils.unpack(params.getCustomizedParams(), ContainerInstanceSyncPerpetualTaskParamsNG.class);
+    InstanceSyncPerpetualTaskParamsNG taskParams =
+        AnyUtils.unpack(params.getCustomizedParams(), InstanceSyncPerpetualTaskParamsNG.class);
 
     return K8S.name().equals(taskParams.getContainerType())
-        ? executeK8sContainerSyncTask(taskId, taskParams.getK8SContainerPerpetualTaskParams())
+        ? executeK8sContainerSyncTask(taskId, taskParams.getK8SPerpetualTaskParams())
         : null;
   }
 
   private PerpetualTaskResponse executeK8sContainerSyncTask(
-      PerpetualTaskId taskId, K8sContainerInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams) {
+      PerpetualTaskId taskId, K8sInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams) {
     final KubernetesClusterConfigDTO k8sClusterConfig = (KubernetesClusterConfigDTO) kryoSerializer.asObject(
         k8SContainerPerpetualTaskParams.getK8SClusterConfig().toByteArray());
     KubernetesConfig kubernetesConfig = k8sYamlToDelegateDTOMapper.createKubernetesConfigFromClusterConfig(
@@ -69,8 +69,7 @@ public class K8sInstanceSyncPerpetualTaskExecutorNG implements PerpetualTaskExec
         .build();
   }
   private K8sDeployResponse getK8sTaskResponse(
-      K8sContainerInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams,
-      KubernetesConfig kubernetesConfig) {
+      K8sInstanceSyncPerpetualTaskParamsNG k8SContainerPerpetualTaskParams, KubernetesConfig kubernetesConfig) {
     try {
       long timeoutMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(DEFAULT_STEADY_STATE_TIMEOUT);
       String namespace = k8SContainerPerpetualTaskParams.getNamespace();
