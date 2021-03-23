@@ -11,11 +11,13 @@ import static software.wings.security.authentication.AuthenticationMechanism.*;
 
 import static java.util.Arrays.asList;
 
+import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
@@ -84,6 +86,7 @@ public class SSOServiceImpl implements SSOService {
   @Inject @Named(LdapFeature.FEATURE_NAME) private PremiumFeature ldapFeature;
   @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
@@ -184,18 +187,20 @@ public class SSOServiceImpl implements SSOService {
     }
     account.setOauthEnabled(shouldEnableOauth);
     if (shouldUpdateAuthMechanism) {
-      if (mechanism == SAML && currentAuthMechanism == USER_PASSWORD) {
-        SSOSettings ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
-        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
-      } else if (currentAuthMechanism == SAML && mechanism == USER_PASSWORD) {
-        SSOSettings ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
-        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
-      } else if (currentAuthMechanism == USER_PASSWORD && mechanism == LDAP) {
-        SSOSettings ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
-        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
-      } else if (currentAuthMechanism == LDAP && mechanism == USER_PASSWORD) {
-        SSOSettings ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
-        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        if (mechanism == SAML && currentAuthMechanism == USER_PASSWORD) {
+          SSOSettings ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
+        } else if (currentAuthMechanism == SAML && mechanism == USER_PASSWORD) {
+          SSOSettings ssoSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
+        } else if (currentAuthMechanism == USER_PASSWORD && mechanism == LDAP) {
+          SSOSettings ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.ENABLE);
+        } else if (currentAuthMechanism == LDAP && mechanism == USER_PASSWORD) {
+          SSOSettings ssoSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, ssoSettings, Event.Type.DISABLE);
+        }
       }
       account.setAuthenticationMechanism(mechanism);
     }

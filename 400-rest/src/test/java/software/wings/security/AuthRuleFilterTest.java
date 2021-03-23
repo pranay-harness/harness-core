@@ -30,6 +30,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.USER_PERMISSION_READ;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
@@ -47,6 +48,7 @@ import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -110,6 +112,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
   @Mock ContainerRequestContext requestContext;
   @Mock UriInfo uriInfo;
   @Mock private AuditServiceHelper auditServiceHelper;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Inject @InjectMocks AuthRuleFilter authRuleFilter;
@@ -175,6 +178,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
       when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
       when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
       when(requestContext.getMethod()).thenReturn("GET");
+      when(mockFeatureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, ACCOUNT_ID)).thenReturn(true);
       mockUriInfo(PATH, uriInfo);
       when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
       when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);
@@ -197,6 +201,7 @@ public class AuthRuleFilterTest extends WingsBaseTest {
       when(resourceInfo.getResourceClass()).thenReturn(getMockResourceClass());
       when(resourceInfo.getResourceMethod()).thenReturn(getMockResourceMethod());
       when(requestContext.getMethod()).thenReturn("GET");
+      when(mockFeatureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, ACCOUNT_ID)).thenReturn(true);
       mockUriInfo("whitelist/isEnabled", uriInfo);
       when(harnessUserGroupService.isHarnessSupportUser(USER_ID)).thenReturn(true);
       when(harnessUserGroupService.isHarnessSupportEnabledForAccount(ACCOUNT_ID)).thenReturn(true);

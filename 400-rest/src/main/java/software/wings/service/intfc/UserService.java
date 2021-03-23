@@ -547,8 +547,6 @@ public interface UserService extends OwnedByAccount {
 
   void loadUserGroupsForUsers(List<User> users, String accountId);
 
-  void loadUserGroups(String accountId, User user);
-
   List<UserGroup> getUserGroupsOfUserAudit(String accountId, String userId);
 
   void setNewDefaultAccountId(User user);

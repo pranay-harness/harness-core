@@ -20,6 +20,7 @@ import io.harness.beans.FeatureName;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.HarnessApiKeyAuth;
 import io.harness.security.annotations.LearningEngineAuth;
@@ -107,6 +108,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   @Context private HttpServletRequest servletRequest;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private ApiKeyService apiKeyService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private AuthService authService;
   private AuthHandler authHandler;
@@ -191,10 +193,12 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     MultivaluedMap<String, String> queryParameters = requestContext.getUriInfo().getQueryParameters();
 
     String accountId = getRequestParamFromContext("accountId", pathParameters, queryParameters);
-    if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
-      String apiKey = requestContext.getHeaderString("X-Api-Key");
-      ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
-      auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
+    if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+      if (isNotEmpty(requestContext.getHeaderString("X-Api-Key"))) {
+        String apiKey = requestContext.getHeaderString("X-Api-Key");
+        ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
+        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, apiKeyEntry, Event.Type.INVOKED);
+      }
     }
     if (authorizationExemptedRequest(requestContext)) {
       return; // do nothing
@@ -342,11 +346,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     } else {
       isWhitelisted = whitelistService.checkIfFeatureIsEnabledAndWhitelisting(accountId, remoteHost, featureName);
     }
+
     if (!isWhitelisted) {
       String msg = "Current IP Address (" + remoteHost + ") is not whitelisted.";
       log.warn(msg);
-      if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
-        auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        if (requestContext.getUriInfo().getPath().contains("whitelist/isEnabled") && user != null) {
+          auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.NON_WHITELISTED);
+        }
       }
       throw new WingsException(NOT_WHITELISTED_IP, USER).addParam("args", msg);
     }

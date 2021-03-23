@@ -667,8 +667,7 @@ public class UserServiceImpl implements UserService {
     return userInvite;
   }
 
-  @Override
-  public void loadUserGroups(String accountId, User user) {
+  private void loadUserGroups(String accountId, User user) {
     List<UserGroup> userGroupList = getUserGroupsOfUser(accountId, user.getUuid(), false);
     user.setUserGroups(userGroupList);
   }

@@ -539,7 +539,9 @@ public class AuditServiceImpl implements AuditService {
       EntityAuditRecordBuilder builder = EntityAuditRecord.builder();
       entityHelper.loadMetaDataForEntity(entityToQuery, builder, type);
       EntityAuditRecord record = builder.build();
-      addDetails(accountId, entityToQuery, record, auditHeaderId, type);
+      if (featureFlagService.isEnabled(FeatureName.AUDIT_TRAIL_ENHANCEMENT, accountId)) {
+        addDetails(accountId, entityToQuery, record, auditHeaderId, type);
+      }
       updateEntityNameCacheIfRequired(oldEntity, newEntity, record);
       switch (type) {
         case LOCK:
