@@ -1228,6 +1228,7 @@ maven_install(
         ),
         "com.auth0:java-jwt:3.1.0",
         "com.azure:azure-identity:1.1.2",
+        "com.azure:azure-core:1.10.0",
         "com.azure:azure-storage-blob:12.9.0",
         "com.azure:azure-storage-common:12.9.0",
         "com.bertramlabs.plugins:hcl4j:0.1.7",
