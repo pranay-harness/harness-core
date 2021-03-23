@@ -44,4 +44,9 @@ public class KubernetesTestConnectionDelegateTask extends AbstractDelegateRunnab
   public KubernetesConnectionTaskResponse run(Object[] parameters) {
     throw new NotImplementedException("not implemented");
   }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }
