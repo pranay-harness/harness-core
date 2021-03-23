@@ -9,9 +9,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -29,10 +29,8 @@ import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.repositories.AuditRepository;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
-import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.rule.Owner;
 import io.harness.scope.ResourceScope;
 
@@ -50,13 +48,16 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(PL)
 public class AuditServiceImplTest extends CategoryTest {
   private AuditRepository auditRepository;
+  private AuditFilterPropertiesValidator auditFilterPropertiesValidator;
   private AuditService auditService;
   private final PageRequest samplePageRequest = PageRequest.builder().pageIndex(0).pageSize(50).build();
 
   @Before
   public void setup() {
     auditRepository = mock(AuditRepository.class);
-    auditService = spy(new AuditServiceImpl(auditRepository));
+    auditFilterPropertiesValidator = mock(AuditFilterPropertiesValidator.class);
+    auditService = spy(new AuditServiceImpl(auditRepository, auditFilterPropertiesValidator));
+    doNothing().when(auditFilterPropertiesValidator).validate(any(), any());
   }
 
   @Test
@@ -111,37 +112,6 @@ public class AuditServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testInvalidScopeAuditFilter() {
-    String accountIdentifier = randomAlphabetic(10);
-    String randomValue = randomAlphabetic(10);
-    AuditFilterPropertiesDTO invalidScopeFilter =
-        AuditFilterPropertiesDTO.builder()
-            .scopes(singletonList(ResourceScope.builder().accountIdentifier(accountIdentifier + "K").build()))
-            .build();
-    try {
-      auditService.list(accountIdentifier, samplePageRequest, invalidScopeFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
-    AuditFilterPropertiesDTO invalidScopeLabelsFilter =
-        AuditFilterPropertiesDTO.builder()
-            .scopes(singletonList(ResourceScope.builder()
-                                      .accountIdentifier(accountIdentifier)
-                                      .labels(singletonList(KeyValuePair.builder().key("").value(randomValue).build()))
-                                      .build()))
-            .build();
-    try {
-      auditService.list(accountIdentifier, samplePageRequest, invalidScopeLabelsFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
-  }
-
-  @Test
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
   public void testResourceAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     String identifier = randomAlphabetic(10);
@@ -170,41 +140,6 @@ public class AuditServiceImplTest extends CategoryTest {
     assertEquals(2, resourceTypeIdentifierScopeDocument.size());
     assertEquals(resourceType, resourceTypeIdentifierScopeDocument.get(AuditEventKeys.RESOURCE_TYPE_KEY));
     assertEquals(identifier, resourceTypeIdentifierScopeDocument.get(AuditEventKeys.RESOURCE_IDENTIFIER_KEY));
-  }
-
-  @Test
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
-  public void testInvalidResourceAuditFilter() {
-    String accountIdentifier = randomAlphabetic(10);
-    String identifier = randomAlphabetic(10);
-    String resourceType = randomAlphabetic(10);
-    String randomValue = randomAlphabetic(10);
-    AuditFilterPropertiesDTO invalidResourceFilter =
-        AuditFilterPropertiesDTO.builder()
-            .resources(singletonList(Resource.builder().identifier(identifier).build()))
-            .build();
-    try {
-      auditService.list(accountIdentifier, samplePageRequest, invalidResourceFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
-    AuditFilterPropertiesDTO invalidResourceLabelsFilter =
-        AuditFilterPropertiesDTO.builder()
-            .resources(
-                singletonList(Resource.builder()
-                                  .identifier(identifier)
-                                  .type(resourceType)
-                                  .labels(singletonList(KeyValuePair.builder().key("").value(randomValue).build()))
-                                  .build()))
-            .build();
-    try {
-      auditService.list(accountIdentifier, samplePageRequest, invalidResourceLabelsFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
   }
 
   @Test
@@ -243,24 +178,6 @@ public class AuditServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testInvalidPrincipalAuditFilter() {
-    String accountIdentifier = randomAlphabetic(10);
-    String identifier = randomAlphabetic(10);
-    AuditFilterPropertiesDTO invalidPrincipalFilter =
-        AuditFilterPropertiesDTO.builder()
-            .principals(singletonList(Principal.builder().identifier(identifier).build()))
-            .build();
-    try {
-      auditService.list(accountIdentifier, samplePageRequest, invalidPrincipalFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
-  }
-
-  @Test
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
   public void testTimeAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
@@ -292,20 +209,6 @@ public class AuditServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = KARAN)
   @Category(UnitTests.class)
-  public void testInvalidTimeAuditFilter() {
-    String accountIdentifier = randomAlphabetic(10);
-    AuditFilterPropertiesDTO invalidTimeFilter = AuditFilterPropertiesDTO.builder().startTime(18L).endTime(17L).build();
-    try {
-      auditService.list(accountIdentifier, samplePageRequest, invalidTimeFilter);
-      fail();
-    } catch (InvalidRequestException exception) {
-      // continue
-    }
-  }
-
-  @Test
-  @Owner(developers = KARAN)
-  @Category(UnitTests.class)
   public void testModuleTypeActionAndEnvironmentIdentifierAuditFilter() {
     String accountIdentifier = randomAlphabetic(10);
     ModuleType moduleType = ModuleType.CD;
@@ -314,7 +217,7 @@ public class AuditServiceImplTest extends CategoryTest {
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     when(auditRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
     AuditFilterPropertiesDTO correctFilter = AuditFilterPropertiesDTO.builder()
-                                                 .moduleTypes(singletonList(ModuleType.CD))
+                                                 .modules(singletonList(ModuleType.CD))
                                                  .actions(singletonList(action))
                                                  .environmentIdentifiers(singletonList(environmentIdentifier))
                                                  .build();
@@ -331,7 +234,7 @@ public class AuditServiceImplTest extends CategoryTest {
 
     Document moduleTypeDocument = (Document) andList.get(1);
     assertNotNull(moduleTypeDocument);
-    Document moduleTypeListDocument = (Document) moduleTypeDocument.get(AuditEventKeys.moduleType);
+    Document moduleTypeListDocument = (Document) moduleTypeDocument.get(AuditEventKeys.module);
     assertNotNull(moduleTypeListDocument);
     List<ModuleType> moduleTypeList = (List<ModuleType>) moduleTypeListDocument.get("$in");
     assertEquals(1, moduleTypeList.size());

@@ -58,7 +58,7 @@ public class AuditEvent {
 
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
-  @NotNull ModuleType moduleType;
+  @NotNull ModuleType module;
 
   @NotNull @Valid Resource resource;
   @NotBlank String action;
@@ -77,15 +77,13 @@ public class AuditEvent {
                  .field(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY)
                  .field(AuditEventKeys.ORG_IDENTIFIER_KEY)
                  .field(AuditEventKeys.PROJECT_IDENTIFIER_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                 .field(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditEventPrincipalIdx")
                  .field(AuditEventKeys.PRINCIPAL_TYPE_KEY)
                  .field(AuditEventKeys.PRINCIPAL_IDENTIFIER_KEY)
                  .build())
-        .add(CompoundMongoIndex.builder().name("ngAuditEventModuleTypeIdx").field(AuditEventKeys.moduleType).build())
+        .add(CompoundMongoIndex.builder().name("ngAuditEventModuleTypeIdx").field(AuditEventKeys.module).build())
         .add(CompoundMongoIndex.builder()
                  .name("ngAuditEventResourceIdx")
                  .field(AuditEventKeys.RESOURCE_TYPE_KEY)
@@ -111,10 +109,6 @@ public class AuditEvent {
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.orgIdentifier;
     public static final String PROJECT_IDENTIFIER_KEY =
         AuditEventKeys.resourceScope + "." + ResourceScopeKeys.projectIdentifier;
-    public static final String RESOURCE_SCOPE_LABEL_KEYS_KEY =
-        AuditEventKeys.resourceScope + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;
-    public static final String RESOURCE_SCOPE_LABEL_VALUES_KEY =
-        AuditEventKeys.resourceScope + "." + ResourceKeys.labels + "." + KeyValuePairKeys.value;
 
     public static final String PRINCIPAL_TYPE_KEY =
         AuditEventKeys.authenticationInfo + "." + AuthenticationInfoKeys.principal + "." + PrincipalKeys.type;
@@ -124,6 +118,7 @@ public class AuditEvent {
     public static final String RESOURCE_TYPE_KEY = AuditEventKeys.resource + "." + ResourceKeys.type;
     public static final String RESOURCE_IDENTIFIER_KEY = AuditEventKeys.resource + "." + ResourceKeys.identifier;
 
+    public static final String RESOURCE_LABEL_KEY = AuditEventKeys.resource + "." + ResourceKeys.labels;
     public static final String RESOURCE_LABEL_KEYS_KEY =
         AuditEventKeys.resource + "." + ResourceKeys.labels + "." + KeyValuePairKeys.key;
     public static final String RESOURCE_LABEL_VALUES_KEY =

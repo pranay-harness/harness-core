@@ -36,7 +36,7 @@ public class AuditFilterPropertiesDTO extends FilterPropertiesDTO {
   List<ResourceScope> scopes;
   List<Resource> resources;
 
-  List<ModuleType> moduleTypes;
+  List<ModuleType> modules;
   List<String> actions;
   List<String> environmentIdentifiers;
   List<Principal> principals;

@@ -3,7 +3,6 @@ package io.harness.audit.api.impl;
 import static io.harness.NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.mapper.AuditEventMapper.fromDTO;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.utils.PageUtils.getPageRequest;
 
@@ -15,7 +14,6 @@ import io.harness.audit.beans.Principal;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.repositories.AuditRepository;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.common.beans.KeyValuePair;
@@ -32,6 +30,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class AuditServiceImpl implements AuditService {
   private final AuditRepository auditRepository;
+  private final AuditFilterPropertiesValidator auditFilterPropertiesValidator;
 
   @Override
   public AuditEvent create(AuditEventDTO auditEventDTO) {
@@ -42,7 +41,7 @@ public class AuditServiceImpl implements AuditService {
   @Override
   public Page<AuditEvent> list(
       String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
-    validateFilterRequest(accountIdentifier, auditFilterPropertiesDTO);
+    auditFilterPropertiesValidator.validate(accountIdentifier, auditFilterPropertiesDTO);
     Criteria criteria = getFilterCriteria(accountIdentifier, auditFilterPropertiesDTO);
     return auditRepository.findAll(criteria, getPageRequest(pageRequest));
   }
@@ -59,8 +58,8 @@ public class AuditServiceImpl implements AuditService {
     if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
       criteriaList.add(getResourceCriteria(auditFilterPropertiesDTO.getResources()));
     }
-    if (isNotEmpty(auditFilterPropertiesDTO.getModuleTypes())) {
-      criteriaList.add(Criteria.where(AuditEventKeys.moduleType).in(auditFilterPropertiesDTO.getModuleTypes()));
+    if (isNotEmpty(auditFilterPropertiesDTO.getModules())) {
+      criteriaList.add(Criteria.where(AuditEventKeys.module).in(auditFilterPropertiesDTO.getModules()));
     }
     if (isNotEmpty(auditFilterPropertiesDTO.getActions())) {
       criteriaList.add(Criteria.where(AuditEventKeys.action).in(auditFilterPropertiesDTO.getActions()));
@@ -98,14 +97,6 @@ public class AuditServiceImpl implements AuditService {
           criteria.and(AuditEventKeys.PROJECT_IDENTIFIER_KEY).is(resourceScope.getProjectIdentifier());
         }
       }
-      List<KeyValuePair> labels = resourceScope.getLabels();
-      if (isNotEmpty(labels)) {
-        labels.forEach(label
-            -> criteria.and(AuditEventKeys.RESOURCE_SCOPE_LABEL_KEYS_KEY)
-                   .is(label.getKey())
-                   .and(AuditEventKeys.RESOURCE_SCOPE_LABEL_VALUES_KEY)
-                   .is(label.getValue()));
-      }
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
@@ -121,10 +112,11 @@ public class AuditServiceImpl implements AuditService {
       List<KeyValuePair> labels = resource.getLabels();
       if (isNotEmpty(labels)) {
         labels.forEach(label
-            -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
-                   .is(label.getKey())
-                   .and(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
-                   .is(label.getValue()));
+            -> criteria.and(AuditEventKeys.RESOURCE_LABEL_KEY)
+                   .elemMatch(Criteria.where(AuditEventKeys.RESOURCE_LABEL_KEYS_KEY)
+                                  .is(label.getKey())
+                                  .and(AuditEventKeys.RESOURCE_LABEL_VALUES_KEY)
+                                  .is(label.getValue())));
       }
       criteriaList.add(criteria);
     });
@@ -141,90 +133,5 @@ public class AuditServiceImpl implements AuditService {
       criteriaList.add(criteria);
     });
     return new Criteria().orOperator(criteriaList.toArray(new Criteria[0]));
-  }
-
-  private void validateFilterRequest(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
-    if (isEmpty(accountIdentifier)) {
-      throw new InvalidRequestException("Missing accountIdentifier in the audit filter request");
-    }
-    if (auditFilterPropertiesDTO == null) {
-      return;
-    }
-    if (isNotEmpty(auditFilterPropertiesDTO.getScopes())) {
-      verifyScopes(accountIdentifier, auditFilterPropertiesDTO.getScopes());
-    }
-    if (isNotEmpty(auditFilterPropertiesDTO.getResources())) {
-      verifyResources(auditFilterPropertiesDTO.getResources());
-    }
-    if (isNotEmpty(auditFilterPropertiesDTO.getPrincipals())) {
-      verifyPrincipals(auditFilterPropertiesDTO.getPrincipals());
-    }
-
-    if (auditFilterPropertiesDTO.getStartTime() != null && auditFilterPropertiesDTO.getEndTime() != null
-        && auditFilterPropertiesDTO.getStartTime() > auditFilterPropertiesDTO.getEndTime()) {
-      throw new InvalidRequestException(String.format("Invalid time filter with start time %d after end time %d.",
-          auditFilterPropertiesDTO.getStartTime(), auditFilterPropertiesDTO.getEndTime()));
-    }
-  }
-
-  private void verifyPrincipals(List<Principal> principals) {
-    principals.forEach(principal -> {
-      if (principal.getType() == null) {
-        throw new InvalidRequestException("Invalid principal filter with missing principal type.");
-      }
-    });
-  }
-
-  private void verifyScopes(String accountIdentifier, List<ResourceScope> resourceScopes) {
-    if (isNotEmpty(resourceScopes)) {
-      resourceScopes.forEach(resourceScope -> verifyScope(accountIdentifier, resourceScope));
-    }
-  }
-
-  private void verifyScope(String accountIdentifier, ResourceScope resourceScope) {
-    if (!accountIdentifier.equals(resourceScope.getAccountIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("Invalid resource scope filter with accountIdentifier %s.", accountIdentifier));
-    }
-    if (isEmpty(resourceScope.getOrgIdentifier()) && isNotEmpty(resourceScope.getProjectIdentifier())) {
-      throw new InvalidRequestException(
-          String.format("Invalid resource scope filter with projectIdentifier %s but missing orgIdentifier.",
-              resourceScope.getProjectIdentifier()));
-    }
-    List<KeyValuePair> labels = resourceScope.getLabels();
-    if (isNotEmpty(labels)) {
-      labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
-          throw new InvalidRequestException("Invalid resource scope filter with missing key in resource scope labels.");
-        }
-        if (isEmpty(label.getValue())) {
-          throw new InvalidRequestException(
-              "Invalid resource scope filter with missing value in resource scope labels.");
-        }
-      });
-    }
-  }
-
-  private void verifyResources(List<Resource> resources) {
-    if (isNotEmpty(resources)) {
-      resources.forEach(this::verifyResource);
-    }
-  }
-
-  private void verifyResource(Resource resource) {
-    if (isEmpty(resource.getType())) {
-      throw new InvalidRequestException("Invalid resource filter with missing resource type.");
-    }
-    List<KeyValuePair> labels = resource.getLabels();
-    if (isNotEmpty(labels)) {
-      labels.forEach(label -> {
-        if (isEmpty(label.getKey())) {
-          throw new InvalidRequestException("Invalid resource filter with missing key in resource labels.");
-        }
-        if (isEmpty(label.getValue())) {
-          throw new InvalidRequestException("Invalid resource filter with missing value in resource labels.");
-        }
-      });
-    }
   }
 }

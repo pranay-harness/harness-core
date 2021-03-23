@@ -5,10 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.common.beans.KeyValuePair;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -26,7 +24,6 @@ public class ResourceScope {
   @NotNull @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  List<KeyValuePair> labels;
 
   @JsonIgnore
   public boolean isOrgScoped() {
