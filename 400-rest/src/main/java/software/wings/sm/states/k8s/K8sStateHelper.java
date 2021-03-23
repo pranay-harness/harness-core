@@ -14,7 +14,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -342,8 +341,7 @@ public class K8sStateHelper {
   }
 
   public Set<String> getRenderedAndTrimmedSelectors(ExecutionContext context, List<String> delegateSelectors) {
-    if (!featureFlagService.isEnabled(FeatureName.CDP_DELEGATE_SELECTORS, context.getAccountId())
-        || isEmpty(delegateSelectors)) {
+    if (isEmpty(delegateSelectors)) {
       return emptySet();
     }
     List<String> renderedSelectors = delegateSelectors.stream().map(context::renderExpression).collect(toList());
