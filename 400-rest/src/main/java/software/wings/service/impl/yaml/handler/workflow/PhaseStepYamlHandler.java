@@ -21,6 +21,7 @@ import software.wings.beans.workflow.StepSkipStrategy;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.utils.Utils;
@@ -41,6 +42,7 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
   public static final String PHASE_STEP_PROPERTY_NAME = "PHASE_STEP";
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
+  @Inject WorkflowServiceHelper workflowServiceHelper;
 
   private PhaseStep toBean(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
     Yaml yaml = changeContext.getYaml();
@@ -98,6 +100,8 @@ public class PhaseStepYamlHandler extends BaseYamlHandler<PhaseStep.Yaml, PhaseS
                               .withStepsInParallel(yaml.isStepsInParallel())
                               .withWaitInterval(yaml.getWaitInterval())
                               .build();
+
+    workflowServiceHelper.validateWaitInterval(phaseStep);
 
     List<StepSkipStrategy> stepSkipStrategies = new ArrayList<>();
     if (yaml.getStepSkipStrategies() != null) {
