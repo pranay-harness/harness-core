@@ -1,7 +1,8 @@
 syntax = "proto3";
-option java_multiple_files = true;
 
 package io.harness.perpetualtask.instancesync;
+
+option java_multiple_files = true;
 
 message K8sInstanceSyncPerpetualTaskParamsNG {
   string account_id = 1;

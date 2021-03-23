@@ -18,8 +18,8 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
-import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.InstanceSyncPerpetualTaskParamsNG;
-import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNg.K8sInstanceSyncPerpetualTaskParamsNG;
+import io.harness.perpetualtask.instancesync.InstanceSyncPerpetualTaskParamsNG;
+import io.harness.perpetualtask.instancesync.K8sInstanceSyncPerpetualTaskParamsNG;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
