@@ -70,8 +70,6 @@ import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.ContainerServiceParams;
-import software.wings.service.impl.SSHKeyDataProvider;
-import software.wings.service.impl.WinRmConnectionAttributesDataProvider;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -90,7 +88,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 import software.wings.stencils.DefaultValue;
-import software.wings.stencils.EnumData;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -153,20 +150,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Attributes(title = "Connection Type")
   private ConnectionType connectionType;
 
-  @NotEmpty
-  @Getter
-  @Setter
-  @Attributes(title = "SSH Key")
-  @EnumData(enumDataProvider = SSHKeyDataProvider.class)
-  @Property("sshKeyRef")
-  private String sshKeyRef;
+  @NotEmpty @Getter @Setter @Attributes(title = "SSH Key") @Property("sshKeyRef") private String sshKeyRef;
 
-  @NotEmpty
-  @Getter
-  @Setter
-  @Attributes(title = "Connection Attributes")
-  @EnumData(enumDataProvider = WinRmConnectionAttributesDataProvider.class)
-  private String connectionAttributes;
+  @NotEmpty @Getter @Setter @Attributes(title = "Connection Attributes") private String connectionAttributes;
 
   @Getter @Setter @Attributes(title = "Working Directory") private String commandPath;
 
