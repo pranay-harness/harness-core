@@ -49,22 +49,56 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
 
   private String resolveUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
     String name = refObject.getName();
+    ExecutionSweepingOutputInstance instance = getInstance(ambiance, refObject);
+    if (instance == null) {
+      throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
+    }
+    return RecastOrchestrationUtils.toDocumentJson(instance.getValue());
+  }
+
+  @Override
+  public RawOptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
+    if (!refObject.getName().contains(".")) {
+      // It is not an expression-like ref-object.
+      return resolveOptionalUsingRuntimeId(ambiance, refObject);
+    }
+
+    EngineExpressionEvaluator evaluator =
+        expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.SWEEPING_OUTPUT), true);
+    injector.injectMembers(evaluator);
+    Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
+    return value == null ? RawOptionalSweepingOutput.builder().found(false).build()
+                         : RawOptionalSweepingOutput.builder()
+                               .found(true)
+                               .output(RecastOrchestrationUtils.toDocumentJson(value))
+                               .build();
+  }
+
+  private RawOptionalSweepingOutput resolveOptionalUsingRuntimeId(Ambiance ambiance, RefObject refObject) {
+    String name = refObject.getName();
+    ExecutionSweepingOutputInstance instance = getInstance(ambiance, refObject);
+    if (instance == null) {
+      return RawOptionalSweepingOutput.builder().found(false).build();
+    }
+    return RawOptionalSweepingOutput.builder()
+        .found(true)
+        .output(RecastOrchestrationUtils.toDocumentJson(instance.getValue()))
+        .build();
+  }
+
+  private ExecutionSweepingOutputInstance getInstance(Ambiance ambiance, RefObject refObject) {
+    String name = refObject.getName();
     Query query = query(where(ExecutionSweepingOutputKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
                       .addCriteria(where(ExecutionSweepingOutputKeys.name).is(name))
                       .addCriteria(where(ExecutionSweepingOutputKeys.levelRuntimeIdIdx)
                                        .in(ResolverUtils.prepareLevelRuntimeIdIndices(ambiance)));
     List<ExecutionSweepingOutputInstance> instances = mongoTemplate.find(query, ExecutionSweepingOutputInstance.class);
     // Multiple instances might be returned if the same name was saved at different levels/specificity.
-    ExecutionSweepingOutputInstance instance = EmptyPredicate.isEmpty(instances)
+    return EmptyPredicate.isEmpty(instances)
         ? null
         : instances.stream()
               .max(Comparator.comparing(ExecutionSweepingOutputInstance::getLevelRuntimeIdIdx))
               .orElse(null);
-    if (instance == null) {
-      throw new SweepingOutputException(format("Could not resolve sweeping output with name '%s'", name));
-    }
-
-    return RecastOrchestrationUtils.toDocumentJson(instance.getValue());
   }
 
   @Override
