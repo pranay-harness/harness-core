@@ -56,6 +56,9 @@ public class AnomalyEntity {
   boolean slackInstantNotification;
   boolean slackWeeklyNotification;
 
+  String viewId;
+  String product;
+
   public EntityType getEntityType() {
     if (workloadName != null) {
       return EntityType.WORKLOAD;
@@ -86,6 +89,9 @@ public class AnomalyEntity {
     }
     if (awsAccount != null) {
       return EntityType.AWS_ACCOUNT;
+    }
+    if (viewId != null) {
+      return EntityType.VIEW;
     }
     return null;
   }
@@ -157,7 +163,9 @@ public class AnomalyEntity {
       REPORTED_BY("reportedby", DataType.STRING),
       SLACK_INSTANT_NOTIFICATION("slackInstantNotification", DataType.BOOLEAN),
       SLACK_DAILY_NOTIFICATION("slackDailyNotification", DataType.BOOLEAN),
-      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN);
+      SLACK_WEEKLY_NOTIFICATION("slackWeeklyNotification", DataType.BOOLEAN),
+      VIEW_ID("viewId", DataType.STRING),
+      PRODUCT("product", DataType.STRING);
 
       private DataType dataType;
       private String fieldName;
@@ -219,6 +227,9 @@ public class AnomalyEntity {
     public static final DbColumn slackDailyNotification;
     public static final DbColumn slackWeeklyNotification;
 
+    public static final DbColumn viewId;
+    public static final DbColumn product;
+
     static {
       spec = new DbSpec();
       schema = spec.addDefaultSchema();
@@ -259,6 +270,9 @@ public class AnomalyEntity {
       slackInstantNotification = table.addColumn("slackInstantNotification");
       slackDailyNotification = table.addColumn("slackDailyNotification");
       slackWeeklyNotification = table.addColumn("slackWeeklyNotification");
+
+      viewId = table.addColumn("viewid");
+      product = table.addColumn("product");
     }
   }
 }

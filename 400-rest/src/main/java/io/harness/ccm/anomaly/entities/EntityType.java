@@ -11,5 +11,6 @@ public enum EntityType {
   AWS_SERVICE,
   AWS_ACCOUNT,
   AWS_INSTANCE_TYPE,
-  AWS_USAGE_TYPE;
+  AWS_USAGE_TYPE,
+  VIEW;
 }

@@ -23,6 +23,7 @@ import io.harness.migrations.timescaledb.AddSchemaForServiceGuardStats;
 import io.harness.migrations.timescaledb.AddSlackNotificationSupportAnomalies;
 import io.harness.migrations.timescaledb.AddStorageSupportK8sUtilTable;
 import io.harness.migrations.timescaledb.AddSystemCostBillingData;
+import io.harness.migrations.timescaledb.AddViewsSupportToAnomalies;
 import io.harness.migrations.timescaledb.AddingToCVDeploymentMetrics;
 import io.harness.migrations.timescaledb.AlterCEUtilizationDataTables;
 import io.harness.migrations.timescaledb.ChangeToTimeStampTZ;
@@ -105,6 +106,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(44, CreateDeploymentParentTable.class))
         .add(Pair.of(45, CreateDeploymentStageTable.class))
         .add(Pair.of(46, AddAlertTypeColumnToBudgetAlerts.class))
+        .add(Pair.of(47, AddViewsSupportToAnomalies.class))
         .build();
   }
 }

@@ -207,6 +207,12 @@ public class AnomalyEntityDao {
           case TIME_GRANULARITY:
             anomalyBuilder.timeGranularity(TimeGranularity.valueOf(resultSet.getString(field.getFieldName())));
             break;
+          case VIEW_ID:
+            anomalyBuilder.viewId(resultSet.getString(field.getFieldName()));
+            break;
+          case PRODUCT:
+            anomalyBuilder.product(resultSet.getString(field.getFieldName()));
+            break;
           default:
             log.error("Unknown field : {} encountered while Resultset conversion in AnomalyDao", field);
         }
@@ -301,6 +307,8 @@ public class AnomalyEntityDao {
                .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
                .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
                .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+               .addColumn(AnomaliesDataTableSchema.viewId, anomaly.getViewId())
+               .addColumn(AnomaliesDataTableSchema.product, anomaly.getProduct())
                .validate()
                .toString()
         + " ON CONFLICT "
