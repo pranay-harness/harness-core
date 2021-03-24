@@ -307,7 +307,7 @@ public class GitSyncServiceImpl implements GitSyncService {
         .commitMessage(commitMessageToPersist)
         .processingCommitMessage(processingCommitMessage)
         .changeType(change.getChangeType())
-        .gitConnectorId(yamlGitConfig.getGitConnectorId())
+        .gitConnectorId(yamlGitConfig.getGitConnectorRef())
         .repo(yamlGitConfig.getRepo())
         .rootFolder(GitFileLocationHelper.getRootPathSafely(change.getFilePath()))
         .branchName(yamlGitConfig.getBranch())

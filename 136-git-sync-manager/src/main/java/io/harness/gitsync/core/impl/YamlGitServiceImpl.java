@@ -1,5 +1,6 @@
 package io.harness.gitsync.core.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.git.GitCommandType.DIFF;
@@ -20,6 +21,7 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.delegate.beans.TaskData;
@@ -68,6 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class YamlGitServiceImpl implements YamlGitService {
   private YamlGitConfigService yamlGitConfigService;
   private GitSyncErrorService gitSyncErrorService;
@@ -96,7 +99,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   private Optional<ConnectorInfoDTO> getGitConnector(YamlGitConfigDTO yamlGitConfig) {
     if (yamlGitConfig != null) {
       String branchName = yamlGitConfig.getBranch();
-      String gitConnectorIdentifier = yamlGitConfig.getGitConnectorId();
+      String gitConnectorIdentifier = yamlGitConfig.getGitConnectorRef();
       String repoName = yamlGitConfig.getRepo();
       return yamlGitConfigService.getGitConnector(yamlGitConfig, gitConnectorIdentifier, repoName, branchName);
     }
@@ -198,7 +201,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     // String taskId = managerDelegateServiceDriver.sendTaskAsync(accountId, setupAbstractions, taskData);
     String taskId = generateUuid();
     waitNotifyEngine.waitForAllOn(NG_ORCHESTRATION,
-        new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorId(),
+        new GitCommandCallback(accountId, yamlChangeSet.getUuid(), DIFF, yamlGitConfig.getGitConnectorRef(),
             yamlGitConfig.getRepo(), yamlGitConfig.getBranch(), yamlGitConfig),
         taskId);
 

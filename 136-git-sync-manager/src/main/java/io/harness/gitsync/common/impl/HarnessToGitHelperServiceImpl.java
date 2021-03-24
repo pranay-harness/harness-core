@@ -65,14 +65,14 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   }
 
   private ScmConnector getDecryptedScmConnector(String accountId, YamlGitConfigDTO yamlGitConfig) {
-    final String gitConnectorId = yamlGitConfig.getGitConnectorId();
+    final String gitConnectorId = yamlGitConfig.getGitConnectorRef();
     final String identifier = IdentifierRefHelper.getIdentifier(gitConnectorId);
-    final Optional<ConnectorResponseDTO> connectorResponseDTO =
-        connectorService.get(accountId, yamlGitConfig.getOrganizationId(), yamlGitConfig.getProjectId(), identifier);
+    final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(
+        accountId, yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), identifier);
     return connectorResponseDTO
         .map(connector
             -> decryptScmApiAccess.decryptScmApiAccess((ScmConnector) connector.getConnector().getConnectorConfig(),
-                accountId, yamlGitConfig.getProjectId(), yamlGitConfig.getOrganizationId()))
+                accountId, yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier()))
         .orElseThrow(() -> new InvalidRequestException("Connector doesn't exist."));
   }
 
