@@ -30,8 +30,8 @@ public class HttpStepParameters extends HttpBaseStepInfo implements StepParamete
   String name;
   String identifier;
   String type = StepSpecTypeConstants.HTTP;
-  ParameterField<String> description;
-  ParameterField<String> skipCondition;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> description;
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> skipCondition;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
   RollbackInfo rollbackInfo;
   Map<String, Object> outputVariables;

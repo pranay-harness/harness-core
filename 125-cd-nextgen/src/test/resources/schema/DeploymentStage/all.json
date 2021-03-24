@@ -940,6 +940,22 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "InstanceSelectionBase": {
       "type": "object",
       "discriminator": "type",
@@ -1074,10 +1090,10 @@
               }
             },
             "skipDryRun": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             },
             "skipSteadyStateCheck": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             }
           }
         }
@@ -1109,7 +1125,7 @@
           "type": "object",
           "properties": {
             "skipDryRun": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             }
           }
         }
@@ -1147,7 +1163,7 @@
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
             "skipDryRun": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             }
           }
         }
@@ -1169,7 +1185,7 @@
               "$ref": "#/definitions/DeleteResourcesWrapper"
             },
             "skipDryRun": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             }
           }
         }
@@ -1207,7 +1223,7 @@
           "type": "object",
           "properties": {
             "skipDryRun": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             }
           }
         }
@@ -1248,10 +1264,10 @@
               "$ref": "#/definitions/InstanceSelectionWrapper"
             },
             "skipDryRun": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             },
             "skipSteadyStateCheck": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             },
             "workload": {
               "type": "string"
@@ -1689,6 +1705,88 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldBoolean": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "boolean"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldInteger": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PercentageInstanceSelection": {
       "allOf": [
         {
@@ -1698,7 +1796,7 @@
           "type": "object",
           "properties": {
             "percentage": {
-              "type": "string"
+              "$ref": "#/definitions/ParameterFieldInteger"
             }
           }
         }
@@ -2032,7 +2130,7 @@
               "type": "string"
             },
             "onDelegate": {
-              "type": "boolean"
+              "$ref": "#/definitions/ParameterFieldBoolean"
             },
             "outputVariables": {
               "type": "array",
