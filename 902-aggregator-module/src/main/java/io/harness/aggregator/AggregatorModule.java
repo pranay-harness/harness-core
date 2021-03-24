@@ -30,6 +30,7 @@ import org.apache.kafka.common.serialization.Serde;
 
 @Slf4j
 public class AggregatorModule extends AbstractModule {
+  private static final String MONGO_DB_CONNECTOR = "io.debezium.connector.mongodb.MongoDbConnector";
   private static final String CONNECTOR_NAME = "name";
   private static final String OFFSET_STORAGE = "offset.storage";
   private static final String OFFSET_STORAGE_FILE_FILENAME = "offset.storage.file.filename";
@@ -137,7 +138,7 @@ public class AggregatorModule extends AbstractModule {
     props.setProperty(OFFSET_FLUSH_INTERVAL_MS, debeziumConfig.getOffsetFlushIntervalMillis());
 
     /* begin connector properties */
-    props.setProperty(CONNECTOR_CLASS, debeziumConfig.getConnectorClass());
+    props.setProperty(CONNECTOR_CLASS, MONGO_DB_CONNECTOR);
     props.setProperty(MONGODB_HOSTS, debeziumConfig.getMongodbHosts());
     props.setProperty(MONGODB_NAME, debeziumConfig.getMongodbName());
     Optional.ofNullable(debeziumConfig.getMongodbUser())
