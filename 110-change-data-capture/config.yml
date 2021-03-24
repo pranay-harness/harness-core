@@ -31,9 +31,9 @@ pms-harness:
   indexManagerMode: AUTO
 
 timescaledb:
-  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessccmdev"
-  timescaledbUsername: "harnessappdev"
-  timescaledbPassword: "harnessappdev"
+  timescaledbUrl: "jdbc:postgresql://localhost:5432/harness"
+  timescaledbUsername: "postgres"
+  timescaledbPassword:
   connectTimeout: 10
   socketTimeout: 30
   logUnclosedConnections: false

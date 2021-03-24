@@ -18,7 +18,7 @@ public class ChangeEvent<T extends PersistentEntity> {
   @NonNull private ChangeType changeType;
   @NonNull private Class<T> entityType;
   @NonNull private String uuid;
-  private T fullDocument;
+  private DBObject fullDocument;
   private DBObject changes;
 
   public boolean isChangeFor(Class<? extends PersistentEntity> entityClass) {
