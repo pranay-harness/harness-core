@@ -4,9 +4,6 @@ import io.harness.changestreamsframework.ChangeEvent.ChangeEventBuilder;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.PersistentEntity;
 
-import software.wings.dl.WingsPersistence;
-
-import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
@@ -18,8 +15,6 @@ import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 
 class ChangeEventFactory {
-  @Inject private WingsPersistence wingsPersistence;
-
   private static Document convertBsonDocumentToDocument(BsonDocument bsonDocument) {
     Codec<Document> codec = MongoClient.getDefaultCodecRegistry().get(Document.class);
     return codec.decode(new BsonDocumentReader(bsonDocument), DecoderContext.builder().build());
@@ -49,28 +44,25 @@ class ChangeEventFactory {
   }
 
   private <T extends PersistentEntity> ChangeEvent<T> buildInsertChangeEvent(
-      ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument, Class<T> entityClass) {
-    T entityObject = wingsPersistence.convertToEntity(entityClass, fullDocument);
-    changeEventBuilder.fullDocument(entityObject);
+      ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument) {
+    changeEventBuilder.fullDocument(fullDocument);
     changeEventBuilder.changes(null);
     changeEventBuilder.changeType(ChangeType.INSERT);
     return changeEventBuilder.build();
   }
 
   private <T extends PersistentEntity> ChangeEvent<T> buildReplaceChangeEvent(
-      ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument, Class<T> entityClass) {
-    T entityObject = wingsPersistence.convertToEntity(entityClass, fullDocument);
-    changeEventBuilder.fullDocument(entityObject);
+      ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument) {
+    changeEventBuilder.fullDocument(fullDocument);
     changeEventBuilder.changes(null);
     changeEventBuilder.changeType(ChangeType.UPDATE);
     return changeEventBuilder.build();
   }
 
-  private <T extends PersistentEntity> ChangeEvent<T> buildUpdateChangeEvent(ChangeEventBuilder<T> changeEventBuilder,
-      ChangeStreamDocument<DBObject> changeStreamDocument, Class<T> entityClass) {
-    T fullDocument = wingsPersistence.convertToEntity(entityClass, changeStreamDocument.getFullDocument());
+  private <T extends PersistentEntity> ChangeEvent<T> buildUpdateChangeEvent(
+      ChangeEventBuilder<T> changeEventBuilder, ChangeStreamDocument<DBObject> changeStreamDocument) {
     DBObject dbObject = getChangeDocumentfromChangeStream(changeStreamDocument);
-    changeEventBuilder.fullDocument(fullDocument);
+    changeEventBuilder.fullDocument(changeStreamDocument.getFullDocument());
     changeEventBuilder.changes(dbObject);
     changeEventBuilder.changeType(ChangeType.UPDATE);
     return changeEventBuilder.build();
@@ -89,13 +81,13 @@ class ChangeEventFactory {
     ChangeEvent<T> changeEvent;
     switch (changeType) {
       case INSERT:
-        changeEvent = buildInsertChangeEvent(changeEventBuilder, changeStreamDocument.getFullDocument(), entityClass);
+        changeEvent = buildInsertChangeEvent(changeEventBuilder, changeStreamDocument.getFullDocument());
         break;
       case REPLACE:
-        changeEvent = buildReplaceChangeEvent(changeEventBuilder, changeStreamDocument.getFullDocument(), entityClass);
+        changeEvent = buildReplaceChangeEvent(changeEventBuilder, changeStreamDocument.getFullDocument());
         break;
       case UPDATE:
-        changeEvent = buildUpdateChangeEvent(changeEventBuilder, changeStreamDocument, entityClass);
+        changeEvent = buildUpdateChangeEvent(changeEventBuilder, changeStreamDocument);
         break;
       case DELETE:
         changeEvent = changeEventBuilder.build();

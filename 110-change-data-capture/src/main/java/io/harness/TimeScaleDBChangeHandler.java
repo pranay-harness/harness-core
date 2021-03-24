@@ -3,10 +3,9 @@ package io.harness;
 import io.harness.changestreamsframework.ChangeEvent;
 import io.harness.timescaledb.TimeScaleDBService;
 
-import software.wings.beans.Application;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.DBObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -65,11 +64,11 @@ public class TimeScaleDBChangeHandler implements ChangeHandler {
 
   private Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
     Map<String, String> columnValueMapping = new HashMap<>();
-    // TODO: make this Handling generic
-    Application fullDocument = (Application) changeEvent.getFullDocument();
+    DBObject dbObject = changeEvent.getFullDocument();
     columnValueMapping.put(Strings.toUpperCase("uuid"), changeEvent.getUuid());
-    columnValueMapping.put(Strings.toUpperCase("appid"), fullDocument.getAppId());
-    columnValueMapping.put(Strings.toUpperCase("name"), fullDocument.getName());
+    for (String field : fields) {
+      columnValueMapping.put(Strings.toUpperCase(field), dbObject.get(field).toString());
+    }
     return columnValueMapping;
   }
 

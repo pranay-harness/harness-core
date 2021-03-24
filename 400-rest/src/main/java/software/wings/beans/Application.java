@@ -47,7 +47,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "applications", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ApplicationKeys")
-@ChangeDataCapture(table = "ApplicationTruthTable", fields = {})
+@ChangeDataCapture(table = "ApplicationTruthTable", fields = {"appid","name"})
 public class Application extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
