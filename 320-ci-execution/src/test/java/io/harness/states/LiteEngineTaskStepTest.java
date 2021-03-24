@@ -11,11 +11,11 @@ import static org.mockito.Mockito.when;
 
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
+import io.harness.beans.steps.stepinfo.DockerStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.beans.steps.stepinfo.PublishStepInfo;
-import io.harness.beans.steps.stepinfo.RestoreCacheStepInfo;
+import io.harness.beans.steps.stepinfo.RestoreCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
-import io.harness.beans.steps.stepinfo.SaveCacheStepInfo;
+import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
@@ -66,7 +66,7 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                 ExecutionElement.builder()
                     .steps(asList(StepElement.builder()
                                       .type("restoreCache")
-                                      .stepSpecType(RestoreCacheStepInfo.builder().identifier("restoreCache").build())
+                                      .stepSpecType(RestoreCacheS3StepInfo.builder().identifier("restoreCache").build())
                                       .build(),
                         StepElement.builder()
                             .type("run")
@@ -75,11 +75,11 @@ public class LiteEngineTaskStepTest extends CIExecutionTestBase {
                         ParallelStepElement.builder()
                             .sections(asList(StepElement.builder()
                                                  .type("publishArtifacts")
-                                                 .stepSpecType(PublishStepInfo.builder().identifier("publish").build())
+                                                 .stepSpecType(DockerStepInfo.builder().identifier("publish").build())
                                                  .build(),
                                 StepElement.builder()
                                     .type("saveCache")
-                                    .stepSpecType(SaveCacheStepInfo.builder().identifier("saveCache").build())
+                                    .stepSpecType(SaveCacheS3StepInfo.builder().identifier("saveCache").build())
                                     .build()))
                             .build()))
                     .build())

@@ -296,7 +296,35 @@ unifiedTableTableSchema = [
             "type": "STRING"
         },
         {
+            "name": "azureAccountName",
+            "type": "STRING"
+        },
+        {
+            "name": "azureFrequency",
+            "type": "STRING"
+        },
+        {
+            "name": "azurePublisherType",
+            "type": "STRING"
+        },
+        {
+            "name": "azurePublisherName",
+            "type": "STRING"
+        },
+        {
             "name": "azureServiceName",
             "type": "STRING"
-        }
+        },
+        {
+            "name": "azureSubscriptionName",
+            "type": "STRING"
+        },
+        {
+            "name": "azureReservationId",
+            "type": "STRING"
+        },
+        {
+            "name": "azureReservationName",
+            "type": "STRING"
+        },
     ]

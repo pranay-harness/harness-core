@@ -59,8 +59,7 @@ public class ContainerResourceRequirementEstimators {
   }
 
   public static ContainerResourceRequirementEstimator customRecommender(
-      Map<String, Long> minResources, int percentile) {
-    // TODO(UTSAV): verify SafetyMargin and ConfidenceMultiplier here
+      Map<String, Long> minResources, double percentile) {
     final ResourceEstimator requiredEstimator = PercentileEstimator.of(percentile, percentile);
     return cs -> {
       Map<String, String> resources =

@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -490,7 +491,7 @@ public class K8sStepHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = ACASIAN)
+  @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testNamespaceValidation() {
     Ambiance ambiance = getAmbiance();

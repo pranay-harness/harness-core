@@ -3,11 +3,18 @@ package tasks
 import (
 	"context"
 	"encoding/json"
-	"github.com/pkg/errors"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
 	"time"
 
+  "github.com/pkg/errors"
+	"github.com/ghodss/yaml"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
+	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/testreports"
@@ -178,35 +185,45 @@ func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string
 
 // selectTests takes a list of files which were changed as input and gets the tests
 // to be run corresponding to that.
-func selectTests(ctx context.Context, diffFiles string, stepID string, log *zap.SugaredLogger) (types.SelectTestsResp, error) {
-	if diffFiles == "" {
+func selectTests(ctx context.Context, files []types.File, stepID string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
+	res := types.SelectTestsResp{}
+	if len(files) == 0 {
 		// No files changed, don't do anything
-		return types.SelectTestsResp{}, nil
+		return res, nil
 	}
 	repo, err := external.GetRepo()
 	if err != nil {
-		return types.SelectTestsResp{}, err
+		return res, err
 	}
 	sha, err := external.GetSha()
 	if err != nil {
-		return types.SelectTestsResp{}, err
+		return res, err
 	}
 	branch, err := external.GetSourceBranch()
 	if err != nil {
-		return types.SelectTestsResp{}, err
+		return res, err
 	}
 	// Create TI proxy client (lite engine)
 	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
 	if err != nil {
-		return types.SelectTestsResp{}, err
+		return res, err
 	}
 	defer client.CloseConn()
+	// Get TI config
+	ticonfig, err := getTiConfig(fs)
+	if err != nil {
+		return res, err
+	}
+	b, err := json.Marshal(&types.SelectTestsReq{Files: files, TiConfig: ticonfig})
+	if err != nil {
+		return res, err
+	}
 	req := &pb.SelectTestsRequest{
-		StepId:    stepID,
-		Repo:      repo,
-		Sha:       sha,
-		Branch:    branch,
-		DiffFiles: diffFiles,
+		StepId: stepID,
+		Repo:   repo,
+		Sha:    sha,
+		Branch: branch,
+		Body:   string(b),
 	}
 	resp, err := client.Client().SelectTests(ctx, req)
 	if err != nil {
@@ -219,4 +236,30 @@ func selectTests(ctx context.Context, diffFiles string, stepID string, log *zap.
 		return types.SelectTestsResp{}, err
 	}
 	return selection, nil
+}
+
+func getTiConfig(fs filesystem.FileSystem) (types.TiConfig, error) {
+	wrkspcPath, err := external.GetWrkspcPath()
+	res := types.TiConfig{}
+	if err != nil {
+		return res, errors.Wrap(err, "could not get ti config")
+	}
+	path := fmt.Sprintf("%s/%s", wrkspcPath, tiConfigPath)
+	_, err = os.Stat(path)
+	if os.IsNotExist(err) {
+		return res, nil
+	}
+	var data []byte
+	err = fs.ReadFile(path, func(r io.Reader) error {
+		data, err = ioutil.ReadAll(r)
+		return err
+	})
+	if err != nil {
+		return res, errors.Wrap(err, "could not read ticonfig file")
+	}
+	err = yaml.Unmarshal(data, &res)
+	if err != nil {
+		return res, errors.Wrap(err, "could not unmarshal ticonfig file")
+	}
+	return res, nil
 }

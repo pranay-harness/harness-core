@@ -2,6 +2,7 @@ package software.wings.service.impl.workflow;
 
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
@@ -105,6 +106,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CloudProviderType;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
+import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -1810,5 +1812,53 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
     expectedProperties.put("instanceCount", 1);
     expectedProperties.put("instanceUnitType", InstanceUnitType.COUNT);
     assertThat(workflowPhase.getPhaseSteps().get(0).getSteps().get(0).getProperties()).isEqualTo(expectedProperties);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testNegativeWaitIntervalWhenOrchestrationWorkflowIsNull() {
+    Workflow workflow = WorkflowServiceTestHelper.constructBasicWorkflowWithPhaseSteps();
+
+    workflow.setOrchestrationWorkflow(null);
+    assertThat(workflow.getOrchestrationWorkflow()).isEqualTo(null);
+    workflowServiceHelper.validateWaitInterval(workflow);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testNegativeWaitIntervalWhenOrchestrationWorkflowPhaseIdMapIsNull() {
+    Workflow workflow = WorkflowServiceTestHelper.constructBasicWorkflowWithPhaseSteps();
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    orchestrationWorkflow.setWorkflowPhaseIdMap(null);
+    assertThat(((CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow()).getWorkflowPhaseIdMap())
+        .isEqualTo(null);
+    workflowServiceHelper.validateWaitInterval(workflow);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void testNegativeWaitIntervalWhenWaitIntervalIsNegative() {
+    Workflow workflow = WorkflowServiceTestHelper.constructBasicWorkflowWithPhaseSteps();
+    BasicOrchestrationWorkflow basicOrchestrationWorkflow =
+        (BasicOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+
+    Map<String, WorkflowPhase> workflowPhaseIdMap = basicOrchestrationWorkflow.getWorkflowPhaseIdMap();
+    List<String> workflowPhaseIds = basicOrchestrationWorkflow.getWorkflowPhaseIds();
+    assertThat(workflowPhaseIdMap).isNotEmpty().size().isGreaterThan(0);
+    assertThat(workflowPhaseIds).isNotEmpty().size().isGreaterThan(0);
+    WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseIds.get(0));
+
+    assertThat(workflowPhase.getPhaseSteps()).isNotEmpty().size().isGreaterThan(0);
+    PhaseStep phaseStep = workflowPhase.getPhaseSteps().get(0);
+    assertThat(phaseStep).isNotNull();
+
+    phaseStep.setWaitInterval(-1);
+    assertThatThrownBy(() -> workflowServiceHelper.validateWaitInterval(workflow))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

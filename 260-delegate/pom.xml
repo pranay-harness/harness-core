@@ -9,6 +9,10 @@
     <artifactId>260-delegate</artifactId>
     <dependencies>
         <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sns</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
         </dependency>
@@ -107,6 +111,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>950-log-client</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>955-scm-java-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

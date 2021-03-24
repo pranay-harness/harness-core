@@ -10,10 +10,8 @@ import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.iterator.PersistenceIteratorFactory;
-import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
-import io.harness.mongo.iterator.provider.MorphiaPersistenceRequiredProvider;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
@@ -21,6 +19,7 @@ import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEven
 import io.harness.ngtriggers.beans.response.WebhookEventResponse;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.pms.triggers.webhook.helpers.TriggerWebhookConfirmationHelper;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookExecutionHelper;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
@@ -28,6 +27,7 @@ import io.harness.repositories.ng.core.spring.TriggerEventHistoryRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -41,8 +41,8 @@ public class TriggerWebhookExecutionServiceImpl
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MongoTemplate mongoTemplate;
   @Inject private TriggerWebhookExecutionHelper ngTriggerWebhookExecutionHelper;
-  @Inject private HarnessMetricRegistry harnessMetricRegistry;
-  @Inject private MorphiaPersistenceRequiredProvider<TriggerWebhookEvent> persistenceProvider;
+  @Inject private TriggerWebhookConfirmationHelper ngTriggerWebhookConfirmationHelper;
+
   @Inject private NGTriggerService ngTriggerService;
   @Inject private TriggerEventHistoryRepository triggerEventHistoryRepository;
 
@@ -59,7 +59,7 @@ public class TriggerWebhookExecutionServiceImpl
             .clazz(TriggerWebhookEvent.class)
             .fieldName(TriggerWebhookEventsKeys.nextIteration)
             .targetInterval(ofMinutes(5))
-            .acceptableExecutionTime(ofMinutes(1))
+            .acceptableExecutionTime(ofMinutes(2))
             .acceptableNoAlertDelay(ofSeconds(30))
             .handler(this)
             .filterExpander(query
@@ -76,13 +76,19 @@ public class TriggerWebhookExecutionServiceImpl
   public void handle(TriggerWebhookEvent event) {
     try {
       updateTriggerEventProcessingStatus(event, true); // start processing
-      WebhookEventProcessingResult result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
+      WebhookEventProcessingResult result;
+
+      if (event.isSubscriptionConfirmation()) {
+        result = ngTriggerWebhookConfirmationHelper.handleTriggerWebhookConfirmationEvent(event);
+      } else {
+        result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
+      }
 
       List<WebhookEventResponse> responseList = result.getResponses();
 
       // Remove any null values if present in list
       if (isNotEmpty(responseList)) {
-        responseList.stream().filter(response -> response != null).collect(Collectors.toList());
+        responseList = responseList.stream().filter(Objects::nonNull).collect(Collectors.toList());
       }
 
       if (discardEmptyOrInvalidPayloadEvents(responseList)) {

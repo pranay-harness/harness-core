@@ -1,8 +1,11 @@
 package io.harness.accesscontrol.resources.resourcegroups;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDao;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.beans.PageRequest;
@@ -23,6 +26,7 @@ import net.jodah.failsafe.RetryPolicy;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 @ValidateOnExecution
@@ -67,7 +71,8 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   public ResourceGroup delete(String identifier, String scopeIdentifier) {
     Optional<ResourceGroup> currentResourceGroupOptional = get(identifier, scopeIdentifier);
     if (!currentResourceGroupOptional.isPresent()) {
-      throw new InvalidRequestException(String.format("Could not find the role in the scope %s", scopeIdentifier));
+      throw new InvalidRequestException(
+          String.format("Could not find the resource group in the scope %s", scopeIdentifier));
     }
     return deleteInternal(identifier, scopeIdentifier);
   }

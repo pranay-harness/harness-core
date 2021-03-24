@@ -65,7 +65,7 @@ func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsReq
 	if branch == "" {
 		return nil, errors.New("branch not present in request")
 	}
-	diffFiles := req.GetDiffFiles()
+	body := req.GetBody()
 	org, err := getOrgId()
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsReq
 	if err != nil {
 		return nil, err
 	}
-	selection, err := tc.SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch, diffFiles)
+	selection, err := tc.SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch, body)
 	if err != nil {
 		return nil, err
 	}

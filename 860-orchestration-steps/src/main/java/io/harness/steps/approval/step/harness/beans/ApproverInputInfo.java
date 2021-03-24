@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.harness.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 
@@ -8,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 public class ApproverInputInfo {

@@ -6,6 +6,7 @@ import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -21,15 +22,25 @@ import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.facilitator.sync.SyncFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -51,16 +62,21 @@ public class InfrastructurePmsPlanCreator {
       PipelineInfrastructure infrastructure, KryoSerializer kryoSerializer, YamlField infraField) {
     PipelineInfrastructure actualInfraConfig = getActualInfraConfig(infrastructure, infraField);
 
-    return PlanNode.builder()
-        .uuid(infraSectionNode.getUuid())
-        .name(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
-        .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
-        .stepType(InfrastructureSectionStep.STEP_TYPE)
-        .skipGraphType(SkipType.SKIP_NODE)
-        .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .adviserObtainments(getAdviserObtainmentFromMetaData(infraSectionNode, kryoSerializer))
-        .build();
+    PlanNodeBuilder planNodeBuilder =
+        PlanNode.builder()
+            .uuid(infraSectionNode.getUuid())
+            .name(PlanCreatorConstants.INFRA_SECTION_NODE_NAME)
+            .identifier(PlanCreatorConstants.INFRA_SECTION_NODE_IDENTIFIER)
+            .stepType(InfrastructureSectionStep.STEP_TYPE)
+            .stepParameters(InfraSectionStepParameters.getStepParameters(actualInfraConfig, infraStepNodeUuid))
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+            .adviserObtainments(getAdviserObtainmentFromMetaData(infraSectionNode, kryoSerializer));
+
+    if (!isProvisionerConfigured(actualInfraConfig)) {
+      planNodeBuilder.skipGraphType(SkipType.SKIP_NODE);
+    }
+    return planNodeBuilder.build();
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(
@@ -81,7 +97,7 @@ public class InfrastructurePmsPlanCreator {
   }
 
   /** Method returns actual InfraStructure object by resolving useFromStage if present. */
-  private PipelineInfrastructure getActualInfraConfig(
+  public PipelineInfrastructure getActualInfraConfig(
       PipelineInfrastructure pipelineInfrastructure, YamlField infraField) {
     if (pipelineInfrastructure.getUseFromStage() != null) {
       if (pipelineInfrastructure.getInfrastructureDefinition() != null) {
@@ -105,5 +121,102 @@ public class InfrastructurePmsPlanCreator {
       }
     }
     return pipelineInfrastructure;
+  }
+
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForProvisioner(PipelineInfrastructure actualInfraConfig,
+      YamlField infraField, String infraStepNodeId, KryoSerializer kryoSerializer) {
+    if (!isProvisionerConfigured(actualInfraConfig)) {
+      return new LinkedHashMap<>();
+    }
+
+    YamlField infraDefField = infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF);
+    YamlField provisionerYamlField = infraDefField.getNode().getField(YAMLFieldNameConstants.PROVISIONER);
+    YamlField stepsYamlField = provisionerYamlField.getNode().getField(YAMLFieldNameConstants.STEPS);
+    List<YamlNode> stepYamlNodes = stepsYamlField.getNode().asArray();
+
+    // Add each step dependency
+    LinkedHashMap<String, PlanCreationResponse> responseMap = new LinkedHashMap<>();
+    List<YamlField> stepYamlFields = getStepYamlFields(stepYamlNodes);
+    for (YamlField stepYamlField : stepYamlFields) {
+      Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
+      stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
+      responseMap.put(
+          stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
+    }
+
+    // Add Steps Node
+    PlanNode stepsNode = getStepsPlanNode(stepsYamlField, stepYamlFields.get(0).getNode().getUuid());
+    responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
+
+    // Add provisioner Node
+    PlanNode provisionerPlanNode =
+        getProvisionerPlanNode(provisionerYamlField, stepsNode.getUuid(), infraStepNodeId, kryoSerializer);
+    responseMap.put(provisionerPlanNode.getUuid(),
+        PlanCreationResponse.builder().node(provisionerPlanNode.getUuid(), provisionerPlanNode).build());
+
+    return responseMap;
+  }
+
+  public boolean isProvisionerConfigured(PipelineInfrastructure actualInfraConfig) {
+    return actualInfraConfig.getInfrastructureDefinition().getProvisioner() != null;
+  }
+
+  private PlanNode getProvisionerPlanNode(
+      YamlField provisionerYamlField, String childNodeId, String infraStepNodeId, KryoSerializer kryoSerializer) {
+    StepParameters stepParameters =
+        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Provisioner Section").build();
+    return PlanNode.builder()
+        .uuid(provisionerYamlField.getNode().getUuid())
+        .identifier(YAMLFieldNameConstants.PROVISIONER)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YAMLFieldNameConstants.PROVISIONER)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .adviserObtainment(
+            AdviserObtainment.newBuilder()
+                .setType(AdviserType.newBuilder().setType(OrchestrationAdviserTypes.ON_SUCCESS.name()).build())
+                .setParameters(ByteString.copyFrom(
+                    kryoSerializer.asBytes(OnSuccessAdviserParameters.builder().nextNodeId(infraStepNodeId).build())))
+                .build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
+  }
+
+  public List<YamlField> getStepYamlFields(List<YamlNode> stepYamlNodes) {
+    List<YamlField> stepFields = new LinkedList<>();
+
+    stepYamlNodes.forEach(yamlNode -> {
+      YamlField stepField = yamlNode.getField(YAMLFieldNameConstants.STEP);
+      YamlField stepGroupField = yamlNode.getField(YAMLFieldNameConstants.STEP_GROUP);
+      YamlField parallelStepField = yamlNode.getField(YAMLFieldNameConstants.PARALLEL);
+      if (stepField != null) {
+        stepFields.add(stepField);
+      } else if (stepGroupField != null) {
+        stepFields.add(stepGroupField);
+      } else if (parallelStepField != null) {
+        stepFields.add(parallelStepField);
+      }
+    });
+    return stepFields;
+  }
+
+  PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
+    StepParameters stepParameters =
+        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Provisioner Steps Element").build();
+    return PlanNode.builder()
+        .uuid(stepsYamlField.getNode().getUuid())
+        .identifier(YAMLFieldNameConstants.STEPS)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YAMLFieldNameConstants.STEPS)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
+  }
+
+  public String getProvisionerNodeId(YamlField infraField) {
+    YamlField infraDefField = infraField.getNode().getField(YamlTypes.INFRASTRUCTURE_DEF);
+    YamlField provisionerYamlField = infraDefField.getNode().getField(YAMLFieldNameConstants.PROVISIONER);
+    return provisionerYamlField.getNode().getUuid();
   }
 }

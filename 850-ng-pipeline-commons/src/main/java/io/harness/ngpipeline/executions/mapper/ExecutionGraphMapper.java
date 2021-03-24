@@ -47,6 +47,7 @@ public class ExecutionGraphMapper {
         .uuid(graphVertex.getUuid())
         .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
+        .setupId(graphVertex.getPlanNodeId())
         .build();
   }
 
