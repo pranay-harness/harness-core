@@ -1,5 +1,10 @@
 package io.harness.pms.execution;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.contracts.execution.Status;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -10,6 +15,8 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
+@TargetModule(HarnessModule._888_PMS_CLIENT)
+@OwnedBy(PIPELINE)
 public enum ExecutionStatus {
   @JsonProperty("Running")
   RUNNING(Sets.newHashSet(Status.RUNNING, Status.ASYNC_WAITING, Status.TASK_WAITING, Status.TIMED_WAITING), "Running"),

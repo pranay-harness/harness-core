@@ -1,7 +1,11 @@
 package io.harness.pms.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.filter.FilterConstants.PIPELINE_SETUP_FILTER;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.ng.core.common.beans.NGTag;
@@ -27,6 +31,8 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("PipelineFilterProperties")
 @JsonTypeName(PIPELINE_SETUP_FILTER)
+@TargetModule(HarnessModule._890_PMS_CONTRACTS)
+@OwnedBy(PIPELINE)
 public class PipelineFilterPropertiesDto extends FilterPropertiesDTO {
   private List<NGTag> pipelineTags;
   private String name;
