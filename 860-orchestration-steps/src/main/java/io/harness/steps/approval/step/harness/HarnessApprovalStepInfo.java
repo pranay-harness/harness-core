@@ -8,6 +8,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.step.ApprovalBaseStepInfo;
 import io.harness.steps.approval.step.harness.beans.ApproverInputInfo;
 import io.harness.steps.approval.step.harness.beans.Approvers;
@@ -27,7 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("HarnessApproval")
+@JsonTypeName(StepSpecTypeConstants.HARNESS_APPROVAL)
 @TypeAlias("harnessApprovalStepInfo")
 public class HarnessApprovalStepInfo extends ApprovalBaseStepInfo {
   @NotNull Approvers approvers;

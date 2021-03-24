@@ -13,7 +13,7 @@ import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.repositories.ApprovalInstanceRepository;
-import io.harness.steps.OrchestrationStepTypes;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
@@ -25,7 +25,7 @@ import java.util.Map;
 @OwnedBy(CDC)
 public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepParameters> {
   public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(OrchestrationStepTypes.HARNESS_APPROVAL).build();
+      StepType.newBuilder().setType(StepSpecTypeConstants.HARNESS_APPROVAL).build();
 
   @Inject private ApprovalInstanceRepository approvalInstanceRepository;
   @Inject private ApprovalInstanceService approvalInstanceService;

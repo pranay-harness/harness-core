@@ -6,6 +6,7 @@ import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.step.ApprovalBaseStepInfo;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -23,7 +24,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("JiraApproval")
+@JsonTypeName(StepSpecTypeConstants.JIRA_APPROVAL)
 @TypeAlias("jiraApprovalStepInfo")
 public class JiraApprovalStepInfo extends ApprovalBaseStepInfo {
   @NotEmpty @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
