@@ -1,48 +1,34 @@
 package io.harness;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
+import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
-import static org.mockito.Mockito.mock;
-
-import io.harness.callback.DelegateCallbackToken;
 import io.harness.delay.DelayEventListener;
-import io.harness.delegate.DelegateServiceGrpc;
-import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
-import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.sdk.PmsSdkConfiguration;
-import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.queue.QueueController;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.serializer.CgOrchestrationRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.serializer.OrchestrationRegistrars;
-import io.harness.serializer.kryo.OrchestrationTestKryoRegistrar;
-import io.harness.service.intfc.DelegateSyncService;
-import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
-import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.waiter.OrchestrationNotifyEventListener;
 
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -51,7 +37,6 @@ import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
-import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -60,20 +45,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
-import org.springframework.core.convert.converter.Converter;
 
 @Slf4j
-public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
+public class CgOrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
 
-  public OrchestrationRule(ClosingFactory closingFactory) {
+  public CgOrchestrationRule(ClosingFactory closingFactory) {
     this.closingFactory = closingFactory;
   }
 
@@ -89,8 +72,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(OrchestrationRegistrars.kryoRegistrars)
-            .add(OrchestrationTestKryoRegistrar.class)
+            .addAll(CgOrchestrationRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -98,7 +80,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(OrchestrationRegistrars.morphiaRegistrars)
+            .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -106,15 +88,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder()
-            .addAll(OrchestrationRegistrars.morphiaConverters)
-            .build();
-      }
-
-      @Provides
-      @Singleton
-      List<Class<? extends Converter<?, ?>>> springConverters() {
-        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
-            .addAll(OrchestrationRegistrars.springConverters)
+            .addAll(CgOrchestrationRegistrars.morphiaConverters)
             .build();
       }
     });
@@ -125,12 +99,6 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
-        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
-        bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
-        bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
-        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
-        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }
     });
 
@@ -153,14 +121,8 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     modules.add(VersionModule.getInstance());
     modules.add(TimeModule.getInstance());
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceTestModule());
-    modules.add(
-        OrchestrationModule.getInstance(OrchestrationModuleConfig.builder()
-                                            .serviceName("ORCHESTRATION_TEST")
-                                            .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                            .build()));
-    PmsSdkConfiguration sdkConfig = PmsSdkConfiguration.builder().serviceName("orchestrationTest").build();
-    modules.add(PmsSdkModule.getInstance(sdkConfig));
+    modules.add(CgOrchestrationModule.getInstance());
+
     return modules;
   }
 
@@ -175,7 +137,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     }
 
     final QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
 
     closingFactory.addServer(new Closeable() {
@@ -191,7 +153,7 @@ public class OrchestrationRule implements MethodRule, InjectorRuleMixin, MongoRu
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        NG_ORCHESTRATION, payload -> publisher.send(Collections.singletonList(NG_ORCHESTRATION), payload));
+        ORCHESTRATION, payload -> publisher.send(Collections.singletonList(ORCHESTRATION), payload));
 
     NotifierScheduledExecutorService notifierScheduledExecutorService =
         injector.getInstance(NotifierScheduledExecutorService.class);
