@@ -90,7 +90,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     doReturn(OptionalSweepingOutput.builder().found(true).output(blueGreenOutcome).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
-            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+            ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     doReturn(infrastructureOutcome).when(k8sStepHelper).getInfrastructureOutcome(ambiance);
   }
 
@@ -231,7 +231,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
     doReturn(OptionalSweepingOutput.builder().found(false).build())
         .when(executionSweepingOutputService)
         .resolveOptional(
-            ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+            ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     assertThatThrownBy(() -> k8sBGSwapServicesStep.obtainTask(ambiance, stepParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(BG_STEP_MISSING_ERROR);
