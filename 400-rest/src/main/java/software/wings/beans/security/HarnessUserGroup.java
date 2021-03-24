@@ -41,8 +41,8 @@ public class HarnessUserGroup extends Base {
 
   @Builder
   public HarnessUserGroup(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, String name, String description, Set<String> memberIds, Set<String> accountIds,
-                          String groupType) {
+      long lastUpdatedAt, String entityYamlPath, String name, String description, Set<String> memberIds,
+      Set<String> accountIds, String groupType) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
