@@ -25,7 +25,7 @@ public final class WorkflowPhaseYaml extends BaseYamlWithType {
   private boolean daemonSet;
   private boolean statefulSet;
   private String phaseNameForRollback;
-  private List<TemplateExpression.Yaml> templateExpressions;
+  private List<TemplateExpressionYaml> templateExpressions;
   private List<PhaseStepYaml> phaseSteps = new ArrayList<>();
   private List<NameValuePair> serviceVariableOverrides = new ArrayList<>();
   //  private DeploymentType deploymentType;
@@ -33,7 +33,7 @@ public final class WorkflowPhaseYaml extends BaseYamlWithType {
   @lombok.Builder
   public WorkflowPhaseYaml(String type, String name, String infraMappingName, String infraDefinitionName,
       String serviceName, String computeProviderName, boolean provisionNodes, String phaseNameForRollback,
-      List<TemplateExpression.Yaml> templateExpressions, List<PhaseStepYaml> phaseSteps, boolean daemonSet,
+      List<TemplateExpressionYaml> templateExpressions, List<PhaseStepYaml> phaseSteps, boolean daemonSet,
       boolean statefulSet, List<NameValuePair> serviceVariableOverrides) {
     super(type);
     this.name = name;

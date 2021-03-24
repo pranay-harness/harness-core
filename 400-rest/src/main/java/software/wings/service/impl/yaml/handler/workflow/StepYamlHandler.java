@@ -26,6 +26,7 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.template.Template;
@@ -316,7 +317,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
     }
 
     // template expressions
-    List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
+    List<TemplateExpressionYaml> templateExprYamlList = Lists.newArrayList();
     if (step.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExpressionYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);

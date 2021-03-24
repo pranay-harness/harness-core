@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
       @JsonSubTypes.Type(value = CommandRefYaml.class, name = "COMMAND"),
       @JsonSubTypes.Type(value = DockerStartCommandUnitYaml.class, name = "DOCKER_START"),
       @JsonSubTypes.Type(value = DockerStopCommandUnitYaml.class, name = "DOCKER_STOP"),
-      @JsonSubTypes.Type(value = ProcessCheckRunningCommandUnit.Yaml.class, name = "PROCESS_CHECK_RUNNING"),
+      @JsonSubTypes.Type(value = ProcessCheckRunningCommandUnitYaml.class, name = "PROCESS_CHECK_RUNNING"),
       @JsonSubTypes.Type(value = ProcessCheckStoppedCommandUnit.Yaml.class, name = "PROCESS_CHECK_STOPPED"),
       @JsonSubTypes.Type(value = PortCheckClearedCommandUnitYaml.class, name = "PORT_CHECK_CLEARED"),
       @JsonSubTypes.Type(value = PortCheckListeningCommandUnitYaml.class, name = "PORT_CHECK_LISTENING"),

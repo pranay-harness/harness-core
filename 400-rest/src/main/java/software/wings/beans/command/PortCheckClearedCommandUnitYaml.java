@@ -19,7 +19,7 @@ public class PortCheckClearedCommandUnitYaml extends ExecCommandUnitAbstractYaml
 
   @lombok.Builder
   public PortCheckClearedCommandUnitYaml(String name, String deploymentType, String workingDirectory, String scriptType,
-      String command, List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+      String command, List<TailFilePatternEntryYaml> filePatternEntryList) {
     super(name, CommandUnitType.PORT_CHECK_CLEARED.name(), deploymentType, workingDirectory, scriptType, command,
         filePatternEntryList);
   }

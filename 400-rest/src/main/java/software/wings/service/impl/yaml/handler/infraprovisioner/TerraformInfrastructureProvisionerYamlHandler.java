@@ -18,7 +18,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
-import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
+import software.wings.beans.TerraformInfrastructureProvisionerYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.NameValuePairYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -30,7 +30,8 @@ import com.google.inject.Inject;
 import java.util.List;
 
 public class TerraformInfrastructureProvisionerYamlHandler
-    extends InfrastructureProvisionerYamlHandler<Yaml, TerraformInfrastructureProvisioner> {
+    extends InfrastructureProvisionerYamlHandler<TerraformInfrastructureProvisionerYaml,
+        TerraformInfrastructureProvisioner> {
   @Inject SettingsService settingsService;
   @Inject AppService appService;
   @Inject SecretManager secretManager;
@@ -51,8 +52,8 @@ public class TerraformInfrastructureProvisionerYamlHandler
   }
 
   @Override
-  public Yaml toYaml(TerraformInfrastructureProvisioner bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public TerraformInfrastructureProvisionerYaml toYaml(TerraformInfrastructureProvisioner bean, String appId) {
+    TerraformInfrastructureProvisionerYaml yaml = TerraformInfrastructureProvisionerYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureProvisionerType.TERRAFORM.name());
     yaml.setPath(bean.getPath());
@@ -85,7 +86,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
 
   @Override
   public TerraformInfrastructureProvisioner upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<TerraformInfrastructureProvisionerYaml> changeContext, List<ChangeContext> changeSetContext) {
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -111,8 +112,8 @@ public class TerraformInfrastructureProvisionerYamlHandler
   }
 
   private void toBean(TerraformInfrastructureProvisioner bean,
-      ChangeContext<TerraformInfrastructureProvisioner.Yaml> changeContext, String appId) {
-    TerraformInfrastructureProvisioner.Yaml yaml = changeContext.getYaml();
+      ChangeContext<TerraformInfrastructureProvisionerYaml> changeContext, String appId) {
+    TerraformInfrastructureProvisionerYaml yaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     super.toBean(changeContext, bean, appId, yamlFilePath);
     bean.setPath(yaml.getPath());
@@ -158,7 +159,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return TerraformInfrastructureProvisionerYaml.class;
   }
 
   @Override

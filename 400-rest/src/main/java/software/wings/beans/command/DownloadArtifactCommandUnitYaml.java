@@ -21,7 +21,7 @@ public class DownloadArtifactCommandUnitYaml extends ExecCommandUnitAbstractYaml
 
   @lombok.Builder
   public DownloadArtifactCommandUnitYaml(String name, String deploymentType, String workingDirectory, String scriptType,
-      String command, List<TailFilePatternEntry.Yaml> filePatternEntryList, String artifactVariableName) {
+      String command, List<TailFilePatternEntryYaml> filePatternEntryList, String artifactVariableName) {
     super(name, CommandUnitType.DOWNLOAD_ARTIFACT.name(), deploymentType, workingDirectory, scriptType, command,
         filePatternEntryList);
     this.artifactVariableName = artifactVariableName;

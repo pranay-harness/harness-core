@@ -19,7 +19,7 @@ public class DockerStopCommandUnitYaml extends ExecCommandUnitAbstractYaml {
 
   @lombok.Builder
   public DockerStopCommandUnitYaml(String name, String deploymentType, String workingDirectory, String scriptType,
-      String command, List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+      String command, List<TailFilePatternEntryYaml> filePatternEntryList) {
     super(name, CommandUnitType.DOCKER_STOP.name(), deploymentType, workingDirectory, scriptType, command,
         filePatternEntryList);
   }

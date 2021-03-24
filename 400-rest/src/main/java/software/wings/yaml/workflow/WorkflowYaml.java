@@ -6,8 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.FailureStrategyYaml;
 import software.wings.beans.NotificationRuleYaml;
-import software.wings.beans.TemplateExpression;
-import software.wings.beans.TemplateExpression.Yaml;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.VariableYaml;
 import software.wings.beans.WorkflowPhaseYaml;
 import software.wings.beans.workflow.StepSkipStrategy;
@@ -42,7 +41,7 @@ import lombok.NoArgsConstructor;
 })
 public abstract class WorkflowYaml extends BaseEntityYaml {
   private String description;
-  private List<TemplateExpression.Yaml> templateExpressions;
+  private List<TemplateExpressionYaml> templateExpressions;
   private String envName;
   private boolean templatized;
 
@@ -61,11 +60,11 @@ public abstract class WorkflowYaml extends BaseEntityYaml {
   private List<StepSkipStrategy.Yaml> preDeploymentStepSkipStrategy = new ArrayList<>();
   private List<StepSkipStrategy.Yaml> postDeploymentStepSkipStrategy = new ArrayList<>();
 
-  public WorkflowYaml(String type, String harnessApiVersion, String description, List<Yaml> templateExpressions,
-      String envName, boolean templatized, List<StepYaml> preDeploymentSteps, List<WorkflowPhaseYaml> phases,
-      List<WorkflowPhaseYaml> rollbackPhases, List<StepYaml> postDeploymentSteps,
-      List<NotificationRuleYaml> notificationRules, List<FailureStrategyYaml> failureStrategies,
-      List<VariableYaml> userVariables, String concurrencyStrategy,
+  public WorkflowYaml(String type, String harnessApiVersion, String description,
+      List<TemplateExpressionYaml> templateExpressions, String envName, boolean templatized,
+      List<StepYaml> preDeploymentSteps, List<WorkflowPhaseYaml> phases, List<WorkflowPhaseYaml> rollbackPhases,
+      List<StepYaml> postDeploymentSteps, List<NotificationRuleYaml> notificationRules,
+      List<FailureStrategyYaml> failureStrategies, List<VariableYaml> userVariables, String concurrencyStrategy,
       List<FailureStrategyYaml> preDeploymentFailureStrategy, List<FailureStrategyYaml> postDeploymentFailureStrategy,
       List<StepSkipStrategy.Yaml> preDeploymentStepSkipStrategy,
       List<StepSkipStrategy.Yaml> postDeploymentStepSkipStrategy) {

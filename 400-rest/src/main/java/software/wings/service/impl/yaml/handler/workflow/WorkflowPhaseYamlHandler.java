@@ -22,6 +22,7 @@ import software.wings.beans.PhaseStepYaml;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowPhaseYaml;
@@ -175,7 +176,7 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhaseYaml,
     }
 
     // template expressions
-    List<TemplateExpression.Yaml> templateExprYamlList = Lists.newArrayList();
+    List<TemplateExpressionYaml> templateExprYamlList = Lists.newArrayList();
     if (bean.getTemplateExpressions() != null) {
       TemplateExpressionYamlHandler templateExpressionYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.TEMPLATE_EXPRESSION);

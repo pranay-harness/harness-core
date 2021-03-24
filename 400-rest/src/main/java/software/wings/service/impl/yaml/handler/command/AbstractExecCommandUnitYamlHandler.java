@@ -17,6 +17,7 @@ import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnitAbstractYaml;
 import software.wings.beans.command.TailFilePatternEntry;
+import software.wings.beans.command.TailFilePatternEntryYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.utils.Utils;
 
@@ -39,7 +40,7 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
     yaml.setFilePatternEntryList(convertToYaml(bean.getTailPatterns()));
   }
 
-  private List<TailFilePatternEntry.Yaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
+  private List<TailFilePatternEntryYaml> convertToYaml(List<TailFilePatternEntry> patternEntryList) {
     if (isEmpty(patternEntryList)) {
       return null;
     }
@@ -47,14 +48,14 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
     return patternEntryList.stream()
         .filter(Objects::nonNull)
         .map(entry
-            -> TailFilePatternEntry.Yaml.Builder.anYaml()
+            -> TailFilePatternEntryYaml.Builder.anYaml()
                    .withFilePath(entry.getFilePath())
                    .withSearchPattern(entry.getPattern())
                    .build())
         .collect(toList());
   }
 
-  protected List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntry.Yaml> patternEntryYamlList) {
+  protected List<TailFilePatternEntry> convertToBean(List<TailFilePatternEntryYaml> patternEntryYamlList) {
     if (isEmpty(patternEntryYamlList)) {
       return null;
     }
@@ -107,11 +108,11 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends ExecCommandUn
     nodeProperties.put(NODE_PROPERTY_COMMAND_STRING, yaml.getCommand());
     nodeProperties.put(NODE_PROPERTY_COMMAND_TYPE, yaml.getCommandUnitType());
 
-    List<TailFilePatternEntry.Yaml> filePatternEntryList = yaml.getFilePatternEntryList();
+    List<TailFilePatternEntryYaml> filePatternEntryList = yaml.getFilePatternEntryList();
     if (isNotEmpty(filePatternEntryList)) {
       List<String> patternList = filePatternEntryList.stream()
                                      .filter(Objects::nonNull)
-                                     .map(TailFilePatternEntry.Yaml::getSearchPattern)
+                                     .map(TailFilePatternEntryYaml::getSearchPattern)
                                      .collect(toList());
       nodeProperties.put(NODE_PROPERTY_TAIL_FILES, true);
       nodeProperties.put(NODE_PROPERTY_TAIL_PATTERNS, patternList);

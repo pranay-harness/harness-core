@@ -17,15 +17,14 @@ public class ExecCommandUnitAbstractYaml extends SshCommandUnit.Yaml {
   // maps to commandString
   private String command;
   // maps to tailPatterns
-  private List<TailFilePatternEntry.Yaml> filePatternEntryList;
+  private List<TailFilePatternEntryYaml> filePatternEntryList;
 
   public ExecCommandUnitAbstractYaml(String commandUnitType) {
     super(commandUnitType);
   }
 
   public ExecCommandUnitAbstractYaml(String name, String commandUnitType, String deploymentType,
-      String workingDirectory, String scriptType, String command,
-      List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+      String workingDirectory, String scriptType, String command, List<TailFilePatternEntryYaml> filePatternEntryList) {
     super(name, commandUnitType, deploymentType);
     this.workingDirectory = workingDirectory;
     this.scriptType = scriptType;

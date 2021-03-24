@@ -18,11 +18,11 @@ public final class ContainerDefinitionYaml extends BaseYaml {
   private Double cpu;
   private Integer memory;
   private LogConfigurationYaml logConfiguration;
-  private List<StorageConfiguration.Yaml> storageConfigurations;
+  private List<StorageConfigurationYaml> storageConfigurations;
 
   @Builder
   public ContainerDefinitionYaml(List<PortMappingYaml> portMappings, String name, List<String> commands, Double cpu,
-      Integer memory, LogConfigurationYaml logConfiguration, List<StorageConfiguration.Yaml> storageConfigurations) {
+      Integer memory, LogConfigurationYaml logConfiguration, List<StorageConfigurationYaml> storageConfigurations) {
     this.portMappings = portMappings;
     this.name = name;
     this.commands = commands;

@@ -16,6 +16,7 @@ import software.wings.beans.container.LogConfigurationYaml;
 import software.wings.beans.container.PortMapping;
 import software.wings.beans.container.PortMappingYaml;
 import software.wings.beans.container.StorageConfiguration;
+import software.wings.beans.container.StorageConfigurationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -52,7 +53,7 @@ public class ContainerDefinitionYamlHandler extends BaseYamlHandler<ContainerDef
     }
 
     // Storage Configurations
-    List<StorageConfiguration.Yaml> storageConfigYamlList = Collections.emptyList();
+    List<StorageConfigurationYaml> storageConfigYamlList = Collections.emptyList();
     StorageConfigurationYamlHandler storageConfigYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.STORAGE_CONFIGURATION);
     List<StorageConfiguration> storageConfigurations = containerDefinition.getStorageConfigurations();

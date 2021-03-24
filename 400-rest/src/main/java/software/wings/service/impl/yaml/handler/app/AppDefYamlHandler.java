@@ -8,7 +8,7 @@ import io.harness.exception.WingsException;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.TemplateExpression;
-import software.wings.beans.TemplateExpression.Yaml;
+import software.wings.beans.TemplateExpressionYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -26,11 +26,11 @@ import java.util.Map;
  * @author rktummala on 10/28/17
  */
 @Singleton
-public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression> {
+public class AppDefYamlHandler extends BaseYamlHandler<TemplateExpressionYaml, TemplateExpression> {
   @Inject YamlHandlerFactory yamlHandlerFactory;
 
-  private TemplateExpression toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private TemplateExpression toBean(ChangeContext<TemplateExpressionYaml> changeContext) {
+    TemplateExpressionYaml yaml = changeContext.getYaml();
 
     Map<String, Object> properties = new HashMap<>();
     if (yaml.getMetadata() != null) {
@@ -50,12 +50,12 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   }
 
   @Override
-  public Yaml toYaml(TemplateExpression bean, String appId) {
+  public TemplateExpressionYaml toYaml(TemplateExpression bean, String appId) {
     NameValuePairYamlHandler nameValuePairYamlHandler = yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
     List<NameValuePairYaml> nameValuePairYamlList =
         Utils.toNameValuePairYamlList(bean.getMetadata(), appId, nameValuePairYamlHandler);
 
-    return Yaml.Builder.aYaml()
+    return TemplateExpressionYaml.Builder.aYaml()
         .withExpression(bean.getExpression())
         .withFieldName(bean.getFieldName())
         .withMetadata(nameValuePairYamlList)
@@ -63,13 +63,14 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   }
 
   @Override
-  public TemplateExpression upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public TemplateExpression upsertFromYaml(
+      ChangeContext<TemplateExpressionYaml> changeContext, List<ChangeContext> changeSetContext) {
     return toBean(changeContext);
   }
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return TemplateExpressionYaml.class;
   }
 
   @Override
@@ -78,7 +79,7 @@ public class AppDefYamlHandler extends BaseYamlHandler<Yaml, TemplateExpression>
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<TemplateExpressionYaml> changeContext) {
     // Do nothing
   }
 }

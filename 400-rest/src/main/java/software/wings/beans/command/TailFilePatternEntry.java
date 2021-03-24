@@ -1,15 +1,10 @@
 package software.wings.beans.command;
 
-import io.harness.yaml.BaseYaml;
-
 import software.wings.stencils.DefaultValue;
 
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.base.MoreObjects;
 import java.util.Objects;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 /**
  * Created by peeyushaggarwal on 8/3/16.
@@ -135,48 +130,6 @@ public class TailFilePatternEntry {
       tailFilePatternEntry.setFilePath(filePath);
       tailFilePatternEntry.setPattern(pattern);
       return tailFilePatternEntry;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseYaml {
-    private String filePath;
-    // maps to pattern
-    private String searchPattern;
-
-    public static final class Builder {
-      private String filePath;
-      // maps to pattern
-      private String searchPattern;
-
-      private Builder() {}
-
-      public static Builder anYaml() {
-        return new Builder();
-      }
-
-      public Builder withFilePath(String filePath) {
-        this.filePath = filePath;
-        return this;
-      }
-
-      public Builder withSearchPattern(String searchPattern) {
-        this.searchPattern = searchPattern;
-        return this;
-      }
-
-      public Builder but() {
-        return anYaml().withFilePath(filePath).withSearchPattern(searchPattern);
-      }
-
-      public Yaml build() {
-        Yaml yaml = new Yaml();
-        yaml.setFilePath(filePath);
-        yaml.setSearchPattern(searchPattern);
-        return yaml;
-      }
     }
   }
 }

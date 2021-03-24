@@ -13,6 +13,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.resources.stats.model.TimeRange;
+import software.wings.resources.stats.model.TimeRangeYaml;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.EnvironmentService;
@@ -43,10 +44,10 @@ public class TimeRangeBasedFreezeConfigYamlHandler
       appFiltersYaml.add(applicationFilterYamlHandler.toYaml(applicationFilter, accountId));
     }
 
-    TimeRange.Yaml timeRangeYaml = TimeRange.Yaml.builder()
-                                       .from(String.valueOf(bean.getTimeRange().getFrom()))
-                                       .to(String.valueOf(bean.getTimeRange().getTo()))
-                                       .build();
+    TimeRangeYaml timeRangeYaml = TimeRangeYaml.builder()
+                                      .from(String.valueOf(bean.getTimeRange().getFrom()))
+                                      .to(String.valueOf(bean.getTimeRange().getTo()))
+                                      .build();
 
     return TimeRangeBasedFreezeConfigYaml.builder()
         .name(bean.getName())
@@ -105,7 +106,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
 
     TimeRangeBasedFreezeConfigYaml yaml = changeContext.getYaml();
     Validator.notNullCheck("Name is required", yaml.getName());
-    TimeRange.Yaml timeRangeYaml = yaml.getTimeRange();
+    TimeRangeYaml timeRangeYaml = yaml.getTimeRange();
 
     bean.timeRange(validateTimeRangeYaml(timeRangeYaml));
     bean.name(yaml.getName());
@@ -126,7 +127,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
     bean.appSelections(applicationFilters);
   }
 
-  private TimeRange validateTimeRangeYaml(TimeRange.Yaml timeRangeYaml) {
+  private TimeRange validateTimeRangeYaml(TimeRangeYaml timeRangeYaml) {
     Validator.notNullCheck("Time Range cannot be empty", timeRangeYaml);
     Validator.notNullCheck("From time cannot be empty", timeRangeYaml.getFrom());
     Validator.notNullCheck("To time cannot be empty", timeRangeYaml.getTo());

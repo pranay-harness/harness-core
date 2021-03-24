@@ -25,7 +25,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
-import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
+import software.wings.beans.TerraformInfrastructureProvisionerYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -82,8 +82,9 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws IOException {
-    ChangeContext<Yaml> changeContext = getChangeContext();
-    Yaml yaml = (Yaml) getYaml(validYamlContent, Yaml.class);
+    ChangeContext<TerraformInfrastructureProvisionerYaml> changeContext = getChangeContext();
+    TerraformInfrastructureProvisionerYaml yaml = (TerraformInfrastructureProvisionerYaml) getYaml(
+        validYamlContent, TerraformInfrastructureProvisionerYaml.class);
     changeContext.setYaml(yaml);
     doReturn(APP_ID).when(mockYamlHelper).getAppId(anyString(), anyString());
     doReturn(null).when(mockInfrastructureProvisionerService).getByName(anyString(), anyString());
@@ -110,7 +111,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     assertThat(provisionerSaved.getRepoName()).isEqualTo("REPO_NAME");
     assertThat(provisionerSaved.getKmsId()).isEqualTo("KMSID");
 
-    Yaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
+    TerraformInfrastructureProvisionerYaml yamlFromObject = handler.toYaml(provisionerSaved, WingsTestConstants.APP_ID);
     String yamlContent = getYamlContent(yamlFromObject);
     assertThat(yamlContent).isEqualTo(validYamlContent);
 
@@ -130,7 +131,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
                                                          .kmsId("KMSID")
                                                          .skipRefreshBeforeApplyingPlan(true)
                                                          .build();
-    TerraformInfrastructureProvisioner.Yaml yaml1 = handler.toYaml(provisioner, APP_ID);
+    TerraformInfrastructureProvisionerYaml yaml1 = handler.toYaml(provisioner, APP_ID);
     assertThat(yaml1).isNotNull();
     assertThat("TERRAFORM").isEqualTo(yaml1.getType());
     assertThat("1.0").isEqualTo(yaml1.getHarnessApiVersion());
@@ -148,14 +149,14 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandl
     assertThat(provisioner).isEqualToIgnoringGivenFields(provisioner1, "uuid", "name", "description");
   }
 
-  private ChangeContext<Yaml> getChangeContext() {
+  private ChangeContext<TerraformInfrastructureProvisionerYaml> getChangeContext() {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(validYamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<TerraformInfrastructureProvisionerYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.PROVISIONER);
     changeContext.setYamlSyncHandler(handler);

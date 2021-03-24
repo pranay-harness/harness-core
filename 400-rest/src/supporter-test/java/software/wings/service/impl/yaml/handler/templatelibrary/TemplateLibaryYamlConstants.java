@@ -17,6 +17,7 @@ import software.wings.beans.VariableType;
 import software.wings.beans.command.ExecCommandUnit;
 import software.wings.beans.command.ExecCommandUnitYaml;
 import software.wings.beans.command.ProcessCheckRunningCommandUnit;
+import software.wings.beans.command.ProcessCheckRunningCommandUnitYaml;
 import software.wings.beans.template.BaseTemplate;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -224,7 +225,7 @@ public class TemplateLibaryYamlConstants {
                                       .name("Start Service")
                                       .deploymentType("SSH")
                                       .build(),
-              ProcessCheckRunningCommandUnit.Yaml.builder()
+              ProcessCheckRunningCommandUnitYaml.builder()
                   .command("echo 0")
                   .name("Process Running")
                   .deploymentType("SSH")

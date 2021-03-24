@@ -19,7 +19,7 @@ public class DockerStartCommandUnitYaml extends ExecCommandUnitAbstractYaml {
 
   @lombok.Builder
   public DockerStartCommandUnitYaml(String name, String deploymentType, String workingDirectory, String scriptType,
-      String command, List<TailFilePatternEntry.Yaml> filePatternEntryList) {
+      String command, List<TailFilePatternEntryYaml> filePatternEntryList) {
     super(name, CommandUnitType.DOCKER_START.name(), deploymentType, workingDirectory, scriptType, command,
         filePatternEntryList);
   }
