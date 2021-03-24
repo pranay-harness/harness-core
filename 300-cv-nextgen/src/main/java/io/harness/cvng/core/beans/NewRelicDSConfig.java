@@ -70,7 +70,6 @@ public class NewRelicDSConfig extends DSConfig {
 
   @Override
   public void validate(List<CVConfig> existingMapping) {
-    // TODO: Recheck this logic.
     existingMapping.forEach(cvConfig -> {
       getNewRelicServiceConfigList().forEach(newRelicServiceConfig -> {
         NewRelicCVConfig newRelicCVConfig = (NewRelicCVConfig) cvConfig;
@@ -79,7 +78,7 @@ public class NewRelicDSConfig extends DSConfig {
                 && newRelicCVConfig.getApplicationName().equals(newRelicServiceConfig.getApplicationName())
                 && newRelicCVConfig.getEnvIdentifier().equals(newRelicServiceConfig.getEnvIdentifier())
                 && newRelicCVConfig.getServiceIdentifier().equals(newRelicServiceConfig.getServiceIdentifier())),
-            "");
+            "A config already exists with the same mapping for Application and service/environment");
       });
     });
   }

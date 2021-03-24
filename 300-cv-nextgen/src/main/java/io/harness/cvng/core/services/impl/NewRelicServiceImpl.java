@@ -16,6 +16,7 @@ import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.datacollection.exception.DataCollectionException;
+import io.harness.exception.UnsupportedOperationException;
 import io.harness.serializer.JsonUtils;
 
 import com.google.common.reflect.TypeToken;
@@ -98,7 +99,6 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
-    // TODO: Is this even needed ? Nothing in the mock.
-    return null;
+    throw new UnsupportedOperationException("Import status is not supported for NewRelic");
   }
 }
