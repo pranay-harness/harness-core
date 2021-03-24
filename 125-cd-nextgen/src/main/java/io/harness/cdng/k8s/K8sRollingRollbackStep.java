@@ -47,7 +47,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
     if (!optionalSweepingOutput.isFound()) {
       return TaskRequest.newBuilder()

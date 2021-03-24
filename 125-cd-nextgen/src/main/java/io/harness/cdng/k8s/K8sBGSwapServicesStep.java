@@ -58,7 +58,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
     }
 
     OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     if (!optionalSweepingOutput.isFound()) {
       throw new InvalidRequestException(BG_STEP_MISSING_ERROR, USER);
     }
