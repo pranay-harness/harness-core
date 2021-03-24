@@ -28,6 +28,7 @@ import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
+import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
@@ -41,6 +42,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -56,6 +58,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -184,6 +187,14 @@ public class K8sStepHelper {
               format("Invalid connector selected in %s. Select Http Helm connector", message));
         }
         break;
+
+      case ManifestStoreType.S3:
+        if (!((connectorInfoDTO.getConnectorConfig()) instanceof AwsConnectorDTO)) {
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select Amazon Web Services connector", message));
+        }
+        break;
+
       default:
         throw new UnsupportedOperationException(format("Unknown manifest store type: [%s]", manifestStoreType));
     }
@@ -249,13 +260,30 @@ public class K8sStepHelper {
       HttpStoreConfig httpStoreConfig = (HttpStoreConfig) storeConfig;
       ConnectorInfoDTO helmConnectorDTO =
           getConnector(getParameterFieldValue(httpStoreConfig.getConnectorRef()), ambiance);
-      validateManifest(storeConfig.getKind(), helmConnectorDTO, manifestType);
+      validateManifest(storeConfig.getKind(), helmConnectorDTO, validationErrorMessage);
 
       return HttpHelmStoreDelegateConfig.builder()
           .repoName(helmConnectorDTO.getIdentifier())
           .repoDisplayName(helmConnectorDTO.getName())
           .httpHelmConnector((HttpHelmConnectorDTO) helmConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .build();
+    }
+
+    if (ManifestStoreType.S3.equals(storeConfig.getKind())) {
+      S3StoreConfig s3StoreConfig = (S3StoreConfig) storeConfig;
+      ConnectorInfoDTO awsConnectorDTO =
+          getConnector(getParameterFieldValue(s3StoreConfig.getConnectorRef()), ambiance);
+      validateManifest(storeConfig.getKind(), awsConnectorDTO, validationErrorMessage);
+
+      return S3HelmStoreDelegateConfig.builder()
+          .repoName(awsConnectorDTO.getIdentifier())
+          .repoDisplayName(awsConnectorDTO.getName())
+          .bucketName(getParameterFieldValue(s3StoreConfig.getBucketName()))
+          .region(getParameterFieldValue(s3StoreConfig.getRegion()))
+          .folderPath(getParameterFieldValue(s3StoreConfig.getFolderPath()))
+          .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
+          .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
           .build();
     }
 
@@ -336,6 +364,15 @@ public class K8sStepHelper {
         List<DecryptableEntity> decryptableEntities = httpHelmConnectorDTO.getDecryptableEntities();
         if (isNotEmpty(decryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntities.get(0));
+        } else {
+          return Collections.emptyList();
+        }
+
+      case AWS:
+        AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorDTO.getConnectorConfig();
+        List<DecryptableEntity> awsDecryptableEntities = awsConnectorDTO.getDecryptableEntities();
+        if (isNotEmpty(awsDecryptableEntities)) {
+          return secretManagerClientService.getEncryptionDetails(ngAccess, awsDecryptableEntities.get(0));
         } else {
           return Collections.emptyList();
         }
