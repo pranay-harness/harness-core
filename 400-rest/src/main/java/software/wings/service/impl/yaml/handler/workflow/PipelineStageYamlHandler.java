@@ -25,6 +25,7 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.PipelineStageYaml;
 import software.wings.beans.RuntimeInputsConfig;
+import software.wings.beans.RuntimeInputsConfigYaml;
 import software.wings.beans.SkipCondition;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -111,7 +112,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<PipelineStageYaml,
       generateBeanForApprovalStage(yaml, appId, properties);
     }
 
-    RuntimeInputsConfig.Yaml yamlConfig = yaml.getRuntimeInputs();
+    RuntimeInputsConfigYaml yamlConfig = yaml.getRuntimeInputs();
     RuntimeInputsConfig inputsConfig = null;
     if (yamlConfig != null) {
       inputsConfig = RuntimeInputsConfig.builder()
@@ -258,9 +259,9 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<PipelineStageYaml,
     }
 
     RuntimeInputsConfig inputsConfig = stageElement.getRuntimeInputsConfig();
-    RuntimeInputsConfig.Yaml yamlConfig = null;
+    RuntimeInputsConfigYaml yamlConfig = null;
     if (inputsConfig != null) {
-      yamlConfig = RuntimeInputsConfig.Yaml.builder()
+      yamlConfig = RuntimeInputsConfigYaml.builder()
                        .timeout(inputsConfig.getTimeout())
                        .timeoutAction(inputsConfig.getTimeoutAction())
                        .runtimeInputVariables(inputsConfig.getRuntimeInputVariables())

@@ -3,7 +3,7 @@ package software.wings.yaml.setting;
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
 import software.wings.security.UsageRestrictionsYaml;
-import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValueYaml;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public abstract class ArtifactServerYaml extends SettingValue.Yaml {
+public abstract class ArtifactServerYaml extends SettingValueYaml {
   private String url;
   private String username;
   private String password = ENCRYPTED_VALUE_STR;

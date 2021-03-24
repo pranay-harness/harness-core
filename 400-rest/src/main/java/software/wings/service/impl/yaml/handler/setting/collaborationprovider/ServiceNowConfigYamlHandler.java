@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import software.wings.beans.JiraConfigYaml;
 import software.wings.beans.ServiceNowConfig;
+import software.wings.beans.ServiceNowConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -46,6 +47,6 @@ public class ServiceNowConfigYamlHandler extends CollaborationProviderYamlHandle
 
   @Override
   public Class getYamlClass() {
-    return ServiceNowConfig.Yaml.class;
+    return ServiceNowConfigYaml.class;
   }
 }

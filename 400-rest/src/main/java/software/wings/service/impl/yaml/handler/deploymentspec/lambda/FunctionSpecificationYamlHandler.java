@@ -5,7 +5,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
-import software.wings.beans.LambdaSpecification.FunctionSpecification.Yaml;
+import software.wings.beans.LambdaSpecificationFunctionSpecificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 
@@ -16,10 +16,12 @@ import java.util.List;
  * @author rktummala on 11/15/17
  */
 @Singleton
-public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, FunctionSpecification> {
+public class FunctionSpecificationYamlHandler
+    extends BaseYamlHandler<LambdaSpecificationFunctionSpecificationYaml, FunctionSpecification> {
   @Override
-  public Yaml toYaml(FunctionSpecification functionSpecification, String appId) {
-    return Yaml.builder()
+  public LambdaSpecificationFunctionSpecificationYaml toYaml(
+      FunctionSpecification functionSpecification, String appId) {
+    return LambdaSpecificationFunctionSpecificationYaml.builder()
         .functionName(functionSpecification.getFunctionName())
         .handler(functionSpecification.getHandler())
         .memorySize(functionSpecification.getMemorySize())
@@ -29,13 +31,13 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   }
 
   @Override
-  public FunctionSpecification upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
-      throws HarnessException {
+  public FunctionSpecification upsertFromYaml(ChangeContext<LambdaSpecificationFunctionSpecificationYaml> changeContext,
+      List<ChangeContext> changeSetContext) throws HarnessException {
     return toBean(changeContext);
   }
 
-  private FunctionSpecification toBean(ChangeContext<Yaml> changeContext) {
-    Yaml yaml = changeContext.getYaml();
+  private FunctionSpecification toBean(ChangeContext<LambdaSpecificationFunctionSpecificationYaml> changeContext) {
+    LambdaSpecificationFunctionSpecificationYaml yaml = changeContext.getYaml();
 
     return FunctionSpecification.builder()
         .functionName(yaml.getFunctionName())
@@ -48,7 +50,7 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return LambdaSpecificationFunctionSpecificationYaml.class;
   }
 
   @Override
@@ -57,7 +59,7 @@ public class FunctionSpecificationYamlHandler extends BaseYamlHandler<Yaml, Func
   }
 
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<LambdaSpecificationFunctionSpecificationYaml> changeContext) {
     // do nothing
   }
 }

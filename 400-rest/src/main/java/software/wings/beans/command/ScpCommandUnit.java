@@ -63,8 +63,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
@@ -602,29 +600,6 @@ public class ScpCommandUnit extends SshCommandUnit {
     @Override
     public Map<String, String> getData(String appId, Map<String, String> params) {
       return Stream.of(ScpFileCategory.values()).collect(toMap(ScpFileCategory::name, ScpFileCategory::getName));
-    }
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("SCP")
-  public static class Yaml extends SshCommandUnit.Yaml {
-    // maps to fileCategory
-    private String source;
-    private String destinationDirectoryPath;
-    private String artifactVariableName;
-
-    public Yaml() {
-      super(CommandUnitType.SCP.name());
-    }
-
-    @lombok.Builder
-    public Yaml(String name, String deploymentType, String source, String destinationDirectoryPath,
-        String artifactVariableName) {
-      super(name, CommandUnitType.SCP.name(), deploymentType);
-      this.source = source;
-      this.destinationDirectoryPath = destinationDirectoryPath;
-      this.artifactVariableName = artifactVariableName;
     }
   }
 }

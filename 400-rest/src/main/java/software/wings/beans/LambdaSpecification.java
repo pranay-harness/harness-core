@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import io.harness.annotation.HarnessEntity;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.AccountAccess;
-import io.harness.yaml.BaseYaml;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,6 @@ import javax.validation.Valid;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -101,26 +99,6 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
           .functionName(this.getFunctionName())
           .handler(this.getHandler())
           .build();
-    }
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
-    public static final class Yaml extends BaseYaml {
-      private String runtime;
-      private Integer memorySize = 128;
-      private Integer timeout = 3;
-      private String functionName;
-      private String handler;
-
-      @Builder
-      public Yaml(String runtime, Integer memorySize, Integer timeout, String functionName, String handler) {
-        this.runtime = runtime;
-        this.memorySize = memorySize;
-        this.timeout = timeout;
-        this.functionName = functionName;
-        this.handler = handler;
-      }
     }
   }
 }

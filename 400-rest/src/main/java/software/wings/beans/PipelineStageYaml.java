@@ -26,12 +26,12 @@ public final class PipelineStageYaml extends BaseYamlWithType {
   private String workflowName;
   private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
   private Map<String, Object> properties = new HashMap<>();
-  private RuntimeInputsConfig.Yaml runtimeInputs;
+  private RuntimeInputsConfigYaml runtimeInputs;
 
   @Builder
   public PipelineStageYaml(String type, String name, String stageName, boolean parallel, String workflowName,
       List<WorkflowVariable> workflowVariables, Map<String, Object> properties, SkipCondition skipCondition,
-      RuntimeInputsConfig.Yaml runtimeInputs) {
+      RuntimeInputsConfigYaml runtimeInputs) {
     super(type);
     this.name = name;
     this.stageName = stageName;

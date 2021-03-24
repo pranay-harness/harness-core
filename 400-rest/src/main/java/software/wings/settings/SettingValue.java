@@ -2,9 +2,7 @@ package software.wings.settings;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 
-import software.wings.security.UsageRestrictionsYaml;
 import software.wings.service.impl.SettingServiceHelper;
-import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -12,10 +10,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
 import java.lang.reflect.Field;
 import java.util.List;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = As.EXISTING_PROPERTY)
@@ -64,17 +59,5 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
   // Default Implementation
   public List<String> fetchRelevantEncryptedSecrets() {
     return SettingServiceHelper.getAllEncryptedSecrets(this);
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends BaseEntityYaml {
-    private UsageRestrictionsYaml usageRestrictions;
-
-    public Yaml(String type, String harnessApiVersion, UsageRestrictionsYaml usageRestrictions) {
-      super(type, harnessApiVersion);
-      this.usageRestrictions = usageRestrictions;
-    }
   }
 }

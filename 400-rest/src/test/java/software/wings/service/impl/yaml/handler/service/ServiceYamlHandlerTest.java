@@ -35,9 +35,9 @@ import software.wings.beans.Application;
 import software.wings.beans.Application.Builder;
 import software.wings.beans.NameValuePairYaml;
 import software.wings.beans.Service;
-import software.wings.beans.Service.Yaml;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
+import software.wings.beans.ServiceYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.tag.HarnessTagYamlHelper;
@@ -137,7 +137,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void toYaml() {
-    final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    final ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
     final List<String> varNames =
         yaml.getConfigVariables().stream().map(NameValuePairYaml::getValue).collect(Collectors.toList());
     assertThat(varNames).containsExactlyInAnyOrder("safeharness:some-secret", "amazonkms:other-secret", "var");
@@ -148,8 +148,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void upsertFromYaml() {
-    final Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    final ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
     assertThat(fromYaml).isNotNull();
     verify(serviceVariableService, times(3)).save(captor.capture(), anyBoolean());
@@ -165,8 +165,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   public void testUpdateServiceVariables() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
 
-    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
     yaml.getConfigVariables().get(0).setValue("amazonkms:other-secret");
     Service fromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
     assertThat(fromYaml).isNotNull();
@@ -180,7 +180,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getYamlClass() {
-    assertThat(serviceYamlHandler.getYamlClass()).isEqualTo(Yaml.class);
+    assertThat(serviceYamlHandler.getYamlClass()).isEqualTo(ServiceYaml.class);
   }
 
   @Test
@@ -195,7 +195,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testUpdateHelmVersionFromYaml() {
-    Service.Yaml yaml = Service.Yaml.builder().helmVersion("V2").deploymentType(DeploymentType.HELM.toString()).build();
+    ServiceYaml yaml = ServiceYaml.builder().helmVersion("V2").deploymentType(DeploymentType.HELM.toString()).build();
     Service service = new Service();
     serviceYamlHandler.setHelmVersion(yaml, service);
     assertThat(service.getHelmVersion()).isEqualTo(HelmVersion.V2);
@@ -210,8 +210,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void shouldThrowIfInvalidHelmVersion() {
-    Service.Yaml yaml =
-        Service.Yaml.builder().helmVersion("garbage-text").deploymentType(DeploymentType.HELM.toString()).build();
+    ServiceYaml yaml =
+        ServiceYaml.builder().helmVersion("garbage-text").deploymentType(DeploymentType.HELM.toString()).build();
     Service service = new Service();
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> serviceYamlHandler.setHelmVersion(yaml, service))
@@ -224,7 +224,7 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   public void testSetHelmVersionInYaml() {
     Service helmService =
         Service.builder().appId(APP_ID).helmVersion(HelmVersion.V2).artifactType(ArtifactType.DOCKER).build();
-    Yaml yaml = serviceYamlHandler.toYaml(helmService, APP_ID);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(helmService, APP_ID);
     assertThat(yaml.getHelmVersion()).isEqualTo(HelmVersion.V2.toString());
 
     Service sshService = Service.builder().deploymentType(DeploymentType.SSH).artifactType(ArtifactType.JAR).build();
@@ -232,11 +232,11 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     assertThat(yaml.getHelmVersion()).isNull();
   }
 
-  private ChangeContext<Yaml> getChangeContext(Yaml yaml) {
+  private ChangeContext<ServiceYaml> getChangeContext(ServiceYaml yaml) {
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFilePath(validYamlFilePath);
     gitFileChange.setAccountId(ACCOUNT_ID);
-    ChangeContext<Yaml> changeContext = new ChangeContext();
+    ChangeContext<ServiceYaml> changeContext = new ChangeContext();
     changeContext.setChange(gitFileChange);
     changeContext.setYaml(yaml);
     return changeContext;
@@ -248,8 +248,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   public void testAddNewServiceVariables() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
 
-    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
 
     NameValuePairYaml newServiceVar = NameValuePairYaml.builder()
                                           .name("enc_3")
@@ -272,8 +272,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
   public void testAddNewServiceVariableWithDashInName() {
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(service);
 
-    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
 
     NameValuePairYaml newServiceVar = NameValuePairYaml.builder()
                                           .name("enc-4")
@@ -300,8 +300,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                                  .artifactType(ArtifactType.TAR)
                                  .build();
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(initialService);
-    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("The 'applicationStack' can not be updated when a Service is already created.");
@@ -317,8 +317,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                                  .artifactType(ArtifactType.TAR)
                                  .build();
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(initialService);
-    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("The 'artifactType' can not be updated when a Service is already created.");
@@ -334,8 +334,8 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                                  .artifactType(ArtifactType.DOCKER)
                                  .build();
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(initialService);
-    Yaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ServiceYaml yaml = serviceYamlHandler.toYaml(service, APP_ID);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("The 'deploymentType' can not be updated when a Service is already created.");
@@ -350,11 +350,11 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                                .deploymentType(DeploymentType.WINRM)
                                .artifactType(ArtifactType.IIS_VirtualDirectory)
                                .build();
-    final Yaml yaml = serviceYamlHandler.toYaml(winRmService, APP_ID);
+    final ServiceYaml yaml = serviceYamlHandler.toYaml(winRmService, APP_ID);
 
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(null);
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(null);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
     Service updatedFromYaml = serviceYamlHandler.upsertFromYaml(changeContext, null);
     assertThat(updatedFromYaml).isNotNull();
     assertThat(updatedFromYaml.getArtifactType()).isEqualTo(ArtifactType.IIS_VirtualDirectory);
@@ -369,11 +369,11 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
                                .deploymentType(DeploymentType.WINRM)
                                .artifactType(ArtifactType.IIS_VirtualDirectory)
                                .build();
-    final Yaml yaml = serviceYamlHandler.toYaml(winRmService, APP_ID);
+    final ServiceYaml yaml = serviceYamlHandler.toYaml(winRmService, APP_ID);
     yaml.setArtifactType("garbageValue");
     when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME)).thenReturn(null);
     when(yamlHelper.getService(APP_ID, validYamlFilePath)).thenReturn(null);
-    ChangeContext<Yaml> changeContext = getChangeContext(yaml);
+    ChangeContext<ServiceYaml> changeContext = getChangeContext(yaml);
 
     assertThatThrownBy(() -> serviceYamlHandler.upsertFromYaml(changeContext, null))
         .isInstanceOf(InvalidRequestException.class)

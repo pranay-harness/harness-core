@@ -1,29 +1,32 @@
-package software.wings.yaml.setting;
+package software.wings.beans;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
-import software.wings.security.UsageRestrictionsYaml;
-import software.wings.settings.SettingValueYaml;
+import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.TargetModule;
 
+import software.wings.security.UsageRestrictionsYaml;
+import software.wings.yaml.setting.CollaborationProviderYaml;
+
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-/**
- * @author dhruvupadhyay on 01/06/20
- */
+@TargetModule(Module._870_CG_YAML_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public abstract class SourceRepoProviderYaml extends SettingValueYaml {
-  private String url;
+public final class ServiceNowConfigYaml extends CollaborationProviderYaml {
+  private String baseUrl;
   private String username;
   private String password = ENCRYPTED_VALUE_STR;
 
-  public SourceRepoProviderYaml(String type, String harnessApiVersion, String url, String username, String password,
+  @Builder
+  public ServiceNowConfigYaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
       UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
-    this.url = url;
+    this.baseUrl = baseUrl;
     this.username = username;
     this.password = password;
   }

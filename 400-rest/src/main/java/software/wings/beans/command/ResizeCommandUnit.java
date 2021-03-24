@@ -29,9 +29,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 
@@ -286,19 +283,5 @@ public class ResizeCommandUnit extends ContainerResizeCommandUnit {
   @Override
   protected Integer getDesiredTrafficPercent(ContextData contextData) {
     return 0;
-  }
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  @JsonTypeName("RESIZE")
-  public static class Yaml extends CommandExecutionStatusYaml {
-    public Yaml() {
-      super(CommandUnitType.RESIZE.name());
-    }
-
-    @Builder
-    public Yaml(String name, String deploymentType) {
-      super(name, CommandUnitType.RESIZE.name(), deploymentType);
-    }
   }
 }

@@ -75,7 +75,6 @@ import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
-import io.harness.yaml.BaseYaml;
 
 import software.wings.beans.artifact.ArtifactStreamSummary;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -96,7 +95,6 @@ import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -406,20 +404,6 @@ public class SettingAttribute
       settingAttribute.setSample(sample);
       settingAttribute.setConnectivityError(connectivityError);
       return settingAttribute;
-    }
-  }
-
-  @Data
-  @NoArgsConstructor
-  @EqualsAndHashCode(callSuper = true)
-  public static class Yaml extends BaseYaml {
-    private String name;
-    private SettingValue.Yaml value;
-
-    @lombok.Builder
-    public Yaml(String name, SettingValue.Yaml value) {
-      this.name = name;
-      this.value = value;
     }
   }
 

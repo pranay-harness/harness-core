@@ -3,7 +3,7 @@ package software.wings.service.impl.yaml.handler.command;
 import software.wings.beans.command.AbstractCommandUnitYaml;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
-import software.wings.beans.command.ScpCommandUnit.Yaml;
+import software.wings.beans.command.ScpCommandUnitYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.utils.Utils;
@@ -15,10 +15,10 @@ import java.util.Map;
  * @author rktummala on 11/13/17
  */
 @Singleton
-public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, ScpCommandUnit> {
+public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<ScpCommandUnitYaml, ScpCommandUnit> {
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return ScpCommandUnitYaml.class;
   }
 
   @Override
@@ -27,8 +27,8 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
   }
 
   @Override
-  public Yaml toYaml(ScpCommandUnit bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public ScpCommandUnitYaml toYaml(ScpCommandUnit bean, String appId) {
+    ScpCommandUnitYaml yaml = ScpCommandUnitYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setDestinationDirectoryPath(bean.getDestinationDirectoryPath());
     String fileCategory = Utils.getStringFromEnum(bean.getFileCategory());
@@ -38,9 +38,9 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
   }
 
   @Override
-  protected ScpCommandUnit toBean(ChangeContext<Yaml> changeContext) {
+  protected ScpCommandUnit toBean(ChangeContext<ScpCommandUnitYaml> changeContext) {
     ScpCommandUnit scpCommandUnit = super.toBean(changeContext);
-    Yaml yaml = changeContext.getYaml();
+    ScpCommandUnitYaml yaml = changeContext.getYaml();
     scpCommandUnit.setDestinationDirectoryPath(yaml.getDestinationDirectoryPath());
     ScpFileCategory scpFileCategory = Utils.getEnumFromString(ScpFileCategory.class, yaml.getSource());
     scpCommandUnit.setFileCategory(scpFileCategory);
@@ -50,7 +50,7 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
 
   @Override
   public ScpCommandUnit toBean(AbstractCommandUnitYaml yaml) {
-    ScpCommandUnit.Yaml scpYaml = (ScpCommandUnit.Yaml) yaml;
+    ScpCommandUnitYaml scpYaml = (ScpCommandUnitYaml) yaml;
     ScpCommandUnit scpCommandUnit = super.toBean(yaml);
     scpCommandUnit.setDestinationDirectoryPath(scpYaml.getDestinationDirectoryPath());
     ScpFileCategory scpFileCategory = Utils.getEnumFromString(ScpFileCategory.class, scpYaml.getSource());
@@ -60,9 +60,9 @@ public class ScpCommandUnitYamlHandler extends SshCommandUnitYamlHandler<Yaml, S
   }
 
   @Override
-  protected Map<String, Object> getNodeProperties(ChangeContext<Yaml> changeContext) {
+  protected Map<String, Object> getNodeProperties(ChangeContext<ScpCommandUnitYaml> changeContext) {
     Map<String, Object> nodeProperties = super.getNodeProperties(changeContext);
-    Yaml yaml = changeContext.getYaml();
+    ScpCommandUnitYaml yaml = changeContext.getYaml();
     nodeProperties.put(YamlConstants.NODE_PROPERTY_FILE_CATEGORY, yaml.getSource());
     nodeProperties.put(YamlConstants.NODE_PROPERTY_DESTINATION_DIR_PATH, yaml.getDestinationDirectoryPath());
     nodeProperties.put(YamlConstants.NODE_PROPERTY_ARTIFACT_VARIABLE_NAME, yaml.getArtifactVariableName());

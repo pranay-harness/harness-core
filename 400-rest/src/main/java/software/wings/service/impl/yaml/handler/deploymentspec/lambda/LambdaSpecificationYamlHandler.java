@@ -14,6 +14,7 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
 import software.wings.beans.LambdaSpecificationDefaultSpecificationYaml;
+import software.wings.beans.LambdaSpecificationFunctionSpecificationYaml;
 import software.wings.beans.LambdaSpecificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -49,7 +50,7 @@ public class LambdaSpecificationYamlHandler
     }
 
     // function specification
-    List<FunctionSpecification.Yaml> functionSpecYamlList = Collections.emptyList();
+    List<LambdaSpecificationFunctionSpecificationYaml> functionSpecYamlList = Collections.emptyList();
     FunctionSpecificationYamlHandler functionSpecYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.FUNCTION_SPECIFICATION);
     List<FunctionSpecification> functionSpecificationList = lambdaSpecification.getFunctions();
