@@ -25,21 +25,21 @@ import com.google.inject.name.Names;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public class MigrationModule extends AbstractModule {
-  private final MigrationConfiguration migrationConfiguration;
+public class AccessControlMigrationModule extends AbstractModule {
+  private final AccessControlMigrationConfiguration migrationConfiguration;
   private final EventsFrameworkConfiguration eventsConfig;
   private final ServiceHttpClientConfig userClientConfig;
   private final String userClientSecret;
   private final ServiceHttpClientConfig roleAssignmentClientConfig;
   private final String roleAssignmentClientSecret;
-  private static MigrationModule instance;
+  private static AccessControlMigrationModule instance;
 
-  public static MigrationModule getInstance(MigrationConfiguration migrationConfiguration,
+  public static AccessControlMigrationModule getInstance(AccessControlMigrationConfiguration migrationConfiguration,
       EventsFrameworkConfiguration eventsConfig, ServiceHttpClientConfig userClientConfig, String userClientSecret,
       ServiceHttpClientConfig roleAssignmentClientConfig, String roleAssignmentClientSecret) {
     if (instance == null) {
-      instance = new MigrationModule(migrationConfiguration, eventsConfig, userClientConfig, userClientSecret,
-          roleAssignmentClientConfig, roleAssignmentClientSecret);
+      instance = new AccessControlMigrationModule(migrationConfiguration, eventsConfig, userClientConfig,
+          userClientSecret, roleAssignmentClientConfig, roleAssignmentClientSecret);
     }
     return instance;
   }

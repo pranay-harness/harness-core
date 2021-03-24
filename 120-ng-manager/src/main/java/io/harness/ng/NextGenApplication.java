@@ -23,8 +23,8 @@ import io.harness.health.HealthService;
 import io.harness.logstreaming.LogStreamingModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.ng.accesscontrol.migrations.MigrationConfiguration;
-import io.harness.ng.accesscontrol.migrations.events.FeatureFlagEventListenerService;
+import io.harness.ng.accesscontrol.migrations.AccessControlMigrationConfiguration;
+import io.harness.ng.accesscontrol.migrations.events.AccessControlMigrationHandler;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -209,7 +209,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
     intializeGitSync(injector, appConfig);
 
-    registerMigrationHandler(appConfig.getMigrationConfiguration(), environment, injector);
+    registerAccessControlMigrationHandler(appConfig.getAccessControlMigrationConfig(), environment, injector);
 
     MaintenanceController.forceMaintenance(false);
   }
@@ -242,10 +242,10 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(NGEventConsumerService.class));
   }
 
-  private void registerMigrationHandler(
-      MigrationConfiguration migrationConfiguration, Environment environment, Injector injector) {
-    if (migrationConfiguration.isEnabled()) {
-      environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
+  private void registerAccessControlMigrationHandler(
+          AccessControlMigrationConfiguration accessControlMigrationConfiguration, Environment environment, Injector injector) {
+    if (accessControlMigrationConfiguration.isEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(AccessControlMigrationHandler.class));
     }
   }
 

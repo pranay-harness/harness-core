@@ -29,7 +29,6 @@ nextGen:
   ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
-  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 allowedOrigins:
   - https://localhost:8181
@@ -213,10 +212,10 @@ accessControlAdminClient:
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-roleAssignmentClientConfig:
-  baseUrl: http://localhost:9006
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
-
-ngRBACMigrationConfig:
-  enabled: true
+accessControlMigrationConfig:
+  enabled: ${ACCESS_CONTROL_MIGRATION_ENABLED:-true}
+  roleAssignmentClientConfig:
+    baseUrl: ${ROLE_ASSIGNMENT_CLIENT_BASE_URL:-http://localhost:9006}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  roleAssignmentClientSecret: ${ROLE_ASSIGNMENT_CLIENT_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}

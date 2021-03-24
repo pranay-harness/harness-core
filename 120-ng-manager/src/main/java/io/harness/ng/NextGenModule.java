@@ -45,7 +45,7 @@ import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ng.accesscontrol.migrations.MigrationModule;
+import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -265,10 +265,10 @@ public class NextGenModule extends AbstractModule {
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
-    install(MigrationModule.getInstance(this.appConfig.getMigrationConfiguration(),
+    install(AccessControlMigrationModule.getInstance(this.appConfig.getAccessControlMigrationConfig(),
         this.appConfig.getEventsFrameworkConfiguration(), this.appConfig.getManagerClientConfig(),
-        this.appConfig.getNextGenConfig().getManagerServiceSecret(), this.appConfig.getRoleAssignmentClientConfig(),
-        this.appConfig.getNextGenConfig().getAccessControlServiceSecret()));
+        this.appConfig.getNextGenConfig().getManagerServiceSecret(), this.appConfig.getAccessControlMigrationConfig().getRoleAssignmentClientConfig(),
+        this.appConfig.getAccessControlMigrationConfig().getRoleAssignmentClientSecret()));
     install(new ProviderModule() {
       @Provides
       @Singleton
