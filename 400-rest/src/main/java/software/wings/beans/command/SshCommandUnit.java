@@ -5,9 +5,6 @@ import io.harness.logging.CommandExecutionStatus;
 
 import software.wings.api.DeploymentType;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-
 /**
  * Created by peeyushaggarwal on 2/1/17.
  */
