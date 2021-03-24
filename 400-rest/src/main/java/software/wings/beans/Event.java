@@ -202,6 +202,10 @@ public class Event {
      */
     DISABLE_2FA,
     /**
+     * 2FA Login
+     */
+    LOGIN_2FA,
+    /**
      * Login type.
      */
     LOGIN,
