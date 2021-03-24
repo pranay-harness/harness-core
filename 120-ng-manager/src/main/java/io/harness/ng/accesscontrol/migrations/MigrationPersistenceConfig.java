@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.migrations;
+package io.harness.ng.accesscontrol.migrations;
 
 import io.harness.annotation.HarnessRepo;
 import io.harness.mongo.MongoConfig;
@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 @Configuration
-@EnableMongoRepositories(basePackages = {"io.harness.accesscontrol.migrations.repositories"},
+@EnableMongoRepositories(basePackages = {"io.harness.ng.accesscontrol.migrations.repositories"},
     includeFilters = @ComponentScan.Filter(HarnessRepo.class))
 public class MigrationPersistenceConfig extends AbstractMongoConfiguration {
   private final MongoConfig mongoBackendConfiguration;

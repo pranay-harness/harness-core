@@ -3,7 +3,6 @@ package io.harness.accesscontrol.scopes.harness.events;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.ONLY_CUSTOM;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 
-import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
 import io.harness.accesscontrol.roles.RoleService;
@@ -13,6 +12,7 @@ import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.eventsframework.api.EventHandler;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;

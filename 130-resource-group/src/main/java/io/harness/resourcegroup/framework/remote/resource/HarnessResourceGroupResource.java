@@ -9,10 +9,8 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
-import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -83,24 +81,6 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid ResourceGroupRequest resourceGroupRequest) {
     ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
-    return ResponseDTO.newResponse(resourceGroupResponse);
-  }
-
-  @POST
-  @Path("/upsert")
-  @InternalApi
-  @ApiOperation(value = "Creates a resource group", nickname = "createResourceGroup")
-  public ResponseDTO<ResourceGroupResponse> upsert(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Valid ResourceGroupDTO resourceGroupDTO) {
-    ResourceGroupResponse resourceGroupResponse = null;
-    if (!resourceGroupService
-             .find(resourceGroupDTO.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier)
-             .isPresent()) {
-      resourceGroupResponse = resourceGroupService.create(resourceGroupDTO);
-    }
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
 

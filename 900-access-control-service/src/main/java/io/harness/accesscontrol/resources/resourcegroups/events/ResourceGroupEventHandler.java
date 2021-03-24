@@ -1,21 +1,21 @@
 package io.harness.accesscontrol.resources.resourcegroups.events;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.protobuf.InvalidProtocolBufferException;
-import io.harness.accesscontrol.commons.events.EventHandler;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.eventsframework.api.EventHandler;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.resourcegroup.ResourceGroupEntityChangeDTO;
-import lombok.extern.slf4j.Slf4j;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Objects;
-
-import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j

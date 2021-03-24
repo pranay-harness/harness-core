@@ -1,8 +1,8 @@
-package io.harness.accesscontrol.migrations.events;
+package io.harness.ng.accesscontrol.migrations.events;
 
-import io.harness.accesscontrol.commons.events.EventConsumer;
-import io.harness.accesscontrol.commons.events.EventFilter;
-import io.harness.accesscontrol.commons.events.EventHandler;
+import io.harness.eventsframework.api.EventConsumer;
+import io.harness.eventsframework.api.EventFilter;
+import io.harness.eventsframework.api.EventHandler;
 
 import com.google.inject.Inject;
 import lombok.AllArgsConstructor;

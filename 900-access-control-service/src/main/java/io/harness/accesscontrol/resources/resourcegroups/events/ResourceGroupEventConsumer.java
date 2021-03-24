@@ -2,9 +2,9 @@ package io.harness.accesscontrol.resources.resourcegroups.events;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.RESOURCE_GROUP;
 
-import io.harness.accesscontrol.commons.events.EventConsumer;
-import io.harness.accesscontrol.commons.events.EventFilter;
-import io.harness.accesscontrol.commons.events.EventHandler;
+import io.harness.eventsframework.api.EventConsumer;
+import io.harness.eventsframework.api.EventFilter;
+import io.harness.eventsframework.api.EventHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

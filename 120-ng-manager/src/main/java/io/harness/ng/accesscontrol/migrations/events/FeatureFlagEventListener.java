@@ -1,7 +1,8 @@
-package io.harness.accesscontrol.commons.events;
+package io.harness.ng.accesscontrol.migrations.events;
 
 import static io.harness.AuthorizationServiceHeader.ACCESS_CONTROL_SERVICE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.ConsumerShutdownException;
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class EntityCrudEventListener implements Runnable {
+public class FeatureFlagEventListener implements Runnable {
   private final Consumer redisConsumer;
   private final Set<EventConsumer> eventConsumers;
 
@@ -28,8 +29,8 @@ public class EntityCrudEventListener implements Runnable {
   }
 
   @Inject
-  public EntityCrudEventListener(
-      @Named(ENTITY_CRUD) Consumer redisConsumer, @Named(ENTITY_CRUD) Set<EventConsumer> eventConsumers) {
+  public FeatureFlagEventListener(@Named(FEATURE_FLAG_STREAM) Consumer redisConsumer,
+      @Named(FEATURE_FLAG_STREAM) Set<EventConsumer> eventConsumers) {
     this.redisConsumer = redisConsumer;
     this.eventConsumers = eventConsumers;
   }

@@ -9,9 +9,7 @@ import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 
 import io.harness.AccessControlClientModule;
 import io.harness.DecisionModule;
-import io.harness.accesscontrol.commons.events.EventConsumer;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
-import io.harness.accesscontrol.migrations.MigrationModule;
 import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.principals.PrincipalValidator;
 import io.harness.accesscontrol.principals.user.UserValidator;
@@ -24,6 +22,7 @@ import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
+import io.harness.eventsframework.api.EventConsumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.ng.core.UserClientModule;
@@ -109,14 +108,6 @@ public class AccessControlModule extends AbstractModule {
     Multibinder<EventConsumer> eventConsumers =
         Multibinder.newSetBinder(binder(), EventConsumer.class, Names.named(ENTITY_CRUD));
     eventConsumers.addBinding().to(ResourceGroupEventConsumer.class);
-
-    if (config.getMigrationConfiguration().isEnabled()) {
-      install(MigrationModule.getInstance(config.getMigrationConfiguration(), config.getEventsConfig(),
-          config.getUserClientConfiguration().getUserServiceConfig(),
-          config.getUserClientConfiguration().getUserServiceSecret(),
-          config.getProjectOrgsClientConfiguration().getProjectOrgsServiceConfig(),
-          config.getProjectOrgsClientConfiguration().getProjectOrgsServiceSecret()));
-    }
     registerRequiredBindings();
   }
 

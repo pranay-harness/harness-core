@@ -1,5 +1,6 @@
 package io.harness.ng;
 
+import io.harness.ng.accesscontrol.migrations.MigrationPersistenceConfig;
 import io.harness.pms.sdk.PmsSdkPersistenceConfig;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.springdata.SpringPersistenceModule;
@@ -15,9 +16,10 @@ public class NextGenPersistenceModule extends SpringPersistenceModule {
   protected Class<?>[] getConfigClasses() {
     Class<?>[] resultClasses;
     if (withPMS) {
-      resultClasses = new Class<?>[] {SpringPersistenceConfig.class, PmsSdkPersistenceConfig.class};
+      resultClasses = new Class<?>[] {
+          SpringPersistenceConfig.class, MigrationPersistenceConfig.class, PmsSdkPersistenceConfig.class};
     } else {
-      resultClasses = new Class<?>[] {SpringPersistenceConfig.class};
+      resultClasses = new Class<?>[] {SpringPersistenceConfig.class, MigrationPersistenceConfig.class};
     }
     return resultClasses;
   }

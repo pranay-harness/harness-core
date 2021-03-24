@@ -1,8 +1,7 @@
 package io.harness.ng.core.user.services.api.impl;
 
-import com.google.common.collect.ImmutableList;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.ng.core.invites.entities.Invite;
@@ -12,17 +11,20 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.invites.spring.UserProjectMapRepository;
+
+import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-
-import java.util.List;
-import java.util.Optional;
-
-import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
@@ -81,6 +83,22 @@ public class NgUserServiceImpl implements NgUserService {
                                                               .roles(ImmutableList.of(invite.getRole()))
                                                               .build());
     userProjectMapRepository.save(userProjectMap);
+  }
+
+  @Override
+  public List<UserProjectMap> createMulti(List<UserProjectMap> userProjectMapList) {
+    List<UserProjectMap> listToReturn = new ArrayList<>();
+    for (UserProjectMap userProjectMap : userProjectMapList) {
+      try {
+        createUserProjectMap(userProjectMap);
+        listToReturn.add(userProjectMap);
+      } catch (DuplicateKeyException duplicateKeyException) {
+        log.info("User project already exists: userid: {}, account: {}, project: {}, org: {}",
+            userProjectMap.getUserId(), userProjectMap.getAccountIdentifier(), userProjectMap.getOrgIdentifier(),
+            userProjectMap.getProjectIdentifier());
+      }
+    }
+    return listToReturn;
   }
 
   @Override

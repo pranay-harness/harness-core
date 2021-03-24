@@ -45,6 +45,7 @@ import io.harness.modules.ModulesClientModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.accesscontrol.migrations.MigrationModule;
 import io.harness.ng.core.CoreModule;
 import io.harness.ng.core.DefaultOrganizationModule;
 import io.harness.ng.core.InviteModule;
@@ -246,7 +247,7 @@ public class NextGenModule extends AbstractModule {
     });
     install(new NextGenPersistenceModule(appConfig.getShouldConfigureWithPMS()));
     install(new CoreModule());
-    install(new InviteModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new InviteModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ConnectorModule(this.appConfig.getCeAwsSetupConfig()));
     install(new GitSyncModule());
@@ -255,15 +256,19 @@ public class NextGenModule extends AbstractModule {
     install(NGModule.getInstance(getOrchestrationConfig()));
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
     install(new SecretManagementModule());
-    install(new SecretManagementClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new SecretManagementClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
         this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority()));
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
-    install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
+    install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
+    install(MigrationModule.getInstance(this.appConfig.getMigrationConfiguration(),
+        this.appConfig.getEventsFrameworkConfiguration(), this.appConfig.getManagerClientConfig(),
+        this.appConfig.getNextGenConfig().getManagerServiceSecret(), this.appConfig.getRoleAssignmentClientConfig(),
+        this.appConfig.getNextGenConfig().getAccessControlServiceSecret()));
     install(new ProviderModule() {
       @Provides
       @Singleton

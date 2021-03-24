@@ -1,7 +1,7 @@
-package io.harness.accesscontrol.migrations.repositories;
+package io.harness.ng.accesscontrol.migrations.repositories;
 
-import io.harness.accesscontrol.migrations.models.Migration;
 import io.harness.annotation.HarnessRepo;
+import io.harness.ng.accesscontrol.migrations.models.Migration;
 
 import org.springframework.data.repository.PagingAndSortingRepository;
 

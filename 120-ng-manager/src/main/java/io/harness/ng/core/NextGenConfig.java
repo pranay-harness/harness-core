@@ -14,4 +14,5 @@ public class NextGenConfig {
   String ngManagerServiceSecret;
   String jwtAuthSecret;
   String jwtIdentityServiceSecret;
+  String accessControlServiceSecret;
 }

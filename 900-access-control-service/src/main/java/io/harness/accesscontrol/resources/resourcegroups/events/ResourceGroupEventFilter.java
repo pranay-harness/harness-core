@@ -1,16 +1,16 @@
 package io.harness.accesscontrol.resources.resourcegroups.events;
 
-import com.google.inject.Singleton;
-import io.harness.accesscontrol.commons.events.EventFilter;
-import io.harness.eventsframework.consumer.Message;
-
-import java.util.Map;
-
 import static io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer.RESOURCE_GROUP_ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
+
+import io.harness.eventsframework.api.EventFilter;
+import io.harness.eventsframework.consumer.Message;
+
+import com.google.inject.Singleton;
+import java.util.Map;
 
 @Singleton
 public class ResourceGroupEventFilter implements EventFilter {

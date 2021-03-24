@@ -1,6 +1,5 @@
-package io.harness.accesscontrol.migrations;
+package io.harness.ng.accesscontrol.migrations;
 
-import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
@@ -8,5 +7,4 @@ import lombok.Data;
 @Builder
 public class MigrationConfiguration {
   private boolean enabled;
-  private List<MigrationType> migrationTypes;
 }

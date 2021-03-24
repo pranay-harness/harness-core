@@ -1,7 +1,6 @@
 package io.harness.accesscontrol;
 
 import io.harness.accesscontrol.acl.ACLPersistenceConfig;
-import io.harness.accesscontrol.migrations.MigrationPersistenceConfig;
 import io.harness.accesscontrol.permissions.persistence.PermissionPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupPersistenceConfig;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypePersistenceConfig;
@@ -100,7 +99,7 @@ public class AccessControlPersistenceModule extends PersistenceModule {
   protected Class<?>[] getConfigClasses() {
     return new Class[] {ResourceTypePersistenceConfig.class, ResourceGroupPersistenceConfig.class,
         PermissionPersistenceConfig.class, RolePersistenceConfig.class, RoleAssignmentPersistenceConfig.class,
-        ACLPersistenceConfig.class, AggregatorPersistenceConfig.class, MigrationPersistenceConfig.class};
+        ACLPersistenceConfig.class, AggregatorPersistenceConfig.class};
   }
 
   private void registerRequiredBindings() {

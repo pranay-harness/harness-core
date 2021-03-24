@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.migrations.events;
+package io.harness.ng.accesscontrol.migrations.events;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;

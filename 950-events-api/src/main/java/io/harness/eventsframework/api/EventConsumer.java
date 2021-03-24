@@ -1,4 +1,4 @@
-package io.harness.accesscontrol.commons.events;
+package io.harness.eventsframework.api;
 
 public interface EventConsumer {
   EventFilter getEventFilter();

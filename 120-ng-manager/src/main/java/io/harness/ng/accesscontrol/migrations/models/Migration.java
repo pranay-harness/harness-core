@@ -1,7 +1,8 @@
-package io.harness.accesscontrol.migrations.models;
+package io.harness.ng.accesscontrol.migrations.models;
 
-import static io.harness.ng.DbAliases.ACCESS_CONTROL;
+import static io.harness.ng.DbAliases.NG_MANAGER;
 
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdIndex;
 
@@ -24,11 +25,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("migrations")
 @Entity(value = "migrations", noClassnameStored = true)
 @TypeAlias("migrations")
-@StoreIn(ACCESS_CONTROL)
+@StoreIn(NG_MANAGER)
 public class Migration {
   @Id @org.springframework.data.annotation.Id String id;
   private Date startedAt;
   private Date endedAt;
-  private List<UserMigration> userMigrations;
   @FdIndex private String accountId;
+  List<RoleAssignmentResponseDTO> createdRoleAssignments;
+  String exception;
 }

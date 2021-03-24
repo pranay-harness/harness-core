@@ -28,6 +28,8 @@ public interface NgUserService {
 
   void createUserProjectMap(Invite invite, User user);
 
+  List<UserProjectMap> createMulti(List<UserProjectMap> userProjectMapList);
+
   List<User> getUsersByIds(List<String> userIds);
 
   UserProjectMap createUserProjectMap(UserProjectMap userProjectMap);

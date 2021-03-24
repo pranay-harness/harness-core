@@ -5,7 +5,7 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ACTION
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ENTITY_TYPE;
 
-import io.harness.accesscontrol.commons.events.EventFilter;
+import io.harness.eventsframework.api.EventFilter;
 import io.harness.eventsframework.consumer.Message;
 
 import java.util.Map;

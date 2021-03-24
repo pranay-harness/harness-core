@@ -1,9 +1,9 @@
 package io.harness.accesscontrol.scopes.harness.events;
 
-import io.harness.accesscontrol.commons.events.EventConsumer;
-import io.harness.accesscontrol.commons.events.EventFilter;
-import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
+import io.harness.eventsframework.api.EventConsumer;
+import io.harness.eventsframework.api.EventFilter;
+import io.harness.eventsframework.api.EventHandler;
 
 import com.google.inject.Inject;
 import java.util.Arrays;

@@ -4,8 +4,6 @@ import io.harness.AccessControlClientConfiguration;
 import io.harness.DecisionModuleConfiguration;
 import io.harness.accesscontrol.commons.events.EventsConfig;
 import io.harness.accesscontrol.commons.iterators.AccessControlIteratorsConfig;
-import io.harness.accesscontrol.migrations.MigrationConfiguration;
-import io.harness.accesscontrol.migrations.ProjectOrgsClientConfiguration;
 import io.harness.accesscontrol.principals.user.UserClientConfiguration;
 import io.harness.accesscontrol.resources.ResourceGroupClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
@@ -47,7 +45,6 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("iteratorsConfig") private AccessControlIteratorsConfig iteratorsConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
-  @JsonProperty("projectOrgsClient") private ProjectOrgsClientConfiguration projectOrgsClientConfiguration;
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
   @JsonProperty("decisionModuleConfig") private DecisionModuleConfiguration decisionModuleConfiguration;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;
@@ -55,7 +52,6 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("defaultServiceSecret") private String defaultServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("identityServiceSecret") private String identityServiceSecret;
-  @JsonProperty("migrationConfig") private MigrationConfiguration migrationConfiguration;
 
   public boolean isAuthEnabled() {
     return this.enableAuth;

@@ -9,6 +9,7 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.accesscontrol.migrations.MigrationConfiguration;
 import io.harness.ng.core.NextGenConfig;
 import io.harness.ng.core.invites.ext.mail.SmtpConfig;
 import io.harness.outbox.OutboxEventIteratorConfiguration;
@@ -46,7 +47,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("mongo") private MongoConfig mongoConfig;
   @JsonProperty("pmsMongo") private MongoConfig pmsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
-  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig serviceHttpClientConfig;
+  @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
@@ -71,6 +72,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("accessControlAdminClient")
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("outboxIteratorConfig") private OutboxEventIteratorConfiguration outboxIteratorConfig;
+  @JsonProperty("ngRBACMigrationConfig") private MigrationConfiguration migrationConfiguration;
+  @JsonProperty("roleAssignmentClientConfig") private ServiceHttpClientConfig roleAssignmentClientConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
