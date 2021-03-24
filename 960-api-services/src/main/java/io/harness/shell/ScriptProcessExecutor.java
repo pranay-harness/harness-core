@@ -127,14 +127,14 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
         ProcessResult processResult = processExecutor.execute();
         commandExecutionStatus = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
         if (commandExecutionStatus == SUCCESS) {
-          saveExecutionLog(format("Command completed with ExitCode (%d)", processResult.getExitValue()), INFO,
+          saveExecutionLog(format("Command completed with ExitCode (%d) with command: " + command, processResult.getExitValue()), INFO,
               commandExecutionStatus);
         } else {
-          saveExecutionLog(format("CommandExecution failed with exit code: (%d)", processResult.getExitValue()), ERROR,
+          saveExecutionLog(format("CommandExecution failed with exit code: (%d) with command: " + command, processResult.getExitValue()), ERROR,
               commandExecutionStatus);
         }
       } catch (RuntimeException | InterruptedException | TimeoutException e) {
-        saveExecutionLog(format("Exception: %s", e), ERROR, commandExecutionStatus);
+        saveExecutionLog(format("Exception: %s with command: " + command, e), ERROR, commandExecutionStatus);
       } finally {
         if (isEmpty(config.getWorkingDirectory())) {
           deleteDirectoryAndItsContentIfExists(workingDirectory.getAbsolutePath());
@@ -144,7 +144,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
         }
       }
     } catch (IOException e) {
-      saveExecutionLog("IOException:" + e, ERROR);
+      saveExecutionLog("IOException:" + e + " command: " + command, ERROR);
     }
     return commandExecutionStatus;
   }
@@ -279,7 +279,7 @@ public class ScriptProcessExecutor extends AbstractScriptExecutor {
       }
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       saveExecutionLog(
-          format("Command completed with ExitCode (%d)", processResult.getExitValue()), INFO, commandExecutionStatus);
+          format("Command completed with ExitCode (%d) with bash command: " + command, processResult.getExitValue()), INFO, commandExecutionStatus);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       handleException(executionDataBuilder, envVariablesMap, commandExecutionStatus, e, "Script execution interrupted");

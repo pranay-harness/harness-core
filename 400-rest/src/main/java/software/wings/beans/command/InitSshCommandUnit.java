@@ -109,6 +109,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
     activityId = context.getActivityId();
     executionStagingDir = "/tmp/" + activityId;
     preInitCommand = "mkdir -p " + executionStagingDir;
+    String secondCommand = "ls -al /tmp/";
     notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
       envVariables.put(entry.getKey(), escapifyString(entry.getValue()));
@@ -126,10 +127,13 @@ public class InitSshCommandUnit extends SshCommandUnit {
     launcherScriptFileName = "harnesslauncher" + activityId + ".sh";
 
     CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
+    context.executeCommandString(secondCommand);
     try {
       commandExecutionStatus = commandExecutionStatus == CommandExecutionStatus.SUCCESS
           ? context.copyFiles(executionStagingDir, Collections.singletonList(getLauncherFile()))
           : commandExecutionStatus;
+
+      context.executeCommandString(secondCommand);
     } catch (IOException | TemplateException e) {
       log.error("Error in InitCommandUnit", e);
     }
@@ -140,6 +144,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
             ? context.copyFiles(executionStagingDir, commandUnitFiles)
             : commandExecutionStatus;
       }
+      context.executeCommandString(secondCommand);
     } catch (IOException | TemplateException e) {
       commandExecutionStatus = CommandExecutionStatus.FAILURE;
       log.error("Error in InitCommandUnit", e);
