@@ -14,11 +14,9 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import javax.validation.constraints.Size;
 import lombok.Builder;
-import lombok.Setter;
+import lombok.Data;
 import lombok.Singular;
-import lombok.Value;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.NonFinal;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -28,7 +26,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Value
+@Data
 @Builder
 @FieldNameConstants(innerTypeName = "NGTriggerEntityKeys")
 @Entity(value = "triggersNG", noClassnameStored = true)
@@ -85,8 +83,8 @@ public class NGTriggerEntity {
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
-  @Setter @NonFinal @Version Long version;
+  @Version Long version;
   @Builder.Default Boolean deleted = Boolean.FALSE;
   @Singular @Size(max = 128) List<NGTag> tags;
-  @Setter @NonFinal @Builder.Default Boolean enabled = Boolean.TRUE;
+  @Builder.Default Boolean enabled = Boolean.TRUE;
 }
