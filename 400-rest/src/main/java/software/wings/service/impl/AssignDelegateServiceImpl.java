@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.beans.DelegateTask.Status.QUEUED;
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -16,10 +17,12 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateActivity;
@@ -75,6 +78,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -82,14 +86,16 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("io.harness.beans.EnvironmentType")
 @BreakDependencyOn("io.harness.tasks.Cd1SetupFields")
 @BreakDependencyOn("software.wings.beans.Environment")
 @BreakDependencyOn("software.wings.beans.InfrastructureMapping")
 @BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
 @BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
+@OwnedBy(DEL)
 public class AssignDelegateServiceImpl implements AssignDelegateService, DelegateTaskRetryObserver {
+  public static final String SCOPE_WILDCARD = "*";
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
 
@@ -394,7 +400,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
     boolean match = true;
 
-    if (isNotEmpty(scope.getEnvironmentTypes())) {
+    if (isNotEmpty(scope.getEnvironmentTypes()) && !shouldFollowWildcardScope(appId, accountId)
+        && !shouldFollowWildcardScope(envId, accountId)) {
       if (isNotBlank(appId) && isNotBlank(envId)) {
         Environment environment = environmentService.get(appId, envId, false);
         if (environment == null) {
@@ -409,26 +416,30 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       match = scope.getTaskTypes().contains(taskGroup);
     }
     if (match && isNotEmpty(scope.getApplications())) {
-      match = isNotBlank(appId) && scope.getApplications().contains(appId);
+      match =
+          shouldFollowWildcardScope(appId, accountId) || (isNotBlank(appId) && scope.getApplications().contains(appId));
     }
     if (match && isNotEmpty(scope.getEnvironments())) {
-      match = isNotBlank(envId) && scope.getEnvironments().contains(envId);
+      match =
+          shouldFollowWildcardScope(envId, accountId) || (isNotBlank(envId) && scope.getEnvironments().contains(envId));
     }
 
     if (isNotEmpty(scope.getInfrastructureDefinitions()) || isNotEmpty(scope.getServices())) {
-      InfrastructureMapping infrastructureMapping =
-          isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
-      if (infrastructureMapping != null) {
-        if (match && isNotEmpty(scope.getInfrastructureDefinitions())) {
-          match = scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
+      if (!shouldFollowWildcardScope(appId, accountId) && !shouldFollowWildcardScope(infraMappingId, accountId)) {
+        InfrastructureMapping infrastructureMapping =
+            isNotBlank(infraMappingId) ? infrastructureMappingService.get(appId, infraMappingId) : null;
+        if (infrastructureMapping != null) {
+          if (match && isNotEmpty(scope.getInfrastructureDefinitions())) {
+            match =
+                scope.getInfrastructureDefinitions().contains(infrastructureMapping.getInfrastructureDefinitionId());
+          }
+          if (match && isNotEmpty(scope.getServices())) {
+            match = scope.getServices().contains(infrastructureMapping.getServiceId());
+          }
+        } else {
+          match = false;
         }
-        if (match && isNotEmpty(scope.getServices())) {
-          match = scope.getServices().contains(infrastructureMapping.getServiceId());
-        }
-      } else {
-        match = false;
       }
-
     } else {
       if (match && isNotEmpty(scope.getServiceInfrastructures())) {
         match = isNotBlank(infraMappingId) && scope.getServiceInfrastructures().contains(infraMappingId);
@@ -436,6 +447,11 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     }
 
     return match;
+  }
+
+  private boolean shouldFollowWildcardScope(String entityId, String accountId) {
+    return isNotBlank(accountId) && featureFlagService.isEnabled(FeatureName.DELEGATE_ADD_WILDCARD_SCOPING, accountId)
+        && StringUtils.equals(entityId, SCOPE_WILDCARD);
   }
 
   @Override

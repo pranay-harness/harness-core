@@ -1,10 +1,10 @@
 package software.wings.beans;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskGroup;
 
-@TargetModule(Module._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public enum TaskType {
   BATCH_CAPABILITY_CHECK(TaskGroup.BATCH_CAPABILITY_CHECK),
   CAPABILITY_VALIDATION(TaskGroup.CAPABILITY_VALIDATION),
@@ -187,6 +187,7 @@ public enum TaskType {
   UPSERT_SECRET(TaskGroup.KMS),
   FETCH_SECRET(TaskGroup.KMS),
   ENCRYPT_SECRET(TaskGroup.KMS),
+  VALIDATE_SECRET_MANAGER_CONFIGURATION(TaskGroup.KMS),
 
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION),
   CONTAINER_ACTIVE_SERVICE_COUNTS(TaskGroup.CONTAINER),
@@ -281,6 +282,7 @@ public enum TaskType {
   JIRA_TASK_NG(TaskGroup.JIRA_NG),
   BUILD_STATUS(TaskGroup.CI),
   GIT_API_TASK(TaskGroup.GIT_NG),
+  AWS_CODECOMMIT_API_TASK(TaskGroup.GIT_NG),
   JIRA_CONNECTIVITY_TASK_NG(TaskGroup.JIRA_NG),
   K8_FETCH_NAMESPACES(TaskGroup.CVNG),
   K8_FETCH_WORKLOADS(TaskGroup.CVNG),
@@ -296,7 +298,8 @@ public enum TaskType {
   CE_VALIDATE_KUBERNETES_CONFIG(TaskGroup.CONTAINER),
   NG_AWS_CODE_COMMIT_TASK(TaskGroup.AWS),
   HTTP_HELM_CONNECTIVITY_TASK(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
-  NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG);
+  NG_DECRYT_GIT_API_ACCESS_TASK(TaskGroup.GIT_NG),
+  TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG);
 
   private final TaskGroup taskGroup;
 

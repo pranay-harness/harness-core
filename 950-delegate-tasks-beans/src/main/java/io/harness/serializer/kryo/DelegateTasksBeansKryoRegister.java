@@ -28,6 +28,14 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskParams;
 import io.harness.delegate.beans.artifactory.ArtifactoryTaskResponse;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiConfirmSubParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiResult;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitApiTaskResponse;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentParams;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitDataObtainmentTaskResult;
+import io.harness.delegate.beans.aws.codecommit.AwsCodeCommitRequestType;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO;
 import io.harness.delegate.beans.azure.AzureMachineImageArtifactDTO.ImageType;
@@ -267,6 +275,7 @@ import io.harness.delegate.task.k8s.K8sScaleResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
+import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
@@ -597,6 +606,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(HttpHelmConnectivityTaskResponse.class, 19641);
     kryo.register(HttpHelmStoreDelegateConfig.class, 19642);
     kryo.register(KustomizeManifestDelegateConfig.class, 19700);
+    kryo.register(OpenshiftManifestDelegateConfig.class, 19701);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -661,5 +671,14 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
 
     kryo.register(DecryptGitAPiAccessTaskParams.class, 543266);
     kryo.register(DecryptGitAPIAccessTaskResponse.class, 543267);
+
+    kryo.register(AwsCodeCommitApiConfirmSubParams.class, 543268);
+    kryo.register(AwsCodeCommitDataObtainmentParams.class, 543269);
+    kryo.register(AwsCodeCommitApiParams.class, 543270);
+    kryo.register(AwsCodeCommitApiResult.class, 543271);
+    kryo.register(AwsCodeCommitApiTaskParams.class, 543272);
+    kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
+    kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
+    kryo.register(AwsCodeCommitRequestType.class, 543275);
   }
 }

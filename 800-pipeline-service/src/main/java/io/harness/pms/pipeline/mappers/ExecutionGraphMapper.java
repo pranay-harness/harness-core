@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline.mappers;
 
 import io.harness.beans.EdgeList;
-import io.harness.delegate.beans.DelegateSelectionLogParams;
+import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.dto.GraphVertexDTO;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.pms.execution.ExecutionStatus;
@@ -39,24 +39,27 @@ public class ExecutionGraphMapper {
         .status(ExecutionStatus.getExecutionStatus(graphVertex.getStatus()))
         .stepType(graphVertex.getStepType())
         .uuid(graphVertex.getUuid())
+        .setupId(graphVertex.getPlanNodeId())
         .executableResponses(graphVertex.getExecutableResponses())
         .taskIdToProgressDataMap(graphVertex.getProgressDataMap())
         .unitProgresses(graphVertex.getUnitProgresses())
-        .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getDelegateSelectionLogParams()))
+        .delegateInfoList(mapDelegateSelectionLogParamsToDelegateInfo(graphVertex.getGraphDelegateSelectionLogParams()))
         .build();
   }
 
   private List<DelegateInfo> mapDelegateSelectionLogParamsToDelegateInfo(
-      List<DelegateSelectionLogParams> delegateSelectionLogParams) {
+      List<GraphDelegateSelectionLogParams> delegateSelectionLogParams) {
     return delegateSelectionLogParams.stream()
         .map(ExecutionGraphMapper::getDelegateInfoForUI)
         .collect(Collectors.toList());
   }
 
-  private DelegateInfo getDelegateInfoForUI(DelegateSelectionLogParams delegateSelectionLogParams) {
+  private DelegateInfo getDelegateInfoForUI(GraphDelegateSelectionLogParams graphDelegateSelectionLogParams) {
     return DelegateInfo.builder()
-        .id(delegateSelectionLogParams.getDelegateId())
-        .name(delegateSelectionLogParams.getDelegateName())
+        .id(graphDelegateSelectionLogParams.getSelectionLogParams().getDelegateId())
+        .name(graphDelegateSelectionLogParams.getSelectionLogParams().getDelegateName())
+        .taskId(graphDelegateSelectionLogParams.getTaskId())
+        .taskName(graphDelegateSelectionLogParams.getTaskName())
         .build();
   }
 

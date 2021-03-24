@@ -5,10 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.Step;
-import io.harness.steps.approval.harness.HarnessApprovalStep;
 import io.harness.steps.approval.stage.ApprovalStageStep;
+import io.harness.steps.approval.step.harness.HarnessApprovalStep;
+import io.harness.steps.approval.step.jira.JiraApprovalStep;
 import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.common.pipeline.PipelineSetupStep;
+import io.harness.steps.http.HttpStep;
 import io.harness.steps.resourcerestraint.ResourceRestraintStep;
 
 import java.util.HashMap;
@@ -27,6 +29,9 @@ public class OrchestrationStepsModuleStepRegistrar {
 
     engineSteps.put(ApprovalStageStep.STEP_TYPE, ApprovalStageStep.class);
     engineSteps.put(HarnessApprovalStep.STEP_TYPE, HarnessApprovalStep.class);
+    engineSteps.put(JiraApprovalStep.STEP_TYPE, JiraApprovalStep.class);
+
+    engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
 

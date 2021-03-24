@@ -8,7 +8,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.aws.AwsElbListener;
 import io.harness.delegate.task.aws.AwsElbListenerRuleData;
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
   private static final String DELIMITER = "__";
   @Inject private AwsHelperService awsHelperService;

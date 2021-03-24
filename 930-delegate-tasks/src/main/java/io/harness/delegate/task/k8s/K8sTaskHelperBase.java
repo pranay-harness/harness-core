@@ -65,6 +65,7 @@ import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
+import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -198,6 +199,7 @@ public class K8sTaskHelperBase {
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private GitDecryptionHelper gitDecryptionHelper;
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
+  @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private HelmTaskHelperBase helmTaskHelperBase;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
@@ -837,9 +839,7 @@ public class K8sTaskHelperBase {
       List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
       throws Exception {
     for (KubernetesResourceId resourceId : kubernetesResourceIds) {
-      DeleteCommand deleteCommand =
-          client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-      ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
       if (result.getExitValue() != 0) {
         log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
       }
@@ -848,6 +848,32 @@ public class K8sTaskHelperBase {
     if (denoteOverallSuccess) {
       executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
     }
+  }
+
+  public boolean executeDelete(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+      List<KubernetesResourceId> kubernetesResourceIds, LogCallback executionLogCallback, boolean denoteOverallSuccess)
+      throws Exception {
+    for (KubernetesResourceId resourceId : kubernetesResourceIds) {
+      ProcessResult result = executeDeleteCommand(client, k8sDelegateTaskParams, executionLogCallback, resourceId);
+      if (result.getExitValue() != 0) {
+        log.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+        return false;
+      }
+    }
+
+    if (denoteOverallSuccess) {
+      executionLogCallback.saveExecutionLog("Done", INFO, CommandExecutionStatus.SUCCESS);
+    }
+
+    return true;
+  }
+
+  private ProcessResult executeDeleteCommand(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams,
+      LogCallback executionLogCallback, KubernetesResourceId resourceId) throws Exception {
+    DeleteCommand deleteCommand =
+        client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+    return runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, deleteCommand);
   }
 
   public void describe(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback)
@@ -1842,7 +1868,7 @@ public class K8sTaskHelperBase {
   }
 
   public List<FileData> renderTemplate(K8sDelegateTaskParams k8sDelegateTaskParams,
-      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> valuesFiles,
+      ManifestDelegateConfig manifestDelegateConfig, String manifestFilesDirectory, List<String> manifestHelperFiles,
       String releaseName, String namespace, LogCallback executionLogCallback, Integer timeoutInMin) throws Exception {
     ManifestType manifestType = manifestDelegateConfig.getManifestType();
     long timeoutInMillis = K8sTaskHelperBase.getTimeoutMillisFromMinutes(timeoutInMin);
@@ -1851,13 +1877,13 @@ public class K8sTaskHelperBase {
       case K8S_MANIFEST:
         List<FileData> manifestFiles = readManifestFilesFromDirectory(manifestFilesDirectory);
         return renderManifestFilesForGoTemplate(
-            k8sDelegateTaskParams, manifestFiles, valuesFiles, executionLogCallback, timeoutInMillis);
+            k8sDelegateTaskParams, manifestFiles, manifestHelperFiles, executionLogCallback, timeoutInMillis);
 
       case HELM_CHART:
         HelmChartManifestDelegateConfig helmChartManifest = (HelmChartManifestDelegateConfig) manifestDelegateConfig;
         return renderTemplateForHelm(k8sDelegateTaskParams.getHelmPath(),
-            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), valuesFiles, releaseName,
-            namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
+            getManifestDirectoryForHelmChart(manifestFilesDirectory, helmChartManifest), manifestHelperFiles,
+            releaseName, namespace, executionLogCallback, helmChartManifest.getHelmVersion(), timeoutInMillis,
             helmChartManifest.getHelmCommandFlag());
 
       case KUSTOMIZE:
@@ -1866,6 +1892,14 @@ public class K8sTaskHelperBase {
             (GitStoreDelegateConfig) kustomizeManifest.getStoreDelegateConfig();
         return kustomizeTaskHelper.build(manifestFilesDirectory, k8sDelegateTaskParams.getKustomizeBinaryPath(),
             kustomizeManifest.getPluginPath(), gitStoreDelegateConfig.getPaths().get(0), executionLogCallback);
+
+      case OPENSHIFT_TEMPLATE:
+        OpenshiftManifestDelegateConfig openshiftManifestConfig =
+            (OpenshiftManifestDelegateConfig) manifestDelegateConfig;
+        GitStoreDelegateConfig otGitStoreDelegateConfig =
+            (GitStoreDelegateConfig) openshiftManifestConfig.getStoreDelegateConfig();
+        return openShiftDelegateService.processTemplatization(manifestFilesDirectory, k8sDelegateTaskParams.getOcPath(),
+            otGitStoreDelegateConfig.getPaths().get(0), executionLogCallback, manifestHelperFiles);
 
       default:
         throw new UnsupportedOperationException(

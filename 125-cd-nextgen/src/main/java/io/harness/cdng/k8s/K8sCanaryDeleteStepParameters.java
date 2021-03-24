@@ -49,7 +49,6 @@ public class K8sCanaryDeleteStepParameters implements K8sStepParameters {
                                                        .description(description)
                                                        .skipCondition(skipCondition)
                                                        .timeout(timeout)
-                                                       .skipDryRun(skipDryRun)
                                                        .build());
   }
 

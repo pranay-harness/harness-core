@@ -1,7 +1,10 @@
 package io.harness.repositories.gitFileLocation;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.beans.GitFileLocation;
 
 import com.google.inject.Inject;
@@ -16,6 +19,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@OwnedBy(DX)
 public class GitFileLocationRepositoryCustomImpl implements GitFileLocationRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 

@@ -154,11 +154,6 @@ public class VaultRestClientFactory {
       // Older Vault services doesn't have secret version metadata available!
       return null;
     }
-
-    @Override
-    public boolean renewToken(String authToken) throws IOException {
-      return vaultRestClient.renewToken(authToken).execute().isSuccessful();
-    }
   }
 
   static class V2Impl implements VaultRestClient {
@@ -204,11 +199,6 @@ public class VaultRestClientFactory {
       VaultMetadataReadResponse response =
           vaultRestClient.readSecretMetadata(authToken, secretEngine, pathAndKey.path).execute().body();
       return response == null ? null : response.getData();
-    }
-
-    @Override
-    public boolean renewToken(String authToken) throws IOException {
-      return vaultRestClient.renewToken(authToken).execute().isSuccessful();
     }
   }
 

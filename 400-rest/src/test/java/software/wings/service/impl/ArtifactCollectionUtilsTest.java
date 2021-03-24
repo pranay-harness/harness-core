@@ -54,8 +54,12 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters.BuildSourceRequestType;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -178,6 +182,100 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
     assertThat(delegateTask.getExpiry()).isNotZero();
     BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
     assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category({UnitTests.class})
+  public void shouldPrepareValidateTaskForNexusArtifactStream() {
+    NexusArtifactStream amazonS3ArtifactStream = NexusArtifactStream.builder()
+                                                     .accountId(ACCOUNT_ID)
+                                                     .uuid(ARTIFACT_STREAM_ID)
+                                                     .appId(APP_ID)
+                                                     .settingId(SETTING_ID)
+                                                     .name("Nexus")
+                                                     .serviceId(SERVICE_ID)
+                                                     .build();
+
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withAccountId(ACCOUNT_ID)
+                        .withValue(NexusConfig.builder()
+                                       .nexusUrl("https://harness.nexus.com/")
+                                       .delegateSelectors(Collections.singletonList("nexus"))
+                                       .build())
+                        .build());
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
+        .thenReturn(Service.builder()
+                        .uuid(SERVICE_ID)
+                        .appId(APP_ID)
+                        .name("SERVICE_NAME")
+                        .description("SERVICE_DESC")
+                        .artifactType(JAR)
+                        .build());
+
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getTags()).contains("nexus");
+    TaskData data = delegateTask.getData();
+    assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
+    assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
+    BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
+    assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
+    assertThat(parameters.getSettingValue()).isNotNull();
+    assertThat(parameters.getEncryptedDataDetails()).isNotNull();
+    assertThat(delegateTask.getExpiry()).isNotZero();
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_PUTHRAYA)
+  @Category({UnitTests.class})
+  public void shouldPrepareValidateTaskForArtifactoryArtifactStream() {
+    ArtifactoryArtifactStream amazonS3ArtifactStream = ArtifactoryArtifactStream.builder()
+                                                           .accountId(ACCOUNT_ID)
+                                                           .uuid(ARTIFACT_STREAM_ID)
+                                                           .appId(APP_ID)
+                                                           .settingId(SETTING_ID)
+                                                           .name("Artifactory")
+                                                           .serviceId(SERVICE_ID)
+                                                           .build();
+
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(SettingAttribute.Builder.aSettingAttribute()
+                        .withAccountId(ACCOUNT_ID)
+                        .withValue(ArtifactoryConfig.builder()
+                                       .artifactoryUrl("https://harness.jfrog.com")
+                                       .delegateSelectors(Collections.singletonList("jfrog"))
+                                       .build())
+                        .build());
+    when(settingsService.getDelegateSelectors(any())).thenCallRealMethod();
+    when(settingsService.hasDelegateSelectorProperty(any())).thenCallRealMethod();
+    when(artifactStreamServiceBindingService.getService(APP_ID, ARTIFACT_STREAM_ID, true))
+        .thenReturn(Service.builder()
+                        .uuid(SERVICE_ID)
+                        .appId(APP_ID)
+                        .name("SERVICE_NAME")
+                        .description("SERVICE_DESC")
+                        .artifactType(JAR)
+                        .build());
+
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+
+    assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(delegateTask.getTags()).contains("jfrog");
+    TaskData data = delegateTask.getData();
+    assertThat(data.getTaskType()).isEqualTo(TaskType.BUILD_SOURCE_TASK.name());
+    assertThat(data.getTimeout()).isEqualTo(TimeUnit.MINUTES.toMillis(1));
+    BuildSourceParameters parameters = (BuildSourceParameters) data.getParameters()[0];
+    assertThat(parameters.getBuildSourceRequestType()).isEqualTo(BuildSourceRequestType.GET_BUILDS);
+    assertThat(parameters.getSettingValue()).isNotNull();
+    assertThat(parameters.getEncryptedDataDetails()).isNotNull();
+    assertThat(delegateTask.getExpiry()).isNotZero();
   }
 
   @Test

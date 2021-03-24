@@ -5,11 +5,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.data.SweepingOutput;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
@@ -48,5 +50,15 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
                                                       .setValue(RecastOrchestrationUtils.toDocumentJson(value))
                                                       .build());
     return sweepingOutputConsumeBlobResponse.getResponse();
+  }
+
+  @Override
+  public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
+    OptionalSweepingOutputResolveBlobResponse resolve = sweepingOutputServiceBlockingStub.resolveOptional(
+        SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
+    return OptionalSweepingOutput.builder()
+        .output(RecastOrchestrationUtils.fromDocumentJson(resolve.getStepTransput(), SweepingOutput.class))
+        .found(resolve.getFound())
+        .build();
   }
 }

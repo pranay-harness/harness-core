@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.aggregation.billing;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.QLData;
@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @Scope(ResourceType.USER)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLEntityTableData implements QLData {
   String id;
   String name;

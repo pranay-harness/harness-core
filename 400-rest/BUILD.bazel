@@ -20,6 +20,7 @@ shared_dependencies = [
     "//870-cg-yaml-beans:module",
     "//870-orchestration:module",
     "//876-orchestration-beans:module",
+    "//874-orchestration-delay:module",
     "//878-pipeline-service-utilities:module",
     "//882-pms-sdk-core:module",
     "//890-sm-core:module",
@@ -761,6 +762,7 @@ java_library(
     tags = [
         "aeriform",
         "manual",
+        "no-ide",
     ],
     visibility = ["//visibility:public"],
     deps = test_dependencies,

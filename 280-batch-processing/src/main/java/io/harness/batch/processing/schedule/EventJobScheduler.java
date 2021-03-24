@@ -87,6 +87,11 @@ public class EventJobScheduler {
     runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER, true);
   }
 
+  @Scheduled(cron = "0 */30 * * * ?")
+  public void runCloudEfficiencyInClusterRecommendationsJobs() {
+    runCloudEfficiencyEventJobs(BatchJobBucket.IN_CLUSTER_RECOMMENDATION, true);
+  }
+
   @Scheduled(cron = "0 */1 * * * ?")
   public void runRecentlyAddedAccountJob() {
     boolean masterPod = accountShardService.isMasterPod();

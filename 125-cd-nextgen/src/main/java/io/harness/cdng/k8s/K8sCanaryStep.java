@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -17,6 +18,7 @@ import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
@@ -28,6 +30,7 @@ import io.harness.steps.StepOutcomeGroup;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +40,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
   private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deployment";
 
   @Inject private K8sStepHelper k8sStepHelper;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public TaskChainResponse startChainLink(
@@ -60,6 +64,8 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
     final String accountId = AmbianceHelper.getAccountId(ambiance);
     final boolean skipDryRun =
         !ParameterField.isNull(stepParameters.getSkipDryRun()) && stepParameters.getSkipDryRun().getValue();
+    List<String> manifestFilesContents = k8sStepHelper.renderValues(k8sManifestOutcome, ambiance, valuesFileContents);
+    boolean isOpenshiftTemplate = ManifestType.OpenshiftTemplate.equals(k8sManifestOutcome.getType());
 
     K8sCanaryDeployRequest k8sCanaryDeployRequest =
         K8sCanaryDeployRequest.builder()
@@ -70,7 +76,8 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .instanceUnitType(canaryStepParameters.getInstanceSelection().getType().getInstanceUnitType())
             .instances(instancesValue)
             .timeoutIntervalInMin(K8sStepHelper.getTimeout(stepParameters))
-            .valuesYamlList(k8sStepHelper.renderValues(ambiance, valuesFileContents))
+            .valuesYamlList(!isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
+            .openshiftParamList(isOpenshiftTemplate ? manifestFilesContents : Collections.emptyList())
             .k8sInfraDelegateConfig(k8sStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance))
             .manifestDelegateConfig(k8sStepHelper.getManifestDelegateConfig(k8sManifestOutcome, ambiance))
             .accountId(accountId)
@@ -111,13 +118,10 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
                                             .targetInstances(k8sCanaryDeployResponse.getCurrentInstances())
                                             .canaryWorkload(k8sCanaryDeployResponse.getCanaryWorkload())
                                             .build();
+    executionSweepingOutputService.consume(
+        ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STAGE.name());
 
     return responseBuilder.status(Status.SUCCEEDED)
-        .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.K8S_CANARY_OUTCOME)
-                         .outcome(k8sCanaryOutcome)
-                         .group(StepOutcomeGroup.STAGE.name())
-                         .build())
         .stepOutcome(StepResponse.StepOutcome.builder()
                          .name(OutcomeExpressionConstants.OUTPUT)
                          .outcome(k8sCanaryOutcome)

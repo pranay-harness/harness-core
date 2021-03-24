@@ -4,7 +4,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author bzane on 5/10/19
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetNamespaceInContainerInstanceInfo implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infraMappingService;

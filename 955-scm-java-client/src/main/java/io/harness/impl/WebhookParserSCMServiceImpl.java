@@ -2,6 +2,7 @@ package io.harness.impl;
 
 import static io.harness.constants.Constants.BITBUCKET_CLOUD_HEADER_KEY;
 import static io.harness.constants.Constants.BITBUCKET_SERVER_HEADER_KEY;
+import static io.harness.constants.Constants.X_AMZ_SNS_MESSAGE_TYPE;
 import static io.harness.constants.Constants.X_BIT_BUCKET_EVENT;
 import static io.harness.constants.Constants.X_GIT_HUB_EVENT;
 import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
@@ -12,11 +13,11 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.beans.BranchWebhookEvent;
 import io.harness.beans.CommitDetails;
 import io.harness.beans.HeaderConfig;
 import io.harness.beans.IssueCommentWebhookEvent;
 import io.harness.beans.PRWebhookEvent;
+import io.harness.beans.PushWebhookEvent;
 import io.harness.beans.Repository;
 import io.harness.beans.WebhookBaseAttributes;
 import io.harness.beans.WebhookGitUser;
@@ -49,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
-  @Inject private SCMGrpc.SCMBlockingStub scmBlockingStub;
+  @Inject private final SCMGrpc.SCMBlockingStub scmBlockingStub;
 
   @Override
   public ParseWebhookResponse parseWebhookUsingSCMAPI(List<HeaderConfig> headers, String payload) {
@@ -74,7 +75,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
 
   @Override
   public WebhookPayload parseWebhookPayload(ParseWebhookResponse parseWebhookResponse) {
-    WebhookPayloadBuilder builder = WebhookPayload.builder();
+    WebhookPayloadBuilder builder;
     if (parseWebhookResponse.hasPr()) {
       PullRequestHook prHook = parseWebhookResponse.getPr();
       builder = convertPullRequestHook(prHook);
@@ -107,7 +108,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
 
   WebhookPayloadBuilder convertPushHook(PushHook pushHook) {
     WebhookGitUser webhookGitUser = convertUser(pushHook.getSender());
-    BranchWebhookEvent webhookEvent = convertPushWebhookEvent(pushHook);
+    PushWebhookEvent webhookEvent = convertPushWebhookEvent(pushHook);
 
     return WebhookPayload.builder()
         .webhookGitUser(webhookGitUser)
@@ -148,12 +149,12 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
         .build();
   }
 
-  private BranchWebhookEvent convertPushWebhookEvent(PushHook pushHook) {
+  private PushWebhookEvent convertPushWebhookEvent(PushHook pushHook) {
     // TODO Add required push event details here with commit
     List<CommitDetails> commitDetailsList = new ArrayList<>();
     pushHook.getCommitsList().forEach(commit -> commitDetailsList.add(convertCommit(commit)));
 
-    return BranchWebhookEvent.builder()
+    return PushWebhookEvent.builder()
         .branchName(pushHook.getRepo().getBranch())
         .link(pushHook.getRepo().getLink())
         .commitDetailsList(commitDetailsList)
@@ -185,6 +186,7 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
 
   private Repository convertRepository(io.harness.product.ci.scm.proto.Repository repo) {
     return Repository.builder()
+        .id(repo.getId())
         .name(repo.getName())
         .namespace(repo.getNamespace())
         .slug(repo.getNamespace() + "/" + repo.getName())
@@ -207,6 +209,8 @@ public class WebhookParserSCMServiceImpl implements WebhookParserSCMService {
       return GitProvider.GITLAB;
     } else if (containsHeaderKey(headerKeys, X_BIT_BUCKET_EVENT)) {
       return getBitbucketProvider(headerKeys);
+    } else if (containsHeaderKey(headerKeys, X_AMZ_SNS_MESSAGE_TYPE)) {
+      return GitProvider.CODECOMMIT;
     }
 
     throw new InvalidRequestException("Unable to resolve the Webhook Source. "

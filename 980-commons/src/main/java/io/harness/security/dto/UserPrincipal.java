@@ -15,9 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @OwnedBy(PL)
 @Getter
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("USER")
 public class UserPrincipal extends Principal {

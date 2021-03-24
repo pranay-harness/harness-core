@@ -96,8 +96,7 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetUpdateOperations() {
-    InputSetEntity inputSetEntity = InputSetEntity.builder().build();
-    inputSetEntity.setInputSetEntityType(InputSetEntityType.INPUT_SET);
+    InputSetEntity inputSetEntity = InputSetEntity.builder().inputSetEntityType(InputSetEntityType.INPUT_SET).build();
     Update updateOperations = PMSInputSetFilterHelper.getUpdateOperations(inputSetEntity);
     Set<String> stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     PropertyDescriptor[] propertyDescriptors = BeanUtils.getPropertyDescriptors(InputSetEntity.class);
@@ -115,8 +114,9 @@ public class PMSInputSetFilterHelperTest extends CategoryTest {
       assertThat(onlyOnce).isTrue();
     }
 
-    inputSetEntity.setInputSetEntityType(InputSetEntityType.OVERLAY_INPUT_SET);
-    updateOperations = PMSInputSetFilterHelper.getUpdateOperations(inputSetEntity);
+    InputSetEntity overlayInputSetEntity =
+        InputSetEntity.builder().inputSetEntityType(InputSetEntityType.OVERLAY_INPUT_SET).build();
+    updateOperations = PMSInputSetFilterHelper.getUpdateOperations(overlayInputSetEntity);
     stringSet = ((Document) updateOperations.getUpdateObject().get("$set")).keySet();
     propertyDescriptors = BeanUtils.getPropertyDescriptors(InputSetEntity.class);
     excludedFields = new HashSet<>(

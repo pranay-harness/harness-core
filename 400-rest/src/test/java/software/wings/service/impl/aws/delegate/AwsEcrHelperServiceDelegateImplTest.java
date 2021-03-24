@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -34,6 +36,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(CDP)
 public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
@@ -66,12 +69,15 @@ public class AwsEcrHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testGetAmazonEcrAuthToken() {
     AmazonECRClient mockClient = mock(AmazonECRClient.class);
     doReturn(mockClient).when(awsEcrHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
+    doReturn(mockClient).when(awsEcrApiHelperServiceDelegate).getAmazonEcrClient(any(), anyString());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList(), eq(false));
     doReturn(new GetAuthorizationTokenResult().withAuthorizationData(
                  new AuthorizationData().withAuthorizationToken("token")))
         .when(mockClient)
         .getAuthorizationToken(any());
     doNothing().when(mockTracker).trackECRCall(anyString());
+    doCallRealMethod().when(awsEcrApiHelperServiceDelegate).getAmazonEcrAuthToken(any(), any(), any());
+    on(awsEcrApiHelperServiceDelegate).set("tracker", tracker);
     String token = awsEcrHelperServiceDelegate.getAmazonEcrAuthToken(
         AwsConfig.builder().build(), Collections.emptyList(), "account", "us-east-1");
     assertThat(token).isEqualTo("token");

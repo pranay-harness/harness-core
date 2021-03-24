@@ -94,6 +94,10 @@ if [[ "" != "$EVENTS_CONFIG_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$EVENTS_CONFIG_REDIS_USERNAME" ]]; then
+  yq write -i $CONFIG_FILE eventsConfig.redis.userName "$EVENTS_CONFIG_REDIS_USERNAME"
+fi
+
 if [[ "" != "$EVENTS_CONFIG_REDIS_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE eventsConfig.redis.password "$EVENTS_CONFIG_REDIS_PASSWORD"
 fi
@@ -104,6 +108,14 @@ fi
 
 if [[ "" != "$RESOURCE_GROUP_ITERATOR_INTERVAL" ]]; then
   yq write -i $CONFIG_FILE iteratorsConfig.resourceGroupIteratorConfig.targetIntervalInSeconds $RESOURCE_GROUP_ITERATOR_INTERVAL
+fi
+
+if [[ "" != "$USER_GROUP_ITERATOR_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE iteratorsConfig.userGroupIteratorConfig.enabled $USER_GROUP_ITERATOR_ENABLED
+fi
+
+if [[ "" != "$USER_GROUP_ITERATOR_INTERVAL" ]]; then
+  yq write -i $CONFIG_FILE iteratorsConfig.userGroupIteratorConfig.targetIntervalInSeconds $USER_GROUP_ITERATOR_INTERVAL
 fi
 
 if [[ "" != "$AGGREGATOR_ENABLED" ]]; then
@@ -134,10 +146,26 @@ if [[ "" != "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceSecret "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET"
 fi
 
+if [[ "" != "$USER_GROUP_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE userGroupClient.userGroupServiceConfig.baseUrl "$USER_GROUP_CLIENT_BASE_URL"
+fi
+
+if [[ "" != "$USER_GROUP_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE userGroupClient.userGroupServiceSecret "$USER_GROUP_CLIENT_SERVICE_SECRET"
+fi
+
 if [[ "" != "$ENABLE_AUTH" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$ENABLE_AUTH"
 fi
 
 if [[ "" != "$DEFAULT_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE defaultServiceSecret "$DEFAULT_SERVICE_SECRET"
+fi
+
+if [[ "" != "$JWT_AUTH_SECRET" ]]; then
+  yq write -i $CONFIG_FILE jwtAuthSecret "$JWT_AUTH_SECRET"
+fi
+
+if [[ "" != "$IDENTITY_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE identityServiceSecret "$IDENTITY_SERVICE_SECRET"
 fi

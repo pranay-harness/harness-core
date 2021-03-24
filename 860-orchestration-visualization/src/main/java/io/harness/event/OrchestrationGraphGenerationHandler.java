@@ -19,6 +19,7 @@ public class OrchestrationGraphGenerationHandler implements AsyncOrchestrationEv
   @Override
   public void handleEvent(OrchestrationEvent event) {
     try {
+      log.info("Started OrchestrationGraphGeneration handler for handling event [{}]", event.getEventType());
       long startTime = System.currentTimeMillis();
       if (event.getNodeExecutionProto() == null) {
         graphGenerationService.buildOrchestrationGraphBasedOnLogs(event.getAmbiance().getPlanExecutionId());
@@ -34,6 +35,8 @@ public class OrchestrationGraphGenerationHandler implements AsyncOrchestrationEv
         log.info("Time Taken to update graph with planExecutionId [{}] is [{}]ms ",
             event.getAmbiance().getPlanExecutionId(), processingTime);
       }
+      log.info("Completed OrchestrationGraphGeneration handler for handling event [{}]", event.getEventType());
+
     } catch (Exception e) {
       log.error("[{}] event failed for [{}] for plan [{}]", event.getEventType(),
           AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance()), event.getAmbiance().getPlanExecutionId(), e);

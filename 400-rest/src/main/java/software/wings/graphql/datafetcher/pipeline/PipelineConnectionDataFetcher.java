@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.graphql.utils.nameservice.NameService.application;
 import static software.wings.graphql.utils.nameservice.NameService.pipeline;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
@@ -35,7 +35,7 @@ import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class PipelineConnectionDataFetcher
     extends AbstractConnectionV2DataFetcher<QLPipelineFilter, QLNoOpSortCriteria, QLPipelineConnection> {
   @Inject PipelineQueryHelper pipelineQueryHelper;

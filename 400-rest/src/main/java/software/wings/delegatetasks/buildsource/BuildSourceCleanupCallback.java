@@ -14,7 +14,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class BuildSourceCleanupCallback implements NotifyCallback {
   private String accountId;
   private String artifactStreamId;

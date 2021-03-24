@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.trigger;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -20,7 +20,7 @@ import software.wings.service.intfc.TriggerService;
 
 import com.google.inject.Inject;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class DeleteTriggerDataFetcher extends BaseMutatorDataFetcher<QLDeleteTriggerInput, QLDeleteTriggerPayload> {
   TriggerService triggerService;
   AppService appService;

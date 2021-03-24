@@ -60,11 +60,15 @@ eventsConfig:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
     password: ""
   enabled: true
 
 iteratorsConfig:
   resourceGroupIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 600
+  userGroupIteratorConfig:
     enabled: true
     targetIntervalInSeconds: 600
 
@@ -90,6 +94,13 @@ userClient:
     readTimeOutSeconds: 15
   userServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+userGroupClient:
+  userGroupServiceConfig:
+    baseUrl: https://localhost:7090
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  userGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 decisionModuleConfig:
 
 aggregatorModuleConfig:
@@ -98,15 +109,17 @@ aggregatorModuleConfig:
     offset.storage.file.filename: "mongodb://127.0.0.1:27018,127.0.0.1:27019,127.0.0.1:27020/accesscontrol?replicaSet=rs0"
     key.converter.schemas.enable: false
     value.converter.schemas.enable: false
-    offset.flush.interval.ms: 50
+    offset.flush.interval.ms: 5000
     mongodb.hosts: rs0/localhost:27018
     mongodb.name: access_control_db
     mongodb.user: ""
     mongodb.password: ""
     mongodb.ssl.enabled: false
     database.include.list: "accesscontrol"
-    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments"
-  enabled: false
+    collection.include.list: "accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups"
+  enabled: true
 
 enableAuth: true
 defaultServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
+identityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU

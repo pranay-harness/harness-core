@@ -1,6 +1,9 @@
 package software.wings.service.intfc.aws.delegate;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -25,7 +28,8 @@ import com.amazonaws.services.cloudwatch.model.MetricAlarm;
 import com.amazonaws.services.cloudwatch.model.PutMetricAlarmResult;
 import java.util.List;
 
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(CDP)
 public interface AwsAppAutoScalingHelperServiceDelegate {
   RegisterScalableTargetResult registerScalableTarget(String region, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, RegisterScalableTargetRequest scalableTargetRequest);

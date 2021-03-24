@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 
@@ -30,6 +33,7 @@ import org.apache.commons.lang3.StringUtils;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "AwsLambdaInfraStructureMappingKeys")
+@OwnedBy(CDP)
 public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   /**
    * Instantiates a new Infrastructure mapping.

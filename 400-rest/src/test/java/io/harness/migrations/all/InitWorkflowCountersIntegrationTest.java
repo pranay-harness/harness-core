@@ -4,7 +4,7 @@ import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.limits.Action;
@@ -27,7 +27,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class InitWorkflowCountersIntegrationTest extends IntegrationTestBase {
   @Inject private InitWorkflowCounters initWorkflowCounters;
   @Inject private AppService appService;

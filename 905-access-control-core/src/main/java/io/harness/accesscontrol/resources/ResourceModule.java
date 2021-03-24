@@ -1,5 +1,7 @@
 package io.harness.accesscontrol.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupServiceImpl;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDao;
@@ -10,12 +12,16 @@ import io.harness.accesscontrol.resources.resourcetypes.ResourceTypeServiceImpl;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypeDao;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypeDaoImpl;
 import io.harness.accesscontrol.resources.resourcetypes.persistence.ResourceTypeMorphiaRegistrar;
+import io.harness.accesscontrol.roleassignments.RoleAssignmentService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@OwnedBy(PL)
 public class ResourceModule extends AbstractModule {
   private static ResourceModule instance;
 
@@ -42,5 +48,8 @@ public class ResourceModule extends AbstractModule {
     registerRequiredBindings();
   }
 
-  private void registerRequiredBindings() {}
+  private void registerRequiredBindings() {
+    requireBinding(RoleAssignmentService.class);
+    requireBinding(TransactionTemplate.class);
+  }
 }

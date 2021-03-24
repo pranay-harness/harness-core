@@ -3,16 +3,22 @@ package io.harness.cdng.k8s;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
+import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GithubStore;
@@ -23,6 +29,8 @@ import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -40,11 +48,14 @@ import io.harness.delegate.task.k8s.K8sManifestDelegateConfig;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestType;
+import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmSubCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -68,6 +79,7 @@ public class K8sStepHelperTest extends CategoryTest {
 
   @Mock private ConnectorService connectorService;
   @Mock private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
+  @Mock private EngineExpressionService engineExpressionService;
   @InjectMocks private K8sStepHelper k8sStepHelper;
 
   private final Ambiance ambiance = Ambiance.newBuilder().build();
@@ -187,6 +199,22 @@ public class K8sStepHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetOpenshiftParamManifests() {
+    OpenshiftManifestOutcome openshiftManifestOutcome = OpenshiftManifestOutcome.builder().build();
+    OpenshiftParamManifestOutcome openshiftParamManifestOutcome = OpenshiftParamManifestOutcome.builder().build();
+    List<ManifestOutcome> serviceManifestOutcomes = new ArrayList<>();
+    serviceManifestOutcomes.add(openshiftManifestOutcome);
+    serviceManifestOutcomes.add(openshiftParamManifestOutcome);
+
+    List<OpenshiftParamManifestOutcome> openshiftParamManifests =
+        k8sStepHelper.getOpenshiftParamManifests(serviceManifestOutcomes);
+    assertThat(openshiftParamManifests).hasSize(1);
+    assertThat(openshiftParamManifests.get(0)).isEqualTo(openshiftParamManifestOutcome);
+  }
+
+  @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testGetManifestDelegateConfigForK8s() {
@@ -272,6 +300,19 @@ public class K8sStepHelperTest extends CategoryTest {
     result = k8sStepHelper.getSkipResourceVersioning(
         HelmChartManifestOutcome.builder().skipResourceVersioning(false).build());
     assertThat(result).isFalse();
+    result = k8sStepHelper.getSkipResourceVersioning(
+        KustomizeManifestOutcome.builder().skipResourceVersioning(true).build());
+    assertThat(result).isTrue();
+    result = k8sStepHelper.getSkipResourceVersioning(
+        KustomizeManifestOutcome.builder().skipResourceVersioning(false).build());
+    assertThat(result).isFalse();
+    result = k8sStepHelper.getSkipResourceVersioning(
+        OpenshiftManifestOutcome.builder().skipResourceVersioning(true).build());
+    assertThat(result).isTrue();
+    result = k8sStepHelper.getSkipResourceVersioning(
+        OpenshiftManifestOutcome.builder().skipResourceVersioning(false).build());
+    assertThat(result).isFalse();
+
     result = k8sStepHelper.getSkipResourceVersioning(ValuesManifestOutcome.builder().build());
     assertThat(result).isFalse();
   }
@@ -402,6 +443,90 @@ public class K8sStepHelperTest extends CategoryTest {
       assertThat(thrown).isNotNull();
       assertThat(thrown).isInstanceOf(InvalidRequestException.class);
       assertThat(thrown.getMessage()).isEqualTo("Repo name cannot be empty for Account level git connector");
+    }
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testGetManifestDelegateConfigForOpenshift() {
+    OpenshiftManifestOutcome manifestOutcome =
+        OpenshiftManifestOutcome.builder()
+            .store(GitStore.builder()
+                       .branch(ParameterField.createValueField("test"))
+                       .connectorRef(ParameterField.createValueField("org.connectorRef"))
+                       .paths(ParameterField.createValueField(Arrays.asList("file1", "file2")))
+                       .build())
+            .build();
+
+    doReturn(
+        Optional.of(ConnectorResponseDTO.builder()
+                        .connector(ConnectorInfoDTO.builder().connectorConfig(GitConfigDTO.builder().build()).build())
+                        .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(manifestOutcome, ambiance);
+    assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.OPENSHIFT_TEMPLATE);
+    assertThat(delegateConfig).isInstanceOf(OpenshiftManifestDelegateConfig.class);
+    assertThat(delegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(delegateConfig.getStoreDelegateConfig()).isInstanceOf(GitStoreDelegateConfig.class);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void shouldRenderReversedValuesFilesForOpenshiftManifest() {
+    String valueFile1 = "file1";
+    String valueFile2 = "file2";
+    List<String> valuesFiles = Arrays.asList(valueFile1, valueFile2);
+
+    doReturn(valueFile1).when(engineExpressionService).renderExpression(any(), eq(valueFile1));
+    doReturn(valueFile2).when(engineExpressionService).renderExpression(any(), eq(valueFile2));
+
+    List<String> renderedValuesFiles = k8sStepHelper.renderValues(
+        OpenshiftManifestOutcome.builder().build(), Ambiance.newBuilder().build(), valuesFiles);
+    assertThat(renderedValuesFiles).isNotEmpty();
+    assertThat(renderedValuesFiles).containsExactly(valueFile2, valueFile1);
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testNamespaceValidation() {
+    Ambiance ambiance = getAmbiance();
+    ConnectorInfoDTO connectorDTO = ConnectorInfoDTO.builder().build();
+    Optional<ConnectorResponseDTO> connectorDTOOptional =
+        Optional.of(ConnectorResponseDTO.builder().connector(connectorDTO).build());
+    doReturn(connectorDTOOptional).when(connectorService).get("account1", "org1", "project1", "abcConnector");
+
+    K8sDirectInfrastructureOutcomeBuilder outcomeBuilder =
+        K8sDirectInfrastructureOutcome.builder().connectorRef("abcConnector").namespace("namespace test");
+
+    try {
+      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
+      fail("Should not reach here.");
+    } catch (InvalidArgumentsException ex) {
+      assertThat(ex.getParams().get("args"))
+          .isEqualTo(
+              "Namespace: \"namespace test\" is an invalid name. Namespaces may only contain lowercase letters, numbers, and '-'.");
+    }
+
+    try {
+      outcomeBuilder.namespace("");
+      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
+      fail("Should not reach here.");
+    } catch (InvalidArgumentsException ex) {
+      assertThat(ex.getParams().get("args")).isEqualTo("Namespace: Namespace cannot be empty");
+    }
+
+    try {
+      outcomeBuilder.namespace(" namespace test ");
+      k8sStepHelper.getK8sInfraDelegateConfig(outcomeBuilder.build(), ambiance);
+      fail("Should not reach here.");
+    } catch (InvalidArgumentsException ex) {
+      assertThat(ex.getParams().get("args"))
+          .isEqualTo("Namespace: [ namespace test ] contains leading or trailing whitespaces");
     }
   }
 }

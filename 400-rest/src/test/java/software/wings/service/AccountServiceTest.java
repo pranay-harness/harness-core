@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.BRETT;
@@ -9,6 +10,7 @@ import static io.harness.rule.OwnerRule.LAZAR;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NANDAN;
+import static io.harness.rule.OwnerRule.NATHAN;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -35,10 +37,12 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -132,6 +136,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
 public class AccountServiceTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
 
@@ -276,9 +281,6 @@ public class AccountServiceTest extends WingsBaseTest {
             .url("https://docs.harness.io/article/r6ut6tldy0-verification-providers")
             .build());
     when(configuration.getTechStackLinks()).thenReturn(techStacksLinkMap);
-    when(userService.getUsersOfAccount(any()))
-        .thenReturn(
-            Arrays.asList(User.Builder.anUser().uuid("userId1").name("name1").email("user1@harness.io").build()));
     return accountService.save(anAccount()
                                    .withCompanyName(HARNESS_NAME)
                                    .withAccountName(HARNESS_NAME)
@@ -292,8 +294,12 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldUpdateTechStacks() {
+    final User currentUser = User.Builder.anUser().email("user1@harness.io").build();
+    UserThreadLocal.set(currentUser);
     Account account = getAccount();
+    currentUser.setAccounts(Arrays.asList(account));
     Set<TechStack> techStackSet = new HashSet<>();
+    when(userService.getUsersOfAccount(any())).thenReturn(Arrays.asList(currentUser));
     TechStack techStack = TechStack.builder().category("Deployment Platforms").technology("AWS").build();
     techStackSet.add(techStack);
     boolean success = accountService.updateTechStacks(account.getUuid(), techStackSet);
@@ -321,7 +327,11 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void shouldUpdateTechStacksWithNullTechStack() {
+    final User currentUser = User.Builder.anUser().email("user1@harness.io").build();
     Account account = getAccount();
+    UserThreadLocal.set(currentUser);
+    currentUser.setAccounts(Arrays.asList(account));
+    when(userService.getUsersOfAccount(any())).thenReturn(Arrays.asList(currentUser));
     boolean success = accountService.updateTechStacks(account.getUuid(), null);
     assertThat(success).isTrue();
     ArgumentCaptor<EmailData> captor = ArgumentCaptor.forClass(EmailData.class);
@@ -334,6 +344,20 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(techStackLinks).hasSize(1);
     String link = techStackLinks.get(0);
     assertThat(link).endsWith("https://docs.harness.io/article/whwnovprrb-cloud-providers");
+  }
+
+  @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void shouldUpdateTechStacksButSendNoEmail() {
+    Account account = getAccount();
+    UserThreadLocal.set(new User());
+    boolean success = accountService.updateTechStacks(account.getUuid(), null);
+    assertThat(success).isTrue();
+    when(userService.getUsersOfAccount(any()))
+        .thenReturn(
+            Arrays.asList(User.Builder.anUser().uuid("userId1").name("name1").email("user1@harness.io").build()));
+    verify(emailNotificationService, never()).send(any());
   }
 
   @Test

@@ -1,6 +1,9 @@
 package software.wings.beans.infrastructure;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -26,6 +29,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "cloudFormationRollbackConfig")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "CloudFormationRollbackConfigKeys")
+@OwnedBy(CDP)
 public class CloudFormationRollbackConfig implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex private String accountId;

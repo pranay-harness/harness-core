@@ -3,9 +3,12 @@ package io.harness.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plancreator.steps.http.HttpStepInfo;
 import io.harness.serializer.KryoRegistrar;
-import io.harness.steps.approval.harness.HarnessApprovalStepParameters;
 import io.harness.steps.approval.stage.ApprovalStageStepParameters;
+import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
+import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
+import io.harness.steps.approval.step.harness.HarnessApprovalStepParameters;
 import io.harness.steps.barriers.BarrierStepParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -14,6 +17,7 @@ import io.harness.steps.dummy.DummySectionOutcome;
 import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.dummy.DummySectionStepTransput;
 import io.harness.steps.fork.ForkStepParameters;
+import io.harness.steps.http.HttpOutcome;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
@@ -52,5 +56,12 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(SectionChainPassThroughData.class, 3217);
     kryo.register(ApprovalStageStepParameters.class, 3218);
     kryo.register(HarnessApprovalStepParameters.class, 3219);
+
+    kryo.register(HarnessApprovalResponseData.class, 3220);
+    kryo.register(HarnessApprovalOutcome.class, 3221);
+
+    // made it same as which was in CD
+    kryo.register(HttpStepInfo.class, 8048);
+    kryo.register(HttpOutcome.class, 12501);
   }
 }

@@ -1,5 +1,9 @@
 package io.harness.yaml.schema.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Set;
@@ -13,6 +17,7 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(DX)
 public class FieldSubtypeData {
   /**
    * Field name in jsonSchema on which {@link JsonSubTypes} is applied.

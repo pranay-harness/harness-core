@@ -239,11 +239,10 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     String delegateName = "testDeleagete";
     KubernetesClusterConfigDTO connectorDTOWithDelegateCreds =
         KubernetesClusterConfigDTO.builder()
+            .delegateSelectors(Collections.singleton(delegateName))
             .credential(KubernetesCredentialDTO.builder()
                             .kubernetesCredentialType(INHERIT_FROM_DELEGATE)
-                            .config(KubernetesDelegateDetailsDTO.builder()
-                                        .delegateSelectors(Collections.singleton(delegateName))
-                                        .build())
+                            .config(KubernetesDelegateDetailsDTO.builder().build())
                             .build())
             .build();
     KubernetesConfig config =

@@ -1,7 +1,7 @@
 <configuration name="Stress Tester" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command"
                nameIsGenerated="true">
     <blaze-settings handler-id="BlazeJavaRunConfigurationHandlerProvider" kind="java_binary"
-                    debug_port="6006" blaze-command="run" keep-in-sync="false">
+                    debug_port="6009" blaze-command="run" >
         <blaze-target>//160-stress-tester:module</blaze-target>
         <blaze-user-flag>
             --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"

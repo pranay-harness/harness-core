@@ -73,11 +73,16 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 }
 
 // SelectTests returns a list of tests which should be run intelligently
-func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change []string) ([]types.RunnableTest, error) {
+func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch, body string) (types.SelectTestsResp, error) {
 	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
-	var tests []types.RunnableTest
-	_, err := c.do(context.Background(), c.Endpoint+path, "POST", &change, &tests)
-	return tests, err
+	var resp types.SelectTestsResp
+	var e types.SelectTestsReq
+	err := json.Unmarshal([]byte(body), &e)
+	if err != nil {
+		return types.SelectTestsResp{}, err
+	}
+	_, err = c.do(context.Background(), c.Endpoint+path, "POST", &e, &resp)
+	return resp, err
 }
 
 func (c *HTTPClient) retry(ctx context.Context, method, path string, in, out interface{}, isOpen bool, b backoff.BackOff) (*http.Response, error) {

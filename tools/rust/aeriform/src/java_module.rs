@@ -4,6 +4,7 @@ use rayon::prelude::*;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
 use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 use crate::java_class::{class_dependencies, external_class, populate_internal_info, JavaClass};
@@ -137,17 +138,20 @@ fn populate_srcs(name: &str, dependencies: &MultiMap<String, String>) -> HashMap
         .map(|line| line.replace(prefix, directory))
         .map(|line| (class(&line), line))
         .map(|tuple| {
-            let (target_module, break_dependencies_on, team) = populate_internal_info(&tuple.1, module_type);
+            let (package, target_module, break_dependencies_on, team, deprecated) =
+                populate_internal_info(&tuple.1, module_type);
             let class_dependencies = class_dependencies(&tuple.0, &dependencies);
             (
                 tuple.0.clone(),
                 JavaClass {
                     name: tuple.0,
+                    package: package,
                     location: tuple.1,
                     dependencies: class_dependencies,
                     target_module: target_module,
                     team: team,
                     break_dependencies_on: break_dependencies_on,
+                    deprecated: deprecated,
                 },
             )
         })
@@ -213,6 +217,10 @@ fn populate_dependencies(name: &String) -> (MultiMap<String, String>, HashSet<St
 }
 
 fn jar_dependencies(jar: &str) -> Vec<(String, String)> {
+    if !Path::new(jar).exists() {
+        panic!(format!("Jar file {} does not exist", jar));
+    }
+
     let output = Command::new("jdeps")
         .args(&["-v", jar])
         .output()

@@ -97,7 +97,9 @@ public class TaskStrategy implements ExecuteStrategy {
                     .setTaskId(taskId)
                     .setTaskCategory(taskRequest.getTaskCategory())
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
-                    .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList())))
+                    .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
+                    .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())
+                    .build())
             .build(),
         Collections.emptyList());
   }

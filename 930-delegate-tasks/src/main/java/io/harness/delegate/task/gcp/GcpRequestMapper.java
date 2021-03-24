@@ -10,7 +10,7 @@ public class GcpRequestMapper {
     return GcpValidationRequest.builder()
         .gcpManualDetailsDTO((GcpManualDetailsDTO) gcpValidationParams.getGcpConnectorDTO().getCredential().getConfig())
         .delegateSelectors(gcpValidationParams.getDelegateSelectors())
-        .encryptedDataDetailList(gcpValidationParams.getEncryptionDetails())
+        .encryptionDetails(gcpValidationParams.getEncryptionDetails())
         .build();
   }
 }

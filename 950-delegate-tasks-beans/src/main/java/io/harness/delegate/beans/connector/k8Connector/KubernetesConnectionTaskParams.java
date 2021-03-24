@@ -1,5 +1,8 @@
+
+
 package io.harness.delegate.beans.connector.k8Connector;
 
+import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -7,12 +10,13 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import java.util.List;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
-public class KubernetesConnectionTaskParams implements TaskParameters, ExecutionCapabilityDemander {
+@Data
+@SuperBuilder
+public class KubernetesConnectionTaskParams
+    extends ConnectorTaskParams implements TaskParameters, ExecutionCapabilityDemander {
   KubernetesClusterConfigDTO kubernetesClusterConfig;
   private List<EncryptedDataDetail> encryptionDetails;
 

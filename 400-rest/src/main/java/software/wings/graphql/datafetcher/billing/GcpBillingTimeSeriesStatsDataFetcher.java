@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.GcpBillingTimeSeriesStatsDTO;
@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GcpBillingTimeSeriesStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate,
     CloudBillingFilter, CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;

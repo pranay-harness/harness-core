@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -32,6 +33,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -75,6 +77,7 @@ import org.mockito.Spy;
 /**
  * Created by anubhaw on 1/24/17.
  */
+@OwnedBy(CDP)
 public class AwsInfrastructureProviderTest extends WingsBaseTest {
   @Mock private AwsUtils mockAwsUtils;
   @Mock private HostService hostService;

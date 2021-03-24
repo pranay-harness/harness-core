@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -39,7 +39,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import retrofit2.Retrofit;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ElkDataCollectorTest extends CategoryTest {
   private ElkConfig config;
   private ElkDataCollector elkDataCollector;

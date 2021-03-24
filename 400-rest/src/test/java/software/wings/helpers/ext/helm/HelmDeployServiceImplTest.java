@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
 import static io.harness.k8s.model.HelmVersion.V2;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -126,6 +128,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import wiremock.com.google.common.collect.ImmutableMap;
 
+@OwnedBy(CDP)
 public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmClient helmClient;
   @Mock private GitService gitService;

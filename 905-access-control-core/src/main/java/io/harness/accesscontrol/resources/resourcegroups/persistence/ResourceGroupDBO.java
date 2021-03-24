@@ -2,6 +2,7 @@ package io.harness.accesscontrol.resources.resourcegroups.persistence;
 
 import static io.harness.ng.DbAliases.ACCESS_CONTROL;
 
+import io.harness.accesscontrol.AccessControlEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
@@ -43,7 +44,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("resourcegroups")
 @TypeAlias("resourcegroups")
 @StoreIn(ACCESS_CONTROL)
-public class ResourceGroupDBO implements PersistentRegularIterable {
+public class ResourceGroupDBO implements PersistentRegularIterable, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty final String scopeIdentifier;
   @NotEmpty final String identifier;

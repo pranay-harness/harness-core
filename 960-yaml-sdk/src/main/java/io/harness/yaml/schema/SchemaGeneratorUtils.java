@@ -1,5 +1,9 @@
 package io.harness.yaml.schema;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
@@ -11,6 +15,7 @@ import java.io.IOException;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(DX)
 public class SchemaGeneratorUtils {
   public static class SchemaPrinter extends DefaultPrettyPrinter {
     @Override

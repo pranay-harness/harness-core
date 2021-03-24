@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -32,6 +33,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -142,6 +144,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class PcfStateHelper {
   public static final String WORKFLOW_STANDARD_PARAMS = "workflowStandardParams";
   public static final String CURRENT_USER = "currentUser";

@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>876-orchestration-beans</artifactId>
+    <artifactId>874-orchestration-delay</artifactId>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
@@ -68,12 +68,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>890-pms-contracts</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>882-pms-sdk-core</artifactId>
+            <artifactId>980-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

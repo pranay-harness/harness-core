@@ -2,7 +2,7 @@ package io.harness.migrations.all;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.migrations.Migration;
@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AmendCorruptedEncryptedServiceVariable implements Migration {
   @Inject private YamlHelper yamlHelper;
   @Inject private WingsPersistence wingsPersistence;

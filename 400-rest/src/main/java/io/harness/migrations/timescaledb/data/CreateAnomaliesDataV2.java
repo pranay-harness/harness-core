@@ -1,10 +1,10 @@
 package io.harness.migrations.timescaledb.data;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.timescaledb.AbstractTimeScaleDBMigration;
 
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class CreateAnomaliesDataV2 extends AbstractTimeScaleDBMigration {
   @Override
   public String getFileName() {

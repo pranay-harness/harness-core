@@ -1,6 +1,9 @@
 package io.harness.gitsync.gitfileactivity.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 import io.harness.mongo.index.FdIndex;
 import io.harness.ng.core.OrganizationAccess;
@@ -25,6 +28,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @HarnessEntity(exportable = false)
 @Document("gitFileActivityNG")
 @TypeAlias("io.harness.gitsync.gitfileactivity.beans.gitFileActivity")
+@OwnedBy(DX)
 public class GitFileActivity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
                                         OrganizationAccess, ProjectAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;

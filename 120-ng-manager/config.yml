@@ -137,6 +137,7 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
     password: ""
 
 redisLockConfig:
@@ -182,7 +183,7 @@ ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
 
-ResoureGroupConfig:
+resourceGroupConfig:
   ng-manager:
     baseUrl: http://localhost:7457/
     secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
@@ -194,7 +195,19 @@ logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
 
-
+outboxIteratorConfig:
+  threadPoolSize: 2
+  intervalInSeconds: 90
+  targetIntervalInSeconds: 60
+  acceptableNoAlertDelayInSeconds: 60
+  maximumOutboxEventHandlingAttempts: 10
 
 accessControlClient:
   enableAccessControl: false
+
+accessControlAdminClient:
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM

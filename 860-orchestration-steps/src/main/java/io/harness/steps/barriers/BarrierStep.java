@@ -48,8 +48,8 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
     final String identifier = barrierStepParameters.getIdentifier();
     log.warn("There is only one barrier present for planExecution [{}] with [{}] identifier, passing through it...",
         ambiance.getPlanExecutionId(), identifier);
-    BarrierExecutionInstance barrierExecutionInstance =
-        barrierService.findByPlanNodeId(AmbianceUtils.obtainCurrentSetupId(ambiance));
+    BarrierExecutionInstance barrierExecutionInstance = barrierService.findByPlanNodeIdAndPlanExecutionId(
+        AmbianceUtils.obtainCurrentSetupId(ambiance), ambiance.getPlanExecutionId());
     barrierExecutionInstance.setBarrierState(DOWN);
     HMongoTemplate.retry(() -> barrierService.save(barrierExecutionInstance));
     return StepResponse.builder()
@@ -68,8 +68,8 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
   @Override
   public AsyncExecutableResponse executeAsync(
       Ambiance ambiance, BarrierStepParameters barrierStepParameters, StepInputPackage inputPackage) {
-    BarrierExecutionInstance barrierExecutionInstance =
-        barrierService.findByPlanNodeId(AmbianceUtils.obtainCurrentSetupId(ambiance));
+    BarrierExecutionInstance barrierExecutionInstance = barrierService.findByPlanNodeIdAndPlanExecutionId(
+        AmbianceUtils.obtainCurrentSetupId(ambiance), ambiance.getPlanExecutionId());
 
     log.info(
         "Barrier Step getting executed. RuntimeId: [{}], barrierUuid [{}], barrierIdentifier [{}], barrierGroupId [{}]",
@@ -86,7 +86,7 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
       Ambiance ambiance, BarrierStepParameters barrierStepParameters, Map<String, ResponseData> responseDataMap) {
     // if barrier is still in STANDING => update barrier state
     BarrierExecutionInstance barrierExecutionInstance =
-        updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance));
+        updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance), ambiance.getPlanExecutionId());
 
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     BarrierResponseData responseData =
@@ -109,11 +109,12 @@ public class BarrierStep implements SyncExecutable<BarrierStepParameters>, Async
   @Override
   public void handleAbort(
       Ambiance ambiance, BarrierStepParameters stepParameters, AsyncExecutableResponse executableResponse) {
-    updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance));
+    updateBarrierExecutionInstance(AmbianceUtils.obtainCurrentSetupId(ambiance), ambiance.getPlanExecutionId());
   }
 
-  private BarrierExecutionInstance updateBarrierExecutionInstance(String planNodeId) {
-    BarrierExecutionInstance barrierExecutionInstance = barrierService.findByPlanNodeId(planNodeId);
+  private BarrierExecutionInstance updateBarrierExecutionInstance(String planNodeId, String planExecutionId) {
+    BarrierExecutionInstance barrierExecutionInstance =
+        barrierService.findByPlanNodeIdAndPlanExecutionId(planNodeId, planExecutionId);
     return barrierService.update(barrierExecutionInstance);
   }
 }

@@ -8,7 +8,7 @@ import static software.wings.sm.states.BambooState.BambooExecutionResponse;
 
 import static java.time.Duration.ofSeconds;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
@@ -36,7 +36,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class BambooTask extends AbstractDelegateRunnableTask {
   @Inject private BambooService bambooService;
 

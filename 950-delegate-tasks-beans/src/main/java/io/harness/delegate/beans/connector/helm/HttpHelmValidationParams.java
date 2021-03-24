@@ -1,21 +1,21 @@
 package io.harness.delegate.beans.connector.helm;
 
+import io.harness.delegate.beans.connector.ConnectorTaskParams;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
-import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import java.util.Collections;
 import java.util.List;
-import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-@Value
-@Builder
-public class HttpHelmValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
+@Data
+@SuperBuilder
+public class HttpHelmValidationParams
+    extends ConnectorTaskParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   HttpHelmConnectorDTO httpHelmConnectorDTO;
   List<EncryptedDataDetail> encryptionDataDetails;
   String connectorName;
@@ -32,8 +32,6 @@ public class HttpHelmValidationParams implements ConnectorValidationParams, Exec
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    final String httpHelmRepoUrl = httpHelmConnectorDTO.getHelmRepoUrl();
-    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        httpHelmRepoUrl, maskingEvaluator));
+    return HttpHelmCapabilityHelper.fetchRequiredExecutionCapabilities(httpHelmConnectorDTO, maskingEvaluator);
   }
 }

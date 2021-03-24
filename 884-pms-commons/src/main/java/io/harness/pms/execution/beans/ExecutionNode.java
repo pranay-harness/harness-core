@@ -17,6 +17,7 @@ import org.bson.Document;
 @Builder
 public class ExecutionNode {
   String uuid;
+  String setupId;
   String name;
   String identifier;
   String baseFqn;

@@ -1,15 +1,24 @@
 package io.harness.accesscontrol;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
-
 import io.harness.accesscontrol.principals.PrincipalType;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModel;
+import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "principalType", include = EXISTING_PROPERTY, visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(name = "USER", value = HPrincipal.class) })
-public interface Principal {
-  PrincipalType getPrincipalType();
-  String getPrincipalIdentifier();
+@Data
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "PrincipalKeys")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ApiModel(value = "Principal")
+public class Principal {
+  @NotEmpty String principalIdentifier;
+  @NotNull PrincipalType principalType;
 }

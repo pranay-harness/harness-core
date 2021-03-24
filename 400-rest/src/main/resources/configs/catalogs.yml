@@ -35,6 +35,8 @@ ARTIFACT_TYPE:
       value: IIS_APP
     - name: IIS Virtual Directory
       value: IIS_VirtualDirectory
+    - name: Microsoft NuGet
+      value: NUGET
     - name: Other
       value: OTHER
 

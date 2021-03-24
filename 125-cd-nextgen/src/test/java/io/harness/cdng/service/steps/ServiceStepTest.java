@@ -96,7 +96,7 @@ public class ServiceStepTest extends CategoryTest {
             .service(entity)
             .serviceDefinition(ServiceDefinition.builder().serviceSpec(KubernetesServiceSpec.builder().build()).build())
             .build(),
-        Collections.singletonList(stepOutcome), 123);
+        Collections.singletonList(stepOutcome), 123, null);
 
     assertThat(serviceOutcome.getManifestResults()).isNotEmpty();
     assertThat(serviceOutcome.getManifestResults().keySet().size()).isEqualTo(2);

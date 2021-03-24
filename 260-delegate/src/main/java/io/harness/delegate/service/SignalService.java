@@ -1,6 +1,6 @@
 package io.harness.delegate.service;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.google.inject.Inject;
@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class SignalService {
   private AtomicReference<State> state = new AtomicReference<>(State.RUNNING);
 

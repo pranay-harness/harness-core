@@ -1,6 +1,6 @@
 package software.wings.graphql.schema.type.secrets;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.utils.RequestField;
 
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @Builder
 @FieldNameConstants(innerTypeName = "QLEncryptedTextUpdateKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLEncryptedTextUpdate {
   RequestField<String> name;
   RequestField<String> value;
