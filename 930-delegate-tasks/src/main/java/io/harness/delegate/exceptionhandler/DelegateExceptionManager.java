@@ -86,10 +86,12 @@ public class DelegateExceptionManager {
 
   private WingsException prepareUnhandledExceptionResponse(Exception exception) {
     Exception unhandledException = exception;
-    if (!kryoSerializer.isRegistered(unhandledException.getClass())) {
-      log.error("Kyro handler not found for exception", unhandledException);
+    if (unhandledException instanceof WingsException && !kryoSerializer.isRegistered(unhandledException.getClass())) {
+      log.error("Kryo handler not found for exception ", unhandledException);
       unhandledException = new KryoHandlerNotFoundException(unhandledException.getMessage());
+      return new DelegateErrorHandlerException(unhandledException.getMessage(), unhandledException);
     }
+    // default is to wrap unknown exception into wings exception using its message
     return new DelegateErrorHandlerException(unhandledException.getMessage());
   }
 
