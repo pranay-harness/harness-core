@@ -3,7 +3,7 @@ package software.wings.beans.settings.helm;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.HelmRepoYaml;
 
 import lombok.Builder;
@@ -22,7 +22,7 @@ public final class AmazonS3HelmRepoConfigYaml extends HelmRepoYaml {
 
   @Builder
   public AmazonS3HelmRepoConfigYaml(String type, String harnessApiVersion, String cloudProvider, String bucket,
-      String region, UsageRestrictions.Yaml usageRestrictions) {
+      String region, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.cloudProvider = cloudProvider;
     this.bucket = bucket;

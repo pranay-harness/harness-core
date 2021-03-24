@@ -72,22 +72,6 @@ public class LambdaSpecification extends DeploymentSpecification implements Acco
           .timeout(this.getTimeout())
           .build();
     }
-
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode(callSuper = true)
-    public static final class Yaml extends BaseYaml {
-      private String runtime;
-      private Integer memorySize = 128;
-      private Integer timeout = 3;
-
-      @Builder
-      public Yaml(String runtime, Integer memorySize, Integer timeout) {
-        this.runtime = runtime;
-        this.memorySize = memorySize;
-        this.timeout = timeout;
-      }
-    }
   }
 
   @Data

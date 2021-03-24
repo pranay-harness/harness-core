@@ -2,7 +2,7 @@ package software.wings.settings;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -70,9 +70,9 @@ public abstract class SettingValue implements ExecutionCapabilityDemander {
   @NoArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   public abstract static class Yaml extends BaseEntityYaml {
-    private UsageRestrictions.Yaml usageRestrictions;
+    private UsageRestrictionsYaml usageRestrictions;
 
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
+    public Yaml(String type, String harnessApiVersion, UsageRestrictionsYaml usageRestrictions) {
       super(type, harnessApiVersion);
       this.usageRestrictions = usageRestrictions;
     }

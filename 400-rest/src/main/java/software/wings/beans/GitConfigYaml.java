@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.SourceRepoProviderYaml;
 
 import lombok.Builder;
@@ -28,7 +28,7 @@ public final class GitConfigYaml extends SourceRepoProviderYaml {
 
   @Builder
   public GitConfigYaml(String type, String harnessApiVersion, String url, String username, String password,
-      String branch, String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshKeyName,
+      String branch, String reference, UsageRestrictionsYaml usageRestrictions, boolean keyAuth, String sshKeyName,
       String description, String authorName, String authorEmailId, String commitMessage, GitConfig.UrlType urlType) {
     super(type, harnessApiVersion, url, username, password, usageRestrictions);
     this.branch = branch;

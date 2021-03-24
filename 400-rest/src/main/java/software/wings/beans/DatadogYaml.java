@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -22,7 +22,7 @@ public final class DatadogYaml extends VerificationProviderYaml {
 
   @Builder
   public DatadogYaml(String type, String harnessApiVersion, String url, String apiKey, String applicationKey,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.url = url;
     this.apiKey = apiKey;

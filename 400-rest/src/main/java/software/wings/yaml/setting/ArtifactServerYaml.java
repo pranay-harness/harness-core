@@ -2,7 +2,7 @@ package software.wings.yaml.setting;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 
 import lombok.Data;
@@ -21,7 +21,7 @@ public abstract class ArtifactServerYaml extends SettingValue.Yaml {
   private String password = ENCRYPTED_VALUE_STR;
 
   public ArtifactServerYaml(String type, String harnessApiVersion, String url, String username, String password,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.url = url;
     this.username = username;

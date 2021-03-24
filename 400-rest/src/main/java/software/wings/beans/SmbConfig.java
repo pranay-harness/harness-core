@@ -11,7 +11,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.ArtifactServerYaml;
@@ -81,7 +81,7 @@ public class SmbConfig extends SettingValue implements EncryptableSetting {
     String domain;
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String domain, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionsYaml usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.domain = domain;
     }

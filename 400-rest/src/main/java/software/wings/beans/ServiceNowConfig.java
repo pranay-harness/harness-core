@@ -13,7 +13,7 @@ import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CollaborationProviderYaml;
@@ -95,7 +95,7 @@ public class ServiceNowConfig extends SettingValue implements EncryptableSetting
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String baseUrl, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionsYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.baseUrl = baseUrl;
       this.username = username;

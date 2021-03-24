@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import lombok.Builder;
@@ -27,7 +27,7 @@ public final class AwsConfigYaml extends CloudProviderYaml {
 
   @Builder
   public AwsConfigYaml(String type, String harnessApiVersion, String accessKey, String accessKeySecretId,
-      String secretKey, UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials, String tag,
+      String secretKey, UsageRestrictionsYaml usageRestrictions, boolean useEc2IamCredentials, String tag,
       boolean assumeCrossAccountRole, AwsCrossAccountAttributes crossAccountAttributes, String defaultRegion) {
     super(type, harnessApiVersion, usageRestrictions);
     this.accessKey = accessKey;

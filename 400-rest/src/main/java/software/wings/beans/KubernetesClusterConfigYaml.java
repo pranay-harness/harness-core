@@ -6,7 +6,7 @@ import io.harness.ccm.config.CCMConfigYaml;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.OidcGrantType;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import java.util.List;
@@ -47,10 +47,9 @@ public class KubernetesClusterConfigYaml extends CloudProviderYaml {
   public KubernetesClusterConfigYaml(boolean useKubernetesDelegate, String delegateName, List<String> delegateSelectors,
       String type, String harnessApiVersion, String masterUrl, String username, String usernameSecretId,
       String password, String caCert, String clientCert, String clientKey, String clientKeyPassphrase,
-      String serviceAccountToken, String clientKeyAlgo, boolean skipValidation,
-      UsageRestrictions.Yaml usageRestrictions, CCMConfigYaml ccmConfig, KubernetesClusterAuthType authType,
-      String oidcIdentityProviderUrl, String oidcUsername, OidcGrantType oidcGrantType, String oidcScopes,
-      String oidcSecret, String oidcPassword, String oidcClientId) {
+      String serviceAccountToken, String clientKeyAlgo, boolean skipValidation, UsageRestrictionsYaml usageRestrictions,
+      CCMConfigYaml ccmConfig, KubernetesClusterAuthType authType, String oidcIdentityProviderUrl, String oidcUsername,
+      OidcGrantType oidcGrantType, String oidcScopes, String oidcSecret, String oidcPassword, String oidcClientId) {
     super(type, harnessApiVersion, usageRestrictions);
     this.useKubernetesDelegate = useKubernetesDelegate;
     this.delegateName = delegateName;

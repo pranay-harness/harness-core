@@ -4,7 +4,7 @@ import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.AzureEnvironmentType;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import lombok.Builder;
@@ -24,7 +24,7 @@ public final class AzureConfigYaml extends CloudProviderYaml {
 
   @Builder
   public AzureConfigYaml(String type, String harnessApiVersion, String clientId, String tenantId, String key,
-      UsageRestrictions.Yaml usageRestrictions, AzureEnvironmentType azureEnvironmentType) {
+      UsageRestrictionsYaml usageRestrictions, AzureEnvironmentType azureEnvironmentType) {
     super(type, harnessApiVersion, usageRestrictions);
     this.clientId = clientId;
     this.tenantId = tenantId;

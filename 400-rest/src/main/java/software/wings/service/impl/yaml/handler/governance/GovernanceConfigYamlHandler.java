@@ -5,6 +5,7 @@ import io.harness.exception.HarnessException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.TimeRangeBasedFreezeConfigYaml;
 
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfigYaml;
@@ -34,7 +35,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
     TimeRangeBasedFreezeConfigYamlHandler timeRangeBasedFreezeConfigYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.GOVERNANCE_FREEZE_CONFIG, TIME_RANGE_BASED_YAML_TYPE);
 
-    List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigYaml =
+    List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigYaml =
         bean.getTimeRangeBasedFreezeConfigs()
             .stream()
             .map(timeRangeBasedFreezeConfig -> {
@@ -91,7 +92,7 @@ public class GovernanceConfigYamlHandler extends BaseYamlHandler<GovernanceConfi
 
     List<TimeRangeBasedFreezeConfig> timeRangeBasedFreezeConfigs = new ArrayList<>();
     if (EmptyPredicate.isNotEmpty(yaml.getTimeRangeBasedFreezeConfigs())) {
-      for (TimeRangeBasedFreezeConfig.Yaml entry : yaml.getTimeRangeBasedFreezeConfigs()) {
+      for (TimeRangeBasedFreezeConfigYaml entry : yaml.getTimeRangeBasedFreezeConfigs()) {
         ChangeContext.Builder clonedContext = cloneFileChangeContext(changeContext, entry);
         timeRangeBasedFreezeConfigs.add(
             timeRangeBasedFreezeConfigYamlHandler.upsertFromYaml(clonedContext.build(), changeSetContext));

@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.LoadBalancerProviderYaml;
 
 import lombok.Builder;
@@ -24,7 +24,7 @@ public final class ElasticLoadBalancerConfigYaml extends LoadBalancerProviderYam
 
   @Builder
   public ElasticLoadBalancerConfigYaml(String type, String harnessApiVersion, String region, String loadBalancerName,
-      String accessKey, String secretKey, UsageRestrictions.Yaml usageRestrictions, boolean useEc2IamCredentials) {
+      String accessKey, String secretKey, UsageRestrictionsYaml usageRestrictions, boolean useEc2IamCredentials) {
     super(type, harnessApiVersion, usageRestrictions);
     this.region = region;
     this.loadBalancerName = loadBalancerName;

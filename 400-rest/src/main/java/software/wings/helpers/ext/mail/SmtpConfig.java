@@ -12,7 +12,7 @@ import io.harness.expression.ExpressionEvaluator;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.stencils.DefaultValue;
@@ -101,7 +101,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String host, int port, String fromAddress, boolean useSSL,
-        String username, String password, UsageRestrictions.Yaml usageRestrictions) {
+        String username, String password, UsageRestrictionsYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.host = host;
       this.port = port;

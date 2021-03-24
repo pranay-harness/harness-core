@@ -10,7 +10,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -111,7 +111,7 @@ public class SplunkConfig extends SettingValue implements EncryptableSetting, Ex
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String splunkUrl, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionsYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.splunkUrl = splunkUrl;
       this.username = username;

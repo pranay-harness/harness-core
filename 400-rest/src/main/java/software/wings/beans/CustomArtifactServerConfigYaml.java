@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
 import lombok.Builder;
@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 public final class CustomArtifactServerConfigYaml extends ArtifactServerYaml {
   @Builder
   public CustomArtifactServerConfigYaml(
-      String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
+      String type, String harnessApiVersion, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, null, null, null, usageRestrictions);
   }
 }

@@ -50,6 +50,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
+import software.wings.beans.trigger.TriggerYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -828,8 +829,8 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     yamlFile = new File(resourcePath + PATH_DELIMITER + validTriggerFiles.Trigger1);
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<Trigger.Yaml> changeContext = getChangeContext(yamlString);
-    Trigger.Yaml yaml = (Trigger.Yaml) getYaml(yamlString, Trigger.Yaml.class);
+    ChangeContext<TriggerYaml> changeContext = getChangeContext(yamlString);
+    TriggerYaml yaml = (TriggerYaml) getYaml(yamlString, TriggerYaml.class);
     changeContext.setYaml(yaml);
 
     pipeline = Pipeline.builder().uuid("pipeline-id").name("tp_2").build();
@@ -861,8 +862,8 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     yamlFile = new File(resourcePath + PATH_DELIMITER + trigger1);
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<Trigger.Yaml> changeContext = getChangeContext(yamlString);
-    Trigger.Yaml yaml = (Trigger.Yaml) getYaml(yamlString, Trigger.Yaml.class);
+    ChangeContext<TriggerYaml> changeContext = getChangeContext(yamlString);
+    TriggerYaml yaml = (TriggerYaml) getYaml(yamlString, TriggerYaml.class);
     changeContext.setYaml(yaml);
 
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -876,8 +877,8 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<Trigger.Yaml> changeContext = getChangeContext(yamlString);
-    Trigger.Yaml yaml = (Trigger.Yaml) getYaml(yamlString, Trigger.Yaml.class);
+    ChangeContext<TriggerYaml> changeContext = getChangeContext(yamlString);
+    TriggerYaml yaml = (TriggerYaml) getYaml(yamlString, TriggerYaml.class);
     changeContext.setYaml(yaml);
 
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -921,14 +922,14 @@ public class TriggerYamlHandlerTest extends YamlHandlerTestBase {
     reset(triggerService);
   }
 
-  private ChangeContext<Trigger.Yaml> getChangeContext(String validYamlContent) {
+  private ChangeContext<TriggerYaml> getChangeContext(String validYamlContent) {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<Trigger.Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<TriggerYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.TRIGGER);
     changeContext.setYamlSyncHandler(handler);

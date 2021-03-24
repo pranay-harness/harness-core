@@ -5,7 +5,7 @@ import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -26,7 +26,7 @@ public final class VerificationYaml extends VerificationProviderYaml {
 
   @Builder
   public VerificationYaml(String type, String harnessApiVersion, String url, String username, String password,
-      String token, String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
+      String token, String authMechanism, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.url = url;
     this.username = username;

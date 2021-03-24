@@ -3,7 +3,7 @@ package software.wings.beans.settings.azureartifacts;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.AzureArtifactsYaml;
 
 import lombok.Builder;
@@ -21,7 +21,7 @@ public final class AzureArtifactsPATConfigYaml extends AzureArtifactsYaml {
 
   @Builder
   public AzureArtifactsPATConfigYaml(String type, String harnessApiVersion, String azureDevopsUrl, String pat,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.azureDevopsUrl = azureDevopsUrl;
     this.pat = pat;

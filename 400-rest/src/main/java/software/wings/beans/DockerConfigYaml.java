@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public final class DockerConfigYaml extends ArtifactServerYaml {
 
   @Builder
   public DockerConfigYaml(String type, String harnessApiVersion, String url, String username, String password,
-      UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors) {
+      UsageRestrictionsYaml usageRestrictions, List<String> delegateSelectors) {
     super(type, harnessApiVersion, url, username, password, usageRestrictions);
     this.delegateSelectors = delegateSelectors;
   }

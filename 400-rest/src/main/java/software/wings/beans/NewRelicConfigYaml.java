@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -17,7 +17,7 @@ public final class NewRelicConfigYaml extends VerificationProviderYaml {
 
   @Builder
   public NewRelicConfigYaml(String type, String harnessApiVersion, String apiKey, String newRelicAccountId,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.apiKey = apiKey;
     this.newRelicAccountId = newRelicAccountId;

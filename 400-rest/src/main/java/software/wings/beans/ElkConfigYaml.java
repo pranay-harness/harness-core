@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
@@ -25,7 +25,7 @@ public final class ElkConfigYaml extends VerificationProviderYaml {
 
   @Builder
   public ElkConfigYaml(String type, String harnessApiVersion, String elkUrl, ElkValidationType validationType,
-      String username, String password, String connectorType, UsageRestrictions.Yaml usageRestrictions) {
+      String username, String password, String connectorType, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.elkUrl = elkUrl;
     this.validationType = validationType;

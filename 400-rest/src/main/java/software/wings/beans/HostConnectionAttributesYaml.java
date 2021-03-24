@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 
 import lombok.Data;
@@ -22,7 +22,7 @@ public final class HostConnectionAttributesYaml extends SettingValue.Yaml {
 
   @lombok.Builder
   public HostConnectionAttributesYaml(String type, String harnessApiVersion, String connectionType, String accessType,
-      String userName, String key, UsageRestrictions.Yaml usageRestrictions) {
+      String userName, String key, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.connectionType = connectionType;
     this.accessType = accessType;

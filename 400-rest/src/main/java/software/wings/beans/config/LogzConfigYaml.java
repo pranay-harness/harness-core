@@ -3,7 +3,7 @@ package software.wings.beans.config;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -21,7 +21,7 @@ public final class LogzConfigYaml extends VerificationProviderYaml {
 
   @Builder
   public LogzConfigYaml(
-      String type, String harnessApiVersion, String logzUrl, String token, UsageRestrictions.Yaml usageRestrictions) {
+      String type, String harnessApiVersion, String logzUrl, String token, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.logzUrl = logzUrl;
     this.token = token;

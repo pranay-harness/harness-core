@@ -13,7 +13,7 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.security.UsageRestrictions;
-import software.wings.security.UsageRestrictions.Yaml;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.service.impl.SettingServiceHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
@@ -73,7 +73,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   }
 
   protected void toYaml(Y yaml, SettingAttribute settingAttribute, String appId) {
-    Yaml usageRestrictionsYaml =
+    UsageRestrictionsYaml usageRestrictionsYaml =
         usageRestrictionsYamlHandler.toYaml(settingServiceHelper.getUsageRestrictions(settingAttribute), appId);
     yaml.setUsageRestrictions(usageRestrictionsYaml);
   }

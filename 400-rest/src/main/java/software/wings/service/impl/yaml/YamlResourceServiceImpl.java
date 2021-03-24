@@ -72,6 +72,7 @@ import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.governance.GovernanceConfigYaml;
 import software.wings.beans.template.Template;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerYaml;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
@@ -291,10 +292,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     Trigger trigger = triggerService.get(appId, triggerId);
 
-    Trigger.Yaml triggerYaml = (Trigger.Yaml) yamlHandlerFactory
-                                   .getYamlHandler(YamlType.TRIGGER)
+    TriggerYaml triggerYaml = (TriggerYaml) yamlHandlerFactory
+                                  .getYamlHandler(YamlType.TRIGGER)
 
-                                   .toYaml(trigger, appId);
+                                  .toYaml(trigger, appId);
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, trigger.getUuid(), accountId, triggerYaml, trigger.getName() + YAML_EXTENSION);

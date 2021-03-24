@@ -2,7 +2,7 @@ package software.wings.beans.governance;
 
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.governance.TimeRangeBasedFreezeConfig;
+import io.harness.governance.TimeRangeBasedFreezeConfigYaml;
 
 import software.wings.yaml.BaseEntityYaml;
 
@@ -17,11 +17,11 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = false)
 public final class GovernanceConfigYaml extends BaseEntityYaml {
   private boolean disableAllDeployments;
-  private List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs;
+  private List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigs;
 
   @lombok.Builder
   public GovernanceConfigYaml(String type, String harnessApiVersion, boolean disableAllDeployments,
-      List<TimeRangeBasedFreezeConfig.Yaml> timeRangeBasedFreezeConfigs) {
+      List<TimeRangeBasedFreezeConfigYaml> timeRangeBasedFreezeConfigs) {
     super(type, harnessApiVersion);
     this.disableAllDeployments = disableAllDeployments;
     this.timeRangeBasedFreezeConfigs = timeRangeBasedFreezeConfigs;

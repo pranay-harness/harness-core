@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -20,7 +20,7 @@ public final class InstanaConfigYaml extends VerificationProviderYaml {
   private String apiToken;
   @Builder
   public InstanaConfigYaml(String type, String harnessApiVersion, String instanaUrl, String apiToken,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.instanaUrl = instanaUrl;
     this.apiToken = apiToken;

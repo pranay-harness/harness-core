@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import lombok.Data;
@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 public final class PhysicalDataCenterConfigYaml extends CloudProviderYaml {
   @lombok.Builder
-  public PhysicalDataCenterConfigYaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions) {
+  public PhysicalDataCenterConfigYaml(String type, String harnessApiVersion, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
   }
 }

@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -23,7 +23,7 @@ public final class AppDynamicsConfigYaml extends VerificationProviderYaml {
 
   @Builder
   public AppDynamicsConfigYaml(String type, String harnessApiVersion, String username, String password,
-      String accountName, String controllerUrl, UsageRestrictions.Yaml usageRestrictions) {
+      String accountName, String controllerUrl, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.username = username;
     this.password = password;

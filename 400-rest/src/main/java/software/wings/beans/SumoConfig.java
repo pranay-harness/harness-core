@@ -9,7 +9,7 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.VerificationProviderYaml;
@@ -86,7 +86,7 @@ public class SumoConfig extends SettingValue implements EncryptableSetting, Exec
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String sumoUrl, String accessId, String accessKey,
-        UsageRestrictions.Yaml usageRestrictions) {
+        UsageRestrictionsYaml usageRestrictions) {
       super(type, harnessApiVersion, usageRestrictions);
       this.sumoUrl = sumoUrl;
       this.accessId = accessId;

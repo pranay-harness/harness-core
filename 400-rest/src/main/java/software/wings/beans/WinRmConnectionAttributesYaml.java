@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 
 import lombok.Data;
@@ -26,7 +26,7 @@ public final class WinRmConnectionAttributesYaml extends SettingValue.Yaml {
   @lombok.Builder
   public WinRmConnectionAttributesYaml(String type, String harnessApiVersion,
       WinRmConnectionAttributes.AuthenticationScheme authenticationScheme, String domain, String userName,
-      String password, boolean useSSL, int port, boolean skipCertChecks, UsageRestrictions.Yaml usageRestrictions) {
+      String password, boolean useSSL, int port, boolean skipCertChecks, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.authenticationScheme = authenticationScheme;
     this.domain = domain;

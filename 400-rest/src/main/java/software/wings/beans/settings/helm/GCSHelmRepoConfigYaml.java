@@ -3,7 +3,7 @@ package software.wings.beans.settings.helm;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.HelmRepoYaml;
 
 import lombok.Builder;
@@ -21,7 +21,7 @@ public final class GCSHelmRepoConfigYaml extends HelmRepoYaml {
 
   @Builder
   public GCSHelmRepoConfigYaml(String type, String harnessApiVersion, String cloudProvider, String bucket,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.cloudProvider = cloudProvider;
     this.bucket = bucket;

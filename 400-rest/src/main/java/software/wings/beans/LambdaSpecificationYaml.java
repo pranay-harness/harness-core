@@ -14,12 +14,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public final class LambdaSpecificationYaml extends DeploymentSpecificationYaml {
-  private LambdaSpecification.DefaultSpecification.Yaml defaults;
+  private LambdaSpecificationDefaultSpecificationYaml defaults;
   private List<LambdaSpecification.FunctionSpecification.Yaml> functions;
 
   @Builder
   public LambdaSpecificationYaml(String type, String harnessApiVersion,
-      LambdaSpecification.DefaultSpecification.Yaml defaults,
+      LambdaSpecificationDefaultSpecificationYaml defaults,
       List<LambdaSpecification.FunctionSpecification.Yaml> functions) {
     super(type, harnessApiVersion);
     this.defaults = defaults;

@@ -13,6 +13,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.FunctionSpecification;
+import software.wings.beans.LambdaSpecificationDefaultSpecificationYaml;
 import software.wings.beans.LambdaSpecificationYaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -42,7 +43,7 @@ public class LambdaSpecificationYamlHandler
     DefaultSpecificationYamlHandler defaultSpecYamlHandler =
         yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION);
     DefaultSpecification defaultSpecification = lambdaSpecification.getDefaults();
-    DefaultSpecification.Yaml defaultSpecYaml = null;
+    LambdaSpecificationDefaultSpecificationYaml defaultSpecYaml = null;
     if (defaultSpecification != null) {
       defaultSpecYaml = defaultSpecYamlHandler.toYaml(defaultSpecification, appId);
     }
@@ -89,7 +90,7 @@ public class LambdaSpecificationYamlHandler
 
     // default specification
     DefaultSpecification defaultSpec = null;
-    DefaultSpecification.Yaml defaultSpecYaml = yaml.getDefaults();
+    LambdaSpecificationDefaultSpecificationYaml defaultSpecYaml = yaml.getDefaults();
     if (defaultSpecYaml != null) {
       DefaultSpecificationYamlHandler defaultSpecYamlHandler =
           yamlHandlerFactory.getYamlHandler(YamlType.DEFAULT_SPECIFICATION);

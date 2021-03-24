@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.VerificationProviderYaml;
 
 import lombok.Builder;
@@ -21,7 +21,7 @@ public final class DynaTraceYaml extends VerificationProviderYaml {
 
   @Builder
   public DynaTraceYaml(String type, String harnessApiVersion, String dynaTraceUrl, String apiToken,
-      UsageRestrictions.Yaml usageRestrictions) {
+      UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, usageRestrictions);
     this.dynaTraceUrl = dynaTraceUrl;
     this.apiToken = apiToken;

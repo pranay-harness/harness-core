@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.ArtifactServerYaml;
 
 import lombok.Builder;
@@ -21,7 +21,7 @@ public final class JenkinsConfigYaml extends ArtifactServerYaml {
 
   @Builder
   public JenkinsConfigYaml(String type, String harnessApiVersion, String url, String username, String password,
-      String token, String authMechanism, UsageRestrictions.Yaml usageRestrictions) {
+      String token, String authMechanism, UsageRestrictionsYaml usageRestrictions) {
     super(type, harnessApiVersion, url, username, password, usageRestrictions);
     this.token = token;
     this.authMechanism = authMechanism;

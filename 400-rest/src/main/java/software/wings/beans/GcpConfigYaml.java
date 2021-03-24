@@ -3,7 +3,7 @@ package software.wings.beans;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.yaml.setting.CloudProviderYaml;
 
 import lombok.Builder;
@@ -23,7 +23,7 @@ public final class GcpConfigYaml extends CloudProviderYaml {
 
   @Builder
   public GcpConfigYaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-      UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector, boolean skipValidation) {
+      UsageRestrictionsYaml usageRestrictions, boolean useDelegate, String delegateSelector, boolean skipValidation) {
     super(type, harnessApiVersion, usageRestrictions);
     this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
     this.delegateSelector = delegateSelector;

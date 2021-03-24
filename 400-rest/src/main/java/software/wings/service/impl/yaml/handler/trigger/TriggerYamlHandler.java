@@ -35,10 +35,10 @@ import software.wings.beans.trigger.ArtifactSelectionYaml;
 import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.ManifestSelectionYaml;
 import software.wings.beans.trigger.Trigger;
-import software.wings.beans.trigger.Trigger.Yaml;
-import software.wings.beans.trigger.Trigger.Yaml.TriggerVariable;
 import software.wings.beans.trigger.TriggerCondition;
 import software.wings.beans.trigger.TriggerConditionType;
+import software.wings.beans.trigger.TriggerYaml;
+import software.wings.beans.trigger.TriggerYaml.TriggerVariable;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
@@ -69,7 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
-public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
+public class TriggerYamlHandler extends BaseYamlHandler<TriggerYaml, Trigger> {
   @Inject private TriggerService triggerService;
   private String WORKFLOW = "Workflow";
   private String PIPELINE = "Pipeline";
@@ -79,7 +79,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   @Inject private WorkflowYAMLHelper workflowYAMLHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Override
-  public void delete(ChangeContext<Yaml> changeContext) {
+  public void delete(ChangeContext<TriggerYaml> changeContext) {
     String accountId = changeContext.getChange().getAccountId();
     String yamlFilePath = changeContext.getChange().getFilePath();
     Optional<Application> optionalApplication = yamlHelper.getApplicationIfPresent(accountId, yamlFilePath);
@@ -98,7 +98,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
   }
 
   @Override
-  public Yaml toYaml(Trigger bean, String appId) {
+  public TriggerYaml toYaml(Trigger bean, String appId) {
     TriggerConditionYamlHandler handler =
         yamlHandlerFactory.getYamlHandler(YamlType.TRIGGER_CONDITION, bean.getCondition().getConditionType().name());
 
@@ -152,24 +152,24 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     }
 
     TriggerConditionYaml triggerConditionYaml = handler.toYaml(bean.getCondition(), appId);
-    Yaml yaml = Yaml.builder()
-                    .description(bean.getDescription())
-                    .executionType(executionType)
-                    .triggerCondition(Arrays.asList(triggerConditionYaml))
-                    .executionName(executionName)
-                    .workflowVariables(triggerVariablesYaml)
-                    .artifactSelections(artifactSelectionList)
-                    .manifestSelections(manifestSelectionList)
-                    .harnessApiVersion(getHarnessApiVersion())
-                    .continueWithDefaultValues(bean.isContinueWithDefaultValues())
-                    .build();
+    TriggerYaml yaml = TriggerYaml.builder()
+                           .description(bean.getDescription())
+                           .executionType(executionType)
+                           .triggerCondition(Arrays.asList(triggerConditionYaml))
+                           .executionName(executionName)
+                           .workflowVariables(triggerVariablesYaml)
+                           .artifactSelections(artifactSelectionList)
+                           .manifestSelections(manifestSelectionList)
+                           .harnessApiVersion(getHarnessApiVersion())
+                           .continueWithDefaultValues(bean.isContinueWithDefaultValues())
+                           .build();
 
     updateYamlWithAdditionalInfo(bean, appId, yaml);
     return yaml;
   }
 
   @Override
-  public Trigger upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  public Trigger upsertFromYaml(ChangeContext<TriggerYaml> changeContext, List<ChangeContext> changeSetContext) {
     Change change = changeContext.getChange();
     String appId = yamlHelper.getAppId(change.getAccountId(), change.getFilePath());
     notNullCheck("Could not locate app info in file path:" + change.getFilePath(), appId, USER);
@@ -190,7 +190,7 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
 
   @Override
   public Class getYamlClass() {
-    return Trigger.Yaml.class;
+    return TriggerYaml.class;
   }
 
   @Override
@@ -200,8 +200,8 @@ public class TriggerYamlHandler extends BaseYamlHandler<Yaml, Trigger> {
     return yamlHelper.getTrigger(appId, yamlFilePath);
   }
 
-  private Trigger toBean(String appId, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml yaml = changeContext.getYaml();
+  private Trigger toBean(String appId, ChangeContext<TriggerYaml> changeContext, List<ChangeContext> changeSetContext) {
+    TriggerYaml yaml = changeContext.getYaml();
     Change change = changeContext.getChange();
     TriggerConditionYaml condition = yaml.getTriggerCondition().get(0);
 

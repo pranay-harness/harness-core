@@ -16,7 +16,7 @@ import software.wings.beans.GcpConfigYaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.GcpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.templatelibrary.SettingValueConfigYamlHandlerTestBase;
 import software.wings.service.impl.yaml.handler.usagerestrictions.UsageRestrictionsYamlHandler;
@@ -54,7 +54,7 @@ public class GcpConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     String appId = "appId";
 
     String encryptedYamlRef = "encryptedYamlRef";
-    UsageRestrictions.Yaml usageRestrictionsYaml = UsageRestrictions.Yaml.builder().build();
+    UsageRestrictionsYaml usageRestrictionsYaml = UsageRestrictionsYaml.builder().build();
 
     when(secretManager.getEncryptedYamlRef(
              gcpConfig.getAccountId(), gcpConfig.getEncryptedServiceAccountKeyFileContent()))

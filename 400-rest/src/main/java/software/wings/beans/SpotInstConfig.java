@@ -10,7 +10,7 @@ import io.harness.spotinst.model.SpotInstConstants;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
-import software.wings.security.UsageRestrictions;
+import software.wings.security.UsageRestrictionsYaml;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
@@ -71,7 +71,7 @@ public class SpotInstConfig extends SettingValue implements EncryptableSetting, 
     private String spotInstAccountId;
 
     @Builder
-    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions, String spotInstToken,
+    public Yaml(String type, String harnessApiVersion, UsageRestrictionsYaml usageRestrictions, String spotInstToken,
         String spotInstAccountId) {
       super(type, harnessApiVersion, usageRestrictions);
       this.spotInstToken = spotInstToken;

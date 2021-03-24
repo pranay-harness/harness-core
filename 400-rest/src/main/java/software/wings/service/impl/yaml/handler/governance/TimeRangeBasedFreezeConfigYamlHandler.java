@@ -6,7 +6,7 @@ import io.harness.governance.ApplicationFilter;
 import io.harness.governance.ApplicationFilterYaml;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.TimeRangeBasedFreezeConfig.TimeRangeBasedFreezeConfigBuilder;
-import io.harness.governance.TimeRangeBasedFreezeConfig.Yaml;
+import io.harness.governance.TimeRangeBasedFreezeConfigYaml;
 import io.harness.validation.Validator;
 
 import software.wings.beans.security.UserGroup;
@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TimeRangeBasedFreezeConfigYamlHandler
-    extends GovernanceFreezeConfigYamlHandler<Yaml, TimeRangeBasedFreezeConfig> {
+    extends GovernanceFreezeConfigYamlHandler<TimeRangeBasedFreezeConfigYaml, TimeRangeBasedFreezeConfig> {
   @Inject YamlHelper yamlHelper;
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject EnvironmentService environmentService;
@@ -32,7 +32,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
   @Inject GovernanceConfigService governanceConfigService;
 
   @Override
-  public Yaml toYaml(TimeRangeBasedFreezeConfig bean, String accountId) {
+  public TimeRangeBasedFreezeConfigYaml toYaml(TimeRangeBasedFreezeConfig bean, String accountId) {
     ApplicationFilterYamlHandler applicationFilterYamlHandler;
 
     List<ApplicationFilterYaml> appFiltersYaml = new ArrayList<>();
@@ -48,7 +48,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
                                        .to(String.valueOf(bean.getTimeRange().getTo()))
                                        .build();
 
-    return Yaml.builder()
+    return TimeRangeBasedFreezeConfigYaml.builder()
         .name(bean.getName())
         .type("TIME_RANGE_BASED_FREEZE_CONFIG")
         .description(bean.getDescription())
@@ -61,7 +61,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
 
   @Override
   public TimeRangeBasedFreezeConfig upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+      ChangeContext<TimeRangeBasedFreezeConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     TimeRangeBasedFreezeConfigBuilder timeRangeBasedFreezeConfig = TimeRangeBasedFreezeConfig.builder();
     toBean(timeRangeBasedFreezeConfig, changeContext, changeSetContext);
     return timeRangeBasedFreezeConfig.build();
@@ -69,7 +69,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return TimeRangeBasedFreezeConfig.Yaml.class;
+    return TimeRangeBasedFreezeConfigYaml.class;
   }
 
   private List<String> getUserGroupNames(List<String> userGroupList, String accountId) {
@@ -98,12 +98,12 @@ public class TimeRangeBasedFreezeConfigYamlHandler
     return userGroupIds;
   }
 
-  private void toBean(
-      TimeRangeBasedFreezeConfigBuilder bean, ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
+  private void toBean(TimeRangeBasedFreezeConfigBuilder bean,
+      ChangeContext<TimeRangeBasedFreezeConfigYaml> changeContext, List<ChangeContext> changeSetContext) {
     String accountId = changeContext.getChange().getAccountId();
     Validator.notNullCheck("AccountId not present", accountId);
 
-    TimeRangeBasedFreezeConfig.Yaml yaml = changeContext.getYaml();
+    TimeRangeBasedFreezeConfigYaml yaml = changeContext.getYaml();
     Validator.notNullCheck("Name is required", yaml.getName());
     TimeRange.Yaml timeRangeYaml = yaml.getTimeRange();
 
