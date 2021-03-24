@@ -224,7 +224,12 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       } else {
         canAssign = true;
         for (DelegateOwner owner : owners) {
-          canAssign = canAssign && owner.getEntityId().equals(taskSetupAbstractions.get(owner.getEntityType()));
+          canAssign = owner.getEntityId().equals(taskSetupAbstractions.get(owner.getEntityType()));
+          if (!canAssign) {
+            delegateSelectionLogsService.logOwnerRuleNotMatched(
+                batch, delegate.getAccountId(), delegate.getUuid(), owner);
+            break;
+          }
         }
       }
     } else {
