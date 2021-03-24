@@ -1,11 +1,9 @@
 package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
-import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -20,7 +18,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
-import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;

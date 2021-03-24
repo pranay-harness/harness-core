@@ -22,7 +22,6 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationResponse;
 import io.harness.datacollection.exception.DataCollectionException;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;

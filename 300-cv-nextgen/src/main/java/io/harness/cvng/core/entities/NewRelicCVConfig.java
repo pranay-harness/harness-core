@@ -36,9 +36,8 @@ public class NewRelicCVConfig extends MetricCVConfig {
 
   @Override
   protected void validateParams() {
-    checkNotNull(
-        applicationName, generateErrorMessageFromParam(AppDynamicsCVConfig.AppDynamicsCVConfigKeys.applicationName));
-    checkNotNull(applicationId, generateErrorMessageFromParam(AppDynamicsCVConfig.AppDynamicsCVConfigKeys.tierName));
+    checkNotNull(applicationName, generateErrorMessageFromParam(NewRelicCVConfigKeys.applicationName));
+    checkNotNull(applicationId, generateErrorMessageFromParam(NewRelicCVConfigKeys.applicationId));
   }
 
   public static class NewRelicCVConfigUpdatableEntity

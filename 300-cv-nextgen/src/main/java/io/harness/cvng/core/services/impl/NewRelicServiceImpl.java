@@ -12,9 +12,7 @@ import io.harness.cvng.core.beans.MetricPackValidationResponse.MetricValidationR
 import io.harness.cvng.core.beans.MonitoringSourceImportStatus;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
-import io.harness.cvng.core.beans.stackdriver.StackdriverDashboardDetail;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.cvng.core.services.api.OnboardingService;
 import io.harness.datacollection.exception.DataCollectionException;
@@ -26,7 +24,6 @@ import com.google.inject.Inject;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.assertj.core.util.Sets;
 
 public class NewRelicServiceImpl implements NewRelicService {
