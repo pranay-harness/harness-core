@@ -28,7 +28,7 @@ public class WingsStepRegistrar {
     engineSteps.put(EmailStep.STEP_TYPE, EmailStep.class);
     engineSteps.put(BasicHttpChainStep.STEP_TYPE, BasicHttpChainStep.class);
 
-    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps());
+    engineSteps.putAll(OrchestrationStepsModuleStepRegistrar.getEngineSteps(false));
     return engineSteps;
   }
 }

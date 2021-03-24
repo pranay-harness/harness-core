@@ -23,20 +23,24 @@ import java.util.Map;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDC)
 @Data
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = JiraIssueDeserializer.class)
 public class JiraIssueNG {
+  @NotNull String url;
   @NotNull String id;
   @NotNull String key;
   @NotNull Map<String, Object> fields = new HashMap<>();
 
   public JiraIssueNG(JsonNode node) {
+    this.id = JsonNodeUtils.mustGetString(node, "self");
     this.id = JsonNodeUtils.mustGetString(node, "id");
     this.key = JsonNodeUtils.mustGetString(node, "key");
     Map<String, JsonNode> names = JsonNodeUtils.getMap(node, "names");

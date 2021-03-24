@@ -176,6 +176,12 @@ public class StepUtils {
         ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), true, null);
   }
 
+  public static TaskRequest prepareTaskRequest(
+      Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, String taskName) {
+    return prepareTaskRequest(
+        ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), true, taskName);
+  }
+
   public static TaskRequest prepareTaskRequestWithoutLogs(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
     return prepareTaskRequest(

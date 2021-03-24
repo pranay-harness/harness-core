@@ -18,6 +18,7 @@ import io.harness.steps.dummy.DummySectionStepParameters;
 import io.harness.steps.dummy.DummySectionStepTransput;
 import io.harness.steps.fork.ForkStepParameters;
 import io.harness.steps.http.HttpOutcome;
+import io.harness.steps.jira.JiraIssueOutcome;
 import io.harness.steps.resourcerestraint.ResourceRestraintStepParameters;
 import io.harness.steps.resourcerestraint.beans.AcquireMode;
 import io.harness.steps.resourcerestraint.beans.HoldingScope;
@@ -59,6 +60,8 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(HarnessApprovalResponseData.class, 3220);
     kryo.register(HarnessApprovalOutcome.class, 3221);
+
+    kryo.register(JiraIssueOutcome.class, 3222);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);

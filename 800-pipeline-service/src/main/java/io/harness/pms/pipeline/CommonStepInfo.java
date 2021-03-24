@@ -4,6 +4,7 @@ import io.harness.beans.FeatureName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
+import io.harness.steps.StepSpecTypeConstants;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,6 +41,12 @@ public class CommonStepInfo {
           .setType("JiraApproval")
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Approval").setFolderPath("Approval").build())
           .build();
+  StepInfo jiraCreateStepInfo =
+      StepInfo.newBuilder()
+          .setName("Jira Create")
+          .setType(StepSpecTypeConstants.JIRA_CREATE)
+          .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").setFolderPath("Jira").build())
+          .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
@@ -62,6 +69,7 @@ public class CommonStepInfo {
       if (pmsFeatureFlagHelper.isEnabled(accountId, FeatureName.NG_HARNESS_APPROVAL)) {
         stepInfos.add(harnessApprovalStepInfo);
         stepInfos.add(jiraApprovalStepInfo);
+        stepInfos.add(jiraCreateStepInfo);
       }
 
       featureName = FeatureName.NG_BARRIERS.name();

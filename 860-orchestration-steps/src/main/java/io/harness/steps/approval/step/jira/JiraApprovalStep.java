@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.steps.StepType;
@@ -11,6 +14,7 @@ import io.harness.tasks.ResponseData;
 
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class JiraApprovalStep implements AsyncExecutable<JiraApprovalStepParameters> {
   public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_APPROVAL).build();
 
