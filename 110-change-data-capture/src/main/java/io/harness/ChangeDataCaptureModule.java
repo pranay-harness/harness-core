@@ -57,7 +57,7 @@ public class ChangeDataCaptureModule extends AbstractModule {
     Multibinder<CDCEntity<?>> cdcEntityMultibinder =
         Multibinder.newSetBinder(binder(), new TypeLiteral<CDCEntity<?>>() {});
     cdcEntityMultibinder.addBinding().to(ApplicationCDCEntity.class);
-//    cdcEntityMultibinder.addBinding().to(ViewCDCEntity.class);
+    cdcEntityMultibinder.addBinding().to(ViewCDCEntity.class);
   }
 
   @Provides

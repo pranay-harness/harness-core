@@ -5,6 +5,8 @@ import io.harness.ccm.views.entities.CEView;
 import io.harness.changestreamsframework.ChangeEvent;
 import io.harness.timescaledb.TimeScaleDBService;
 
+import software.wings.dl.WingsPersistence;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.sql.Connection;
@@ -21,6 +23,7 @@ import org.bouncycastle.util.Strings;
 public class ViewTimeScaleDBChangeHandler implements ChangeHandler {
   private static final int MAX_RETRY_COUNT = 5;
   @Inject private TimeScaleDBService timeScaleDBService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public boolean handleChange(ChangeEvent<?> changeEvent, String tableName, String[] fields) {
@@ -64,8 +67,8 @@ public class ViewTimeScaleDBChangeHandler implements ChangeHandler {
 
   private Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
     Map<String, String> columnValueMapping = new HashMap<>();
-    // TODO: make this Handling generic
-    CEView fullDocument = (CEView) changeEvent.getFullDocument();
+    CEView fullDocument = wingsPersistence.convertToEntity(CEView.class, changeEvent.getFullDocument());
+
     columnValueMapping.put(Strings.toUpperCase("uuid"), changeEvent.getUuid());
     columnValueMapping.put(
         Strings.toUpperCase("defaultcharttype"), fullDocument.getViewVisualization().getChartType().toString());
