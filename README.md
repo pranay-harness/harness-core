@@ -1,4 +1,4 @@
-Portal Project Dev environment setup instructions
+Portal Project Dev environment setup instructions. Update README file
 ==================================================
 ## On MacOS 
 
