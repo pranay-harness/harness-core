@@ -32,6 +32,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -59,6 +60,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
 
   @Mock private InfrastructureOutcome infrastructureOutcome;
   @Mock private K8sInfraDelegateConfig infraDelegateConfig;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
 
   private final Ambiance ambiance = Ambiance.newBuilder().build();
   private final StepInputPackage stepInputPackage = StepInputPackage.builder().build();
@@ -81,7 +83,7 @@ public class K8sBGSwapServicesStepTest extends CategoryTest {
         .when(k8sStepHelper)
         .queueK8sTask(eq(stepParameters), any(K8sDeployRequest.class), eq(ambiance), eq(infrastructureOutcome));
     doReturn(blueGreenOutcome)
-        .when(outcomeService)
+        .when(executionSweepingOutputService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     doReturn(infrastructureOutcome)
         .when(outcomeService)

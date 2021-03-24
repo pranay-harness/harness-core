@@ -210,8 +210,8 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
   public void rebalance(PerpetualTaskRecord taskRecord) {
     if (delegateService.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
-      perpetualTaskRecordDao.appointDelegate(
-          taskRecord.getUuid(), taskRecord.getDelegateId(), taskRecord.getClientContext().getLastContextUpdated());
+      perpetualTaskService.appointDelegate(taskRecord.getAccountId(), taskRecord.getUuid(), taskRecord.getDelegateId(),
+          taskRecord.getClientContext().getLastContextUpdated());
       return;
     }
     assign(taskRecord);

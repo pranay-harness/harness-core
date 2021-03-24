@@ -64,7 +64,7 @@ public class AbstractSchemaChecker {
       try {
         final String schemaInUT =
             IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-        if (!schemaInUT.equals(s)) {
+        if (!schemaInUT.trim().equals(s.trim())) {
           log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
           throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
         }

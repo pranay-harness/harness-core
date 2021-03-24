@@ -157,7 +157,7 @@ class ComputedRecommendationWriter implements ItemWriter<K8sWorkloadRecommendati
 
               for (Integer percentile : requiredPercentiles) {
                 computedPercentiles.put(String.format(PERCENTILE_KEY, percentile),
-                    customRecommender(minContainerResources, percentile)
+                    customRecommender(minContainerResources, percentile / 100.0)
                         .getEstimatedResourceRequirements(containerStateFromPartialHistogram));
               }
             } else {

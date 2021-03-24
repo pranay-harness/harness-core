@@ -14,5 +14,6 @@ import lombok.Value;
 @ApiModel("BarrierInfo")
 public class BarrierInfoDTO {
   String name;
+  long timeoutIn;
   List<StageDetailDTO> stages;
 }

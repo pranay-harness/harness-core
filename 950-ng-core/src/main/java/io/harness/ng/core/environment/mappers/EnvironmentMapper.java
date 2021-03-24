@@ -1,5 +1,6 @@
 package io.harness.ng.core.environment.mappers;
 
+import static io.harness.NGConstants.HARNESS_BLUE;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
@@ -7,6 +8,7 @@ import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 
+import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -18,6 +20,7 @@ public class EnvironmentMapper {
         .orgIdentifier(environmentRequestDTO.getOrgIdentifier())
         .projectIdentifier(environmentRequestDTO.getProjectIdentifier())
         .name(environmentRequestDTO.getName())
+        .color(Optional.ofNullable(environmentRequestDTO.getColor()).orElse(HARNESS_BLUE))
         .description(environmentRequestDTO.getDescription())
         .type(environmentRequestDTO.getType())
         .tags(convertToList(environmentRequestDTO.getTags()))
@@ -32,6 +35,7 @@ public class EnvironmentMapper {
         .projectIdentifier(environment.getProjectIdentifier())
         .identifier(environment.getIdentifier())
         .name(environment.getName())
+        .color(Optional.ofNullable(environment.getColor()).orElse(HARNESS_BLUE))
         .description(environment.getDescription())
         .type(environment.getType())
         .deleted(environment.getDeleted())

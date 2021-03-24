@@ -37,8 +37,6 @@ import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.registrars.OrchestrationResolverRegistrar;
-import io.harness.state.inspection.StateInspectionService;
-import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.threading.ThreadPool;
 import io.harness.waiter.AsyncWaitEngineImpl;
 import io.harness.waiter.WaitNotifyEngine;
@@ -78,7 +76,6 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     install(OrchestrationBeansModule.getInstance());
     install(OrchestrationQueueModule.getInstance(config));
 
-    bind(StateInspectionService.class).to(StateInspectionServiceImpl.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class);
     bind(InterruptService.class).to(InterruptServiceImpl.class);

@@ -120,6 +120,11 @@ type SelectTestsResp struct {
 	Tests         []RunnableTest `json:"tests"`
 }
 
+type SelectTestsReq struct {
+	Files    []File   `json:"files"`
+	TiConfig TiConfig `json:"ti_config"`
+}
+
 type SelectionDetails struct {
 	New int `json:"new_tests"`
 	Upd int `json:"updated_tests"`
@@ -136,4 +141,17 @@ type SelectionOverview struct {
 type File struct {
 	Name   string     `json:"name"`
 	Status FileStatus `json:"status"`
+}
+
+// This is a yaml file which may or may not exist in the root of the source code
+// as .ticonfig. The contents of the file get deserialized into this object.
+// Sample YAML:
+// config:
+//   ignore:
+//     - README.md
+//     - config.sh
+type TiConfig struct {
+	Config struct {
+		Ignore []string `json:"ignore"`
+	}
 }

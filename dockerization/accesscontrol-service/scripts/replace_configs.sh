@@ -110,6 +110,14 @@ if [[ "" != "$RESOURCE_GROUP_ITERATOR_INTERVAL" ]]; then
   yq write -i $CONFIG_FILE iteratorsConfig.resourceGroupIteratorConfig.targetIntervalInSeconds $RESOURCE_GROUP_ITERATOR_INTERVAL
 fi
 
+if [[ "" != "$USER_GROUP_ITERATOR_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE iteratorsConfig.userGroupIteratorConfig.enabled $USER_GROUP_ITERATOR_ENABLED
+fi
+
+if [[ "" != "$USER_GROUP_ITERATOR_INTERVAL" ]]; then
+  yq write -i $CONFIG_FILE iteratorsConfig.userGroupIteratorConfig.targetIntervalInSeconds $USER_GROUP_ITERATOR_INTERVAL
+fi
+
 if [[ "" != "$AGGREGATOR_ENABLED" ]]; then
   yq write -i $CONFIG_FILE aggregatorModuleConfig.enabled $AGGREGATOR_ENABLED
 fi
@@ -136,6 +144,14 @@ fi
 
 if [[ "" != "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET" ]]; then
   yq write -i $CONFIG_FILE resourceGroupClient.resourceGroupServiceSecret "$RESOURCE_GROUP_CLIENT_SERVICE_SECRET"
+fi
+
+if [[ "" != "$USER_GROUP_CLIENT_BASE_URL" ]]; then
+  yq write -i $CONFIG_FILE userGroupClient.userGroupServiceConfig.baseUrl "$USER_GROUP_CLIENT_BASE_URL"
+fi
+
+if [[ "" != "$USER_GROUP_CLIENT_SERVICE_SECRET" ]]; then
+  yq write -i $CONFIG_FILE userGroupClient.userGroupServiceSecret "$USER_GROUP_CLIENT_SERVICE_SECRET"
 fi
 
 if [[ "" != "$ENABLE_AUTH" ]]; then

@@ -68,6 +68,9 @@ iteratorsConfig:
   resourceGroupIteratorConfig:
     enabled: true
     targetIntervalInSeconds: 600
+  userGroupIteratorConfig:
+    enabled: true
+    targetIntervalInSeconds: 600
 
 accessControlClient:
   enableAccessControl: true
@@ -90,6 +93,13 @@ userClient:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   userServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+userGroupClient:
+  userGroupServiceConfig:
+    baseUrl: https://localhost:7090
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  userGroupServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 decisionModuleConfig:
 

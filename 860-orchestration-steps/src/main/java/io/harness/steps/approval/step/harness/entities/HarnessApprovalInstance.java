@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.harness.entities;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -33,6 +36,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "HarnessApprovalInstanceKeys")

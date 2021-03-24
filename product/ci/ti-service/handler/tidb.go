@@ -37,17 +37,17 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		branch := r.FormValue(branchParam)
 		sha := r.FormValue(shaParam)
 
-		var files []types.File
-		if err := json.NewDecoder(r.Body).Decode(&files); err != nil {
+		var req types.SelectTestsReq
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			WriteBadRequest(w, err)
 			log.Errorw("api: could not unmarshal input for test selection",
 				"account_id", accountId, "repo", repo, "branch", branch, "sha", sha, zap.Error(err))
 			return
 		}
-		log.Infow("got a files list", "account_id", accountId, "files", files, "repo", repo, "branch", branch, "sha", sha)
+		log.Infow("got a files list", "account_id", accountId, "files", req.Files, "repo", repo, "branch", branch, "sha", sha)
 
 		// Make call to Mongo DB to get the tests to run
-		selected, err := tidb.GetTestsToRun(ctx, files)
+		selected, err := tidb.GetTestsToRun(ctx, req)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not select tests", "account_id", accountId,
@@ -57,7 +57,7 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 
 		// Write changed file information to timescaleDB
 		err = db.WriteDiffFiles(ctx, config.TimeScaleDb.CoverageTable, accountId, orgId,
-			projectId, pipelineId, buildId, stageId, stepId, files)
+			projectId, pipelineId, buildId, stageId, stepId, req.Files)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: could not write changed file information", "account_id", accountId,

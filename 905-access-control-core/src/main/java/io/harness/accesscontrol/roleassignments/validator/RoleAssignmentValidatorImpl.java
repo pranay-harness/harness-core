@@ -1,6 +1,7 @@
 package io.harness.accesscontrol.roleassignments.validator;
 
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.common.validation.ValidationResult;
 import io.harness.accesscontrol.principals.Principal;
@@ -12,6 +13,7 @@ import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult.RoleAssignmentValidationResultBuilder;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.roles.RoleService;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @Singleton
 public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
@@ -42,7 +45,8 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
       builder.principalValidationResult(validatePrincipal(Principal.builder()
                                                               .principalIdentifier(assignment.getPrincipalIdentifier())
                                                               .principalType(assignment.getPrincipalType())
-                                                              .build()));
+                                                              .build(),
+          assignment.getScopeIdentifier()));
     }
     if (request.isValidateResourceGroup()) {
       builder.resourceGroupValidationResult(
@@ -54,7 +58,7 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
     return builder.build();
   }
 
-  private ValidationResult validatePrincipal(Principal principal) {
+  private ValidationResult validatePrincipal(Principal principal, String scopeIdentifier) {
     PrincipalValidator principalValidator = principalValidatorByType.get(principal.getPrincipalType());
     if (principalValidator == null) {
       return ValidationResult.builder()
@@ -63,7 +67,7 @@ public class RoleAssignmentValidatorImpl implements RoleAssignmentValidator {
               String.format("Incorrect Principal Type. Please select one out of %s", principalValidatorByType.keySet()))
           .build();
     }
-    return principalValidator.validatePrincipal(principal);
+    return principalValidator.validatePrincipal(principal, scopeIdentifier);
   }
 
   private ValidationResult validateRole(String roleIdentifier, String scopeIdentifier) {

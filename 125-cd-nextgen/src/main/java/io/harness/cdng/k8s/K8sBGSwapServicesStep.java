@@ -17,6 +17,7 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -37,6 +38,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
 
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public TaskRequest obtainTask(
@@ -50,7 +52,7 @@ public class K8sBGSwapServicesStep implements TaskExecutable<K8sBGSwapServicesSt
           .build();
     }
 
-    K8sBlueGreenOutcome k8sBlueGreenOutcome = (K8sBlueGreenOutcome) outcomeService.resolve(
+    K8sBlueGreenOutcome k8sBlueGreenOutcome = (K8sBlueGreenOutcome) executionSweepingOutputService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));

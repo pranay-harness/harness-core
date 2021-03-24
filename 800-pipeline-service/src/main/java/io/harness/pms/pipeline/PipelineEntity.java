@@ -23,9 +23,11 @@ import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Builder.Default;
-import lombok.Data;
+import lombok.Setter;
 import lombok.Singular;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -35,7 +37,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
+@Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "PipelineEntityKeys")
@@ -54,30 +56,29 @@ public class PipelineEntity implements PersistentEntity, AccountAccess, UuidAwar
                  .field(PipelineEntityKeys.projectIdentifier)
                  .field(PipelineEntityKeys.identifier)
                  .build())
-        .add(CompoundMongoIndex.builder().name("accountIdIndex").field(PipelineEntityKeys.accountId).build())
         .build();
   }
 
-  @Id @org.mongodb.morphia.annotations.Id String uuid;
+  @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotEmpty String yaml;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @NotEmpty String identifier;
   @Trimmed @NotEmpty String projectIdentifier;
-  private int stageCount;
-  @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
-  @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
+  @Setter @NonFinal int stageCount;
+  @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
+  @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Default Boolean deleted = Boolean.FALSE;
 
   @EntityName String name;
   @Size(max = 1024) String description;
   @Singular @Size(max = 128) List<NGTag> tags;
 
-  @Version Long version;
+  @Setter @NonFinal @Version Long version;
   @Default Map<String, org.bson.Document> filters = new HashMap<>();
   ExecutionSummaryInfo executionSummaryInfo;
   int runSequence;
-  @Singular List<String> stageNames;
+  @Setter @NonFinal @Singular List<String> stageNames;
 
   @Override
   public String getAccountId() {

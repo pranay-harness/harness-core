@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.steps.io.BaseStepParameterInfo;
@@ -19,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

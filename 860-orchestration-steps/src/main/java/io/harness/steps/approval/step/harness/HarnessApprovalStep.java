@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableMode;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
@@ -19,6 +22,7 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Map;
 
+@OwnedBy(CDC)
 public class HarnessApprovalStep implements AsyncExecutable<HarnessApprovalStepParameters> {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(OrchestrationStepTypes.HARNESS_APPROVAL).build();

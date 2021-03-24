@@ -20,9 +20,11 @@ import com.sun.istack.internal.NotNull;
 import java.util.List;
 import javax.validation.constraints.Size;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Setter;
 import lombok.Singular;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -32,7 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Data
+@Value
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "InputSetEntityKeys")
@@ -52,10 +54,9 @@ public class InputSetEntity implements PersistentEntity, AccountAccess, UuidAwar
                  .field(InputSetEntityKeys.pipelineIdentifier)
                  .field(InputSetEntityKeys.identifier)
                  .build())
-        .add(CompoundMongoIndex.builder().name("accountIdIndex").field(InputSetEntityKeys.accountId).build())
         .build();
   }
-  @Id @org.mongodb.morphia.annotations.Id String uuid;
+  @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotEmpty String yaml;
 
@@ -72,10 +73,10 @@ public class InputSetEntity implements PersistentEntity, AccountAccess, UuidAwar
   @NotEmpty InputSetEntityType inputSetEntityType;
   List<String> inputSetReferences;
 
-  @SchemaIgnore @FdIndex @CreatedDate private long createdAt;
-  @SchemaIgnore @NotNull @LastModifiedDate private long lastUpdatedAt;
+  @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate long createdAt;
+  @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate long lastUpdatedAt;
   @Builder.Default Boolean deleted = Boolean.FALSE;
-  @Version Long version;
+  @Setter @NonFinal @Version Long version;
 
   @Override
   public String getAccountId() {

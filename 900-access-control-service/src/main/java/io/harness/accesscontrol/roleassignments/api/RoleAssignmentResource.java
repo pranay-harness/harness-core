@@ -2,14 +2,17 @@ package io.harness.accesscontrol.roleassignments.api;
 
 import static io.harness.NGCommonEntityConstants.IDENTIFIER_KEY;
 import static io.harness.accesscontrol.common.filter.ManagedFilter.NO_FILTER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.fromDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toDTO;
 import static io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTOMapper.toResponseDTO;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PACKAGE;
 import static lombok.AccessLevel.PRIVATE;
 
+import io.harness.accesscontrol.principals.usergroups.HarnessUserGroupService;
 import io.harness.accesscontrol.resourcegroups.api.ResourceGroupDTO;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
@@ -24,6 +27,7 @@ import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -55,6 +59,7 @@ import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
+@OwnedBy(PL)
 @Api("roleassignments")
 @Path("roleassignments")
 @Produces({"application/json", "application/yaml"})
@@ -69,6 +74,7 @@ import retrofit2.http.Body;
 public class RoleAssignmentResource {
   RoleAssignmentService roleAssignmentService;
   HarnessResourceGroupService harnessResourceGroupService;
+  HarnessUserGroupService harnessUserGroupService;
   ScopeService scopeService;
   RoleService roleService;
   ResourceGroupService resourceGroupService;
@@ -133,6 +139,9 @@ public class RoleAssignmentResource {
       @BeanParam HarnessScopeParams harnessScopeParams, @Body RoleAssignmentDTO roleAssignmentDTO) {
     Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
     harnessResourceGroupService.sync(roleAssignmentDTO.getResourceGroupIdentifier(), scope);
+    if (roleAssignmentDTO.getPrincipal().getType().equals(USER_GROUP)) {
+      harnessUserGroupService.sync(roleAssignmentDTO.getPrincipal().getIdentifier(), scope);
+    }
     RoleAssignment createdRoleAssignment = roleAssignmentService.create(fromDTO(scope.toString(), roleAssignmentDTO));
     return ResponseDTO.newResponse(toResponseDTO(createdRoleAssignment));
   }
@@ -161,6 +170,12 @@ public class RoleAssignmentResource {
             .stream()
             .map(roleAssignmentDTO -> fromDTO(scope.toString(), roleAssignmentDTO))
             .collect(Collectors.toList());
+    for (RoleAssignment roleAssignment : roleAssignmentsPayload) {
+      harnessResourceGroupService.sync(roleAssignment.getResourceGroupIdentifier(), scope);
+      if (roleAssignment.getPrincipalType().equals(USER_GROUP)) {
+        harnessUserGroupService.sync(roleAssignment.getPrincipalIdentifier(), scope);
+      }
+    }
     return ResponseDTO.newResponse(roleAssignmentService.createMulti(roleAssignmentsPayload)
                                        .stream()
                                        .map(RoleAssignmentDTOMapper::toResponseDTO)
