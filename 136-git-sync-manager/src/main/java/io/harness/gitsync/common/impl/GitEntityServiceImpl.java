@@ -219,7 +219,7 @@ public class GitEntityServiceImpl implements GitEntityService {
                                              .entityGitPath(filePath)
                                              .branch(yamlGitConfig.getBranch())
                                              .repo(yamlGitConfig.getRepo())
-                                             .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                                             .gitConnectorId(yamlGitConfig.getGitConnectorRef())
                                              .scope(yamlGitConfig.getScope())
                                              .entityIdentifierFQN(entityDetail.getEntityRef().getFullyQualifiedName())
                                              .entityReference(entityDetail.getEntityRef())
