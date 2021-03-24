@@ -2,7 +2,6 @@ package io.harness.cvng.beans.newrelic;
 
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
-import io.harness.cvng.utils.StackdriverUtils;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;

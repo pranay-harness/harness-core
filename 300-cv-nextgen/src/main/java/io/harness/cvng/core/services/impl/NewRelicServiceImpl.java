@@ -57,8 +57,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     OnboardingResponseDTO response = onboardingService.getOnboardingResponse(accountId, onboardingRequestDTO);
     final Gson gson = new Gson();
     Type type = new TypeToken<List<NewRelicApplication>>() {}.getType();
-    List<NewRelicApplication> newRelicApplications = gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-    return newRelicApplications;
+    return gson.fromJson(JsonUtils.asJson(response.getResult()), type);
   }
 
   @Override

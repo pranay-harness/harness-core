@@ -1,5 +1,5 @@
 Var appsQuery = "query?nrql=SELECT count(*)  FROM Transaction,TransactionError"
-Var groupByQuery = " FACET appId,appName SINCE 7 days ago  LIMIT 1000"
+Var groupByQuery = " FACET appId,appName SINCE 30 days ago  LIMIT 1000"
 Var emptySpace = ""
 Var partialQuery
 if Env:filter != Var:emptySpace {
