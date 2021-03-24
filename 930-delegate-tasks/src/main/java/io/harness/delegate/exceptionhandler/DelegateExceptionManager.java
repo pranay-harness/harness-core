@@ -80,7 +80,7 @@ public class DelegateExceptionManager {
       return handledException;
     } catch (Exception e) {
       log.error("Exception occured while handling delegate exception : {}", exception, e);
-      return prepareUnhandledExceptionResponse(e);
+      return prepareUnhandledExceptionResponse(exception);
     }
   }
 
