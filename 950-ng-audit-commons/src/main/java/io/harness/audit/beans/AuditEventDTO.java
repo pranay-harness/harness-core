@@ -1,6 +1,9 @@
 package io.harness.audit.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.ModuleType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.Resource;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.request.HttpRequestInfo;
@@ -17,6 +20,7 @@ import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import org.hibernate.validator.constraints.NotBlank;
 
+@OwnedBy(PL)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -32,7 +36,7 @@ public class AuditEventDTO {
 
   @NotNull @Valid AuthenticationInfo authenticationInfo;
 
-  @NotNull ModuleType moduleType;
+  @NotNull ModuleType module;
 
   @NotNull @Valid Resource resource;
   @NotNull @NotBlank String action;

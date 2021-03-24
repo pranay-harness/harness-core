@@ -42,7 +42,7 @@ public class AuditClientServiceImpl implements AuditClientService {
                                                     .action(auditEntry.getAction())
                                                     .resourceScope(auditEntry.getResourceScope())
                                                     .insertId(auditEntry.getInsertId())
-                                                    .moduleType(auditEntry.getModule())
+                                                    .module(auditEntry.getModule())
                                                     .timestamp(auditEntry.getTimestamp());
 
     if (principal != null) {
