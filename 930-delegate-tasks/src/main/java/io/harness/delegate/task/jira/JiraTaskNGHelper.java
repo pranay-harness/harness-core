@@ -27,6 +27,8 @@ public class JiraTaskNGHelper {
         return jiraTaskNGHandler.getIssue(params);
       case GET_ISSUE_CREATE_METADATA:
         return jiraTaskNGHandler.getIssueCreateMetadata(params);
+      case GET_ISSUE_UPDATE_METADATA:
+        return jiraTaskNGHandler.getIssueUpdateMetadata(params);
       case CREATE_ISSUE:
         return jiraTaskNGHandler.createIssue(params);
       case UPDATE_ISSUE:

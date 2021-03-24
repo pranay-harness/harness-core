@@ -91,7 +91,7 @@ public class JiraClient {
    * @param issueType   the issue type - can be null if not known
    * @param expand      the expand query parameter - if null a default value of `projects.issuetypes.fields` is used
    * @param fetchStatus should also fetch status
-   * @return the issue create meta
+   * @return the issue create metadata
    */
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(
       String projectKey, String issueType, String expand, boolean fetchStatus) {
@@ -99,7 +99,7 @@ public class JiraClient {
         executeCall(restClient.getIssueCreateMetadata(EmptyPredicate.isEmpty(projectKey) ? null : projectKey,
                         EmptyPredicate.isEmpty(issueType) ? null : issueType,
                         EmptyPredicate.isEmpty(expand) ? "projects.issuetypes.fields" : expand),
-            "fetching create meta");
+            "fetching create metadata");
 
     if (fetchStatus) {
       if (EmptyPredicate.isEmpty(projectKey)) {
@@ -120,6 +120,25 @@ public class JiraClient {
     }
 
     return createMetadata;
+  }
+
+  /**
+   * Get the issue update metadata information - schema information for the issue with the given key.
+   *
+   * There is special handling for these fields:
+   * - project, issue type and status are not part of the fields
+   * - timetracking: returned as 2 string fields - "Original Estimate", "Remaining Estimate"
+   * - Fields treated as OPTION type fields:
+   *   - resolution
+   *   - component
+   *   - priority
+   *   - version
+   *
+   * @param issueKey  the key of the issue
+   * @return the issue update metadata
+   */
+  public JiraIssueUpdateMetadataNG getIssueUpdateMetadata(@NotBlank String issueKey) {
+    return executeCall(restClient.getIssueUpdateMetadata(issueKey), "fetching update metadata");
   }
 
   private List<JiraStatusNG> getStatuses() {
@@ -154,8 +173,8 @@ public class JiraClient {
    */
   public JiraIssueNG createIssue(
       @NotBlank String projectKey, @NotBlank String issueTypeName, Map<String, String> fields) {
-    JiraIssueCreateMetadataNG createMetaResponse = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
-    JiraProjectNG project = createMetaResponse.getProjects().get(projectKey);
+    JiraIssueCreateMetadataNG createMetadata = getIssueCreateMetadata(projectKey, issueTypeName, null, false);
+    JiraProjectNG project = createMetadata.getProjects().get(projectKey);
     if (project == null) {
       throw new InvalidRequestException(String.format("Invalid project: %s", projectKey));
     }
@@ -169,6 +188,54 @@ public class JiraClient {
     JiraCreateIssueRequestNG createIssueRequest = new JiraCreateIssueRequestNG(project, issueType, fields);
     JiraIssueNG issue = executeCall(restClient.createIssue(createIssueRequest), "creating issue");
     return getIssue(issue.getKey());
+  }
+
+  /**
+   * Update an issue with the given key.
+   *
+   * There is special handling for these fields:
+   * - status is not part of the fields sent to jira - in case status needs to updated, pass transition arguments
+   * - timetracking: sent as { originalEstimate: [originalEstimate], remainingEstimate: [remainingEstimate] }
+   * - OPTION type fields are sent as { id: [optionId], name: [optionName], value: [optionValue] } - null fields are
+   *   ignored
+   * - Fields treated as OPTION type fields:
+   *   - resolution
+   *   - component
+   *   - priority
+   *   - version
+   *
+   * @param issueKey           the key of the issue to be updated
+   * @param transitionToStatus the status to transition to
+   * @param transitionName     the transition name to choose in case multiple transitions have same to status
+   * @param fields             the issue fields - list/array type are represented as comma separated strings - if an
+   *                           array element has comma itself, it should be wrapped in quotes
+   * @return the updated issue
+   */
+  public JiraIssueNG updateIssue(
+      @NotBlank String issueKey, String transitionToStatus, String transitionName, Map<String, String> fields) {
+    JiraIssueUpdateMetadataNG updateMetadata = getIssueUpdateMetadata(issueKey);
+    String transitionId = findIssueTransition(issueKey, transitionToStatus, transitionName);
+    JiraUpdateIssueRequestNG updateIssueRequest = new JiraUpdateIssueRequestNG(updateMetadata, transitionId, fields);
+    executeCall(restClient.updateIssue(issueKey, updateIssueRequest), "updating issue");
+    return getIssue(issueKey);
+  }
+
+  private String findIssueTransition(@NotBlank String issueKey, String transitionToStatus, String transitionName) {
+    if (EmptyPredicate.isEmpty(transitionName)) {
+      return null;
+    }
+
+    JiraIssueTransitionsNG transitions =
+        executeCall(restClient.getIssueTransitions(issueKey), "fetching issue transitions");
+    boolean checkTransitionName = EmptyPredicate.isNotEmpty(transitionName);
+    return transitions.getTransitions()
+        .stream()
+        .filter(t
+            -> t.getTo().getName().equals(transitionToStatus)
+                && (!checkTransitionName || t.getName().equals(transitionName)))
+        .findFirst()
+        .map(JiraIssueTransitionNG::getId)
+        .orElse(null);
   }
 
   private <T> T executeCall(Call<T> call, String action) {

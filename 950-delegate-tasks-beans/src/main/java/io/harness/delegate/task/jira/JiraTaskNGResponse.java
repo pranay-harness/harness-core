@@ -4,6 +4,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
 
 import java.util.List;
@@ -25,6 +26,7 @@ public class JiraTaskNGResponse implements DelegateTaskNotifyResponseData {
   List<JiraProjectBasicNG> projects;
   JiraIssueNG issue;
   JiraIssueCreateMetadataNG issueCreateMetadata;
+  JiraIssueUpdateMetadataNG issueUpdateMetadata;
 
   DelegateMetaInfo delegateMetaInfo;
 }

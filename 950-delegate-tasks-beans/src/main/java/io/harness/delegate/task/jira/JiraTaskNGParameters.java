@@ -33,6 +33,8 @@ public class JiraTaskNGParameters implements TaskParameters, ExecutionCapability
   String issueKey;
   String expand;
   boolean fetchStatus;
+  String transitionToStatus;
+  String transitionName;
   Map<String, String> fields;
 
   @Override

@@ -7,12 +7,13 @@ import io.harness.data.structure.EmptyPredicate;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDC)
 @Data
-@NoArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class JiraTimeTrackingFieldNG {
   String originalEstimate;

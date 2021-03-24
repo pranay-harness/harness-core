@@ -8,6 +8,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.jira.JiraClient;
 import io.harness.jira.JiraIssueCreateMetadataNG;
 import io.harness.jira.JiraIssueNG;
+import io.harness.jira.JiraIssueUpdateMetadataNG;
 import io.harness.jira.JiraProjectBasicNG;
 
 import com.google.inject.Singleton;
@@ -49,6 +50,12 @@ public class JiraTaskNGHandler {
     return JiraTaskNGResponse.builder().issueCreateMetadata(createMetadata).build();
   }
 
+  public JiraTaskNGResponse getIssueUpdateMetadata(JiraTaskNGParameters params) {
+    JiraClient jiraClient = getJiraClient(params);
+    JiraIssueUpdateMetadataNG updateMetadata = jiraClient.getIssueUpdateMetadata(params.getIssueKey());
+    return JiraTaskNGResponse.builder().issueUpdateMetadata(updateMetadata).build();
+  }
+
   public JiraTaskNGResponse createIssue(JiraTaskNGParameters params) {
     JiraClient jiraClient = getJiraClient(params);
     JiraIssueNG issue = jiraClient.createIssue(params.getProjectKey(), params.getIssueType(), params.getFields());
@@ -56,8 +63,10 @@ public class JiraTaskNGHandler {
   }
 
   public JiraTaskNGResponse updateIssue(JiraTaskNGParameters params) {
-    // TODO: implement this method
-    throw new UnsupportedOperationException("Update operation not supported");
+    JiraClient jiraClient = getJiraClient(params);
+    JiraIssueNG issue = jiraClient.updateIssue(
+        params.getIssueKey(), params.getTransitionToStatus(), params.getTransitionName(), params.getFields());
+    return JiraTaskNGResponse.builder().issue(issue).build();
   }
 
   private JiraClient getJiraClient(JiraTaskNGParameters parameters) {
