@@ -32,3 +32,8 @@ fi
 if [[ "" != "$EVENTS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE events-mongo.uri "$EVENTS_MONGO_URI"
 fi
+
+if [[ "" != "$CDC_MONGO_URI" ]]; then
+  yq write -i $CONFIG_FILE cdc-mongo.uri "$CDC_MONGO_URI"
+fi
+
