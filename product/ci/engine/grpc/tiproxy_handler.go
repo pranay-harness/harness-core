@@ -199,6 +199,7 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	fs := fs.NewOSFileSystem(h.log)
 	parser := ti.NewCallGraphParser(h.log, fs)
 	cg, err := parser.Parse(cgDir, files)
+	h.log.Infow(fmt.Sprintf("size of nodes parsed is:%d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
 	if err != nil {
 		return res, errors.Wrap(err, "failed to parse callgraph directory")
 	}
@@ -245,9 +246,11 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 // getCgFiles return list of name of files inside given directory
 func getCgFiles(dir string) ([]string, error) {
 	var files []string
-	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	fmt.Println("---- " + dir)
+	err := filepath.Walk(dir+"/", func(path string, info os.FileInfo, err error) error {
+		fmt.Println("---- " + info.Name())
 		// ignore any other file apart from json extension
-		if filepath.Ext(path) == ".json" {
+		if filepath.Ext(info.Name()) != ".json" {
 			return nil
 		}
 		files = append(files, info.Name())

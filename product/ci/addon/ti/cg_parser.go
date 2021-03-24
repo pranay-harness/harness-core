@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
@@ -36,6 +37,9 @@ func NewCallGraphParser(log *zap.SugaredLogger, fs filesystem.FileSystem) *CallG
 // iterate through all the cg files in the directory, parse each of them and return Callgraph object
 func (cg *CallGraphParser) Parse(cgDir string, files []string) (*Callgraph, error) {
 	var finalCg []string
+	if !strings.HasSuffix(cgDir, "/") {
+		cgDir = cgDir + "/"
+	}
 	for _, file := range files {
 		fName := cgDir + file
 		f, err := cg.fs.Open(fName)
