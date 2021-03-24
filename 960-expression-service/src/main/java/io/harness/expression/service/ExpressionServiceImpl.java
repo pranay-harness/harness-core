@@ -43,7 +43,12 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
       try {
         String originalExpr = expressionQuery.getJexl();
         Map<String, Object> context = getContextMap(expressionQuery.getJsonContext());
-        String evaluatedExpr = expressionEvaluator.renderExpression(originalExpr, context);
+        String evaluatedExpr = null;
+        if (expressionQuery.getIsSkipCondition()) {
+          evaluatedExpr = expressionEvaluator.evaluateExpression(originalExpr, context).toString();
+        } else {
+          evaluatedExpr = expressionEvaluator.renderExpression(originalExpr, context);
+        }
 
         responseBuilder.addValues(ExpressionValue.newBuilder()
                                       .setValue(evaluatedExpr)
