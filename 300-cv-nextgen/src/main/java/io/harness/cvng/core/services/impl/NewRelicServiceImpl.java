@@ -88,9 +88,10 @@ public class NewRelicServiceImpl implements NewRelicService {
       Type type = new TypeToken<List<MetricValidationResponse>>() {}.getType();
       List<MetricValidationResponse> metricValidationResponseList =
           gson.fromJson(JsonUtils.asJson(response.getResult()), type);
-      MetricPackValidationResponse validationResponse =
-          MetricPackValidationResponse.builder().metricValidationResponses(metricValidationResponseList).build();
-      validationResponse.setOverallStatus(ThirdPartyApiResponseStatus.SUCCESS);
+      MetricPackValidationResponse validationResponse = MetricPackValidationResponse.builder()
+                                                            .overallStatus(ThirdPartyApiResponseStatus.SUCCESS)
+                                                            .metricValidationResponses(metricValidationResponseList)
+                                                            .build();
       validationResponse.updateStatus();
       return validationResponse;
     } catch (DataCollectionException ex) {
@@ -101,6 +102,7 @@ public class NewRelicServiceImpl implements NewRelicService {
   @Override
   public MonitoringSourceImportStatus createMonitoringSourceImportStatus(
       List<CVConfig> cvConfigsGroupedByMonitoringSource, int totalNumberOfEnvironments) {
+    // TODO: Is this even needed ? Nothing in the mock.
     return null;
   }
 }
