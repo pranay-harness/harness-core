@@ -37,7 +37,7 @@ public class PhaseSubWorkflowHelperService {
       service = templateExpressionProcessor.resolveService(context, appId, serviceTemplateExpression);
     } else if (serviceId != null) {
       service = serviceResourceService.get(appId, serviceId);
-      notNullCheck("Service not found, check if it's not deleted", service);
+      notNullCheck(format("Service with id: %s not found, check if it's not deleted", serviceId), service);
     }
     return service;
   }
