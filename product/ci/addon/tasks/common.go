@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-  "github.com/pkg/errors"
 	"github.com/ghodss/yaml"
 	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
 	"github.com/pkg/errors"
