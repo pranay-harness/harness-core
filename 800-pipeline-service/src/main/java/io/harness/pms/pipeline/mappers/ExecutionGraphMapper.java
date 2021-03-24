@@ -49,6 +49,7 @@ public class ExecutionGraphMapper {
   private List<DelegateInfo> mapDelegateSelectionLogParamsToDelegateInfo(
       List<GraphDelegateSelectionLogParams> delegateSelectionLogParams) {
     return delegateSelectionLogParams.stream()
+        .filter(param -> param.getSelectionLogParams() != null)
         .map(ExecutionGraphMapper::getDelegateInfoForUI)
         .collect(Collectors.toList());
   }
