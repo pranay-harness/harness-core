@@ -3,7 +3,7 @@ package io.harness.outbox.api.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_PAGE_REQUEST;
 
-import io.harness.Event;
+import io.harness.event.Event;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -31,7 +31,7 @@ public class OutboxServiceImpl implements OutboxService {
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .resourceScope(event.getResourceScope())
                                   .resource(event.getResource())
-                                  .eventData(gson.toJson(event.getEventData()))
+                                  .eventData(gson.toJson(event))
                                   .eventType(event.getEventType())
                                   .globalContext(GlobalContextManager.obtainGlobalContext())
                                   .build();

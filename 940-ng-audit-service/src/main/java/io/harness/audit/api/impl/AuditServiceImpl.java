@@ -14,19 +14,29 @@ import io.harness.audit.repositories.AuditRepository;
 import io.harness.ng.beans.PageRequest;
 
 import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
+@Slf4j
 public class AuditServiceImpl implements AuditService {
   private final AuditRepository auditRepository;
 
   @Override
-  public AuditEvent create(AuditEventDTO auditEventDTO) {
+  public Boolean create(AuditEventDTO auditEventDTO) {
     AuditEvent auditEvent = fromDTO(auditEventDTO);
-    return auditRepository.save(auditEvent);
+    try {
+      auditRepository.save(auditEvent);
+      return true;
+    } catch (DuplicateKeyException ex) {
+      log.info("Audit for this entry already exists with id {} and account identifier {}", auditEvent.getInsertId(),
+          auditEvent.getResourceScope().getAccountIdentifier());
+      return true;
+    }
   }
 
   @Override

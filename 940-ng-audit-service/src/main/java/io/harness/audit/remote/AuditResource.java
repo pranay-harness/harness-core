@@ -1,7 +1,6 @@
 package io.harness.audit.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.audit.mapper.AuditEventMapper.toDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
@@ -51,8 +50,8 @@ public class AuditResource {
   @POST
   @ApiOperation(hidden = true, value = "Create an Audit", nickname = "postAudit")
   @InternalApi
-  public ResponseDTO<AuditEventDTO> create(@Valid AuditEventDTO auditEventDTO) {
-    return ResponseDTO.newResponse(toDTO(auditService.create(auditEventDTO)));
+  public ResponseDTO<Boolean> create(@Valid AuditEventDTO auditEventDTO) {
+    return ResponseDTO.newResponse(auditService.create(auditEventDTO));
   }
 
   @POST

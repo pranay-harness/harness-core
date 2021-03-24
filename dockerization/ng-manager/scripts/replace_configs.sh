@@ -109,6 +109,10 @@ if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
 
+if [[ "" != "$AUDIT_ENABLED" ]]; then
+  yq write -i $CONFIG_FILE enableAudit "$AUDIT_ENABLED"
+fi
+
 if [[ "" != "$MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE managerClientConfig.baseUrl "$MANAGER_CLIENT_BASEURL"
 fi
@@ -188,6 +192,10 @@ fi
 
 if [[ "" != "$HARNESS_IMAGE_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE ciDefaultEntityConfiguration.harnessImagePassword $HARNESS_IMAGE_PASSWORD
+fi
+
+if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 fi
 
 if [[ "" != "$LOG_STREAMING_SERVICE_BASEURL" ]]; then

@@ -12,7 +12,7 @@ import org.springframework.data.domain.Page;
 
 @OwnedBy(PL)
 public interface AuditService {
-  AuditEvent create(AuditEventDTO auditEventDTO);
+  Boolean create(AuditEventDTO auditEventDTO);
 
   Page<AuditEvent> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO);

@@ -17,6 +17,7 @@ public class NextGenRegistrars {
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -29,6 +30,7 @@ public class NextGenRegistrars {
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(GitSyncRegistrars.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
