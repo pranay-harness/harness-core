@@ -31,7 +31,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.ServiceVariableBuilder;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.ServiceYaml;
-import software.wings.beans.ServiceYaml.YamlBuilder;
+import software.wings.beans.ServiceYaml.ServiceYamlBuilder;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.service.impl.yaml.handler.ArtifactVariableYamlHelper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -85,15 +85,15 @@ public class ServiceYamlHandler extends BaseYamlHandler<ServiceYaml, Service> {
     String deploymentType = service.getDeploymentType() != null ? service.getDeploymentType().name() : null;
     String helmVersion = service.getHelmVersion() != null ? service.getHelmVersion().toString() : null;
 
-    YamlBuilder yamlBuilder = ServiceYaml.builder()
-                                  .harnessApiVersion(getHarnessApiVersion())
-                                  .description(service.getDescription())
-                                  .artifactType(service.getArtifactType().name())
-                                  .deploymentType(deploymentType)
-                                  .configMapYaml(service.getConfigMapYaml())
-                                  .configVariables(nameValuePairList)
-                                  .applicationStack(applicationStack)
-                                  .helmVersion(helmVersion);
+    ServiceYamlBuilder yamlBuilder = ServiceYaml.builder()
+                                         .harnessApiVersion(getHarnessApiVersion())
+                                         .description(service.getDescription())
+                                         .artifactType(service.getArtifactType().name())
+                                         .deploymentType(deploymentType)
+                                         .configMapYaml(service.getConfigMapYaml())
+                                         .configVariables(nameValuePairList)
+                                         .applicationStack(applicationStack)
+                                         .helmVersion(helmVersion);
     if (isNotBlank(service.getDeploymentTypeTemplateId())) {
       yamlBuilder.deploymentTypeTemplateUri(
           customDeploymentTypeService.fetchDeploymentTemplateUri(service.getDeploymentTypeTemplateId()));
