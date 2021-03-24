@@ -1,21 +1,22 @@
 package io.harness.changehandlers;
 
 import io.harness.ChangeHandler;
-import io.harness.ccm.views.entities.CEView;
 import io.harness.changestreamsframework.ChangeEvent;
-import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.Strings;
 
 @Slf4j
 @Singleton
@@ -65,26 +66,31 @@ public class PlanExecutionSummaryChangeDataHandler implements ChangeHandler {
 
   private Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
     Map<String, String> columnValueMapping = new HashMap<>();
-    // TODO: make this Handling generic
-    PipelineExecutionSummaryEntity fullDocument = (PipelineExecutionSummaryEntity) changeEvent.getFullDocument();
+    DBObject dbObject = changeEvent.getFullDocument();
+    DBObject ciExecutionInfo =
+        (DBObject) ((BasicDBObject) ((BasicDBObject) dbObject.get("moduleInfo")).get("ci")).get("ciExecutionInfoDTO");
+    DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
+    HashMap firstCommit = (HashMap) ((List) branch.get("commits")).get(0);
+    DBObject author = (DBObject) (ciExecutionInfo.get("author"));
+
     columnValueMapping.put("id", changeEvent.getUuid());
-    columnValueMapping.put("accountId", ((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getAccountId());
-    columnValueMapping.put("orgIdentifier", ((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getOrgIdentifier());
-    columnValueMapping.put("projectIdentifier", ((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getProjectIdentifier());
-    columnValueMapping.put("pipelineIdentifier", ((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getPipelineIdentifier());
-    columnValueMapping.put("name", ((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getName());
-    columnValueMapping.put("status", ((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getStatus().getDisplayName());
-    columnValueMapping.put("moduleInfo_event", "");
-    columnValueMapping.put("moduleInfo_author_id", "");
-    columnValueMapping.put("moduleInfo_branch_name", "");
-    columnValueMapping.put("moduleInfo_branch_commit_id", "");
-    columnValueMapping.put("moduleInfo_branch_commit_message", "");
-    columnValueMapping.put("startTs", Long.toString(((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getStartTs()));
-    columnValueMapping.put("endTs", Long.toString(((PipelineExecutionSummaryEntity) changeEvent.getFullDocument()).getEndTs()));
+    columnValueMapping.put("accountId", dbObject.get("accountId").toString());
+    columnValueMapping.put("orgIdentifier", dbObject.get("orgIdentifier").toString());
+    columnValueMapping.put("projectIdentifier", dbObject.get("projectIdentifier").toString());
+    columnValueMapping.put("pipelineIdentifier", dbObject.get("pipelineIdentifier").toString());
+    columnValueMapping.put("name", dbObject.get("name").toString());
+    columnValueMapping.put("status", dbObject.get("status").toString());
+    columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
+    columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
+    columnValueMapping.put("moduleInfo_branch_name", branch.get("name").toString());
+    columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+    columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+    columnValueMapping.put(
+        "startTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("startTs").toString()))));
+    columnValueMapping.put("endTs", String.valueOf(new Timestamp(Long.parseLong(dbObject.get("endTs").toString()))));
 
     return columnValueMapping;
   }
-
 
   // https://www.codeproject.com/articles/779373/generic-functions-to-generate-insert-update-delete Generic Function
   // Adapted from here
