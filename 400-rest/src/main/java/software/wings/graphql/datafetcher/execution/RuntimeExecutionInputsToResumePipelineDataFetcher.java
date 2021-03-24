@@ -3,7 +3,7 @@ package software.wings.graphql.datafetcher.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notBlankCheck;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class RuntimeExecutionInputsToResumePipelineDataFetcher
     extends AbstractObjectDataFetcher<QLExecutionInputs, QLExecutionInputsToResumePipelineQueryParams> {
   private static final String APPLICATION_DOES_NOT_EXIST_MSG = "Application does not exist";

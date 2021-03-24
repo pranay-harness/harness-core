@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.k8sLabel;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.SettingAttribute;
@@ -17,7 +17,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
 
 @Singleton
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class K8sLabelQueryHelper {
   @Inject protected DataFetcherUtils utils;
 

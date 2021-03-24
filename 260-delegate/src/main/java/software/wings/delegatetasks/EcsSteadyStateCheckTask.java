@@ -2,7 +2,7 @@ package software.wings.delegatetasks;
 
 import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.container.ContainerInfo;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
   @Inject private AwsHelperService awsHelperService;
   @Inject private DelegateLogService delegateLogService;

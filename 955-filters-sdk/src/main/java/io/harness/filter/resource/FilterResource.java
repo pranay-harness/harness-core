@@ -1,9 +1,11 @@
 package io.harness.filter.resource;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -44,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
     })
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @NextGenManagerAuth
+@OwnedBy(DX)
 public class FilterResource {
   private FilterService filterService;
 

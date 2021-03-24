@@ -1,5 +1,8 @@
 package io.harness.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.testing.TestExecution;
 import io.harness.yaml.schema.AbstractSchemaChecker;
@@ -17,6 +20,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DX)
 public class YamlSdkModule extends AbstractModule {
   private static volatile YamlSdkModule defaultInstance;
 

@@ -6,6 +6,7 @@ option java_multiple_files = true;
 
 import "io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/gitsync/change_type.proto";
+import "google/protobuf/wrappers.proto";
 
 service GitToHarnessService {
   rpc syncRequestFromGit(ChangeSet) returns (ProcessingResponse);
@@ -21,8 +22,8 @@ message ChangeSet {
   string yaml = 2;
   string account_id = 3;
   io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 4;
-  string commit_id = 5;
-  string object_id = 6;
+  google.protobuf.StringValue commit_id = 5;
+  google.protobuf.StringValue object_id = 6;
   io.harness.gitsync.ChangeType change_type = 7;
 }
 

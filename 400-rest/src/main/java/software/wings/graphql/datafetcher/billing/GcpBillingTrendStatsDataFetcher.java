@@ -2,7 +2,7 @@ package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.GcpBillingService;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.stat.regression.SimpleRegression;
 
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<CloudBillingAggregate, CloudBillingFilter,
     CloudBillingGroupBy, QLBillingSortCriteria> {
   @Inject GcpBillingService gcpBillingService;

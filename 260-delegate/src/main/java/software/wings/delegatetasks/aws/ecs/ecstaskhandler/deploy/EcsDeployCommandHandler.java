@@ -8,7 +8,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.exception.ExceptionUtils;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private EcsDeployCommandTaskHelper ecsDeployCommandTaskHelper;
   @Inject private AwsClusterService awsClusterService;

@@ -8,7 +8,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -31,7 +31,7 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class AddReplCtrlNameToKubeSetupProperties implements Migration {
   private static final String DEFAULT_REPLICATION_CONTROLLER_NAME = "${app.name}.${service.name}.${env.name}";
   private static final String REPLICATION_CONTROLLER_NAME_KEY = "replicationControllerName";

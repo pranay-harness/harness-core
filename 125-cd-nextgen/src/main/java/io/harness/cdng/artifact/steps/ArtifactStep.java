@@ -27,6 +27,7 @@ import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.sdk.core.execution.invokers.NGManagerLogCallback;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.serializer.KryoSerializer;
@@ -54,7 +55,7 @@ public class ArtifactStep {
   private static final long DEFAULT_TIMEOUT = TimeUnit.MINUTES.toMillis(1);
 
   public TaskRequest getTaskRequest(Ambiance ambiance, ArtifactStepParameters stepParameters) {
-    log.info("Executing deployment stage with params [{}]", stepParameters);
+    log.info("Executing Artifact step with params [{}]", stepParameters);
     ArtifactConfig finalArtifact = applyArtifactsOverlay(stepParameters);
     String accountId = AmbianceHelper.getAccountId(ambiance);
     ArtifactSourceDelegateRequest artifactSourceDelegateRequest =
@@ -133,7 +134,8 @@ public class ArtifactStep {
     return resultantArtifact;
   }
 
-  public List<ArtifactConfig> getArtifactOverrideSetsApplicable(ServiceConfig serviceConfig) {
+  public List<ArtifactConfig> getArtifactOverrideSetsApplicable(
+      ServiceConfig serviceConfig, NGManagerLogCallback ngManagerLogCallback) {
     List<ArtifactConfig> artifacts = new LinkedList<>();
     if (serviceConfig.getStageOverrides() != null
         && !ParameterField.isNull(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
@@ -150,7 +152,7 @@ public class ArtifactStep {
           throw new InvalidRequestException("Artifact Override Set is not defined properly.");
         }
         ArtifactListConfig artifactListConfig = artifactOverrideSetsList.get(0).getArtifacts();
-        artifacts.addAll(ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig));
+        artifacts.addAll(ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig, ngManagerLogCallback));
       }
     }
     return artifacts;
@@ -172,24 +174,28 @@ public class ArtifactStep {
     }
   }
 
-  public List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(ServiceConfig serviceConfig) {
+  public List<ArtifactStepParameters> getArtifactsWithCorrespondingOverrides(
+      ServiceConfig serviceConfig, NGManagerLogCallback ngManagerLogCallback) {
     Map<String, ArtifactStepParametersBuilder> artifactsMap = new HashMap<>();
     ArtifactListConfig artifacts = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     if (artifacts != null) {
       // Add service artifacts.
-      List<ArtifactConfig> serviceSpecArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(artifacts);
+      List<ArtifactConfig> serviceSpecArtifacts =
+          ArtifactUtils.convertArtifactListIntoArtifacts(artifacts, ngManagerLogCallback);
       mapArtifactsToIdentifier(artifactsMap, serviceSpecArtifacts, ArtifactStepParametersBuilder::artifact);
     }
 
     // Add Artifact Override Sets.
-    List<ArtifactConfig> artifactOverrideSetsApplicable = getArtifactOverrideSetsApplicable(serviceConfig);
+    List<ArtifactConfig> artifactOverrideSetsApplicable =
+        getArtifactOverrideSetsApplicable(serviceConfig, ngManagerLogCallback);
     mapArtifactsToIdentifier(
         artifactsMap, artifactOverrideSetsApplicable, ArtifactStepParametersBuilder::artifactOverrideSet);
 
     // Add Stage Overrides.
     if (serviceConfig.getStageOverrides() != null && serviceConfig.getStageOverrides().getArtifacts() != null) {
       ArtifactListConfig stageOverrides = serviceConfig.getStageOverrides().getArtifacts();
-      List<ArtifactConfig> stageOverridesArtifacts = ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrides);
+      List<ArtifactConfig> stageOverridesArtifacts =
+          ArtifactUtils.convertArtifactListIntoArtifacts(stageOverrides, ngManagerLogCallback);
       mapArtifactsToIdentifier(
           artifactsMap, stageOverridesArtifacts, ArtifactStepParametersBuilder::artifactStageOverride);
     }

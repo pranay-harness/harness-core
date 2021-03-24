@@ -1,32 +1,37 @@
 package io.harness.platform;
 
+import static io.harness.AuthorizationServiceHeader.BEARER;
+import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.platform.PlatformConfiguration.getResourceClasses;
+import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombinedResourceClasses;
+import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
+import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
-import io.harness.AuthorizationServiceHeader;
+import io.harness.GodInjector;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
-import io.harness.manage.ManagedScheduledExecutorService;
 import io.harness.metrics.MetricRegistryModule;
-import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
-import io.harness.notification.SeedDataConfiguration;
-import io.harness.notification.annotations.NotificationMicroserviceAuth;
 import io.harness.notification.eventbackbone.MessageConsumer;
-import io.harness.notification.eventbackbone.MongoMessageConsumer;
 import io.harness.notification.exception.NotificationExceptionMapper;
-import io.harness.notification.service.api.SeedDataPopulaterService;
-import io.harness.persistence.HPersistence;
-import io.harness.queue.QueueListenerController;
-import io.harness.remote.CharsetResponseFilter;
+import io.harness.platform.audit.AuditServiceModule;
+import io.harness.platform.audit.AuditServiceSetup;
+import io.harness.platform.notification.NotificationServiceModule;
+import io.harness.platform.notification.NotificationServiceSetup;
+import io.harness.platform.remote.HealthResource;
 import io.harness.remote.NGObjectMapperHelper;
+import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
-import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.security.annotations.InternalApi;
+import io.harness.security.annotations.PublicApi;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 
@@ -34,9 +39,6 @@ import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -44,9 +46,12 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -62,6 +67,7 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
 
 @Slf4j
+@OwnedBy(PL)
 public class PlatformApplication extends Application<PlatformConfiguration> {
   private static final String APPLICATION_NAME = "Platform Microservice";
 
@@ -103,50 +109,45 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   public void run(PlatformConfiguration appConfig, Environment environment) {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
-    log.info("Starting Notification Application ...");
+    log.info("Starting Platform Application ...");
     MaintenanceController.forceMaintenance(true);
-    Injector injector = Guice.createInjector(new PlatformModule(appConfig), new MetricRegistryModule(metricRegistry));
+    GodInjector godInjector = new GodInjector();
+    godInjector.put(NOTIFICATION_SERVICE,
+        Guice.createInjector(new NotificationServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+    if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
+      godInjector.put(AUDIT_SERVICE,
+          Guice.createInjector(new AuditServiceModule(appConfig), new MetricRegistryModule(metricRegistry)));
+    }
 
-    // Will create collections and Indexes
-    injector.getInstance(HPersistence.class);
+    registerCommonResources(appConfig, environment, godInjector);
     registerCorsFilter(appConfig, environment);
-    registerResources(environment, injector);
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
-    registerCharsetResponseFilter(environment, injector);
-    registerCorrelationFilter(environment, injector);
-    registerScheduleJobs(injector);
-    registerManagedBeans(environment, injector);
-    registerQueueListeners(injector, appConfig);
-    registerAuthFilters(appConfig, environment, injector);
-    registerHealthCheck(environment, injector);
-    populateSeedData(injector, appConfig.getSeedDataConfiguration());
+    registerAuthFilters(appConfig, environment);
+
+    new NotificationServiceSetup().setup(
+        appConfig.getNotificationServiceConfig(), environment, godInjector.get(NOTIFICATION_SERVICE));
+    if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
+      new AuditServiceSetup().setup(appConfig.getAuditServiceConfig(), environment, godInjector.get(AUDIT_SERVICE));
+    }
     MaintenanceController.forceMaintenance(false);
-    new Thread(injector.getInstance(MessageConsumer.class)).start();
+    new Thread(godInjector.get(NOTIFICATION_SERVICE).getInstance(MessageConsumer.class)).start();
   }
 
-  private void registerHealthCheck(Environment environment, Injector injector) {
-    final HealthService healthService = injector.getInstance(HealthService.class);
-    environment.healthChecks().register("Platform Application", healthService);
-    healthService.registerMonitor(injector.getInstance(HPersistence.class));
-  }
-
-  private void populateSeedData(Injector injector, SeedDataConfiguration seedDataConfiguration) {
-    injector.getInstance(SeedDataPopulaterService.class).populateSeedData(seedDataConfiguration);
+  private void registerCommonResources(
+      PlatformConfiguration appConfig, Environment environment, GodInjector godInjector) {
+    if (Resource.isAcceptable(HealthResource.class)) {
+      List<HealthService> healthServices = new ArrayList<>();
+      healthServices.add(godInjector.get(NOTIFICATION_SERVICE).getInstance(HealthService.class));
+      if (appConfig.getAuditServiceConfig().isEnableAuditService()) {
+        healthServices.add(godInjector.get(AUDIT_SERVICE).getInstance(HealthService.class));
+      }
+      environment.jersey().register(new HealthResource(healthServices));
+    }
   }
 
   private void registerJerseyFeatures(Environment environment) {
     environment.jersey().register(MultiPartFeature.class);
-  }
-
-  private void registerIterators(Injector injector) {
-    //    injector.getInstance(NotificationRetryHandler.class).registerIterators();
-  }
-
-  private void registerManagedBeans(Environment environment, Injector injector) {
-    environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
-    environment.lifecycle().manage(
-        injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response"))));
   }
 
   private void registerCorsFilter(PlatformConfiguration appConfig, Environment environment) {
@@ -158,14 +159,6 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
-  private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceClasses()) {
-      if (Resource.isAcceptable(resource)) {
-        environment.jersey().register(injector.getInstance(resource));
-      }
-    }
-  }
-
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(NotificationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
@@ -173,23 +166,9 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     environment.jersey().register(GenericExceptionMapperV2.class);
   }
 
-  private void registerCharsetResponseFilter(Environment environment, Injector injector) {
-    environment.jersey().register(injector.getInstance(CharsetResponseFilter.class));
-  }
-
-  private void registerCorrelationFilter(Environment environment, Injector injector) {
-    environment.jersey().register(injector.getInstance(CorrelationFilter.class));
-  }
-
-  private void registerQueueListeners(Injector injector, PlatformConfiguration appConfig) {
-    log.info("Initializing queue listeners...");
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(MongoMessageConsumer.class), 1);
-  }
-
   public SwaggerBundleConfiguration getSwaggerConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
+    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setVersion("1.0");
@@ -199,28 +178,50 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     return defaultSwaggerBundleConfiguration;
   }
 
-  private void registerScheduleJobs(Injector injector) {
-    log.info("Initializing scheduled jobs...");
-    injector.getInstance(Key.get(ManagedScheduledExecutorService.class, Names.named("delegate-response")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+  private void registerAuthFilters(PlatformConfiguration configuration, Environment environment) {
+    if (configuration.isEnableAuth()) {
+      registerNextGenAuthFilter(configuration, environment);
+      registerInternalApiAuthFilter(configuration, environment);
+    }
   }
 
-  private void registerAuthFilters(PlatformConfiguration configuration, Environment environment, Injector injector) {
-    if (configuration.isEnableAuth()) {
-      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
-          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NotificationMicroserviceAuth.class)
-              != null
-          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NotificationMicroserviceAuth.class)
-              != null;
-      Map<String, String> serviceToSecretMapping = new HashMap<>();
-      serviceToSecretMapping.put(
-          AuthorizationServiceHeader.BEARER.getServiceId(), configuration.getPlatformSecrets().getJwtAuthSecret());
-      serviceToSecretMapping.put(AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(),
-          configuration.getPlatformSecrets().getJwtIdentityServiceSecret());
-      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(),
-          configuration.getPlatformSecrets().getNgManagerServiceSecret());
-      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
-    }
+  private void registerNextGenAuthFilter(PlatformConfiguration configuration, Environment environment) {
+    Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
+        (getAuthenticationExemptedRequestsPredicate().negate())
+            .and((getAuthFilterPredicate(InternalApi.class)).negate());
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(BEARER.getServiceId(), configuration.getPlatformSecrets().getJwtAuthSecret());
+    serviceToSecretMapping.put(
+        IDENTITY_SERVICE.getServiceId(), configuration.getPlatformSecrets().getJwtIdentityServiceSecret());
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getPlatformSecrets().getNgManagerServiceSecret());
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+  }
+
+  private void registerInternalApiAuthFilter(PlatformConfiguration configuration, Environment environment) {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getPlatformSecrets().getNgManagerServiceSecret());
+    environment.jersey().register(
+        new InternalApiAuthFilter(getAuthFilterPredicate(InternalApi.class), null, serviceToSecretMapping));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthenticationExemptedRequestsPredicate() {
+    return getAuthFilterPredicate(PublicApi.class)
+        .or(resourceInfoAndRequest
+            -> resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+                    "api/swagger.json")
+                || resourceInfoAndRequest.getValue().getUriInfo().getAbsolutePath().getPath().endsWith(
+                    "api/swagger.yaml"));
+  }
+
+  private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
+      Class<? extends Annotation> annotation) {
+    return resourceInfoAndRequest
+        -> (resourceInfoAndRequest.getKey().getResourceMethod() != null
+               && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
+        || (resourceInfoAndRequest.getKey().getResourceClass() != null
+            && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {

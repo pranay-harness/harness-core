@@ -5,7 +5,7 @@ import static io.harness.logging.LogLevel.ERROR;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsListenerUpdateBGTaskHandler extends EcsCommandTaskHandler {
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
   @Inject private AwsHelperService awsHelperService;

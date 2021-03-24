@@ -1,6 +1,9 @@
 package software.wings.service.intfc;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -8,7 +11,8 @@ import io.harness.delegate.beans.DelegateScope;
 
 import javax.validation.Valid;
 
-@TargetModule(Module._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public interface DelegateScopeService {
   /**
    * List page response.

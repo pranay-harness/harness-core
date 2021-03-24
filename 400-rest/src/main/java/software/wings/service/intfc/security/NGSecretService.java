@@ -1,6 +1,6 @@
 package software.wings.service.intfc.security;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
-@TargetModule(Module._950_NG_CORE)
+@TargetModule(HarnessModule._950_NG_CORE)
 public interface NGSecretService {
   EncryptedData createSecretText(SecretTextDTO dto);
 

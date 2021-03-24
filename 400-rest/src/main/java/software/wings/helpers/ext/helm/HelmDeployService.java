@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.helm;
 
-import io.harness.annotations.dev.Module;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
@@ -19,7 +22,8 @@ import java.util.concurrent.TimeoutException;
 /**
  * Created by anubhaw on 4/1/18.
  */
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public interface HelmDeployService {
   /**
    * Deploy helm command response.

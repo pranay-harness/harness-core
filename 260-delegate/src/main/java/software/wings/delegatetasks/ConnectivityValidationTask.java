@@ -12,7 +12,7 @@ import static software.wings.settings.validation.SmtpConnectivityValidationAttri
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -48,7 +48,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
   @Inject private Mailer mailer;

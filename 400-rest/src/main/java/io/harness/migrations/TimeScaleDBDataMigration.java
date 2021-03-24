@@ -1,8 +1,8 @@
 package io.harness.migrations;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public interface TimeScaleDBDataMigration {
   boolean migrate();
 }

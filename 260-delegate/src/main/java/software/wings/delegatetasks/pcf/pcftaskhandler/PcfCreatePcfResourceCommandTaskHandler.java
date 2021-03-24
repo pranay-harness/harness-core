@@ -2,7 +2,7 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static java.util.Collections.emptyList;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -29,7 +29,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PcfCreatePcfResourceCommandTaskHandler extends PcfCommandTaskHandler {
   /**
    * Fetches Organization, Spaces, RouteMap data

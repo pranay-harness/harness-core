@@ -1,6 +1,6 @@
 package software.wings.graphql.datafetcher.billing;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.math.BigDecimal;
@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(Module._380_CG_GRAPHQL)
+@TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class QLIdleCostData {
   private BigDecimal totalCost;
   private BigDecimal totalCpuCost;

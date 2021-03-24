@@ -28,6 +28,7 @@ public class NextGenRegistrars {
           .addAll(ResourceGroupSerializer.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(GitSyncRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =

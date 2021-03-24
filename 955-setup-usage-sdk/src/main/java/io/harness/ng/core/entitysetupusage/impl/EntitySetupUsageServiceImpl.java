@@ -1,7 +1,10 @@
 package io.harness.ng.core.entitysetupusage.impl;
+
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.EntityType;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.core.entitysetupusage.EntitySetupUsageQueryFilterHelper;
@@ -33,6 +36,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(DX)
 public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
   EntitySetupUsageQueryFilterHelper entitySetupUsageFilterHelper;
   EntitySetupUsageRepository entityReferenceRepository;

@@ -82,6 +82,6 @@ public class NodeExecutionsCache {
   }
 
   public List<NodeExecution> findAllChildren(String parentId) {
-    return nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), parentId);
+    return nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), parentId, false);
   }
 }

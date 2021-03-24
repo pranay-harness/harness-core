@@ -1,5 +1,6 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHU;
@@ -19,6 +20,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -39,6 +41,7 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 1/3/17.
  */
+@OwnedBy(CDP)
 public class AwsClusterServiceImplTest extends WingsBaseTest {
   @Mock private EcsContainerService ecsContainerService;
   @Inject @InjectMocks private AwsClusterService awsClusterService;

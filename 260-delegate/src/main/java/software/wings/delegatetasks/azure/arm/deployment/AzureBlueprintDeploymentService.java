@@ -6,7 +6,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAuthorizationClient;
 import io.harness.azure.client.AzureBlueprintClient;
@@ -44,7 +44,7 @@ import org.apache.commons.lang3.StringUtils;
 @Singleton
 @NoArgsConstructor
 @Slf4j
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureBlueprintDeploymentService {
   @Inject private AzureBlueprintClient azureBlueprintClient;
   @Inject private AzureAuthorizationClient azureAuthorizationClient;

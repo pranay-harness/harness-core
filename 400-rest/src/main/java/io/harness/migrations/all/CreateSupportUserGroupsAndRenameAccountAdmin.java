@@ -9,7 +9,7 @@ import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 3/21/18
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class CreateSupportUserGroupsAndRenameAccountAdmin implements Migration {
   private static final String DEFAULT_OLD_USER_GROUP_NAME = "ADMIN";
 

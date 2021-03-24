@@ -8,7 +8,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 
@@ -41,7 +41,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class SetInfraDefinitionPipelines {
   @Inject private PipelineService pipelineService;
   @Inject private WorkflowService workflowService;

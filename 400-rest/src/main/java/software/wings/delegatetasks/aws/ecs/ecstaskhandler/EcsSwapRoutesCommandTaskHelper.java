@@ -8,7 +8,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -30,7 +30,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
-@TargetModule(Module._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsSwapRoutesCommandTaskHelper {
   static final String BG_VERSION = "BG_VERSION";
   static final String BG_GREEN = "GREEN";

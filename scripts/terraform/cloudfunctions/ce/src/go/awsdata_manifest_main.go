@@ -39,20 +39,25 @@ type BillingPeriod struct {
 	End   string `json:"end"`
 }
 
+type AdditionalArtifact struct {
+	ArtifactType string `json:"artifactType"`
+	Name         string `json:"name"`
+}
+
 //ManifestJson : The Json Structure AWS publishes in the CUR report
 type manifestJSON struct {
-	AssemblyID             string        `json:"assemblyId"`
-	Account                string        `json:"account"`
-	Columns                []Column      `json:"columns"`
-	Charset                string        `json:"charset"`
-	Compression            string        `json:"compression"`
-	ContentType            string        `json:"contentType"`
-	ReportID               string        `json:"reportId"`
-	ReportName             string        `json:"reportName"`
-	BillingPeriod          BillingPeriod `json:"billingPeriod"`
-	Bucket                 string        `json:"bucket"`
-	ReportKeys             []string      `json:"reportKeys"`
-	AdditionalArtifactKeys []string      `json:"additionalArtifactKeys"`
+	AssemblyID             string                   `json:"assemblyId"`
+	Account                string                   `json:"account"`
+	Columns                []Column                 `json:"columns"`
+	Charset                string                   `json:"charset"`
+	Compression            string                   `json:"compression"`
+	ContentType            string                   `json:"contentType"`
+	ReportID               string                   `json:"reportId"`
+	ReportName             string                   `json:"reportName"`
+	BillingPeriod          BillingPeriod            `json:"billingPeriod"`
+	Bucket                 string                   `json:"bucket"`
+	ReportKeys             []string                 `json:"reportKeys"`
+	AdditionalArtifactKeys []AdditionalArtifact     `json:"additionalArtifactKeys"`
 }
 
 //CreateTable : is responsible for creating a Table in BigQuery
@@ -92,18 +97,24 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 	rc, readerClientErr := storageClient.Bucket(e.Bucket).Object(e.Name).NewReader(ctxBack)
 	// log.Printf("Printing Event Context %+v\n", e)
 	if readerClientErr != nil {
-		log.Fatal(readerClientErr)
+		fmt.Println(readerClientErr)
+		return nil
 	}
 	defer rc.Close()
 	fmt.Println("Reading data from manifest")
 	body, readingErr := ioutil.ReadAll(rc)
 	if readingErr != nil {
-		log.Fatal(readingErr)
+		fmt.Println(readingErr)
+		return nil
 	}
 	var jsonData manifestJSON
 	if readingErr = json.Unmarshal(body, &jsonData); readingErr != nil {
-		log.Fatal("Could not Deserialise Manifest File: {}", readingErr.Error())
-	}
+		fmt.Println("Could not Deserialise Manifest File: {}", readingErr.Error())
+		return nil
+	} else if jsonData.Columns == nil {
+	  fmt.Println("Could not Deserialise Manifest File. No columns found. Exiting")
+	  return nil
+  }
 
 	createDataSet := true
 	datasetsIterator := client.Datasets(ctxBack)
@@ -184,6 +195,7 @@ func CreateTable(ctx context.Context, e GCSEvent) error {
 		Description: description,
 		Target:      jobTarget,
 		Schedule:    schedule,
+		TimeZone:    "UTC",
 	}
 
 	// https://godoc.org/google.golang.org/genproto/googleapis/cloud/scheduler/v1#DeleteJobRequest
@@ -272,7 +284,7 @@ func getMappedDataColumn(dataType string) bigquery.FieldType {
 	case "BigDecimal":
 		modifiedDataType = bigquery.FloatFieldType
 	case "OptionalBigDecimal":
-		modifiedDataType = bigquery.FloatFieldType
+      modifiedDataType = bigquery.FloatFieldType
 	default:
 		modifiedDataType = bigquery.StringFieldType
 	}

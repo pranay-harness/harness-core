@@ -6,7 +6,7 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofMillis;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -37,7 +37,7 @@ import org.mongodb.morphia.query.UpdateOperations;
  * Created by Praveen
  */
 @Slf4j
-@TargetModule(Module._390_DB_MIGRATION)
+@TargetModule(HarnessModule._390_DB_MIGRATION)
 public class TimeSeriesRiskSummaryMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   private int completedCount;

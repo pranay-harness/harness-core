@@ -15,7 +15,7 @@ import static io.harness.security.encryption.EncryptionType.VAULT;
 
 import static software.wings.service.intfc.security.NGSecretManagerService.isReadOnlySecretManager;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.EncryptedData;
@@ -66,7 +66,7 @@ import org.mongodb.morphia.query.Query;
 
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
-@TargetModule(Module._950_NG_CORE)
+@TargetModule(HarnessModule._950_NG_CORE)
 public class NGSecretServiceImpl implements NGSecretService {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
   private static final String ACCOUNT_IDENTIFIER_KEY =

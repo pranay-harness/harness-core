@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import com.google.inject.Inject;
@@ -16,7 +16,7 @@ import io.kubernetes.client.util.CallGeneratorParams;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@TargetModule(Module._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class NamespaceFetcher {
   private final Store<V1Namespace> store;
   private final CoreV1Api coreV1Api;

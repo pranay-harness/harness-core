@@ -114,21 +114,22 @@ directories:
   200-functional-test
   tools
   scripts
+  cargo
 
 import_run_configurations:
   run-configurations/AccessControlMicroservice.xml
+  run-configurations/BatchProcessinngApp.xml
   run-configurations/CENextGenApp.xml
   run-configurations/CIManagerApplication.xml
   run-configurations/CommandServiceLibraryApp.xml
   run-configurations/CVNGApp.xml
-  run-configurations/DataGen_App.xml
+  run-configurations/DataGenApp.xml
   run-configurations/DelegateApp.xml
   run-configurations/EventsFrameworkTest.xml
   run-configurations/GitSyncTestApp.xml
-  run-configurations/NextGen_Manager.xml
-  run-configurations/Notification Client.xml
-  run-configurations/Platform Microservice.xml
+  run-configurations/NextGenManager.xml
+  run-configurations/NotificationClient.xml
+  run-configurations/PlatformMicroservice.xml
+  run-configurations/VerificationServiceApp.xml
   run-configurations/Watcher.xml
   run-configurations/WingsApp.xml
-  run-configurations/VerificationServiceApp.xml
-  run-configurations/BatchProcessinngApp.xml

@@ -1,6 +1,6 @@
 package software.wings.core.local.executors;
 
-import io.harness.annotations.dev.Module;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.shell.ScriptProcessExecutor;
 import io.harness.shell.ShellExecutorConfig;
@@ -15,7 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 @Singleton
-@TargetModule(Module._960_API_SERVICES)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class ShellExecutorFactory {
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager fileService;
