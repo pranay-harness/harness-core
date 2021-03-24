@@ -8,8 +8,8 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
-import io.harness.exception.HintWithExplanationException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.NestedExceptionUtils;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -78,10 +78,10 @@ public class AwsClientImpl implements AwsClient {
       if (amazonEC2Exception.getStatusCode() == 401) {
         if (!awsConfig.isEc2IamCredentials()) {
           if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
-            throw HintWithExplanationException.build(HintException.HINT_EMPTY_ACCESS_KEY,
+            throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_ACCESS_KEY,
                 ExplanationException.EXPLANATION_EMPTY_ACCESS_KEY, amazonEC2Exception);
           } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
-            throw HintWithExplanationException.build(HintException.HINT_EMPTY_SECRET_KEY,
+            throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_SECRET_KEY,
                 ExplanationException.EXPLANATION_EMPTY_SECRET_KEY, amazonEC2Exception);
           }
         }

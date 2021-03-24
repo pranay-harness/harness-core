@@ -74,10 +74,10 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GitOperationException;
 import io.harness.exception.HelmClientException;
-import io.harness.exception.HintWithExplanationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesValuesException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.helm.HelmCliCommandType;
@@ -2064,7 +2064,7 @@ public class K8sTaskHelperBase {
     } catch (Exception ex) {
       log.info("Exception while validating kubernetes credentials", ex);
       ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(ex.getMessage());
-      throw HintWithExplanationException.build(
+      throw NestedExceptionUtils.hintWithExplanationException(
           "Issue could be : " + errorDetail.getReason(), errorDetail.getMessage(), ex);
       //      return createConnectivityFailureValidationResult(ex);
     }
