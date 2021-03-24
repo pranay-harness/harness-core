@@ -79,7 +79,7 @@ public abstract class AbstractAccountMigrationTestBase extends AbstractFunctiona
   }
 
   private void addUserToHarnessUserGroup() {
-    accountGenerator.addUserToHarnessUserGroup(user);
+    accountGenerator.addUserToHarnessUserGroup(account.getUuid(), user);
   }
 
   private void loginUser() {
