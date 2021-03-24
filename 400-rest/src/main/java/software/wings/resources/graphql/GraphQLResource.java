@@ -59,7 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 @Path("/graphql")
 @Produces("application/json")
 @Singleton
-@AuditSkip
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GraphQLResource {
