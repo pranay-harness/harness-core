@@ -1,6 +1,10 @@
 package io.harness.data.validator;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static org.apache.commons.lang3.StringUtils.isBlank;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.util.HashSet;
@@ -11,11 +15,12 @@ import java.util.stream.Stream;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
+@OwnedBy(PL)
 public class EntityIdentifierValidator implements ConstraintValidator<EntityIdentifier, String> {
   // Max Length : 64 characters
   // Start with: Alphabets, characters, Underscore  or $
   // Chars Allowed : Alphanumeric, Underscore, $
-  public static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z_$][0-9a-zA-Z_$]{1,63}$");
+  public static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z_$][0-9a-zA-Z_$]{0,63}$");
   public static final Set<String> NOT_ALLOWED_WORDS =
       Stream
           .of("or", "and", "eq", "ne", "lt", "gt", "le", "ge", "div", "mod", "not", "null", "true", "false", "new",
