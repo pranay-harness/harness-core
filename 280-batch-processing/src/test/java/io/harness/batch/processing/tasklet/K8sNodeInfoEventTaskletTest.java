@@ -295,6 +295,20 @@ public class K8sNodeInfoEventTaskletTest extends CategoryTest {
   @Test
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
+  public void shouldReturnAwsSpotInstance2() {
+    Map<String, String> label = new HashMap<>();
+    label.put(K8sCCMConstants.REGION, InstanceMetaDataConstants.REGION);
+    label.put(K8sCCMConstants.INSTANCE_FAMILY, InstanceMetaDataConstants.INSTANCE_FAMILY);
+    label.put(K8sCCMConstants.OPERATING_SYSTEM, InstanceMetaDataConstants.OPERATING_SYSTEM);
+    label.put(K8sCCMConstants.AWS_LIFECYCLE_KEY, "Ec2");
+    label.put("eks.amazonaws.com/capacityType", "spot");
+    InstanceCategory instanceCategory = k8sNodeInfoTasklet.getInstanceCategory(CloudProvider.AWS, label);
+    assertThat(instanceCategory).isEqualTo(InstanceCategory.SPOT);
+  }
+
+  @Test
+  @Owner(developers = HITESH)
+  @Category(UnitTests.class)
   public void shouldReturnCloudProviderInstance() {
     String providerId = "aws:///eu-west-2c/i-072ecaefff88547de";
     String cloudProviderInstanceId = k8sNodeInfoTasklet.getCloudProviderInstanceId(providerId);
