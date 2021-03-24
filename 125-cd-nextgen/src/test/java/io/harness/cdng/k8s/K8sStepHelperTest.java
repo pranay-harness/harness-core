@@ -1,5 +1,6 @@
 package io.harness.cdng.k8s;
 
+import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
@@ -32,6 +33,7 @@ import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
+import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
@@ -56,6 +58,9 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -80,6 +85,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private ConnectorService connectorService;
   @Mock private GitConfigAuthenticationInfoHelper gitConfigAuthenticationInfoHelper;
   @Mock private EngineExpressionService engineExpressionService;
+  @Mock private OutcomeService outcomeService;
   @InjectMocks private K8sStepHelper k8sStepHelper;
 
   private final Ambiance ambiance = Ambiance.newBuilder().build();
@@ -528,5 +534,23 @@ public class K8sStepHelperTest extends CategoryTest {
       assertThat(ex.getParams().get("args"))
           .isEqualTo("Namespace: [ namespace test ] contains leading or trailing whitespaces");
     }
+  }
+
+  @Test
+  @Owner(developers = ANSHUL)
+  @Category(UnitTests.class)
+  public void testGetInfrastructureOutcome() {
+    K8sDirectInfrastructureOutcome outcome = K8sDirectInfrastructureOutcome.builder().build();
+    doReturn(OptionalOutcome.builder().outcome(outcome).found(true).build())
+        .when(outcomeService)
+        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+    assertThat(k8sStepHelper.getInfrastructureOutcome(ambiance)).isEqualTo(outcome);
+
+    doReturn(OptionalOutcome.builder().found(false).build())
+        .when(outcomeService)
+        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+    assertThatThrownBy(() -> k8sStepHelper.getInfrastructureOutcome(ambiance))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(MISSING_INFRASTRUCTURE_ERROR);
   }
 }

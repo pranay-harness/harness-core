@@ -4,6 +4,7 @@ import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.ngpipeline.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.steps.StepUtils.prepareTaskRequest;
 import static io.harness.validation.Validator.notEmptyCheck;
@@ -71,7 +72,6 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
@@ -85,6 +85,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -120,6 +121,8 @@ public class K8sStepHelper {
   private static final Set<String> K8S_SUPPORTED_MANIFEST_TYPES = ImmutableSet.of(
       ManifestType.K8Manifest, ManifestType.HelmChart, ManifestType.Kustomize, ManifestType.OpenshiftTemplate);
 
+  public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
+
   @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   @Inject private SecretManagerClientService secretManagerClientService;
   @Inject private EngineExpressionService engineExpressionService;
@@ -145,8 +148,7 @@ public class K8sStepHelper {
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     if (!connectorDTO.isPresent()) {
-      throw new InvalidRequestException(
-          format("Connector not found for identifier : [%s]", connectorId), WingsException.USER);
+      throw new InvalidRequestException(format("Connector not found for identifier : [%s]", connectorId), USER);
     }
     return connectorDTO.get().getConnector();
   }
@@ -531,11 +533,11 @@ public class K8sStepHelper {
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
             .collect(Collectors.toList());
     if (isEmpty(k8sManifests)) {
-      throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", WingsException.USER);
+      throw new InvalidRequestException("K8s Manifests are mandatory for k8s Rolling step", USER);
     }
 
     if (k8sManifests.size() > 1) {
-      throw new InvalidRequestException("There can be only a single K8s manifest", WingsException.USER);
+      throw new InvalidRequestException("There can be only a single K8s manifest", USER);
     }
     return k8sManifests.get(0);
   }
@@ -747,5 +749,15 @@ public class K8sStepHelper {
       default:
         return false;
     }
+  }
+
+  public InfrastructureOutcome getInfrastructureOutcome(Ambiance ambiance) {
+    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
+    if (!optionalOutcome.isFound()) {
+      throw new InvalidRequestException(MISSING_INFRASTRUCTURE_ERROR, USER);
+    }
+
+    return (InfrastructureOutcome) optionalOutcome.getOutcome();
   }
 }
