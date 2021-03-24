@@ -462,6 +462,7 @@ public class AuditServiceImpl implements AuditService {
         case UPDATE:
         case ADD:
         case LOGIN:
+        case LOGIN_2FA:
         case DELEGATE_APPROVAL:
         case NON_WHITELISTED:
         case REMOVE:
@@ -495,6 +496,7 @@ public class AuditServiceImpl implements AuditService {
         case REMOVE:
         case DELEGATE_APPROVAL:
         case LOGIN:
+        case LOGIN_2FA:
         case NON_WHITELISTED:
         case CREATE: {
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
@@ -583,6 +585,7 @@ public class AuditServiceImpl implements AuditService {
           && Lists.isNullOrEmpty(auditPreference.getOperationTypes())) {
         auditPreference.setOperationTypes(Arrays.stream(Type.values())
                                               .filter(type -> type != Type.LOGIN)
+                                              .filter(type -> type != Type.LOGIN_2FA)
                                               .map(Type::name)
                                               .collect(Collectors.toList()));
       }

@@ -1,6 +1,8 @@
 package io.harness.audit.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.SortOrder.OrderType.DESC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
@@ -8,7 +10,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.api.AuditService;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditFilterPropertiesDTO;
+import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.mapper.AuditEventMapper;
+import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -16,6 +20,7 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.security.annotations.InternalApi;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -59,12 +64,13 @@ public class AuditResource {
   @ApiOperation(value = "Get Audit list", nickname = "getAuditList")
   public ResponseDTO<PageResponse<AuditEventDTO>> list(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @BeanParam PageRequest pageRequest,
-      AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+      @BeanParam PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order = SortOrder.Builder.aSortOrder().withField(AuditEventKeys.timestamp, DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
     Page<AuditEventDTO> audits =
-        auditService.list(accountIdentifier, orgIdentifier, projectIdentifier, pageRequest, auditFilterPropertiesDTO)
-            .map(AuditEventMapper::toDTO);
+        auditService.list(accountIdentifier, pageRequest, auditFilterPropertiesDTO).map(AuditEventMapper::toDTO);
     return ResponseDTO.newResponse(getNGPageResponse(audits));
   }
 }

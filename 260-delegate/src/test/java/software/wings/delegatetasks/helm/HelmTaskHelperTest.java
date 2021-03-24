@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
@@ -840,12 +841,12 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
-            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
+            helmChartConfigParams.getBasePath());
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
-        .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
+        .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doReturn(getHelmCollectionResult(""))
         .when(helmTaskHelper)
         .executeCommandWithLogOutput(eq(V_3_HELM_SEARCH_REPO_COMMAND), eq("dir"), anyString());
@@ -859,8 +860,8 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     assertThat(helmCharts.get(1).getVersion()).isEqualTo("1.0.1");
     verify(processExecutor, times(1)).execute();
     verify(chartMuseumClient, times(1))
-        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
-            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
+            helmChartConfigParams.getBasePath());
   }
 
   @NotNull
@@ -928,11 +929,11 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(),
-            HelmTaskHelper.RESOURCE_DIR_BASE, helmChartConfigParams.getBasePath());
+        .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
+            helmChartConfigParams.getBasePath());
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
-        .createNewDirectoryAtPath(HelmTaskHelper.RESOURCE_DIR_BASE);
+        .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doAnswer(new Answer() {
       private int count = 0;
 

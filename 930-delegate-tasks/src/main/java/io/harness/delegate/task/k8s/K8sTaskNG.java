@@ -17,6 +17,7 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
@@ -171,6 +172,13 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) storeDelegateConfig;
         for (DecryptableEntity entity : httpHelmStoreConfig.getHttpHelmConnector().getDecryptableEntities()) {
           decryptionService.decrypt(entity, httpHelmStoreConfig.getEncryptedDataDetails());
+        }
+        break;
+
+      case S3_HELM:
+        S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
+        for (DecryptableEntity decryptableEntity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+          decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
         }
         break;
 

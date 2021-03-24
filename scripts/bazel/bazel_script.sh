@@ -137,6 +137,8 @@ BAZEL_MODULES="\
   //950-wait-engine:module \
   //950-walktree-visitor:module \
   //950-ng-audit-commons:module \
+  //953-git-sync-commons:module \
+  //953-git-sync-commons/src/main/proto:all \
   //954-connector-beans:module \
   //955-filters-sdk:module \
   //955-setup-usage-sdk:module \
@@ -152,8 +154,6 @@ BAZEL_MODULES="\
   //960-persistence:supporter-test \
   //960-recaster:module \
   //960-yaml-sdk:module \
-  //965-git-sync-commons:module \
-  //965-git-sync-commons/src/main/proto:all \
   //970-api-services-beans/src/main/proto/io/harness/logging:all \
   //970-api-services-beans:module \
   //970-grpc:module \
@@ -420,7 +420,7 @@ build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
 build_bazel_module 960-recaster
 build_bazel_module 960-yaml-sdk
-build_bazel_module 965-git-sync-commons
+build_bazel_module 953-git-sync-commons
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons

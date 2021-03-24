@@ -12,10 +12,10 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.auditevent.OrgCreateEvent;
-import io.harness.ng.core.auditevent.OrgDeleteEvent;
-import io.harness.ng.core.auditevent.OrgRestoreEvent;
-import io.harness.ng.core.auditevent.OrgUpdateEvent;
+import io.harness.ng.core.auditevent.OrganizationCreateEvent;
+import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
+import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
+import io.harness.ng.core.auditevent.OrganizationUpdateEvent;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.dto.OrganizationDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
@@ -94,7 +94,7 @@ public class OrganizationServiceImpl implements OrganizationService {
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       Organization savedOrganization = organizationRepository.save(organization);
       outboxService.save(
-          new OrgCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
+          new OrganizationCreateEvent(organization.getAccountIdentifier(), OrganizationMapper.writeDto(organization)));
       return savedOrganization;
     }));
   }
@@ -146,7 +146,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         Organization updatedOrganization = organizationRepository.save(organization);
         log.info(String.format("Organization with identifier %s was successfully updated", identifier));
-        outboxService.save(new OrgUpdateEvent(organization.getAccountIdentifier(),
+        outboxService.save(new OrganizationUpdateEvent(organization.getAccountIdentifier(),
             OrganizationMapper.writeDto(updatedOrganization), OrganizationMapper.writeDto(existingOrganization)));
         return updatedOrganization;
       }));
@@ -200,7 +200,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       boolean delete = organization != null;
       if (delete) {
         log.info(String.format("Organization with identifier %s was successfully deleted", organizationIdentifier));
-        outboxService.save(new OrgDeleteEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
+        outboxService.save(new OrganizationDeleteEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
       } else {
         log.error(String.format("Organization with identifier %s could not be deleted", organizationIdentifier));
       }
@@ -214,7 +214,7 @@ public class OrganizationServiceImpl implements OrganizationService {
       Organization organization = organizationRepository.restore(accountIdentifier, identifier);
       boolean success = organization != null;
       if (success) {
-        outboxService.save(new OrgRestoreEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
+        outboxService.save(new OrganizationRestoreEvent(accountIdentifier, OrganizationMapper.writeDto(organization)));
       }
       return success;
     }));
