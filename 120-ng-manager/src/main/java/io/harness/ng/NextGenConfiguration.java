@@ -52,11 +52,13 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
   @JsonProperty("ciDefaultEntityConfiguration") private CiDefaultEntityConfiguration ciDefaultEntityConfiguration;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
+  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
 
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;

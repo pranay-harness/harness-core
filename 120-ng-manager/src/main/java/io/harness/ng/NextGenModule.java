@@ -16,6 +16,7 @@ import io.harness.OrchestrationStepsModule;
 import io.harness.OrchestrationVisualizationModule;
 import io.harness.YamlBaseUrlServiceImpl;
 import io.harness.accesscontrol.AccessControlAdminClientModule;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -264,6 +265,9 @@ public class NextGenModule extends AbstractModule {
     install(new ModulesClientModule(this.appConfig.getServiceHttpClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
+    install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
+        this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
+        this.appConfig.isEnableAudit()));
     install(new ProviderModule() {
       @Provides
       @Singleton
