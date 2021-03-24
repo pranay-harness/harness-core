@@ -340,7 +340,29 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(containerRecommendation.getNumDays()).isEqualTo(7);
     assertThat(containerRecommendation.getTotalSamplesCount()).isEqualTo(674);
 
-    assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(87.78));
+    assertThat(containerRecommendation.getPercentileBased().get("p50"))
+        .isNotNull()
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "25m")
+                       .request("memory", "477M")
+                       .request("nvidia.com/gpu", "1")
+                       .limit("cpu", "25m")
+                       .limit("memory", "477M")
+                       .limit("nvidia.com/gpu", "2")
+                       .build());
+
+    assertThat(containerRecommendation.getPercentileBased().get("p99"))
+        .isNotNull()
+        .isEqualTo(ResourceRequirement.builder()
+                       .request("cpu", "43m")
+                       .request("memory", "477M")
+                       .request("nvidia.com/gpu", "1")
+                       .limit("cpu", "43m")
+                       .limit("memory", "477M")
+                       .limit("nvidia.com/gpu", "2")
+                       .build());
+
+    assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(189.52));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
   }
 
