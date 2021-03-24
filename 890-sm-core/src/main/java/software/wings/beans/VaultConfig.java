@@ -90,6 +90,7 @@ public class VaultConfig extends BaseVaultConfig {
                                           .secretEngineVersion(getSecretEngineVersion())
                                           .renewalIntervalMinutes(getRenewalInterval())
                                           .vaultUrl(getVaultUrl())
+                                          .namespace(getNamespace())
                                           .build();
     SecretManagerConfigMapper.updateNGSecretManagerMetadata(getNgMetadata(), ngVaultConfigDTO);
     if (!maskSecrets) {

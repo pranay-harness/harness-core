@@ -45,5 +45,6 @@ public interface VaultSysAuthRestClient {
       @Path(value = "role-name") String roleName, @Header("X-Vault-Token") String header,
       @Body SignedSSHVaultRequest request);
 
-  @POST(TOKEN_RENEW_URL) Call<Object> renewToken(@Header("X-Vault-Token") String header);
+  @POST(TOKEN_RENEW_URL)
+  Call<Object> renewToken(@Header("X-Vault-Token") String header, @Header("X-Vault-Namespace") String namespace);
 }

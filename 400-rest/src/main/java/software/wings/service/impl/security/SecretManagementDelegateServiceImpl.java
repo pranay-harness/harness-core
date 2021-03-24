@@ -135,9 +135,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     String encryptedDataId = encryptedData.getUuid();
 
     try {
-      VaultSecretMetadata secretMetadata = VaultRestClientFactory.create(vaultConfig)
-                                               .readSecretMetadata(vaultConfig.getAuthToken(),
-                                                   vaultConfig.getSecretEngineName(), encryptedData.getPath());
+      VaultSecretMetadata secretMetadata =
+          VaultRestClientFactory.create(vaultConfig)
+              .readSecretMetadata(vaultConfig.getAuthToken(), vaultConfig.getNamespace(),
+                  vaultConfig.getSecretEngineName(), encryptedData.getPath());
       if (secretMetadata != null && isNotEmpty(secretMetadata.getVersions())) {
         for (Entry<Integer, VersionMetadata> entry : secretMetadata.getVersions().entrySet()) {
           int version = entry.getKey();
@@ -187,7 +188,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             VaultRestClientFactory
                 .getVaultRetrofit(baseVaultConfig.getVaultUrl(), baseVaultConfig.isCertValidationRequired())
                 .create(VaultSysAuthRestClient.class);
-        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken()).execute().isSuccessful();
+        boolean isSuccessful = restClient.renewToken(baseVaultConfig.getAuthToken(), baseVaultConfig.getNamespace())
+                                   .execute()
+                                   .isSuccessful();
         if (isSuccessful) {
           return true;
         } else {
