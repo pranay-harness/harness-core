@@ -18,9 +18,9 @@ import javax.validation.ConstraintValidatorContext;
 @OwnedBy(PL)
 public class EntityIdentifierValidator implements ConstraintValidator<EntityIdentifier, String> {
   // Max Length : 64 characters
-  // Start with: Alphabets, characters, Underscore  or $
+  // Start with: Alphabets, characters or Underscore
   // Chars Allowed : Alphanumeric, Underscore, $
-  public static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z_$][0-9a-zA-Z_$]{0,63}$");
+  public static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$");
   public static final Set<String> NOT_ALLOWED_WORDS =
       Stream
           .of("or", "and", "eq", "ne", "lt", "gt", "le", "ge", "div", "mod", "not", "null", "true", "false", "new",

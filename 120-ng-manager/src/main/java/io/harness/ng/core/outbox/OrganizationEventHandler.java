@@ -14,10 +14,10 @@ import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.entity_crud.organization.OrganizationEntityChangeDTO;
 import io.harness.eventsframework.producer.Message;
 import io.harness.ng.core.AccountScope;
-import io.harness.ng.core.auditevent.OrgCreateEvent;
-import io.harness.ng.core.auditevent.OrgDeleteEvent;
-import io.harness.ng.core.auditevent.OrgRestoreEvent;
-import io.harness.ng.core.auditevent.OrgUpdateEvent;
+import io.harness.ng.core.auditevent.OrganizationCreateEvent;
+import io.harness.ng.core.auditevent.OrganizationDeleteEvent;
+import io.harness.ng.core.auditevent.OrganizationRestoreEvent;
+import io.harness.ng.core.auditevent.OrganizationUpdateEvent;
 import io.harness.ng.core.dto.OrganizationRequest;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -33,15 +33,15 @@ import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class OrgEventHandler implements OutboxEventHandler {
+public class OrganizationEventHandler implements OutboxEventHandler {
   private final ObjectMapper objectMapper;
   private final Producer eventProducer;
   private final AuditClientService auditClientService;
   private final ObjectMapper yamlObjectMapper;
 
   @Inject
-  public OrgEventHandler(ObjectMapper objectMapper, @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer,
-      AuditClientService auditClientService) {
+  public OrganizationEventHandler(ObjectMapper objectMapper,
+      @Named(EventsFrameworkConstants.ENTITY_CRUD) Producer eventProducer, AuditClientService auditClientService) {
     this.objectMapper = objectMapper;
     this.eventProducer = eventProducer;
     this.auditClientService = auditClientService;
@@ -51,14 +51,14 @@ public class OrgEventHandler implements OutboxEventHandler {
   public boolean handle(OutboxEvent outboxEvent) {
     try {
       switch (outboxEvent.getEventType()) {
-        case "OrgCreated":
-          return handleOrgCreateEvent(outboxEvent);
-        case "OrgUpdated":
-          return handleOrgUpdateEvent(outboxEvent);
-        case "OrgDeleted":
-          return handleOrgDeleteEvent(outboxEvent);
-        case "OrgRestored":
-          return handleOrgRestoreEvent(outboxEvent);
+        case "OrganizationCreated":
+          return handleOrganizationCreateEvent(outboxEvent);
+        case "OrganizationUpdated":
+          return handleOrganizationUpdateEvent(outboxEvent);
+        case "OrganizationDeleted":
+          return handleOrganizationDeleteEvent(outboxEvent);
+        case "OrganizationRestored":
+          return handleOrganizationRestoreEvent(outboxEvent);
         default:
           throw new IllegalArgumentException("Not supported event type {}".format(outboxEvent.getEventType()));
       }
@@ -67,38 +67,41 @@ public class OrgEventHandler implements OutboxEventHandler {
     }
   }
 
-  private boolean handleOrgCreateEvent(OutboxEvent outboxEvent) throws IOException {
+  private boolean handleOrganizationCreateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
 
     boolean publishedToRedis =
         publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
             outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
-    OrgCreateEvent orgCreateEvent = objectMapper.readValue(outboxEvent.getEventData(), OrgCreateEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(ActionConstants.CREATE_ACTION)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    OrganizationRequest.builder().organization(orgCreateEvent.getOrg()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    OrganizationCreateEvent organizationCreateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), OrganizationCreateEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(ActionConstants.CREATE_ACTION)
+            .module(ModuleType.CORE)
+            .newYaml(yamlObjectMapper.writeValueAsString(
+                OrganizationRequest.builder().organization(organizationCreateEvent.getOrganization()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(outboxEvent.getResource())
+            .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
-  private boolean handleOrgUpdateEvent(OutboxEvent outboxEvent) throws IOException {
+  private boolean handleOrganizationUpdateEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
 
     boolean publishedToRedis =
         publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
             outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.UPDATE_ACTION);
-    OrgUpdateEvent orgUpdateEvent = objectMapper.readValue(outboxEvent.getEventData(), OrgUpdateEvent.class);
+    OrganizationUpdateEvent organizationUpdateEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), OrganizationUpdateEvent.class);
     AuditEntry auditEntry = AuditEntry.builder()
                                 .action(ActionConstants.UPDATE_ACTION)
                                 .module(ModuleType.CORE)
-                                .newYaml(orgUpdateEvent.getNewOrg().toString())
-                                .oldYaml(orgUpdateEvent.getOldOrg().toString())
+                                .newYaml(organizationUpdateEvent.getNewOrganization().toString())
+                                .oldYaml(organizationUpdateEvent.getOldOrganization().toString())
                                 .timestamp(outboxEvent.getCreatedAt())
                                 .resource(outboxEvent.getResource())
                                 .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
@@ -108,44 +111,48 @@ public class OrgEventHandler implements OutboxEventHandler {
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
-  private boolean handleOrgDeleteEvent(OutboxEvent outboxEvent) throws IOException {
+  private boolean handleOrganizationDeleteEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
 
     boolean publishedToRedis =
         publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
             outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.DELETE_ACTION);
-    OrgDeleteEvent orgDeleteEvent = objectMapper.readValue(outboxEvent.getEventData(), OrgDeleteEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(ActionConstants.DELETE_ACTION)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    OrganizationRequest.builder().organization(orgDeleteEvent.getOrg()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    OrganizationDeleteEvent organizationDeleteEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), OrganizationDeleteEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(ActionConstants.DELETE_ACTION)
+            .module(ModuleType.CORE)
+            .newYaml(yamlObjectMapper.writeValueAsString(
+                OrganizationRequest.builder().organization(organizationDeleteEvent.getOrganization()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(outboxEvent.getResource())
+            .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
 
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
 
-  private boolean handleOrgRestoreEvent(OutboxEvent outboxEvent) throws IOException {
+  private boolean handleOrganizationRestoreEvent(OutboxEvent outboxEvent) throws IOException {
     GlobalContext globalContext = outboxEvent.getGlobalContext();
 
     boolean publishedToRedis =
         publishOrganizationChangeEventToRedis(((AccountScope) outboxEvent.getResourceScope()).getAccountIdentifier(),
             outboxEvent.getResource().getIdentifier(), EventsFrameworkMetadataConstants.RESTORE_ACTION);
-    OrgRestoreEvent orgRestoreEvent = objectMapper.readValue(outboxEvent.getEventData(), OrgRestoreEvent.class);
-    AuditEntry auditEntry = AuditEntry.builder()
-                                .action(ActionConstants.RESTORE_ACTION)
-                                .module(ModuleType.CORE)
-                                .newYaml(yamlObjectMapper.writeValueAsString(
-                                    OrganizationRequest.builder().organization(orgRestoreEvent.getOrg()).build()))
-                                .timestamp(outboxEvent.getCreatedAt())
-                                .resource(outboxEvent.getResource())
-                                .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
-                                .insertId(outboxEvent.getId())
-                                .build();
+    OrganizationRestoreEvent organizationRestoreEvent =
+        objectMapper.readValue(outboxEvent.getEventData(), OrganizationRestoreEvent.class);
+    AuditEntry auditEntry =
+        AuditEntry.builder()
+            .action(ActionConstants.RESTORE_ACTION)
+            .module(ModuleType.CORE)
+            .newYaml(yamlObjectMapper.writeValueAsString(
+                OrganizationRequest.builder().organization(organizationRestoreEvent.getOrganization()).build()))
+            .timestamp(outboxEvent.getCreatedAt())
+            .resource(outboxEvent.getResource())
+            .resourceScope(ResourceScope.fromResourceScope(outboxEvent.getResourceScope()))
+            .insertId(outboxEvent.getId())
+            .build();
 
     return publishedToRedis && auditClientService.publishAudit(auditEntry, globalContext);
   }
