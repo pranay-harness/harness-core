@@ -16,8 +16,6 @@ import "io/harness/pms/contracts/service/node_execution_event.proto";
 
 service NodeExecutionProtoService {
   rpc queueTask(QueueTaskRequest) returns (QueueTaskResponse);
-  rpc addExecutableResponse(AddExecutableResponseRequest) returns (AddExecutableResponseResponse);
-  rpc handleStepResponse(HandleStepResponseRequest) returns (HandleStepResponseResponse);
   rpc resumeNodeExecution(ResumeNodeExecutionRequest) returns (ResumeNodeExecutionResponse);
   rpc accumulateResponses(AccumulateResponsesRequest) returns (AccumulateResponsesResponse);
   rpc handleFacilitatorResponse(FacilitatorResponseRequest) returns (FacilitatorResponseResponse);
@@ -34,22 +32,6 @@ message QueueTaskRequest {
 message QueueTaskResponse {
   string taskId = 1;
 }
-
-message AddExecutableResponseRequest {
-  string nodeExecutionId = 1;
-  execution.Status status = 2;
-  execution.ExecutableResponse executableResponse = 3;
-  repeated string callbackIds = 4;
-}
-
-message AddExecutableResponseResponse {}
-
-message HandleStepResponseRequest {
-  string nodeExecutionId = 1;
-  steps.io.StepResponseProto stepResponse = 2;
-}
-
-message HandleStepResponseResponse {}
 
 message ResumeNodeExecutionRequest {
   string nodeExecutionId = 1;

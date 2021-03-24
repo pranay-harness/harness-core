@@ -38,6 +38,7 @@ public class EnvironmentFilterHelper {
     update.set(EnvironmentKeys.type, environment.getType());
     update.set(EnvironmentKeys.deleted, false);
     update.set(EnvironmentKeys.tags, environment.getTags());
+    update.set(EnvironmentKeys.color, environment.getColor());
     return update;
   }
 

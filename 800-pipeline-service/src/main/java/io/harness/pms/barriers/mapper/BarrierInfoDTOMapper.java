@@ -12,6 +12,7 @@ public class BarrierInfoDTOMapper {
   public final Function<BarrierExecutionInfo, BarrierInfoDTO> toBarrierInfoDTO = barrierExecutionInfo
       -> BarrierInfoDTO.builder()
              .name(barrierExecutionInfo.getName())
+             .timeoutIn(barrierExecutionInfo.getTimeoutIn())
              .stages(barrierExecutionInfo.getStages()
                          .stream()
                          .map(StageDetailDTOMapper.toStageDetailDTO)

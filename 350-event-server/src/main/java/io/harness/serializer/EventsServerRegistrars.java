@@ -28,6 +28,7 @@ public class EventsServerRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .addAll(DelegateTasksBeansRegistrars.kryoRegistrars)
+          .addAll(CgOrchestrationRegistrars.kryoRegistrars)
           .addAll(OrchestrationRegistrars.kryoRegistrars)
           .add(OrchestrationStepsKryoRegistrar.class)
           .add(OrchestrationVisualizationKryoRegistrar.class)

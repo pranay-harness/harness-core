@@ -16,7 +16,7 @@ import lombok.experimental.UtilityClass;
 public class DelegateServiceRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-          .addAll(OrchestrationRegistrars.kryoRegistrars)
+          .addAll(CgOrchestrationRegistrars.kryoRegistrars)
           .addAll(DelegateServiceBeansRegistrars.kryoRegistrars)
           .add(CommonEntitiesKryoRegistrar.class)
           .add(DelegateAgentBeansKryoRegister.class)
@@ -28,7 +28,7 @@ public class DelegateServiceRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .add(CommonEntitiesMorphiaRegister.class)
-          .addAll(OrchestrationRegistrars.morphiaRegistrars)
+          .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
           .add(DelegateServiceMorphiaRegistrar.class)
           .add(FeatureFlagBeansMorphiaRegistrar.class)
           .build();

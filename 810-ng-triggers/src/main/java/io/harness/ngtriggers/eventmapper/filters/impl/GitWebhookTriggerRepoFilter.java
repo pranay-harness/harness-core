@@ -32,6 +32,7 @@ import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.ngtriggers.utils.GitProviderDataObtainmentManager;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -57,6 +58,7 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
   // TODO: This should come from scm parsing service
   private static final String AWS_CODECOMMIT_URL_PATTERN = "https://git-codecommit.%s.amazonaws.com/v1/repos/%s";
   private final NGTriggerService ngTriggerService;
+  private final GitProviderDataObtainmentManager gitProviderDataObtainmentManager;
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
@@ -92,6 +94,8 @@ public class GitWebhookTriggerRepoFilter implements TriggerFilter {
               WebhookEventResponseHelper.toResponse(NO_MATCHING_TRIGGER_FOR_REPO, originalEvent, null, null, msg, null))
           .build();
     } else {
+      // fetches additional information
+      gitProviderDataObtainmentManager.acquireProviderData(filterRequestData);
       addDetails(mappingResponseBuilder, filterRequestData, eligibleTriggers);
     }
 

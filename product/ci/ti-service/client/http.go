@@ -74,11 +74,11 @@ func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, s
 }
 
 // SelectTests returns a list of tests which should be run intelligently
-func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch string, change string) (types.SelectTestsResp, error) {
+func (c *HTTPClient) SelectTests(org, project, pipeline, build, stage, step, repo, sha, branch, body string) (types.SelectTestsResp, error) {
 	path := fmt.Sprintf(testEndpoint, c.AccountID, org, project, pipeline, build, stage, step, repo, sha, branch)
 	var resp types.SelectTestsResp
-	var e []types.File
-	err := json.Unmarshal([]byte(change), &e)
+	var e types.SelectTestsReq
+	err := json.Unmarshal([]byte(body), &e)
 	if err != nil {
 		return types.SelectTestsResp{}, err
 	}

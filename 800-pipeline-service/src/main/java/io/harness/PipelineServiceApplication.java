@@ -2,7 +2,7 @@ package io.harness;
 
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
@@ -50,9 +50,9 @@ import io.harness.steps.barriers.service.BarrierServiceImpl;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
-import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
@@ -238,7 +238,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
   private void registerEventListeners(Injector injector) {
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 5);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SdkResponseEventListener.class), 1);
 
@@ -254,7 +254,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(
-        ORCHESTRATION, payload -> publisher.send(singletonList(ORCHESTRATION), payload));
+        NG_ORCHESTRATION, payload -> publisher.send(singletonList(NG_ORCHESTRATION), payload));
   }
 
   private void registerScheduledJobs(Injector injector) {

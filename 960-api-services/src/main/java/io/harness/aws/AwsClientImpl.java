@@ -18,8 +18,13 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codecommit.AWSCodeCommitClient;
 import com.amazonaws.services.codecommit.AWSCodeCommitClientBuilder;
 import com.amazonaws.services.codecommit.model.AWSCodeCommitException;
+import com.amazonaws.services.codecommit.model.BatchGetCommitsRequest;
+import com.amazonaws.services.codecommit.model.BatchGetCommitsResult;
+import com.amazonaws.services.codecommit.model.Commit;
 import com.amazonaws.services.codecommit.model.GetRepositoryRequest;
+import com.amazonaws.services.codecommit.model.GetRepositoryResult;
 import com.amazonaws.services.codecommit.model.ListRepositoriesRequest;
+import com.amazonaws.services.codecommit.model.RepositoryMetadata;
 import com.amazonaws.services.costandusagereport.AWSCostAndUsageReport;
 import com.amazonaws.services.costandusagereport.AWSCostAndUsageReportClientBuilder;
 import com.amazonaws.services.costandusagereport.model.DescribeReportDefinitionsRequest;
@@ -45,10 +50,13 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
+import com.amazonaws.services.sns.message.DefaultSnsMessageHandler;
+import com.amazonaws.services.sns.message.SnsMessageManager;
+import com.amazonaws.services.sns.message.SnsNotification;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hazelcast.util.CollectionUtil;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,6 +65,7 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
@@ -73,13 +82,7 @@ public class AwsClientImpl implements AwsClient {
       getAmazonEc2Client(awsConfig).describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
-        if (!awsConfig.isEc2IamCredentials()) {
-          if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
-            throw new InvalidRequestException("Access Key should not be empty");
-          } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
-            throw new InvalidRequestException("Secret Key should not be empty");
-          }
-        }
+        checkCredentials(awsConfig);
       }
       throw amazonEC2Exception;
     }
@@ -97,16 +100,48 @@ public class AwsClientImpl implements AwsClient {
       }
     } catch (AWSCodeCommitException awsCodeCommitException) {
       if (awsCodeCommitException.getStatusCode() == 401) {
-        if (!awsConfig.isEc2IamCredentials()) {
-          if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
-            throw new InvalidRequestException("Access Key should not be empty");
-          } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
-            throw new InvalidRequestException("Secret Key should not be empty");
-          }
-        }
+        checkCredentials(awsConfig);
       }
       throw awsCodeCommitException;
     }
+  }
+
+  private void checkCredentials(AwsConfig awsConfig) {
+    if (!awsConfig.isEc2IamCredentials()) {
+      if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
+        throw new InvalidRequestException("Access Key should not be empty");
+      } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
+        throw new InvalidRequestException("Secret Key should not be empty");
+      }
+    }
+  }
+
+  @Override
+  public void confirmSnsSubscription(String confirmationMessage) {
+    SnsMessageManager snsMessageManager = new SnsMessageManager();
+    snsMessageManager.handleMessage(
+        IOUtils.toInputStream(confirmationMessage, Charset.defaultCharset()), new DefaultSnsMessageHandler() {
+          @Override
+          public void handle(SnsNotification message) {
+            throw new InvalidRequestException("Only SubscriptionConfirmation message type is supported");
+          }
+        });
+  }
+
+  @Override
+  public RepositoryMetadata fetchRepositoryInformation(AwsConfig awsConfig, String region, String repo) {
+    AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
+    GetRepositoryResult repository =
+        amazonCodeCommitClient.getRepository(new GetRepositoryRequest().withRepositoryName(repo));
+    return repository.getRepositoryMetadata();
+  }
+
+  @Override
+  public List<Commit> fetchCommitInformation(AwsConfig awsConfig, String region, String repo, List<String> commitIds) {
+    AWSCodeCommitClient amazonCodeCommitClient = getAmazonCodeCommitClient(awsConfig, region);
+    BatchGetCommitsResult batchGetCommitsResult = amazonCodeCommitClient.batchGetCommits(
+        new BatchGetCommitsRequest().withRepositoryName(repo).withCommitIds(commitIds));
+    return batchGetCommitsResult.getCommits();
   }
 
   @Override
@@ -121,13 +156,7 @@ public class AwsClientImpl implements AwsClient {
           .getAuthorizationToken();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
-        if (!awsConfig.isEc2IamCredentials()) {
-          if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
-            throw new InvalidRequestException("Access Key should not be empty");
-          } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
-            throw new InvalidRequestException("Secret Key should not be empty");
-          }
-        }
+        checkCredentials(awsConfig);
       }
       throw amazonEC2Exception;
     }
@@ -285,7 +314,7 @@ public class AwsClientImpl implements AwsClient {
     final AmazonIdentityManagement iam = getAwsIAMClient(credentialsProvider);
     final SimulatePrincipalPolicyRequest request =
         new SimulatePrincipalPolicyRequest().withPolicySourceArn(policySourceArn).withActionNames(actionNames);
-    if (CollectionUtil.isNotEmpty(resourceArns)) {
+    if (isNotEmpty(resourceArns)) {
       request.withResourceArns(resourceArns);
     }
 

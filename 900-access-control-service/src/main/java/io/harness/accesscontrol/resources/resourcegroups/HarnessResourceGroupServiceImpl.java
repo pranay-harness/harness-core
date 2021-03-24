@@ -3,11 +3,12 @@ package io.harness.accesscontrol.resources.resourcegroups;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ACCOUNT_LEVEL_PARAM_NAME;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.ORG_LEVEL_PARAM_NAME;
 import static io.harness.accesscontrol.scopes.harness.HarnessScopeParams.PROJECT_LEVEL_PARAM_NAME;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeParams;
 import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
-import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
 
+@OwnedBy(PL)
 @Slf4j
 public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupService {
   private final ResourceGroupClient resourceGroupClient;
@@ -35,7 +37,7 @@ public class HarnessResourceGroupServiceImpl implements HarnessResourceGroupServ
 
   @Inject
   public HarnessResourceGroupServiceImpl(ResourceGroupClient resourceGroupClient,
-      ResourceGroupFactory resourceGroupFactory, ResourceGroupService resourceGroupService, ScopeService scopeService,
+      ResourceGroupFactory resourceGroupFactory, ResourceGroupService resourceGroupService,
       ScopeParamsFactory scopeParamsFactory) {
     this.resourceGroupClient = resourceGroupClient;
     this.resourceGroupFactory = resourceGroupFactory;

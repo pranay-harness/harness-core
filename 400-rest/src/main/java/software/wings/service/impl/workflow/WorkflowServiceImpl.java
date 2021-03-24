@@ -891,6 +891,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     validateWorkflowNameForDuplicates(workflow);
     validateOrchestrationWorkflow(workflow);
+    workflowServiceHelper.validateWaitInterval(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     List<String> linkedTemplateUuids = new ArrayList<>();
@@ -1128,6 +1129,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
+    workflowServiceHelper.validateWaitInterval(workflow);
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
     WorkflowServiceHelper.cleanupWorkflowStrategies(orchestrationWorkflow);
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
