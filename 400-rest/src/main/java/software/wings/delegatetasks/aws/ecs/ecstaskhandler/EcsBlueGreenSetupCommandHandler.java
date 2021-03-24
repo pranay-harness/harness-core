@@ -15,6 +15,7 @@ import io.harness.delegate.task.aws.AwsElbListenerRuleData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.TimeoutException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
@@ -98,6 +99,17 @@ public class EcsBlueGreenSetupCommandHandler extends EcsCommandTaskHandler {
           commandExecutionDataBuilder, executionLogCallback);
 
       ecsCommandResponse.setSetupData(commandExecutionDataBuilder.build());
+    } catch (TimeoutException ex) {
+      log.error("Completed operation with errors");
+      log.error(ExceptionUtils.getMessage(ex), ex);
+      Misc.logAllMessages(ex, executionLogCallback);
+
+      commandExecutionStatus = CommandExecutionStatus.FAILURE;
+      ecsCommandResponse.setCommandExecutionStatus(commandExecutionStatus);
+      ecsCommandResponse.setOutput(ExceptionUtils.getMessage(ex));
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        ecsCommandResponse.setTimeoutFailure(true);
+      }
     } catch (Exception ex) {
       log.error("Completed operation with errors");
       log.error(ExceptionUtils.getMessage(ex), ex);

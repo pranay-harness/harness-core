@@ -179,7 +179,7 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     verify(mockCallback, times(3)).saveExecutionLog(anyString());
 
     verify(mockEcsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), any(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(any(), any(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), any());
     verify(mockAwsRoute53HelperServiceDelegate)
         .upsertRoute53ParentRecord(
             any(), any(), anyString(), anyString(), anyString(), eq(100), eq(oldValue), eq(0), eq(newValue), anyInt());

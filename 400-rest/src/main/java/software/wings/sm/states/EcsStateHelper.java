@@ -4,6 +4,7 @@ import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -422,6 +423,7 @@ public class EcsStateHelper {
         .targetGroupForNewService(requestConfigData.getTargetGroupForNewService())
         .targetGroupForExistingService(requestConfigData.getTargetGroupForExistingService())
         .serviceSteadyStateTimeout(serviceSteadyStateTimeout)
+        .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, accountId))
         .build();
   }
 

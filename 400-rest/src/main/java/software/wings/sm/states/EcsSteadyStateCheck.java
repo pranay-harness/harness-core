@@ -1,9 +1,11 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.EnvironmentType.ALL;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -22,6 +24,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.tasks.Cd1SetupFields;
 import io.harness.tasks.ResponseData;
 
@@ -51,6 +54,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
@@ -73,6 +77,7 @@ public class EcsSteadyStateCheck extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject private transient FeatureFlagService featureFlagService;
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   @Attributes(title = "Ecs Service") @Getter @Setter private String ecsServiceName;
@@ -99,19 +104,21 @@ public class EcsSteadyStateCheck extends State {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       Activity activity = createActivity(context);
       AwsConfig awsConfig = getAwsConfig(ecsInfrastructureMapping.getComputeProviderSettingId());
-      EcsSteadyStateCheckParams params = EcsSteadyStateCheckParams.builder()
-                                             .appId(app.getUuid())
-                                             .region(ecsInfrastructureMapping.getRegion())
-                                             .accountId(app.getAccountId())
-                                             .timeoutInMs(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
-                                             .activityId(activity.getUuid())
-                                             .commandName(ECS_STEADY_STATE_CHECK_COMMAND_NAME)
-                                             .clusterName(ecsInfrastructureMapping.getClusterName())
-                                             .serviceName(context.renderExpression(ecsServiceName))
-                                             .awsConfig(awsConfig)
-                                             .encryptionDetails(secretManager.getEncryptionDetails(
-                                                 awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
-                                             .build();
+      EcsSteadyStateCheckParams params =
+          EcsSteadyStateCheckParams.builder()
+              .appId(app.getUuid())
+              .region(ecsInfrastructureMapping.getRegion())
+              .accountId(app.getAccountId())
+              .timeoutInMs(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
+              .activityId(activity.getUuid())
+              .commandName(ECS_STEADY_STATE_CHECK_COMMAND_NAME)
+              .clusterName(ecsInfrastructureMapping.getClusterName())
+              .serviceName(context.renderExpression(ecsServiceName))
+              .awsConfig(awsConfig)
+              .encryptionDetails(
+                  secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
+              .timeoutErrorSupported(featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, app.getAccountId()))
+              .build();
       DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(app.getAccountId())
@@ -159,12 +166,17 @@ public class EcsSteadyStateCheck extends State {
       InstanceElementListParam instanceElementListParam =
           InstanceElementListParam.builder().instanceElements(instanceElements).build();
 
-      return ExecutionResponse.builder()
-          .executionStatus(ecsSteadyStateCheckResponse.getExecutionStatus())
-          .stateExecutionData(context.getStateExecutionData())
-          .contextElement(instanceElementListParam)
-          .notifyElement(instanceElementListParam)
-          .build();
+      ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                             .executionStatus(ecsSteadyStateCheckResponse.getExecutionStatus())
+                                             .stateExecutionData(context.getStateExecutionData())
+                                             .contextElement(instanceElementListParam)
+                                             .notifyElement(instanceElementListParam);
+
+      if (ecsSteadyStateCheckResponse.isTimeoutFailure()) {
+        builder.failureTypes(TIMEOUT);
+      }
+
+      return builder.build();
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {

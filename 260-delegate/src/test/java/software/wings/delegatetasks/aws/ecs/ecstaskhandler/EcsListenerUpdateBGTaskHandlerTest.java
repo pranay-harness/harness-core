@@ -67,7 +67,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), any());
     doNothing()
         .when(awsElbHelperServiceDelegate)
         .swapListenersForEcsBG(any(), anyList(), anyBoolean(), anyString(), anyString(), anyString(), anyString(),
@@ -97,7 +97,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), any());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
         .updateServiceTags(any(), anyList(), anyString(), anyString(), anyString(), anyString(), anyBoolean(), any());
@@ -165,7 +165,7 @@ public class EcsListenerUpdateBGTaskHandlerTest extends WingsBaseTest {
     doNothing().when(executionLogCallback).saveExecutionLog(anyString());
     doNothing()
         .when(ecsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(any(), anyList(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), any());
     doReturn(describeListenersResult)
         .when(awsElbHelperServiceDelegate)
         .describeListenerResult(any(), anyList(), anyString(), anyString());

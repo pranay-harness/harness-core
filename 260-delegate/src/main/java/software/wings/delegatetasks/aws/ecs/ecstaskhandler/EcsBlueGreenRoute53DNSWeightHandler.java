@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.Module;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.TimeoutException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -63,7 +64,8 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
             request.getServiceNameDownsized(), request.getServiceCountDownsized()));
         ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
             request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
-            request.getServiceNameDownsized(), executionLogCallback, request.getTimeout());
+            request.getServiceNameDownsized(), executionLogCallback, request.getTimeout(),
+            request.isTimeoutErrorSupported());
         blueServiceWeight = 100;
         blueServiceValue = oldServiceValue;
         greenServiceWeight = 0;
@@ -98,6 +100,20 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(SUCCESS)
           .ecsCommandResponse(EcsBGRoute53DNSWeightUpdateResponse.builder().commandExecutionStatus(SUCCESS).build())
+          .build();
+    } catch (TimeoutException ex) {
+      String errorMessage = ExceptionUtils.getMessage(ex);
+      executionLogCallback.saveExecutionLog(errorMessage, ERROR);
+      EcsBGRoute53DNSWeightUpdateResponse response =
+          EcsBGRoute53DNSWeightUpdateResponse.builder().commandExecutionStatus(FAILURE).build();
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        response.setTimeoutFailure(true);
+      }
+
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(FAILURE)
+          .errorMessage(errorMessage)
+          .ecsCommandResponse(response)
           .build();
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);

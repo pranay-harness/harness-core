@@ -39,7 +39,8 @@ public class EcsSwapRoutesCommandTaskHelper {
   @Inject private EcsContainerService ecsContainerService;
 
   public void upsizeOlderService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region,
-      String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback, int timeout) {
+      String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback, int timeout,
+      boolean timeoutErrorSupported) {
     if (isEmpty(serviceName)) {
       executionLogCallback.saveExecutionLog("No service needs to be upsized");
       return;
@@ -59,8 +60,8 @@ public class EcsSwapRoutesCommandTaskHelper {
                                                                       .executionLogCallback(executionLogCallback)
                                                                       .serviceEvents(serviceEvents)
                                                                       .build();
-    if (needToUpdateDesiredCount(
-            awsConfig, encryptedDataDetails, region, cluster, count, serviceName, executionLogCallback)) {
+    if (needToUpdateDesiredCount(awsConfig, encryptedDataDetails, region, cluster, count, serviceName,
+            executionLogCallback, timeoutErrorSupported)) {
       ecsContainerService.updateServiceCount(serviceCountUpdateRequestData);
 
       ecsContainerService.waitForTasksToBeInRunningStateWithHandledExceptions(serviceCountUpdateRequestData);
@@ -70,14 +71,15 @@ public class EcsSwapRoutesCommandTaskHelper {
   }
 
   private boolean needToUpdateDesiredCount(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String region, String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback) {
+      String region, String cluster, int count, String serviceName, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
     DescribeServicesResult describeServicesResult = awsHelperService.describeServices(region, awsConfig,
         encryptedDataDetails, new DescribeServicesRequest().withCluster(cluster).withServices(serviceName));
     Service service = describeServicesResult.getServices().get(0);
     if (count == service.getDesiredCount()) {
       executionLogCallback.saveExecutionLog(
-          format("Service: [%s] is already at desired count: [%d]", serviceName, count));
-      return false;
+          format("Service: [%s] is already at desired count: [%d]. Retrying...", serviceName, count));
+      return timeoutErrorSupported;
     } else {
       executionLogCallback.saveExecutionLog(
           format("Need to update service desired count to: [%d] for service: [%s]", count, serviceName));

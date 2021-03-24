@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.exception.FailureType.TIMEOUT;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
@@ -35,6 +36,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -153,11 +155,15 @@ public class EcsBGUpdateListnerState extends State {
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
       stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-      return ExecutionResponse.builder()
-          .stateExecutionData(stateExecutionData)
-          .errorMessage(executionResponse.getErrorMessage())
-          .executionStatus(executionStatus)
-          .build();
+      ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                             .stateExecutionData(stateExecutionData)
+                                             .errorMessage(executionResponse.getErrorMessage())
+                                             .executionStatus(executionStatus);
+      if (null != executionResponse.getEcsCommandResponse()
+          && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
+        builder.failureTypes(TIMEOUT);
+      }
+      return builder.build();
 
     } catch (WingsException ex) {
       throw ex;
