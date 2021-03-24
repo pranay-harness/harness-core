@@ -8,6 +8,7 @@ import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.LUCAS;
@@ -60,6 +61,7 @@ import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateInstanceStatus;
+import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -76,6 +78,7 @@ import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.tasks.Cd1SetupFields;
+import io.harness.tasks.Cd2SetupFields;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -95,6 +98,8 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
@@ -1895,6 +1900,67 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .isFalse();
     verify(delegateSelectionLogsService).logMustExecuteOnDelegateNotMatched(batch, accountId, delegateId2);
     verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testCanAssignOwner() {
+    TaskData taskData = TaskData.builder().build();
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    DelegateTask delegateTask =
+        DelegateTask.builder().accountId(accountId).data(taskData).executionCapabilities(emptyList()).build();
+    Delegate delegate =
+        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+
+    BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
+    // Test matching mustExecuteOnDelegateId
+    when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
+
+    DelegateOwner projectOwner =
+        DelegateOwner.builder().entityType(Cd2SetupFields.PROJECT_ID_FIELD).entityId("p1").build();
+    DelegateOwner orgOwner = DelegateOwner.builder().entityType(Cd2SetupFields.ORG_ID_FIELD).entityId("o1").build();
+
+    List<DelegateOwner> orgOwners = asList(orgOwner);
+    List<DelegateOwner> orgProjectOwners = asList(projectOwner, orgOwner);
+    List<DelegateOwner> noOwners = asList();
+
+    Map<String, String> noSetupAbstractions = ImmutableMap.of();
+    Map<String, String> orgSetupAbstractions = ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o1");
+    Map<String, String> projectSetupAbstractions = ImmutableMap.of(Cd2SetupFields.PROJECT_ID_FIELD, "p1");
+    Map<String, String> orgProjectSetupAbstractions =
+        ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o1", Cd2SetupFields.PROJECT_ID_FIELD, "p1");
+
+    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, noSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, orgSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, projectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, orgProjectSetupAbstractions, true);
+
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, noSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, orgSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, projectSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, orgProjectSetupAbstractions, true);
+
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, noSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, orgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, projectSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, orgProjectSetupAbstractions, true);
+
+    // testing above valid scenarios with wrong values of project / org
+    Map<String, String> invalidOrgSetupAbstractions = ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o2");
+    Map<String, String> invalidOrgProjectSetupAbstractions =
+        ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o2", Cd2SetupFields.PROJECT_ID_FIELD, "p2");
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, invalidOrgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, invalidOrgProjectSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, invalidOrgProjectSetupAbstractions, false);
+  }
+
+  private void canAssignOwnerAssert(DelegateTask delegateTask, BatchDelegateSelectionLog batch, Delegate delegate,
+      List<DelegateOwner> delegateOwners, Map<String, String> setupAbstractions, boolean canAssign) {
+    delegate.setOwners(delegateOwners);
+    delegateTask.setSetupAbstractions(setupAbstractions);
+    assertThat(assignDelegateService.canAssign(batch, delegate.getUuid(), delegateTask)).isEqualTo(canAssign);
   }
 
   @Test
