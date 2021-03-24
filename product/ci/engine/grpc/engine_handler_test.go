@@ -175,3 +175,14 @@ func TestEvaluateJEXLSuccess(t *testing.T) {
 	_, err := h.EvaluateJEXL(ctx, arg)
 	assert.Nil(t, err)
 }
+
+func TestPing(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	arg := &pb.PingRequest{}
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	h := NewEngineHandler(log.Sugar())
+	_, err := h.Ping(ctx, arg)
+	assert.Nil(t, err)
+}
