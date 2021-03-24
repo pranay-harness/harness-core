@@ -82,6 +82,39 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 	return nil
 }
 
+func collectCg(ctx context.Context, stepID, cgDir string, log *zap.SugaredLogger) error {
+	repo, err := external.GetRepo()
+	if err != nil {
+		return err
+	}
+	sha, err := external.GetSha()
+	if err != nil {
+		return err
+	}
+	branch, err := external.GetSourceBranch()
+	if err != nil {
+		return err
+	}
+	// Create TI proxy client (lite engine)
+	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
+	if err != nil {
+		return err
+	}
+	defer client.CloseConn()
+	req := &pb.UploadCgRequest{
+		StepId: stepID,
+		Repo:   repo,
+		Sha:    sha,
+		Branch: branch,
+		CgDir:  cgDir,
+	}
+	_, err = client.Client().UploadCg(ctx, req)
+	if err != nil {
+		return errors.Wrap(err, "failed to upload cg to ti server")
+	}
+	return nil
+}
+
 func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string, log *zap.SugaredLogger) error {
 	// Test cases from reports are identified at a per-step level and won't cause overwriting/clashes
 	// at the backend.
