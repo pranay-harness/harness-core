@@ -165,7 +165,9 @@ public class K8sNodeInfoTasklet implements Tasklet {
     } else if (k8SCloudProvider == CloudProvider.AWS) {
       List<String> lifecycleKeys = labelsMap.keySet()
                                        .stream()
-                                       .filter(key -> key.contains(K8sCCMConstants.AWS_LIFECYCLE_KEY))
+                                       .filter(key
+                                           -> key.contains(K8sCCMConstants.AWS_LIFECYCLE_KEY)
+                                               || key.contains(K8sCCMConstants.AWS_CAPACITY_TYPE_KEY))
                                        .collect(Collectors.toList());
       for (String lifecycleKey : lifecycleKeys) {
         String lifecycle = labelsMap.get(lifecycleKey);

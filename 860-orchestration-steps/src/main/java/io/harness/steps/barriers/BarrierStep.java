@@ -17,7 +17,7 @@ import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.springdata.HMongoTemplate;
-import io.harness.steps.OrchestrationStepTypes;
+import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
 import io.harness.steps.barriers.beans.BarrierResponseData;
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Slf4j
 public class BarrierStep implements SyncExecutable<BarrierStepParameters>, AsyncExecutable<BarrierStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(OrchestrationStepTypes.BARRIER).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.BARRIER).build();
 
   private static final String BARRIER = "barrier";
 
