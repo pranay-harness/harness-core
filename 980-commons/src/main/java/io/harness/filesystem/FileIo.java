@@ -30,6 +30,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.sql.Time;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,15 +49,44 @@ public class FileIo {
     createDirectoryIfDoesNotExist(Paths.get(directoryPath));
   }
 
+  public static void createDirectoryIfDoesNotExist(final String directoryPath, boolean stickyBit) throws IOException {
+    createDirectoryIfDoesNotExist(Paths.get(directoryPath), stickyBit);
+  }
+
   public static void createDirectoryIfDoesNotExist(final Path filePath) throws IOException {
+    createFileInternal(filePath, false);
+  }
+
+  public static void createDirectoryIfDoesNotExist(final Path filePath, boolean stickyBit) throws IOException {
+    createFileInternal(filePath, stickyBit);
+  }
+
+  private static void createFileInternal(Path filePath, boolean stickyBit) throws IOException {
     try {
       Files.createDirectories(filePath);
+      if (stickyBit) {
+        setStickyBit(filePath);
+      }
     } catch (FileAlreadyExistsException exception) {
       ignoredOnPurpose(exception);
     }
   }
 
-  public static boolean checkIfFileExist(final String filePath) throws IOException {
+  private static void setStickyBit(Path filePath) {
+    final ProcessExecutor processExecutor =
+        new ProcessExecutor().commandSplit(getStickyBitSetCommand(filePath)).timeout(1, TimeUnit.SECONDS);
+    try {
+      processExecutor.execute();
+    } catch (IOException | InterruptedException | TimeoutException | InvalidExitValueException e) {
+      noop(); // Ignore
+    }
+  }
+
+  private static String getStickyBitSetCommand(Path filePath) {
+    return String.format("chmod +t %s", filePath.toAbsolutePath().toString());
+  }
+
+  public static boolean checkIfFileExist(final String filePath) {
     Path path = Paths.get(filePath);
     return Files.exists(path);
   }

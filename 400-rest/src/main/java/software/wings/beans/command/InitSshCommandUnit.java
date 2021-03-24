@@ -8,6 +8,7 @@ import static software.wings.utils.Utils.escapifyString;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -108,7 +109,7 @@ public class InitSshCommandUnit extends SshCommandUnit {
   protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     activityId = context.getActivityId();
     executionStagingDir = "/tmp/" + activityId;
-    preInitCommand = "mkdir -p " + executionStagingDir;
+    preInitCommand = format("mkdir -p %s && chmod +t %s", executionStagingDir, executionStagingDir);
     notNullCheck("Service Variables", context.getServiceVariables());
     for (Map.Entry<String, String> entry : context.getServiceVariables().entrySet()) {
       envVariables.put(entry.getKey(), escapifyString(entry.getValue()));

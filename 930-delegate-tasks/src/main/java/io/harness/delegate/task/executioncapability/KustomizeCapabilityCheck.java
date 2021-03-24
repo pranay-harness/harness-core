@@ -51,12 +51,8 @@ public class KustomizeCapabilityCheck implements CapabilityCheck, ProtoCapabilit
   static boolean doesKustomizePluginDirExist(String pluginDir) {
     String kustomizePluginPath = renderPathUsingEnvVariables(pluginDir);
     if (isNotEmpty(kustomizePluginPath)) {
-      try {
-        kustomizePluginPath = join("/", kustomizePluginPath, KUSTOMIZE_PLUGIN_DIR_SUFFIX);
-        return FileIo.checkIfFileExist(kustomizePluginPath);
-      } catch (IOException e) {
-        return false;
-      }
+      kustomizePluginPath = join("/", kustomizePluginPath, KUSTOMIZE_PLUGIN_DIR_SUFFIX);
+      return FileIo.checkIfFileExist(kustomizePluginPath);
     }
     return true;
   }

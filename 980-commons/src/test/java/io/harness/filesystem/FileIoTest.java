@@ -12,6 +12,7 @@ import static io.harness.filesystem.FileIo.writeFile;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.nio.file.Files.lines;
 import static java.time.Duration.ofMinutes;
@@ -19,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.Owner;
 import io.harness.threading.Concurrent;
 
@@ -27,12 +29,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributes;
 import java.util.UUID;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.ProcessResult;
 
 public class FileIoTest extends CategoryTest {
   private static String tempDirectory = System.getProperty("java.io.tmpdir");
@@ -44,20 +51,60 @@ public class FileIoTest extends CategoryTest {
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
-  public void createDirectoryTest() throws IOException {
+  public void createDirectoryTest() throws IOException, TimeoutException, InterruptedException {
     final String directoryPath = getRandomTempDirectory();
+    String permissionSet;
     try {
       createDirectoryIfDoesNotExist(directoryPath);
       File testFile = new File(directoryPath);
       assertThat(testFile.exists()).isTrue();
       long lastModifiedTime = testFile.lastModified();
 
+      permissionSet = getPermissionSet(directoryPath);
+      assertThat(permissionSet).doesNotEndWith("t");
+
       createDirectoryIfDoesNotExist(directoryPath);
       File testFile1 = new File(directoryPath);
       assertThat(testFile1.lastModified()).isEqualTo(lastModifiedTime);
+
+      permissionSet = getPermissionSet(directoryPath);
+      assertThat(permissionSet).doesNotEndWith("t");
+
     } finally {
       deleteDirectoryAndItsContentIfExists(directoryPath);
     }
+  }
+
+  @Test
+  @Owner(developers = YOGESH)
+  @Category(UnitTests.class)
+  public void createDirectoryTestWithStickyBit() throws IOException, TimeoutException, InterruptedException {
+    final String directoryPath = getRandomTempDirectory();
+    String permissionSet;
+    try {
+      createDirectoryIfDoesNotExist(directoryPath, true);
+      File testFile = new File(directoryPath);
+      assertThat(testFile.exists()).isTrue();
+      long lastModifiedTime = testFile.lastModified();
+
+      permissionSet = getPermissionSet(directoryPath);
+      assertThat(permissionSet).endsWith("t");
+
+      createDirectoryIfDoesNotExist(directoryPath);
+      File testFile1 = new File(directoryPath);
+      assertThat(testFile1.lastModified()).isEqualTo(lastModifiedTime);
+
+      permissionSet = getPermissionSet(directoryPath);
+      assertThat(permissionSet).endsWith("t");
+
+    } finally {
+      deleteDirectoryAndItsContentIfExists(directoryPath);
+    }
+  }
+
+  private String getPermissionSet(String dirPath) throws InterruptedException, TimeoutException, IOException {
+    final ProcessResult execute = new ProcessExecutor().commandSplit("ls -ld " + dirPath).readOutput(true).execute();
+    return execute.outputUTF8().split(" ")[0];
   }
 
   @Test

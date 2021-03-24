@@ -7,6 +7,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.utils.Utils.escapifyString;
 
 import static freemarker.template.Configuration.VERSION_2_3_23;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -91,7 +92,7 @@ public class InitSshCommandUnitV2 extends SshCommandUnit {
   protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     activityId = context.getActivityId();
     executionStagingDir = "/tmp/" + activityId;
-    preInitCommand = "mkdir -p " + executionStagingDir;
+    preInitCommand = format("mkdir -p %s && chmod +t %s", executionStagingDir, executionStagingDir);
     CommandExecutionStatus commandExecutionStatus = context.executeCommandString(preInitCommand);
 
     notNullCheck("Service Variables", context.getServiceVariables());
