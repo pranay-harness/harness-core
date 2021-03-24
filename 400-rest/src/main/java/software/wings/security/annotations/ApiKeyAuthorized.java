@@ -15,5 +15,7 @@ public @interface ApiKeyAuthorized {
 
   Action action() default Action.DEFAULT;
 
-  boolean skipApiKeyCheck() default false;
+  boolean allowEmptyApiKey() default false;
+
+  boolean skipAuth() default false;
 }

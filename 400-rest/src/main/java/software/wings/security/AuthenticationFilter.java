@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.GlobalContext;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.logging.AccountLogContext;
@@ -130,7 +131,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
     String authorization = containerRequestContext.getHeaderString(HttpHeaders.AUTHORIZATION);
 
-    if (isExternalFacingApiRequest(containerRequestContext) || isApiKeyAuthorizationAPI()) {
+    boolean isApiKeyAuthorizeRequest = isApiKeyAuthorizationAPI();
+    if (isExternalFacingApiRequest(containerRequestContext) || isApiKeyAuthorizeRequest) {
       String apiKey = containerRequestContext.getHeaderString(API_KEY_HEADER);
 
       if (isNotEmpty(apiKey)) {
@@ -150,6 +152,13 @@ public class AuthenticationFilter implements ContainerRequestFilter {
 
       if (checkIfBearerTokenAndValidate(authorization, containerRequestContext)) {
         return;
+      }
+
+      if (isApiKeyAuthorizeRequest && isEmpty(apiKey)) {
+        if (allowEmptyApiKey()) {
+          return;
+        }
+        throw new AccessDeniedException("Api Key cannot be empty", USER);
       }
     }
 
@@ -256,6 +265,33 @@ public class AuthenticationFilter implements ContainerRequestFilter {
       return true;
     }
     return false;
+  }
+
+  private boolean allowEmptyApiKey() {
+    boolean methodAllowEmptyApiKey = false;
+    boolean classAllowEmptyApiKey = false;
+
+    Method resourceMethod = resourceInfo.getResourceMethod();
+    ApiKeyAuthorized[] methodAnnotations = resourceMethod.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(methodAnnotations)) {
+      for (ApiKeyAuthorized methodAnnotation : methodAnnotations) {
+        methodAllowEmptyApiKey = methodAnnotation.allowEmptyApiKey() || methodAllowEmptyApiKey;
+      }
+    }
+
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    ApiKeyAuthorized[] classAnnotations = resourceClass.getAnnotationsByType(ApiKeyAuthorized.class);
+    if (isNotEmpty(classAnnotations)) {
+      for (ApiKeyAuthorized classAnnotation : classAnnotations) {
+        classAllowEmptyApiKey = classAnnotation.allowEmptyApiKey() || classAllowEmptyApiKey;
+      }
+    }
+
+    if (isEmpty(methodAnnotations)) {
+      return classAllowEmptyApiKey;
+    } else {
+      return methodAllowEmptyApiKey;
+    }
   }
 
   private void setPrincipal(String tokenString) {
