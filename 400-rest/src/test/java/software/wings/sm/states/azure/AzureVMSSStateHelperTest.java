@@ -87,7 +87,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.sm.states.azure.appservices.AzureAppServiceStateData;
 import software.wings.sm.states.azure.artifact.ArtifactStreamMapper;
-import software.wings.sm.states.azure.artifact.DockerArtifactStreamMapper;
+import software.wings.sm.states.azure.artifact.container.DockerArtifactStreamMapper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;

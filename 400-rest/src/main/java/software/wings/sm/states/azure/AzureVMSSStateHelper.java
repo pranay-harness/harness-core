@@ -85,6 +85,7 @@ import software.wings.utils.ServiceVersionConvention;
 import com.google.common.primitives.Ints;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -99,6 +100,9 @@ import org.jetbrains.annotations.NotNull;
 public class AzureVMSSStateHelper {
   public static final String VIRTUAL_MACHINE_SCALE_SET_ID_PATTERN =
       "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Compute/virtualMachineScaleSets/%s";
+  protected static final List<String> METADATA_ONLY_ARTIFACT_STREAM_TYPES =
+      Arrays.asList("JENKINS", "BAMBOO", "ARTIFACTORY", "NEXUS", "S3");
+
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ActivityService activityService;
   @Inject private AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
@@ -553,11 +557,19 @@ public class AzureVMSSStateHelper {
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     ArtifactStreamAttributes artifactStreamAttributes =
         artifactStream.fetchArtifactStreamAttributes(featureFlagService);
+
+    artifactStreamAttributes.setMetadata(artifact.getMetadata());
+    artifactStreamAttributes.setArtifactName(artifact.getDisplayName());
     artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
     artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
-    artifactStreamAttributes.setMetadataOnly(artifactStream.isMetadataOnly());
+    artifactStreamAttributes.setMetadataOnly(onlyMetaForArtifactType(artifactStream));
     artifactStreamAttributes.setArtifactStreamType(artifactStream.getArtifactStreamType());
     return ArtifactStreamMapper.getArtifactStreamMapper(artifact, artifactStreamAttributes);
+  }
+
+  private boolean onlyMetaForArtifactType(ArtifactStream artifactStream) {
+    return METADATA_ONLY_ARTIFACT_STREAM_TYPES.contains(artifactStream.getArtifactStreamType())
+        && artifactStream.isMetadataOnly();
   }
 
   public void validateAppSettings(List<AzureAppServiceApplicationSetting> appSettings) {
@@ -617,5 +629,11 @@ public class AzureVMSSStateHelper {
   private <T> Set<T> getDuplicateItems(List<T> listItems) {
     Set<T> tempItemsSet = new HashSet<>();
     return listItems.stream().filter(item -> !tempItemsSet.add(item)).collect(Collectors.toSet());
+  }
+
+  public UserDataSpecification getUserDataSpecification(ExecutionContext context) {
+    String appId = context.getAppId();
+    Service service = getServiceByAppId(context, appId);
+    return serviceResourceService.getUserDataSpecification(appId, service.getUuid());
   }
 }
