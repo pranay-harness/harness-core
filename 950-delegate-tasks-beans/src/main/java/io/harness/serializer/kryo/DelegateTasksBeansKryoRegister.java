@@ -53,6 +53,7 @@ import io.harness.delegate.beans.ci.CIBuildSetupTaskParams;
 import io.harness.delegate.beans.ci.CIClusterType;
 import io.harness.delegate.beans.ci.CIK8BuildTaskParams;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.ExecuteCommandTaskParams;
 import io.harness.delegate.beans.ci.K8ExecCommandParams;
 import io.harness.delegate.beans.ci.K8ExecuteCommandTaskParams;
@@ -123,6 +124,7 @@ import io.harness.delegate.beans.executioncapability.GitInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
 import io.harness.delegate.beans.executioncapability.HttpConnectionExecutionCapability;
 import io.harness.delegate.beans.executioncapability.KustomizeCapability;
+import io.harness.delegate.beans.executioncapability.LiteEngineConnectionCapability;
 import io.harness.delegate.beans.executioncapability.PcfAutoScalarCapability;
 import io.harness.delegate.beans.executioncapability.PcfConnectivityCapability;
 import io.harness.delegate.beans.executioncapability.ProcessExecutorCapability;
@@ -680,5 +682,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
     kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
     kryo.register(AwsCodeCommitRequestType.class, 543275);
+
+    kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
+    kryo.register(LiteEngineConnectionCapability.class, 543277);
   }
 }

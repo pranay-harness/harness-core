@@ -140,6 +140,17 @@ message EvaluateJEXLResponse {
   map<string, string> evaluated_expressions = 1;  // expression is key & value is evaluated expression
 }
 
+message PingRequest {}
+
+message PingResponse {}
+
+message ExecuteStepRequest {
+  string id = 1;
+  UnitStep step = 2;
+}
+
+message ExecuteStepResponse {}
+
 service LiteEngine {
   // Synchronous RPC to execute a step
   rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
@@ -149,4 +160,12 @@ service LiteEngine {
 
   // Synchronous RPC to evaluate JEXL expression
   rpc EvaluateJEXL(EvaluateJEXLRequest) returns (EvaluateJEXLResponse);
+
+  // Synchronous RPC to check health of lite-engine service.
+  rpc Ping(PingRequest) returns (PingResponse);
+
+  // Asynchronous RPC that starts execution of a step.
+  // It is idempotent such that if two requests are fired with same id, then
+  // only one request will start execution of the step.
+  rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
 }

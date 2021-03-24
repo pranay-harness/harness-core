@@ -33,5 +33,6 @@ public enum CapabilityType {
   SMB,
   SELECTORS,
   GIT_CONNECTION_NG,
-  GIT_INSTALLATION;
+  GIT_INSTALLATION,
+  LITE_ENGINE;
 }

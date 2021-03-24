@@ -184,6 +184,7 @@ public class CIK8CtlHandler {
         .status(PodStatus.Status.ERROR)
         .errorMessage(errMsg)
         .ciContainerStatusList(getContainersStatus(pod))
+        .ip(pod.getStatus().getPodIP())
         .build();
   }
 
