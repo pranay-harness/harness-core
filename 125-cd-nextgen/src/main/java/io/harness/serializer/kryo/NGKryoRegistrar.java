@@ -50,6 +50,7 @@ import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
+import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
@@ -177,5 +178,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(OpenshiftManifestOutcome.class, 12535);
     kryo.register(OpenshiftParamManifest.class, 12536);
     kryo.register(OpenshiftParamManifestOutcome.class, 12537);
+    kryo.register(S3StoreConfig.class, 12538);
   }
 }
