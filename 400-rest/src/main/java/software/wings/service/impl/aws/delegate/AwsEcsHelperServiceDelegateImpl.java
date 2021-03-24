@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.amazonaws.services.ecs.model.ServiceField.TAGS;
