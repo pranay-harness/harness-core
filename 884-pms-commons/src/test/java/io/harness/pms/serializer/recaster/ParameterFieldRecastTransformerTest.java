@@ -117,4 +117,10 @@ public class ParameterFieldRecastTransformerTest extends CategoryTest {
     private List<String> listVal;
     private Map<String, Integer> mapVal;
   }
+
+  @Data
+  @Builder
+  public static class DummyC {
+    private List<DummyB> dummyB;
+  }
 }

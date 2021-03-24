@@ -8,5 +8,5 @@ import lombok.Data;
 public class ParameterFieldValueWrapper<T> {
   public static final String VALUE_FIELD = "value";
 
-  private final T value;
+  private T value;
 }
