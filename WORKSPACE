@@ -5303,6 +5303,13 @@ go_repository(
 )
 
 go_repository(
+    name = "com_github_linkedin_goavro_v2",
+    importpath = "github.com/linkedin/goavro/v2",
+    sum = "h1:eTBIRoInBM88gITGXYtUSqqxLTFXfOsJBiX8ZMW0o4U=",
+    version = "v2.10.0",
+)
+
+go_repository(
     name = "com_github_robbiet480_go_sns",
     importpath = "github.com/robbiet480/go.sns",
     sum = "h1:oiuVamdP4LloTcrinlnYOxhLwhJCV3hE9D+NSxH0L4I=",
