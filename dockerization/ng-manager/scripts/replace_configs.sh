@@ -220,6 +220,10 @@ replace_key_value resourceGroupConfig.ng-manager.baseUrl "$NG_MANAGER_CLIENT_BAS
 
 replace_key_value resourceGroupConfig.ng-manager.secret "$NEXT_GEN_MANAGER_SECRET"
 
+replace_key_value resourceGroupConfig.pipeline-service.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
+
+replace_key_value resourceGroupConfig.pipeline-service.secret "$PIPELINE_SERVICE_SECRET"
+
 replace_key_value resourceGroupConfig.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupConfig.manager.secret "$NEXT_GEN_MANAGER_SECRET"

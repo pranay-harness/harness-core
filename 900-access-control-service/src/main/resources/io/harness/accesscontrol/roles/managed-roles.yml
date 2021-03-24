@@ -14,6 +14,10 @@ roles:
         - core.connector.view
         - core.connector.edit
         - core.connector.delete
+        - core.pipeline.view
+        - core.pipeline.edit
+        - core.pipeline.delete
+        - core.pipeline.execute
       allowedScopeLevels:
         - project
       managed: true
@@ -24,6 +28,7 @@ roles:
         - core.project.view
         - core.secret.view
         - core.connector.view
+        - core.pipeline.view
       allowedScopeLevels:
         - project
       managed: true
@@ -82,4 +87,15 @@ roles:
         - core.connector.view
       allowedScopeLevels:
         - account
+      managed: true
+    - identifier: _pipeline_executor
+      name: Pipeline Executor
+      description: Execute a pipeline
+      permissions:
+        - core.secret.view
+        - core.connector.view
+        - core.pipeline.view
+        - core.pipeline.execute
+      allowedScopeLevels:
+        - project
       managed: true
