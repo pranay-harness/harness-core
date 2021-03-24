@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 @TargetModule(Module._870_CG_YAML_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ExecCommandUnitAbstractYaml extends SshCommandUnit.Yaml {
+public class ExecCommandUnitAbstractYaml extends SshCommandUnitYaml {
   // maps to commandPath
   private String workingDirectory;
   private String scriptType;

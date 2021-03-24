@@ -31,16 +31,4 @@ public abstract class SshCommandUnit extends AbstractCommandUnit {
   }
 
   protected abstract CommandExecutionStatus executeInternal(ShellCommandExecutionContext context);
-
-  @Data
-  @EqualsAndHashCode(callSuper = true)
-  public abstract static class Yaml extends AbstractCommandUnitYaml {
-    public Yaml(String commandUnitType) {
-      super(commandUnitType);
-    }
-
-    public Yaml(String name, String commandUnitType, String deploymentType) {
-      super(name, commandUnitType, deploymentType);
-    }
-  }
 }
