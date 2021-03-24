@@ -2,8 +2,10 @@ package io.harness;
 
 import io.harness.entities.ApplicationCDCEntity;
 import io.harness.entities.CDCEntity;
+import io.harness.entities.PipelineExecutionSummaryEntityCDCEntity;
 import io.harness.entities.ViewCDCEntity;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
@@ -58,6 +60,7 @@ public class ChangeDataCaptureModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), new TypeLiteral<CDCEntity<?>>() {});
     cdcEntityMultibinder.addBinding().to(ApplicationCDCEntity.class);
     cdcEntityMultibinder.addBinding().to(ViewCDCEntity.class);
+    cdcEntityMultibinder.addBinding().to(PipelineExecutionSummaryEntityCDCEntity.class);
   }
 
   @Provides

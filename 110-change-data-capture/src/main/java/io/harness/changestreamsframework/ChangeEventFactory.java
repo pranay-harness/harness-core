@@ -3,6 +3,7 @@ package io.harness.changestreamsframework;
 import io.harness.changestreamsframework.ChangeEvent.ChangeEventBuilder;
 import io.harness.exception.UnexpectedException;
 import io.harness.persistence.PersistentEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import software.wings.dl.WingsPersistence;
 
@@ -16,6 +17,7 @@ import org.bson.BsonDocumentReader;
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
+import org.bson.types.ObjectId;
 
 class ChangeEventFactory {
   @Inject private WingsPersistence wingsPersistence;
@@ -36,7 +38,10 @@ class ChangeEventFactory {
 
   private static String getUuidfromChangeStream(ChangeStreamDocument<DBObject> changeStreamDocument) {
     Document uuidDocument = convertBsonDocumentToDocument(changeStreamDocument.getDocumentKey());
-    return (String) uuidDocument.get("_id");
+    if (uuidDocument.get("_id") instanceof String) {
+      return (String) uuidDocument.get("_id");
+    }
+    return ((ObjectId) uuidDocument.get("_id")).toString();
   }
 
   private static ChangeType getChangeTypefromChangeStream(ChangeStreamDocument<DBObject> changeStreamDocument) {
@@ -50,6 +55,8 @@ class ChangeEventFactory {
 
   private <T extends PersistentEntity> ChangeEvent<T> buildInsertChangeEvent(
       ChangeEventBuilder<T> changeEventBuilder, DBObject fullDocument, Class<T> entityClass) {
+    PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
+        wingsPersistence.createQuery(PipelineExecutionSummaryEntity.class).get();
     T entityObject = wingsPersistence.convertToEntity(entityClass, fullDocument);
     changeEventBuilder.fullDocument(entityObject);
     changeEventBuilder.changes(null);

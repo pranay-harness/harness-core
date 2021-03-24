@@ -1,6 +1,7 @@
 package io.harness.pms.plan.execution.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.changestreamsframework.ChangeDataCapture;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -45,6 +46,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("planExecutionsSummary")
 @TypeAlias("planExecutionsSummary")
 @HarnessEntity(exportable = true)
+@ChangeDataCapture(table = "pipelineExecutionSummaryci", dataStore = "pms-harness", fields = {})
 public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
@@ -63,6 +65,7 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
   @Singular @Size(max = 128) List<NGTag> tags;
 
   @Builder.Default private Map<String, org.bson.Document> moduleInfo = new HashMap<>();
+  @Builder.Default private Map<String, Object> moduleInfoNew = new HashMap<>();
   @Builder.Default private Map<String, GraphLayoutNodeDTO> layoutNodeMap = new HashMap<>();
   private List<String> modules;
   private String startingNodeId;

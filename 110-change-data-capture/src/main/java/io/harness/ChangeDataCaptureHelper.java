@@ -28,6 +28,7 @@ class ChangeDataCaptureHelper {
     cdcEntities.forEach(cdcEntity -> subscribedClasses.add(cdcEntity.getSubscriptionEntity()));
 
     for (Class<? extends PersistentEntity> subscribedClass : subscribedClasses) {
+      log.info("Subscribed Class: {}", subscribedClass);
       ChangeTrackingInfo<?> changeTrackingInfo = getChangeTrackingInfo(subscribedClass, changeSubscriber);
       changeTrackingInfos.add(changeTrackingInfo);
     }
