@@ -78,12 +78,11 @@ public class Filter implements PersistentEntity {
                  .field(FilterKeys.filterType)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_name_type_Index")
+                 .name("unique_accountId_orgId_projectId_name_type_Index")
                  .unique(true)
                  .fields(Arrays.asList(FilterKeys.accountIdentifier, FilterKeys.orgIdentifier,
                      FilterKeys.projectIdentifier, FilterKeys.name, FilterKeys.filterType))
                  .build())
-        .add(CompoundMongoIndex.builder().name("accountIdIndex").field(FilterKeys.accountIdentifier).build())
         .build();
   }
 }

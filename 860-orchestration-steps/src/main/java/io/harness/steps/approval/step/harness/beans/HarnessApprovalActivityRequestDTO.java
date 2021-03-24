@@ -1,5 +1,9 @@
 package io.harness.steps.approval.step.harness.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
 import java.util.List;
@@ -9,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(CDC)
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)

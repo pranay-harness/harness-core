@@ -13,6 +13,8 @@ import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalSta
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
 import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_FAILED;
+import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TRIGGER_CONFIRMATION_SUCCESSFUL;
 
 import io.harness.execution.PlanExecution;
 import io.harness.ngpipeline.pipeline.beans.resources.NGPipelineExecutionResponseDTO;
@@ -83,7 +85,8 @@ public class WebhookEventResponseHelper {
     Set<FinalStatus> set = EnumSet.of(INVALID_PAYLOAD, INVALID_RUNTIME_INPUT_YAML, TARGET_DID_NOT_EXECUTE,
         TARGET_EXECUTION_REQUESTED, NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE, NO_ENABLED_TRIGGER_FOR_PROJECT,
         NO_MATCHING_TRIGGER_FOR_REPO, NO_MATCHING_TRIGGER_FOR_EVENT_ACTION, NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS,
-        NO_MATCHING_TRIGGER_FOR_HEADER_CONDITIONS, EXCEPTION_WHILE_PROCESSING, FAILED_TO_FETCH_PR_DETAILS);
+        NO_MATCHING_TRIGGER_FOR_HEADER_CONDITIONS, EXCEPTION_WHILE_PROCESSING, FAILED_TO_FETCH_PR_DETAILS,
+        TRIGGER_CONFIRMATION_FAILED, TRIGGER_CONFIRMATION_SUCCESSFUL);
     return set.contains(status);
   }
 

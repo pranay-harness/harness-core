@@ -517,7 +517,7 @@ if [[ "" != "$TIMESCALEDB_LOGGERLEVEL" ]]; then
   yq write -i $CONFIG_FILE timescaledb.loggerLevel "$TIMESCALEDB_LOGGERLEVEL"
 fi
 
-if [[ "" != "$TIMESCALEDB_HEALTH_CHECK_NEEDED" ]]; then
+if [[ "$TIMESCALEDB_HEALTH_CHECK_NEEDED" == "true" ]]; then
   yq write -i $CONFIG_FILE timescaledb.isHealthCheckNeeded "$TIMESCALEDB_HEALTH_CHECK_NEEDED"
 fi
 

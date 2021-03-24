@@ -428,7 +428,9 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   private String getExecutionStepsNodeId(YamlField currentField) {
     YamlNode execution = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
-    return Objects.requireNonNull(Objects.requireNonNull(execution).getField(STEPS)).getNode().getUuid();
+    return execution == null
+        ? null
+        : Objects.requireNonNull(Objects.requireNonNull(execution).getField(STEPS)).getNode().getUuid();
   }
 
   private String getRollbackStepsNodeId(YamlNode currentNode) {

@@ -3,6 +3,7 @@ package software.wings.service.impl.workflow;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.beans.OrchestrationWorkflowType.BASIC;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
@@ -15,6 +16,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
+import static io.harness.exception.FailureType.TIMEOUT_ERROR;
 import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -105,6 +107,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.WorkflowType;
 import io.harness.data.parser.CsvParser;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.FailureType;
@@ -284,6 +287,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -891,6 +895,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     validateWorkflowNameForDuplicates(workflow);
     validateOrchestrationWorkflow(workflow);
+    workflowServiceHelper.validateWaitInterval(workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     workflow.setDefaultVersion(1);
     List<String> linkedTemplateUuids = new ArrayList<>();
@@ -1128,7 +1133,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean onSaveCallNeeded, boolean infraChanged, boolean envChanged, boolean cloned, boolean migration) {
+    workflowServiceHelper.validateWaitInterval(workflow);
     String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+
+    validateFailureStrategiesWithTimeoutErrorFailureType(accountId, orchestrationWorkflow);
+
     WorkflowServiceHelper.cleanupWorkflowStrategies(orchestrationWorkflow);
     Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
 
@@ -1232,6 +1241,113 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       updateLinkedArtifactStreamIds(finalWorkflow, linkedArtifactStreamIds);
     }
     return finalWorkflow;
+  }
+
+  private void validateFailureStrategiesWithTimeoutErrorFailureType(
+      String accountId, OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
+
+      validateOrchestrationLevelFailureStrategies(canaryOrchestrationWorkflow);
+
+      if (featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, accountId)) {
+        Map<List<GraphNode>, List<FailureStrategy>> stepsToStrategiesMap =
+            canaryOrchestrationWorkflow.getWorkflowPhases()
+                .stream()
+                .flatMap(phase -> phase.getPhaseSteps().stream())
+                .filter(this::phaseStepContainsStrategyForTimeoutOnly)
+                .collect(toMap(
+                    PhaseStep::getSteps, PhaseStep::getFailureStrategies, (strategies1, strategies2) -> strategies1));
+
+        stepsToStrategiesMap.putAll(Stream
+                                        .of(canaryOrchestrationWorkflow.getPreDeploymentSteps(),
+                                            canaryOrchestrationWorkflow.getPostDeploymentSteps())
+                                        .filter(Objects::nonNull)
+                                        .filter(this::phaseStepContainsStrategyForTimeoutOnly)
+                                        .collect(toMap(PhaseStep::getSteps, PhaseStep::getFailureStrategies,
+                                            (strategies1, strategies2) -> strategies1)));
+
+        validateStepsToStrategiesPairs(stepsToStrategiesMap);
+      } else {
+        if (anyFailureStrategyContainsTimeoutErrorFailureType(canaryOrchestrationWorkflow)) {
+          throw new InvalidRequestException("Timeout error is not supported");
+        }
+      }
+    }
+  }
+
+  private boolean anyFailureStrategyContainsTimeoutErrorFailureType(
+      CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    return Stream
+        .concat(canaryOrchestrationWorkflow.getWorkflowPhases()
+                    .stream()
+                    .flatMap(phase -> phase.getPhaseSteps().stream())
+                    .flatMap(phaseStep -> phaseStep.getFailureStrategies().stream()),
+            Stream
+                .of(canaryOrchestrationWorkflow.getPreDeploymentSteps(),
+                    canaryOrchestrationWorkflow.getPostDeploymentSteps())
+                .filter(Objects::nonNull)
+                .flatMap(phaseStep -> phaseStep.getFailureStrategies().stream()))
+        .map(FailureStrategy::getFailureTypes)
+        .anyMatch(failureTypes -> failureTypes.contains(TIMEOUT_ERROR));
+  }
+
+  private boolean phaseStepContainsStrategyForTimeoutOnly(PhaseStep phaseStep) {
+    List<FailureStrategy> failureStrategies = phaseStep.getFailureStrategies();
+    return isNotEmpty(failureStrategies)
+        && failureStrategies.stream().anyMatch(failureStrategy
+            -> isNotEmpty(failureStrategy.getFailureTypes())
+                && failureStrategy.getFailureTypes().contains(TIMEOUT_ERROR)
+                && failureStrategy.getFailureTypes().size() == 1);
+  }
+
+  private boolean isStrategyForTimeoutOnly(FailureStrategy failureStrategy) {
+    return isNotEmpty(failureStrategy.getFailureTypes()) && failureStrategy.getFailureTypes().contains(TIMEOUT_ERROR)
+        && failureStrategy.getFailureTypes().size() == 1;
+  }
+
+  private void validateOrchestrationLevelFailureStrategies(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    List<FailureStrategy> orchestrationFailureStrategies = canaryOrchestrationWorkflow.getFailureStrategies();
+    if (isNotEmpty(orchestrationFailureStrategies)
+        && orchestrationFailureStrategies.stream()
+               .map(FailureStrategy::getFailureTypes)
+               .filter(EmptyPredicate::isNotEmpty)
+               .flatMap(Collection::stream)
+               .anyMatch(failureType -> failureType == TIMEOUT_ERROR)) {
+      throw new InvalidRequestException("Timeout error is not supported on orchestration level.");
+    }
+  }
+
+  private void validateStepsToStrategiesPairs(Map<List<GraphNode>, List<FailureStrategy>> map) {
+    for (Entry<List<GraphNode>, List<FailureStrategy>> entry : map.entrySet()) {
+      entry.getValue()
+          .stream()
+          .filter(this::isStrategyForTimeoutOnly)
+          .forEach(failureStrategy -> validateAgainstSupportedTypes(entry.getKey(), failureStrategy));
+    }
+  }
+
+  private void validateAgainstSupportedTypes(List<GraphNode> steps, FailureStrategy failureStrategy) {
+    List<String> supportedTypesNames = Arrays.stream(StepType.values())
+                                           .filter(StepType::supportsTimeoutFailure)
+                                           .map(StepType::getName)
+                                           .collect(toList());
+    List<String> supportedTypes = Arrays.stream(StepType.values())
+                                      .filter(StepType::supportsTimeoutFailure)
+                                      .map(StepType::getType)
+                                      .collect(toList());
+
+    if (isEmpty(failureStrategy.getSpecificSteps())) {
+      throw new InvalidRequestException(
+          format("Specify the steps for timeout error. Allowed step types are: %s", supportedTypesNames), USER);
+    } else {
+      Map<String, String> stepsNameToTypeMap = steps.stream().collect(toMap(GraphNode::getName, GraphNode::getType));
+      if (failureStrategy.getSpecificSteps().stream().anyMatch(
+              specificStep -> !supportedTypes.contains(stepsNameToTypeMap.get(specificStep)))) {
+        throw new InvalidRequestException(
+            format("Timeout error is allowed only for step types: %s", supportedTypesNames), USER);
+      }
+    }
   }
 
   private void updateEnvIdInLinkedPipelines(

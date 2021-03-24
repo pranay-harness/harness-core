@@ -7,7 +7,7 @@ import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.executionplan.ExecutionPlanModule;
 import io.harness.impl.CIPipelineExecutionService;
 import io.harness.impl.CIPipelineExecutionServiceImpl;
-import io.harness.waiter.OrchestrationNotifyEventListener;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -35,7 +35,7 @@ public class CIExecutionServiceModule extends AbstractModule {
                                                 .serviceName("CI")
                                                 .withPMS(Optional.ofNullable(withPMS).orElse(false))
                                                 .expressionEvaluatorProvider(new AmbianceExpressionEvaluatorProvider())
-                                                .publisherName(OrchestrationNotifyEventListener.ORCHESTRATION)
+                                                .publisherName(NgOrchestrationNotifyEventListener.NG_ORCHESTRATION)
                                                 .maxPoolSize(10)
                                                 .build()));
     bind(CIBuildService.class).to(CIBuildServiceImpl.class);

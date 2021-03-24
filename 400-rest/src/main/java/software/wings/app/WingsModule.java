@@ -3,6 +3,7 @@ package software.wings.app;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.CgOrchestrationModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -167,8 +168,6 @@ import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
 import io.harness.service.DelegateServiceDriverModule;
-import io.harness.service.impl.DelegateCacheImpl;
-import io.harness.service.intfc.DelegateCache;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
@@ -1015,7 +1014,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(AzureResourceService.class).to(AzureResourceServiceImpl.class);
     bind(AzureMachineImageBuildService.class).to(AzureMachineImageBuildServiceImpl.class);
     bind(AssignDelegateService.class).to(AssignDelegateServiceImpl.class);
-    bind(DelegateCache.class).to(DelegateCacheImpl.class);
     bind(ExpressionBuilderService.class).to(ExpressionBuilderServiceImpl.class);
     bind(HostValidationService.class).to(HostValidationServiceImpl.class);
     bind(WebHookService.class).to(WebHookServiceImpl.class);
@@ -1326,6 +1324,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
+    install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());

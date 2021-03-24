@@ -1,5 +1,6 @@
 package io.harness;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Matchers.any;
@@ -54,10 +55,13 @@ public class DelegateInfoHelperTest extends OrchestrationVisualizationTestBase {
     when(delegateSelectionLogHttpClient.getDelegateInfo(any(), any())).thenReturn(getConnectorResourceCall);
 
     List<ExecutableResponse> executableResponses = new ArrayList<>();
+    executableResponses.add(ExecutableResponse.newBuilder()
+                                .setTask(TaskExecutableResponse.newBuilder().setTaskId(generateUuid()).build())
+                                .build());
     executableResponses.add(
-        ExecutableResponse.newBuilder().setTask(TaskExecutableResponse.newBuilder().build()).build());
-    executableResponses.add(
-        ExecutableResponse.newBuilder().setTaskChain(TaskChainExecutableResponse.newBuilder().build()).build());
+        ExecutableResponse.newBuilder()
+            .setTaskChain(TaskChainExecutableResponse.newBuilder().setTaskId(generateUuid()).build())
+            .build());
     executableResponses.add(
         ExecutableResponse.newBuilder().setSync(SyncExecutableResponse.newBuilder().build()).build());
     executableResponses.add(
@@ -80,10 +84,13 @@ public class DelegateInfoHelperTest extends OrchestrationVisualizationTestBase {
     when(delegateSelectionLogHttpClient.getDelegateInfo(any(), any())).thenReturn(getConnectorResourceCall);
 
     List<ExecutableResponse> executableResponses = new ArrayList<>();
+    executableResponses.add(ExecutableResponse.newBuilder()
+                                .setTask(TaskExecutableResponse.newBuilder().setTaskId(generateUuid()).build())
+                                .build());
     executableResponses.add(
-        ExecutableResponse.newBuilder().setTask(TaskExecutableResponse.newBuilder().build()).build());
-    executableResponses.add(
-        ExecutableResponse.newBuilder().setTaskChain(TaskChainExecutableResponse.newBuilder().build()).build());
+        ExecutableResponse.newBuilder()
+            .setTaskChain(TaskChainExecutableResponse.newBuilder().setTaskId(generateUuid()).build())
+            .build());
     executableResponses.add(
         ExecutableResponse.newBuilder().setSync(SyncExecutableResponse.newBuilder().build()).build());
     executableResponses.add(
@@ -116,6 +123,7 @@ public class DelegateInfoHelperTest extends OrchestrationVisualizationTestBase {
         ExecutableResponse.newBuilder().setAsync(AsyncExecutableResponse.newBuilder().build()).build());
 
     delegateInfoHelper.getDelegateInformationForGivenTask(executableResponses, ExecutionMode.ASYNC, "accountId");
+    verify(delegateSelectionLogHttpClient, times(0)).getDelegateInfo(any(), any());
   }
 
   @Test
@@ -139,5 +147,6 @@ public class DelegateInfoHelperTest extends OrchestrationVisualizationTestBase {
         ExecutableResponse.newBuilder().setAsync(AsyncExecutableResponse.newBuilder().build()).build());
 
     delegateInfoHelper.getDelegateInformationForGivenTask(executableResponses, ExecutionMode.SYNC, "accountId");
+    verify(delegateSelectionLogHttpClient, times(0)).getDelegateInfo(any(), any());
   }
 }

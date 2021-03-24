@@ -8,6 +8,7 @@ import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.time.DurationUtils.durationTillDayTime;
+import static io.harness.waiter.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
@@ -137,6 +138,7 @@ import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -814,6 +816,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
     notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
+    notifyQueuePublisherRegister.register(
+        NG_ORCHESTRATION, payload -> publisher.send(asList(NG_ORCHESTRATION), payload));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -843,6 +847,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
   }
 
   private void scheduleJobs(Injector injector, MainConfiguration configuration) {
@@ -965,6 +970,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         (PerpetualTaskServiceImpl) injector.getInstance(Key.get(PerpetualTaskService.class));
     perpetualTaskService.getPerpetualTaskCrudSubject().register(
         injector.getInstance(Key.get(PerpetualTaskRecordHandler.class)));
+    perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
+        injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
     DelegateServiceImpl delegateServiceImpl =
         (DelegateServiceImpl) injector.getInstance(Key.get(DelegateService.class));

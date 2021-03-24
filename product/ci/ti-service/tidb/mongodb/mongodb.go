@@ -6,12 +6,14 @@ import (
 	"github.com/kamva/mgm/v3"
 	"time"
 
+	"github.com/mattn/go-zglob"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+
 	"go.uber.org/zap"
 )
 
@@ -173,11 +175,30 @@ func isValid(t types.RunnableTest) bool {
 	return t.Pkg != "" && t.Class != ""
 }
 
-func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.SelectTestsResp, error) {
+func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq) (types.SelectTestsResp, error) {
 	// parse package and class names from the files
+	fileNames := []string{}
+	for _, f := range req.Files {
+		// Check if the filename matches any of the regexes in the ignore config. If so, remove them
+		// from consideration
+		var remove bool
+		for _, ignore := range req.TiConfig.Config.Ignore {
+			matched, _ := zglob.Match(ignore, f.Name)
+			if matched == true {
+				// TODO: (Vistaar) Remove this warning message in prod since it has no context
+				// Keeping for debugging help for now
+				mdb.Log.Warnw(fmt.Sprintf("removing %s from consideration as it matches %s", f, ignore))
+				remove = true
+				break
+			}
+		}
+		if !remove {
+			fileNames = append(fileNames, f.Name)
+		}
+	}
 	res := types.SelectTestsResp{}
 	totalTests := 0
-	nodes, err := utils.ParseFileNames(files)
+	nodes, err := utils.ParseFileNames(fileNames)
 	if err != nil {
 		return res, err
 	}
@@ -205,11 +226,14 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 	l := []types.RunnableTest{}
 	var pkgs []string
 	var cls []string
+	var selectAll bool
+	new := 0
+	updated := 0
 	for _, node := range nodes {
 		// A file which is not recognized. Need to add logic for handling these type of files
 		if !utils.IsSupported(node) {
 			// A list with a single empty element indicates that all tests need to be run
-			return types.SelectTestsResp{}, nil
+			selectAll = true
 		} else if utils.IsTest(node) {
 			t := types.RunnableTest{Pkg: node.Pkg, Class: node.Class}
 			if !isValid(t) {
@@ -221,8 +245,10 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 					if _, ok2 := allm[t]; !ok2 {
 						// Doesn't exist in existing callgraph
 						totalTests += 1
+						new += 1
 						t.Selection = types.SelectNewTest
 					} else {
+						updated += 1
 						t.Selection = types.SelectUpdatedTest
 					}
 					l = append(l, t)
@@ -235,6 +261,17 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 			cls = append(cls, node.Class)
 		}
 	}
+	if selectAll == true {
+		return types.SelectTestsResp{
+			SelectAll:     true,
+			TotalTests:    totalTests,
+			SelectedTests: totalTests,
+			NewTests:      new,
+			UpdatedTests:  updated,
+			SrcCodeTests:  totalTests - new - updated,
+		}, nil
+	}
+
 	tests, err := mdb.queryHelper(pkgs, cls)
 	if err != nil {
 		return res, err
@@ -251,7 +288,12 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, files []string) (types.Se
 			}
 		}
 	}
-	res.TotalTests = totalTests
-	res.Tests = l
-	return res, nil
+	return types.SelectTestsResp{
+		TotalTests:    totalTests,
+		SelectedTests: len(l),
+		NewTests:      new,
+		UpdatedTests:  updated,
+		SrcCodeTests:  len(l) - new - updated,
+		Tests:         l,
+	}, nil
 }

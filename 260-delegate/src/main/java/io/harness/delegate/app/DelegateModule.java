@@ -91,6 +91,7 @@ import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.docker.DockerArtifactTaskNG;
 import io.harness.delegate.task.artifacts.ecr.EcrArtifactTaskNG;
 import io.harness.delegate.task.artifacts.gcr.GcrArtifactTaskNG;
+import io.harness.delegate.task.aws.AwsCodeCommitApiDelegateTask;
 import io.harness.delegate.task.aws.AwsCodeCommitDelegateTask;
 import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.aws.AwsValidationHandler;
@@ -140,6 +141,7 @@ import io.harness.delegatetasks.EncryptSecretTaskValidationHandler;
 import io.harness.delegatetasks.FetchSecretTask;
 import io.harness.delegatetasks.UpsertSecretTask;
 import io.harness.delegatetasks.UpsertSecretTaskValidationHandler;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTask;
 import io.harness.delegatetasks.ValidateSecretReferenceTask;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
@@ -1210,6 +1212,8 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.UPSERT_SECRET).toInstance(UpsertSecretTask.class);
     mapBinder.addBinding(TaskType.FETCH_SECRET).toInstance(FetchSecretTask.class);
     mapBinder.addBinding(TaskType.ENCRYPT_SECRET).toInstance(EncryptSecretTask.class);
+    mapBinder.addBinding(TaskType.VALIDATE_SECRET_MANAGER_CONFIGURATION)
+        .toInstance(ValidateSecretManagerConfigurationTask.class);
 
     mapBinder.addBinding(TaskType.HOST_VALIDATION).toInstance(HostValidationTask.class);
     mapBinder.addBinding(TaskType.CONTAINER_ACTIVE_SERVICE_COUNTS).toInstance(ServiceImplDelegateTask.class);
@@ -1307,6 +1311,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.JIRA_TASK_NG).toInstance(JiraTaskNG.class);
     mapBinder.addBinding(TaskType.BUILD_STATUS).toInstance(CIBuildStatusPushTask.class);
     mapBinder.addBinding(TaskType.GIT_API_TASK).toInstance(GitApiTask.class);
+    mapBinder.addBinding(TaskType.AWS_CODECOMMIT_API_TASK).toInstance(AwsCodeCommitApiDelegateTask.class);
     mapBinder.addBinding(TaskType.CE_VALIDATE_KUBERNETES_CONFIG)
         .toInstance(CEKubernetesTestConnectionDelegateTask.class);
     mapBinder.addBinding(TaskType.HTTP_HELM_CONNECTIVITY_TASK).toInstance(HttpHelmConnectivityDelegateTask.class);

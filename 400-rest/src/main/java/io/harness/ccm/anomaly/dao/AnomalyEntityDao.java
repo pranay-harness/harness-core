@@ -279,29 +279,36 @@ public class AnomalyEntityDao {
 
   private String getInsertQuery(AnomalyEntity anomaly) {
     return new InsertQuery(AnomaliesDataTableSchema.table)
-        .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
-        .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
-        .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
-        .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
-        .addColumn(AnomaliesDataTableSchema.anomalyTime, anomaly.getAnomalyTime())
-        .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
-        .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
-        .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
-        .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
-        .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
-        .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
-        .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
-        .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
-        .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
-        .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
-        .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
-        .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
-        .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
-        .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
-        .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
-        .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
-        .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
-        .validate()
-        .toString();
+               .addColumn(AnomaliesDataTableSchema.id, anomaly.getId())
+               .addColumn(AnomaliesDataTableSchema.accountId, anomaly.getAccountId())
+               .addColumn(AnomaliesDataTableSchema.actualCost, anomaly.getActualCost())
+               .addColumn(AnomaliesDataTableSchema.expectedCost, anomaly.getExpectedCost())
+               .addColumn(AnomaliesDataTableSchema.anomalyTime, anomaly.getAnomalyTime())
+               .addColumn(AnomaliesDataTableSchema.timeGranularity, anomaly.getTimeGranularity().toString())
+               .addColumn(AnomaliesDataTableSchema.clusterId, anomaly.getClusterId())
+               .addColumn(AnomaliesDataTableSchema.clusterName, anomaly.getClusterName())
+               .addColumn(AnomaliesDataTableSchema.namespace, anomaly.getNamespace())
+               .addColumn(AnomaliesDataTableSchema.workloadType, anomaly.getWorkloadType())
+               .addColumn(AnomaliesDataTableSchema.workloadName, anomaly.getWorkloadName())
+               .addColumn(AnomaliesDataTableSchema.region, anomaly.getRegion())
+               .addColumn(AnomaliesDataTableSchema.gcpProduct, anomaly.getGcpProduct())
+               .addColumn(AnomaliesDataTableSchema.gcpProject, anomaly.getGcpProject())
+               .addColumn(AnomaliesDataTableSchema.gcpSkuId, anomaly.getGcpSKUId())
+               .addColumn(AnomaliesDataTableSchema.gcpSkuDescription, anomaly.getGcpSKUDescription())
+               .addColumn(AnomaliesDataTableSchema.awsAccount, anomaly.getAwsAccount())
+               .addColumn(AnomaliesDataTableSchema.awsInstanceType, anomaly.getAwsInstanceType())
+               .addColumn(AnomaliesDataTableSchema.awsService, anomaly.getAwsService())
+               .addColumn(AnomaliesDataTableSchema.awsUsageType, anomaly.getAwsUsageType())
+               .addColumn(AnomaliesDataTableSchema.anomalyScore, anomaly.getAnomalyScore())
+               .addColumn(AnomaliesDataTableSchema.reportedBy, anomaly.getReportedBy())
+               .validate()
+               .toString()
+        + " ON CONFLICT "
+        + String.format("(%1$s,%2$s) ", AnomaliesDataTableSchema.id.getColumnNameSQL(),
+            AnomaliesDataTableSchema.anomalyTime.getColumnNameSQL())
+        + "DO UPDATE SET "
+        + String.format("%s = %f , %s = %f ", AnomaliesDataTableSchema.actualCost.getColumnNameSQL(),
+            anomaly.getActualCost(), AnomaliesDataTableSchema.expectedCost.getColumnNameSQL(),
+            anomaly.getExpectedCost());
   }
 }

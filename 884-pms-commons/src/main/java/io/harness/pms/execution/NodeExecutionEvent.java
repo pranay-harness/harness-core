@@ -27,7 +27,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "NodeExecutionEventKeys")
-@Entity(value = "nodeExecutionEventQueue")
+@Entity(value = "nodeExecutionEventQueue", noClassnameStored = true)
 @Document("nodeExecutionEventQueue")
 @TypeAlias("nodeExecutionEvent")
 @HarnessEntity(exportable = false)

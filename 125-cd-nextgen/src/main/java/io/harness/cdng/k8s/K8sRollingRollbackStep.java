@@ -15,9 +15,10 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.SkipTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -35,6 +36,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
 
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public Class<K8sRollingRollbackStepParameters> getStepParametersClass() {
@@ -44,10 +46,10 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
   @Override
   public TaskRequest obtainTask(
       Ambiance ambiance, K8sRollingRollbackStepParameters stepParameters, StepInputPackage inputPackage) {
-    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
-    if (!optionalOutcome.isFound()) {
+    if (!optionalSweepingOutput.isFound()) {
       return TaskRequest.newBuilder()
           .setSkipTaskRequest(SkipTaskRequest.newBuilder()
                                   .setMessage("K8s Rollout Deploy step was not executed. Skipping rollback.")
@@ -55,7 +57,7 @@ public class K8sRollingRollbackStep implements TaskExecutable<K8sRollingRollback
           .build();
     }
 
-    K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) optionalOutcome.getOutcome();
+    K8sRollingOutcome k8sRollingOutcome = (K8sRollingOutcome) optionalSweepingOutput.getOutput();
     InfrastructureOutcome infrastructure = (InfrastructureOutcome) outcomeService.resolve(
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));
 

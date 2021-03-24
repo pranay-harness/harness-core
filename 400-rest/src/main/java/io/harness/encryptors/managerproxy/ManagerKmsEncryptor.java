@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegatetasks.EncryptSecretTaskParameters;
 import io.harness.delegatetasks.EncryptSecretTaskResponse;
+import io.harness.delegatetasks.ValidateSecretManagerConfigurationTaskParameters;
 import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.exception.SecretManagementException;
@@ -70,5 +71,12 @@ public class ManagerKmsEncryptor implements KmsEncryptor {
   @Override
   public char[] fetchSecretValue(String accountId, EncryptedRecord encryptedRecord, EncryptionConfig encryptionConfig) {
     return managerEncryptorHelper.fetchSecretValue(accountId, encryptedRecord, encryptionConfig);
+  }
+
+  @Override
+  public boolean validateKmsConfiguration(String accountId, EncryptionConfig encryptionConfig) {
+    ValidateSecretManagerConfigurationTaskParameters parameters =
+        ValidateSecretManagerConfigurationTaskParameters.builder().encryptionConfig(encryptionConfig).build();
+    return managerEncryptorHelper.validateConfiguration(accountId, parameters);
   }
 }

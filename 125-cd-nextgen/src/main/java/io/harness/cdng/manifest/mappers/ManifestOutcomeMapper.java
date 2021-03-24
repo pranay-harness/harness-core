@@ -3,6 +3,7 @@ package io.harness.cdng.manifest.mappers;
 import static io.harness.cdng.manifest.ManifestType.HelmChart;
 import static io.harness.cdng.manifest.ManifestType.K8Manifest;
 import static io.harness.cdng.manifest.ManifestType.Kustomize;
+import static io.harness.cdng.manifest.ManifestType.OpenshiftParam;
 import static io.harness.cdng.manifest.ManifestType.OpenshiftTemplate;
 import static io.harness.cdng.manifest.ManifestType.VALUES;
 
@@ -11,15 +12,17 @@ import static java.lang.String.format;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
-import io.harness.cdng.manifest.yaml.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.KustomizeManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
-import io.harness.cdng.manifest.yaml.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftParamManifestOutcome;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.manifest.yaml.kinds.HelmChartManifest;
 import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
+import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
+import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
+import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.pms.yaml.ParameterField;
@@ -50,6 +53,8 @@ public class ManifestOutcomeMapper {
         return getKustomizeOutcome(manifestAttributes);
       case OpenshiftTemplate:
         return getOpenshiftOutcome(manifestAttributes);
+      case OpenshiftParam:
+        return getOpenshiftParamOutcome(manifestAttributes);
       default:
         throw new UnsupportedOperationException(
             format("Unknown Artifact Config type: [%s]", manifestAttributes.getKind()));
@@ -140,6 +145,14 @@ public class ManifestOutcomeMapper {
         .identifier(openshiftManifest.getIdentifier())
         .store(openshiftManifest.getStoreConfig())
         .skipResourceVersioning(skipResourceVersioning)
+        .build();
+  }
+
+  private OpenshiftParamManifestOutcome getOpenshiftParamOutcome(ManifestAttributes manifestAttributes) {
+    OpenshiftParamManifest attributes = (OpenshiftParamManifest) manifestAttributes;
+    return OpenshiftParamManifestOutcome.builder()
+        .identifier(attributes.getIdentifier())
+        .store(attributes.getStoreConfig())
         .build();
   }
 }

@@ -119,6 +119,7 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
             .identifier(generateUuid())
             .planExecutionId(ambiance.getPlanExecutionId())
             .setupInfo(BarrierSetupInfo.builder()
+                           .timeout(10_000L)
                            .stages(Sets.newSet(
                                StageDetail.builder().name("stage-name").identifier("stage-identifier").build()))
                            .build())
@@ -137,7 +138,7 @@ public class PMSBarrierServiceTest extends PipelineServiceTestBase {
                        .identifier(instance1.getIdentifier())
                        .startedAt(0)
                        .started(false)
-                       .timeoutIn(0)
+                       .timeoutIn(10_000L)
                        .stages(ImmutableSet.of(
                            StageDetail.builder().identifier("stage-identifier").name("stage-name").build()))
                        .build());

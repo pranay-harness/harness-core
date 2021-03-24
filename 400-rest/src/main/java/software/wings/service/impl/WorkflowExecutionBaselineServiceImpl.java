@@ -100,7 +100,8 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
   private void markPipelineWorkflowBaselineIfNecessary(WorkflowExecutionBaseline baseline, boolean isBaseline) {
     WorkflowExecution execution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, baseline.getAppId(), baseline.getWorkflowExecutionId());
-    if (isEmpty(execution.getPipelineExecutionId())) {
+    // the workflow execution might have been deleted due to expiry.
+    if (execution == null || isEmpty(execution.getPipelineExecutionId())) {
       return;
     }
 

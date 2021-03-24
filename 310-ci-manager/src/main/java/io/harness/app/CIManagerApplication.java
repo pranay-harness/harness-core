@@ -55,6 +55,7 @@ import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
+import io.harness.waiter.NgOrchestrationNotifyEventListener;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
@@ -351,6 +352,7 @@ public class CIManagerApplication extends Application<CIManagerConfiguration> {
     queueListenerController.register(injector.getInstance(OrchestrationEventListener.class), 1);
     queueListenerController.register(injector.getInstance(NodeExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(InterruptEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(NgOrchestrationNotifyEventListener.class), 1);
     if (configuration.getShouldConfigureWithPMS()) {
       queueListenerController.register(injector.getInstance(SdkOrchestrationEventListener.class), 1);
     }

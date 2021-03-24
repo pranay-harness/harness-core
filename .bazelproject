@@ -44,6 +44,7 @@ directories:
   860-orchestration-steps
   860-orchestration-visualization
   870-cg-yaml-beans
+  870-cg-orchestration
   870-orchestration
   870-yaml-beans
   874-orchestration-delay
@@ -52,6 +53,7 @@ directories:
   879-pms-sdk
   882-pms-sdk-core
   884-pms-commons
+  888-pms-client
   890-pms-contracts
   890-sm-core
   900-access-control-service
