@@ -44,6 +44,7 @@ directories:
   860-orchestration-steps
   860-orchestration-visualization
   870-cg-yaml-beans
+  870-cg-orchestration
   870-orchestration
   870-yaml-beans
   874-orchestration-delay

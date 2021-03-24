@@ -6,20 +6,18 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>320-ci-execution</artifactId>
+    <artifactId>870-cg-orchestration</artifactId>
+    <properties>
+        <graphviz.version>0.16.3</graphviz.version>
+    </properties>
     <dependencies>
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.smoketurner</groupId>
-            <artifactId>dropwizard-swagger</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>converter-gson</artifactId>
-            <version>2.2.0</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
@@ -34,41 +32,46 @@
             <artifactId>de.flapdoodle.embed.mongo</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-core</artifactId>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-java</artifactId>
+            <version>${graphviz.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.dropwizard-bundles</groupId>
-            <artifactId>dropwizard-configurable-assets-bundle</artifactId>
+            <groupId>guru.nidi</groupId>
+            <artifactId>graphviz-rough</artifactId>
+            <version>${graphviz.version}</version>
         </dependency>
         <dependency>
-            <groupId>ru.vyarus</groupId>
-            <artifactId>guice-validator</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>330-ci-beans</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>440-connector-nextgen</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>850-ng-pipeline-commons</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>870-cg-orchestration</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>870-orchestration</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.mongodb.morphia</groupId>
+            <artifactId>morphia</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
@@ -77,17 +80,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>878-pipeline-service-utilities</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>879-pms-sdk</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>890-sm-core</artifactId>
+            <artifactId>882-pms-sdk-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -97,24 +90,30 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>930-ng-core-clients</artifactId>
+            <artifactId>930-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>954-connector-beans</artifactId>
+            <artifactId>950-wait-engine</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>990-commons-test</artifactId>
-            <version>${project.parent.version}</version>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>960-persistence</artifactId>
             <version>${project.parent.version}</version>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>990-commons-test</artifactId>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

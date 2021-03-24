@@ -3,6 +3,7 @@ package software.wings.app;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.CgOrchestrationModule;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationStepsModule;
@@ -1323,6 +1324,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       log.info("Could not create the connector resource client module", ex);
     }
 
+    install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
     install(OrchestrationStepsModule.getInstance());
     install(OrchestrationVisualizationModule.getInstance());

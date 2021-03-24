@@ -4,6 +4,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Collections.singletonList;
 
 import io.harness.config.PublisherConfiguration;
+import io.harness.delay.DelayEvent;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
@@ -44,7 +45,7 @@ public class OrchestrationDelayModule extends AbstractModule {
 
   @Provides
   @Singleton
-  QueueConsumer<io.harness.delay.DelayEvent> delayQueueConsumer(
+  QueueConsumer<DelayEvent> delayQueueConsumer(
       Injector injector, VersionInfoManager versionInfoManager, PublisherConfiguration config) {
     return QueueFactory.createQueueConsumer(injector, io.harness.delay.DelayEvent.class, ofSeconds(5),
         singletonList(singletonList(versionInfoManager.getVersionInfo().getVersion())), config);
