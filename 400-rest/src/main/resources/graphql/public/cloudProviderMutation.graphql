@@ -76,6 +76,8 @@ input SpotInstCloudProviderInput {
 
 input GcpCloudProviderInput {
   name: String!
+  useDelegate: Boolean
+  delegateSelector: String
   useDelegateSelectors: Boolean
   delegateSelectors: [String!]
   serviceAccountKeySecretId: String
@@ -115,7 +117,8 @@ input UpdateSpotInstCloudProviderInput {
 
 input UpdateGcpCloudProviderInput {
   name: String
-
+  useDelegate: Boolean
+  delegateSelector: String
   useDelegateSelectors: Boolean
   delegateSelectors: [String!]
   serviceAccountKeySecretId: String

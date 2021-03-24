@@ -20,7 +20,9 @@ import lombok.Value;
 public class QLGcpCloudProviderInput {
   private RequestField<String> name;
   private RequestField<String> serviceAccountKeySecretId;
+  private RequestField<String> delegateSelector;
   private RequestField<List<String>> delegateSelectors;
   private RequestField<Boolean> skipValidation;
+  private RequestField<Boolean> useDelegate;
   private RequestField<Boolean> useDelegateSelectors;
 }

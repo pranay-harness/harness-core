@@ -10,6 +10,7 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
 
+import lombok.experimental.FieldNameConstants;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
@@ -34,6 +35,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by bzane on 2/28/17
  */
 @JsonTypeName("GCP")
+@FieldNameConstants(innerTypeName = "GcpConfigKeys")
 @Data
 @Builder
 @ToString(exclude = {"serviceAccountKeyFileContent", "encryptedServiceAccountKeyFileContent"})
@@ -46,6 +48,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedServiceAccountKeyFileContent;
 
+  private boolean useDelegate;
+  private String delegateSelector;
   private boolean useDelegateSelectors;
   private List<String> delegateSelectors;
   private boolean skipValidation;
@@ -55,7 +59,7 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   }
 
   public GcpConfig(char[] serviceAccountKeyFileContent, String accountId, CCMConfig ccmConfig,
-      String encryptedServiceAccountKeyFileContent, boolean useDelegateSelectors, List<String> delegateSelectors,
+      String encryptedServiceAccountKeyFileContent, boolean useDelegate, String delegateSelector, boolean useDelegateSelectors, List<String> delegateSelectors,
       boolean skipValidation) {
     this();
     this.serviceAccountKeyFileContent =
@@ -66,6 +70,8 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
     this.delegateSelectors = delegateSelectors;
     this.useDelegateSelectors = useDelegateSelectors;
     this.skipValidation = skipValidation;
+    this.delegateSelector = delegateSelector;
+    this.useDelegate = useDelegate;
   }
 
   @Override
@@ -83,19 +89,23 @@ public class GcpConfig extends SettingValue implements EncryptableSetting, Cloud
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends CloudProviderYaml {
     private String serviceAccountKeyFileContent;
+    private boolean useDelegate;
+    private String delegateSelector;
     private boolean useDelegateSelectors;
     private List<String> delegateSelectors;
     private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String serviceAccountKeyFileContent,
-        UsageRestrictions.Yaml usageRestrictions, boolean useDelegateSelectors, List<String> delegateSelectors,
+        UsageRestrictions.Yaml usageRestrictions, boolean useDelegate, String delegateSelector, boolean useDelegateSelectors, List<String> delegateSelectors,
         boolean skipValidation) {
       super(type, harnessApiVersion, usageRestrictions);
       this.serviceAccountKeyFileContent = serviceAccountKeyFileContent;
       this.delegateSelectors = delegateSelectors;
       this.useDelegateSelectors = useDelegateSelectors;
       this.skipValidation = skipValidation;
+      this.delegateSelector = delegateSelector;
+      this.useDelegate = useDelegate;
     }
   }
 }
