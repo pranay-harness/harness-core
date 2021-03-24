@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.common.EntityReference;
 import io.harness.data.validator.Trimmed;
 import io.harness.encryption.Scope;
 import io.harness.ng.core.ProjectAccess;
@@ -41,23 +42,23 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class GitFileLocation implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                         UpdatedByAware, AccountAccess, ProjectAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
-  private String yamlGitFolderConfigId;
+  private String yamlGitConfigId;
   private String gitConnectorId;
   private String branch;
   private String repo;
   private String entityGitPath;
   private String entityIdentifier;
   private String entityName;
-  private String entityRootFolderName;
-  private String entityRootFolderId;
+  @Deprecated private String entityRootFolderName;
   private String entityIdentifierFQN;
   private String entityType;
   private String projectId;
   private String organizationId;
   @Trimmed @NotEmpty private String accountId;
-
   Scope scope;
-
+  private EntityReference entityReference;
+  private String lastCommitId;
+  private String objectId;
   @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
   @LastModifiedBy private EmbeddedUser lastUpdatedBy;

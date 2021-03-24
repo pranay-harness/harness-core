@@ -4,29 +4,35 @@ package io.harness.gitsync;
 
 import "google/protobuf/wrappers.proto";
 import "io/harness/eventsframework/schemas/entity/entity_type.proto";
+import "io/harness/eventsframework/schemas/entity/entity_detail.proto";
 
 option java_multiple_files = true;
 
 service HarnessToGitPushInfoService {
   rpc pushFromHarness(PushInfo) returns (PushResponse);
+  // todo(abhinav): make rpc to get user profile connector when available.
   rpc getConnectorInfo(FileInfo) returns (InfoForPush);
 }
 
 message PushInfo {
   string commit_id = 1;
   string file_path = 2;
-  string fqn = 3;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 3;
+  string account_id = 4;
+  string yaml_git_config_id = 5;
 }
 
 message PushResponse {}
 
 message FileInfo {
   string file_path = 1;
-  string repo = 2;
-  string branch = 3;
-  io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum entity_type = 4;
+  string yaml_git_config_id = 2;
+  io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 3;
+  string account_id = 4;
+  string branch = 5;
 }
 
 message InfoForPush {
   bytes connector = 1;
+  string file_path = 2;
 }

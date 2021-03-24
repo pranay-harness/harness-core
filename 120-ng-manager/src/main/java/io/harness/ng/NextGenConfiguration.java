@@ -3,6 +3,7 @@ package io.harness.ng;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.AccessControlClientConfiguration;
+import io.harness.Microservice;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -23,6 +24,7 @@ import io.dropwizard.Configuration;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.ws.rs.Path;
@@ -50,7 +52,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty("grpcServer") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("nextGen") private NextGenConfig nextGenConfig;
-  @JsonProperty("ciDefaultEntityConfiguration") private CiDefaultEntityConfiguration ciDefaultEntityConfiguration;
+  @JsonProperty("ciDefaultEntityConfiguration")
+  private io.harness.ng.CiDefaultEntityConfiguration ciDefaultEntityConfiguration;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
@@ -64,11 +67,12 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("pmsGrpcClientConfig") private GrpcClientConfig pmsGrpcClientConfig;
   @JsonProperty("shouldConfigureWithPMS") private Boolean shouldConfigureWithPMS;
   @JsonProperty("ngManagerPublicBaseUrl") private String ngManagerPublicBaseUrl;
-  @JsonProperty("baseUrls") private BaseUrls baseUrls;
+  @JsonProperty("baseUrls") private io.harness.ng.BaseUrls baseUrls;
   @JsonProperty("resourceGroupConfig") private ResourceGroupConfig resoureGroupConfig;
   @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfiguration logStreamingServiceConfig;
   @JsonProperty("gitSyncServerConfig") private GrpcServerConfig gitSyncGrpcServerConfig;
+  @JsonProperty("gitGrpcClientConfigs") private Map<Microservice, GrpcClientConfig> gitGrpcClientConfigs;
   @JsonProperty("shouldDeployWithGitSync") private Boolean shouldDeployWithGitSync;
   @JsonProperty("accessControlAdminClient")
   private AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
