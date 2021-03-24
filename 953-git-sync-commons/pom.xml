@@ -6,5 +6,5 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>965-git-sync-commons</artifactId>
+    <artifactId>953-git-sync-commons</artifactId>
 </project>

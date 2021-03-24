@@ -13,6 +13,6 @@ public class TestCustomRepositoryImpl implements TestCustomRepository {
 
   @Override
   public SampleBean save(SampleBean sampleBean) {
-    return mongoTemplate.save(sampleBean, null);
+    return mongoTemplate.save(sampleBean, sampleBean.toString());
   }
 }

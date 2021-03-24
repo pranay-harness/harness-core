@@ -1,7 +1,9 @@
 syntax = "proto3";
+
 package io.harness.eventsframework.schemas.entity;
 
 option java_multiple_files = true;
+
 import "io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "io/harness/eventsframework/schemas/entity/identifier_ref.proto";
 import "io/harness/eventsframework/schemas/entity/input_set_ref.proto";

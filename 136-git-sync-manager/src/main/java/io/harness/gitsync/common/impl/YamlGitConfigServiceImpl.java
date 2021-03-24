@@ -18,6 +18,7 @@ import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.repositories.repositories.yamlGitConfig.YamlGitConfigRepository;
+import io.harness.tasks.DecryptGitApiAccessHelper;
 
 import software.wings.utils.CryptoUtils;
 
@@ -36,12 +37,15 @@ import lombok.extern.slf4j.Slf4j;
 public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final YamlGitConfigRepository yamlGitConfigRepository;
   private final ConnectorService connectorService;
+  private final DecryptGitApiAccessHelper decryptScmApiAccess;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
-      @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService) {
+      @Named(DEFAULT_CONNECTOR_SERVICE) ConnectorService connectorService,
+      DecryptGitApiAccessHelper decryptScmApiAccess) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
+    this.decryptScmApiAccess = decryptScmApiAccess;
   }
 
   @Override
@@ -225,5 +229,12 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     return yamlGitConfigRepository.removeByAccountIdAndOrganizationIdAndProjectIdAndScopeAndUuid(
                accountId, orgIdentifier, projectIdentifier, scope, identifier)
         != 0;
+  }
+
+  @Override
+  public YamlGitConfigDTO get(String uuid, String accountId) {
+    final Optional<YamlGitConfig> yamlGitConfig = yamlGitConfigRepository.findByUuidAndAccountId(uuid, accountId);
+    return yamlGitConfig.map(YamlGitConfigMapper::toYamlGitConfigDTO)
+        .orElseThrow(() -> new InvalidRequestException("Incorrect id for git sync config"));
   }
 }
