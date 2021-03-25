@@ -25,8 +25,16 @@ public class GcpDataFetcherHelper {
       input.getSkipValidation().getValue().ifPresent(configBuilder::skipValidation);
     }
 
+    if (input.getUseDelegate().isPresent()) {
+      input.getUseDelegate().getValue().ifPresent(configBuilder::useDelegate);
+    }
+
     if (input.getUseDelegateSelectors().isPresent()) {
       input.getUseDelegateSelectors().getValue().ifPresent(configBuilder::useDelegateSelectors);
+    }
+
+    if (input.getDelegateSelector().isPresent()) {
+      input.getDelegateSelector().getValue().ifPresent(configBuilder::delegateSelector);
     }
 
     if (input.getDelegateSelectors().isPresent()) {
@@ -57,8 +65,16 @@ public class GcpDataFetcherHelper {
       input.getSkipValidation().getValue().ifPresent(config::setSkipValidation);
     }
 
+    if (input.getUseDelegate().isPresent()) {
+      input.getUseDelegate().getValue().ifPresent(config::setUseDelegate);
+    }
+
     if (input.getUseDelegateSelectors().isPresent()) {
       input.getUseDelegateSelectors().getValue().ifPresent(config::setUseDelegateSelectors);
+    }
+
+    if (input.getDelegateSelector().isPresent()) {
+      input.getDelegateSelector().getValue().ifPresent(config::setDelegateSelector);
     }
 
     if (input.getDelegateSelectors().isPresent()) {
