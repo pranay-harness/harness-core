@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness;
 
 import static io.harness.product.ci.scm.proto.SCMGrpc.newBlockingStub;
 

@@ -1,4 +1,4 @@
-package io.harness.pms.triggers.webhook.scm;
+package io.harness.scm;
 
 import static io.harness.product.ci.scm.proto.SCMGrpc.newBlockingStub;
 
@@ -12,7 +12,7 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import javax.net.ssl.SSLException;
 
 public class SCMGrpcClientModule extends ProviderModule {
-  ScmConnectionConfig scmConnectionConfig;
+  io.harness.scm.ScmConnectionConfig scmConnectionConfig;
 
   public SCMGrpcClientModule(ScmConnectionConfig scmConnectionConfig) {
     this.scmConnectionConfig = scmConnectionConfig;

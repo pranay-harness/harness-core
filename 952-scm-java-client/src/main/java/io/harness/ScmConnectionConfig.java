@@ -1,4 +1,4 @@
-package io.harness.ng;
+package io.harness;
 
 import lombok.Builder;
 import lombok.Getter;

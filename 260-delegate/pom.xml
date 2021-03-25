@@ -115,7 +115,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>955-scm-java-client</artifactId>
+            <artifactId>952-scm-java-client</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
