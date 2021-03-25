@@ -3,7 +3,7 @@ package io.harness.ng.core.user;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ng.core.usergroup.UserGroup;
+import io.harness.ng.core.usergroup.UserGroupInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -21,6 +21,6 @@ public class UserInfo {
   String uuid;
   String name;
   String email;
-  List<UserGroup> userGroups;
+  List<UserGroupInfo> userGroups;
   List<String> accountIds;
 }

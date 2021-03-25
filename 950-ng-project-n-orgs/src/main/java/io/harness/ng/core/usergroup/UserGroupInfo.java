@@ -11,6 +11,6 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.PL)
-public class UserGroup {
+public class UserGroupInfo {
   private String name;
 }

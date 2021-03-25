@@ -29,7 +29,7 @@ import io.harness.ng.core.event.MessageListener;
 import io.harness.ng.core.invites.entities.UserProjectMap;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.NGRestUtils;
@@ -73,10 +73,10 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
 
-  private RoleAssignmentMetadata createRoleAssignments(String account, String org, String project, List<User> users,
+  private RoleAssignmentMetadata createRoleAssignments(String account, String org, String project, List<UserInfo> users,
       String adminRoleIdentifier, String viewerRoleIdentifier) {
     List<RoleAssignmentDTO> roleAssignmentRequests = new ArrayList<>();
-    for (User user : users) {
+    for (UserInfo user : users) {
       boolean admin =
           Optional.ofNullable(user.getUserGroups())
               .filter(userGroups
@@ -103,7 +103,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private boolean handleNGRBACEnabledFlag(String accountId) {
     log.info("Running ng access control migration for account: {}", accountId);
     // get users along with user groups for account
-    PageResponse<User> users = RestClientUtils.getResponse(userClient.list(accountId, "0", "100000", null, true));
+    PageResponse<UserInfo> users = RestClientUtils.getResponse(userClient.list(accountId, "0", "100000", null, true));
     AccessControlMigrationBuilder migrationBuilder =
         AccessControlMigration.builder()
             .accountId(accountId)

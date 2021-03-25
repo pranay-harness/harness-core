@@ -28,7 +28,7 @@ public interface UserClient {
   String USER_SAFE_DELETE = "ng/users/safeDelete/{userId}";
 
   @GET(USERS_SEARCH_API)
-  Call<RestResponse<PageResponse<User>>> list(@Query(value = "accountId") String accountId,
+  Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
       @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm,
       @Query("loadUserGroups") boolean loadUserGroups);
 

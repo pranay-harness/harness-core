@@ -60,12 +60,13 @@ public class UserResourceNG {
       userList = userService.listUsers(pageRequest, accountId, null, offset, pageSize, true);
     }
 
-    PageResponse<User> pageResponse = aPageResponse()
-                                          .withOffset(offset.toString())
-                                          .withLimit(pageSize.toString())
-                                          .withResponse(userList)
-                                          .withTotal(userService.getTotalUserCount(accountId, true))
-                                          .build();
+    PageResponse<UserInfo> pageResponse =
+        aPageResponse()
+            .withOffset(offset.toString())
+            .withLimit(pageSize.toString())
+            .withResponse(userList.stream().map(this::convertUserToNgUser).collect(Collectors.toList()))
+            .withTotal(userService.getTotalUserCount(accountId, true))
+            .build();
 
     return new RestResponse<>(pageResponse);
   }
