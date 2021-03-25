@@ -301,13 +301,15 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
 
     let module_dependencies = populate_module_dependencies(name, modules);
 
-    let (dependencies, protos) = populate_dependencies(name);
+    let (dependencies, maybe_protos) = populate_dependencies(name);
 
     let mut srcs = populate_srcs(&name, &dependencies);
     // println!("{:?}", srcs);
 
-    protos.iter().for_each(|class| {
-        srcs.insert(class.to_string(), external_class(class, &dependencies, None));
+    maybe_protos.iter().for_each(|class| {
+        if !srcs.contains_key(class) {
+            srcs.insert(class.to_string(), external_class(class, &dependencies, None));
+        }
     });
 
     JavaModule {

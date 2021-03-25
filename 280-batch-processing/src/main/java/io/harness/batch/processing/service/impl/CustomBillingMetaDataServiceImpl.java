@@ -6,21 +6,16 @@ import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.CEMetadataRecord;
 
-import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
-import software.wings.settings.SettingVariableTypes;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.common.collect.ImmutableSet;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.AllArgsConstructor;
@@ -90,7 +85,8 @@ public class CustomBillingMetaDataServiceImpl implements CustomBillingMetaDataSe
 
   private String getAwsBillingMetaData(String accountId) {
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
-    if (null != ceMetadataRecord && ceMetadataRecord.getAwsDataPresent()) {
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+        && ceMetadataRecord.getAwsDataPresent()) {
       return cloudBillingHelper.getDataSetId(accountId);
     }
     return null;

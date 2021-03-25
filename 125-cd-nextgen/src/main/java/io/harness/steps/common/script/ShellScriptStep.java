@@ -160,8 +160,9 @@ public class ShellScriptStep implements TaskExecutable<ShellScriptStepParameters
             .parameters(new Object[] {taskParameters})
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
             .build();
+    String taskName = TaskType.SHELL_SCRIPT_TASK_NG.getDisplayName();
     return StepUtils.prepareTaskRequest(
-        ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT));
+        ambiance, taskData, kryoSerializer, singletonList(ShellScriptTaskNG.COMMAND_UNIT), taskName);
   }
 
   private String getShellScript(ShellScriptStepParameters stepParameters) {

@@ -3,6 +3,7 @@ package io.harness.pms.plan.execution.data.service.outputs;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.RawOptionalSweepingOutput;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
+import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse.Builder;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
@@ -27,10 +28,13 @@ public class SweepingOutputServiceImpl extends SweepingOutputServiceImplBase {
       StreamObserver<OptionalSweepingOutputResolveBlobResponse> responseObserver) {
     RawOptionalSweepingOutput resolve =
         pmsSweepingOutputService.resolveOptional(request.getAmbiance(), request.getRefObject());
-    responseObserver.onNext(OptionalSweepingOutputResolveBlobResponse.newBuilder()
-                                .setStepTransput(resolve.getOutput())
-                                .setFound(resolve.isFound())
-                                .build());
+
+    Builder builder = OptionalSweepingOutputResolveBlobResponse.newBuilder().setFound(resolve.isFound());
+    if (resolve.isFound()) {
+      builder.setStepTransput(resolve.getOutput());
+    }
+
+    responseObserver.onNext(builder.build());
     responseObserver.onCompleted();
   }
 

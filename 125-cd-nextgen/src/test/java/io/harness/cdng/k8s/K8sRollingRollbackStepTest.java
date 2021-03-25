@@ -45,7 +45,7 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
     OptionalSweepingOutput optionalSweepingOutput = OptionalSweepingOutput.builder().found(false).build();
     doReturn(optionalSweepingOutput)
         .when(executionSweepingOutputService)
-        .resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
+        .resolveOptional(ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_ROLL_OUT));
 
     TaskRequest taskRequest = k8sRollingRollbackStep.obtainTask(ambiance, stepParameters, stepInputPackage);
     assertThat(taskRequest).isNotNull();

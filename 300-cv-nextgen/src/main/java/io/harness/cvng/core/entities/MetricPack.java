@@ -112,6 +112,7 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
     @NotNull private TimeSeriesMetricType type;
     private String path;
     private String validationPath;
+    private String responseJsonPath;
     private boolean included;
     @Builder.Default private List<TimeSeriesThreshold> thresholds = new ArrayList<>();
     @JsonIgnore
@@ -128,6 +129,7 @@ public final class MetricPack implements PersistentEntity, UuidAware, CreatedAtA
       return MetricDefinitionDTO.builder()
           .name(name)
           .path(path)
+          .responseJsonPath(responseJsonPath)
           .type(type)
           .validationPath(validationPath)
           .included(included)

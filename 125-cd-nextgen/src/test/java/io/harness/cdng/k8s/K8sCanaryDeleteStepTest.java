@@ -82,7 +82,7 @@ public class K8sCanaryDeleteStepTest extends CategoryTest {
         .queueK8sTask(eq(stepParameters), any(K8sDeleteRequest.class), eq(ambiance), eq(infrastructureOutcome));
     doReturn(k8sCanaryOutcome)
         .when(executionSweepingOutputService)
-        .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
+        .resolve(ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_CANARY_OUTCOME));
     doReturn(infrastructureOutcome)
         .when(outcomeService)
         .resolve(ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE));

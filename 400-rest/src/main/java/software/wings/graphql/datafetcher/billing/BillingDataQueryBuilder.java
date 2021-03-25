@@ -1484,7 +1484,8 @@ public class BillingDataQueryBuilder {
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
-    if ((null != ceMetadataRecord && ceMetadataRecord.getAwsDataPresent())
+    if ((null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+            && ceMetadataRecord.getAwsDataPresent())
         || ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
       return false;
     }

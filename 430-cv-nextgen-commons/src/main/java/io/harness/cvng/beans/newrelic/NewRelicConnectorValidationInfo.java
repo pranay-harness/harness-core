@@ -3,7 +3,6 @@ package io.harness.cvng.beans.newrelic;
 import io.harness.cvng.beans.ConnectorValidationInfo;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 
-import java.util.HashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -28,10 +27,6 @@ public class NewRelicConnectorValidationInfo extends ConnectorValidationInfo<New
 
   @Override
   public Map<String, String> collectionHeaders() {
-    String apiKey = new String(getConnectorConfigDTO().getApiKeyRef().getDecryptedValue());
-    Map<String, String> headers = new HashMap<>();
-    headers.put("X-Query-Key", apiKey);
-    headers.put("Accept", "application/json");
-    return headers;
+    return NewRelicUtils.collectionHeaders(getConnectorConfigDTO());
   }
 }

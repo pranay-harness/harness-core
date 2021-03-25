@@ -1,6 +1,7 @@
 import .bazelproject-config
 
 directories:
+  .aeriform
   120-ng-manager
   125-cd-nextgen
   130-resource-group
@@ -92,6 +93,7 @@ directories:
   950-timeout-engine
   950-wait-engine
   950-walktree-visitor
+  953-git-sync-commons
   954-connector-beans
   955-filters-sdk
   955-outbox-sdk
@@ -105,7 +107,6 @@ directories:
   960-persistence
   960-recaster
   960-yaml-sdk
-  965-git-sync-commons
   970-api-services-beans
   970-grpc
   970-ng-commons

@@ -1,10 +1,14 @@
 package io.harness.audit.mapper;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.entities.AuditEvent;
 
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class AuditEventMapper {
   public static AuditEvent fromDTO(AuditEventDTO dto) {
@@ -15,7 +19,7 @@ public class AuditEventMapper {
         .requestMetadata(dto.getRequestMetadata())
         .timestamp(dto.getTimestamp())
         .authenticationInfo(dto.getAuthenticationInfo())
-        .moduleType(dto.getModuleType())
+        .module(dto.getModule())
         .resource(dto.getResource())
         .action(dto.getAction())
         .yamlDiff(dto.getYamlDiff())
@@ -32,7 +36,7 @@ public class AuditEventMapper {
         .requestMetadata(auditEvent.getRequestMetadata())
         .timestamp(auditEvent.getTimestamp())
         .authenticationInfo(auditEvent.getAuthenticationInfo())
-        .moduleType(auditEvent.getModuleType())
+        .module(auditEvent.getModule())
         .resource(auditEvent.getResource())
         .action(auditEvent.getAction())
         .yamlDiff(auditEvent.getYamlDiff())

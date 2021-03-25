@@ -14,20 +14,20 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class ProjectDeleteEvent implements Event {
-  private ProjectDTO projectDTO;
+  private ProjectDTO project;
   private String accountIdentifier;
 
-  public ProjectDeleteEvent(String accountIdentifier, ProjectDTO projectDTO) {
-    this.projectDTO = projectDTO;
+  public ProjectDeleteEvent(String accountIdentifier, ProjectDTO project) {
+    this.project = project;
     this.accountIdentifier = accountIdentifier;
   }
 
   public ResourceScope getResourceScope() {
-    return new OrgScope(accountIdentifier, projectDTO.getOrgIdentifier());
+    return new OrgScope(accountIdentifier, project.getOrgIdentifier());
   }
 
   public Resource getResource() {
-    return Resource.builder().identifier(projectDTO.getIdentifier()).type(PROJECT).build();
+    return Resource.builder().identifier(project.getIdentifier()).type(PROJECT).build();
   }
 
   public String getEventType() {

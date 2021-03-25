@@ -1,5 +1,6 @@
 package io.harness.batch.processing.tasklet;
 
+import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
@@ -25,6 +26,7 @@ public class RerunJobTasklet implements Tasklet {
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
   @Autowired private CEMetadataRecordDao ceMetadataRecordDao;
   @Autowired private BatchJobScheduledDataService batchJobScheduledDataService;
+  @Autowired private BillingDataServiceImpl billingDataService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
@@ -47,6 +49,8 @@ public class RerunJobTasklet implements Tasklet {
           ImmutableList.of(BatchJobType.INSTANCE_BILLING.toString(), BatchJobType.ACTUAL_IDLE_COST_BILLING.toString(),
               BatchJobType.INSTANCE_BILLING_AGGREGATION.toString(), BatchJobType.CLUSTER_DATA_TO_BIG_QUERY.toString());
       batchJobScheduledDataService.invalidateJobs(accountId, batchJobs, startInstant);
+      billingDataService.cleanBillingData(
+          accountId, startInstant, Instant.ofEpochMilli(endTime), BatchJobType.INSTANCE_BILLING);
     }
     return null;
   }

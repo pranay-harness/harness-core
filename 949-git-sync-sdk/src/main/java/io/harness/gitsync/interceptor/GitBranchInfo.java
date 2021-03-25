@@ -11,9 +11,11 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "GitBranchInfoKeys")
 public class GitBranchInfo {
   String branch;
-  String repo;
+  String yamlGitConfigId;
   // todo(abhinav): convert to different interfaces depending on how github connector comes out.
   @SecretReference String password;
   // todo(abhinav): See if we need to convert this to .
   String connectorFQN;
+  String filePath;
+  String accountId;
 }

@@ -99,6 +99,7 @@ public class ConnectorUtils {
         connectorDetails = getK8sConnectorDetails(ngAccess, connectorDTO, connectorDetailsBuilder);
         break;
       case GITHUB:
+      case GIT:
       case GITLAB:
       case BITBUCKET:
       case CODECOMMIT:

@@ -19,6 +19,7 @@ public enum FeatureName {
   AZURE_VMSS,
   AZURE_WEBAPP,
   AZURE_ARM,
+  AUDIT_TRAIL_ENHANCEMENT,
   BIND_FETCH_FILES_TASK_TO_DELEGATE,
   CDNG_ENABLED,
   CENG_ENABLED,
@@ -170,7 +171,8 @@ public enum FeatureName {
   ENHANCED_GCR_CONNECTIVITY_CHECK,
   SETTING_API_BATCH_RBAC, /*Flag to use batch RBAC api exposed by SecretManager*/
   NG_PROVISIONERS, /*Flag to use batch RBAC api exposed by SecretManager*/
-  AWS_SM_ASSUME_IAM_ROLE;
+  AWS_SM_ASSUME_IAM_ROLE,
+  SERVICE_DASHBOARD_NG;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

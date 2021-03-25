@@ -1,8 +1,10 @@
 package io.harness.outbox.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 import static io.harness.utils.PageUtils.getPageRequest;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.outbox.OutboxEvent;
@@ -12,6 +14,7 @@ import io.harness.repositories.OutboxEventRepository;
 import com.google.inject.Inject;
 import org.springframework.util.Assert;
 
+@OwnedBy(PL)
 public class OutboxDaoImpl implements OutboxDao {
   private final OutboxEventRepository outboxRepository;
 

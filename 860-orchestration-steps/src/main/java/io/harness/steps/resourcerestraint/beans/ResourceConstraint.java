@@ -7,9 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
-import io.harness.mongo.index.Field;
-import io.harness.mongo.index.NgUniqueIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -21,6 +21,8 @@ import io.harness.validation.Update;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -33,8 +35,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @OwnedBy(CDC)
-@NgUniqueIndex(name = "uniqueName", fields = { @Field("accountId")
-                                               , @Field("name") })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
@@ -44,6 +44,16 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResourceConstraint implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, AccountAccess, ResourceRestraint {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("uniqueName")
+                 .unique(true)
+                 .field(ResourceConstraintKeys.accountId)
+                 .field(ResourceConstraintKeys.name)
+                 .build())
+        .build();
+  }
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String NAME_KEY = "name";
 
