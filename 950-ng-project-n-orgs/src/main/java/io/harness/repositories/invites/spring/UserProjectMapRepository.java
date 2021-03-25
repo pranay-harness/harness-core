@@ -16,4 +16,6 @@ public interface UserProjectMapRepository
     extends PagingAndSortingRepository<UserProjectMap, String>, UserProjectMapRepositoryCustom {
   Optional<UserProjectMap> findByUserIdAndAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
       String userId, String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  Optional<UserProjectMap> findFirstByUserIdAndAccountIdentifier(String userId, String accountIdentifier);
 }

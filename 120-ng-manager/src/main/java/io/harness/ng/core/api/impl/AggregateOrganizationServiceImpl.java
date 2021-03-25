@@ -22,7 +22,7 @@ import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.services.api.NgUserService;
 
 import com.google.inject.Inject;
@@ -115,7 +115,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private Map<String, UserSearchDTO> getUserMap(List<String> userIds) {
-    List<User> users = ngUserService.getUsersByIds(userIds);
+    List<UserInfo> users = ngUserService.getUsersByIds(userIds);
     Map<String, UserSearchDTO> userMap = new HashMap<>();
     users.forEach(user -> userMap.put(user.getUuid(), writeDTO(user)));
     return userMap;
