@@ -208,6 +208,17 @@ public class SettingResource {
     return new RestResponse<>(settingsService.validateConnectivityWithPruning(variable, appId, accountId));
   }
 
+  @POST
+  @Path("validate-connectivity-arvind")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ValidationResult> validateConnectivity2(
+          @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+          SettingAttribute variable, Map<String, String> setupAbstractions) {
+    settingAuthHandler.authorize(variable);
+    return new RestResponse<ValidationResult>(settingsService.validateConnectivityWithPruning2(variable, appId, accountId, setupAbstractions));
+  }
+
   /**
    * Save uploaded GCP service account key file.
    *

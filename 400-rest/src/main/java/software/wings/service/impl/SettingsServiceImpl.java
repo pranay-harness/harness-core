@@ -752,6 +752,13 @@ public class SettingsServiceImpl implements SettingsService {
     return validateConnectivity(settingAttribute);
   }
 
+  @Override
+  public ValidationResult validateConnectivityWithPruning2(
+          SettingAttribute settingAttribute, String appId, String accountId, Map<String, String> setupAbstractions) {
+    prePruneSettingAttribute(appId, accountId, settingAttribute);
+    return settingValidationService.validateConnectivity(settingAttribute, setupAbstractions);
+  }
+
   private ValidationResult validateInternal(final SettingAttribute settingAttribute) {
     try {
       settingServiceHelper.updateReferencedSecrets(settingAttribute);

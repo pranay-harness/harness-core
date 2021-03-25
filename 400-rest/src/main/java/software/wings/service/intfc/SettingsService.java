@@ -136,6 +136,7 @@ public interface SettingsService extends OwnedByAccount, OwnedBySettingAttribute
   ValidationResult validateConnectivity(SettingAttribute settingAttribute);
 
   ValidationResult validateConnectivityWithPruning(SettingAttribute settingAttribute, String appId, String accountId);
+  ValidationResult validateConnectivityWithPruning2(SettingAttribute settingAttribute, String appId, String accountId, Map<String, String> setupAbstractions);
 
   void deleteByYamlGit(String appId, String settingAttributeId, boolean syncFromGit);
   Map<String, String> listAccountDefaults(String accountId);

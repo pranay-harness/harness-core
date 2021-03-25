@@ -42,6 +42,7 @@ import com.google.inject.Singleton;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -77,6 +78,11 @@ public class GitConfigHelperService {
   }
 
   public void validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
+    validateGitConfig(gitConfig, encryptionDetails, null);
+  }
+
+  public void validateGitConfig(
+      GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> setupAbstractions) {
     if (gitConfig.isKeyAuth()) {
       if (gitConfig.getSshSettingId() == null) {
         throw new InvalidRequestException("SSH SettingId can not be empty");
@@ -116,7 +122,7 @@ public class GitConfigHelperService {
     convertToRepoGitConfig(gitConfig, gitConfig.getRepoName());
 
     try {
-      DelegateResponseData notifyResponseData = delegateService.executeTask(
+      DelegateTask.DelegateTaskBuilder builder =
           DelegateTask.builder()
               .accountId(gitConfig.getAccountId())
               .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
@@ -125,8 +131,12 @@ public class GitConfigHelperService {
                         .taskType(TaskType.GIT_COMMAND.name())
                         .parameters(new Object[] {GitCommandType.VALIDATE, gitConfig, encryptionDetails})
                         .timeout(TimeUnit.SECONDS.toMillis(60))
-                        .build())
-              .build());
+                        .build());
+      if (!isEmpty(setupAbstractions)) {
+        builder.setupAbstractions(setupAbstractions);
+      }
+      DelegateTask task = builder.build();
+      DelegateResponseData notifyResponseData = delegateService.executeTask(task);
 
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());

@@ -119,6 +119,7 @@ import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -161,6 +162,11 @@ public class SettingValidationService {
   @Inject private SSHVaultService sshVaultService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
+    return validateConnectivity(settingAttribute, null);
+  }
+
+  public ValidationResult validateConnectivity(
+      SettingAttribute settingAttribute, Map<String, String> setupAbstractions) {
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue instanceof HostConnectionAttributes || settingValue instanceof WinRmConnectionAttributes
         || settingValue instanceof SmtpConfig) {
@@ -219,7 +225,7 @@ public class SettingValidationService {
       }
     } else {
       try {
-        return ValidationResult.builder().valid(validate(settingAttribute)).errorMessage("").build();
+        return ValidationResult.builder().valid(validate(settingAttribute, setupAbstractions)).errorMessage("").build();
       } catch (Exception ex) {
         return ValidationResult.builder().valid(false).errorMessage(ExceptionUtils.getMessage(ex)).build();
       }
@@ -227,6 +233,10 @@ public class SettingValidationService {
   }
 
   public boolean validate(SettingAttribute settingAttribute) {
+    return validate(settingAttribute, null);
+  }
+
+  public boolean validate(SettingAttribute settingAttribute, Map<String, String> setupAbstractions) {
     // Name has leading/trailing spaces
     SettingAttribute sa = wingsPersistence.createQuery(SettingAttribute.class)
                               .filter(SettingAttributeKeys.accountId, settingAttribute.getAccountId())
@@ -325,7 +335,7 @@ public class SettingValidationService {
       newRelicService.validateAPMConfig(
           settingAttribute, ((ScalyrConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof GitConfig) {
-      validateGitConfig(settingAttribute, encryptedDataDetails);
+      validateGitConfig(settingAttribute, encryptedDataDetails, setupAbstractions);
     } else if (settingValue instanceof HostConnectionAttributes) {
       validateHostConnectionAttributes((HostConnectionAttributes) settingValue);
     } else if (settingValue instanceof JiraConfig) {
@@ -459,10 +469,14 @@ public class SettingValidationService {
   }
 
   private void validateGitConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
+     validateGitConfig(settingAttribute, encryptedDataDetails, null);
+  }
+
+  private void validateGitConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> setupAbstractions) {
     try {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
       gitConfig.setDecrypted(true);
-      gitConfigHelperService.validateGitConfig(gitConfig, encryptedDataDetails);
+      gitConfigHelperService.validateGitConfig(gitConfig, encryptedDataDetails, setupAbstractions);
     } catch (Exception e) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), USER);
     }
