@@ -9,6 +9,11 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.accesscontrol.scopes.core.Scope;
+import io.harness.accesscontrol.scopes.core.ScopeParams;
+import io.harness.accesscontrol.scopes.core.ScopeService;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeLevel;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
@@ -18,7 +23,6 @@ import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration.AccessControlMigrationBuilder;
-import io.harness.ng.accesscontrol.migrations.models.AccessControlMigrationPrincipal;
 import io.harness.ng.accesscontrol.migrations.models.RoleAssignmentMetadata;
 import io.harness.ng.accesscontrol.migrations.services.AccessControlMigrationService;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
@@ -40,21 +44,23 @@ import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
+import javafx.util.Pair;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Pageable;
 
 @Slf4j
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.PL)
 public class AccessControlMigrationFeatureFlagEventListener implements MessageListener {
   private static final String CG_ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
@@ -65,6 +71,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private static final String ORG_VIEWER_ROLE_IDENTIFIER = "_organization_viewer";
   private static final String PROJECT_VIEWER_ROLE_IDENTIFIER = "_project_viewer";
   private static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
+  Map<String, Pair<String, String>> levelToRolesMapping;
   private final ProjectService projectService;
   private final OrganizationService orgService;
   private final AccessControlMigrationService accessControlMigrationService;
@@ -72,50 +79,98 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
   private final ResourceGroupClient resourceGroupClient;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
+  private final ScopeService scopeService;
 
-  private RoleAssignmentMetadata createRoleAssignments(String account, String org, String project, List<UserInfo> users,
-      String adminRoleIdentifier, String viewerRoleIdentifier) {
-    List<RoleAssignmentDTO> roleAssignmentRequests = new ArrayList<>();
+  public AccessControlMigrationFeatureFlagEventListener(ProjectService projectService,
+      OrganizationService organizationService, AccessControlMigrationService accessControlMigrationService,
+      NgUserService ngUserService, ResourceGroupClient resourceGroupClient,
+      AccessControlAdminClient accessControlAdminClient, UserClient userClient, ScopeService scopeService) {
+    this.projectService = projectService;
+    this.orgService = organizationService;
+    this.accessControlMigrationService = accessControlMigrationService;
+    this.ngUserService = ngUserService;
+    this.resourceGroupClient = resourceGroupClient;
+    this.accessControlAdminClient = accessControlAdminClient;
+    this.userClient = userClient;
+    this.scopeService = scopeService;
+    levelToRolesMapping = new HashMap<>();
+    levelToRolesMapping.put(
+        HarnessScopeLevel.ACCOUNT.getName(), new Pair<>(ACCOUNT_ADMIN_ROLE_IDENTIFIER, ACCOUNT_VIEWER_ROLE_IDENTIFIER));
+    levelToRolesMapping.put(
+        HarnessScopeLevel.ORGANIZATION.getName(), new Pair<>(ORG_ADMIN_ROLE_IDENTIFIER, ORG_VIEWER_ROLE_IDENTIFIER));
+    levelToRolesMapping.put(
+        HarnessScopeLevel.PROJECT.getName(), new Pair<>(PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
+  }
+
+  private String getRoleIdentifierForUser(
+      UserInfo user, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    ScopeParams scopeParams = HarnessScopeParams.builder()
+                                  .accountIdentifier(accountIdentifier)
+                                  .orgIdentifier(orgIdentifier)
+                                  .projectIdentifier(projectIdentifier)
+                                  .build();
+    Scope scope = scopeService.buildScopeFromParams(scopeParams);
+    boolean admin =
+        Optional.ofNullable(user.getUserGroups())
+            .filter(userGroups
+                -> userGroups.stream().anyMatch(ug -> CG_ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(ug.getName())))
+            .isPresent();
+    if (admin) {
+      return levelToRolesMapping.get(scope.getLevel().getParamName()).getKey();
+    } else {
+      return levelToRolesMapping.get(scope.getLevel().getParamName()).getValue();
+    }
+  }
+
+  private RoleAssignmentMetadata createRoleAssignments(
+      String account, String org, String project, List<UserInfo> users) {
+    List<RoleAssignmentDTO> roleAssignmentsToCreate = new ArrayList<>();
     for (UserInfo user : users) {
-      boolean admin =
-          Optional.ofNullable(user.getUserGroups())
-              .filter(userGroups
-                  -> userGroups.stream().anyMatch(ug -> CG_ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(ug.getName())))
-              .isPresent();
-      if (admin) {
-        roleAssignmentRequests.add(getRoleAssignment(user.getUuid(), adminRoleIdentifier));
-      } else {
-        roleAssignmentRequests.add(getRoleAssignment(user.getUuid(), viewerRoleIdentifier));
-      }
+      String roleIdentifier = getRoleIdentifierForUser(user, account, org, project);
+      roleAssignmentsToCreate.add(getRoleAssignment(user.getUuid(), roleIdentifier));
     }
 
     List<RoleAssignmentResponseDTO> createdRoleAssignments =
         NGRestUtils.getResponse(accessControlAdminClient.createMulti(account, org, project,
-            RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentRequests).build()));
+            RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentsToCreate).build()));
+
+    Set<RoleAssignmentDTO> createdRoleAssignmentsSet =
+        createdRoleAssignments.stream().map(RoleAssignmentResponseDTO::getRoleAssignment).collect(Collectors.toSet());
+
+    List<RoleAssignmentDTO> failedRoleAssignments = roleAssignmentsToCreate.stream()
+                                                        .filter(x -> !createdRoleAssignmentsSet.contains(x))
+                                                        .collect(Collectors.toList());
 
     return RoleAssignmentMetadata.builder()
         .createdRoleAssignments(createdRoleAssignments)
-        .roleAssignmentRequests(roleAssignmentRequests)
-        .status(RoleAssignmentMetadata.getStatus(createdRoleAssignments, roleAssignmentRequests))
+        .failedRoleAssignments(failedRoleAssignments)
         .build();
   }
 
-  private boolean handleNGRBACEnabledFlag(String accountId) {
+  private List<UserInfo> getUsers(String accountId) {
+    int offset = 0;
+    int limit = 500;
+    int maxIterations = 50;
+    Set<UserInfo> users = new HashSet<>();
+    while (maxIterations > 0) {
+      PageResponse<UserInfo> usersPage = RestClientUtils.getResponse(
+          userClient.list(accountId, String.valueOf(limit), String.valueOf(offset), null, true));
+      if (isEmpty(usersPage.getResponse())) {
+        break;
+      }
+      users.addAll(usersPage.getResponse());
+      maxIterations--;
+      offset++;
+    }
+    return new ArrayList<>(users);
+  }
+
+  private boolean handleAccesscontrolMigrationEnabledFlag(String accountId) {
     log.info("Running ng access control migration for account: {}", accountId);
     // get users along with user groups for account
-    PageResponse<UserInfo> users = RestClientUtils.getResponse(userClient.list(accountId, "0", "100000", null, true));
+    List<UserInfo> users = getUsers(accountId);
     AccessControlMigrationBuilder migrationBuilder =
-        AccessControlMigration.builder()
-            .accountId(accountId)
-            .startedAt(new Date())
-            .principals(users.stream()
-                            .map(user
-                                -> AccessControlMigrationPrincipal.builder()
-                                       .email(user.getEmail())
-                                       .identifier(user.getUuid())
-                                       .name(user.getName())
-                                       .build())
-                            .collect(Collectors.toList()));
+        AccessControlMigration.builder().accountId(accountId).startedAt(new Date());
 
     if (isEmpty(users)) {
       accessControlMigrationService.save(migrationBuilder.endedAt(new Date()).build());
@@ -126,16 +181,14 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
 
     // adding account level roles to users
     List<RoleAssignmentMetadata> roleAssignmentMetadataList = new ArrayList<>();
-    roleAssignmentMetadataList.add(createRoleAssignments(
-        accountId, null, null, users, ACCOUNT_ADMIN_ROLE_IDENTIFIER, ACCOUNT_VIEWER_ROLE_IDENTIFIER));
+    roleAssignmentMetadataList.add(createRoleAssignments(accountId, null, null, users));
 
     // adding org level roles to users
     List<Organization> organizations =
         orgService.list(accountId, Pageable.unpaged(), OrganizationFilterDTO.builder().build()).getContent();
     for (Organization organization : organizations) {
       upsertResourceGroup(accountId, organization.getIdentifier(), null, ALL_RESOURCES_RESOURCE_GROUP);
-      roleAssignmentMetadataList.add(createRoleAssignments(
-          accountId, organization.getIdentifier(), null, users, ORG_ADMIN_ROLE_IDENTIFIER, ORG_VIEWER_ROLE_IDENTIFIER));
+      roleAssignmentMetadataList.add(createRoleAssignments(accountId, organization.getIdentifier(), null, users));
 
       // adding project level roles to users
       List<Project> projects = projectService
@@ -145,15 +198,16 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
       for (Project project : projects) {
         upsertResourceGroup(
             accountId, organization.getIdentifier(), project.getIdentifier(), ALL_RESOURCES_RESOURCE_GROUP);
-        roleAssignmentMetadataList.add(createRoleAssignments(accountId, organization.getIdentifier(),
-            project.getIdentifier(), users, PROJECT_ADMIN_ROLE_IDENTIFIER, PROJECT_VIEWER_ROLE_IDENTIFIER));
+        roleAssignmentMetadataList.add(
+            createRoleAssignments(accountId, organization.getIdentifier(), project.getIdentifier(), users));
 
         // adding user project map
         users.forEach(user
             -> upsertUserProjectMap(accountId, organization.getIdentifier(), project.getIdentifier(), user.getUuid()));
       }
     }
-    accessControlMigrationService.save(migrationBuilder.metadata(roleAssignmentMetadataList).build());
+    accessControlMigrationService.save(
+        migrationBuilder.endedAt(new Date()).metadata(roleAssignmentMetadataList).build());
     return true;
   }
 
@@ -181,13 +235,13 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
       try {
         featureFlagChangeDTO = FeatureFlagChangeDTO.parseFrom(message.getMessage().getData());
       } catch (InvalidProtocolBufferException e) {
-        // no point in reading the message again
-        return true;
+        log.error("Unable to parse event into feature flag", e);
+        return false;
       }
       if (NG_ACCESS_CONTROL_MIGRATION.equals(FeatureName.valueOf(featureFlagChangeDTO.getFeatureName()))
           && featureFlagChangeDTO.getEnable()) {
         try {
-          return handleNGRBACEnabledFlag(featureFlagChangeDTO.getAccountId());
+          return handleAccesscontrolMigrationEnabledFlag(featureFlagChangeDTO.getAccountId());
         } catch (Exception ex) {
           log.error(
               "Error while processing {} feature flag for access control migration", NG_ACCESS_CONTROL_MIGRATION, ex);

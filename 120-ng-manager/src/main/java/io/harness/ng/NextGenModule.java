@@ -269,7 +269,9 @@ public class NextGenModule extends AbstractModule {
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(YamlSdkModule.getInstance());
-    install(AccessControlMigrationModule.getInstance());
+    if (appConfig.getAccessControlMigrationConfig().isEnabled()) {
+      install(AccessControlMigrationModule.getInstance());
+    }
     install(new AuditClientModule(this.appConfig.getAuditClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         this.appConfig.isEnableAudit()));

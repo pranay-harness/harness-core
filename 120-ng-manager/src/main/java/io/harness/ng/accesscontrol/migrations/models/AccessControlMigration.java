@@ -33,7 +33,5 @@ public class AccessControlMigration {
   Date startedAt;
   Date endedAt;
   @FdIndex String accountId;
-  List<AccessControlMigrationPrincipal> principals;
   List<RoleAssignmentMetadata> metadata;
-  String exception;
 }

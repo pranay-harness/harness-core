@@ -23,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -31,7 +32,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Api(value = "/ng/users", hidden = true)
@@ -48,17 +48,12 @@ public class UserResourceNG {
   @GET
   @Path("/search")
   public RestResponse<PageResponse<UserInfo>> list(@BeanParam PageRequest<User> pageRequest,
-      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm) {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("searchTerm") String searchTerm,
+      @QueryParam("loadUserGroups") @DefaultValue("false") boolean loadUserGroups) {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList;
-
-    if (!StringUtils.isEmpty(searchTerm)) {
-      userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, false);
-    } else {
-      userList = userService.listUsers(pageRequest, accountId, null, offset, pageSize, true);
-    }
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, loadUserGroups);
 
     PageResponse<UserInfo> pageResponse =
         aPageResponse()

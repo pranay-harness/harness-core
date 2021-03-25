@@ -14,7 +14,7 @@ import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
-import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -48,7 +48,7 @@ public class AccessControlMigrationModule extends AbstractModule {
     requireBinding(NgUserService.class);
     requireBinding(ProjectService.class);
     requireBinding(OrganizationService.class);
-    requireBinding(ResourceGroupService.class);
+    requireBinding(ResourceGroupClient.class);
     requireBinding(AccessControlAdminClient.class);
   }
 }
