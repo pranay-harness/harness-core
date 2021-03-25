@@ -71,6 +71,6 @@ public class PipelineResourceValidatorImpl implements ResourceValidator {
 
   @Override
   public EnumSet<ValidatorType> getValidatorTypes() {
-    return EnumSet.of(STATIC, DYNAMIC);
+    return EnumSet.of(DYNAMIC);
   }
 }
