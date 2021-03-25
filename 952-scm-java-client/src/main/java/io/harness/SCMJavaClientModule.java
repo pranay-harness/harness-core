@@ -1,6 +1,8 @@
 package io.harness;
 
 import io.harness.impl.WebhookParserSCMServiceImpl;
+import io.harness.impl.scm.SCMServiceGitClientImpl;
+import io.harness.service.ScmClient;
 import io.harness.service.WebhookParserSCMService;
 
 import com.google.inject.AbstractModule;
@@ -14,13 +16,13 @@ public class SCMJavaClientModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(WebhookParserSCMService.class).to(WebhookParserSCMServiceImpl.class);
+    bind(ScmClient.class).to(SCMServiceGitClientImpl.class);
   }
 
   public static SCMJavaClientModule getInstance() {
     if (instanceRef.get() == null) {
       instanceRef.compareAndSet(null, new SCMJavaClientModule());
     }
-
     return instanceRef.get();
   }
 }

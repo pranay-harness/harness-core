@@ -4,6 +4,8 @@ import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.SCMGrpcClientModule;
+import io.harness.ScmConnectionConfig;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.services.ConnectorService;
 import io.harness.factory.ClosingFactory;
@@ -116,6 +118,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
     modules.add(NGCoreModule.getInstance());
     modules.add(new WaiterModule());
     modules.add(new EntitySetupUsageModule());
+    modules.add(new SCMGrpcClientModule(ScmConnectionConfig.builder().url("dummyurl").build()));
     return modules;
   }
 

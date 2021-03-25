@@ -6,7 +6,7 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-    <artifactId>955-scm-java-client</artifactId>
+    <artifactId>952-scm-java-client</artifactId>
 
     <dependencies>
         <dependency>
@@ -36,6 +36,11 @@
         <dependency>
             <groupId>org.springframework.guice</groupId>
             <artifactId>spring-guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>954-connector-beans</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>ru.vyarus</groupId>

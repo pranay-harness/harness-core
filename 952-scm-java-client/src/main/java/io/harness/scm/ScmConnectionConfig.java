@@ -1,4 +1,4 @@
-package io.harness.pms.triggers.webhook.scm;
+package io.harness.scm;
 
 import lombok.Builder;
 import lombok.Getter;

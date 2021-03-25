@@ -2,6 +2,7 @@ package io.harness.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.SCMJavaClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
 import io.harness.gitsync.common.impl.HarnessToGitHelperServiceImpl;
@@ -42,6 +43,7 @@ public class GitSyncModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(SCMJavaClientModule.getInstance());
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(YamlChangeSetService.class).to(YamlChangeSetServiceImpl.class);
@@ -51,11 +53,9 @@ public class GitSyncModule extends AbstractModule {
     bind(GitEntityService.class).to(GitEntityServiceImpl.class);
     bind(GitSyncTriggerService.class).to(GitSyncTriggerServiceImpl.class);
     bind(HarnessToGitHelperService.class).to(HarnessToGitHelperServiceImpl.class);
-
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
-
     registerRequiredBindings();
   }
 
