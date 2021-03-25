@@ -137,8 +137,8 @@ BAZEL_MODULES="\
   //950-wait-engine:module \
   //950-walktree-visitor:module \
   //950-ng-audit-commons:module \
-  //953-git-sync-commons:module \
-  //953-git-sync-commons/src/main/proto:all \
+  //951-git-sync-commons:module \
+  //951-git-sync-commons/src/main/proto:all \
   //954-connector-beans:module \
   //955-filters-sdk:module \
   //955-setup-usage-sdk:module \
@@ -420,7 +420,7 @@ build_bazel_module 960-notification-beans
 build_bazel_module 960-persistence
 build_bazel_module 960-recaster
 build_bazel_module 960-yaml-sdk
-build_bazel_module 953-git-sync-commons
+build_bazel_module 951-git-sync-commons
 build_bazel_module 970-api-services-beans
 build_bazel_module 970-grpc
 build_bazel_module 970-ng-commons

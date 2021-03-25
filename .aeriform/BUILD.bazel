@@ -304,7 +304,7 @@ aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
 
-aeriform("//953-git-sync-commons:module")
+aeriform("//951-git-sync-commons:module")
 
 aeriform("//954-connector-beans:module")
 

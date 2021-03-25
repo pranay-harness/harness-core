@@ -8,7 +8,7 @@ java_library(
     visibility = ["//visibility:public"],
     exports = [
         "//950-events-api:module",
-        "//953-git-sync-commons:module",
+        "//951-git-sync-commons:module",
         "//960-persistence:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
