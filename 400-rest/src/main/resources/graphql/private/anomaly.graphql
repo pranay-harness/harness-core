@@ -9,6 +9,13 @@ extend type Query {
     @dataFetcher(name: cloudAnomalies)
 
   overviewAnomalies(filters: [CCMFilter]): AnomalyDataList @dataFetcher(name: overviewAnomalies)
+
+  viewAnomalies(
+    filters: [CEViewFilterWrapper]
+    aggregateFunction: [CEViewAggregation]
+    groupBy: [CEViewGroupBy]
+    sortCriteria: [CEViewSortCriteria]
+  ): AnomalyDataList @dataFetcher(name: viewAnomalies)
 }
 
 type AnomalyDataList {
@@ -56,4 +63,7 @@ type EntityInfo {
   gcpSKUDescription: String
   awsAccount: String
   awsService: String
+  awsUsageType: String
+  viewId: String
+  product: String
 }

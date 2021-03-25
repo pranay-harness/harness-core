@@ -28,4 +28,7 @@ public class QLEntityInfo implements QLObject {
   String gcpSKUDescription;
   String awsAccount;
   String awsService;
+  String awsUsageType;
+  String viewId;
+  String product;
 }

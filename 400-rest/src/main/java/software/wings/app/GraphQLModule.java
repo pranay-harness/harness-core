@@ -27,6 +27,7 @@ import software.wings.graphql.datafetcher.anomaly.CloudAnomaliesDataFetcher;
 import software.wings.graphql.datafetcher.anomaly.K8sAnomaliesDataFetcher;
 import software.wings.graphql.datafetcher.anomaly.OverviewAnomaliesDataFetcher;
 import software.wings.graphql.datafetcher.anomaly.UpdateAnomalyDataFetcher;
+import software.wings.graphql.datafetcher.anomaly.viewAnomaliesDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationConnectionDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationDataFetcher;
 import software.wings.graphql.datafetcher.application.ApplicationGitSyncConfigDataFetcher;
@@ -324,6 +325,7 @@ public class GraphQLModule extends AbstractModule {
 
     bindDataFetcherWithAnnotation(LinkedAccountStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sAnomaliesDataFetcher.class);
+    bindDataFetcherWithAnnotation(viewAnomaliesDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sEventYamlDiffDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sLabelConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(K8sWorkloadRecommendationsDataFetcher.class);
