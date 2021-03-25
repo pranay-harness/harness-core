@@ -190,8 +190,8 @@ public class StepUtils {
   }
 
   public static TaskRequest prepareTaskRequest(
-      Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<String> units) {
-    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, null);
+      Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<String> units, String taskName) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, units, true, taskName);
   }
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,

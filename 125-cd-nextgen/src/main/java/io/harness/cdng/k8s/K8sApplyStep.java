@@ -75,7 +75,6 @@ public class K8sApplyStep implements TaskChainExecutable<K8sApplyStepParameters>
             .filePaths(k8sApplyStepParameters.getFilePaths().getValue())
             .skipSteadyStateCheck(skipSteadyStateCheck)
             .build();
-
     return k8sStepHelper.queueK8sTask(stepParameters, k8sApplyRequest, ambiance, infrastructure);
   }
 

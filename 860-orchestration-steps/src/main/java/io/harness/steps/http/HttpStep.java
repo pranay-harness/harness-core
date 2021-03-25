@@ -3,7 +3,6 @@ package io.harness.steps.http;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
@@ -33,6 +32,8 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.StepUtils;
 import io.harness.tasks.ResponseData;
+
+import software.wings.beans.TaskType;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -81,7 +82,7 @@ public class HttpStep implements TaskExecutable<HttpStepParameters> {
         TaskData.builder()
             .async(true)
             .timeout(NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()))
-            .taskType(NGTaskType.HTTP_TASK_NG.name())
+            .taskType(TaskType.HTTP_TASK_NG.name())
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
