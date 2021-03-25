@@ -13,7 +13,7 @@ public class ExplanationException extends WingsException {
   public static String EXPLANATION_AWS_CLIENT_UNKNOWN_ISSUE = "Seems to encounter unknown AWS client issue";
 
   public ExplanationException(String message, Throwable cause) {
-    super(null, cause, EXPLANATION, INFO, USER_SRE, null);
+    super(message, cause, EXPLANATION, INFO, USER_SRE, null);
     super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));
     super.param("message", message);
   }
