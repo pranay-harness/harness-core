@@ -21,7 +21,7 @@ public class ComplexFieldRecaster implements FieldRecaster {
           refObj = recaster.getTransformer().decode(cf.getType(), docVal, cf);
         } else if (!(docVal instanceof Document) && recaster.getTransformer().hasSimpleValueTransformer(docVal)) {
           // special case for parameterized classes. E.x: Dummy<T>
-          refObj = recaster.getTransformer().decode(cf.getType(), docVal, cf);
+          refObj = recaster.getTransformer().decode(docVal.getClass(), docVal, cf);
         } else {
           Document value = (Document) docVal;
           if (!value.containsKey(Recaster.RECAST_CLASS_KEY)) {
