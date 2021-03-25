@@ -1,5 +1,6 @@
 package io.harness.delegate.beans.connector.newrelicconnector;
 
+import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
@@ -12,8 +13,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class NewRelicCapabilityHelper {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(
-      ExpressionEvaluator maskingEvaluator, NewRelicConnectorDTO newRelicConnectorDTO) {
+      ExpressionEvaluator maskingEvaluator, ConnectorConfigDTO newRelicConnectorDTO) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        newRelicConnectorDTO.getUrl(), maskingEvaluator));
+        ((NewRelicConnectorDTO) newRelicConnectorDTO).getUrl(), maskingEvaluator));
   }
 }
