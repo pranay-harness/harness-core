@@ -1,5 +1,8 @@
 package io.harness.steps.approval.step.jira;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.SwaggerConstants;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
@@ -8,6 +11,7 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.step.ApprovalBaseStepInfo;
+import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapper;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,6 +24,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

@@ -74,6 +74,7 @@ func NewRunTask(step *pb.UnitStep, prevStepOutputs map[string]*pb.StepOutput, tm
 		timeoutSecs:       timeoutSecs,
 		numRetries:        numRetries,
 		cmdContextFactory: exec.OsCommandContextGracefulWithLog(log),
+		prevStepOutputs:   prevStepOutputs,
 		logMetrics:        logMetrics,
 		log:               log,
 		fs:                fs,

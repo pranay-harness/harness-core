@@ -31,7 +31,7 @@ import org.apache.commons.codec.binary.Hex;
 @Slf4j
 @Singleton
 public class TokenGenerator {
-  private static final TemporalAmount EXP_DURATION = Duration.ofMinutes(5);
+  private static final TemporalAmount EXP_DURATION = Duration.ofMinutes(30);
 
   private final String accountId;
   private final JWEEncrypter encrypter;

@@ -8,6 +8,7 @@ import io.harness.cdng.manifest.yaml.S3StoreConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
@@ -16,6 +17,7 @@ import io.harness.walktree.visitor.validation.ConfigValidator;
 import io.harness.walktree.visitor.validation.ValidationVisitor;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -40,14 +42,25 @@ public class S3StoreVisitorHelper implements ConfigValidator, EntityReferenceExt
     if (ParameterField.isNull(s3StoreConfig.getConnectorRef())) {
       return result;
     }
+    String fullQualifiedDomainName =
+        VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
+    Map<String, String> metadata =
+        new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
 
     if (!s3StoreConfig.getConnectorRef().isExpression()) {
       String connectorRefString = s3StoreConfig.getConnectorRef().getValue();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
-      Map<String, String> metadata = Collections.singletonMap("fqn", fullQualifiedDomainName);
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
+      EntityDetailProtoDTO entityDetail =
+          EntityDetailProtoDTO.newBuilder()
+              .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
+              .setType(EntityTypeProtoEnum.CONNECTORS)
+              .build();
+      result.add(entityDetail);
+    } else {
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, s3StoreConfig.getConnectorRef().getExpressionValue());
+      IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
+          orgIdentifier, projectIdentifier, s3StoreConfig.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =
           EntityDetailProtoDTO.newBuilder()
               .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))

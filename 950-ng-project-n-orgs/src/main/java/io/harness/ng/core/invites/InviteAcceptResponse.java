@@ -1,8 +1,9 @@
-package io.harness.ng.core.user;
+package io.harness.ng.core.invites;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.user.UserInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -15,8 +16,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PL)
-public class User {
-  String uuid;
-  String name;
-  String email;
+public class InviteAcceptResponse {
+  InviteOperationResponse response;
+  UserInfo userInfo;
 }

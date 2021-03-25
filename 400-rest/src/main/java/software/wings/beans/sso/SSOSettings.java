@@ -6,14 +6,15 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.mongo.index.CdIndex;
-import io.harness.mongo.index.Field;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
 import software.wings.beans.Base;
-import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,9 +28,17 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "SSOSettingsKeys")
 @Entity(value = "ssoSettings")
 @HarnessEntity(exportable = true)
-@CdIndex(name = "accountIdTypeIdx", fields = { @Field("accountId")
-                                               , @Field(SSOSettingsKeys.type) })
 public abstract class SSOSettings extends Base implements AccountAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("accountIdTypeIdx")
+                 .field(SSOSettingsKeys.accountId)
+                 .field(SSOSettingsKeys.type)
+                 .build())
+        .build();
+  }
+
   @NotNull protected SSOType type;
   @NotEmpty protected String displayName;
   @NotEmpty protected String url;
@@ -43,4 +52,6 @@ public abstract class SSOSettings extends Base implements AccountAccess {
 
   // TODO: Return list of all sso settings instead with the use of @JsonIgnore to trim the unnecessary elements
   @JsonIgnore public abstract SSOSettings getPublicSSOSettings();
+
+  public static final class SSOSettingsKeys { public static final String accountId = AccountAccess.ACCOUNT_ID_KEY; }
 }

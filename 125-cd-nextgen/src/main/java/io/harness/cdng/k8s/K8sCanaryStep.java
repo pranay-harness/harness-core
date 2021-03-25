@@ -37,7 +37,7 @@ import java.util.Map;
 public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameters>, K8sStepExecutor {
   public static final StepType STEP_TYPE =
       StepType.newBuilder().setType(ExecutionNodeType.K8S_CANARY.getYamlType()).build();
-  private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deployment";
+  private final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
   @Inject private K8sStepHelper k8sStepHelper;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
@@ -83,6 +83,7 @@ public class K8sCanaryStep implements TaskChainExecutable<K8sCanaryStepParameter
             .accountId(accountId)
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .build();
+
     return k8sStepHelper.queueK8sTask(stepParameters, k8sCanaryDeployRequest, ambiance, infrastructure);
   }
 

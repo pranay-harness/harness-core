@@ -1233,7 +1233,7 @@ maven_install(
         "com.azure:azure-storage-common:12.9.0",
         "com.bertramlabs.plugins:hcl4j:0.1.7",
         "com.bettercloud:vault-java-driver:4.0.0",
-        "com.bugsnag:bugsnag:3.6.1",
+        "com.bugsnag:bugsnag:3.6.2",
         "com.carrotsearch:hppc:0.8.1",
         "com.coveo:saml-client:3.0.2",
         "com.cronutils:cron-utils:9.0.1",

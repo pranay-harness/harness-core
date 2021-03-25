@@ -6,7 +6,7 @@ import io.harness.PipelineServiceConfiguration;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ng.core.user.User;
+import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.remote.UserClient;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
@@ -36,12 +36,12 @@ public class CurrentUserHelper {
 
     UserPrincipal userPrincipal = (UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
     String userId = userPrincipal.getName();
-    List<User> users = RestClientUtils.getResponse(userClient.getUsersByIds(Collections.singletonList(userId)));
+    List<UserInfo> users = RestClientUtils.getResponse(userClient.getUsersByIds(Collections.singletonList(userId)));
     if (EmptyPredicate.isEmpty(users)) {
       throw new InvalidRequestException(String.format("Invalid user: %s", userId));
     }
 
-    User user = users.get(0);
+    UserInfo user = users.get(0);
     return EmbeddedUser.builder().uuid(user.getUuid()).name(user.getName()).email(user.getEmail()).build();
   }
 }

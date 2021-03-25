@@ -12,6 +12,7 @@ import retrofit2.http.Query;
 public interface AccountClient {
   String ACCOUNT_DTO_API = "ng/accounts/dto";
   String FEATURE_FLAG_CHECK_API = "ng/accounts/feature-flag-enabled";
+  String ACCOUNT_BASEURL = "ng/accounts/baseUrl";
 
   @GET(ACCOUNT_DTO_API + "/{accountId}")
   Call<RestResponse<AccountDTO>> getAccountDTO(@Path("accountId") String accountId);
@@ -22,4 +23,6 @@ public interface AccountClient {
   @GET(FEATURE_FLAG_CHECK_API)
   Call<RestResponse<Boolean>> isFeatureFlagEnabled(
       @Query("featureName") String featureName, @Query("accountId") String accountId);
+
+  @GET(ACCOUNT_BASEURL) Call<RestResponse<String>> getBaseUrl(@Query("accountId") String accountId);
 }

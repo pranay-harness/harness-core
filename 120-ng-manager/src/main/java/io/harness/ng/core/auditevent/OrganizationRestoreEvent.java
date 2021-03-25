@@ -13,12 +13,12 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class OrgCreateEvent implements Event {
-  private OrganizationDTO org;
+public class OrganizationRestoreEvent implements Event {
+  private OrganizationDTO organization;
   private String accountIdentifier;
 
-  public OrgCreateEvent(String accountIdentifier, OrganizationDTO newOrg) {
-    this.org = newOrg;
+  public OrganizationRestoreEvent(String accountIdentifier, OrganizationDTO organization) {
+    this.organization = organization;
     this.accountIdentifier = accountIdentifier;
   }
 
@@ -27,10 +27,10 @@ public class OrgCreateEvent implements Event {
   }
 
   public Resource getResource() {
-    return Resource.builder().identifier(org.getIdentifier()).type(ORGANIZATION).build();
+    return Resource.builder().identifier(organization.getIdentifier()).type(ORGANIZATION).build();
   }
 
   public String getEventType() {
-    return "OrgCreated";
+    return "OrganizationRestored";
   }
 }

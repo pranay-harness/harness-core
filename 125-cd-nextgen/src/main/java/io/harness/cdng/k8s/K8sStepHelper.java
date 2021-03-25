@@ -19,6 +19,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
@@ -33,7 +34,6 @@ import io.harness.cdng.manifest.yaml.StoreConfig;
 import io.harness.cdng.manifest.yaml.ValuesManifestOutcome;
 import io.harness.cdng.service.beans.ServiceOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
-import io.harness.common.NGTaskType;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
@@ -43,6 +43,7 @@ import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoH
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -56,6 +57,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
@@ -101,6 +103,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
+
+import software.wings.beans.TaskType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -192,6 +196,13 @@ public class K8sStepHelper {
         if (!((connectorInfoDTO.getConnectorConfig()) instanceof AwsConnectorDTO)) {
           throw new InvalidRequestException(
               format("Invalid connector selected in %s. Select Amazon Web Services connector", message));
+        }
+        break;
+
+      case ManifestStoreType.GCS:
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof GcpConnectorDTO)) {
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select Google cloud connector", message));
         }
         break;
 
@@ -287,6 +298,22 @@ public class K8sStepHelper {
           .build();
     }
 
+    if (ManifestStoreType.GCS.equals(storeConfig.getKind())) {
+      GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) storeConfig;
+      ConnectorInfoDTO gcpConnectorDTO =
+          getConnector(getParameterFieldValue(gcsStoreConfig.getConnectorRef()), ambiance);
+      validateManifest(storeConfig.getKind(), gcpConnectorDTO, validationErrorMessage);
+
+      return GcsHelmStoreDelegateConfig.builder()
+          .repoName(gcpConnectorDTO.getIdentifier())
+          .repoDisplayName(gcpConnectorDTO.getName())
+          .bucketName(getParameterFieldValue(gcsStoreConfig.getBucketName()))
+          .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
+          .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
+          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .build();
+    }
+
     throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
   }
 
@@ -377,6 +404,15 @@ public class K8sStepHelper {
           return Collections.emptyList();
         }
 
+      case GCP:
+        GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
+        List<DecryptableEntity> gcpDecryptableEntities = gcpConnectorDTO.getDecryptableEntities();
+        if (isNotEmpty(gcpDecryptableEntities)) {
+          return secretManagerClientService.getEncryptionDetails(ngAccess, gcpDecryptableEntities.get(0));
+        } else {
+          return Collections.emptyList();
+        }
+
       case APP_DYNAMICS:
       case SPLUNK:
       case GIT:
@@ -415,13 +451,14 @@ public class K8sStepHelper {
       Ambiance ambiance, InfrastructureOutcome infrastructure) {
     TaskData taskData = TaskData.builder()
                             .parameters(new Object[] {k8sDeployRequest})
-                            .taskType(NGTaskType.K8S_COMMAND_TASK_NG.name())
+                            .taskType(TaskType.K8S_COMMAND_TASK_NG.name())
                             .timeout(getTimeout(k8sStepParameters))
                             .async(true)
                             .build();
 
+    String taskName = TaskType.K8S_COMMAND_TASK_NG.getDisplayName() + " : " + k8sDeployRequest.getCommandName();
     final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits());
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits(), taskName);
 
     return TaskChainResponse.builder().taskRequest(taskRequest).chainEnd(true).passThroughData(infrastructure).build();
   }
@@ -475,12 +512,13 @@ public class K8sStepHelper {
     final TaskData taskData = TaskData.builder()
                                   .async(true)
                                   .timeout(K8sStepHelper.getTimeout(k8sStepParameters))
-                                  .taskType(NGTaskType.GIT_FETCH_NEXT_GEN_TASK.name())
+                                  .taskType(TaskType.GIT_FETCH_NEXT_GEN_TASK.name())
                                   .parameters(new Object[] {gitFetchRequest})
                                   .build();
 
+    String taskName = TaskType.GIT_FETCH_NEXT_GEN_TASK.getDisplayName();
     final TaskRequest taskRequest =
-        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits());
+        prepareTaskRequest(ambiance, taskData, kryoSerializer, k8sStepParameters.getCommandUnits(), taskName);
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)

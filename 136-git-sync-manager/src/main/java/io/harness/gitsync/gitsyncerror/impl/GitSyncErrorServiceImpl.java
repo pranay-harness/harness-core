@@ -68,10 +68,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     addPreviousCommitDetailsToErrorDetails(failedGitFileChange, gitToHarnessErrorDetails, previousGitSyncError);
     gitSyncErrorRepository.upsertGitError(failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(),
         GIT_TO_HARNESS, errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info",
-        false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorId(),
+        false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorRef(),
         yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
         GitFileLocationHelper.getRootPathSafely(failedGitFileChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectId(), yamlGitConfig.getOrganizationId());
+        yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier());
   }
 
   private void addPreviousCommitDetailsToErrorDetails(GitFileChange failedGitFileChange,

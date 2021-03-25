@@ -132,6 +132,7 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.invites.client.NgInviteClientModule;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
@@ -1326,6 +1327,10 @@ public class WingsModule extends AbstractModule implements ServersModule {
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
+
+    // User-Sync Dependencies
+    install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies

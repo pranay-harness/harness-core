@@ -33,4 +33,6 @@ public interface YamlGitConfigService {
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier);
 
   YamlGitConfigDTO get(String uuid, String accountId);
+
+  Boolean isGitSyncEnabled(String accountIdentifier, String organizationIdentifier, String projectIdentifier);
 }

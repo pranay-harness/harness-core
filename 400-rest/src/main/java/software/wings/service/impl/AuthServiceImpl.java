@@ -1134,6 +1134,14 @@ public class AuthServiceImpl implements AuthService {
   }
 
   @Override
+  public void auditLogin2FA(List<String> accountIds, User loggedInUser) {
+    if (Objects.nonNull(loggedInUser) && Objects.nonNull(accountIds)) {
+      accountIds.forEach(accountId
+          -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, loggedInUser, Event.Type.LOGIN_2FA));
+    }
+  }
+
+  @Override
   public void authorizeAppAccess(String accountId, String appId, User user, Action action) {
     UserPermissionInfo userPermissionInfo = authorizeAndGetUserPermissionInfo(accountId, appId, user, false);
 

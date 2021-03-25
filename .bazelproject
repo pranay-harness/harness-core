@@ -1,6 +1,7 @@
 import .bazelproject-config
 
 directories:
+  .aeriform
   120-ng-manager
   125-cd-nextgen
   130-resource-group

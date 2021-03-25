@@ -35,6 +35,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(PIPELINE)
 public class PipelineFilterPropertiesDto extends FilterPropertiesDTO {
   private List<NGTag> pipelineTags;
+  private List<String> pipelineIdentifiers;
   private String name;
   private String description;
   private org.bson.Document moduleProperties;
