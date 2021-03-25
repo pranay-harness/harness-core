@@ -151,8 +151,8 @@ public class NotificationServiceModule extends AbstractModule {
     bind(HPersistence.class).to(MongoPersistence.class);
     install(DelegateServiceDriverModule.getInstance());
     install(new DelegateServiceDriverGrpcClientModule(appConfig.getPlatformSecrets().getNgManagerServiceSecret(),
-        this.appConfig.getNotificationServiceConfig().getGrpcClientConfig().getTarget(),
-        this.appConfig.getNotificationServiceConfig().getGrpcClientConfig().getAuthority()));
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getTarget(),
+        this.appConfig.getNotificationServiceConfig().getDelegateServiceGrpcConfig().getAuthority()));
 
     install(VersionModule.getInstance());
     install(new ValidationModule(getValidatorFactory()));

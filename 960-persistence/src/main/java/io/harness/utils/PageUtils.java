@@ -72,6 +72,18 @@ public class PageUtils {
         .build();
   }
 
+  public static <T, C> PageResponse<C> getNGPageResponse(PageResponse<T> page, List<C> content) {
+    return PageResponse.<C>builder()
+        .totalPages(page.getTotalPages())
+        .totalItems(page.getTotalItems())
+        .pageItemCount((content != null) ? content.size() : 0)
+        .content(content)
+        .pageSize(page.getPageSize())
+        .pageIndex(page.getPageIndex())
+        .empty(page.isEmpty())
+        .build();
+  }
+
   public <T> PageResponse<T> getNGPageResponse(io.harness.beans.PageResponse<T> page) {
     return PageResponse.<T>builder()
         .totalPages((page.getPageSize() == 0) ? 0 : (page.getTotal() + page.getPageSize() - 1) / page.getPageSize())

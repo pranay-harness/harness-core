@@ -1,6 +1,7 @@
 package io.harness.resourcegroup;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
+import static io.harness.eventsframework.EventsFrameworkConstants.FEATURE_FLAG_STREAM;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.connector.ConnectorResourceClient;
@@ -14,6 +15,7 @@ import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.account.remote.AccountClientModule;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.organizationmanagerclient.OrganizationManagementClientModule;
 import io.harness.organizationmanagerclient.remote.OrganizationManagerClient;
 import io.harness.pipeline.PipelineRemoteClientModule;
@@ -23,6 +25,7 @@ import io.harness.projectmanagerclient.remote.ProjectManagerClient;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.framework.beans.ResourceGroupConstants;
+import io.harness.resourcegroup.framework.migration.ResourceGroupCreationFeatureFlagStreamListener;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.framework.service.ResourceTypeService;
@@ -70,6 +73,9 @@ public class ResourceGroupModule extends AbstractModule {
         .annotatedWith(Names.named("DynamicResourceValidator"))
         .to(DynamicResourceGroupValidatorServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(NG_MANAGER.getServiceId());
+    bind(MessageListener.class)
+        .annotatedWith(Names.named("resource_group" + FEATURE_FLAG_STREAM))
+        .to(ResourceGroupCreationFeatureFlagStreamListener.class);
     requireBinding(AccessControlAdminClient.class);
     installResourceValidators();
     addResourceValidatorConstraints();

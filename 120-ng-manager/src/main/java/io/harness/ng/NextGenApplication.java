@@ -50,6 +50,7 @@ import io.harness.registrars.NGExecutionEventHandlerRegistrar;
 import io.harness.registrars.OrchestrationAdviserRegistrar;
 import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.request.RequestContextFilter;
+import io.harness.resourcegroup.framework.migration.DefaultResourceGroupCreationService;
 import io.harness.resourcegroup.reconciliation.ResourceGroupAsyncReconciliationHandler;
 import io.harness.resourcegroup.reconciliation.ResourceGroupSyncConciliationService;
 import io.harness.scm.SCMGrpcClientModule;
@@ -287,6 +288,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(NotifierScheduledExecutorService.class));
     environment.lifecycle().manage(injector.getInstance(ResourceGroupSyncConciliationService.class));
+    environment.lifecycle().manage(injector.getInstance(DefaultResourceGroupCreationService.class));
     createConsumerThreadsToListenToEvents(environment, injector);
   }
 

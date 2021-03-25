@@ -9,11 +9,14 @@ import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.ng.core.utils.NGUtils.validate;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
-import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.ModuleType;
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.principals.PrincipalDTO;
+import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
@@ -30,8 +33,7 @@ import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
-import io.harness.ng.core.invites.entities.Role;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
@@ -68,24 +70,26 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Singleton
 @Slf4j
 public class ProjectServiceImpl implements ProjectService {
+  private static final String PROJECT_ADMIN_ROLE = "_project_admin";
   private final ProjectRepository projectRepository;
   private final OrganizationService organizationService;
   private final OutboxService outboxService;
   private final NgUserService ngUserService;
   private final TransactionTemplate transactionTemplate;
-  private static final String PROJECT_ADMIN_ROLE_NAME = "Project Admin";
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+  private final AccessControlAdminClient accessControlAdminClient;
 
   @Inject
   public ProjectServiceImpl(ProjectRepository projectRepository, OrganizationService organizationService,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, NgUserService ngUserService,
-      OutboxService outboxService) {
+      OutboxService outboxService, AccessControlAdminClient accessControlAdminClient) {
     this.projectRepository = projectRepository;
     this.organizationService = organizationService;
-    this.outboxService = outboxService;
     this.transactionTemplate = transactionTemplate;
     this.ngUserService = ngUserService;
+    this.outboxService = outboxService;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Override
@@ -118,30 +122,46 @@ public class ProjectServiceImpl implements ProjectService {
     log.info(String.format(
         "Performing actions post project creation for project with identifier %s and orgIdentifier %s ...",
         project.getIdentifier(), project.getOrgIdentifier()));
-    createUserProjectMap(project);
+    updateUserMembership(project);
+    addUserToAdmins(project);
     log.info(String.format(
         "Successfully completed actions post project creation for project with identifier %s and orgIdentifier %s",
         project.getIdentifier(), project.getOrgIdentifier()));
   }
 
-  private void createUserProjectMap(Project project) {
+  private void addUserToAdmins(Project project) {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
       String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
-      Role role = Role.builder()
-                      .accountIdentifier(project.getAccountIdentifier())
-                      .orgIdentifier(project.getOrgIdentifier())
-                      .projectIdentifier(project.getIdentifier())
-                      .name(PROJECT_ADMIN_ROLE_NAME)
-                      .build();
-      UserProjectMap userProjectMap = UserProjectMap.builder()
-                                          .userId(userId)
-                                          .accountIdentifier(project.getAccountIdentifier())
-                                          .orgIdentifier(project.getOrgIdentifier())
-                                          .projectIdentifier(project.getIdentifier())
-                                          .roles(singletonList(role))
-                                          .build();
-      ngUserService.createUserProjectMap(userProjectMap);
+      RoleAssignmentDTO roleAssignmentDTO =
+          RoleAssignmentDTO.builder()
+              .roleIdentifier(PROJECT_ADMIN_ROLE)
+              .disabled(false)
+              .principal(PrincipalDTO.builder()
+                             .type(io.harness.accesscontrol.principals.PrincipalType.USER)
+                             .identifier(userId)
+                             .build())
+              .resourceGroupIdentifier(getFullScopeDefaultResourceGroup(project))
+              .build();
+      getResponse(accessControlAdminClient.createRoleAssignment(
+          project.getAccountIdentifier(), project.getOrgIdentifier(), project.getIdentifier(), roleAssignmentDTO));
+    }
+  }
+
+  private String getFullScopeDefaultResourceGroup(Project project) {
+    return String.format("_%s", project.getIdentifier());
+  }
+
+  private void updateUserMembership(Project project) {
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      String userId = SourcePrincipalContextBuilder.getSourcePrincipal().getName();
+      ngUserService.addUserToScope(userId,
+          UserMembership.Scope.builder()
+              .accountIdentifier(project.getAccountIdentifier())
+              .orgIdentifier(project.getOrgIdentifier())
+              .projectIdentifier(project.getIdentifier())
+              .build());
     }
   }
 

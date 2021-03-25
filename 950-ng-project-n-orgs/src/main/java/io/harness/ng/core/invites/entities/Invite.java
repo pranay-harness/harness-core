@@ -5,13 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
-import io.harness.data.validator.EntityName;
-import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.invites.remote.RoleBinding;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -21,12 +19,11 @@ import com.mongodb.lang.NonNull;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
+import javax.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
-import lombok.experimental.Wither;
 import org.codehaus.jackson.annotate.JsonProperty;
-import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -36,40 +33,39 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @FieldNameConstants(innerTypeName = "InviteKeys")
 @Entity(value = "invites", noClassnameStored = true)
 @Document("invites")
 @TypeAlias("invites")
 @StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(PL)
-public class Invite implements PersistentEntity, NGAccountAccess {
+public class Invite implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("ng_invite_account_org_project_identifiers_email_role_deleted")
                  .field(InviteKeys.deleted)
+                 .field(InviteKeys.email)
                  .field(InviteKeys.accountIdentifier)
                  .field(InviteKeys.orgIdentifier)
                  .field(InviteKeys.projectIdentifier)
-                 .field(InviteKeys.email)
-                 .field(InviteKeys.role)
                  .build())
         .build();
   }
 
-  @Trimmed @NotEmpty String accountIdentifier;
-  @Wither @Id @org.mongodb.morphia.annotations.Id @EntityIdentifier String id;
-  @Trimmed @NotEmpty String orgIdentifier;
-  @Trimmed @NotEmpty String projectIdentifier;
-  @Wither @NotEmpty @EntityName @Email String email;
-  @Wither @NotEmpty Role role;
+  @NotEmpty String accountIdentifier;
+  @Id @org.mongodb.morphia.annotations.Id @EntityIdentifier String id;
+  String orgIdentifier;
+  String projectIdentifier;
+  @NotEmpty String email;
+  @Size(min = 1, max = 100) List<RoleBinding> roleBindings;
   String name;
   @NonNull InviteType inviteType;
   @CreatedDate Long createdAt;
-  @Wither @Version Long version;
-  @Trimmed String inviteToken;
-  @NonNull Boolean approved;
+  @Version Long version;
+  String inviteToken;
+  @NonNull @Builder.Default Boolean approved = Boolean.FALSE;
   @Builder.Default Boolean deleted = Boolean.FALSE;
 
   @JsonIgnore
@@ -83,7 +79,7 @@ public class Invite implements PersistentEntity, NGAccountAccess {
     @JsonProperty("USER_INITIATED_INVITE") USER_INITIATED_INVITE("USER_INITIATED_INVITE"),
     @JsonProperty("ADMIN_INITIATED_INVITE") ADMIN_INITIATED_INVITE("ADMIN_INITIATED_INVITE");
 
-    private String type;
+    private final String type;
     InviteType(String type) {
       this.type = type;
     }

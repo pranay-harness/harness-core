@@ -16,7 +16,6 @@ import io.harness.beans.PageResponse;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.featureflag.FeatureFlagChangeDTO;
 import io.harness.exception.DuplicateFieldException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration.AccessControlMigrationBuilder;
 import io.harness.ng.accesscontrol.migrations.models.RoleAssignmentMetadata;
@@ -26,7 +25,7 @@ import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.event.MessageListener;
-import io.harness.ng.core.invites.entities.UserProjectMap;
+import io.harness.ng.core.invites.entities.UserMembership.Scope;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.UserInfo;
@@ -34,14 +33,10 @@ import io.harness.ng.core.user.remote.UserClient;
 import io.harness.ng.core.user.services.api.NgUserService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
-import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
-import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
-import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.resourcegroupclient.remote.ResourceGroupClient;
 import io.harness.utils.CryptoUtils;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
@@ -137,7 +132,7 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     }
 
     List<RoleAssignmentResponseDTO> createdRoleAssignments =
-        NGRestUtils.getResponse(accessControlAdminClient.createMulti(account, org, project,
+        NGRestUtils.getResponse(accessControlAdminClient.createMultiRoleAssignment(account, org, project,
             RoleAssignmentCreateRequestDTO.builder().roleAssignments(roleAssignmentsToCreate).build()));
 
     Set<RoleAssignmentDTO> createdRoleAssignmentsSet =
@@ -183,18 +178,20 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
       return true;
     }
 
-    upsertResourceGroup(accountId, null, null, ALL_RESOURCES_RESOURCE_GROUP);
+    upsertResourceGroup(accountId, null, null);
 
     // adding account level roles to users
     List<RoleAssignmentMetadata> roleAssignmentMetadataList = new ArrayList<>();
     roleAssignmentMetadataList.add(createRoleAssignments(accountId, null, null, users));
+    users.forEach(user -> upsertUserMembership(accountId, null, null, user));
 
     // adding org level roles to users
     List<Organization> organizations =
         orgService.list(accountId, Pageable.unpaged(), OrganizationFilterDTO.builder().build()).getContent();
     for (Organization organization : organizations) {
-      upsertResourceGroup(accountId, organization.getIdentifier(), null, ALL_RESOURCES_RESOURCE_GROUP);
+      upsertResourceGroup(accountId, organization.getIdentifier(), null);
       roleAssignmentMetadataList.add(createRoleAssignments(accountId, organization.getIdentifier(), null, users));
+      users.forEach(user -> upsertUserMembership(accountId, organization.getIdentifier(), null, user));
 
       // adding project level roles to users
       List<Project> projects = projectService
@@ -202,14 +199,13 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
                                        ProjectFilterDTO.builder().orgIdentifier(organization.getIdentifier()).build())
                                    .getContent();
       for (Project project : projects) {
-        upsertResourceGroup(
-            accountId, organization.getIdentifier(), project.getIdentifier(), ALL_RESOURCES_RESOURCE_GROUP);
+        upsertResourceGroup(accountId, organization.getIdentifier(), project.getIdentifier());
         roleAssignmentMetadataList.add(
             createRoleAssignments(accountId, organization.getIdentifier(), project.getIdentifier(), users));
 
         // adding user project map
-        users.forEach(user
-            -> upsertUserProjectMap(accountId, organization.getIdentifier(), project.getIdentifier(), user.getUuid()));
+        users.forEach(
+            user -> upsertUserMembership(accountId, organization.getIdentifier(), project.getIdentifier(), user));
       }
     }
     accessControlMigrationService.save(
@@ -217,19 +213,17 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
     return true;
   }
 
-  private void upsertUserProjectMap(
-      String accountId, String orgIdentifier, String projectIdentifier, String principalIdentifier) {
+  private void upsertUserMembership(String accountId, String orgIdentifier, String projectIdentifier, UserInfo user) {
     try {
-      ngUserService.createUserProjectMap(UserProjectMap.builder()
-                                             .accountIdentifier(accountId)
-                                             .projectIdentifier(projectIdentifier)
-                                             .orgIdentifier(orgIdentifier)
-                                             .userId(principalIdentifier)
-                                             .roles(new ArrayList<>())
-                                             .build());
+      Scope scope = Scope.builder()
+                        .accountIdentifier(accountId)
+                        .projectIdentifier(projectIdentifier)
+                        .orgIdentifier(orgIdentifier)
+                        .build();
+      ngUserService.addUserToScope(user, scope);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       log.info("User project map already exists account: {}, org: {}, project: {}, principal: {}", accountId,
-          orgIdentifier, projectIdentifier, principalIdentifier);
+          orgIdentifier, projectIdentifier, user.getUuid());
     }
   }
 
@@ -268,32 +262,8 @@ public class AccessControlMigrationFeatureFlagEventListener implements MessageLi
         .build();
   }
 
-  private void upsertResourceGroup(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String resourceGroupIdentifier) {
-    ResourceGroupDTO resourceGroupDTO = ResourceGroupDTO.builder()
-                                            .accountIdentifier(accountIdentifier)
-                                            .orgIdentifier(orgIdentifier)
-                                            .projectIdentifier(projectIdentifier)
-                                            .identifier(ALL_RESOURCES_RESOURCE_GROUP)
-                                            .fullScopeSelected(true)
-                                            .resourceSelectors(new ArrayList<>())
-                                            .name("All Resources")
-                                            .description("Resource Group containing all resources")
-                                            .color("#0061fc")
-                                            .tags(ImmutableMap.of("predefined", "true"))
-                                            .build();
-    try {
-      if (NGRestUtils.getResponse(resourceGroupClient.getResourceGroup(
-              resourceGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier))
-          == null) {
-        ResourceGroupResponse resourceGroupResponse =
-            NGRestUtils.getResponse(resourceGroupClient.create(accountIdentifier, orgIdentifier, projectIdentifier,
-                ResourceGroupRequest.builder().resourceGroup(resourceGroupDTO).build()));
-        log.info("Created resource group: {}", resourceGroupResponse);
-      }
-    } catch (DuplicateFieldException | DuplicateKeyException | InvalidRequestException exception) {
-      log.info("Resource group already exists, account: {}, org: {}, project:{}, identifier: {}", accountIdentifier,
-          orgIdentifier, projectIdentifier, resourceGroupIdentifier);
-    }
+  private void upsertResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    NGRestUtils.getResponse(
+        resourceGroupClient.ensureDefaultResourceGroup(accountIdentifier, orgIdentifier, projectIdentifier));
   }
 }

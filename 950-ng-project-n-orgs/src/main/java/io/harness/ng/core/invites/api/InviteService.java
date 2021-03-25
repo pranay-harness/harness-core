@@ -3,6 +3,8 @@ package io.harness.ng.core.invites.api;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.invites.InviteAcceptResponse;
 import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
@@ -13,12 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
-public interface InvitesService {
+public interface InviteService {
   InviteOperationResponse create(Invite invite);
 
-  Invite resendInvitationMail(Invite invite);
-
   Optional<Invite> get(String inviteId);
+
+  PageResponse<Invite> getInvites(Criteria criteria, PageRequest pageRequest);
 
   Page<Invite> list(Criteria criteria, Pageable pageable);
 

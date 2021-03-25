@@ -32,13 +32,13 @@ logging:
 allowedOrigins: ${ALLOWED_ORIGINS:-https://localhost:8181,https://127.0.0.1:8181,http://localhost:8000,http://127.0.0.1:8000,https://localhost:8000,https://127.0.0.1:8000}
 
 mongo:
-  uri: ${MONGO_URI:-mongodb://127.0.0.1:27018,127.0.0.1:27019,127.0.0.1:27020/accesscontrol?replicaSet=rs0}
+  uri: ${MONGO_URI:-mongodb://127.0.0.1:27017/accesscontrol}
   connectTimeout: ${MONGO_CONNECT_TIMEOUT:-30000}
   serverSelectionTimeout: ${MONGO_SERVER_SELECTION_TIMEOUT:-90000}
   maxConnectionIdleTime: ${MAX_CONNECTION_IDLE_TIME:-600000}
   connectionsPerHost: ${-MONGO_CONNECTIONS_PER_HOST:-300}
   indexManagerMode: ${MONGO_INDEX_MANAGER_MODE:-AUTO}
-  transactionsEnabled: ${MONGO_TRANSACTIONS_ENABLED:-true}
+  transactionsEnabled: ${MONGO_TRANSACTIONS_ENABLED:-false}
   aliasDBName: ${MONGO_ALIAS_DB_NAME:-accesscontrol}
 
 eventsConfig:
@@ -111,7 +111,7 @@ aggregatorModuleConfig:
     collection.include.list: ${COLLECTION_INCLUDE_LIST:-accesscontrol.permissions,accesscontrol.roles,accesscontrol.roleassignments,accesscontrol.resourcegroups,accesscontrol.usergroups}
   enabled: ${AGGREGATOR_ENABLED:-true}
 
-enableAuth: ${ENABLE_AUTH:-true}
+enableAuth: ${ENABLE_AUTH:-false}
 defaultServiceSecret: ${DEFAULT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 jwtAuthSecret: ${JWT_AUTH_SECRET:-dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq}
 identityServiceSecret: ${IDENTITY_SERVICE_SECRET:-HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU}

@@ -11,6 +11,8 @@ import org.springframework.data.domain.Page;
 public interface ResourceGroupService {
   ResourceGroupResponse create(ResourceGroupDTO resourceGroupDTO);
 
+  void ensureDefaultResourceGroup(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
   Page<ResourceGroupResponse> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       PageRequest pageRequest, String searchTerm);
 

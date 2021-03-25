@@ -3,6 +3,7 @@ package io.harness.notification.beans;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import lombok.Builder;
 import lombok.Data;
 
@@ -25,11 +26,17 @@ public class NotificationProcessingResponse {
         .build();
   }
 
-  public static boolean isNotificationResquestFailed(NotificationProcessingResponse response) {
+  public static boolean isNotificationRequestFailed(NotificationProcessingResponse response) {
+    if (Objects.isNull(response)) {
+      return true;
+    }
     return !response.getResult().stream().reduce(false, (e1, e2) -> e1 || e2);
   }
 
-  public static boolean isNotificationResquestFailed(List<Boolean> response) {
+  public static boolean isNotificationRequestFailed(List<Boolean> response) {
+    if (response.isEmpty()) {
+      return true;
+    }
     return !response.stream().reduce(false, (e1, e2) -> e1 || e2);
   }
 

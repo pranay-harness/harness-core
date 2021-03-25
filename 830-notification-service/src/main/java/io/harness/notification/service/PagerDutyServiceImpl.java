@@ -95,7 +95,7 @@ public class PagerDutyServiceImpl implements ChannelService {
     }
     NotificationProcessingResponse processingResponse = send(Collections.singletonList(pagerdutyKey), TEST_PD_TEMPLATE,
         Collections.emptyMap(), pagerDutySettingDTO.getNotificationId(), null, notificationSettingDTO.getAccountId());
-    if (NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)) {
+    if (NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)) {
       throw new NotificationException("Invalid pagerduty key encountered while processing Test Connection request "
               + notificationSettingDTO.getNotificationId(),
           DEFAULT_ERROR_CODE, USER);
@@ -159,7 +159,7 @@ public class PagerDutyServiceImpl implements ChannelService {
     } else {
       processingResponse = pagerDutySender.send(pagerDutyKeys, payload, links, notificationId);
     }
-    log.info(NotificationProcessingResponse.isNotificationResquestFailed(processingResponse)
+    log.info(NotificationProcessingResponse.isNotificationRequestFailed(processingResponse)
             ? "Failed to send notification for request {}"
             : "Notification request {} sent",
         notificationId);

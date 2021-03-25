@@ -8,7 +8,6 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.rest.RestResponse;
 
 import java.util.List;
-import java.util.Optional;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -22,7 +21,6 @@ public interface UserClient {
   String SEARCH_TERM_KEY = "searchTerm";
   String USERS_SEARCH_API = "ng/users/search";
   String USERS_API = "ng/users";
-  String USERNAME_API = "ng/users/usernames";
   String USER_BATCH_LIST_API = "ng/users/batch";
   String USER_IN_ACCOUNT_VERIFICATION = "ng/users/user-account";
   String USER_SAFE_DELETE = "ng/users/safeDelete/{userId}";
@@ -31,11 +29,8 @@ public interface UserClient {
   Call<RestResponse<PageResponse<UserInfo>>> list(@Query(value = "accountId") String accountId,
       @Query("offset") String offset, @Query("limit") String limit, @Query("searchTerm") String searchTerm);
 
-  @GET(USERNAME_API)
-  Call<RestResponse<List<String>>> getUsernameFromEmail(
-      @Query(value = "accountId") String accountId, @Query(value = "emailList") List<String> emailList);
-
-  @GET(USERS_API) Call<RestResponse<Optional<UserInfo>>> getUserFromEmail(@Query(value = "emailId") String email);
+  @GET(USERS_API)
+  Call<RestResponse<List<UserInfo>>> getUsersFromEmail(@Query(value = "emailIds") List<String> emailIds);
 
   @POST(USER_BATCH_LIST_API) Call<RestResponse<List<UserInfo>>> getUsersByIds(@Body List<String> userIds);
 

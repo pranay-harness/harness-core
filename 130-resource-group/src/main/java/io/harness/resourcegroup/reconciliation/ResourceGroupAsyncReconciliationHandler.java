@@ -33,7 +33,7 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
   }
 
   public void registerIterators() {
-    Duration interval = ofMinutes(10);
+    Duration interval = ofMinutes(15);
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("ResourceGroupAsyncReconciliation")
