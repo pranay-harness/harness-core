@@ -42,7 +42,7 @@ public enum TaskType {
   GCR_GET_BUILDS(TaskGroup.GCR),
   GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR),
   GCR_GET_PLANS(TaskGroup.GCR),
-  ECR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG),
+  ECR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, "ECR Task"),
   ACR_GET_BUILDS(TaskGroup.ACR),
   ACR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ACR),
   ACR_GET_PLANS(TaskGroup.ACR),
@@ -243,17 +243,17 @@ public enum TaskType {
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS),
   AWS_CF_TASK(TaskGroup.AWS),
   K8S_COMMAND_TASK(TaskGroup.K8S),
-  K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG),
+  K8S_COMMAND_TASK_NG(TaskGroup.K8S_NG, "K8s Task"),
   K8S_WATCH_TASK(TaskGroup.K8S),
   TRIGGER_TASK(TaskGroup.TRIGGER),
   JIRA(TaskGroup.JIRA),
   CONNECTIVITY_VALIDATION(TaskGroup.CONNECTIVITY_VALIDATION),
   GIT_COMMAND(TaskGroup.GIT),
   GIT_FETCH_FILES_TASK(TaskGroup.GIT),
-  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT),
+  GIT_FETCH_NEXT_GEN_TASK(TaskGroup.GIT, "Git Fetch Files Task"),
   BUILD_SOURCE_TASK(TaskGroup.BUILD_SOURCE),
-  DOCKER_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG),
-  GCR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG),
+  DOCKER_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, "DockerHub Task"),
+  GCR_ARTIFACT_TASK_NG(TaskGroup.ARTIFACT_COLLECT_NG, "GCR Task"),
   AWS_ROUTE53_TASK(TaskGroup.AWS),
   SHELL_SCRIPT_APPROVAL(TaskGroup.SCRIPT),
   CUSTOM_GET_BUILDS(TaskGroup.CUSTOM),
@@ -280,7 +280,7 @@ public enum TaskType {
   NG_SSH_VALIDATION(TaskGroup.CONNECTIVITY_VALIDATION),
   DOCKER_CONNECTIVITY_TEST_TASK(TaskGroup.DOCKER),
   NG_AWS_TASK(TaskGroup.AWS),
-  JIRA_TASK_NG(TaskGroup.JIRA_NG),
+  JIRA_TASK_NG(TaskGroup.JIRA_NG, "Jira Task"),
   BUILD_STATUS(TaskGroup.CI),
   GIT_API_TASK(TaskGroup.GIT_NG),
   AWS_CODECOMMIT_API_TASK(TaskGroup.GIT_NG),
@@ -292,8 +292,8 @@ public enum TaskType {
   NOTIFY_PAGERDUTY(TaskGroup.NOTIFICATION),
   NOTIFY_MAIL(TaskGroup.NOTIFICATION),
   NOTIFY_MICROSOFTTEAMS(TaskGroup.NOTIFICATION),
-  HTTP_TASK_NG(TaskGroup.HTTP_NG),
-  SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG),
+  HTTP_TASK_NG(TaskGroup.HTTP_NG, "Http Task"),
+  SHELL_SCRIPT_TASK_NG(TaskGroup.SHELL_SCRIPT_NG, "Shell Script Task"),
   NG_NEXUS_TASK(TaskGroup.NEXUS),
   NG_ARTIFACTORY_TASK(TaskGroup.ARTIFACTORY),
   CE_VALIDATE_KUBERNETES_CONFIG(TaskGroup.CE),
@@ -303,12 +303,21 @@ public enum TaskType {
   TERRAFORM_TASK_NG(TaskGroup.TERRAFORM_NG);
 
   private final TaskGroup taskGroup;
+  private final String displayName;
 
   TaskType(TaskGroup taskGroup) {
     this.taskGroup = taskGroup;
+    this.displayName = null;
+  }
+  TaskType(TaskGroup taskGroup, String displayName) {
+    this.taskGroup = taskGroup;
+    this.displayName = displayName;
   }
 
   public TaskGroup getTaskGroup() {
     return taskGroup;
+  }
+  public String getDisplayName() {
+    return displayName != null ? displayName : name();
   }
 }
