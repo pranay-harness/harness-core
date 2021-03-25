@@ -84,7 +84,7 @@ public class TriggerWebhookConfirmationHelper {
   private AwsCodeCommitApiTaskResponse buildAndFireDelegateTask(TriggerWebhookEvent event) {
     String topicArn = null;
     for (HeaderConfig headerConfig : event.getHeaders()) {
-      if (headerConfig.getKey().equals(X_AMZ_SNS_TOPIC_ARN)) {
+      if (headerConfig.getKey().equalsIgnoreCase(X_AMZ_SNS_TOPIC_ARN)) {
         List<String> values = headerConfig.getValues();
         if (isNotEmpty(values) && values.size() == 1) {
           topicArn = values.get(0);
