@@ -222,8 +222,9 @@ public class NGTriggerElementMapper {
       webhookSourceRepo = BITBUCKET;
     } else if (webhookEventPayloadParser.containsHeaderKey(headers, X_AMZ_SNS_MESSAGE_TYPE)) {
       webhookSourceRepo = AWS_CODECOMMIT;
-      if (headers.get(X_AMZ_SNS_MESSAGE_TYPE).contains(AMZ_SUBSCRIPTION_CONFIRMATION_TYPE)) {
-        isConfirmationMessage = true;
+      List<String> headerValues = webhookEventPayloadParser.getHeaderValue(headers, X_AMZ_SNS_MESSAGE_TYPE);
+      if (isNotEmpty(headerValues)) {
+        isConfirmationMessage = headerValues.stream().anyMatch(AMZ_SUBSCRIPTION_CONFIRMATION_TYPE::equalsIgnoreCase);
       }
     } else {
       webhookSourceRepo = CUSTOM;

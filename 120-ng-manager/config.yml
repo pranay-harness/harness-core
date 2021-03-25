@@ -222,7 +222,12 @@ accessControlAdminClient:
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
+
 gitGrpcClientConfigs:
   pms:
     target: localhost:12011
     authority: localhost
+
+scmConnectionConfig:
+  url: localhost:8091
+

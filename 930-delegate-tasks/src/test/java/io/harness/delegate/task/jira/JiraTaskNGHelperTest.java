@@ -1,20 +1,18 @@
 package io.harness.delegate.task.jira;
 
-import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.rule.OwnerRule.GARVIT;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.task.jira.response.JiraTaskNGResponse;
-import io.harness.jira.JiraAction;
-import io.harness.logging.CommandExecutionStatus;
+import io.harness.jira.JiraActionNG;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDC)
 public class JiraTaskNGHelperTest {
   @Mock private JiraTaskNGHandler jiraTaskNGHandler;
   @Mock private SecretDecryptionService secretDecryptionService;
@@ -34,190 +33,55 @@ public class JiraTaskNGHelperTest {
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseAuth() {
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
-    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder().jiraAction(JiraAction.AUTH).build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.validateCredentials(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  public void shouldTValidateCredentials() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.VALIDATE_CREDENTIALS);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).validateCredentials(params);
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseCreateTicket() {
-    final String issueId = "issueID";
-    final String issueType = "Bug";
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
-    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
-                                                    .jiraAction(JiraAction.CREATE_TICKET)
-                                                    .issueId(issueId)
-                                                    .issueType(issueType)
-                                                    .build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.createTicket(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  public void shouldGetProjects() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_PROJECTS);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).getProjects(params);
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseUpdateTicket() {
-    final String issueId = "issueID";
-    final String issueType = "Bug";
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
-    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
-                                                    .jiraAction(JiraAction.UPDATE_TICKET)
-                                                    .updateIssueIds(Collections.singletonList(issueId))
-                                                    .issueType(issueType)
-                                                    .build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.updateTicket(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+  public void shouldGetIssue() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_ISSUE);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).getIssue(params);
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseFetchIssue() {
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.RUNNING).build();
-    JiraTaskNGParameters jiraTaskNGParameters =
-        JiraTaskNGParameters.builder().jiraAction(JiraAction.FETCH_ISSUE).build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.fetchIssue(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.RUNNING);
+  public void shouldGetIssueCreateMetadata() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.GET_ISSUE_CREATE_METADATA);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).getIssueCreateMetadata(params);
   }
 
   @Test
-  @Owner(developers = ALEXEI)
+  @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseGetProjects() {
-    final String issueId = "issueID";
-    final String issueType = "Bug";
-    JiraTaskNGResponse mockedResponse = JiraTaskNGResponse.builder()
-                                            .executionStatus(CommandExecutionStatus.SUCCESS)
-                                            .projects(new ArrayList<>())
-                                            .build();
-    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
-                                                    .jiraAction(JiraAction.GET_PROJECTS)
-                                                    .issueId(issueId)
-                                                    .issueType(issueType)
-                                                    .build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.getProjects(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(jiraTaskResponse.getProjects()).isNotNull();
+  public void shouldCreateIssue() {
+    JiraTaskNGParameters params = setupMocksForAction(JiraActionNG.CREATE_ISSUE);
+    jiraTaskNGHelper.getJiraTaskResponse(params);
+    verify(jiraTaskNGHandler).createIssue(params);
   }
 
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseGetStatuses() {
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
-    JiraTaskNGParameters jiraTaskNGParameters =
-        JiraTaskNGParameters.builder().jiraAction(JiraAction.GET_STATUSES).build();
+  private JiraTaskNGParameters setupMocksForAction(JiraActionNG action) {
+    JiraTaskNGResponse mockedResponse = JiraTaskNGResponse.builder().build();
+    JiraTaskNGParameters params = JiraTaskNGParameters.builder().action(action).build();
     when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.getStatuses(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseGetFieldsAndOptions() {
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    JiraTaskNGParameters jiraTaskNGParameters =
-        JiraTaskNGParameters.builder().jiraAction(JiraAction.GET_FIELDS_OPTIONS).build();
-
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.getFieldsOptions(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseCheckApproval() {
-    final String issueId = "issueID";
-    JiraTaskNGResponse mockedResponse = JiraTaskNGResponse.builder()
-                                            .executionStatus(CommandExecutionStatus.SUCCESS)
-                                            .projects(new ArrayList<>())
-                                            .build();
-    JiraTaskNGParameters jiraTaskNGParameters = JiraTaskNGParameters.builder()
-                                                    .jiraAction(JiraAction.CHECK_APPROVAL)
-                                                    .approvalField("status")
-                                                    .approvalValue("Success")
-                                                    .issueId(issueId)
-                                                    .build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.checkJiraApproval(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
-    assertThat(jiraTaskResponse.getProjects()).isNotNull();
-  }
-
-  @Test
-  @Owner(developers = ALEXEI)
-  @Category(UnitTests.class)
-  public void shouldTestGetJiraTaskResponseGetCreateMetadata() {
-    JiraTaskNGResponse mockedResponse =
-        JiraTaskNGResponse.builder().executionStatus(CommandExecutionStatus.SUCCESS).build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    JiraTaskNGParameters jiraTaskNGParameters =
-        JiraTaskNGParameters.builder().jiraAction(JiraAction.GET_CREATE_METADATA).build();
-
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
-    when(jiraTaskNGHandler.getCreateMetadata(jiraTaskNGParameters)).thenReturn(mockedResponse);
-
-    JiraTaskNGResponse jiraTaskResponse = jiraTaskNGHelper.getJiraTaskResponse(jiraTaskNGParameters);
-
-    assertThat(jiraTaskResponse).isNotNull();
-    assertThat(jiraTaskResponse.getExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    when(jiraTaskNGHandler.createIssue(params)).thenReturn(mockedResponse);
+    return params;
   }
 }
