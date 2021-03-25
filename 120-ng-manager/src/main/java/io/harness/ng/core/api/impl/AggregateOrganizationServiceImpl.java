@@ -1,11 +1,13 @@
 package io.harness.ng.core.api.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.getAdmins;
 import static io.harness.ng.core.api.impl.AggregateProjectServiceImpl.getCollaborators;
 import static io.harness.ng.core.invites.remote.UserSearchMapper.writeDTO;
 import static io.harness.ng.core.remote.OrganizationMapper.toResponseWrapper;
 import static io.harness.ng.core.remote.ProjectMapper.writeDTO;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.dto.OrganizationAggregateDTO.OrganizationAggregateDTOBuilder;
@@ -40,6 +42,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 @Singleton
 @Slf4j
 public class AggregateOrganizationServiceImpl implements AggregateOrganizationService {

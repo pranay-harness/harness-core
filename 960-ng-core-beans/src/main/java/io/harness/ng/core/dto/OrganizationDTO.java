@@ -1,7 +1,10 @@
 package io.harness.ng.core.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 
@@ -18,6 +21,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor

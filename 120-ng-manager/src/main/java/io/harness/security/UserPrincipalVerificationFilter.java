@@ -1,12 +1,14 @@
 package io.harness.security;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import static javax.ws.rs.Priorities.AUTHORIZATION;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.user.services.api.NgUserService;
@@ -22,6 +24,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MultivaluedMap;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(PL)
 @Singleton
 @Priority(AUTHORIZATION)
 public class UserPrincipalVerificationFilter implements ContainerRequestFilter {

@@ -1,8 +1,10 @@
 package io.harness.ng.core;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.account.remote.AccountClient;
 import io.harness.ng.core.services.OrganizationService;
@@ -13,6 +15,7 @@ import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Singleton
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
