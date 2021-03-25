@@ -84,7 +84,7 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
         .stepType(StepGroupStep.STEP_TYPE)
         .group(StepOutcomeGroup.STEP_GROUP.name())
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
-        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen()))
+        .whenCondition(RunInfoUtils.getRunCondition(config.getWhen(), false))
         .stepParameters(stepParameters)
         .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))

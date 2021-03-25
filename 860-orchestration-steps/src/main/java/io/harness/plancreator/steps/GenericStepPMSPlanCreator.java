@@ -158,7 +158,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                        .build())
             .adviserObtainments(adviserObtainmentFromMetaData)
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
-            .whenCondition(RunInfoUtils.getRunCondition(stepElement.getWhen()))
+            .whenCondition(RunInfoUtils.getRunCondition(stepElement.getWhen(), false))
             .timeoutObtainment(
                 TimeoutObtainment.newBuilder()
                     .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
