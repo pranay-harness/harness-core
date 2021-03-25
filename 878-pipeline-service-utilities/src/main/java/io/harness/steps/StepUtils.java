@@ -12,6 +12,7 @@ import io.harness.delegate.Capability;
 import io.harness.delegate.TaskDetails;
 import io.harness.delegate.TaskLogAbstractions;
 import io.harness.delegate.TaskMode;
+import io.harness.delegate.TaskSelector;
 import io.harness.delegate.TaskSetupAbstractions;
 import io.harness.delegate.TaskType;
 import io.harness.delegate.beans.TaskData;
@@ -176,6 +177,12 @@ public class StepUtils {
         ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2, Collections.emptyList(), true, null);
   }
 
+  public static TaskRequest prepareTaskRequestWithTaskSelector(
+      Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer, List<TaskSelector> selectors) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, TaskCategory.DELEGATE_TASK_V2,
+        Collections.emptyList(), true, null, selectors);
+  }
+
   public static TaskRequest prepareTaskRequestWithoutLogs(
       Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer) {
     return prepareTaskRequest(
@@ -189,6 +196,11 @@ public class StepUtils {
 
   public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
       TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName) {
+    return prepareTaskRequest(ambiance, taskData, kryoSerializer, taskCategory, units, withLogs, taskName, null);
+  }
+
+  public static TaskRequest prepareTaskRequest(Ambiance ambiance, TaskData taskData, KryoSerializer kryoSerializer,
+      TaskCategory taskCategory, List<String> units, boolean withLogs, String taskName, List<TaskSelector> selectors) {
     String accountId = Preconditions.checkNotNull(ambiance.getSetupAbstractionsMap().get("accountId"));
     TaskParameters taskParameters = (TaskParameters) taskData.getParameters()[0];
     List<ExecutionCapability> capabilities = new ArrayList<>();
@@ -215,6 +227,7 @@ public class StepUtils {
                     .setType(TaskType.newBuilder().setType(taskData.getTaskType()).build())
                     .build())
             .addAllUnits(CollectionUtils.emptyIfNull(units))
+            .addAllSelectors(CollectionUtils.emptyIfNull(selectors))
             .addAllLogKeys(CollectionUtils.emptyIfNull(generateLogKeys(logAbstractionMap, units)))
             .setLogAbstractions(TaskLogAbstractions.newBuilder().putAllValues(logAbstractionMap).build())
             .setSetupAbstractions(TaskSetupAbstractions.newBuilder()
