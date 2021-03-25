@@ -112,7 +112,7 @@ pub fn analyze(opts: Analyze) {
     println!("loading...");
 
     let modules = modules();
-    //println!("{:?}", modules);
+    // println!("{:?}", modules);
 
     if opts.module_filter.is_some()
         && !modules
