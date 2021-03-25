@@ -1,5 +1,6 @@
 package io.harness.plancreator.steps.http;
 
+import io.harness.data.structure.CollectionUtils;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
@@ -93,7 +94,8 @@ public class HttpStepInfo extends HttpBaseStepInfo implements PMSStepInfo, Visit
         .method(getMethod())
         .outputVariables(NGVariablesUtils.getMapOfVariables(outputVariables, 0L))
         .requestBody(getRequestBody())
-        .delegateSelectors(delegateSelectors)
+        .delegateSelectors(ParameterField.createValueField(
+            CollectionUtils.emptyIfNull(delegateSelectors != null ? delegateSelectors.getValue() : null)))
         .rollbackInfo(baseStepParameterInfo.getRollbackInfo())
         .timeout(baseStepParameterInfo.getTimeout())
         .url(getUrl())
