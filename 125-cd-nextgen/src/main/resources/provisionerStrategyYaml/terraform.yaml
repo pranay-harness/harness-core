@@ -1,38 +1,30 @@
-failureStrategies:
-  - onFailure:
-      errors:
-        - AnyOther
-      action:
-        type: StageRollback
-spec:
-  infrastructure:
-    provisioner:
-      steps:
-        - step:
-          type: TerraformApply
-          name:
-          identifier:
-          timeout: 10
-          delegateSelectors:
-          spec:
-            provisionerIdentifier: myStageInfra
-            configuration:
-              type: Inline
-              spec:
-                workspace: default
-                configFiles:
-                  store:
-                    type: Git
-                    spec:
-                      gitFetchType: Branch
-                      repoName:
-                      branch:
-                      folderPath:
-                      connectorRef:
-                varFiles:
-                backendConfig:
-                  type: Inline
+provisioner:
+  steps:
+    - step:
+        type: TerraformApply
+        name:
+        identifier:
+        timeout: 10
+        delegateSelectors:
+        spec:
+          provisionerIdentifier:
+          configuration:
+            type: Inline
+            spec:
+              workspace: default
+              configFiles:
+                store:
+                  type: Git
                   spec:
-                    content:
-                targets:
-                environmentVariables:
+                    gitFetchType: Branch
+                    repoName:
+                    branch:
+                    folderPath:
+                    connectorRef:
+              varFiles:
+              backendConfig:
+                type: Inline
+                spec:
+                  content:
+              targets:
+              environmentVariables:
