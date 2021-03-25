@@ -28,11 +28,11 @@ xxxxxxxx
 
 mongo:
   uri: mongodb://localhost:27017/pms-harness
-  connectTimeout: 30000
-  serverSelectionTimeout: 90000
-  maxConnectionIdleTime: 600000
-  connectionsPerHost: 300
-  indexManagerMode: AUTO
+  connectTimeout: ${MONGO_CONNECT_TIMEOUT:-30000}
+  serverSelectionTimeout: ${MONGO_SERVER_SELECTION_TIMEOUT:-90000}
+  maxConnectionIdleTime: ${MAX_CONNECTION_IDLE_TIME:-600000}
+  connectionsPerHost: ${MONGO_CONNECTIONS_PER_HOST:-300}
+  indexManagerMode: ${MONGO_INDEX_MANAGER_MODE:-AUTO}
   transactionsEnabled: false
 
 grpcServerConfig:
@@ -45,55 +45,56 @@ grpcServerConfig:
 
 grpcClientConfigs:
   cd:
-    target: localhost:12101
-    authority: localhost
+    target: ${NG_MANAGER_TARGET:-localhost:12101}
+    authority: ${NG_MANAGER_AUTHORITY:-localhost}
   cv:
-    target: localhost:12201
-    authority: localhost
+    target: ${CV_MANAGER_TARGET:-localhost:12201}
+    authority: ${CV_MANAGER_AUTHORITY:-localhost}
   ci:
-    target: localhost:12301
-    authority: localhost
+    target: ${CI_MANAGER_TARGET:-localhost:12301}
+    authority: ${CI_MANAGER_AUTHORITY:-localhost}
 
 yamlSchemaClientConfig:
   yamlSchemaHttpClientMap:
     ci:
       serviceHttpClientConfig:
-        baseUrl: http://localhost:4457/
+        baseUrl: ${CI_MANAGER_BASE_URL:-http://localhost:4457/}
         connectTimeOutSeconds: 15
         readTimeOutSeconds: 15
-      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+      secret: ${CI_MANAGER_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
     cd:
       serviceHttpClientConfig:
-        baseUrl: http://localhost:7457/
+        baseUrl: ${NG_MANAGER_BASE_URL:-http://localhost:7457/}
         connectTimeOutSeconds: 15
         readTimeOutSeconds: 15
-      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+      secret: ${NG_MANAGER_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 
-managerTarget: localhost:9880
-managerAuthority: localhost
+
+managerTarget: ${MANAGER_TARGET:-localhost:9880}
+managerAuthority: ${MANAGER_AUTHORITY:-localhost}
 
 eventsFramework:
   redis:
-    sentinel: false
-    masterName: "test"
-    redisUrl: "redis://localhost:6379"
+    sentinel: ${EVENTS_FRAMEWORK_USE_SENTINEL:-false}
+    masterName: ${EVENTS_FRAMEWORK_SENTINEL_MASTER_NAME:-"test"}
+    redisUrl: ${EVENTS_FRAMEWORK_REDIS_URL:-redis://localhost:6379}
     sentinelUrls:
       - "redis://redis1:26379"
       - "redis://redis2:26379"
       - "redis://redis3:26379"
-    envNamespace: ""
+    envNamespace: ${EVENTS_FRAMEWORK_ENV_NAMESPACE:-""}
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
-    userName: ""
-    password: ""
+    userName: ${EVENTS_FRAMEWORK_REDIS_USERNAME:-""}
+    password: ${EVENTS_FRAMEWORK_REDIS_PASSWORD:-""}
 
 managerClientConfig:
-  baseUrl: http://localhost:3457/api/
+  baseUrl: ${MANAGER_BASE_URL:-http://localhost:3457/api/}
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
-managerServiceSecret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+managerServiceSecret: ${MANAGER_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 notificationClient:
   messageBroker:
@@ -104,26 +105,26 @@ notificationClient:
     maxConnectionIdleTime: 600000
     connectionsPerHost: 300
   httpClient:
-    baseUrl: http://localhost:9005/api/
+    baseUrl: ${NOTIFICATION_BASE_URL:-http://localhost:9005/api/}
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   secrets:
     notificationClientSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 ngManagerServiceHttpClientConfig:
-  baseUrl: http://localhost:7457/
+  baseUrl: ${NG_MANAGER_BASE_URL:-http://localhost:7457/}
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
-ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
-jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
+ngManagerServiceSecret: ${NG_MANAGER_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+jwtAuthSecret: ${JWT_AUTH_SECRET:-dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq}
+jwtIdentityServiceSecret: ${JWT_IDENTITY_SERVICE_SECRET:-HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=}
 
 allowedOrigins:
   - "*"
 
-pipelineServiceBaseUrl: https://localhost:8181/#
+pipelineServiceBaseUrl: ${PIPELINE_SERVICE_BASE_URL:-https://localhost:8181/#}
 
 scmConnectionConfig:
-  url: localhost:8091
+  url: ${SCM_SERVICE_URI:-localhost:8091}
 
-enableAuth: false
+enableAuth: ${AUTH_ENABLED:-false}
