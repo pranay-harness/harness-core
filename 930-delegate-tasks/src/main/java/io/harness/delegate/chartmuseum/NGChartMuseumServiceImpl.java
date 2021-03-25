@@ -6,6 +6,10 @@ import io.harness.chartmuseum.ChartMuseumClientHelper;
 import io.harness.chartmuseum.ChartMuseumServer;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
@@ -47,6 +51,19 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
         return clientHelper.startS3ChartMuseumServer(s3StoreDelegateConfig.getBucketName(),
             s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
             secretKey);
+
+      case GCS_HELM:
+        GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
+        GcpConnectorCredentialDTO credentials = gcsHelmStoreDelegateConfig.getGcpConnector().getCredential();
+        char[] serviceAccountKey = null;
+
+        if (GcpCredentialType.MANUAL_CREDENTIALS == credentials.getGcpCredentialType()) {
+          GcpManualDetailsDTO manualCredentials = (GcpManualDetailsDTO) credentials.getConfig();
+          serviceAccountKey = manualCredentials.getSecretKeyRef().getDecryptedValue();
+        }
+
+        return clientHelper.startGCSChartMuseumServer(gcsHelmStoreDelegateConfig.getBucketName(),
+            gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory);
 
       default:
         throw new UnsupportedOperationException(

@@ -19,6 +19,7 @@ import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.manifest.ManifestStoreType;
 import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.HelmManifestCommandFlag;
@@ -43,6 +44,7 @@ import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoH
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -56,6 +58,7 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
@@ -195,6 +198,13 @@ public class K8sStepHelper {
         }
         break;
 
+      case ManifestStoreType.GCS:
+        if (!(connectorInfoDTO.getConnectorConfig() instanceof GcpConnectorDTO)) {
+          throw new InvalidRequestException(
+              format("Invalid connector selected in %s. Select Google cloud connector", message));
+        }
+        break;
+
       default:
         throw new UnsupportedOperationException(format("Unknown manifest store type: [%s]", manifestStoreType));
     }
@@ -287,6 +297,22 @@ public class K8sStepHelper {
           .build();
     }
 
+    if (ManifestStoreType.GCS.equals(storeConfig.getKind())) {
+      GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) storeConfig;
+      ConnectorInfoDTO gcpConnectorDTO =
+          getConnector(getParameterFieldValue(gcsStoreConfig.getConnectorRef()), ambiance);
+      validateManifest(storeConfig.getKind(), gcpConnectorDTO, validationErrorMessage);
+
+      return GcsHelmStoreDelegateConfig.builder()
+          .repoName(gcpConnectorDTO.getIdentifier())
+          .repoDisplayName(gcpConnectorDTO.getName())
+          .bucketName(getParameterFieldValue(gcsStoreConfig.getBucketName()))
+          .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
+          .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
+          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .build();
+    }
+
     throw new UnsupportedOperationException(format("Unsupported Store Config type: [%s]", storeConfig.getKind()));
   }
 
@@ -373,6 +399,15 @@ public class K8sStepHelper {
         List<DecryptableEntity> awsDecryptableEntities = awsConnectorDTO.getDecryptableEntities();
         if (isNotEmpty(awsDecryptableEntities)) {
           return secretManagerClientService.getEncryptionDetails(ngAccess, awsDecryptableEntities.get(0));
+        } else {
+          return Collections.emptyList();
+        }
+
+      case GCP:
+        GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
+        List<DecryptableEntity> gcpDecryptableEntities = gcpConnectorDTO.getDecryptableEntities();
+        if (isNotEmpty(gcpDecryptableEntities)) {
+          return secretManagerClientService.getEncryptionDetails(ngAccess, gcpDecryptableEntities.get(0));
         } else {
           return Collections.emptyList();
         }

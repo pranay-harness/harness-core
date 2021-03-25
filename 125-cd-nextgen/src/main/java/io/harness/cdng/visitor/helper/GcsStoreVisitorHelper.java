@@ -4,7 +4,7 @@ import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
 
 import io.harness.IdentifierRefProtoUtils;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.manifest.yaml.S3StoreConfig;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class S3StoreVisitorHelper implements ConfigValidator, EntityReferenceExtractor {
+public class GcsStoreVisitorHelper implements ConfigValidator, EntityReferenceExtractor {
   @Override
   public void validate(Object object, ValidationVisitor visitor) {
     // Nothing to validate.
@@ -30,25 +30,26 @@ public class S3StoreVisitorHelper implements ConfigValidator, EntityReferenceExt
 
   @Override
   public Object createDummyVisitableElement(Object originalElement) {
-    return S3StoreConfig.builder().build();
+    return GcsStoreConfig.builder().build();
   }
 
   @Override
   public Set<EntityDetailProtoDTO> addReference(Object object, String accountIdentifier, String orgIdentifier,
       String projectIdentifier, Map<String, Object> contextMap) {
-    S3StoreConfig s3StoreConfig = (S3StoreConfig) object;
+    GcsStoreConfig gcsStoreConfig = (GcsStoreConfig) object;
 
     Set<EntityDetailProtoDTO> result = new HashSet<>();
-    if (ParameterField.isNull(s3StoreConfig.getConnectorRef())) {
+    if (ParameterField.isNull(gcsStoreConfig.getConnectorRef())) {
       return result;
     }
+
     String fullQualifiedDomainName =
         VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.CONNECTOR_REF;
     Map<String, String> metadata =
         new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
 
-    if (!s3StoreConfig.getConnectorRef().isExpression()) {
-      String connectorRefString = s3StoreConfig.getConnectorRef().getValue();
+    if (!gcsStoreConfig.getConnectorRef().isExpression()) {
+      String connectorRefString = gcsStoreConfig.getConnectorRef().getValue();
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
       EntityDetailProtoDTO entityDetail =
@@ -58,9 +59,9 @@ public class S3StoreVisitorHelper implements ConfigValidator, EntityReferenceExt
               .build();
       result.add(entityDetail);
     } else {
-      metadata.put(PreFlightCheckMetadata.EXPRESSION, s3StoreConfig.getConnectorRef().getExpressionValue());
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, gcsStoreConfig.getConnectorRef().getExpressionValue());
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(accountIdentifier,
-          orgIdentifier, projectIdentifier, s3StoreConfig.getConnectorRef().getExpressionValue(), metadata);
+          orgIdentifier, projectIdentifier, gcsStoreConfig.getConnectorRef().getExpressionValue(), metadata);
       EntityDetailProtoDTO entityDetail =
           EntityDetailProtoDTO.newBuilder()
               .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))

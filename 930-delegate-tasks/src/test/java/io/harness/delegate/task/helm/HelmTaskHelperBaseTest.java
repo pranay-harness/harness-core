@@ -24,8 +24,10 @@ import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.encryption.SecretRefData;
@@ -299,25 +301,38 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDownloadChartFilesUsingChartMuseumS3() throws Exception {
+    final S3HelmStoreDelegateConfig s3StoreDelegateConfig =
+        S3HelmStoreDelegateConfig.builder().repoName(REPO_NAME).repoDisplayName(REPO_DISPLAY_NAME).build();
+    testDownloadChartFilesUsingChartMuseum(s3StoreDelegateConfig);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testDownloadChartFilesUsingChartMuseumGCS() throws Exception {
+    final GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig =
+        GcsHelmStoreDelegateConfig.builder().repoName(REPO_NAME).repoDisplayName(REPO_DISPLAY_NAME).build();
+    testDownloadChartFilesUsingChartMuseum(gcsHelmStoreDelegateConfig);
+  }
+
+  private void testDownloadChartFilesUsingChartMuseum(StoreDelegateConfig storeDelegateConfig) throws Exception {
     final HelmTaskHelperBase spyHelmTaskHelperBase = spy(helmTaskHelperBase);
     final String destinationDirectory = "destinationDirectory";
     final String resourceDirectory = "resourceDirectory";
     final long timeoutInMillis = 90000L;
     final int port = 33344;
     final ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(port).build();
-    final S3HelmStoreDelegateConfig s3StoreDelegateConfig =
-        S3HelmStoreDelegateConfig.builder().repoName(REPO_NAME).repoDisplayName(REPO_DISPLAY_NAME).build();
     final HelmChartManifestDelegateConfig manifest = HelmChartManifestDelegateConfig.builder()
                                                          .chartName(CHART_NAME)
                                                          .chartVersion(CHART_VERSION)
-                                                         .storeDelegateConfig(s3StoreDelegateConfig)
+                                                         .storeDelegateConfig(storeDelegateConfig)
                                                          .helmVersion(V3)
                                                          .build();
 
     doReturn(resourceDirectory).when(spyHelmTaskHelperBase).createNewDirectoryAtPath(RESOURCE_DIR_BASE);
     doReturn(chartMuseumServer)
         .when(ngChartMuseumService)
-        .startChartMuseumServer(s3StoreDelegateConfig, resourceDirectory);
+        .startChartMuseumServer(storeDelegateConfig, resourceDirectory);
     doNothing()
         .when(spyHelmTaskHelperBase)
         .addChartMuseumRepo(REPO_NAME, REPO_DISPLAY_NAME, port, destinationDirectory, V3, timeoutInMillis);
@@ -328,7 +343,7 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     spyHelmTaskHelperBase.downloadChartFilesUsingChartMuseum(manifest, destinationDirectory, timeoutInMillis);
 
-    verify(ngChartMuseumService, times(1)).startChartMuseumServer(s3StoreDelegateConfig, resourceDirectory);
+    verify(ngChartMuseumService, times(1)).startChartMuseumServer(storeDelegateConfig, resourceDirectory);
     verify(ngChartMuseumService, times(1)).stopChartMuseumServer(chartMuseumServer);
     verify(spyHelmTaskHelperBase, times(1))
         .addChartMuseumRepo(REPO_NAME, REPO_DISPLAY_NAME, port, destinationDirectory, V3, timeoutInMillis);

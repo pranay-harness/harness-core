@@ -1965,6 +1965,7 @@ public class K8sTaskHelperBase {
 
       case HTTP_HELM:
       case S3_HELM:
+      case GCS_HELM:
         return downloadFilesFromChartRepo(
             manifestDelegateConfig, manifestFilesDirectory, executionLogCallback, timeoutInMillis);
 

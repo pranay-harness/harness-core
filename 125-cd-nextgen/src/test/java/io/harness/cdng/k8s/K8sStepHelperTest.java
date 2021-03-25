@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.cdng.k8s.K8sStepHelper.MISSING_INFRASTRUCTURE_ERROR;
 import static io.harness.delegate.beans.connector.ConnectorType.AWS;
+import static io.harness.delegate.beans.connector.ConnectorType.GCP;
 import static io.harness.delegate.beans.connector.ConnectorType.HTTP_HELM_REPO;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
@@ -21,6 +22,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome.K8sDirectInfrastructureOutcomeBuilder;
+import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GitStoreConfig;
 import io.harness.cdng.manifest.yaml.GithubStore;
@@ -43,11 +45,15 @@ import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoH
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
+import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
@@ -607,5 +613,51 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(s3StoreDelegateConfig.getRegion()).isEqualTo(region);
     assertThat(s3StoreDelegateConfig.getFolderPath()).isEqualTo(folderPath);
     assertThat(s3StoreDelegateConfig.getAwsConnector()).isEqualTo(awsConnectorConfig);
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testGetManifestDelegateConfigForHelmChartUsingGcsRepo() {
+    String connectorRef = "org.aws_s3_repo";
+    String bucketName = "bucketName";
+    String folderPath = "basePath";
+    String chartName = "chartName";
+    String chartVersion = "chartVersion";
+    GcpConnectorDTO gcpConnectorDTO =
+        GcpConnectorDTO.builder()
+            .credential(
+                GcpConnectorCredentialDTO.builder().gcpCredentialType(GcpCredentialType.INHERIT_FROM_DELEGATE).build())
+            .build();
+
+    HelmChartManifestOutcome helmChartManifestOutcome =
+        HelmChartManifestOutcome.builder()
+            .chartVersion(chartVersion)
+            .chartName(chartName)
+            .store(GcsStoreConfig.builder()
+                       .connectorRef(ParameterField.createValueField(connectorRef))
+                       .bucketName(ParameterField.createValueField(bucketName))
+                       .folderPath(ParameterField.createValueField(folderPath))
+                       .build())
+            .build();
+
+    doReturn(Optional.of(
+                 ConnectorResponseDTO.builder()
+                     .connector(ConnectorInfoDTO.builder().connectorType(GCP).connectorConfig(gcpConnectorDTO).build())
+                     .build()))
+        .when(connectorService)
+        .get(anyString(), anyString(), anyString(), anyString());
+
+    ManifestDelegateConfig delegateConfig = k8sStepHelper.getManifestDelegateConfig(helmChartManifestOutcome, ambiance);
+    assertThat(delegateConfig.getManifestType()).isEqualTo(ManifestType.HELM_CHART);
+    assertThat(delegateConfig).isInstanceOf(HelmChartManifestDelegateConfig.class);
+    HelmChartManifestDelegateConfig helmChartDelegateConfig = (HelmChartManifestDelegateConfig) delegateConfig;
+    assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isNotNull();
+    assertThat(helmChartDelegateConfig.getStoreDelegateConfig()).isInstanceOf(GcsHelmStoreDelegateConfig.class);
+    GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig =
+        (GcsHelmStoreDelegateConfig) helmChartDelegateConfig.getStoreDelegateConfig();
+    assertThat(gcsHelmStoreDelegateConfig.getBucketName()).isEqualTo(bucketName);
+    assertThat(gcsHelmStoreDelegateConfig.getFolderPath()).isEqualTo(folderPath);
+    assertThat(gcsHelmStoreDelegateConfig.getGcpConnector()).isEqualTo(gcpConnectorDTO);
   }
 }
